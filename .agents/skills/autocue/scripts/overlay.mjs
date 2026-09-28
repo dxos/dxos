@@ -25,29 +25,6 @@ const COUNTDOWN = new URL(
   import.meta.url,
 );
 
-/** `@dxos/brand`'s Composer mark as markup, drawn inside the ring; React-free, so it renders in Node. */
-const COMPOSER_LOGO = new URL(
-  '../../../../packages/ui/brand/src/components/experimental/composer-mark.ts',
-  import.meta.url,
-);
-
-let composerLogo;
-const loadComposerLogo = async () => {
-  if (!composerLogo) {
-    const { build } = await import('esbuild');
-    const { outputFiles } = await build({
-      entryPoints: [COMPOSER_LOGO.pathname],
-      bundle: true,
-      format: 'esm',
-      platform: 'neutral',
-      write: false,
-    });
-    const module = await import(`data:text/javascript;base64,${Buffer.from(outputFiles[0].text).toString('base64')}`);
-    composerLogo = module.composerLogoSvg();
-  }
-  return composerLogo;
-};
-
 /** Transpiled once, on first use: esbuild is the repo's own, and the module has no imports to resolve. */
 let countdownCode;
 const loadCountdown = async () => {
@@ -288,8 +265,6 @@ export const createOverlay = (page, { enabled, feed = true, feedMs = 3_500, posi
     moveCursor: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.moveCursor(x, y), point)),
     countdown: async (options) => {
       const code = await loadCountdown();
-      // The ring carries the Composer mark, as `Countdown` does in React.
-      options = { ...options, logo: options?.logo ?? (await loadComposerLogo()) };
       return safely(async () => {
         // An IIFE assigning `var __countdown`, run as a script through the protocol rather than `eval`,
         // so an app's content security policy cannot refuse it.

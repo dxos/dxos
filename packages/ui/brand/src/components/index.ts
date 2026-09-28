@@ -4,4 +4,3 @@
 
 export * from './icons/index.ts';
 export * from './logotypes/index.ts';
-export * from './experimental/composer-mark.ts';

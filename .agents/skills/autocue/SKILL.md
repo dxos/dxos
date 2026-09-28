@@ -136,8 +136,7 @@ first step after the setup ones it plays a countdown in the page: a closed ring 
 recorder, clicks it, and the take begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays
 it without the click, and the `countdown` op plays one on demand. It is react-ui-experimental's `Countdown`
 (story `ui/react-ui-experimental/Countdown`): its DOM half, `play-countdown.ts`, has no imports, and the overlay
-transpiles and injects that same file rather than keeping a copy, so change the look there. The Composer mark
-inside the ring is rendered from `@dxos/brand`.
+transpiles and injects that same file rather than keeping a copy, so change the look there.
 
 ### Browser logs
 
