@@ -33,7 +33,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/tooltip',
+  title: 'ui/react-ui-core/next/components/tooltip',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

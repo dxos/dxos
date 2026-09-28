@@ -45,7 +45,7 @@ const DefaultStory = ({ prefix }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/combobox',
+  title: 'ui/react-ui-core/next/components/combobox',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

@@ -42,7 +42,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/typography',
+  title: 'ui/react-ui-core/next/components/typography',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

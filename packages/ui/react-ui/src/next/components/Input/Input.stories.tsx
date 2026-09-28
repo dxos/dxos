@@ -33,7 +33,7 @@ const DefaultStory = ({ disabled }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/input',
+  title: 'ui/react-ui-core/next/components/input',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

@@ -43,7 +43,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/tag',
+  title: 'ui/react-ui-core/next/components/tag',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

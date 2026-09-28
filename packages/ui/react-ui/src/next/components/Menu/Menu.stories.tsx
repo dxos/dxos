@@ -50,7 +50,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/menu',
+  title: 'ui/react-ui-core/next/components/menu',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

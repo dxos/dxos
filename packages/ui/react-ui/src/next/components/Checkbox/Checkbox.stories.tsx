@@ -29,7 +29,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/checkbox',
+  title: 'ui/react-ui-core/next/components/checkbox',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

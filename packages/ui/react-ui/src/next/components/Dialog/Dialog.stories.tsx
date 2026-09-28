@@ -104,7 +104,7 @@ const DefaultStory = ({ sizes, paragraphs }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/dialog',
+  title: 'ui/react-ui-core/next/components/dialog',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

@@ -68,7 +68,7 @@ const DefaultStory = ({ mode, width, native }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/scroll-area',
+  title: 'ui/react-ui-core/next/components/scroll-area',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

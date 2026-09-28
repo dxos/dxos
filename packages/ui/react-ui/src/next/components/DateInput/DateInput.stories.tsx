@@ -42,7 +42,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/date-input',
+  title: 'ui/react-ui-core/next/components/date-input',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

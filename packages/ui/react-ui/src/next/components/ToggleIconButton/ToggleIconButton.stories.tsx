@@ -38,7 +38,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/toggle-icon-button',
+  title: 'ui/react-ui-core/next/components/toggle-icon-button',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

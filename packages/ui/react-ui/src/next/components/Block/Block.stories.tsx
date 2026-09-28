@@ -32,7 +32,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/block',
+  title: 'ui/react-ui-core/next/components/block',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

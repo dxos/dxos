@@ -44,7 +44,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/toolbar',
+  title: 'ui/react-ui-core/next/components/toolbar',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

@@ -29,7 +29,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/switch',
+  title: 'ui/react-ui-core/next/components/switch',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

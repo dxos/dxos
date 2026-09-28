@@ -43,7 +43,7 @@ const DefaultStory = ({ invalid }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/field',
+  title: 'ui/react-ui-core/next/components/field',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

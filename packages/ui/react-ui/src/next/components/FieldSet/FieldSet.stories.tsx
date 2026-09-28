@@ -63,7 +63,7 @@ const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/fieldset',
+  title: 'ui/react-ui-core/next/components/fieldset',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

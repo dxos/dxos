@@ -49,7 +49,7 @@ const DefaultStory = ({ icons }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/select',
+  title: 'ui/react-ui-core/next/components/select',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

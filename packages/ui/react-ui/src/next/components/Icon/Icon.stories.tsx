@@ -32,7 +32,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/icon',
+  title: 'ui/react-ui-core/next/components/icon',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

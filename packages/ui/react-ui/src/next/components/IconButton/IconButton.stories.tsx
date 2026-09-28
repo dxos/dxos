@@ -43,7 +43,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/icon-button',
+  title: 'ui/react-ui-core/next/components/icon-button',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

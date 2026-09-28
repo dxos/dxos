@@ -30,7 +30,7 @@ const DefaultStory = ({ justify }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/group',
+  title: 'ui/react-ui-core/next/components/group',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

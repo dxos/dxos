@@ -43,7 +43,7 @@ const DefaultStory = ({ size, arrow }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/popover',
+  title: 'ui/react-ui-core/next/components/popover',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },

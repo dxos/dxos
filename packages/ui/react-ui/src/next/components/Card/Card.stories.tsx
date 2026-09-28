@@ -74,7 +74,7 @@ const DefaultStory = ({ poster = POSTER }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/card',
+  title: 'ui/react-ui-core/next/components/card',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
