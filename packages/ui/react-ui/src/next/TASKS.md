@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 1 — controls (Field/Checkbox/Select/IconButton), Toolbar roving focus, components story + play tests, benchmark. Last: theme CSS in `next/theme/`, Container/ScrollArea productionized._
+_Resume: Phase 1 done except the Firefox style-query check. Last: controls, Toolbar roving focus, components story, play tests and benchmark._
 
 ## Phase 0: Design
 
@@ -29,19 +29,19 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 - [x] **Move size metrics to CSS** — `[data-size=*]` rules in the theme; `sizes.ts` keeps only `Size`/`SIZES`. — `theme/size.css`; one icon scale (md = 1rem).
 - [x] **Add levels** — `level` prop emits `data-surface`; `--nx-level` rungs; style-query `+1`. — `theme/level.css`; spike Levels story passes on `Next.Container`.
 - [x] **Input/Button fill `--block-size`** — superseded by decision 12.
-- [ ] **Control sizing** — `--nx-control-inset`/`--nx-control-size`/`--nx-control-icon` per size; Input, Button, IconButton, Select trigger, Checkbox use them (decision 12).
-- [ ] **Field** — Ark `Field`; flex stack in the content track; Label, HelperText, ErrorText (decision 13).
-- [ ] **Checkbox, Select, IconButton** — Ark Checkbox/Select; Select content at `level='popup'` in a portal; IconButton requires a label.
+- [x] **Control sizing** — `--nx-control-inset`/`--nx-control-size`/`--nx-control-icon` per size; Input, Button, IconButton, Select trigger, Checkbox use them (decision 12). — asserted per size in `components.stories.tsx` Default.
+- [x] **Field** — Ark `Field`; flex stack in the content track; Label, HelperText, ErrorText (decision 13). — `Field.tsx`; `Next.Input` is Ark `Field.Input`.
+- [x] **Checkbox, Select, IconButton** — Ark Checkbox/Select; Select content at `level='popup'` in a portal; IconButton requires a label. — Select.Content takes its own `size` (finding 9).
 - [x] **Move CSS to `next/theme/`** — size, container, scroll-area, level, control; `@layer dx-components`; stories import `theme/index.css`; drop `SpikeStyles`. — spike illustrations moved to `spike/choices.css`.
-- [ ] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`.
-- [ ] **ARIA fixes** — `aria-hidden` icons, labels.
+- [x] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`. — `machines/toolbar.ts`; ToolbarFocus play test.
+- [x] **ARIA fixes** — `aria-hidden` icons, labels. — Icon `label` → `role=img`; Roles play test.
 - [x] **Container rails** — `gutter` with named lines; `layout` stack/row; `Block rail`; `gutter='inherit'` subgrid nesting. — `Container.tsx`; spike stories now run on `Next.*`.
 - [x] **Container columns** — inner template inherited via subgrid; `auto` label track aligns across nesting. — spike Default/Sizes assertions.
 - [x] **Next.ScrollArea** — composed frame/viewport; `:has` subgrid frame; `mode` overlay|reserve; `width` thin|regular; `native`. — `ScrollArea.tsx`; thin is a fixed 4px.
 - [x] **Responsive collapse** — pane and ScrollArea frame are query containers; rail→inset, rails hide, columns stack. — spike Narrow story.
 - [x] **Direct-nesting dev warning** — warn when a Container's parent is not a Container. — dev-only effect in `Container.tsx`.
-- [ ] **Nested-form story** — rails, gutter Blocks, scroll, sizes.
-- [ ] **Play tests** — per-size block-height alignment, rail alignment across nesting, and roles.
-- [ ] **`data-scope`/`data-part` on every part** — decision 10.
-- [ ] **Shared class recipes** — plain TS functions used by the bindings (decision 8).
-- [ ] **Benchmark story** — 1,000 rows in a nested Container inside a ScrollArea (decision 11).
+- [x] **Nested-form story** — rails, gutter Blocks, scroll, sizes. — spike stories on `Next.*` plus `components.stories.tsx`.
+- [x] **Play tests** — per-size block-height alignment, rail alignment across nesting, and roles. — 12 storybook tests pass.
+- [x] **`data-scope`/`data-part` on every part** — decision 10. — asserted in Roles; `asChild` caveat is finding 10.
+- [x] **Shared class recipes** — plain TS functions used by the bindings (decision 8). — `recipes.ts`.
+- [x] **Benchmark story** — 1,000 rows in a nested Container inside a ScrollArea (decision 11). — ~110ms mount+layout in headless Chromium.

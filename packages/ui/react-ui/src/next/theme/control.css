@@ -180,4 +180,7 @@
   .nx-toolbar > .nx-input {
     flex: 1;
   }
+  .nx-toolbar > .nx-select > .nx-select-trigger {
+    width: fit-content;
+  }
 }

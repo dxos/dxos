@@ -12,7 +12,7 @@
     --nx-font-size: var(--text-base);
     --nx-icon-size: 1rem;
     --nx-gap-size: 0.5rem;
-    --nx-control-inset: 4px;
+    --nx-control-inset: 2px;
     --nx-control-icon: 1rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
@@ -23,7 +23,7 @@
     --nx-font-size: var(--text-xs);
     --nx-icon-size: 0.75rem;
     --nx-gap-size: 0.25rem;
-    --nx-control-inset: 2px;
+    --nx-control-inset: 1px;
     --nx-control-icon: 0.75rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
@@ -34,7 +34,7 @@
     --nx-font-size: var(--text-sm);
     --nx-icon-size: 0.875rem;
     --nx-gap-size: 0.25rem;
-    --nx-control-inset: 3px;
+    --nx-control-inset: 2px;
     --nx-control-icon: 0.875rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
@@ -45,7 +45,7 @@
     --nx-font-size: var(--text-base);
     --nx-icon-size: 1rem;
     --nx-gap-size: 0.5rem;
-    --nx-control-inset: 4px;
+    --nx-control-inset: 2px;
     --nx-control-icon: 1rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
@@ -56,7 +56,7 @@
     --nx-font-size: var(--text-lg);
     --nx-icon-size: 1.25rem;
     --nx-gap-size: 0.5rem;
-    --nx-control-inset: 5px;
+    --nx-control-inset: 3px;
     --nx-control-icon: 1.25rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
@@ -67,7 +67,7 @@
     --nx-font-size: var(--text-xl);
     --nx-icon-size: 1.5rem;
     --nx-gap-size: 0.5rem;
-    --nx-control-inset: 6px;
+    --nx-control-inset: 3px;
     --nx-control-icon: 1.5rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }

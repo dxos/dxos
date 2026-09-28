@@ -87,7 +87,7 @@
 
 12. **Control sizing.** Controls (Input, Button, IconButton, Select trigger, Checkbox box) are shorter than the block
     and centred in it: `--nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset))`, with a per-size
-    inset (provisional: xs 2px, sm 3px, md 4px, lg 5px, xl 6px). `--nx-control-icon` equals `--nx-icon-size` (one
+    inset (provisional: xs 1px, sm 2px, md 2px, lg 3px, xl 3px; controls 18/20/28/34/42px). `--nx-control-icon` equals `--nx-icon-size` (one
     icon scale, decision 2), so an icon is the same size in a control as in a rail Block. The block stays the row height, so rails and Typography's first-line centring are unchanged.
     Illustrated in `spike/Choices.stories.tsx` (ControlSizing).
 13. **Field layout.** Field is a part, not a container (containers are Container, Form, Toolbar). `Field.Root` is a
@@ -124,3 +124,14 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    (`@container style(--nx-level: 2) { … }`), since every element is a style container. Level is independent of
    rails: an inheriting (subgrid) container can lift its surface and keep the parent's tracks. Style queries need a
    Firefox support check before production.
+9. **Portals leave the sized scope.** Portalled content (Select's listbox) inherits neither `data-size` nor level, so
+   `Select.Content` takes its own `size` and sets `data-surface='popup'`; unsized, it falls back to the `:root`
+   defaults (md). Deriving the trigger's size would need JS measurement or context, both ruled out by decision 3.
+10. **`asChild` merges one element's parts.** `ScrollArea.Viewport asChild > Container` renders one element, whose
+    `data-scope`/`data-part` are the Container's (the child wins); the viewport is identified by `.nx-scroll-viewport`.
+11. **Controls in stacks.** A stack row has no block of its own, so the enclosing Container (or `Field.Root`) pads a
+    direct control child out to a block with `margin-block: var(--nx-control-inset)`; a `row` Container is at least
+    one block tall and centres its items. Both are container rules, keeping decision 6.
+12. **Toolbar items join by hook.** The roving machine (`machines/toolbar.ts`) is framework-neutral; Button,
+    IconButton, Input and Select.Trigger join the nearest Toolbar through React context carrying the machine's api
+    (behaviour, not size or level, so decision 3 holds). Arrow/Home/End keys stay with a focused text input.
