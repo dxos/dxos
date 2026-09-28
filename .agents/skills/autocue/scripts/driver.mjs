@@ -92,6 +92,9 @@ const parseArgs = () => {
   options.captions ??= narrate;
   // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
   options.pace ??= options.mode === 'manual' ? 800 : 0;
+  // Milliseconds the cursor rests on a target before the click: a live viewer has to see what is about to be
+  // chosen. A recording is trimmed, so it needs none.
+  options.dwell ??= options.mode === 'manual' ? 1_000 : 0;
   return options;
 };
 
@@ -310,8 +313,8 @@ const gestured = () => {
 };
 
 /**
- * Cursor and ripple go up first, then a beat, then the click: the viewer's eye has to reach the target
- * before its effect replaces it.
+ * The cursor moves to the target and rests there (`dwell`), then the ripple, then a beat, then the click: the
+ * viewer's eye has to reach the target, and see which one it is, before its effect replaces it.
  */
 const pointAt = async (target, command, kind) => {
   if (command.hud === false) {
@@ -323,7 +326,13 @@ const pointAt = async (target, command, kind) => {
     ? await describe(target, command)
     : summarize(command.label || command.text || command.selector, 60);
   if (box) {
-    await overlay.click({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const dwell = command.dwell ?? options.dwell;
+    if (dwell > 0) {
+      await overlay.moveCursor(point);
+      await page.waitForTimeout(dwell);
+    }
+    await overlay.click(point);
   }
   await overlay.event({ kind, label, detail: command.value === undefined ? undefined : summarize(command.value) });
   if (box) {

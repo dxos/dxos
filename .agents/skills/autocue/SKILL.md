@@ -63,6 +63,11 @@ Run it in the background. `--mode manual` changes the driver in five ways:
 - **Headed window, no recorder.** The browser opens in the foreground at `--width`×`--height`, and
   the page follows the window, so the user can resize it for their capture. Nothing is encoded, the
   boot is not cut, and §4, §4b and §5 do not apply.
+- **The cursor points before it clicks.** Every visible gesture moves the cursor to its target and rests
+  there for a second before the ripple and the click, so the person watching sees what is about to be
+  chosen. `--dwell <ms>` sets it (default 1000 in manual mode, 0 when recording); a command's own `dwell`
+  overrides it. Rely on it rather than adding a `sleep` before each click in a flow; `hud: false` gestures
+  (off-camera prep) skip it.
 - **Cursor, but no pills and no banners.** The virtual cursor and click ripple still show what is
   being clicked. The action feed and the `caption` banner are suppressed, so they don't compete with
   the product. `--pills on` or `--captions on` brings either back when the user asks.
