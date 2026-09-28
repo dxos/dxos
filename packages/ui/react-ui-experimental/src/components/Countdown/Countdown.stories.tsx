@@ -62,3 +62,10 @@ export const Unattended: Story = {
     wait: false,
   },
 };
+
+export const WithReticle: Story = {
+  args: {
+    wait: false,
+    reticle: true,
+  },
+};

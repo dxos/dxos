@@ -10,6 +10,8 @@ export type FilmLeaderOptions = {
   from?: number;
   /** Hold on a play button until it is clicked, so the person recording can start their recorder first. */
   wait?: boolean;
+  /** Draw the classic leader's inner ring and crosshairs (off by default: the mark carries the frame). */
+  reticle?: boolean;
   /** SVG markup drawn inside the ring behind the numeral; the DXOS mark by default, `false` for none. */
   logo?: string | false;
 };
@@ -82,7 +84,7 @@ const registerSweep = () => {
  */
 export const playFilmLeader = async (
   root: HTMLElement | ShadowRoot,
-  { from = 3, wait = true, logo = DXOS_LOGO }: FilmLeaderOptions = {},
+  { from = 3, wait = true, reticle = false, logo = DXOS_LOGO }: FilmLeaderOptions = {},
 ): Promise<void> => {
   registerSweep();
   const style = document.createElement('style');
@@ -103,8 +105,9 @@ export const playFilmLeader = async (
     play?.classList.add('go');
     await sleep(220);
     curtain.innerHTML = `
-      <div class="leader"><div class="sweep"></div><div class="cross h"></div><div class="cross v"></div>
-        <div class="ring"></div>${logo ? `<div class="logo">${logo}</div>` : ''}<div class="num"></div></div>`;
+      <div class="leader"><div class="sweep"></div>${
+        reticle ? '<div class="cross h"></div><div class="cross v"></div><div class="ring"></div>' : ''
+      }${logo ? `<div class="logo">${logo}</div>` : ''}<div class="num"></div></div>`;
     const num = curtain.querySelector<HTMLElement>('.num');
     const mark = curtain.querySelector<HTMLElement>('.logo');
     for (let count = from; count > 0 && num; count--) {
