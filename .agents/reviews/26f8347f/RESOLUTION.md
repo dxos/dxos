@@ -46,17 +46,17 @@
 - 26f8347f-42 - unresolved - keep-parallel-apis-structurally-aligned - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:44:3
 - 26f8347f-43 - resolved - consistent-field-and-list-ordering - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:140:1
 - 26f8347f-44 - unresolved - name-for-general-behavior - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:253
-- 26f8347f-45 - ignored - barrel-imports-not-internal-paths - packages/ui/react-ui/src/hooks/useIconHref.ts:7:1 (importing either providers barrel forms a real cycle back through ThemeProvider.tsx -> hooks/index.ts; the deep import is intentional, caught in PR review — see https://github.com/dxos/dxos/pull/13489)
+- 26f8347f-45 - ignored - barrel-imports-not-internal-paths - packages/ui/react-ui/src/hooks/useIconHref.ts:7:1
 - 26f8347f-46 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/hooks/useIconHref.ts:29:3
-- 26f8347f-47 - resolved - consistent-file-naming-within-folder - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1 (file deleted)
-- 26f8347f-48 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1 (file deleted)
-- 26f8347f-49 - resolved - comment-hygiene - packages/ui/react-ui/src/playground/experimental.stories.tsx:11:1 (file deleted)
-- 26f8347f-50 - resolved - reuse-existing-mechanism - packages/ui/react-ui/src/playground/experimental.stories.tsx:67 (file deleted)
-- 26f8347f-51 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:70:5 (file deleted)
-- 26f8347f-52 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:88:10 (file deleted)
-- 26f8347f-53 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:134:5 (file deleted)
-- 26f8347f-54 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:135:7 (file deleted)
-- 26f8347f-55 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:136:11 (file deleted)
-- 26f8347f-56 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:144:7 (file deleted)
-- 26f8347f-57 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:145:11 (file deleted)
-- 26f8347f-58 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:157:9 (file deleted)
+- 26f8347f-47 - resolved - consistent-file-naming-within-folder - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1
+- 26f8347f-48 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1
+- 26f8347f-49 - resolved - comment-hygiene - packages/ui/react-ui/src/playground/experimental.stories.tsx:11:1
+- 26f8347f-50 - resolved - reuse-existing-mechanism - packages/ui/react-ui/src/playground/experimental.stories.tsx:67
+- 26f8347f-51 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:70:5
+- 26f8347f-52 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:88:10
+- 26f8347f-53 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:134:5
+- 26f8347f-54 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:135:7
+- 26f8347f-55 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:136:11
+- 26f8347f-56 - resolved - no-styling-wrapper-divs - packages/ui/react-ui/src/playground/experimental.stories.tsx:144:7
+- 26f8347f-57 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:145:11
+- 26f8347f-58 - resolved - layout-only-wrapper-invisible-to-a11y - packages/ui/react-ui/src/playground/experimental.stories.tsx:157:9
