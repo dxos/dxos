@@ -17,6 +17,8 @@ mod menubar;
 #[cfg(target_os = "macos")]
 mod spotlight;
 mod web_process;
+#[cfg(target_os = "linux")]
+mod webkit_features;
 
 #[cfg(desktop)]
 use oauth::OAuthServerState;
@@ -304,13 +306,17 @@ pub fn run() {
 
                 let root = app_root_url(&app.config().identifier);
                 let url = last_url::initial_url(app.handle(), root.clone());
-                let main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::External(url))
+                let window_builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::External(url))
                     .title("Composer")
                     .inner_size(1600.0, 1200.0)
                     .resizable(true)
-                    .fullscreen(false)
+                    .fullscreen(false);
+                // The overlay title bar is an NSWindow style; the builder has no such methods elsewhere.
+                #[cfg(target_os = "macos")]
+                let window_builder = window_builder
                     .hidden_title(true)
-                    .title_bar_style(tauri::TitleBarStyle::Overlay)
+                    .title_bar_style(tauri::TitleBarStyle::Overlay);
+                let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
                     // all drag events after dragstart, breaking pragmatic-drag-and-drop drop targets.
@@ -326,6 +332,17 @@ pub fn run() {
                     .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
                     .devtools(true)
                     .build()?;
+
+                // Before anything runs in the page: the client opens its storage during boot.
+                #[cfg(target_os = "linux")]
+                main_window.with_webview(|webview| {
+                    use webkit2gtk::WebViewExt;
+                    let view = webview.inner();
+                    webkit_features::enable(&view);
+                    // The first load began under the defaults; restart it with the features on. Through
+                    // WebKit, not `navigate`, which dispatches to this (main) thread and would wait on itself.
+                    view.reload();
+                })?;
 
                 if let Some(saved_state) = WindowState::load(&app.handle()) {
                     if let Err(e) = saved_state.apply_to_window(&main_window) {

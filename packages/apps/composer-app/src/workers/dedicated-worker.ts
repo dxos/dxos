@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityClientProvider';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { isTauri } from '@dxos/util';
 
 import { initEchoHostWasm } from '../util/automerge-wasm.ts';
@@ -32,7 +33,15 @@ log.addProcessor(logProcessor.processor);
 
 let observability: ReturnType<typeof initializeObservability> | undefined;
 
+/**
+ * `VITE_DX_STORAGE=memory` keeps the database in memory instead of OPFS, for webviews that cannot hand a worker
+ * an OPFS sync access handle — WebKitGTK, so the Linux desktop app — where the app otherwise cannot open at all.
+ * Nothing survives a reload; it is for demos and automated runs, never a shipped build.
+ */
+const sqliteLayer = import.meta.env.VITE_DX_STORAGE === 'memory' ? layerMemory : undefined;
+
 runDedicatedWorker({
+  sqliteLayer,
   onBeforeStart: async (cfg) => {
     observability = initializeObservability(cfg, isTauri(), logStore, undefined, {
       post: (message) => observabilityWorker.postMessage(message),

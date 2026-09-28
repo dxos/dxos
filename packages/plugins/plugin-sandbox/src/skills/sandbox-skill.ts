@@ -19,6 +19,7 @@ const make = () =>
         SandboxOperation.Exec,
         SandboxOperation.UploadFile,
         SandboxOperation.DownloadFile,
+        SandboxOperation.PublishFiles,
       ],
     }),
     instructions: Template.make({
@@ -30,6 +31,8 @@ const make = () =>
         The sandbox service is lazily initialized: the container starts on first use.
         A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds).
         A command that is cut off has not finished.
+        In the desktop app, with the Local backend, you can also publish a directory of a sandbox: it is served
+        read-only over HTTP on this machine, and the URL you get back is how this app loads what you built there.
       `,
     }),
   });

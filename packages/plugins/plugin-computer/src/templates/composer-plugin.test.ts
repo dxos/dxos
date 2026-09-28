@@ -10,10 +10,11 @@ import * as Project from '@dxos/compute/Project';
 import { Database } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { SKILL_KEY as SANDBOX_SKILL_KEY } from '@dxos/plugin-sandbox/Sandbox';
 import { Text } from '@dxos/schema';
 import { Task, TaskSet } from '@dxos/types';
 
-import { composerPlugin } from './composer-plugin.ts';
+import { composerPlugin, desktopVariant, makeComposerPlugin } from './composer-plugin.ts';
 
 describe('Composer Plugin project template', () => {
   let builder: EchoTestBuilder;
@@ -63,5 +64,35 @@ describe('Composer Plugin project template', () => {
 
     const instructions = await project.instructions?.load();
     expect(instructions?.skills).toHaveLength(1);
+  });
+
+  test('the desktop variant builds in a sandbox against the source tree and publishes the result', async ({
+    expect,
+  }) => {
+    const { db } = await builder.createDatabase({
+      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
+    });
+    const project = db.add(
+      await EffectEx.runPromise(
+        makeComposerPlugin(desktopVariant('/src/dxos'))
+          .scaffold({})
+          .pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+      ),
+    );
+    await db.flush();
+
+    const instructions = await project.instructions?.load();
+    expect(instructions?.skills.map((skill) => skill.uri.toString())).toEqual([
+      expect.stringContaining(SANDBOX_SKILL_KEY),
+    ]);
+    const text = (await instructions?.text?.load())?.content ?? '';
+    expect(text).toContain('ln -sfn /src/dxos/node_modules node_modules');
+
+    const taskSet = await project.taskSet?.load();
+    const parent = await taskSet?.tasks[0].load();
+    const subtasks = await Promise.all((parent?.subtasks ?? []).map((ref) => ref.load()));
+    expect(subtasks[0].description).toContain('/src/dxos/docs/src/content/docs/docs/composer/publishing-plugins.md');
+    expect(subtasks[2].description).toContain('--configLoader runner plugins/world-clock');
+    expect(subtasks[3].description).toContain('Publish Files');
   });
 });

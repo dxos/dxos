@@ -8,7 +8,7 @@ import { createWriteStream } from 'node:fs';
  * Prefix on the console line a tapped realm emits for each log entry. The control character keeps it
  * from colliding with anything the app prints itself.
  */
-const MARK = '\u0001dxlog ';
+export const MARK = '\u0001dxlog ';
 
 /**
  * Runs inside the page and each dedicated worker. A bundled app has no `vite-plugin-log` runtime, so this
@@ -17,7 +17,7 @@ const MARK = '\u0001dxlog ';
  * not exist yet, a setter on `DX_LOG` attaches the processor the moment the bundle creates it, so the
  * entries logged during boot are captured too. Must stay self-contained: it is serialized into the realm.
  */
-const tapRealm = ({ mark, env }) => {
+export const tapRealm = ({ mark, env }) => {
   const short = { 5: 'T', 10: 'D', 11: 'V', 12: 'I', 13: 'W', 14: 'E' };
   const attach = (log) => {
     if (!log?.addProcessor || log.__demoTap) {
@@ -119,4 +119,57 @@ export const startLogTap = async ({ context, page, file }) => {
   });
 
   return { close: () => new Promise((resolve) => out.end(resolve)) };
+};
+
+/**
+ * The same tap for a page that reports no console events — a Tauri webview under WebDriver. The page
+ * buffers its entries and this drains them every second, re-installing the tap after a navigation; entries
+ * logged before the first drain of a document are not captured, since WebDriver has no init scripts.
+ */
+export const startPolledLogTap = async ({ page, file }) => {
+  const out = createWriteStream(file, { flags: 'w' });
+  const drain = async () => {
+    const lines = await page.evaluate(
+      ({ tap, mark }) => {
+        if (!globalThis.__demoLogBuffer) {
+          globalThis.__demoLogBuffer = [];
+          const debug = console.debug.bind(console);
+          console.debug = (...args) => {
+            if (typeof args[0] === 'string' && args[0].startsWith(mark)) {
+              globalThis.__demoLogBuffer.push(args[0].slice(mark.length));
+              return;
+            }
+            debug(...args);
+          };
+          (0, eval)(`(${tap})`)({ mark, env: 'page' });
+        }
+        return globalThis.__demoLogBuffer.splice(0);
+      },
+      { tap: tapRealm.toString(), mark: MARK },
+    );
+    for (const line of lines ?? []) {
+      out.write(`${line}\n`);
+    }
+  };
+  let draining = false;
+  const timer = setInterval(() => {
+    if (draining) {
+      return;
+    }
+    draining = true;
+    // A drain that lands mid-navigation fails; the next one re-installs the tap.
+    drain()
+      .catch(() => {})
+      .finally(() => {
+        draining = false;
+      });
+  }, 1_000);
+
+  return {
+    close: async () => {
+      clearInterval(timer);
+      await drain().catch(() => {});
+      await new Promise((resolve) => out.end(resolve));
+    },
+  };
 };

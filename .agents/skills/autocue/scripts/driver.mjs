@@ -26,6 +26,11 @@
  * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
  * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`).
  *
+ * `--target tauri` drives the native desktop app instead of Chromium: `--app` names its binary (the release
+ * build under `packages/apps/composer-app/src-tauri/target/release/app` by default), which runs under
+ * `tauri-driver` on its own Xvfb screen (`--headed on` uses `$DISPLAY`), recorded by `tauri/recorder.mjs`.
+ * The ops, the overlay and flow scripts are the same; `page` is `tauri/page.mjs`'s Playwright-shaped adapter.
+ *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
  * is the least time between two on-camera gestures. The app's `@dxos/log` output streams to `<out>/app.log`
@@ -41,9 +46,11 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
-import { startLogTap } from './logs.mjs';
+import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { launchTauri } from './tauri/launch.mjs';
+import { startX11Recorder } from './tauri/recorder.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -80,6 +87,12 @@ const parseArgs = () => {
     'cadence': 600,
     // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
     'log': undefined,
+    // `browser` (Chromium through Playwright) or `tauri` (the native desktop app through tauri-driver).
+    'target': 'browser',
+    // Tauri only: the app binary, and the port tauri-driver listens on (its native driver takes the next).
+    'app': new URL('../../../../packages/apps/composer-app/src-tauri/target/release/app', import.meta.url).pathname,
+    'driver-port': 4444,
+    'headed': 'off',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -100,6 +113,7 @@ const parseArgs = () => {
 
 const options = parseArgs();
 const manual = options.mode === 'manual';
+const tauri = options.target === 'tauri';
 mkdirSync(options.out, { recursive: true });
 
 /**
@@ -143,31 +157,57 @@ const launchOptions = {
   ],
 };
 
+/**
+ * The native app, when `--target tauri`: it boots into its own origin, so `goto` with no `url` waits for it
+ * there instead of navigating, and a `restart` reloads that origin.
+ */
+const native = tauri
+  ? await launchTauri({
+      app: options.app,
+      width: options.width,
+      height: options.height,
+      scale,
+      theme: options.theme,
+      port: options['driver-port'],
+      headed: manual || options.headed === 'on',
+      proxy: sandbox,
+      onExit: (reason) => {
+        console.error(`${reason}; the driver is exiting`);
+        process.exit(1);
+      },
+    })
+  : undefined;
+if (native) {
+  options.url = new URL(native.page.url()).origin;
+}
+
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
-const browser = manual ? undefined : await chromium.launch(launchOptions);
-const context = manual
-  ? await chromium
-      .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
-      .catch((error) => {
-        // Chromium locks a profile to one process; the usual cause is the previous session's window.
-        if (/already in use/.test(error.message)) {
-          console.error(`profile ${options.profile} is in use: close the open demo window, or pass --profile`);
-          process.exit(1);
-        }
-        throw error;
-      })
-  : await browser.newContext({
-      viewport,
-      deviceScaleFactor: scale,
-      colorScheme: options.theme,
-      recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-    });
+const browser = manual || tauri ? undefined : await chromium.launch(launchOptions);
+const context = tauri
+  ? undefined
+  : manual
+    ? await chromium
+        .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
+        .catch((error) => {
+          // Chromium locks a profile to one process; the usual cause is the previous session's window.
+          if (/already in use/.test(error.message)) {
+            console.error(`profile ${options.profile} is in use: close the open demo window, or pass --profile`);
+            process.exit(1);
+          }
+          throw error;
+        })
+    : await browser.newContext({
+        viewport,
+        deviceScaleFactor: scale,
+        colorScheme: options.theme,
+        recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+      });
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
-const page = context.pages()[0] ?? (await context.newPage());
+const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));
 page.setDefaultTimeout(options['action-timeout']);
 const logFile = options.log === 'off' ? undefined : (options.log ?? path.join(options.out, 'app.log'));
 if (logFile) {
-  await startLogTap({ context, page, file: logFile });
+  await (native ? startPolledLogTap({ page, file: logFile }) : startLogTap({ context, page, file: logFile }));
 }
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
@@ -175,22 +215,31 @@ const overlay = createOverlay(page, {
   position: options.feed,
 });
 
-if (manual) {
+if (manual && !native) {
   // The window is the person's now; closing it is how they end the session.
   page.on('close', () => context.close().finally(() => process.exit(0)));
   context.on('close', () => process.exit(0));
 }
 
-const recorder = hires
-  ? await startRecorder(page, {
-      dir: options.out,
-      file: path.join(options.out, 'session.webm'),
-      size: { width: viewport.width * scale, height: viewport.height * scale },
-      fps: options.fps,
-      crf: options.crf,
-      quality: options.quality,
-    })
-  : undefined;
+const recorder = !hires
+  ? undefined
+  : native
+    ? await startX11Recorder({
+        display: native.display,
+        dir: options.out,
+        file: path.join(options.out, 'session.webm'),
+        size: { width: viewport.width * scale, height: viewport.height * scale },
+        fps: options.fps,
+        crf: options.crf,
+      })
+    : await startRecorder(page, {
+        dir: options.out,
+        file: path.join(options.out, 'session.webm'),
+        size: { width: viewport.width * scale, height: viewport.height * scale },
+        fps: options.fps,
+        crf: options.crf,
+        quality: options.quality,
+      });
 
 /**
  * When each caption went up, measured from the first frame of the recording. `trim-static.mjs` remaps
@@ -355,7 +404,11 @@ const center = async (selector) => {
  */
 const NO_CUT = {
   cut: false,
-  reason: manual ? 'manual mode records nothing' : 'the 1x Playwright fallback cannot drop recorded frames',
+  reason: manual
+    ? 'manual mode records nothing'
+    : tauri
+      ? 'no ffmpeg with libvpx-vp9, so nothing is recorded'
+      : 'the 1x Playwright fallback cannot drop recorded frames',
 };
 
 const cut = async () => {
@@ -559,7 +612,10 @@ const runFlow = async (command) => {
 
 const handlers = {
   goto: async (command) => {
-    await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
+    // The native app has already loaded its own origin; navigating there again would only reboot it.
+    if (!native || command.url) {
+      await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
+    }
     const result = { url: page.url() };
     // Only the first navigation boots the app; a later `goto` is part of the demo.
     if (!booted && options.boot !== 'keep' && !manual) {
@@ -808,8 +864,9 @@ const handlers = {
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
     const recorded = await recorder?.stop();
-    await context.close();
-    await browser.close();
+    await context?.close();
+    await browser?.close();
+    await native?.close();
     // `recorded.file` already carries the output directory; only the fallback's bare name needs it.
     const fallback = recorded ? undefined : readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
     const video = recorded ? path.resolve(recorded.file) : fallback && path.resolve(options.out, fallback);

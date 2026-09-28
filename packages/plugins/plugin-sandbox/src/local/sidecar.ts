@@ -19,6 +19,12 @@ const DESKTOP_PATH = ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin',
 
 const MIN_TOKEN_LENGTH = 32;
 
+/**
+ * Host directories, `:`-separated, that commands may read although they sit under the user's home — how a
+ * dev build lets an agent build against the Composer source tree it came from.
+ */
+export const ALLOW_READ_ENV = 'DX_SANDBOX_ALLOW_READ';
+
 export type SidecarOptions = {
   input: Readable;
   output: Writable;
@@ -40,7 +46,8 @@ export const runSidecar = async ({ input, output, env }: SidecarOptions): Promis
   }
 
   const path = [...new Set([...(env.PATH ?? '').split(':').filter(Boolean), ...DESKTOP_PATH])].join(':');
-  const backend = new LocalSandboxBackend({ root: env.DX_SANDBOX_ROOT, path });
+  const allowRead = (env[ALLOW_READ_ENV] ?? '').split(':').filter(Boolean);
+  const backend = new LocalSandboxBackend({ root: env.DX_SANDBOX_ROOT, path, allowRead });
   const server = await serve({ backend, token });
   output.write(`${JSON.stringify({ port: server.port })}\n`);
 

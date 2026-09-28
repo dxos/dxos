@@ -93,6 +93,50 @@ describe.skipIf(unavailable)('local sandbox server', { timeout: 60_000 }, () => 
     expect(status).toBe(403);
   });
 
+  it.effect('serves a published directory without the token, and nothing outside it', () =>
+    Effect.gen(function* () {
+      const remote = HttpBackend.make(url, TOKEN);
+      yield* remote.create(SPACE_ID, 'sbx2', {});
+      yield* remote.writeFile(SPACE_ID, 'sbx2', 'site/dist/index.mjs', new TextEncoder().encode('export default 1;'));
+      yield* remote.writeFile(SPACE_ID, 'sbx2', 'site/secret.txt', new TextEncoder().encode('secret'));
+      const publish = remote.publish;
+      if (!publish) {
+        throw new Error('the HTTP backend must publish');
+      }
+      const base = yield* publish(SPACE_ID, 'sbx2', 'site/dist');
+      expect(base).toMatch(new RegExp(`^${url}/files/[0-9a-f]{32}/$`));
+
+      const module = yield* Effect.promise(() => fetch(`${base}index.mjs`));
+      expect(module.status).toBe(200);
+      expect(module.headers.get('content-type')).toBe('text/javascript');
+      expect(module.headers.get('access-control-allow-origin')).toBe('*');
+      expect(yield* Effect.promise(() => module.text())).toBe('export default 1;');
+
+      for (const path of ['..%2Fsecret.txt', '../secret.txt', 'missing.mjs', '']) {
+        const response = yield* Effect.promise(() => fetch(`${base}${path}`));
+        expect(response.status, path).toBe(404);
+      }
+      const unknown = yield* Effect.promise(() => fetch(`${url}/files/${'0'.repeat(32)}/index.mjs`));
+      expect(unknown.status).toBe(404);
+
+      const error = yield* publish(SPACE_ID, 'sbx2', 'site/secret.txt').pipe(Effect.flip);
+      expect(error.message).toMatch(/not a directory/);
+    }),
+  );
+
+  it('allows the headers a preflight asks for, so instrumented fetches reach the token check', async () => {
+    const response = await fetch(`${url}/exec`, {
+      method: 'OPTIONS',
+      headers: {
+        'origin': 'http://localhost:26777',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'authorization,content-type,traceparent',
+      },
+    });
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-headers')).toBe('authorization,content-type,traceparent');
+  });
+
   it('rejects malformed calls', async () => {
     const response = await fetch(`${url}/exec`, {
       method: 'POST',
