@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Flex } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -30,11 +30,11 @@ type StoryArgs = Pick<WorldMapProps, 'view'>;
 const DefaultStory = ({ view }: StoryArgs) => {
   const [selected, setSelected] = useState<string>();
   return (
-    <div className='flex flex-col h-full'>
-      <div className='dx-grow'>
+    <Flex column classNames='h-full'>
+      <Flex grow>
         <WorldMap markers={markers} selected={selected} view={view} />
-      </div>
-      <div className='flex flex-wrap gap-2 p-2'>
+      </Flex>
+      <Flex wrap gap='sm' classNames='p-2'>
         {markers.map((marker) => (
           <Button
             key={marker.id}
@@ -45,8 +45,8 @@ const DefaultStory = ({ view }: StoryArgs) => {
             {marker.title}
           </Button>
         ))}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 };
 
