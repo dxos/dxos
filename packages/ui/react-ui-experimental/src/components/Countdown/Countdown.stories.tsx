@@ -69,3 +69,10 @@ export const WithReticle: Story = {
     reticle: true,
   },
 };
+
+export const WithoutSweep: Story = {
+  args: {
+    wait: false,
+    sweep: false,
+  },
+};
