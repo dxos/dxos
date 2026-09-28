@@ -67,9 +67,16 @@ const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
     const tooltip = useTooltipContext();
     const openDelay = useContext(OpenDelayContext);
     const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
     const pressed = useRef(false);
     const cancel = () => clearTimeout(timer.current);
-    useEffect(() => cancel, []);
+    useEffect(
+      () => () => {
+        cancel();
+        clearTimeout(closeTimer.current);
+      },
+      [],
+    );
 
     return (
       <TooltipPrimitive.Trigger
@@ -118,7 +125,9 @@ const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
           }
           // Deferred so a tooltip opened by the same focus move claims zag's shared store first (DESIGN.md follow-up 20).
           event.preventDefault();
-          setTimeout(() => tooltip.setOpen(false));
+          // A pending hover would otherwise reopen the tooltip on a trigger that no longer has focus.
+          cancel();
+          closeTimer.current = setTimeout(() => tooltip.setOpen(false));
         }}
         ref={forwardedRef}
       />

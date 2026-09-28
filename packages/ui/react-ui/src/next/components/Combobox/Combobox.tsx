@@ -5,7 +5,7 @@
 import { createListCollection } from '@ark-ui/react/collection';
 import { Combobox as ComboboxPrimitive, useComboboxContext } from '@ark-ui/react/combobox';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ReactNode, forwardRef, useMemo, useState } from 'react';
+import React, { type ReactNode, forwardRef, useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -78,6 +78,7 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
         className={mx(recipes.combobox(), classNames)}
         ref={forwardedRef}
       >
+        <ComboboxSyncInput />
         {children}
       </ComboboxPrimitive.Root>
     );
@@ -85,6 +86,18 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
 );
 
 ComboboxRoot.displayName = 'Next.Combobox.Root';
+
+/** zag keeps a preselected value when items arrive later but not the input text, so fill it from the selected option. */
+const ComboboxSyncInput = () => {
+  const combobox = useComboboxContext();
+  const label: string | undefined = combobox.selectedItems[0]?.label;
+  useEffect(() => {
+    if (label && !combobox.open && combobox.inputValue !== label) {
+      combobox.setInputValue(label);
+    }
+  }, [label]);
+  return null;
+};
 
 //
 // Label

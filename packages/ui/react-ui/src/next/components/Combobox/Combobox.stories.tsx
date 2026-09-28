@@ -5,7 +5,7 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
@@ -120,5 +120,34 @@ export const CustomFilter: Story = {
     const listbox = await body.findByRole('listbox');
     await waitFor(() => expect(within(listbox).getAllByRole('option')).toHaveLength(1));
     await expect(within(listbox).getByRole('option', { name: 'Carol Black' })).toBeVisible();
+  },
+};
+
+/** Items that arrive after mount, with a value already selected, as a lookup or query would deliver them. */
+const AsyncItemsStory = () => {
+  const [items, setItems] = useState<Next.ComboboxOption[]>([]);
+  useEffect(() => {
+    const timeout = setTimeout(() => setItems(OPTIONS), 100);
+    return () => clearTimeout(timeout);
+  }, []);
+  return (
+    <div className='nx-scope w-[20rem]' data-size='md'>
+      <Next.Field.Root>
+        <Next.Combobox.Root items={items} defaultValue={[OPTIONS[1].value]}>
+          <Next.Combobox.Label>Owner</Next.Combobox.Label>
+          <Next.Combobox.Input data-testid='async' />
+          <Next.Combobox.Content size='md' />
+        </Next.Combobox.Root>
+      </Next.Field.Root>
+    </div>
+  );
+};
+
+/** A preselected value shows its label once the items load. */
+export const AsyncItems: Story = {
+  render: AsyncItemsStory,
+  play: async ({ canvasElement }) => {
+    const input = within(canvasElement).getByRole('combobox');
+    await waitFor(() => expect(input).toHaveValue(OPTIONS[1].label));
   },
 };
