@@ -23,6 +23,8 @@
 2. **Sizes.** CSS is the source of truth: theme rules keyed by `[data-size=xs|sm|md|lg|xl]` define `--block-size`,
    `--line-height`, `--font-size`, `--icon-size`, `--gap-size`. `Container` only sets `data-size`; TS exports just
    the `Size` type and `SIZES` list.
+   Namespacing (provisional, to be renamed): rules match only `.nx-*` elements and variables are `--nx-*`, since
+   `data-size`, `data-layout`, `--gutter`, `--icon-size` and `--line-height` are already used by current primitives.
 3. **Framework neutrality.** Design for Solid, build React only, following Ark's layering: behavior in framework-neutral
    zag machines (Ark's where one exists, our own `@zag-js/core` machine otherwise), styling in CSS rules and plain class
    recipes, React as a thin binding. No React-only mechanisms (e.g. context) for size or level.

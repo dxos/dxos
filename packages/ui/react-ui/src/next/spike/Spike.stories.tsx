@@ -28,7 +28,7 @@ const Field = ({ id, label, testId }: { id: string; label: string; testId?: stri
     <Block rail='start' data-testid={testId && `${testId}-rail-start`}>
       <Icon />
     </Block>
-    <label htmlFor={id} className='pe-(--gap-size)' data-testid={testId && `${testId}-label`}>
+    <label htmlFor={id} className='pe-(--nx-gap-size)' data-testid={testId && `${testId}-label`}>
       {label}
     </label>
     <Next.Input id={id} data-testid={testId && `${testId}-input`} />
@@ -59,7 +59,7 @@ const Message = ({ testId, children }: { testId: string; children: ReactNode }) 
       <Icon icon='ph--chat-circle--regular' />
     </Block>
     {/* Pads the line box up to the block so the first line centres on the icon. */}
-    <p className='py-[calc((var(--block-size)-var(--line-height))/2)]' data-testid={`${testId}-text`}>
+    <p className='py-[calc((var(--nx-block-size)-var(--nx-line-height))/2)]' data-testid={`${testId}-text`}>
       {children}
     </p>
   </Container>
@@ -114,7 +114,7 @@ const DefaultStory = ({ size, width, native, debug }: StoryArgs) => (
     <div
       data-size={size}
       data-debug={debug ? '' : undefined}
-      className='@container flex flex-col h-[40rem] border border-separator bg-base-surface'
+      className='nx-scope @container flex flex-col h-[40rem] border border-separator bg-base-surface'
       style={{ width }}
     >
       <Header testId='header'>Header</Header>

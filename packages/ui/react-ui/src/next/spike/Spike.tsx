@@ -64,7 +64,7 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
       asChild={asChild}
       {...rest}
       data-native={native ? '' : undefined}
-      style={{ '--scroll-width': `${scrollbar.lg.size}px`, ...style } as CSSProperties}
+      style={{ '--nx-scroll-width': `${scrollbar.lg.size}px`, ...style } as CSSProperties}
       className={['nx-scroll-viewport', className].join(' ')}
       ref={ref}
     >
@@ -113,7 +113,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
         data-layout={layout}
         data-place={place}
         data-columns={columns ? '' : undefined}
-        style={{ ...(columns ? { '--columns': columns } : {}), ...style } as CSSProperties}
+        style={{ ...(columns ? { '--nx-columns': columns } : {}), ...style } as CSSProperties}
         className={['nx-grid', className].join(' ')}
         ref={ref}
       >

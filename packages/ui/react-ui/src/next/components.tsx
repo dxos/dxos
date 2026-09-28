@@ -22,11 +22,11 @@ export namespace Next {
       // Defaults rather than overrides, so a caller's own `style` still wins.
       const { className, ...rest } = composableProps(props, {
         style: {
-          '--block-size': blockSize,
-          '--line-height': lineHeight,
-          '--font-size': fontSize,
-          '--icon-size': iconSize,
-          '--gap-size': gapSize,
+          '--nx-block-size': blockSize,
+          '--nx-line-height': lineHeight,
+          '--nx-font-size': fontSize,
+          '--nx-icon-size': iconSize,
+          '--nx-gap-size': gapSize,
         } as CSSProperties,
       });
       return (
@@ -49,13 +49,13 @@ export namespace Next {
   };
 
   export const Block = ({ children }: PropsWithChildren) => {
-    return <div className='shrink-0 grid place-items-center w-(--block-size) h-(--block-size)'>{children}</div>;
+    return <div className='shrink-0 grid place-items-center w-(--nx-block-size) h-(--nx-block-size)'>{children}</div>;
   };
 
   export const Icon = ({ icon }: { icon: string }) => {
     const href = useIconHref(icon);
     return (
-      <svg className='w-(--icon-size,1.5rem) h-(--icon-size,1.5rem)'>
+      <svg className='w-(--nx-icon-size,1.5rem) h-(--nx-icon-size,1.5rem)'>
         <use href={href} />
       </svg>
     );
@@ -68,8 +68,8 @@ export namespace Next {
         {...props}
         type={type}
         className={mx(
-          'w-full px-(--gap-size) py-0',
-          'text-[length:var(--font-size,1rem)] leading-(--line-height)',
+          'w-full px-(--nx-gap-size) py-0',
+          'text-[length:var(--nx-font-size,1rem)] leading-(--nx-line-height)',
           'bg-input-bg border-none dx-focus-ring-inset',
           className,
         )}
@@ -85,8 +85,8 @@ export namespace Next {
         {...props}
         type={type}
         className={mx(
-          'w-fit px-(--gap-size) py-0',
-          'text-[length:var(--font-size,1rem)] leading-(--line-height)',
+          'w-fit px-(--nx-gap-size) py-0',
+          'text-[length:var(--nx-font-size,1rem)] leading-(--nx-line-height)',
           'bg-base-surface hover:bg-hover-surface border-none dx-focus-ring-inset',
           className,
         )}
@@ -97,6 +97,6 @@ export namespace Next {
   };
 
   export const Typography = ({ children }: PropsWithChildren) => {
-    return <span className='text-[length:var(--font-size,1rem)]'>{children}</span>;
+    return <span className='text-[length:var(--nx-font-size,1rem)]'>{children}</span>;
   };
 }
