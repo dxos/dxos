@@ -14,6 +14,9 @@ export const DEFAULT_INDENTATION = 8;
  */
 export const DROP_INDENTATION = 24;
 
+/** One level's indent in a compact tree; a regular tree steps by the row's block size instead. */
+export const COMPACT_INDENT_STEP = `${DEFAULT_INDENTATION}px`;
+export const BLOCK_INDENT_STEP = 'var(--dx-control)';
+
 /** The row's depth as a length, applied as padding on the row's own grid so every track shifts with it. */
-export const indentTrack = (level: number, indentation = DEFAULT_INDENTATION): string =>
-  `${(level - 1) * indentation}px`;
+export const indentTrack = (level: number, step = COMPACT_INDENT_STEP): string => `calc(${level - 1} * ${step})`;

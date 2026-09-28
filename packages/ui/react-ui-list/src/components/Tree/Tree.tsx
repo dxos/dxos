@@ -50,7 +50,7 @@ import {
 import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
-import { DROP_INDENTATION, indentTrack } from './helpers.ts';
+import { BLOCK_INDENT_STEP, COMPACT_INDENT_STEP, DROP_INDENTATION, indentTrack } from './helpers.ts';
 import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
@@ -310,6 +310,11 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   indentGuides?: boolean;
   /**
+   * Indent each level by a small fixed step (the default). Off, a level indents by the row's block
+   * size, so a child's toggle sits under its parent's icon; the guides and the drop line follow either.
+   */
+  compact?: boolean;
+  /**
    * The element that scrolls the tree, when the consumer owns one.
    *
    * Optional because a tree is usually inside somebody else's scroller; without it the nearest
@@ -368,6 +373,7 @@ export const Tree = <T extends { id: string } = any>({
   hideDragSource = false,
   virtualize = false,
   indentGuides = false,
+  compact = true,
   scrollerRef,
   canSelect,
   onOpenChange,
@@ -715,6 +721,7 @@ export const Tree = <T extends { id: string } = any>({
     mountedRef.current ||= !resolving;
   }, [resolving]);
 
+  const indentStep = compact ? COMPACT_INDENT_STEP : BLOCK_INDENT_STEP;
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
       treeId,
@@ -738,6 +745,7 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       mountedRef,
       indentGuides,
+      indentStep,
       windowed,
       claimFocus,
     }),
@@ -762,6 +770,7 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       indentGuides,
+      indentStep,
       windowed,
       claimFocus,
     ],
@@ -978,7 +987,7 @@ TreeNodeRow.displayName = 'Tree.NodeRow';
  * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef, indentGuides, toggle } = useTreeRender();
+  const { mountedRef, indentGuides, indentStep, toggle } = useTreeRender();
   // Only with children to span: the guide would otherwise defeat `empty:hidden` on a childless branch.
   const guide = indentGuides && (node.children?.length ?? 0) > 0;
 
@@ -1017,7 +1026,7 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
           className='absolute inset-y-0 w-0 border-s border-subdued-separator pointer-events-none'
           // Centred under the branch's own toggle (or icon), which sits at the start of its indent.
           style={{
-            insetInlineStart: `calc(${indentTrack(node.level)} + ${toggle ? 'var(--dx-control) / 2' : '0.75rem'})`,
+            insetInlineStart: `calc(${indentTrack(node.level, indentStep)} + ${toggle ? 'var(--dx-control) / 2' : '0.75rem'})`,
           }}
         />
       )}
@@ -1086,6 +1095,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canSelect,
     selectionMode,
     claimFocus,
+    indentStep,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
@@ -1353,7 +1363,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           places it with `row-start-2`. */}
       <div
         className='indent relative grid grid-rows-[var(--dx-control)]'
-        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level) }}
+        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level, indentStep) }}
       >
         {toggle &&
           (branch ? (
@@ -1380,7 +1390,12 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && (
-          <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
+          <TreeDropIndicator
+            instruction={instruction}
+            kind={dropKind === 'link' ? 'link' : 'move'}
+            gap={2}
+            indentStep={indentStep}
+          />
         )}
         {debug && (
           <TreeDropDebug

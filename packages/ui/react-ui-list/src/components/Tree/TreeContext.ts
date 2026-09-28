@@ -156,6 +156,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   mountedRef: MutableRefObject<boolean>;
   /** Draw a vertical guide down the left of each open branch's children, under the branch's toggle. */
   indentGuides: boolean;
+  /** The length one nesting level indents its rows by (a CSS length). */
+  indentStep: string;
   /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
   windowed: boolean;
   /** Takes DOM focus for the row a drop left the tree waiting to focus, once the row is in the document. */

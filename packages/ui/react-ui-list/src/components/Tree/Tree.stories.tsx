@@ -49,6 +49,7 @@ const DefaultStory = ({
   branches,
   features,
   indentGuides,
+  compact,
   onItemHover,
 }: {
   draggable?: boolean;
@@ -65,6 +66,8 @@ const DefaultStory = ({
   features?: boolean;
   /** Draw a guide line down each open branch's children. */
   indentGuides?: boolean;
+  /** Indent by a small fixed step (default) rather than the row's block size. */
+  compact?: boolean;
   onItemHover?: (params: { item: TestItem }) => void;
 }) => {
   const rootTree = virtualize
@@ -278,6 +281,7 @@ const DefaultStory = ({
       virtualize={virtualize}
       dropAtEnd={features}
       indentGuides={indentGuides}
+      compact={compact}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -452,9 +456,13 @@ const openTwoLevels = async (canvasElement: HTMLElement) => {
 
 /** Each open branch draws a guide down its children, centred under its own chevron at every depth. */
 export const IndentGuides: Story = {
-  args: { indentGuides: true },
+  // Block-size indent, so the guides' alignment is checked away from the compact default.
+  args: { indentGuides: true, compact: false },
   play: async ({ canvasElement }) => {
     const toggles = await openTwoLevels(canvasElement);
+    // Off compact, a level steps in by a whole control, so the child's toggle sits under the parent's icon.
+    const [outer, inner] = toggles.map((toggle) => toggle.getBoundingClientRect());
+    await expect(Math.abs(inner.left - outer.left - outer.width)).toBeLessThanOrEqual(1);
     await waitFor(() => expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(2));
     for (const toggle of toggles) {
       const guide = queryPart(
