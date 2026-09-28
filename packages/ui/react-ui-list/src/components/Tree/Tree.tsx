@@ -51,7 +51,14 @@ import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
 import { DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
-import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
+import {
+  type RowUnit,
+  flattenRowUnits,
+  isDescendantPath,
+  nominalExtents,
+  rowUnitId,
+  useScroller,
+} from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -64,6 +71,7 @@ import {
   type TreeNodeEntry,
   type TreeRenderContextValue,
   TreeRenderProvider,
+  type WindowDisclosure,
   useTreeRender,
 } from './TreeContext.ts';
 import { TreeDropDebug } from './TreeDropDebug.tsx';
@@ -86,6 +94,13 @@ const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false
  */
 const TREE_TRACK = '[tree-row-start] minmax(0, 1fr) [tree-row-end]';
 const TREE_GRID = 'grid gap-0.5';
+
+/** The theme's disclosure duration, which the windowed rows' animation runs for; 0 where animation is off. */
+const disclosureDuration = (): number => {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--duration-tree-disclosure').trim();
+  const duration = Number.parseFloat(value);
+  return Number.isNaN(duration) ? 0 : value.endsWith('ms') ? duration : duration * 1000;
+};
 
 type TreeWalkState<T extends { id: string }> = {
   root: TreeNodeEntry<T>;
@@ -297,8 +312,8 @@ export type TreeProps<T extends { id: string } = any> = {
    * measured extents and the scrollbar, and the tree renders the mounted range into a translated
    * parent. Off by default — a list short enough to render whole gains nothing.
    *
-   * An open branch's children are mounted as rows of the window after their parent, so windowed
-   * disclosure is immediate rather than animated.
+   * An open branch's children are mounted as rows of the window after their parent, so those rows
+   * animate the disclosure themselves; a close is committed once they have concealed.
    */
   virtualize?: boolean;
   /**
@@ -411,8 +426,32 @@ export const Tree = <T extends { id: string } = any>({
     return Date.now() - at < MODIFIER_WINDOW ? { option, shift, meta } : NO_MODIFIERS;
   }, []);
 
+  // Windowed, a branch's children are rows of the window rather than its content, so they have no
+  // container to animate: the rows animate themselves, and a close is committed only once they have.
+  const windowedRef = useRef(false);
+  const [disclosure, setDisclosure] = useState<WindowDisclosure>();
+  const disclosureTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(disclosureTimerRef.current), []);
+
   const setOpen = useCallback(
-    (node: TreeNodeEntry<T>, open: boolean) => onOpenChange?.({ item: node.item, path: node.path, open }),
+    (node: TreeNodeEntry<T>, open: boolean) => {
+      const commit = () => onOpenChange?.({ item: node.item, path: node.path, open });
+      clearTimeout(disclosureTimerRef.current);
+      if (!windowedRef.current) {
+        return commit();
+      }
+
+      setDisclosure({ path: node.path, open });
+      if (open) {
+        commit();
+      }
+      disclosureTimerRef.current = setTimeout(() => {
+        if (!open) {
+          commit();
+        }
+        setDisclosure(undefined);
+      }, disclosureDuration());
+    },
     [onOpenChange],
   );
 
@@ -709,6 +748,7 @@ export const Tree = <T extends { id: string } = any>({
   );
   const scroller = useScroller(treeRef, scrollerRef, !!units);
   const windowed = !!units && !!scroller;
+  windowedRef.current = windowed;
   // The first commit that renders rows, which a tree still finding its scroller has not had.
   const resolving = !!units && scroller === undefined;
   useEffect(() => {
@@ -739,6 +779,7 @@ export const Tree = <T extends { id: string } = any>({
       mountedRef,
       indentGuides,
       windowed,
+      disclosure,
       claimFocus,
     }),
     [
@@ -763,6 +804,7 @@ export const Tree = <T extends { id: string } = any>({
       onItemHover,
       indentGuides,
       windowed,
+      disclosure,
       claimFocus,
     ],
   );
@@ -845,6 +887,7 @@ const TreeWindow = ({
   endData: TreeData;
   revealRef: RefObject<((value: string) => boolean) | null>;
 }) => {
+  const { disclosure } = useTreeRender();
   const scrollerRef = useRef<HTMLElement | null>(scroller);
   scrollerRef.current = scroller;
   const model = useListModel(units, rowUnitId);
@@ -886,8 +929,20 @@ const TreeWindow = ({
     }
 
     const id = rowUnitId(unit);
+    const moving = disclosure && unit.kind === 'row' && isDescendantPath(unit.node.path, disclosure.path);
     mounted.push(
-      <div key={id} role='none' className='col-[tree-row] grid grid-cols-subgrid' {...windowRowProps(index, id)}>
+      <div
+        key={id}
+        role='none'
+        className={mx(
+          'col-[tree-row] grid grid-cols-subgrid',
+          // An opening row fades rather than grows: the window measures a row once per commit, so one
+          // mounted at zero height would be placed at zero until something else re-rendered it.
+          // A concealing row may shrink, since it leaves the window when the close commits.
+          moving && (disclosure.open ? 'animate-fade-in' : '[interpolate-size:allow-keywords] animate-tree-conceal'),
+        )}
+        {...windowRowProps(index, id)}
+      >
         {unit.kind === 'header' ? (
           <TreeSectionHeader label={unit.label} />
         ) : unit.kind === 'end' ? (
@@ -1087,6 +1142,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     claimFocus,
     windowed,
     indentGuides,
+    disclosure,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
@@ -1363,7 +1419,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
                   open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
               <TreeItemToggle
                 isBranch
-                open={open}
+                // A windowed branch stays open in the model while its rows conceal; the chevron turns with them.
+                open={open && !(disclosure && !disclosure.open && disclosure.path.join('/') === path.join('/'))}
                 density={density}
                 // Nothing to disclose: a branch the model knows to be childless keeps its chevron for
                 // row geometry but offers no toggle.

@@ -85,8 +85,6 @@ type TaskListRootProps = PropsWithChildren<{
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
   hierarchical?: boolean;
-  /** Draw a guide line down each open branch's sub-tasks (with `hierarchical` or `groups`). */
-  indentGuides?: boolean;
   /**
    * Ids of the branches whose sub-tasks are hidden (controlled). Collapsed rather than expanded
    * ids, because a branch is open by default: tracking the expanded set would render a task's new
@@ -200,7 +198,6 @@ const TaskListRoot = ({
   descriptionComponents,
   showEstimates = false,
   hierarchical = false,
-  indentGuides = false,
   collapsed,
   selected: selectedProp,
   selectable: selectableProp,
@@ -286,7 +283,6 @@ const TaskListRoot = ({
       descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
-      indentGuides={indentGuides}
       debug={debug}
       showGutter={showGutter}
       isCollapsed={isCollapsed}
@@ -404,7 +400,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     groupByStatus,
     groups,
     hierarchical,
-    indentGuides,
     selected,
     checked,
     dragging,
@@ -460,7 +455,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       descriptionComponents={descriptionComponents}
       debug={debug}
       hierarchical={hierarchical}
-      indentGuides={indentGuides}
       groupByStatus={grouping}
       groups={groups}
       tasks={tasks}

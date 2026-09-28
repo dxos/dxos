@@ -715,7 +715,14 @@ export const TestWindowedTreeInFull: Story = {
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(async () => expect(focused()).toEqual(first.id), { timeout: 5_000 });
     await userEvent.keyboard('{ArrowLeft}');
-    await waitFor(async () => expect(row(lastChild.id)).toBeNull(), { timeout: 5_000 });
+    // The close commits once the children have concealed, and the window mounts what follows after it.
+    await waitFor(
+      async () => {
+        await expect(row(lastChild.id)).toBeNull();
+        await expect(row(second.id)).not.toBeNull();
+      },
+      { timeout: 5_000 },
+    );
 
     // An item under two open branches is two rows, and the tree stays windowed.
     await userEvent.click(toggle(second.id));

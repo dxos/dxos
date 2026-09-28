@@ -158,9 +158,17 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   indentGuides: boolean;
   /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
   windowed: boolean;
+  /**
+   * A windowed branch mid-disclosure: its descendant rows animate in (`open`) or out, and a closing
+   * branch stays open in the model until they have, so its rows have something to animate.
+   */
+  disclosure?: WindowDisclosure;
   /** Takes DOM focus for the row a drop left the tree waiting to focus, once the row is in the document. */
   claimFocus: (value: string, row: HTMLElement) => void;
 };
+
+/** A windowed branch's disclosure in flight; see {@link TreeRenderContextValue.disclosure}. */
+export type WindowDisclosure = { path: readonly string[]; open: boolean };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
 
