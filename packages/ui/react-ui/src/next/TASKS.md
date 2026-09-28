@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 1 — move size metrics to CSS. Uncommitted: none. Last: Container/ScrollArea spike (all play tests green)._
+_Resume: Phase 1 — move size metrics to CSS. Uncommitted: none. Last: all goal constraints designed (decisions 8–11); Typography/Input/Button fill the block._
 
 ## Phase 0: Design
 
@@ -12,6 +12,8 @@ Settle the constraints in [DESIGN.md](./DESIGN.md) before building.
 - [x] **Decide the grid model** — configurable Container with inherited rails/columns (DESIGN.md decision 5).
 - [x] **Spike Container + ScrollArea** — `spike/Spike.stories.tsx`; 5 alignment play tests pass; findings in DESIGN.md.
 - [x] **Decide scroll API shape** — composed `ScrollArea.Root > Viewport asChild > Container` (decision 5).
+- [x] **Design theming, ARIA, testability, performance** — decisions 8–11.
+- [ ] **Open spike issues** — rail-end Blocks overlap a native bar (finding 4); a non-scrolling template root cannot query its own width (needs an ancestor container); levels unspiked.
 
 ## Phase 1: Model (story components)
 
@@ -20,10 +22,10 @@ Rebuild Container, Toolbar, Block, Icon, Input, Button, Typography on the agreed
 ### Tasks
 
 - [x] **Namespace attributes and variables** — selectors scoped to `.nx-*`, variables `--nx-*` (provisional names; rename later).
-- [ ] **Typography owns first-line centring** — pad text beside a rail to `--block-size` (spike message row).
+- [x] **Typography owns first-line centring** — `Next.Typography` pads to `--nx-block-size`; spike message row uses it.
 - [ ] **Move size metrics to CSS** — `[data-size=*]` rules in the theme; `sizes.ts` keeps only `Size`/`SIZES`.
 - [ ] **Add levels** — `[data-level=*]` rules for surface/border/shadow; nested step-up.
-- [ ] **Input/Button fill `--block-size`** — resolve the padding TODOs; align with `Block` per size.
+- [x] **Input/Button fill `--block-size`** — `h-(--nx-block-size)`; padding TODOs removed.
 - [ ] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`.
 - [ ] **ARIA fixes** — `aria-hidden` icons, labels.
 - [ ] **Container rails** — `gutter` with named lines; `layout` stack/row; `Block rail`; `gutter='inherit'` subgrid nesting.
@@ -33,3 +35,6 @@ Rebuild Container, Toolbar, Block, Icon, Input, Button, Typography on the agreed
 - [ ] **Direct-nesting dev warning** — warn when a Container's parent is not a Container.
 - [ ] **Nested-form story** — rails, gutter Blocks, scroll, sizes.
 - [ ] **Play tests** — per-size block-height alignment, rail alignment across nesting, and roles.
+- [ ] **`data-scope`/`data-part` on every part** — decision 10.
+- [ ] **Shared class recipes** — plain TS functions used by the bindings (decision 8).
+- [ ] **Benchmark story** — 1,000 rows in a nested Container inside a ScrollArea (decision 11).

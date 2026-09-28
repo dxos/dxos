@@ -58,10 +58,7 @@ const Message = ({ testId, children }: { testId: string; children: ReactNode }) 
     <Block rail='start' data-testid={`${testId}-rail-start`}>
       <Icon icon='ph--chat-circle--regular' />
     </Block>
-    {/* Pads the line box up to the block so the first line centres on the icon. */}
-    <p className='py-[calc((var(--nx-block-size)-var(--nx-line-height))/2)]' data-testid={`${testId}-text`}>
-      {children}
-    </p>
+    <Next.Typography data-testid={`${testId}-text`}>{children}</Next.Typography>
   </Container>
 );
 

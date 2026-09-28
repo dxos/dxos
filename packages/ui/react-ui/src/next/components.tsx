@@ -12,6 +12,8 @@ import { useIconHref } from '../hooks/index.ts';
 import { composableProps, slottable } from '../util/index.ts';
 import { type Size, metrics } from './sizes.ts';
 
+const TEXT = 'text-[length:var(--nx-font-size,1rem)] leading-(--nx-line-height)';
+
 export namespace Next {
   export type ContainerProps = SlottableProps<{ size?: Size }>;
 
@@ -61,15 +63,14 @@ export namespace Next {
     );
   };
 
-  // TODO(burdon): Implement geometry (padding).
   export const Input = ({ className, type = 'text', ...props }: ComponentPropsWithoutRef<'input'>) => {
     return (
       <input
         {...props}
         type={type}
         className={mx(
-          'w-full px-(--nx-gap-size) py-0',
-          'text-[length:var(--nx-font-size,1rem)] leading-(--nx-line-height)',
+          'w-full h-(--nx-block-size) px-(--nx-gap-size) py-0',
+          TEXT,
           'bg-input-bg border-none dx-focus-ring-inset',
           className,
         )}
@@ -77,7 +78,6 @@ export namespace Next {
     );
   };
 
-  // TODO(burdon): Implement geometry (padding).
   // `button` by default: the browser's `submit` would post an enclosing form on every click.
   export const Button = ({ className, type = 'button', children, ...props }: ComponentPropsWithoutRef<'button'>) => {
     return (
@@ -85,8 +85,8 @@ export namespace Next {
         {...props}
         type={type}
         className={mx(
-          'w-fit px-(--nx-gap-size) py-0',
-          'text-[length:var(--nx-font-size,1rem)] leading-(--nx-line-height)',
+          'inline-flex items-center w-fit h-(--nx-block-size) px-(--nx-gap-size) py-0',
+          TEXT,
           'bg-base-surface hover:bg-hover-surface border-none dx-focus-ring-inset',
           className,
         )}
@@ -96,7 +96,18 @@ export namespace Next {
     );
   };
 
-  export const Typography = ({ children }: PropsWithChildren) => {
-    return <span className='text-[length:var(--nx-font-size,1rem)]'>{children}</span>;
-  };
+  /**
+   * Text whose first line is centred in a block, so it lines up with a Block, Input or Button beside it however many
+   * lines it wraps to. Renders a `<p>`; `asChild` puts the metrics on a heading or other text element instead.
+   */
+  export const Typography = slottable<HTMLParagraphElement>(({ children, asChild, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props, {
+      classNames: [TEXT, 'py-[calc((var(--nx-block-size)-var(--nx-line-height))/2)]'],
+    });
+    return (
+      <ark.p asChild={asChild} {...rest} className={className} ref={forwardedRef}>
+        {children}
+      </ark.p>
+    );
+  });
 }

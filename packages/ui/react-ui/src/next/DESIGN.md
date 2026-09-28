@@ -60,6 +60,22 @@
    storybook play tests assert per-size alignment and roles. Container gains gutter/columns/layout and a composed
    ScrollArea per decision 5, exercised by a nested-form story (rails, gutter Blocks, scrollbar in the end gutter).
    No plugin adoption yet.
+8. **Theming.** A theme only sets values: `--nx-*` variables plus ui-theme's color tokens (dark mode via
+   `light-dark()`), applied globally or under a scope such as `[data-theme=…]`. Structure — grid, placement, the
+   element tree — is not themeable. Class recipes are plain TS functions shared by the React and Solid bindings; they
+   are fixed at build time, not swapped at runtime through context (unlike the current `tx()` theme functions).
+   One theme therefore serves both bindings, provided they emit identical DOM (same elements, classes and `data-*`
+   attributes); the shared recipes guarantee the classes, and a parity test should assert the rest.
+9. **ARIA.** Interactive roles and `aria-*` state come only from zag machines (`api.get*Props()`), so a role is
+   claimed only by code that implements its keyboard contract. Layout parts (Container, Block, ScrollArea) carry no
+   role by default; callers add landmark or `group` roles explicitly. Icons are `aria-hidden` unless given a label.
+10. **Testability.** Three hooks, one job each: every part forwards `data-testid` to its root (the only e2e
+    target); every part emits Ark's `data-scope`/`data-part` (structural queries and the React/Solid parity test);
+    storybook play tests assert geometry and ARIA roles.
+11. **Performance.** Size, level, gutter and layout are attribute swaps resolved by CSS — never React context or
+    re-renders; no JS layout measurement except the overlay scroll thumbs; container queries only at template roots.
+    A benchmark story (e.g. 1,000 rows in a nested Container inside a ScrollArea) tracks render and layout cost, since
+    deep subgrids and `:has` are the design's unmeasured risks.
 
 ## Spike findings
 
