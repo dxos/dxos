@@ -14,8 +14,9 @@ description: >-
 # Autocue
 
 **"Cue" is the verb.** "Cue the projects demo" means: find the committed flow whose name or doc comment
-matches, serve the app its `@app` line names, open the driver in manual mode, load the flow with `steps`,
-and wait at step 1 for the user's go (see "The protocol"). Cueing never starts the run by itself.
+matches, serve the app its `@app` line names, and load the flow with `steps`. Cueing never starts the run.
+"Go" then does all the off-camera prep and replies `ready` once the play button is up; the play button
+runs the take to the end (see "The protocol").
 
 The agent drives the real app one gesture at a time and the session is recorded. Three things make
 this different from a Playwright spec, and they are the reasons to reach for it:
@@ -122,7 +123,10 @@ C '{"op":"abort"}'                                 # stops the run now, mid-step
   the way, a collapsed sidebar, or a renamed control. Fix the script, then `run` again to retry
   from that step.
 - **Background a long `run`** (`run_in_background`), so the user can interrupt you mid-flow and you
-  can send `abort`.
+  can send `abort`. Give its request no client timeout (no `curl --max-time`): a timed-out request loses
+  the reply, though the run carries on. `status` answers where it is at any time — `state` is `setup`,
+  `cued` (play button up), `running`, `done`, `failed` or `aborted`, with the step number and, once it
+  ends, the same `result` the `run` reply carries.
 
 ### Setup steps and the countdown
 
@@ -171,22 +175,30 @@ that again"), and for probing a failure before you fix the script.
 
 ### The protocol
 
-1. **Open and wait.** Start the driver and send one `goto`, then stop. Don't caption, click, or run
-   a setup step. Find or draft the `.mdl` test, write the flow script from it, send `steps`, and show the user the numbered list. Wait for
-   them to say go, since they are setting up their recorder.
-2. **Run only what they release.** "Go" runs the next step. "Run until step 4" is `run` with
-   `until: 4`. "Run it all" is `run` with no bounds. After each stop, say which step you stopped on
-   and what comes next, then wait.
-3. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
-   back and open it again" become an edit to the script (or a `from`/`until`), then a `run`. "Start
-   again from step 4" is `run` with `from: 4` and `restart: true`. A change the user asks for is not
-   a divergence to report.
-4. **Handle failures quietly.** Don't narrate passing checks. When a step fails, look at its
+The user's part is two words and one click: "go", then the play button. Everything else is yours.
+
+1. **Cue: stage and wait.** On "cue <demo>" (or when the user asks for a manual recording), find the
+   committed flow — or, for a new demo, the `.mdl` test and then the script — serve the app its `@app`
+   line names, and load the flow with `steps`. Show the numbered step list and wait. Nothing runs yet.
+2. **"Go": do all the prep, then reply `ready`.** Start the driver (the browser opens) and `goto`
+   if it is not up, then send `run` with no bounds, backgrounded and with no client timeout — it holds
+   until the take ends. Poll `status` until `state` is `cued`: every `setup` step has run off camera
+   and the play button is up, waiting. Then reply with exactly `ready` and nothing else. If a setup
+   step fails instead (`state: failed`), say in one line what failed and fix it; there is no take yet.
+3. **Play runs to the end.** The user starts their recorder and clicks play; the flow runs through
+   its last step unattended, with no more "go"s. Don't poll on a short interval while it runs — the
+   backgrounded `run` returns when the take ends. Then report each step as passed or failed, in a line
+   or two.
+4. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
+   back and open it again" become an edit to the script (or a `from`/`until`), then another cue.
+   "Start again from step 4" is `run` with `from: 4` and `restart: true`. "Run until 4" still works
+   for a user who asks to stop partway. A change the user asks for is not a divergence to report.
+5. **Handle failures quietly.** Don't narrate passing checks. When a step fails, look at its
    screenshot, say in a line what went wrong and what you'll change, then fix the script. Retry
    only when the user says so, since the retry happens on camera.
-5. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
+6. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
    that closing it ends the driver.
-6. **Commit the flow once it has run end to end.** Save it as `autocue/<name>.mjs` in the package it
+7. **Commit the flow once it has run end to end.** Save it as `autocue/<name>.mjs` in the package it
    exercises — the plugin under test, or `composer-app` for a flow that spans plugins — and commit it, so
    the next session runs it instead of rediscovering every selector. Commit again whenever a later
    session fixes it.
@@ -295,7 +307,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
