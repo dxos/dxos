@@ -18,13 +18,13 @@
 
 const TWENTY_MIN = 20 * 60_000;
 
+/** The Assistant's remote model; Composer's default (Claude Sonnet 5) left the delegated chat silent. */
+const MODEL = 'DeepSeek V4 Pro';
+
 export const steps = [
   {
-    name: 'Prep (off camera): enable Coding (Dev), dismiss notices, go home',
-    done: async ({ page }) =>
-      page
-        .evaluate(() => (globalThis.composer?.manager?.getEnabled() ?? []).includes('org.dxos.plugin.computer'))
-        .catch(() => false),
+    // No `done`: every action here is idempotent, so a replay simply re-applies it.
+    name: 'Prep (off camera): enable Coding (Dev), pick the model, dismiss notices',
     run: async ({ demo, page }) => {
       // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
       const notice = page.locator(
@@ -61,6 +61,13 @@ export const steps = [
         await toggle.click();
       }
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
+
+      // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
+      await demo.press({ key: 'Meta+Comma', hud: false });
+      await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
+      await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
+      await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
+
       await demo.click({ selector: '[data-testid="spacePlugin.space"]', hud: false });
     },
   },
