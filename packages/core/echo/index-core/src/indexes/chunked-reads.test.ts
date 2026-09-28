@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import * as Statement from 'effect/unstable/sql/Statement';
 
@@ -11,7 +12,7 @@ import { ATTR_DELETED, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
-import { SqlBoundVariableLimit } from '../utils.ts';
+import { MAX_CHUNKED_STATEMENTS, SqlBoundVariableLimit } from '../utils.ts';
 import { EntityMetaIndex, type QueueRef, type QueueWindow } from './entity-meta-index.ts';
 import { FtsIndex } from './fts-index.ts';
 import type { IndexerObject } from './interface.ts';
@@ -106,12 +107,12 @@ const seed = Effect.fnUntraced(function* () {
 
 /**
  * Runs a read under a bound-variable limit, refusing any statement over it as Durable Object SQLite
- * would, and counts the statements it issues.
+ * would, and counts the statements it issued, whether or not it failed.
  */
 const runWithLimit = <A, E, R>(read: Effect.Effect<A, E, R>, limit: number) =>
   Effect.gen(function* () {
     let statements = 0;
-    const result = yield* read.pipe(
+    const exit = yield* read.pipe(
       Effect.provideService(SqlBoundVariableLimit, limit),
       Effect.provideService(Statement.CurrentTransformer, (statement) => {
         statements++;
@@ -120,8 +121,9 @@ const runWithLimit = <A, E, R>(read: Effect.Effect<A, E, R>, limit: number) =>
           ? Effect.die(new Error(`statement binds ${params.length} variables, over ${limit}: ${query}`))
           : Effect.succeed(statement);
       }),
+      Effect.exit,
     );
-    return { result, statements };
+    return { exit, statements };
   });
 
 /** The read's rows split across statements and in one, and how many statements the split took. */
@@ -130,7 +132,7 @@ const runBothWays = <T extends { readonly recordId: number }, E, R>(read: Effect
     const unchunked = yield* runWithLimit(read, UNCHUNKED_LIMIT);
     const chunked = yield* runWithLimit(read, CHUNKED_LIMIT);
     expect(unchunked.statements).toBe(1);
-    return { unchunked: unchunked.result, chunked: chunked.result, statements: chunked.statements };
+    return { unchunked: yield* unchunked.exit, chunked: yield* chunked.exit, statements: chunked.statements };
   });
 
 /** An unordered read promises its rows, not their order. */
@@ -244,6 +246,34 @@ describe('chunked reads', () => {
         }
       }
       expect(compared).toBeGreaterThan(0);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'an inverted type filter past the statement cap across both phases fails before issuing any',
+    Effect.fnUntraced(function* () {
+      const { meta } = yield* seed();
+      let refused = 0;
+      // Each phase fits the cap on its own at some of these widths while the two together do not.
+      for (let spaceCount = 16; spaceCount <= 24; spaceCount++) {
+        const { exit, statements } = yield* runWithLimit(
+          meta.queryTypes({
+            spaceIds: Array.from({ length: spaceCount }, () => SpaceId.random()),
+            typeDxns: typeFilter(TYPE_COUNT),
+            inverted: true,
+            includeAllQueues: true,
+          }),
+          CHUNKED_LIMIT,
+        );
+        if (Exit.isSuccess(exit)) {
+          expect(statements).toBeLessThanOrEqual(MAX_CHUNKED_STATEMENTS);
+        } else {
+          expect(String(exit)).toContain('a read needs');
+          expect(statements).toBe(0);
+          refused++;
+        }
+      }
+      expect(refused).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
   );
 

@@ -17,11 +17,13 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
 } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { localEntityId } from '../entity-ids.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
 import {
+  MAX_CHUNKED_STATEMENTS,
   SqlBoundVariableLimit,
   chunkArray,
   chunkSizeForBoundVariables,
@@ -494,23 +496,28 @@ export class EntityMetaIndex implements Index {
         // Too many types to negate in one statement: find the rows they match, then read the sources
         // without those rows, each statement's limit leaving room for the ones it drops. Always
         // several statements, and a row written between the phases would escape the exclusion.
+        const exclusionPairs = planChunkPairs(
+          { items: typeDxns, costOf: typeCost },
+          { items: sources, costOf: sourceCost },
+          limit,
+        );
+        // Widening the window changes its limit's value, not what it binds, so the second phase plans
+        // before the first runs and the cap covers both.
+        const sourceChunks = planChunks(sources, sourceCost, budget);
+        const statementCount = exclusionPairs.length + sourceChunks.length;
+        invariant(statementCount <= MAX_CHUNKED_STATEMENTS, `a read needs ${statementCount} statements`);
         const results = yield* sql.withTransaction(
           Effect.gen(function* () {
             const excluded = new Set<number>();
-            for (const [types, chunk] of planChunkPairs(
-              { items: typeDxns, costOf: typeCost },
-              { items: sources, costOf: sourceCost },
-              limit,
-            )) {
+            for (const [types, chunk] of exclusionPairs) {
               const rows = yield* sql<{
                 recordId: number;
               }>`SELECT recordId FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}`;
               rows.forEach((row) => excluded.add(row.recordId));
             }
             const widenedWindow = buildQueueWindow(sql, widenQueueWindow(window, excluded.size));
-            const chunks = planChunks(sources, sourceCost, limit - countBoundVariables(sql, widenedWindow));
             const rows = yield* Effect.forEach(
-              chunks,
+              sourceChunks,
               (chunk) =>
                 sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${widenedWindow}`,
             );
