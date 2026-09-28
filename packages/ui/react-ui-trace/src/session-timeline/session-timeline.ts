@@ -269,6 +269,29 @@ const historySpan = (
   return start === undefined || last === undefined ? undefined : { start, end: open ? undefined : end, last };
 };
 
+/**
+ * The stretches a task was put down between two runs of work: from a move out of `started` that did
+ * not finish it (a question blocking it, say) to the next move back. One still open is no gap — the
+ * lane simply ends there — and nothing before the first start is one either.
+ */
+const workGaps = (changes: readonly TaskStatusChange[]): { start: number; end: number }[] => {
+  const gaps: { start: number; end: number }[] = [];
+  let started = false;
+  let pausedAt: number | undefined;
+  for (const change of changes) {
+    if (change.status === 'started') {
+      if (pausedAt !== undefined && change.timestamp > pausedAt) {
+        gaps.push({ start: pausedAt, end: change.timestamp });
+      }
+      started = true;
+      pausedAt = undefined;
+    } else if (started && pausedAt === undefined && !CLOSED_STATUSES.has(change.status)) {
+      pausedAt = change.timestamp;
+    }
+  }
+  return gaps;
+};
+
 /** A question or answer in the task's log; other entries are edits the edit history already holds. */
 const exchangeMarker = (entry: Task.HistoryEntry, id: string, laneId: string): Marker | undefined => {
   const timestamp = Date.parse(entry.date);
@@ -801,6 +824,11 @@ export const buildSessionTimeline = ({
     const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
     if (task) {
       lane.hue = getHashHue(Obj.getMnemonic(task));
+      // After the fold, so a session standing for its one task breaks where the task was put down too.
+      const gaps = workGaps(taskStatusChanges?.get(task.id) ?? []);
+      if (gaps.length > 0) {
+        lane.gaps = gaps;
+      }
     }
   }
 
