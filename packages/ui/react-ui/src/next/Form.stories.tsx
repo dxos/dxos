@@ -94,7 +94,10 @@ const part = (root: HTMLElement, testId: string, selector: string) => {
   return element.getBoundingClientRect();
 };
 
-export const Default: Story = {
+export const Default: Story = {};
+
+/** Labels above controls, control geometry, focus ring, Select popup and roles. */
+export const Layout: Story = {
   play: async ({ canvasElement }) => {
     // Label above its control, sharing the field's left edge.
     for (const field of ['name', 'email', 'role', 'website']) {

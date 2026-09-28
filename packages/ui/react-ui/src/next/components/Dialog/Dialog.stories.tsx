@@ -130,7 +130,10 @@ const open = async (canvasElement: HTMLElement, size: Size) => {
   return dialog;
 };
 
-export const Default: Story = {
+export const Default: Story = {};
+
+/** Opens the dialog and checks its roles, shared gutter, actions and nested Select. */
+export const Open: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await open(canvasElement, 'md');
     await expect(dialog).toHaveAttribute('aria-modal', 'true');

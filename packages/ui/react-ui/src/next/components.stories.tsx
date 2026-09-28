@@ -119,7 +119,10 @@ const byTestId = (root: HTMLElement, testId: string) => {
 const centreY = (rect: DOMRect) => rect.top + rect.height / 2;
 
 /** Every control is `block - 2 * inset` tall and vertically centred in its block (decision 12). */
-export const Default: Story = {
+export const Default: Story = {};
+
+/** Per-size control height, centring and icon scale. */
+export const Geometry: Story = {
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const { block, inset, icon } = GEOMETRY[size];

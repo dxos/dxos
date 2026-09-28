@@ -176,7 +176,10 @@ const assertAligned = async (root: HTMLElement, { railEnd = true } = {}) => {
   await expect(body && body.scrollHeight > body.clientHeight).toBe(true);
 };
 
-export const Default: Story = {
+export const Default: Story = {};
+
+/** Rails, label track and full bleed line up across nesting. */
+export const Alignment: Story = {
   play: ({ canvasElement }) => assertAligned(canvasElement),
 };
 
