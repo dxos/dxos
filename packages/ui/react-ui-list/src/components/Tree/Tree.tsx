@@ -305,8 +305,8 @@ export type TreeProps<T extends { id: string } = any> = {
    * Draw a vertical guide line down the left of each open branch's children, centred under the
    * branch's disclosure toggle (or its icon when `toggle` is off), as Ark's indent guides do.
    *
-   * Not drawn when windowed: a windowed branch's children are rows of the window rather than
-   * content of the branch, so there is no element spanning them to carry the line.
+   * Windowed, a branch's children are rows of the window rather than content of the branch, so no
+   * element spans them; each row draws a segment per ancestor instead, and the segments join up.
    */
   indentGuides?: boolean;
   /**
@@ -1085,6 +1085,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canSelect,
     selectionMode,
     claimFocus,
+    windowed,
+    indentGuides,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
@@ -1378,6 +1380,18 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           <TreeNodeHeading item={item} path={path} props={props} />
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
+        {windowed &&
+          indentGuides &&
+          Array.from({ length: level - 1 }, (_, index) => (
+            <div
+              key={index}
+              role='none'
+              data-part='row-indent-guide'
+              // Down past the row into the gap below it, so one ancestor's segments read as a single line.
+              className='absolute top-0 -bottom-0.5 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
+              style={{ insetInlineStart: `calc(${indentTrack(index + 1)} + ${TREE_BLOCK} / 2)` }}
+            />
+          ))}
         {instruction && (
           <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
         )}

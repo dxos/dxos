@@ -60,6 +60,8 @@ export type TaskTreeNodeProps = {
   groups?: readonly TaskGroup[];
   /** Nest sub-tasks under their parent; off renders one row per task. */
   hierarchical?: boolean;
+  /** Draw a guide line down each open branch's sub-tasks. */
+  indentGuides?: boolean;
   tasks: readonly Task.Task[];
   collapsed: ReadonlySet<string>;
   showGutter: boolean;
@@ -89,6 +91,7 @@ export const TaskTreeNode = ({
   groupByStatus,
   groups,
   hierarchical,
+  indentGuides = false,
   tasks,
   collapsed,
   showGutter,
@@ -334,6 +337,7 @@ export const TaskTreeNode = ({
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
       virtualize
+      indentGuides={indentGuides}
       debug={debug}
       renderHeading={renderHeading}
       renderColumns={renderTrailing}

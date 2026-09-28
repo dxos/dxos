@@ -26,7 +26,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
+import { Listbox, TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, Task } from '@dxos/types';
 import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
@@ -85,6 +85,8 @@ type TaskListRootProps = PropsWithChildren<{
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
   hierarchical?: boolean;
+  /** Draw a guide line down each open branch's sub-tasks (with `hierarchical` or `groups`). */
+  indentGuides?: boolean;
   /**
    * Ids of the branches whose sub-tasks are hidden (controlled). Collapsed rather than expanded
    * ids, because a branch is open by default: tracking the expanded set would render a task's new
@@ -198,6 +200,7 @@ const TaskListRoot = ({
   descriptionComponents,
   showEstimates = false,
   hierarchical = false,
+  indentGuides = false,
   collapsed,
   selected: selectedProp,
   selectable: selectableProp,
@@ -283,6 +286,7 @@ const TaskListRoot = ({
       descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
+      indentGuides={indentGuides}
       debug={debug}
       showGutter={showGutter}
       isCollapsed={isCollapsed}
@@ -358,7 +362,8 @@ const buildGridTemplate = ({
   hasActions: boolean;
 }): string => {
   const candidates: (GridTrack | false)[] = [
-    toggle && [undefined, 'var(--dx-control)'],
+    // The tree's block, which each level also indents by, so a guide lands under its branch's chevron.
+    toggle && [undefined, TREE_BLOCK],
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
@@ -399,6 +404,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     groupByStatus,
     groups,
     hierarchical,
+    indentGuides,
     selected,
     checked,
     dragging,
@@ -454,6 +460,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       descriptionComponents={descriptionComponents}
       debug={debug}
       hierarchical={hierarchical}
+      indentGuides={indentGuides}
       groupByStatus={grouping}
       groups={groups}
       tasks={tasks}

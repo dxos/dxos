@@ -36,6 +36,8 @@ export type TaskListContextValue = {
   showEstimates: boolean;
   /** Render the questions in each task's history under its title. */
   hierarchical: boolean;
+  /** Draw a guide line down each open branch's sub-tasks. */
+  indentGuides: boolean;
   /** Paint the tree's drop bands on every row (development affordance). */
   debug: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */

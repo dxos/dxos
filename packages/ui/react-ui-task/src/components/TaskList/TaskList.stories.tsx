@@ -521,6 +521,7 @@ const DefaultStory = ({
   draggable = false,
   checkable = false,
   hierarchical,
+  indentGuides,
   groupByStatus,
   showGroupLabels,
   showOrdinals,
@@ -542,6 +543,8 @@ const DefaultStory = ({
   /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
   checkable?: boolean;
   hierarchical?: boolean;
+  /** Guide lines down each open branch's sub-tasks. */
+  indentGuides?: boolean;
   /** Group tasks under status headers. */
   groupByStatus?: boolean;
   showGroupLabels?: boolean;
@@ -643,6 +646,7 @@ const DefaultStory = ({
       tasks={tasks}
       selected={selected}
       hierarchical={hierarchical}
+      indentGuides={indentGuides}
       groupByStatus={groupByStatus}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
@@ -944,6 +948,15 @@ export const DeepHierarchy: Story = {
     showOrdinals: true,
     showEstimates: true,
     showDescription: true,
+  },
+};
+
+/** Guides down each open branch, under its chevron, at every depth. */
+export const WithIndentGuides: Story = {
+  args: {
+    seed: () => seedDeepHierarchy(3, 3),
+    hierarchical: true,
+    indentGuides: true,
   },
 };
 
