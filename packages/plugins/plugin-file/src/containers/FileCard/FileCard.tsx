@@ -23,7 +23,7 @@ export type FileCardProps = AppSurface.ObjectCardProps<File.File>;
 export const FileCard = ({ subject: file }: FileCardProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  const [fit, setFit] = useState<ImageProps['fit']>('cover');
+  const [fit, setFit] = useState<ImageProps['fit']>('contain');
 
   const rendered = useFileUrl(file);
   if (!rendered) {
