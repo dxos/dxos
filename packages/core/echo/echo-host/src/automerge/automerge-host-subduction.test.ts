@@ -89,7 +89,7 @@ describe('AutomergeHost with Subduction', () => {
     const reopened = await setupAutomergeHost({ runtime });
     using loaded = (await reopened.loadDoc<any>(Context.default(), url))!;
     await loaded.waitUntilReady();
-    expect(loaded.doc()!.text).toEqual('second');
+    expect(loaded.doc()?.text).toEqual('second');
   });
 
   test('a write after eviction and re-lease reaches a peer', async ({ expect }) => {
@@ -138,8 +138,7 @@ describe('AutomergeHost with Subduction', () => {
       timeout: 4 * SYNC_WINDOW_MS,
     },
     async ({ expect }) => {
-      // Collection sync faults the document in to catch up, and its older local copy makes it ready at once.
-      // Evicted on the idle delay while its sync round was still running, it lost the round every time.
+      // Faulted in to catch up and ready at once from its older local copy, the document was evicted mid-round.
       const rt1 = createRuntime();
       onTestFinished(() => rt1.dispose());
       const writer = await setupAutomergeHost({ runtime: rt1.runtime });
@@ -153,6 +152,11 @@ describe('AutomergeHost with Subduction', () => {
       const created = await writer.createDoc<{ edit: number }>({ edit: 0 });
       const documentId = created.documentId;
       await writer.flush(Context.default());
+      const writerHeads = () => {
+        const doc = created.doc();
+        invariant(doc, 'The writer holds the document.');
+        return getHeads(doc);
+      };
 
       // Each message outlasts the reader's idle delay, so every sync round does too.
       const network = await new TestReplicationNetwork({ latency: 150 }).open();
@@ -164,7 +168,7 @@ describe('AutomergeHost with Subduction', () => {
         await reader.updateLocalCollectionState(collectionId, [documentId]);
         await expect
           .poll(async () => (await reader.getHeads([documentId]))[0], { timeout: SYNC_WINDOW_MS })
-          .toEqual(getHeads(created.doc()!));
+          .toEqual(writerHeads());
         await waitForEviction(expect, reader, documentId);
 
         created.change((doc) => {
@@ -173,7 +177,7 @@ describe('AutomergeHost with Subduction', () => {
         await writer.flush(Context.default());
         await expect
           .poll(async () => (await reader.getHeads([documentId]))[0], { timeout: SYNC_WINDOW_MS })
-          .toEqual(getHeads(created.doc()!));
+          .toEqual(writerHeads());
       } finally {
         await writer.close();
         await reader.close();
