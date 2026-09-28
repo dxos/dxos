@@ -14,7 +14,7 @@ description: >-
 # Autocue
 
 **"Cue" is the verb.** "Cue the projects demo" means: find the committed flow whose name or doc comment
-matches, serve the app its `@app` line names, and load the flow with `steps`. Cueing never starts the run.
+matches, serve the app its `@app` line names, and list its steps. Cueing never opens the browser or runs.
 "Go" then does all the off-camera prep and replies `ready` once the play button is up; the play button
 runs the take to the end (see "The protocol").
 
@@ -178,8 +178,9 @@ that again"), and for probing a failure before you fix the script.
 The user's part is two words and one click: "go", then the play button. Everything else is yours.
 
 1. **Cue: stage and wait.** On "cue <demo>" (or when the user asks for a manual recording), find the
-   committed flow — or, for a new demo, the `.mdl` test and then the script — serve the app its `@app`
-   line names, and load the flow with `steps`. Show the numbered step list and wait. Nothing runs yet.
+   committed flow — or, for a new demo, the `.mdl` test and then the script — and serve the app its
+   `@app` line names. List the steps by importing the script with `node` (the driver's `steps` op
+   needs a driver, and the browser opens only on "go"). Show the numbered list and wait. Nothing runs yet.
 2. **"Go": do all the prep, then reply `ready`.** Start the driver (the browser opens) and `goto`
    if it is not up, then send `run` with no bounds, backgrounded and with no client timeout — it holds
    until the take ends. Poll `status` until `state` is `cued`: every `setup` step has run off camera
