@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { trim } from '@dxos/util';
+
 import { identity } from './identity.ts';
 
 /**
@@ -17,24 +19,27 @@ import { identity } from './identity.ts';
  * project-specific guidance lives in skills, and the operations themselves are discovered at
  * runtime — so what is stated here is the *loop* by which a model reaches both.
  */
-export const SERVER_INSTRUCTIONS = [
-  'This server reads and writes objects in DXOS spaces (collaborative databases). Its verbs are ' +
-    'not separate tools: call queryOperations to search them, then invokeOperation to run one.',
-  'Before invoking an operation for the first time, call queryOperations with its key to get the ' +
-    'input schema, and match it exactly. Rows also carry a mutation class: none reads, write ' +
-    'creates or updates, destructive deletes.',
-  'Every write targets exactly one space. Pass spaceId explicitly on writes, taking it from the ' +
-    "caller's instructions, a repo/project configuration, or a reference already in hand — when " +
-    'spaceId is omitted the server falls back to an arbitrary session default, which is not an ' +
-    'inferred choice; never guess a space from its name.',
-  'References between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes. Pass ' +
-    'references back exactly as you received them.',
-  'Operations belong to larger workflows described by skills. When a queryOperations row names a ' +
-    'skill, call loadSkill with that name and follow the returned instructions before invoking ' +
-    'the operation; loadSkill with no argument lists every skill. Skills are also offered to ' +
-    'users as prompts (slash commands); loadSkill brings the same text into context without user ' +
-    'action.',
-].join('\n');
+export const SERVER_INSTRUCTIONS = trim`
+  This server reads and writes objects in DXOS spaces (collaborative databases). Its verbs are not
+  separate tools: call queryOperations to search them, then invokeOperation to run one.
+
+  Before invoking an operation for the first time, call queryOperations with its key to get the
+  input schema, and match it exactly. Rows also carry a mutation class: none reads, write creates or
+  updates, destructive deletes.
+
+  Every write targets exactly one space. Pass spaceId explicitly on writes, taking it from the
+  caller's instructions, a repo/project configuration, or a reference already in hand — when spaceId
+  is omitted the server falls back to an arbitrary session default, which is not an inferred choice;
+  never guess a space from its name.
+
+  References between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes. Pass
+  references back exactly as you received them.
+
+  Operations belong to larger workflows described by skills. When a queryOperations row names a
+  skill, call loadSkill with that name and follow the returned instructions before invoking the
+  operation; loadSkill with no argument lists every skill. Skills are also offered to users as
+  prompts (slash commands); loadSkill brings the same text into context without user action.
+`;
 
 export type PassOptions = {
   readonly serverInfo?: Record<string, unknown>;

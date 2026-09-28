@@ -31,7 +31,7 @@ type Invoke = ReturnType<typeof useOperationInvoker>['invoke'];
  * entity id, which would resolve against the *active* space and so mis-resolve a card showing an object
  * from elsewhere.
  */
-const openObject = (
+export const openObject = (
   subject: Obj.Unknown,
   invoke: Invoke,
   options: { pivotId?: string; modifiers?: { shift?: boolean } },

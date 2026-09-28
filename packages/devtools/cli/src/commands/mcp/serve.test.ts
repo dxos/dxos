@@ -70,8 +70,8 @@ const SURFACE_REQUESTS = [
 
 const SURFACE_IDS = SURFACE_REQUESTS.map((request) => request.id);
 
-/** The host-local toolkits: `whoami` (see the TODO on `space-tools.ts`) and the loopback `createUpload`. */
-const STATIC_TOOLS = ['whoami', 'createUpload'];
+/** The host-local toolkits: `whoami` (see the TODO on `space-tools.ts`) and the loopback `createUpload` / `createDownload`. */
+const STATIC_TOOLS = ['whoami', 'createUpload', 'createDownload'];
 
 /** This package's fixed surface: every operation is reached through these rather than as a tool. */
 const SURFACE_TOOLS = ['queryOperations', 'invokeOperation', 'loadSkill'];
