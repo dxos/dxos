@@ -35,11 +35,11 @@ import { WATCH_CHILD_ENV, formatReady } from './watch-protocol.ts';
 /**
  * Names of the statically-defined tools; the projection refuses to build if one of them collides
  * with a name it defines. The operation verbs are not tools at all, but rows `queryOperations`
- * returns and `invokeOperation` dispatches; these two are what an operation cannot reach. `whoami`
+ * returns and `invokeOperation` dispatches; these are what an operation cannot reach. `whoami`
  * reports the session's identity, which EDGE resolves from an OAuth grant rather than a local
- * client, and `createUpload` mints a URL on a listener owned by this process.
+ * client, and `createUpload` / `createDownload` mint URLs on a listener owned by this process.
  */
-const STATIC_TOOL_NAMES = ['whoami', 'createUpload'] as const;
+const STATIC_TOOL_NAMES = ['whoami', 'createUpload', 'createDownload'] as const;
 
 declare global {
   /**
@@ -102,7 +102,7 @@ export const serve = Command.make(
       // FilePlugin is not activated here (it is mostly UI), so its skill is served directly — without
       // it no skill owns `file.createFromUpload` and the operation is invisible to the caller.
       skills: [FileSkill],
-      overrides: [StagedUpload.createFromUploadHandler(uploads)],
+      overrides: [StagedUpload.createFromUploadHandler(uploads), StagedUpload.resolveDownloadHandler(uploads)],
     });
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
@@ -126,6 +126,11 @@ export const serve = Command.make(
       McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server)))),
       McpServer.toolkit(LocalUpload.UploadToolkit).pipe(
         Layer.provide(LocalUpload.UploadToolkit.toLayer(LocalUpload.handlers(uploads))),
+      ),
+      McpServer.toolkit(McpServer.DownloadToolkit).pipe(
+        Layer.provide(
+          McpServer.DownloadToolkit.toLayer(LocalUpload.downloadHandlers(uploads, server.registry, server.host)),
+        ),
       ),
     );
 

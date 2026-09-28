@@ -59,3 +59,28 @@ export const createFromUploadHandler = (source: Source) =>
       }),
     ),
   );
+
+/** Where a local host holds bytes for its download listener to serve. */
+export type Sink = {
+  /** Holds the bytes and returns the id the host's `createDownload` tool signs a URL for. */
+  stage(download: Upload): string;
+};
+
+/**
+ * `file.resolveDownload` for a host that serves downloads itself. Registered in place of the default
+ * handler, which only resolves files already in EDGE's content-addressed store: this one reads the
+ * bytes through whichever backend holds them, so inline and extension-backed files download too.
+ */
+export const resolveDownloadHandler = (sink: Sink) =>
+  FileOperation.ResolveDownload.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ file }) {
+        const object = yield* Database.load(file);
+        const blob = yield* Database.load(object.data);
+        const bytes = yield* Blob.read(blob);
+        const type = blob.type ?? 'application/octet-stream';
+        const downloadId = sink.stage({ bytes, type, name: object.name });
+        return { downloadId, name: object.name, type, size: bytes.byteLength };
+      }),
+    ),
+  );

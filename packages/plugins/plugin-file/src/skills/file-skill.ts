@@ -45,6 +45,10 @@ const make = () =>
         from disk to storage without passing through this conversation, so the cost is the same
         whether the file is 40KB or 90MB. Base64 is never the right choice for a video.
 
+        The reverse works the same way: to save a file from the space to your own disk, ask the host
+        for a download URL for the file reference and run the shell command it returns. Read a file
+        only when you need to look at it yourself; never read one just to write its bytes out.
+
         Images, video, PDFs, and plain text, CSV, Markdown and JSON are accepted. HTML is not.
         Always pass the true media type of the content; do not infer it from a file extension.
       `,
