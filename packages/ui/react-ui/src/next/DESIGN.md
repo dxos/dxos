@@ -173,3 +173,6 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 15. **Collapsible** is Ark Collapsible: a block-row Trigger (caret Indicator rotating 90° when open, then the label)
     over Content whose height animates from Ark's measured `--height`; both motions are off under
     `prefers-reduced-motion`. `aria-expanded` stays true until the closing animation ends.
+16. **Menu** is Ark Menu, portalled like Select: `Menu.Content` takes an explicit `size`, sits at `level='popup'` 2px
+    from its trigger and mounts only while open. Items are block rows (leading Icon, label, trailing shortcut in
+    `--color-description`); the highlight is `--color-hover-surface` under the popup's outline focus ring.

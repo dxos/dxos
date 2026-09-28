@@ -30,6 +30,7 @@ import {
   Label as NextLabel,
   type LabelProps as NextLabelProps,
   type Level as NextLevel,
+  Menu as NextMenu,
   ScrollArea as NextScrollArea,
   Select as NextSelect,
   type SelectOption as NextSelectOption,
@@ -77,4 +78,5 @@ export namespace Next {
   export type ImageProps = NextImageProps;
   export const Card = NextCard;
   export const Collapsible = NextCollapsible;
+  export const Menu = NextMenu;
 }

@@ -53,4 +53,10 @@ export const recipes = {
   collapsibleTrigger: () => `nx-collapsible-trigger ${FOCUS_RING}`,
   collapsibleIndicator: () => 'nx-collapsible-indicator',
   collapsibleContent: () => 'nx-collapsible-content',
+  menuContent: () => 'nx-menu',
+  menuItem: () => 'nx-menu-item',
+  menuItemText: () => 'nx-menu-item-text',
+  menuShortcut: () => 'nx-menu-shortcut',
+  menuSeparator: () => 'nx-menu-separator',
+  menuGroupLabel: () => 'nx-menu-group-label',
 } as const;
