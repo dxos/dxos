@@ -17,7 +17,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
 
-import { FileTooLargeError, UnsupportedFileTypeError } from './create.ts';
+import { FileTooLargeError } from './create.ts';
 
 describe('FileOperation.Create', () => {
   test('uploads a small PNG to the default (inline) backend', async ({ expect }) => {
@@ -93,20 +93,29 @@ describe('FileOperation.Create', () => {
     }
   });
 
-  // `text/html` rather than `text/plain`: plain text is accepted now, and HTML is the type the
-  // allowlist most needs to keep out — a stored HTML file served from the blob origin executes.
-  test('rejects unsupported MIME types', async ({ expect }) => {
+  test('accepts any MIME type, neutralizing absent and executable ones', async ({ expect }) => {
     const { harness, defaultSpace } = await setup();
     await using _harness = harness;
 
-    const error = await harness.runPromise(
-      Operation.invoke(
-        FileOperation.Create,
-        { file: makeFile('page.html', 'text/html', new Uint8Array(8)), db: defaultSpace.db },
-        { spaceId: defaultSpace.id },
-      ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
-    );
-    expect(error).toBeInstanceOf(UnsupportedFileTypeError);
+    const cases: [name: string, declared: string, stored: string][] = [
+      ['logs.ndjson.gz', '', 'application/octet-stream'],
+      ['archive.zip', 'application/zip', 'application/zip'],
+      ['page.html', 'text/html', 'application/octet-stream'],
+      ['feed.xml', 'Application/XML; charset=utf-8', 'application/octet-stream'],
+    ];
+    for (const [name, declared, stored] of cases) {
+      await harness.runPromise(
+        Effect.gen(function* () {
+          const { object } = yield* Operation.invoke(
+            FileOperation.Create,
+            { file: makeFile(name, declared, new Uint8Array(8)), db: defaultSpace.db },
+            { spaceId: defaultSpace.id },
+          );
+          const blob = yield* Database.load(object.data);
+          expect(blob.type, name).toBe(stored);
+        }),
+      );
+    }
   });
 
   test('rejects files larger than the inline cap on the inline backend', async ({ expect }) => {
