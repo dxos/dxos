@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { SessionConfig } from '@dxos/ai';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { ArchivableAnnotation } from '@dxos/schema';
 import { Outline, Repo, TaskSet } from '@dxos/types';
@@ -63,6 +64,9 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
      */
     // TODO(burdon): Change to array? Move into taskSet?
     repo: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
+
+    /** The default configuration (model, ...) for the sessions this project starts; a chat's own overrides it. */
+    session: Schema.optional(SessionConfig.SessionConfig.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Schema.annotate({ title: 'Project' }),
     Annotation.LabelAnnotation.set(['name']),
