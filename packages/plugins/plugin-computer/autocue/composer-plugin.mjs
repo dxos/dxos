@@ -95,8 +95,8 @@ export const steps = [
       // Earlier takes' projects (and the chats filed under them) go too, so the navtree shows only this
       // take's. Through the space's own remove operation, so it cascades as a delete from the UI does.
       await page.waitForFunction(
-        () => globalThis.composer?.invoke && globalThis.dxos?.spaces && document.querySelector(SPACE_TAB),
-        undefined,
+        (tab) => globalThis.composer?.invoke && globalThis.dxos?.spaces && document.querySelector(tab),
+        SPACE_TAB,
         { timeout: 60_000 },
       );
       await page.evaluate(

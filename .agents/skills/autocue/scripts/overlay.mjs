@@ -263,16 +263,16 @@ export const createOverlay = (page, { enabled, feed = true, feedMs = 3_500, posi
       safely(() => page.evaluate(([id, ok, note]) => window.__demoOverlay.resolve(id, ok, note), [id, ok, note])),
     click: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.click(x, y), point)),
     moveCursor: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.moveCursor(x, y), point)),
-    countdown: async (options) => {
-      const code = await loadCountdown();
-      return safely(async () => {
+    // Loaded inside `safely`: a failed transpile must not fail the take, and a disabled overlay skips it.
+    countdown: (options) =>
+      safely(async () => {
+        const code = await loadCountdown();
         // An IIFE assigning `var __countdown`, run as a script through the protocol rather than `eval`,
         // so an app's content security policy cannot refuse it.
         if (!(await page.evaluate(() => Boolean(window.__countdown)))) {
           await page.evaluate(code);
         }
         await page.evaluate((args) => window.__demoOverlay.countdown(args), options);
-      });
-    },
+      }),
   };
 };

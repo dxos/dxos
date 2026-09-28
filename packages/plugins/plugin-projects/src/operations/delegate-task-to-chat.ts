@@ -38,6 +38,9 @@ const DELEGATION_SKILL_KEYS = [
   'org.dxos.skill.sandbox',
 ];
 
+/** Statuses a subtask keeps when its parent is delegated. */
+const FINISHED: ReadonlySet<string> = new Set(['done', 'review', 'cancelled', 'duplicate']);
+
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
     Operation.withHandler(
@@ -53,9 +56,16 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // list the child twice.
         const subtrees = yield* Effect.forEach(requested, (task) => Task.collectSubtree(task));
 
+        // A subtask that is already finished stays finished: it comes along only when it was asked for
+        // by name, so delegating a parent never reopens work that is done.
+        const asked = new Set(requested.map((task) => task.id));
+        const descendants = Task.dedupeById(subtrees.flat()).filter(
+          (task) => asked.has(task.id) || !FINISHED.has(task.status ?? 'todo'),
+        );
+
         // Idempotent over re-invocation: a task the agent already holds is skipped rather than
         // handed to a second session, and a list of nothing else stops here the way an empty one does.
-        const tasks = Task.dedupeById(subtrees.flat()).filter((task) => !Task.isAgentWorking(task));
+        const tasks = descendants.filter((task) => !Task.isAgentWorking(task));
         invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather

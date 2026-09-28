@@ -178,8 +178,13 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     invariant(space, 'Expected a default space.');
 
     const children = ['Read the guide', 'Write the plugin'].map((title) => Task.make({ title, status: 'todo' }));
+    const finished = Task.make({ title: 'Already shipped', status: 'done' });
     const parent = space.db.add(
-      Task.make({ title: 'Build the plugin', status: 'todo', subtasks: children.map((child) => Ref.make(child)) }),
+      Task.make({
+        title: 'Build the plugin',
+        status: 'todo',
+        subtasks: [...children, finished].map((child) => Ref.make(child)),
+      }),
     );
     const sibling = space.db.add(Task.make({ title: 'Unrelated', status: 'todo' }));
     await space.db.flush();
@@ -193,6 +198,8 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(chat.name).toBe('Build the plugin');
     expect([parent, ...children].map((task) => task.status)).toEqual(['started', 'started', 'started']);
     expect(sibling.status).toBe('todo');
+    // A finished subtask is not reopened.
+    expect(finished.status).toBe('done');
   });
 
   test('refuses a list spanning two projects', async ({ expect }) => {

@@ -9,8 +9,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { type CountdownOptions, playCountdown } from './play-countdown.ts';
 
+// No `signal`: unmounting is how a React host stops the countdown.
 export type CountdownProps = ThemedClassName<
-  CountdownOptions & {
+  Omit<CountdownOptions, 'signal'> & {
     /** Called once the count has run out and faded. */
     onComplete?: () => void;
   }
