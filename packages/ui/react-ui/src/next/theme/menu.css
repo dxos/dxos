@@ -3,8 +3,11 @@
  */
 
 @layer dx-components {
+  /* A long menu scrolls inside the space the positioner reports, which is what the current `Menu.Viewport` did. */
   .nx-menu {
     min-width: 10rem;
+    max-height: var(--available-height, none);
+    overflow-y: auto;
   }
 
   .nx-menu-item {
@@ -35,5 +38,20 @@
     font-size: var(--nx-label-font-size);
     line-height: var(--nx-label-line-height);
     color: var(--color-description);
+  }
+
+  /* An icon-sized leading cell, so checked and unchecked option items keep their labels aligned. */
+  .nx-menu-indicator-cell {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--nx-icon-size);
+    height: var(--nx-icon-size);
+  }
+  .nx-menu-indicator[hidden] {
+    display: none;
+  }
+  .nx-menu-item[data-state='open'] {
+    background: var(--color-hover-surface);
   }
 }

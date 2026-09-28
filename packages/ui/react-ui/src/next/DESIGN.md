@@ -349,6 +349,16 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     no Tooltip and a required `label` (AUDIT 2.10). The `useMenuActions` action-graph binding (`ActionIconButton`,
     `Toolbar.Menu`) waits for Phase 4, where react-ui-menu moves onto Next Menu.
 
+44. **Menu parity.** `ContextTrigger`, `CheckboxItem`, `RadioGroup` (Ark's `RadioItemGroup`), `RadioItem` and
+    `ItemIndicator` are Ark's parts. Option items lead with an icon-sized indicator cell (a check, or a dot for
+    radio) that stays when unchecked, so their labels align with each other and with icon items. A nested menu is
+    `Menu.Sub` (a Root inside a parent's Content, placed `right-start` with no gutter) opened by `Menu.SubTrigger`
+    (Ark's `TriggerItem`, an item row with a trailing caret, highlighted while its menu is open); its Content is the
+    ordinary `Menu.Content`. `Content arrow` draws Popover's arrow, off by default since menus usually have none. Ark
+    has no virtual-trigger part: a menu without a Trigger opens under control and anchors through
+    `positioning.getAnchorRect`, which the story and Test cover. The content caps itself at the positioner's
+    `--available-height` and scrolls, replacing the current `Menu.Viewport`.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).
