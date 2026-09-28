@@ -27,6 +27,11 @@ const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
  * nothing about the connection. Probe and re-arm instead of restarting.
  */
 const KEEPALIVE_WATCHDOG_LATE_TOLERANCE = 3_000;
+/**
+ * Probes in a row that may go unanswered before the watchdog restarts even though the loop keeps stalling: a live
+ * connection answers between blocks, so only a dead one gets this far.
+ */
+const KEEPALIVE_MAX_UNANSWERED_PROBES = 3;
 
 /** `WebSocket.CONNECTING`, inlined because `isomorphic-ws` exposes no static in every runtime. */
 const WS_CONNECTING = 0;
@@ -60,6 +65,8 @@ export class EdgeWsConnection extends Resource {
    * so pongs that arrived meanwhile went unread.
    */
   private _loopStalledAt: number | undefined;
+  /** Probes the watchdog sent since anything was last received. */
+  private _unansweredProbes = 0;
   private _rtt = 0;
 
   // Rate tracking with sliding window.
@@ -227,6 +234,7 @@ export class EdgeWsConnection extends Resource {
         return;
       }
       this._lastReceivedMessageTimestamp = Date.now();
+      this._unansweredProbes = 0;
       if (event.data === '__pong__') {
         // Calculate latency.
         if (this._pingTimestamp) {
@@ -330,7 +338,8 @@ export class EdgeWsConnection extends Resource {
    * for the full window. Wall-clock silence alone is not evidence — sync compute can pin the event
    * loop for seconds, during which the ping sender does not run and arrived pongs are not
    * processed; restarting a healthy connection on that basis costs a re-handshake and fails
-   * in-flight sync rounds.
+   * in-flight sync rounds. A stalled loop is excused only until {@link KEEPALIVE_MAX_UNANSWERED_PROBES}
+   * probes in a row go unanswered.
    */
   private _rescheduleHeartbeatTimeout(): void {
     if (!this.isOpen) {
@@ -360,10 +369,11 @@ export class EdgeWsConnection extends Resource {
           this._loopStalledAt === undefined ? Number.POSITIVE_INFINITY : now - this._loopStalledAt;
         const loopWasLive =
           firedLateByMs < KEEPALIVE_WATCHDOG_LATE_TOLERANCE && loopStalledAgoMs >= SIGNAL_KEEPALIVE_TIMEOUT;
-        if (pingsWereFlowing && loopWasLive) {
+        if ((pingsWereFlowing && loopWasLive) || this._unansweredProbes >= KEEPALIVE_MAX_UNANSWERED_PROBES) {
           log.warn('restart due to inactivity timeout', {
             silenceMs,
             pingAgeMs,
+            unansweredProbes: this._unansweredProbes,
             lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
           });
           this._callbacks.onRestartRequired('inactivity_timeout');
@@ -376,7 +386,9 @@ export class EdgeWsConnection extends Resource {
           pingAgeMs,
           firedLateByMs,
           loopStalledAgoMs,
+          unansweredProbes: this._unansweredProbes,
         });
+        this._unansweredProbes++;
         this._sendPing();
         this._rescheduleHeartbeatTimeout();
       },

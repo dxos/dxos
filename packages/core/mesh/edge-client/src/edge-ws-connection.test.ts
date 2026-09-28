@@ -219,6 +219,29 @@ describe('EdgeWsConnection keepalive watchdog', () => {
 
     expect(restarts).toEqual(['inactivity_timeout']);
   });
+
+  test('restarts a dead connection even when the loop blocks for most of every window', async ({ expect }) => {
+    const { restarts } = await openAnsweredConnection();
+
+    for (let cycle = 0; cycle < 12; cycle++) {
+      await block(8_000);
+      await run(2_000);
+    }
+
+    expect(restarts).toEqual(['inactivity_timeout']);
+  });
+
+  test('keeps probing a blocked connection that answers between blocks', async ({ expect }) => {
+    const { ws, restarts } = await openAnsweredConnection();
+
+    for (let cycle = 0; cycle < 4; cycle++) {
+      await block(12_600);
+      await block(12_600);
+      ws.onmessage?.({ data: '__pong__', type: 'message' });
+    }
+
+    expect(restarts).toEqual([]);
+  });
 });
 
 /**
