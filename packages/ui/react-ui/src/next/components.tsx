@@ -40,7 +40,9 @@ export namespace Next {
   export const Toolbar = ({ children, size = 'md' }: PropsWithChildren<{ size?: Size }>) => {
     return (
       <Container size={size} asChild>
-        <div className='shrink-0 w-full flex items-center overflow-x-auto scrollbar-none'>{children}</div>
+        <div role='toolbar' className='shrink-0 w-full flex items-center overflow-x-auto scrollbar-none'>
+          {children}
+        </div>
       </Container>
     );
   };
