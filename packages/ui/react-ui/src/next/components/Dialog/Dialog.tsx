@@ -4,7 +4,7 @@
 
 import { Dialog as DialogPrimitive } from '@ark-ui/react/dialog';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ComponentPropsWithoutRef, type ReactNode, forwardRef } from 'react';
+import React, { type ComponentPropsWithoutRef, type ReactNode, type RefObject, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -15,6 +15,12 @@ import { Button } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
 import { Group } from '../Group/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+
+/**
+ * Marks the control a dialog focuses when it opens (the current constant's role); zag's own initial-focus lookup reads
+ * it, ahead of the first tabbable control.
+ */
+export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-autofocus';
 
 //
 // Root
@@ -49,12 +55,14 @@ DialogTrigger.displayName = 'Next.Dialog.Trigger';
 type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
   /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
   size?: Size;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
 };
 
 /** Portalled surface at `level='raised'` over a scrim, centred in the viewport: a column of Header, Body and Footer. */
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, size = 'md', children, ...props }, forwardedRef) => (
-    <Portal>
+  ({ classNames, size = 'md', container, children, ...props }, forwardedRef) => (
+    <Portal container={container}>
       <DialogPrimitive.Backdrop className={recipes.dialogBackdrop()} />
       <DialogPrimitive.Positioner className={recipes.dialogPositioner()}>
         <DialogPrimitive.Content

@@ -3,6 +3,8 @@
 //
 
 import {
+  DIALOG_AUTOFOCUS_ATTRIBUTE as NEXT_DIALOG_AUTOFOCUS_ATTRIBUTE,
+  AlertDialog as NextAlertDialog,
   Block as NextBlock,
   type BlockProps as NextBlockProps,
   Button as NextButton,
@@ -53,6 +55,8 @@ import {
   type TagProps as NextTagProps,
   Textarea as NextTextarea,
   type TextareaProps as NextTextareaProps,
+  TextTooltip as NextTextTooltip,
+  type TextTooltipProps as NextTextTooltipProps,
   Toggle as NextToggle,
   ToggleGroup as NextToggleGroup,
   type ToggleProps as NextToggleProps,
@@ -97,6 +101,8 @@ export namespace Next {
   export const Select = NextSelect;
   export type SelectOption = NextSelectOption;
   export const Dialog = NextDialog;
+  export const DIALOG_AUTOFOCUS_ATTRIBUTE = NEXT_DIALOG_AUTOFOCUS_ATTRIBUTE;
+  export const AlertDialog = NextAlertDialog;
   export const Switch = NextSwitch;
   export type SwitchProps = NextSwitchProps;
   export const FieldSet = NextFieldSet;
@@ -106,6 +112,8 @@ export namespace Next {
   export const Collapsible = NextCollapsible;
   export const Menu = NextMenu;
   export const Tooltip = NextTooltip;
+  export const TextTooltip = NextTextTooltip;
+  export type TextTooltipProps = NextTextTooltipProps;
   export const Textarea = NextTextarea;
   export type TextareaProps = NextTextareaProps;
   export const DateInput = NextDateInput;

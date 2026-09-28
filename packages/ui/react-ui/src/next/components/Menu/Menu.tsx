@@ -4,7 +4,7 @@
 
 import { Menu as MenuPrimitive } from '@ark-ui/react/menu';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ReactNode, forwardRef } from 'react';
+import React, { type ReactNode, type RefObject, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -73,12 +73,14 @@ type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
   size?: Size;
   /** Point at the trigger with an arrow in the popup's surface colour, like Popover's; off by default for menus. */
   arrow?: boolean;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
 };
 
 /** Portalled menu at `level='popup'`; a nested menu's Content is the same part inside a `Menu.Sub`. */
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
-  ({ classNames, size = 'md', arrow = false, children, ...props }, forwardedRef) => (
-    <Portal>
+  ({ classNames, size = 'md', arrow = false, container, children, ...props }, forwardedRef) => (
+    <Portal container={container}>
       <MenuPrimitive.Positioner>
         <MenuPrimitive.Content
           {...props}

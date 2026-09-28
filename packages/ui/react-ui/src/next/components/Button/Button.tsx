@@ -10,7 +10,7 @@ import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { Icon } from '../Icon/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
-import { Tooltip } from '../Tooltip/index.ts';
+import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
 
 /** The current Button's variants; `primary` marks the one action a surface leads with (e.g. a form's Save). */
 export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'outline' | 'destructive' | 'valence';
@@ -19,8 +19,6 @@ export type ButtonValence = MessageValence;
 
 /** Tag's palette (`Next.TagHue`), repeated here since Tag builds on nothing of Button's. */
 export type ButtonHue = NeutralPalette | ChromaticPalette | MessageValence;
-
-export type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
 
 export type ButtonVariantProps = {
   variant?: ButtonVariant;

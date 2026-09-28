@@ -5,8 +5,10 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
+
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
@@ -43,11 +45,78 @@ const SharePopover = ({ size, arrow, label, testId }: SharePopoverProps) => (
   </Next.Popover.Root>
 );
 
-/** A popover with the default arrow and one with `arrow={false}`; the content takes the row's size (finding 9). */
+random.seed(123);
+
+const NOTES = Array.from({ length: 30 }, () => random.lorem.sentence());
+
+/** A modal popover whose Body scrolls, portalled into a local element instead of the body. */
+const NotesPopover = ({ size }: SizeArgs) => {
+  const container = useRef<HTMLDivElement>(null);
+  return (
+    <>
+      <Next.Popover.Root modal>
+        <Next.Popover.Trigger asChild>
+          <Next.Button data-testid={`notes-${size}-trigger`}>Notes</Next.Button>
+        </Next.Popover.Trigger>
+        <Next.Popover.Content size={size} container={container} data-testid={`notes-${size}`}>
+          <Next.Popover.Header>
+            <Next.Popover.Title>Notes</Next.Popover.Title>
+            <Next.Popover.CloseTrigger />
+          </Next.Popover.Header>
+          <Next.Popover.Body data-testid={`notes-${size}-body`}>
+            {NOTES.map((note, index) => (
+              <Next.Typography key={index}>{note}</Next.Typography>
+            ))}
+          </Next.Popover.Body>
+          <Next.Group justify='end'>
+            <Next.Popover.CloseTrigger asChild>
+              <Next.Button>Done</Next.Button>
+            </Next.Popover.CloseTrigger>
+          </Next.Group>
+        </Next.Popover.Content>
+      </Next.Popover.Root>
+      <div ref={container} data-testid={`notes-${size}-container`} />
+    </>
+  );
+};
+
+/** A popover with no trigger, opened under control and anchored to a text span (a virtual trigger). */
+const AnchoredPopover = ({ size }: SizeArgs) => {
+  const [open, setOpen] = useState(false);
+  const anchor = useRef<HTMLSpanElement>(null);
+  return (
+    <>
+      <Next.Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
+        Open at anchor
+      </Next.Button>
+      <Next.Typography asChild>
+        <span ref={anchor} data-testid={`anchor-${size}`}>
+          Anchor
+        </span>
+      </Next.Typography>
+      <Next.Popover.Root
+        open={open}
+        onOpenChange={({ open }) => setOpen(open)}
+        positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
+      >
+        <Next.Popover.Content size={size} data-testid={`anchored-${size}`}>
+          <Next.Popover.Description>Anchored to a span.</Next.Popover.Description>
+        </Next.Popover.Content>
+      </Next.Popover.Root>
+    </>
+  );
+};
+
+/**
+ * A popover with the default arrow and one with `arrow={false}`, a modal one with a scrolling Body portalled into a
+ * local element, and one anchored to a span; the content takes the row's size (finding 9).
+ */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <Next.Group>
     <SharePopover size={size} label='Share' testId={`popover-${size}`} />
     <SharePopover size={size} arrow={false} label='Share (no arrow)' testId={`plain-${size}`} />
+    <NotesPopover size={size} />
+    <AnchoredPopover size={size} />
   </Next.Group>
 );
 
@@ -67,7 +136,9 @@ export const Default: Story = {};
 /**
  * Escape, the header's close button and Done each close it, returning focus to the trigger. The popover takes its
  * own size, since it leaves the trigger's sized scope; `arrow={false}` drops the arrow and its share of the gutter.
- * It opens a portalled `dialog` named by its title, 2px from the trigger at `level='popup'`; the story ends open.
+ * It opens a portalled `dialog` named by its title, 2px from the trigger at `level='popup'`. `modal` keeps focus
+ * inside; the Body scrolls within the space available to the popup; `container` portals it into a given element; and a
+ * popover without a trigger anchors to `positioning.getAnchorRect`. The story ends open.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -104,6 +175,29 @@ export const Test: Story = {
     await expectAnchoredBelow(plainTrigger, plain, 'center');
     await userEvent.click(within(plain).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
+
+    // Modal, scrolling Body, portalled into a local element.
+    await userEvent.click(byTestId(canvasElement, 'notes-md-trigger'));
+    const notes = await body.findByTestId('notes-md');
+    await expect(byTestId(canvasElement, 'notes-md-container').contains(notes)).toBe(true);
+    const notesBody = byTestId(notes, 'notes-md-body');
+    const viewport = notesBody.querySelector<HTMLElement>('.nx-scroll-viewport');
+    await waitFor(() => expect(viewport && viewport.scrollHeight > viewport.clientHeight).toBe(true));
+    await expect(notes.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
+    await waitFor(() => expect(notes.contains(canvasElement.ownerDocument.activeElement)).toBe(true));
+    for (let tab = 0; tab < 4; tab++) {
+      await userEvent.tab();
+      await expect(notes.contains(canvasElement.ownerDocument.activeElement)).toBe(true);
+    }
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByTestId('notes-md')).toBeNull());
+
+    // A virtual trigger.
+    await userEvent.click(byTestId(canvasElement, 'anchored-md-trigger'));
+    const anchored = await body.findByTestId('anchored-md');
+    await expectAnchoredBelow(byTestId(canvasElement, 'anchor-md'), anchored, 'center');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByTestId('anchored-md')).toBeNull());
 
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(trigger);

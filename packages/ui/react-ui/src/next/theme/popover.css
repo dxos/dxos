@@ -9,7 +9,15 @@
     gap: var(--nx-gap-size);
     min-width: 12rem;
     max-width: min(24rem, 100vw - 1rem);
+    max-height: var(--available-height, none);
     padding: var(--nx-gap-size);
+  }
+
+  /* Fills what Header and Footer leave; its inset gutter replaces the panel's padding, so the thumb sits in it. */
+  .nx-popover-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-inline: calc(-1 * var(--nx-gap-size));
   }
 
   /* A trailing CloseTrigger's inset cell ends at the panel's padding edge, like `Field.Header`'s trailing icon-only Button. */

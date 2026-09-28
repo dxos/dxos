@@ -359,6 +359,21 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     `positioning.getAnchorRect`, which the story and Test cover. The content caps itself at the positioner's
     `--available-height` and scrolls, replacing the current `Menu.Viewport`.
 
+45. **Overlay parity.** Every portalled Content (Select, Combobox, Menu, Popover, Tooltip, Dialog) takes
+    `container`, Ark's `Portal container`, which is also the first option of AUDIT 2.2 (portal into a sized scope).
+    Popover passes `modal` through to zag and gains `Popover.Body`, a composed ScrollArea like `Dialog.Body` whose
+    inset gutter replaces the panel's padding, while the panel caps itself at the positioner's `--available-height`.
+    zag decides whether a popover has a title or description once, when its machine starts, which is before lazily
+    mounted content exists, so a lazy popover was unnamed; `Popover.Title`/`Description` now register with their
+    Content (a behaviour context), which sets `aria-labelledby`/`aria-describedby` itself. Ark has no virtual-trigger
+    part: Popover and Menu anchor through `positioning.getAnchorRect` (Popover also has `Anchor`). `Tooltip.Trigger
+content side` is the current shorthand: the trigger brings its own Root and Content, so `Next.Tooltip` stays a
+    namespace. `Next.TextTooltip` is one ellipsizing line whose controlled tooltip opens only if the text is cut off,
+    measured when it would open. `Next.AlertDialog` reuses the Dialog parts with `role=alertdialog` (zag keeps it open
+    on an outside click); it focuses a control marked `DIALOG_AUTOFOCUS_ATTRIBUTE` (`data-autofocus`, which zag's own
+    initial-focus lookup already honours in a Dialog), else `Cancel`; `Action` is a `primary` Button that closes after
+    its handler unless the handler prevents default. Next ships no labels for Cancel or Action (AUDIT 2.10).
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

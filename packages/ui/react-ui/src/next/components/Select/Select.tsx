@@ -5,7 +5,7 @@
 import { createListCollection } from '@ark-ui/react/collection';
 import { Portal } from '@ark-ui/react/portal';
 import { Select as SelectPrimitive, useSelectContext } from '@ark-ui/react/select';
-import React, { type ReactNode, forwardRef, useMemo } from 'react';
+import React, { type ReactNode, type RefObject, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -140,12 +140,14 @@ SelectTrigger.displayName = 'Next.Select.Trigger';
 type SelectContentProps = ThemedClassName<SelectPrimitive.ContentProps> & {
   /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
   size?: Size;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
 };
 
 /** Portalled listbox at `level='popup'`. */
 const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
-  ({ classNames, size, children, ...props }, forwardedRef) => (
-    <Portal>
+  ({ classNames, size, container, children, ...props }, forwardedRef) => (
+    <Portal container={container}>
       <SelectPrimitive.Positioner>
         <SelectPrimitive.Content
           {...props}

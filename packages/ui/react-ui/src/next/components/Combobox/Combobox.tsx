@@ -5,7 +5,7 @@
 import { createListCollection } from '@ark-ui/react/collection';
 import { Combobox as ComboboxPrimitive, useComboboxContext } from '@ark-ui/react/combobox';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ReactNode, forwardRef, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, type RefObject, forwardRef, useEffect, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -145,12 +145,14 @@ type ComboboxContentProps = ThemedClassName<ComboboxPrimitive.ContentProps> & {
   size?: Size;
   /** Shown when no option matches. */
   empty?: ReactNode;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
 };
 
 /** Portalled listbox at `level='popup'`; without children it lists the options that match the typed text. */
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
-  ({ classNames, size, empty = 'No results', children, ...props }, forwardedRef) => (
-    <Portal>
+  ({ classNames, size, empty = 'No results', container, children, ...props }, forwardedRef) => (
+    <Portal container={container}>
       <ComboboxPrimitive.Positioner>
         <ComboboxPrimitive.Content
           {...props}

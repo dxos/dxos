@@ -97,7 +97,8 @@ export const Test: Story = {
 
     const pin = byTestId(canvasElement, 'pin-md');
     const href = () => pin.querySelector('use')?.getAttribute('href') ?? '';
-    await expect(href()).toContain('ph--star--regular');
+    // The icon's href resolves once the sprite registry has the icon.
+    await waitFor(() => expect(href()).toContain('ph--star--regular'));
     await userEvent.click(pin);
     await waitFor(() => expect(href()).toContain('ph--star--fill'));
     await expect(pin).toHaveAttribute('aria-pressed', 'true');

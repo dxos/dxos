@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './AlertDialog/index.ts';
 export * from './Block/index.ts';
 export * from './Button/index.ts';
 export * from './Card/index.ts';
