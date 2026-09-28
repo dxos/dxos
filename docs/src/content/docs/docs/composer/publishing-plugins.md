@@ -325,7 +325,13 @@ export default Plugin.define(meta).pipe(
           match: AppNodeMatcher.whenSpace,
           connector: (space) =>
             Effect.succeed([
-              AppNode.makeGroup({ id: GROUP, type: GROUP_TYPE, label: 'Hello', space, position: 400 }),
+              AppNode.makeGroup({
+                id: GROUP,
+                type: GROUP_TYPE,
+                label: 'Hello',
+                space,
+                position: 400,
+              }),
             ]),
         });
         // A page in that group. The URL binding is what lets the deck open it.
