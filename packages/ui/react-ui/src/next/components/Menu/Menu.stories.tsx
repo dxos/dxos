@@ -223,7 +223,7 @@ export const Test: Story = {
     // A context menu opens at the pointer.
     const context = byTestId(canvasElement, 'context-md');
     const { left, top } = context.getBoundingClientRect();
-    fireEvent.contextMenu(context, { clientX: left + 10, clientY: top + 5 });
+    await fireEvent.contextMenu(context, { clientX: left + 10, clientY: top + 5 });
     const contextMenu = await within(canvasElement.ownerDocument.body).findByRole('menu');
     await expect(within(contextMenu).getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
     await waitFor(() => expect(contextMenu.getBoundingClientRect().left).toBeCloseTo(left + 10, -1));
