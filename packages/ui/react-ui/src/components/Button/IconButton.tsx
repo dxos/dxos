@@ -15,11 +15,12 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
     label: string;
     noTooltip?: boolean;
     iconOnly?: boolean;
-    square?: boolean; // TODO(burdon): Should be automatic in style?
-    /** Removes inline padding while keeping the control's height. */
-    compact?: boolean;
     iconEnd?: boolean;
     iconClassNames?: ThemedClassName<any>['classNames'];
+    /** @deprecated Remove (should be automatic in style.) */
+    square?: boolean;
+    /** Removes inline padding while keeping the control's height. */
+    compact?: boolean;
     tooltipSide?: TooltipSide;
   };
 

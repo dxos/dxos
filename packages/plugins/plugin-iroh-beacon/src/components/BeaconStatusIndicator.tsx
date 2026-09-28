@@ -16,7 +16,7 @@ import { BeaconCapabilities } from '../capabilities/beacon-service.ts';
 
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {
-  // The status bar paints with the shell, but the beacon service activates on `SpacesReady` — which
+  // The status bar paints with the shell, but the beacon service activates on `SpacesAvailable` — which
   // the forked client initialization can land long after — so absence is a normal early state here.
   const state = useOptionalAtomCapability(BeaconCapabilities.State);
   const { t } = useTranslation(meta.profile.key);

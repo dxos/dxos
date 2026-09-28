@@ -85,6 +85,12 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   },
   () => import('./companion-chat-provisioner.ts'),
 );
+// Ungated: an agent blocked on a question is waiting whether or not any assistant UI is on screen.
+export const QuestionResumer = Capability.lazyModule(
+  'QuestionResumer',
+  { requires: [Capabilities.OperationInvoker], provides: [] },
+  () => import('./question-resumer.ts'),
+);
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['node'],
 });

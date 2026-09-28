@@ -104,6 +104,7 @@ export default Capability.makeModule(
       // Debug object companion.
       AppGraphBuilder.createExtension({
         id: 'debugObject',
+        relation: AppNode.companion,
         match: AppNodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
@@ -120,6 +121,7 @@ export default Capability.makeModule(
       // Object explorer deck companion.
       AppGraphBuilder.createExtension({
         id: 'spaceObjects',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

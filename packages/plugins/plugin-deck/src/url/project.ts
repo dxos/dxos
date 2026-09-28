@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities, DeckSchema } from '#types';
 
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
-import { type CompanionTarget, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
+import { type CompanionTarget, type NavigationIntent, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
 import * as Navigation from './navigation.ts';
 import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
 
@@ -38,6 +38,24 @@ export const RESOLVE_TIMEOUT_MS = 10_000;
 const RESOLVE_TIMEOUT = `${RESOLVE_TIMEOUT_MS} millis`;
 
 const LOADER_TIMEOUT = '5 seconds';
+
+/** What the navigation target loaders say about an object; `absent` only when every answer is `absent`. */
+const targetVerdict = (
+  loaders: readonly AppCapabilities.NavigationTargetLoader[],
+  spaceId: string,
+  entityIds: readonly string[],
+): Effect.Effect<AppCapabilities.NavigationTargetVerdict> =>
+  Effect.forEach(entityIds, (entityId) =>
+    Effect.forEach(loaders, (loader) =>
+      loader.load({ spaceId, entityId }).pipe(
+        Effect.timeoutOrElse({
+          duration: LOADER_TIMEOUT,
+          orElse: () => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'),
+        }),
+        Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
+      ),
+    ),
+  ).pipe(Effect.map((results) => NotFound.combineVerdicts(results.flat())));
 
 /** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
@@ -68,6 +86,8 @@ export type ProjectOptions = {
   attend?: boolean;
   /** Node ids an in-app navigation already holds; see {@link Navigation.PlankIds}. */
   navigatedIds?: Navigation.PlankIds;
+  /** How this navigation lands; see {@link NavigationIntent}. */
+  intent?: NavigationIntent;
 };
 
 /**
@@ -177,7 +197,9 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
   yield* switchWorkspace(workspacePath);
 
-  yield* applyActive(initialPlanks(pairs, idsBySegment()));
+  // An in-app navigation already holds its ids, so this first pass is the write that mounts its planks
+  // and carries the caller's intent.
+  yield* applyActive(initialPlanks(pairs, idsBySegment()), options?.intent);
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
@@ -190,18 +212,8 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
         if (candidates.length === 0) {
           return Effect.void;
         }
-        return Effect.forEach(candidates, (entityId) =>
-          Effect.forEach(loaders, (loader) =>
-            loader.load({ spaceId: pair.workspace, entityId }).pipe(
-              Effect.timeoutOrElse({
-                duration: LOADER_TIMEOUT,
-                orElse: () => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'),
-              }),
-              Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
-            ),
-          ),
-        ).pipe(
-          Effect.tap((results) => Effect.sync(() => (verdicts[index] = NotFound.combineVerdicts(results.flat())))),
+        return targetVerdict(loaders, pair.workspace, candidates).pipe(
+          Effect.tap((verdict) => Effect.sync(() => (verdicts[index] = verdict))),
         );
       },
       { concurrency: 'unbounded' },
@@ -237,15 +249,26 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     });
   });
 
-  const displaced = yield* applyActive(planks);
+  // An external URL's planks resolve only here, so the chain end lands with the write that mounts them.
+  const chainEnd = attendChainEnd ? (companionAnchorId ?? planks[planks.length - 1]?.id) : undefined;
+  const displaced = yield* applyActive(planks, { scrollIntoView: chainEnd });
 
   yield* applyCompanion(companion);
+
+  const open = registry.get(ephemeralAtom).open[workspacePath];
+  if (open && open.url !== pathname) {
+    const ephemeral = registry.get(ephemeralAtom);
+    registry.set(ephemeralAtom, {
+      ...ephemeral,
+      open: { ...ephemeral.open, [workspacePath]: { ...open, url: pathname } },
+    });
+  }
 
   if (!attendChainEnd) {
     return displaced;
   }
 
-  return companionAnchorId ?? planks[planks.length - 1]?.id;
+  return chainEnd;
 });
 
 /**

@@ -7,6 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
+import * as CrxEvents from '@dxos/plugin-crx/CrxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { PreviewEvents } from '@dxos/plugin-preview';
@@ -39,10 +41,16 @@ export const LinkResolver = Capability.lazyModule(
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: [],
 });
+export const PageActionProvider = Capability.lazyModule(
+  'PageActionProvider',
+  { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
+  () => import('./page-action.ts'),
+);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.cardContent', 'org.dxos.role.cardMenu', 'org.dxos.role.article', 'org.dxos.role.dialog'],
 });

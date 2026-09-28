@@ -1,0 +1,218 @@
+---
+id: org.dxos.review.effect
+name: EffectRules
+version: 0.1.0
+---
+
+Effect-TS authoring conventions mined from a year of human review comments on
+`dxos/dxos`, clustered into candidate rules in
+`.agents/projects/architecture-rules/dataset/CANDIDATES.md`. Each `rule` block
+below is discovered by the agentic-review harness, matched against the files
+its globs select, and applied by a focused subagent.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule no-mixed-promise-effect-lifecycle: Once an interface is Effect-based, keep its whole surface in Effect
+  A service or module with some `Promise<T>`-returning methods and others
+  returning `Effect<T, E>` forces every caller to know which convention this
+  particular method uses, and drops the Promise methods' errors out of
+  Effect's typed-error channel entirely. Flag a service interface mixing
+  `Promise` and `Effect` return types; a plain `throw new Error(...)` inside
+  `Effect.gen` instead of `Effect.fail`; manual `.open()`/`.close()` calls on
+  a resource instead of `Scope` or the shared resource-lifecycle wrapper. Do
+  not flag a true platform boundary — dynamic `import()`, a browser callback
+  API — where CLAUDE.md says Promises belong. Fix: wrap the remaining Promise
+  method in Effect and route lifecycle through Scope.
+  Source: 5 review comments across 5 PRs, e.g. https://github.com/dxos/dxos/pull/9896#discussion_r2392065488.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: Promise<|\.open\(\)|\.close\(\)|throw new Error
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule flat-layer-composition: Compose Effect layers flatly, as module-level values, with a single provide
+  A layer built inside a function closure is rebuilt on every call instead of
+  once; several chained `Effect.provide` calls where one `Layer.mergeAll` and
+  a single provide would do adds indirection with no benefit; re-providing a
+  dependency the layer graph already resolves hides which layer actually
+  supplies it. Flag a layer constructed inside a function body rather than at
+  module scope; multiple chained `Effect.provide` calls collapsible into one
+  `Layer.mergeAll`; an explicit provide of a service the enclosing graph
+  already satisfies; a resource-acquiring function that returns only an
+  `Effect`, forcing every caller to hand-roll its own `Layer.provide`
+  wrapping. Do not flag a layer that must be parameterized per call and
+  genuinely cannot be a static module value.
+  Source: 7 review comments across 4 PRs, e.g. https://github.com/dxos/dxos/pull/11054#discussion_r3129706252.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: Layer\.|Effect\.provide
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule standalone-service-accessor: Give a repeated "yield* the tag, then call a method" pattern its own function
+  When every caller has to `yield*` the same service tag out of context and
+  then invoke the same method, that pair of steps is the real API and belongs
+  behind a standalone function (a module-level helper, or
+  `Effect.serviceFunction`) rather than being retyped at each call site. Flag
+  the same `const svc = yield* Service; svc.method(...)` pattern repeated at
+  more than one call site for the same service/method pair. Do not flag a
+  single call site, or a service accessed differently depending on context,
+  where there is no real duplication yet. Fix: add the standalone wrapper and
+  call it directly at each site.
+  Source: 3 review comments across 3 PRs, e.g. https://github.com/dxos/dxos/pull/9896#discussion_r2394501074.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule effect-requirement-type-not-erased: Propagate an Effect's `R` requirement type; never erase it to `any` or cast around it
+  A cast forcing an Effect's return type to match hides a real
+  service-requirement mismatch instead of fixing it, and widening a generic
+  `<R>` parameter to `any` in a signature breaks the compiler's ability to
+  catch a missing `provide` anywhere downstream. This is the Effect-specific
+  failure mode of `no-casts`, which covers casts generally — this rule is
+  about the requirement channel specifically. Flag `Effect.Effect<O>` with the
+  requirement channel erased or cast away; a function accepting or returning
+  `any` where a generic `<R>` should thread through; a hand-written
+  requirement-narrowing formula that isn't the standard `Exclude<R, R0> | R2`.
+  Do not flag an explicit, deliberate `never` requirement once every service
+  is genuinely provided. Fix: thread the generic `<R>` through and provide the
+  real missing service instead of casting.
+  Source: 8 review comments across 2 PRs, e.g. https://github.com/dxos/dxos/pull/9896#discussion_r2392090168.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: Effect\.Effect<|Exclude<
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule service-via-shared-factory: Construct an Effect service via the shared Tag+Layer factory, not a raw Context.Tag or plain class
+  A service defined ad hoc as `class Foo extends Context.Tag(...)`, or
+  instantiated directly as a plain class, bypasses the project's shared
+  factory (e.g. `Service.make`) and the Tag+Layer pair it produces — the
+  result doesn't compose into the layer stack the rest of the codebase
+  expects. This is adjacent to `namespace-service-layers`, which covers where
+  an already-factory-built service's layer constructors are exported; this
+  rule covers how the service itself gets built. Flag a new service defined
+  as `class Foo extends Context.Tag(...)` without going through the shared
+  factory, and a service implemented as a plain class instantiated directly.
+  Do not flag a `Context.Tag` used purely as a type, with no service
+  construction happening at that site. Fix: rewrite with the shared
+  `Service.make`-style factory.
+  Source: 3 review comments across 2 PRs, e.g. https://github.com/dxos/dxos/pull/10966#discussion_r3064089079.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: Context\.Tag\(
+  unit: file
+  system-one: on
+  context: imports
+  severity: warn
+```
+
+```mdl
+rule schema-declare-and-brand: Use Schema.declare and Brand instead of hand-rolling the equivalent machinery
+  A Schema for a type identified by a runtime type guard should use
+  `Schema.declare(isX)` rather than hand-composing `Schema.Any` with custom
+  refinement logic, and a nominal/branded type should use Effect's
+  `Brand.Brand<'...'>` rather than a hand-rolled `string & { unique symbol }`
+  intersection — the hand-rolled forms duplicate machinery Schema already
+  gives for free and drift from it silently. Flag `Schema.Any.pipe(...)`
+  hand-composing what `Schema.declare(isX)` expresses directly; a hand-rolled
+  `T & { unique symbol }` brand instead of `Brand.Brand<'...'>`; a redundant
+  wrapper function around a value that is now branded and needs no wrapper.
+  Do not flag a predicate too dynamic or parameterized for `Schema.declare` to
+  express cleanly.
+  Source: 3 review comments across 2 PRs, e.g. https://github.com/dxos/dxos/pull/10204#discussion_r2541010745.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: Schema\.Any|unique symbol
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule deferred-callback-owns-its-context: A deferred callback gets its own Effect context, never inherits the caller's
+  Once Effect is adopted, its own context is the single context-propagation
+  mechanism — a custom `Context`-like object threaded alongside it is a
+  second, redundant one. Separately, a deferred callback such as an
+  alarm/timer handler that silently inherits the forking fiber's context lets
+  contexts grow unbounded through recursive scheduling chains; it needs a
+  context owned by its own scheduler instead. Flag a custom `Context`-like
+  parameter threaded alongside Effect's own context, and a forked or
+  scheduled callback (an alarm, a timer, a retry loop) that inherits the
+  parent fiber's context rather than starting a fresh one. Do not flag
+  context genuinely meant to propagate forward within the same logical
+  request or fiber.
+  Source: 2 review comments across 2 PRs, e.g. https://github.com/dxos/dxos/pull/13008#discussion_r3968926579.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule effect-fn-not-hand-wrapped-gen: Define Effect-returning functions with Effect.fn/fnUntraced, not a hand-wrapped Effect.gen
+  `(args) => Effect.gen(function* () {...})` reimplements what
+  `Effect.fn`/`Effect.fnUntraced` already gives — a named span and a shorter
+  call shape — by hand. Flag an arrow function whose body is only
+  `Effect.gen(function* () {...})` where `Effect.fn`/`fnUntraced` would do; an
+  unnamed `Effect.fn(...)` call; `Effect.fn` used inside a test where tracing
+  adds no value (use `Effect.fnUntraced` there instead). Do not flag a
+  genuine boundary worth a trace span, using a named `Effect.fn`. Fix: wrap
+  with `Effect.fnUntraced` or a named `Effect.fn` instead of hand-wrapping
+  `Effect.gen`.
+  Source: 2 review comments across 2 PRs, e.g. https://github.com/dxos/dxos/pull/9896#discussion_r2394509299.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: Effect\.gen\(|Effect\.fn\(
+  unit: file
+  system-one: on
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```

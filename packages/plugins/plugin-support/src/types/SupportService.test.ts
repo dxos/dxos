@@ -145,7 +145,13 @@ describe('submitSupportIssue', () => {
           sessionContext: () => ({ distinctId: 'did:dx:me', widgetSessionId: 'w-1', replayUrl: 'https://r' }),
           flushLogs,
         }),
-        report: { title: 'Broken', body: 'It broke.', type: 'bug', includeLogs: true },
+        report: {
+          title: 'Broken',
+          body: 'It broke.',
+          type: 'bug',
+          includeLogs: true,
+          labels: ['Composer Feedback Form'],
+        },
         did: 'did:dx:me',
       }),
     );
@@ -154,7 +160,12 @@ describe('submitSupportIssue', () => {
     expect(value).toEqual(issue);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://edge.test/discord/issue');
-    expect(JSON.parse(String(init.body))).toMatchObject({ title: 'Broken', did: 'did:dx:me', logKey: 'logs/1.ndjson' });
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      title: 'Broken',
+      did: 'did:dx:me',
+      logKey: 'logs/1.ndjson',
+      labels: ['Composer Feedback Form'],
+    });
     await vi.waitFor(() => expect(flushLogs).toHaveBeenCalledWith({ reportId: 'r-1' }));
   });
 

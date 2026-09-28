@@ -5,7 +5,7 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 
@@ -47,12 +47,6 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
     [controller],
   );
 
-  const handleCopy = useCallback(() => {
-    if (status.session) {
-      void navigator.clipboard.writeText(status.session);
-    }
-  }, [status.session]);
-
   return (
     <Form.FieldSet
       label={t('settings.debug-port.section.label')}
@@ -80,11 +74,10 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
           >
             <Flex gap='sm' align='center'>
               <span className='grow truncate font-mono text-sm'>{status.session}</span>
-              <IconButton
-                icon='ph--copy--regular'
+              <SystemIconButton.Clipboard
                 iconOnly
                 label={t('settings.debug-port.copy-session.label')}
-                onClick={handleCopy}
+                value={status.session ?? ''}
               />
             </Flex>
           </Form.Field>

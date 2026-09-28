@@ -36,8 +36,10 @@ export const TreeItemToggle = memo(
             // against the title it discloses. One control wide too — the same rail-item square as
             // every other cell in a row, so a grid laid out beside it tiles with no gap.
             'h-(--dx-control) w-(--dx-control) px-0',
-            '[&_svg]:transition-transform [&_svg]:duration-200',
-            open ? '[&_svg]:rotate-90' : '[&_svg]:rotate-0',
+            '[&_svg]:transition-transform [&_svg]:duration-(--duration-tree-disclosure)',
+            // Closing holds the turn for the conceal it shares a duration with, so the chevron
+            // lands with the last row out; opening leads, and the rows follow it in.
+            open ? '[&_svg]:rotate-90 [&_svg]:delay-0' : '[&_svg]:rotate-0 [&_svg]:delay-(--duration-tree-disclosure)',
             hidden ? 'hidden' : !isBranch && 'invisible',
             classNames,
           ]}

@@ -130,6 +130,7 @@ export const ProcessTree = React.memo(
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
+              virtualize
               density='sm'
               selectionMode='multiple'
               classNames='text-sm tabular-nums font-thin'
@@ -181,13 +182,13 @@ const makeColumnRenderer =
   ({ item: { process } }) =>
     process === undefined ? null : (
       <>
-        <div className='flex items-center justify-end text-xs text-description tabular-nums'>
+        <div className='flex items-center justify-end ps-1 text-xs text-description tabular-nums'>
           {[Process.State.FAILED, Process.State.SUCCEEDED].includes(process.state) && (
             <span className='whitespace-nowrap'>{Unit.Duration(process.metrics.wallTime).toString()}</span>
           )}
         </div>
-        <div className='flex items-center'>
-          {onProcessTerminate && (
+        <div className='flex items-center mx-1'>
+          {onProcessTerminate && process.state !== Process.State.TERMINATED && (
             <IconButton
               classNames='min-h-0 p-1'
               icon='ph--x--regular'

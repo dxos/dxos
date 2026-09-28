@@ -93,7 +93,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Counts every object by type and places them all on today, the day they were written. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -103,7 +102,7 @@ export const Default: Story = {
     await canvas.findByTestId('space-home-dashboard.objects', {}, { timeout: 10_000 });
     await waitFor(() => expect(valueOf('objects')).toBe(String(OBJECT_COUNT + 1)), { timeout: 10_000 });
     await expect(valueOf('types')).toBe('3');
-    await expect(valueOf('active-days')).toBe('1');
+    await waitFor(() => expect(valueOf('active-days')).toBe('1'), { timeout: 10_000 });
     await expect(canvasElement.querySelectorAll('[data-level]:not([data-level="0"])')).toHaveLength(1);
   },
 };

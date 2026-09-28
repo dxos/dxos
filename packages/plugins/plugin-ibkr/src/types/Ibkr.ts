@@ -195,6 +195,7 @@ export class Instrument extends Type.makeObject<Instrument>(DXN.make('org.dxos.t
   }).pipe(
     LabelAnnotation.set(['symbol', 'name']),
     Annotation.IconAnnotation.set({ icon: 'ph--chart-line-up--regular', hue: 'blue' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -234,7 +235,7 @@ export type Report = Type.InstanceType<typeof Report>;
 export const Portfolio = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Owned feed: `SetParent` cascades it with the portfolio. */
-  feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true)),
+  feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set()),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--chart-line--regular', hue: 'green' }),
   // Offer "Connect Interactive Brokers" in the portfolio toolbar. IBKR has no external-sync Cursor, so
@@ -283,5 +284,6 @@ export class Lot extends Type.makeObject<Lot>(DXN.make('org.dxos.type.ibkr.Lot',
   }).pipe(
     LabelAnnotation.set(['symbol', 'quantity']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}

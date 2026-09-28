@@ -41,6 +41,12 @@ export const IndexCursor = Schema.Struct({
 export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 
 export class IndexTracker {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -49,15 +55,16 @@ export class IndexTracker {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
   queryCursors = Effect.fn('IndexTracker.queryCursors')(
     (
       query: Pick<IndexCursor, 'indexName'> & Partial<Pick<IndexCursor, 'sourceName' | 'resourceId' | 'spaceId'>>,
-    ): Effect.Effect<IndexCursor[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    ): Effect.Effect<IndexCursor[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         if (query.spaceId) {
           yield* Effect.annotateCurrentSpan(SpanAttributes.SPACE_ID, query.spaceId);
         }
@@ -93,9 +100,9 @@ export class IndexTracker {
     (query: {
       sourceName: string;
       spaceId?: SpaceId | null;
-    }): Effect.Effect<Map<string, IndexCursor[]>, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    }): Effect.Effect<Map<string, IndexCursor[]>, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
 
         const spaceIdParam = query.spaceId === undefined ? null : (query.spaceId ?? '');
 
@@ -126,9 +133,9 @@ export class IndexTracker {
   );
 
   updateCursors = Effect.fn('IndexTracker.updateCursors')(
-    (cursors: IndexCursor[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (cursors: IndexCursor[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         yield* Effect.forEach(
           cursors,
           (cursor) => {
@@ -147,12 +154,9 @@ export class IndexTracker {
 
   /** Delete cursors for documents (resource ids) wiped by garbage collection. */
   deleteCursors = Effect.fn('IndexTracker.deleteCursors')(
-    (query: {
-      spaceId: SpaceId;
-      resourceIds: readonly string[];
-    }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (query: { spaceId: SpaceId; resourceIds: readonly string[] }): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(query.resourceIds)) {
           yield* sql`DELETE FROM indexCursor WHERE spaceId = ${query.spaceId} AND ${sql.in('resourceId', chunk)}`;
         }

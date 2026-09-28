@@ -247,11 +247,10 @@ describe('WorkingSetQueryExecutor', () => {
       Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc')),
     );
     const personResults = results.filter((item) => {
-      const data = item.core?.getObjectStructure().data;
-      const name = data?.['name'];
+      const name = item.structure.data['name'];
       return name === 'Alice' || name === 'Bob' || name === 'Charlie';
     });
-    const names = personResults.map((item) => item.core!.getObjectStructure().data['name']);
+    const names = personResults.map((item) => item.structure.data['name']);
     expect(names).toEqual(['Alice', 'Bob', 'Charlie']);
   });
 
@@ -538,6 +537,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   allCores: () => db.allObjectCores(),
   getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
+  areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),
 });
 
 const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));

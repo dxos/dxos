@@ -11,7 +11,6 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -23,6 +22,7 @@ import { DeckCapabilities } from '#types';
 import { Navigation, applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
 import {
   addSubjectsToActiveDeck,
+  matchOpenEntities,
   plankIdForName,
   pushSubjectsToStack,
   resolveLevelOpen,
@@ -35,6 +35,7 @@ import {
   openCompanionPlank,
   resolveDeckSpec,
   updateActiveDeck,
+  withViewTransition,
 } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -49,49 +50,27 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       );
 
       for (const subjectId of input.subject) {
-        NotFound.expandPath(graph, subjectId);
+        AppGraph.expandPath(graph, subjectId);
       }
 
-      {
-        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        if (input.workspace && state.activeDeck !== input.workspace) {
-          yield* applyWorkspace(input.workspace);
-        }
+      const workspaceToEnter = yield* Effect.map(Capabilities.getAtomValue(DeckCapabilities.State), (state) =>
+        input.workspace && state.activeDeck !== input.workspace ? input.workspace : undefined,
+      );
+      if (workspaceToEnter) {
+        yield* withViewTransition(applyWorkspace(workspaceToEnter));
       }
 
-      // Dedup subjects against the active deck using EID identity.
-      // The same object can appear under different graph paths (e.g., via collections vs types).
-      // Resolve each subject's EID and, if it matches an already-open deck item, remap the
-      // subject to the existing deck entry so the already-open check matches by identity.
-      {
-        const deck = yield* DeckCapabilities.getDeck();
-        const active = deck.active;
-        if (active.length > 0 && input.subject.length > 0) {
-          // Build EID → deck item ID map for active items.
-          const deckEidMap = new Map<string, string>();
-          for (const deckId of active) {
-            const eid = GraphPath.tryGetEid(graph, deckId);
-            if (Option.isSome(eid)) {
-              deckEidMap.set(eid.value, deckId);
-            }
-          }
-
-          // Remap subjects whose EID matches an existing deck item.
-          if (deckEidMap.size > 0) {
-            const remapped = input.subject.map((subjectId) => {
-              const eid = GraphPath.tryGetEid(graph, subjectId);
-              if (Option.isSome(eid)) {
-                const existing = deckEidMap.get(eid.value);
-                if (existing && existing !== subjectId) {
-                  return existing;
-                }
-              }
-              return subjectId;
-            });
-            input = { ...input, subject: remapped };
-          }
-        }
-      }
+      // The same object can appear under several graph paths (two collections, or a collection and its
+      // type). A plain navigation moves its open plank onto the path asked for; any other open reuses
+      // the plank where it is rather than opening the object twice.
+      const rehome = (input.disposition ?? 'solo') === 'solo' && !input.modifiers?.shift;
+      const matched = matchOpenEntities({
+        active: (yield* DeckCapabilities.getDeck()).active,
+        subjects: input.subject,
+        entityOf: (id) => Option.getOrUndefined(GraphPath.tryGetEid(graph, id)),
+        rehome,
+      });
+      input = { ...input, subject: matched.subjects };
 
       // Compute the next active deck state and apply it. Dispositions:
       // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
@@ -111,9 +90,17 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const { segments } = yield* DeckCapabilities.getDeck();
 
       let previouslyOpenIds: Set<string>;
+      /** The plank the deck write below focuses, so the followups know whether one carried the intent. */
+      let scrolled: string | undefined;
       {
-        const deck = yield* DeckCapabilities.getDeck();
-        previouslyOpenIds = new Set<string>(deck.active);
+        const before = yield* DeckCapabilities.getDeck();
+        previouslyOpenIds = new Set<string>(before.active);
+        // A re-homed plank is the same plank under its new path, not one this open closes.
+        const deck = {
+          ...before,
+          active: matched.active,
+          companionPlanks: before.companionPlanks?.map((id) => matched.moved.get(id) ?? id),
+        };
 
         const disposition = input.disposition ?? 'solo';
         const shift = !!input.modifiers?.shift;
@@ -123,11 +110,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
 
         // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
         // the documents it contains rather than a plank showing the collection itself.
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const seeded = resolveSeededPlanks({
           initial: resolveDeckSpec(
             input.subject[0] ? Option.getOrUndefined(AppGraph.getNode(graph, input.subject[0])) : undefined,
           )?.initial,
           addBesideOrigin,
+          flatten: !!flatten,
           children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
         });
 
@@ -168,7 +157,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           next = navigateSolo(deck.active);
         }
 
-        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
         // so names whose plank this open closed are dropped rather than left dangling.
@@ -195,21 +183,26 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
-        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
+        // Subjects the graph has not built yet open at once: the URL projection shows them while they
+        // load and turns any that do not exist into not-found. The focus intent rides on the write that
+        // mounts the plank, so its first painted frame is already attended.
+        scrolled =
+          input.scrollIntoView === false ? undefined : deckUpdates.active.find((id) => !previouslyOpenIds.has(id));
+        yield* navigateDeck({
+          workspace,
+          active: deckUpdates.active,
+          companionPlanks,
+          intent: { scrollIntoView: scrolled, focus: input.focus, transition: !workspaceToEnter },
+        });
       }
 
-      // Schedule side-effects for the newly opened items: scroll into view, expose in
-      // the navigation sidebar, and emit observability events.
-      // When nothing is newly opened (subject was already visible), the fallback
-      // `input.subject[0]` still triggers scroll and expose so the user is taken there.
       {
         const deck = yield* DeckCapabilities.getDeck();
         const newlyOpen = deck.active.filter((i: string) => !previouslyOpenIds.has(i));
 
-        if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, {
-            subject: newlyOpen[0] ?? input.subject[0],
-          });
+        // Nothing newly open means no URL changed, so no write carried the intent above.
+        if (scrolled === undefined && input.scrollIntoView !== false && input.subject[0]) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0], focus: input.focus });
         }
 
         if (newlyOpen[0] ?? input.subject[0]) {

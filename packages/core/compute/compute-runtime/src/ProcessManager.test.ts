@@ -861,6 +861,27 @@ describe('ManagerImpl', () => {
     );
 
     it.effect(
+      'a finished process is released, leaving its summary in processTree and nothing in the registry',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const monitor = yield* Process.ProcessMonitorService;
+        const registry = yield* Registry.AtomRegistry;
+
+        const handle = yield* manager.spawn(makeWaitingExecutable());
+        yield* handle.terminate();
+
+        const tree = yield* monitor.processTree;
+        expect(tree.map((info) => [info.pid, info.state])).toEqual([[handle.pid, Process.State.TERMINATED]]);
+        const attached = yield* manager.attach(handle.pid).pipe(Effect.exit);
+        expect(Exit.isFailure(attached)).toBe(true);
+
+        yield* Effect.promise(() => new Promise<void>((resolve) => setImmediate(resolve)));
+        expect(registry.getNodes().has(handle.statusAtom)).toBe(false);
+        expect(registry.get(handle.statusAtom).state).toEqual(Process.State.TERMINATED);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
       'processTree records parentPid for child processes',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
@@ -973,6 +994,58 @@ describe('ManagerImpl', () => {
         expect(failures.length).toBeGreaterThanOrEqual(1);
         expect(failures.every((entry) => entry.level === LogLevel.ERROR)).toBe(true);
         expect(failures[0].computedError).toContain('Test Error');
+      }, Effect.provide(TestLayer)),
+    );
+
+    /** The two messages a settled FAILED transition reports under, so the debug lifecycle chatter is ignored. */
+    const LIFECYCLE_OUTCOMES = new Set(['lifecycle: failed', 'lifecycle: cancelled']);
+
+    it.effect(
+      'a user-dismissed prompt reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const dismissed = new Error('No passkey was presented', {
+          cause: new DOMException('The operation either timed out or was not allowed.', 'NotAllowedError'),
+        });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.dismissed', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports).toHaveLength(1);
+        expect(reports[0].level).toEqual(LogLevel.INFO);
+        expect(reports[0].computedError).toContain('No passkey was presented');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'an aborted ceremony reports below error level, other DOMExceptions do not (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const aborted = new Error('aborted', { cause: new DOMException('signal aborted', 'AbortError') });
+        const unsupported = new Error('unsupported', {
+          cause: new DOMException('no authenticator', 'NotSupportedError'),
+        });
+
+        const entries = yield* captureLogEntries(() =>
+          Effect.gen(function* () {
+            yield* manager.spawn(failWith('test.aborted', aborted));
+            yield* manager.spawn(failWith('test.unsupported', unsupported));
+          }),
+        );
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO, LogLevel.ERROR]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a domain error that declares itself a cancellation reports below error level (DX-1281)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        // Mirrors `PasskeyError.Dismissed`, which the platform can raise without any DOMException.
+        const dismissed = Object.assign(new Error('No passkey was presented'), { cancellation: true as const });
+
+        const entries = yield* captureLogEntries(() => manager.spawn(failWith('test.marked', dismissed)));
+        const reports = entries.filter((entry) => LIFECYCLE_OUTCOMES.has(entry.message ?? ''));
+        expect(reports.map((entry) => entry.level)).toEqual([LogLevel.INFO]);
       }, Effect.provide(TestLayer)),
     );
   });
@@ -1442,7 +1515,6 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const { db } = yield* Database.Service;
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const monitor = yield* Process.ProcessMonitorService;
-      const manager = yield* ProcessManager.Service;
 
       const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 
@@ -1453,16 +1525,12 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       );
       yield* fiber.await;
 
-      // The parent op spawns the child via Operation.invoke; locate the
-      // child's handle through the process tree and assert its environment
-      // carries both inherited fields.
       const tree = yield* monitor.processTree;
       const childInfo = tree.find((node) => node.parentPid === fiber.pid);
       if (!childInfo) {
         throw new Error('child process not present in process tree');
       }
-      const childHandle = yield* manager.attach(childInfo.pid);
-      expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
+      expect(childInfo.environment).toEqual({ space: db.spaceId, conversation });
     }, Effect.provide(InheritanceTestLayer)),
   );
 });
@@ -1715,7 +1783,7 @@ describe('durability', () => {
     handlerSet: OperationHandlerSet.OperationHandlerSet;
     traceSink: Trace.Sink;
   }) =>
-    new ProcessManager.ProcessManagerImpl({
+    new ProcessManager.Impl({
       registry: deps.registry,
       kvStore: deps.kv,
       traceSink: deps.traceSink,
@@ -2355,3 +2423,15 @@ const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.
     const remove = log.addProcessor(processor);
     return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
   });
+
+// A dismissed passkey prompt reaches this path wrapped in a domain error, which is why the
+// DOMException sits on `cause` rather than being the failing value itself.
+const failWith = (key: string, error: Error) =>
+  Process.make({ key, input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.sync(() => ctx.fail(error)),
+      onInput: () => Effect.void,
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );

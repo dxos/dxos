@@ -5,8 +5,8 @@
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { ClientRpcServer } from '@dxos/client-protocol';
-import { type ServiceContextRuntimeProps } from '@dxos/client-services';
+import { Rpc } from '@dxos/client-protocol';
+import { ServiceStack } from '@dxos/client-services';
 import { ServiceContext } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -88,7 +88,7 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ServiceContext {
+  createClientServicesHost(runtimeProps?: ServiceStack.ServiceContextRuntimeProps): ServiceContext {
     const services = new ServiceContext({ config: this.config, runtimeProps, ...this.networking });
     this._ctx.onDispose(() => services.destroy());
     return services;
@@ -124,13 +124,12 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, ClientRpcServer] {
+  createClientServer(host: ServiceContext = this.createClientServicesHost()): [Client, Rpc.GroupServer] {
     const channel = new MessageChannel();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
-    const server = new ClientRpcServer({
-      services: () => host.services,
-      port: channel.port2,
-    });
+    // Served straight off the host's router, as a worker session serves a tab; resolved on open so
+    // a host opened after this call is served.
+    const server = Rpc.serveRouterOnPort(() => host.router, channel.port2);
 
     this._ctx.onDispose(() => server.close());
     this._ctx.onDispose(() => client.destroy());

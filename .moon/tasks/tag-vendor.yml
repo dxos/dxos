@@ -12,6 +12,7 @@ tasks:
     deps:
       - esbuild-plugins:build
       - vite-plugin-import-source:build
+      - vite-plugin-module-url:build
       - ^:build
     inputs:
       - /tsconfig.base.json

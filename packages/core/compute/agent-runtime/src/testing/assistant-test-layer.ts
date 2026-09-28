@@ -154,7 +154,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(captureProcessManager(processManagerHolder)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder, agentServiceHolder)),
-    Layer.provideMerge(AiService.model(DXN.getName(resolvedModel), { provider: resolvedProvider })),
+    Layer.provideMerge(AiService.languageModel(DXN.getName(resolvedModel), { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??

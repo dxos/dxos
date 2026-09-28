@@ -94,6 +94,7 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--terminal-window--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

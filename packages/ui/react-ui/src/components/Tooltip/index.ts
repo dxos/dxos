@@ -3,7 +3,5 @@
 //
 
 export * from './TextTooltip.tsx';
-export { useTooltipContext } from './TooltipContext.ts';
-
 export * from './Tooltip.tsx';
-export * from './tooltipContent.ts';
+export { useTooltipContext } from './TooltipContext.ts';

@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useResolveRef } from '@dxos/echo-react';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -39,11 +40,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   const callAvailable = useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
   const tabs = useMemo(() => (callAvailable ? TAB_ORDER : TAB_ORDER.filter((key) => key !== 'call')), [callAvailable]);
 
-  // Read the reactive ref targets directly: these are handed to child surfaces (e.g. MarkdownArticle)
-  // which call `useObject` themselves, so they must receive the live object, not a `useObject` snapshot.
-  const notes = meeting.notes?.target;
-  const transcript = meeting.transcript?.target;
-  const summary = meeting.summary?.target;
+  // Subscribed to their own refs (not a plain `useObject(meeting)` snapshot) because these values are
+  // handed to child surfaces (e.g. MarkdownArticle) which call `useObject` themselves and need the
+  // live object.
+  const notes = useResolveRef(meeting.notes);
+  const transcript = useResolveRef(meeting.transcript);
+  const summary = useResolveRef(meeting.summary);
 
   const hasSummary = !!summary && summary.content.length > 0;
 

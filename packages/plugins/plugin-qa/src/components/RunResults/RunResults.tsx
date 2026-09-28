@@ -109,7 +109,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
       {snapshot.summary && <p className='text-subdued text-sm'>{snapshot.summary}</p>}
 
       {error && (
-        <p className='text-redText text-sm' role='alert' data-testid='qa.run.error'>
+        <p className='text-red-text text-sm' role='alert' data-testid='qa.run.error'>
           {error}
         </p>
       )}

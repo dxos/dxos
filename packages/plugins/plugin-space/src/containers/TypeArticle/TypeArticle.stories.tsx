@@ -150,7 +150,6 @@ const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) =>
 /** Ephemeral state the toolbar and the merge preview read; normally contributed by `state.ts`. */
 const ephemeralState = () =>
   Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    awaiting: undefined,
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},

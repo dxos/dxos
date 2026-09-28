@@ -20,7 +20,7 @@ import * as Trigger from './types/Trigger.ts';
  * Writes ephemeral or persistent events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
-export interface TraceWriter {
+export interface Writer {
   write<T>(eventType: EventType<T>, payload: NoInfer<T>): void;
 }
 
@@ -28,7 +28,7 @@ export interface TraceWriter {
  * Service that writes events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
-export class TraceService extends Context.Service<TraceService, TraceWriter>()('@dxos/functions/TraceService') {}
+export class TraceService extends Context.Service<TraceService, Writer>()('@dxos/functions/TraceService') {}
 
 /**
  * Writes an event to the trace.
@@ -155,10 +155,7 @@ export const MessageData = Schema.Struct({
 export type MessageData = Schema.Schema.Type<typeof MessageData>;
 
 export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.traceMessage', '0.1.0'))(
-  MessageData.pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
-    Annotation.HiddenAnnotation.set(true),
-  ),
+  MessageData.pipe(Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' })),
 ) {}
 
 /**
@@ -374,7 +371,7 @@ export interface Sink {
 // TODO(dmaretskyi): Consider moving sink to the Process Manager.
 export class TraceSink extends Context.Service<TraceSink, Sink>()('@dxos/functions/TraceSink') {}
 
-export const noopWriter: TraceWriter = {
+export const noopWriter: Writer = {
   write: () => {},
 };
 
@@ -560,6 +557,7 @@ export const TaskStatusChanged = EventType('task.statusChanged', {
  */
 export const QuestionAsked = EventType('question.asked', {
   schema: Schema.Struct({
+    /** Id of the question's entry in the task's history. */
     questionId: Obj.ID,
     /** The question as put to the reader. */
     text: Schema.String,
@@ -681,6 +679,24 @@ export const DelegationSpawned = EventType('assistant.delegationSpawned', {
 });
 
 /**
+ * Emitted by the supervisor when a delegated sub-agent's result has been folded back into the
+ * conversation — the counterpart of {@link DelegationSpawned}, and the only durable record that the
+ * return happened at all. A child's own trace ends with its operation; that it reported *to someone*
+ * is knowable only from the supervisor's side, so without this the delegation reads as a one-way
+ * spawn even though the runtime genuinely returns a value.
+ */
+export const DelegationCompleted = EventType('assistant.delegationCompleted', {
+  schema: Schema.Struct({
+    taskId: Schema.String,
+    pid: Schema.String,
+    status: Schema.Literals(['success', 'failure']),
+    /** The result, rendered for a reader; the payload itself lives on the task and in the feed. */
+    result: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Emitted when an MCP server connection fails for a request turn.
  * Ephemeral so that misconfigured/unreachable servers don't pollute the durable feed,
  * but can still be surfaced to the user via the live ephemeral event stream.
@@ -690,6 +706,8 @@ export const McpServerError = EventType('assistant.mcpServerError', {
     url: Schema.String,
     protocol: Schema.Literals(['sse', 'http']),
     message: Schema.String,
+    /** The server wants credentials the configuration does not (validly) supply. */
+    unauthorized: Schema.optional(Schema.Boolean),
   }),
   isEphemeral: true,
 });

@@ -51,6 +51,32 @@ export const Client = Capability.lazyModule(
   },
   () => import('./client.ts'),
 );
+export const IdentityLifecycle = Capability.lazyModule(
+  'IdentityLifecycle',
+  {
+    requires: [
+      ClientCapabilities.Client,
+      ClientCapabilities.AccountCache,
+      Capabilities.AtomRegistry,
+      Capabilities.OperationInvoker,
+      Capabilities.PluginManager,
+    ],
+    provides: [],
+    // Subscribes to `client.halo` (initialized-only).
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./identity-lifecycle.ts'),
+);
+export const InboxMonitor = Capability.lazyModule(
+  'InboxMonitor',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.OperationInvoker],
+    provides: [],
+    // Subscribes to `client.halo` and `client.spaces` (initialized-only).
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./inbox-monitor.ts'),
+);
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
@@ -82,7 +108,6 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',
     invitationProp = 'deviceInvitationCode',
-    onReset,
     identityTestActions,
   }: ClientOptions.ClientPluginOptions) => {
     const createInvitationUrl = (invitationCode: string) => {
@@ -90,7 +115,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
       baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
-    return { createInvitationUrl, onReset, identityTestActions };
+    return { createInvitationUrl, identityTestActions };
   },
 });
 export const SchemaDefs = Capability.lazyModule(
@@ -118,7 +143,7 @@ export const SpaceReplicationProgress = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [],
     // Runtime event: spaces become ready when the client observes them, not at startup.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./space-replication-progress.ts'),
 );
@@ -130,7 +155,7 @@ export const TraceProgress = Capability.lazyModule(
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
     // registry are all available by the time spaces are observed.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./trace-progress.ts'),
 );

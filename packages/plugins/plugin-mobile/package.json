@@ -87,7 +87,6 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
@@ -97,7 +96,6 @@
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

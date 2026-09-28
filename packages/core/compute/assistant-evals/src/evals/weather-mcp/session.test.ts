@@ -18,7 +18,7 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { WeatherSpace } from '@dxos/plugin-debug/sample';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -49,7 +49,7 @@ describe('weather MCP hand-off', () => {
 
       await using harness = await createComposerTestApp({
         plugins: [
-          ClientPlugin.make({ types: [...WeatherSpace().schemas, Collection.Collection] }),
+          ClientPlugin.make({ types: [...WeatherSpace.make().schemas, Collection.Collection] }),
           AssistantPlugin.make({
             aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
               // Step three: the configuring write, as the task text tells the session to make it.

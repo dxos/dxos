@@ -17,7 +17,7 @@ export const DashboardDriver = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry, SpaceCapabilities.Dashboard, LaMetricCapabilities.SettingsAtom],
     provides: [LaMetricCapabilities.PushStatus],
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./dashboard-driver.ts'),
 );

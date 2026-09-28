@@ -18,12 +18,43 @@ tasks:
   render-diagrams:
     # vite-node, not bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
     command: vite-node scripts/render-diagrams.tsx
+    # vite-node loads vite.config.ts (tool packages, generated `#capabilities` barrels) and resolves
+    # `@dxos/*` imports to dist, so a fresh clone needs all of these built first.
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
     inputs:
       - scripts/render-diagrams.tsx
       - docs/diagrams/*.mmd
       - src/**/*
     outputs:
       - docs/diagrams/*.svg
+    options:
+      cache: false
+      runInCI: false
+
+  judge-diagrams:
+    # Same runner and prerequisites as render-diagrams; the architecture rows need TYPESAFE_API_KEY.
+    command: vite-node scripts/judge-diagrams.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
+    options:
+      cache: false
+      runInCI: false
+
+  eval-layout-views:
+    # Compares System One reading each `View` rendering with a reference that saw the image; needs TYPESAFE_API_KEY.
+    command: vite-node scripts/eval-layout-views.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
     options:
       cache: false
       runInCI: false

@@ -34,8 +34,26 @@ const MAX_CHUNK_LENGTH = 16384;
 const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_MAX_BYTES;
 const BUFFER_FULL_BACKOFF_TIMEOUT = 100;
 
+/**
+ * Nothing larger than the Cloudflare RPC limit can legitimately be reassembled, so a sequence
+ * that exceeds it is either malformed or hostile.
+ */
+export const MAX_INBOUND_MESSAGE_BYTES = CLOUDFLARE_RPC_MAX_BYTES;
+/**
+ * Bounds the accumulator independently of the byte cap, which empty or tiny chunks never trip.
+ * Generous enough for a peer chunking well below `MAX_CHUNK_LENGTH` (32MB / 16KB is ~2k chunks).
+ */
+export const MAX_INBOUND_CHUNK_COUNT = 65536;
+/**
+ * Bounds the muxer as a whole: the channel id is a byte, so a per-channel cap alone would
+ * still allow 256 concurrently open sequences to pin their full quota.
+ */
+export const MAX_INBOUND_TOTAL_BYTES = 4 * CLOUDFLARE_RPC_MAX_BYTES;
+
 export class WebSocketMuxer {
   private readonly _inMessageAccumulator = new Map<number, Uint8Array[]>();
+  private readonly _inMessageAccumulatorBytes = new Map<number, number>();
+  private _inMessageAccumulatedBytes = 0;
   private readonly _outMessageChunks = new Map<number, MessageChunk[]>();
   private readonly _outMessageChannelByService = new Map<string, number>();
 
@@ -120,9 +138,34 @@ export class WebSocketMuxer {
       return buf.fromBinary(MessageSchema, data.slice(1));
     }
 
-    const [flags, channelId, ...payload] = data;
-    const chunkPayload = new Uint8Array(payload);
+    const flags = data[0];
+    const channelId = data[1];
+    // Measured before the copy, so an over-limit chunk is rejected without allocating it.
+    const chunkLength = Math.max(0, data.byteLength - 2);
     let chunkAccumulator = this._inMessageAccumulator.get(channelId);
+
+    // A first chunk is bounded like any other: an unchecked one would let a single oversized
+    // segment, or a fresh channel opened once the aggregate is full, past the limits entirely.
+    const chunkCount = (chunkAccumulator?.length ?? 0) + 1;
+    const channelBytes = (this._inMessageAccumulatorBytes.get(channelId) ?? 0) + chunkLength;
+    if (
+      channelBytes > MAX_INBOUND_MESSAGE_BYTES ||
+      chunkCount > MAX_INBOUND_CHUNK_COUNT ||
+      this._inMessageAccumulatedBytes + chunkLength > MAX_INBOUND_TOTAL_BYTES
+    ) {
+      this._dropAccumulator(channelId);
+      log.error('muxer dropped oversized segmented message', {
+        channelId,
+        chunkCount,
+        byteLength: channelBytes,
+        maxByteLength: MAX_INBOUND_MESSAGE_BYTES,
+        maxChunkCount: MAX_INBOUND_CHUNK_COUNT,
+        maxTotalByteLength: MAX_INBOUND_TOTAL_BYTES,
+      });
+      throw new SegmentedMessageLimitError(channelId, chunkCount, channelBytes);
+    }
+
+    const chunkPayload = data.slice(2);
     if (chunkAccumulator) {
       chunkAccumulator.push(chunkPayload);
     } else {
@@ -130,17 +173,18 @@ export class WebSocketMuxer {
       this._inMessageAccumulator.set(channelId, chunkAccumulator);
       log.debug('muxer started receiving segmented message', {
         channelId,
-        firstChunkBytes: chunkPayload.byteLength,
+        firstChunkBytes: chunkLength,
       });
     }
+    this._inMessageAccumulatorBytes.set(channelId, channelBytes);
+    this._inMessageAccumulatedBytes += chunkLength;
 
     if ((flags & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
       return undefined;
     }
 
     const reassembled = concatUint8Arrays(chunkAccumulator);
-    const chunkCount = chunkAccumulator.length;
-    this._inMessageAccumulator.delete(channelId);
+    this._dropAccumulator(channelId);
     try {
       const message = buf.fromBinary(MessageSchema, reassembled);
       log('muxer reassembled segmented message', {
@@ -172,7 +216,15 @@ export class WebSocketMuxer {
     }
     this._outMessageChunks.clear();
     this._inMessageAccumulator.clear();
+    this._inMessageAccumulatorBytes.clear();
+    this._inMessageAccumulatedBytes = 0;
     this._outMessageChannelByService.clear();
+  }
+
+  private _dropAccumulator(channelId: number): void {
+    this._inMessageAccumulatedBytes -= this._inMessageAccumulatorBytes.get(channelId) ?? 0;
+    this._inMessageAccumulator.delete(channelId);
+    this._inMessageAccumulatorBytes.delete(channelId);
   }
 
   private _sendChunkedMessages(): void {
@@ -181,6 +233,11 @@ export class WebSocketMuxer {
     }
 
     const send = () => {
+      if (this._ws.readyState === WebSocket.CONNECTING) {
+        // `send()` throws `InvalidStateError` before the handshake completes, so wait it out.
+        this._sendTimeout = setTimeout(send, BUFFER_FULL_BACKOFF_TIMEOUT);
+        return;
+      }
       if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
         log.warn('send called for closed websocket');
         this._sendTimeout = undefined;
@@ -235,6 +292,20 @@ export class WebSocketMuxer {
   }
 }
 
+/**
+ * Thrown when an inbound segment sequence exceeds the reassembly limits; the channel's
+ * accumulator is released before the throw.
+ */
+export class SegmentedMessageLimitError extends Error {
+  constructor(
+    public readonly channelId: number,
+    public readonly chunkCount: number,
+    public readonly byteLength: number,
+  ) {
+    super(`Segmented message exceeded reassembly limits on channel ${channelId}.`);
+  }
+}
+
 type WebSocketCompat = {
   readonly readyState: number;
   /**
@@ -256,6 +327,7 @@ type MessageChunk = {
  * To avoid using isomorphic-ws on edge.
  */
 enum WebSocket {
+  CONNECTING = 0,
   CLOSING = 2,
   CLOSED = 3,
 }

@@ -56,6 +56,10 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.contains(${JSON.stringify(filter.value)})`;
     case 'tag':
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
+    case 'annotation':
+      return filter.value === undefined
+        ? `Filter.annotation(${JSON.stringify(filter.key)})`
+        : `Filter.annotation(${JSON.stringify(filter.key)}, ${JSON.stringify(filter.value)})`;
     case 'range':
       return `Filter.range(${JSON.stringify(filter.from)}, ${JSON.stringify(filter.to)})`;
     case 'text-search':
@@ -70,6 +74,10 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'mnemonic':
       return `Filter.mnemonic(${JSON.stringify(filter.mnemonic)})`;
+    case 'changes':
+      return filter.targets
+        ? `Filter.changes([${filter.targets.map((target) => JSON.stringify(target)).join(', ')}])`
+        : 'Filter.changes()';
     case 'has-parent':
       return `Filter.hasParent(${filter.value})`;
     case 'not':
@@ -188,9 +196,9 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
     case 'type':
       return '';
     case 'timestamp':
-      return aggregate.timeZone !== undefined
-        ? `${JSON.stringify(aggregate.unit)}, { timeZone: ${JSON.stringify(aggregate.timeZone)} }`
-        : JSON.stringify(aggregate.unit);
+      return JSON.stringify(aggregate.unit);
+    case 'time':
+      return `${JSON.stringify(aggregate.property)}, ${JSON.stringify(aggregate.unit)}`;
     case 'items':
       return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
     case 'group':
@@ -199,6 +207,7 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
         : `{ coalesce: ${JSON.stringify(aggregate.properties)} }`;
     case 'max':
     case 'min':
+    case 'sum':
       return JSON.stringify(aggregate.property);
   }
 };

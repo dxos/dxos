@@ -43,6 +43,11 @@
       "types": "./dist/types/src/Blob.d.ts",
       "import": "./dist/lib/Blob.mjs"
     },
+    "./Change": {
+      "source": "./src/Change.ts",
+      "types": "./dist/types/src/Change.d.ts",
+      "import": "./dist/lib/Change.mjs"
+    },
     "./Collection": {
       "source": "./src/Collection.ts",
       "types": "./dist/types/src/Collection.d.ts",

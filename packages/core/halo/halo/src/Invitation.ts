@@ -74,8 +74,8 @@ export interface Flow {
   authenticate(code: string): Effect.Effect<void, InvitationError>;
   /** Abort the flow. */
   cancel(): Effect.Effect<void>;
-  /** Encoded, shareable invitation code (host side). */
-  readonly code: Effect.Effect<string>;
+  /** Encoded, shareable invitation code (host side). Fails when the flow errors before it is complete. */
+  readonly code: Effect.Effect<string, InvitationError>;
 }
 
 /**
@@ -92,4 +92,4 @@ export const cancel = (flow: Flow): Effect.Effect<void> => flow.cancel();
 export const events = (flow: Flow): Stream.Stream<Event> => flow.events;
 
 /** Encoded, shareable code for a flow. */
-export const code = (flow: Flow): Effect.Effect<string> => flow.code;
+export const code = (flow: Flow): Effect.Effect<string, InvitationError> => flow.code;

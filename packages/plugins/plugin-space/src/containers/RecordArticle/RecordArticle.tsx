@@ -7,6 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Field, Flex, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -21,7 +22,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { RelatedObjectCard, RelatedTypeFilter } from '#components';
+import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -29,6 +30,7 @@ import { SpaceSurface } from '#types';
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { actions, onAction } = useMenuActions(attendableId);
+  useObject(subject);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);
@@ -97,7 +99,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 {/* `centered={false}` on the ROOT, which is column alignment — distinct from
                     `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
                     columns drift right of the record card above them, which shares this column. */}
-                <Masonry.Root Tile={RelatedObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
+                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
                   <Masonry.Content padding={false} centered={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>

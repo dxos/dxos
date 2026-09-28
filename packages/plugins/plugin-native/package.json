@@ -125,8 +125,7 @@
     "@tauri-apps/plugin-os": "catalog:",
     "@tauri-apps/plugin-process": "catalog:",
     "@tauri-apps/plugin-shell": "catalog:",
-    "@tauri-apps/plugin-updater": "catalog:",
-    "date-fns": "catalog:"
+    "@tauri-apps/plugin-updater": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

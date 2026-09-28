@@ -309,9 +309,9 @@ export class Client {
    */
   // TODO(burdon): Return type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
-    const { DiagnosticsCollector } = await import('@dxos/client-services');
+    const { Diagnostics } = await import('@dxos/client-services');
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    return DiagnosticsCollector.collect(this._config, this.services, options);
+    return Diagnostics.DiagnosticsCollector.collect(this._config, this.services, options);
   }
 
   /**

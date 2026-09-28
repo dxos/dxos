@@ -6,13 +6,13 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Model } from '@dxos/ai';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
@@ -24,7 +24,7 @@ import { exportProfileArchive, pickProfileArchive, stageProfileImport } from './
 
 /**
  * Story chrome: a picker over the contributed space templates
- * ({@link SpaceCapabilities.SpaceTemplate}) above the story's grid, plus a reset.
+ * ({@link AppCapabilities.SpaceTemplate}) above the story's grid, plus a reset.
  *
  * Space templates rather than project templates, because a project only means something with the
  * data it works over: the template brings the mailbox, the accounts and the documents into the
@@ -48,7 +48,7 @@ export const SpaceTemplateToolbar = () => (
 
 const TemplateSelect = () => {
   const client = useClient();
-  const templates = useCapabilities(SpaceCapabilities.SpaceTemplate);
+  const templates = useCapabilities(AppCapabilities.SpaceTemplate);
   const { invokePromise } = useOperationInvoker();
   const [templateId, setTemplateId] = useState(VOYAGE_SPACE_ID);
   // Guards the seed effect against the re-renders between an open starting and its space landing.
@@ -236,8 +236,8 @@ const ProfileControls = () => {
  * through the edge, which needs no key; a template not listed keeps the picker's default.
  */
 const TEMPLATE_MODELS: Record<string, Model.Model> = {
-  'org.dxos.plugin-debug.sample.stockfish': Model.deepseekV4Pro,
-  'org.dxos.plugin-debug.sample.weather': Model.deepseekV4Pro,
+  'org.dxos.plugin-debug.template.stockfish': Model.deepseekV4Pro,
+  'org.dxos.plugin-debug.template.weather': Model.deepseekV4Pro,
 };
 
 /**

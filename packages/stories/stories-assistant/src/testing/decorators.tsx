@@ -129,7 +129,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
-  // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
+  // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
   const chats = useQuery(space?.db, Filter.type(Chat.Chat));
@@ -292,7 +292,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
   Plugin.addModule(({ createAgent, onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.setup',
     // Runtime event: the space isn't available until the client observes it.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
     requires: [Capabilities.OperationInvoker, ClientCapabilities.Client, Capabilities.AtomRegistry],
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capabilities.OperationInvoker;

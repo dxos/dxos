@@ -41,14 +41,15 @@ describe('space visibility', () => {
     expect(AppSpace.isVisibleSpace(makeSpace([]))).toBe(true);
   });
 
-  test('the sample space and pre-migration personal spaces stay visible', ({ expect }) => {
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SAMPLE_SPACE_TAG]))).toBe(true);
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
+  test("the settings space is hidden, tagged alone or alongside the user's own tags", ({ expect }) => {
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
+    expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned', AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
   });
 
-  test('spaces the app manages on the user behalf are hidden', ({ expect }) => {
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SETTINGS_SPACE_TAG]))).toBe(false);
-    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.filesystem-mirror']))).toBe(false);
+  test('every other tagged space belongs to the user, including tags this one has not heard of', ({ expect }) => {
+    expect(AppSpace.isVisibleSpace(makeSpace(['org.dxos.space.exemplar']))).toBe(true);
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
+    expect(AppSpace.isVisibleSpace(makeSpace(['com.example.pinned']))).toBe(true);
   });
 });
 
@@ -96,3 +97,30 @@ const makeReadySpace = (id: string, tags: string[]): Space =>
     properties: Obj.make(Expando.Expando, {}),
     state: { get: () => SpaceState.SPACE_READY },
   }) as unknown as Space;
+
+describe('space templates', () => {
+  const LEGACY_TAG = 'org.dxos.space.exemplar';
+  const TEMPLATE_ID = 'org.dxos.plugin.onboarding.template.bramble';
+  const client = (spaces: Space[]) => ({ spaces: { get: () => spaces } });
+
+  test('stamps the template a legacy onboarding space came from', ({ expect }) => {
+    const space = makeReadySpace('a', [LEGACY_TAG]);
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([space]), TEMPLATE_ID)).toEqual(['a']);
+    expect(AppSpace.getSpaceTemplateId(space)).toBe(TEMPLATE_ID);
+    expect(AppSpace.findSpaceFromTemplate(client([space]), TEMPLATE_ID)).toBe(space);
+  });
+
+  test('re-running stamps nothing, so a later template wins over the tag', ({ expect }) => {
+    const space = makeReadySpace('a', [LEGACY_TAG]);
+    AppSpace.setSpaceTemplateId(space, 'com.example.template.other');
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([space]), TEMPLATE_ID)).toEqual([]);
+    expect(AppSpace.getSpaceTemplateId(space)).toBe('com.example.template.other');
+  });
+
+  test('skips spaces that are untagged or not yet readable', ({ expect }) => {
+    const untagged = makeReadySpace('a', []);
+    const closed = makeClosedSpace('b', [LEGACY_TAG]);
+    expect(AppSpace.migrateLegacyOnboardingSpaces(client([untagged, closed]), TEMPLATE_ID)).toEqual([]);
+    expect(AppSpace.getSpaceTemplateId(untagged)).toBeUndefined();
+  });
+});

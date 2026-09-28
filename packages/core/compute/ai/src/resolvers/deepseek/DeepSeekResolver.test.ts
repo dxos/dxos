@@ -46,7 +46,7 @@ const ClientLayer = ChatCompletionsAdapter.clientLayer({
 const ResolverLayer = DeepSeekResolver.make().pipe(Layer.provide(ClientLayer));
 
 const modelLayer = (options?: { thinking?: boolean }) =>
-  AiService.model(FLASH, { provider: Provider.edge.id, ...options }).pipe(
+  AiService.languageModel(FLASH, { provider: Provider.edge.id, ...options }).pipe(
     Layer.provide(AiModelResolver.buildAiService),
     Layer.provide(ResolverLayer),
   );

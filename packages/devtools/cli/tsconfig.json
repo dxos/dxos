@@ -92,6 +92,9 @@
       "path": "../../plugins/plugin-connector"
     },
     {
+      "path": "../../plugins/plugin-file"
+    },
+    {
       "path": "../../plugins/plugin-game"
     },
     {

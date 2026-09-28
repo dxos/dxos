@@ -35,6 +35,8 @@ export type FormFieldSetProps = ThemedClassName<
     collapsible?: boolean;
     /** Controls acting on the group as a whole, rendered at the end of its heading row. */
     actions?: React.ReactNode;
+    /** When nested: a bordered `group` of fields (default), or a titled `section` of arbitrary content. */
+    appearance?: 'group' | 'section';
   }>
 >;
 
@@ -45,12 +47,30 @@ export type FormFieldSetProps = ThemedClassName<
  * section, a nested one an indented, bordered group, so the same element serves both.
  */
 export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
-  ({ children, label, description, descriptionPlacement = 'below', collapsible, actions, ...props }, forwardedRef) => {
+  (
+    {
+      children,
+      label,
+      description,
+      descriptionPlacement = 'below',
+      collapsible,
+      actions,
+      appearance = 'group',
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
     const depth = useFormFieldSetDepth();
     const labelId = useId();
     const showLabel = layout !== 'inline' && !!label;
-    const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested', labelled: showLabel });
+    const styles = formTheme.styles({
+      variant,
+      depth: depth === 0 ? 'root' : 'nested',
+      appearance,
+      labelled: showLabel,
+    });
+    const Heading = depth === 0 ? 'h2' : 'h3';
     // An empty group has nothing to fold, so a disclosure on its legend would be a control that does nothing.
     const canCollapse = !!collapsible && Children.toArray(children).length > 0;
 
@@ -105,12 +125,12 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
               </>
             }
           />
-        ) : depth === 0 ? (
+        ) : depth === 0 || appearance === 'section' ? (
           // A heading inside the legend: the group is named by its title, and the title still serves navigation.
           <>
-            <h2 id={labelId} className={styles.fieldSetTitle()}>
+            <Heading id={labelId} className={styles.fieldSetTitle()}>
               {label}
-            </h2>
+            </Heading>
             {hint}
             {trailing}
           </>

@@ -19,7 +19,7 @@ import { SpaceId } from '@dxos/keys';
 
 import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
 import type * as RemoteProcessManager from './RemoteProcessManager.ts';
-import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * How a handle for a remotely hosted process delivers ephemeral trace.
@@ -102,8 +102,8 @@ describe('RemoteProcessHandle ephemeral trace', () => {
   });
 
   test('ends when the live source completes', async ({ expect }) => {
-    // A monitor may hand back a finite stream — `RemoteTraceMonitor.layerNoop` is exactly that —
-    // and the subscription has to end with it rather than sit on the drained bridge queue.
+    // A monitor may hand back a finite stream, and the subscription has to end with it rather than
+    // sit on the drained bridge queue.
     const collected = await EffectEx.runPromise(
       Effect.gen(function* () {
         const handle = yield* makeHandle(makeControl([traceMessage('buffered')]), {
@@ -114,6 +114,21 @@ describe('RemoteProcessHandle ephemeral trace', () => {
     );
 
     expect(textsOf([...collected])).toEqual(['buffered', 'live']);
+  });
+
+  test('falls back to polling the ring when the monitor is the noop', async ({ expect }) => {
+    // `layerNoop` says the deployment HAS no live source, so it must behave as if the tag were
+    // unset. Taken as live, its empty stream ends the subscription as soon as the ring's replay is
+    // drained — which, for a reader that subscribes before the turn it wants to watch, is before a
+    // single event exists. That silently delivered nothing to every local-only deployment.
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(makeControl([traceMessage('buffered')]), RemoteTraceMonitor.noopMonitor);
+        return yield* Stream.runCollect(handle.subscribeEphemeral().pipe(Stream.take(1)));
+      }).pipe(Effect.provide(registryLayer()), Effect.timeout('5 seconds')),
+    );
+
+    expect(textsOf([...collected])).toEqual(['buffered']);
   });
 
   test('falls back to polling the ring with no live source', async ({ expect }) => {

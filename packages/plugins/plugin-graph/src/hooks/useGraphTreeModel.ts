@@ -19,11 +19,6 @@ export type GraphTreeState = {
   itemCurrent: (path: string[]) => Atom.Atom<boolean>;
 };
 
-export type GraphTreeModelOptions = GraphTreeState & {
-  /** Extra child filter on top of the `hidden` disposition (the navtree drops plank companions here). */
-  isVisible?: (node: AppGraphNode.Node) => boolean;
-};
-
 /** Rows the tree lists: not hidden, and either a plain node or an action the graph marks as an item. */
 const isItem = (node: AppGraphNode.Node): boolean =>
   !AppGraphNode.hasDisposition(node, 'hidden') &&
@@ -36,9 +31,9 @@ const isItem = (node: AppGraphNode.Node): boolean =>
 export const createGraphTreeModel = (
   graph: AppGraph.ReadableGraph,
   rootId: string,
-  { itemOpen, itemCurrent, isVisible = () => true }: GraphTreeModelOptions,
+  { itemOpen, itemCurrent }: GraphTreeState,
 ): TreeModel<AppGraphNode.Node> => {
-  const isVisibleChild = (node: AppGraphNode.Node) => !AppGraphNode.hasDisposition(node, 'hidden') && isVisible(node);
+  const isVisibleChild = (node: AppGraphNode.Node) => !AppGraphNode.hasDisposition(node, 'hidden');
 
   const itemPropsFamily = Atom.family((pathKey: string) => {
     const path = Path.parts(pathKey);
@@ -109,11 +104,11 @@ export const createGraphTreeModel = (
 };
 
 /** {@link createGraphTreeModel} over the app graph capability, memoised on its inputs. */
-export const useGraphTreeModel = (rootId: string, options: GraphTreeModelOptions): TreeModel<AppGraphNode.Node> => {
+export const useGraphTreeModel = (rootId: string, options: GraphTreeState): TreeModel<AppGraphNode.Node> => {
   const { graph } = useAppGraph();
-  const { itemOpen, itemCurrent, isVisible } = options;
+  const { itemOpen, itemCurrent } = options;
   return useMemo(
-    () => createGraphTreeModel(graph, rootId, { itemOpen, itemCurrent, isVisible }),
-    [graph, rootId, itemOpen, itemCurrent, isVisible],
+    () => createGraphTreeModel(graph, rootId, { itemOpen, itemCurrent }),
+    [graph, rootId, itemOpen, itemCurrent],
   );
 };

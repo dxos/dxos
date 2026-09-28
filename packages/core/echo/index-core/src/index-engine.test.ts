@@ -7,15 +7,17 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
-import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine.ts';
-import { type IndexCursor, IndexTracker } from './index-tracker.ts';
-import { EntityMetaIndex, FtsIndex, type IndexerObject, ReverseRefIndex } from './indexes/index.ts';
+import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
+import { IndexEngine, type IndexingResult } from './index-engine.ts';
+import { type IndexCursor } from './index-tracker.ts';
+import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
@@ -27,6 +29,9 @@ const TestLayer = SqliteClient.layer({
 
 class MockIndexDataSource implements IndexDataSource {
   readonly sourceName = 'mock-source';
+
+  /** Whether to say when the limit cut a read short, as a source predating `more` does not. */
+  constructor(private readonly _reportsMore = false) {}
 
   // Composite Key -> { object, hash, timestamp }
   // Key: `${spaceId}:${documentId}`
@@ -47,7 +52,7 @@ class MockIndexDataSource implements IndexDataSource {
     _ctx: Context,
     cursors: IndexCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more?: boolean }> {
     return Effect.sync(() => {
       const results: { object: IndexerObject; hash: string }[] = [];
 
@@ -80,32 +85,108 @@ class MockIndexDataSource implements IndexDataSource {
         cursor: r.hash,
       }));
 
-      return { objects, cursors: newCursors };
+      return this._reportsMore
+        ? { objects, cursors: newCursors, more: limitedResults.length < results.length }
+        : { objects, cursors: newCursors };
+    });
+  }
+}
+
+class ActivityMockDataSource implements IndexDataSource {
+  readonly sourceName = 'activity-mock-source';
+
+  constructor(
+    private readonly spaceId: SpaceId,
+    private readonly documentId: string,
+    private readonly objectId: EntityId,
+  ) {}
+
+  getChangedObjects(
+    _ctx: Context,
+    cursors: IndexCursor[],
+    opts?: { limit?: number; activity?: boolean },
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] }> {
+    return Effect.sync(() => {
+      const seen = cursors.some((cursor) => cursor.resourceId === this.documentId && cursor.cursor === 'v1');
+      if (seen) {
+        return { objects: [], cursors: [], activity: [] };
+      }
+
+      const object: IndexerObject = {
+        spaceId: this.spaceId,
+        documentId: this.documentId,
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: this.objectId, [ATTR_TYPE]: TYPE_DEFAULT, title: 'Activity' },
+      };
+      const newCursors: DataSourceCursor[] = [{ spaceId: this.spaceId, resourceId: this.documentId, cursor: 'v1' }];
+      const activity: DocumentActivity[] | undefined = opts?.activity
+        ? [
+            {
+              spaceId: this.spaceId,
+              documentId: this.documentId,
+              full: true,
+              changes: [{ time: 1700000000000, ops: 1 }],
+            },
+          ]
+        : undefined;
+
+      return { objects: [object], cursors: newCursors, activity };
     });
   }
 }
 
 describe('IndexEngine', () => {
   const setup = Effect.gen(function* () {
-    const tracker = new IndexTracker();
-    yield* tracker.migrate();
-    const metaIndex = new EntityMetaIndex();
-    yield* metaIndex.migrate();
-    const ftsIndex = new FtsIndex();
-    yield* ftsIndex.migrate();
-    const reverseRefIndex = new ReverseRefIndex();
-    yield* reverseRefIndex.migrate();
-    const indexEngine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex, reverseRefIndex });
-    return { indexEngine, tracker, metaIndex, ftsIndex, reverseRefIndex };
+    const engine = new IndexEngine(yield* SqlClient.SqlClient);
+    yield* engine.migrate();
+    // The stores are stateless accessors over the same `SqlClient` the engine writes through, so
+    // one constructed here reads exactly what the engine wrote.
+    return { engine, metaIndex: new EntityMetaIndex(yield* SqlClient.SqlClient) };
   });
+
+  // `done` needs an empty batch, which writes arriving faster than passes never leave; `drained` is
+  // what lets a caller waiting for its own writes settle anyway.
+  it.effect(
+    'reports a batch drained once it indexed everything the source held, before any batch is empty',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const spaceId = SpaceId.random();
+      const makeObject = (documentId: string): IndexerObject => ({
+        spaceId,
+        documentId,
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: documentId },
+      });
+
+      const dataSource = new MockIndexDataSource(true);
+      dataSource.push(['doc-1', 'doc-2', 'doc-3'].map(makeObject));
+      const cut = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(cut).toMatchObject({ done: false, drained: false });
+      const rest = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(rest).toMatchObject({ done: false, drained: true });
+      const empty = yield* engine.update(Context.default(), dataSource, { spaceId: null, limit: 2 });
+      expect(empty).toMatchObject({ done: true, drained: true });
+
+      // A source that does not report `more` could have been cut short whenever it returned anything.
+      const legacySource = new MockIndexDataSource();
+      legacySource.push([makeObject('doc-4')]);
+      const legacy = yield* engine.update(Context.default(), legacySource, { spaceId: null, limit: 2 });
+      expect(legacy).toMatchObject({ done: false, drained: false });
+    }, Effect.provide(TestLayer)),
+  );
 
   it.effect(
     'should index and update objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-
-      // Inject dependencies.
-      const engine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex, reverseRefIndex });
+      const { engine, metaIndex } = yield* setup;
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -128,7 +209,7 @@ describe('IndexEngine', () => {
 
       // First update.
       const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
-      // Updates objectMeta, FTS, and reverseRef indexes.
+      // Updates objectMeta, the snapshot store, and the reverseRef index.
       expect(updated).toBe(2);
 
       // Verify using the SAME index instance.
@@ -138,7 +219,8 @@ describe('IndexEngine', () => {
       expect(results1[0].version).toBeGreaterThan(0);
 
       // Verify FTS index gets updated.
-      const ftsResults1 = yield* ftsIndex.query({
+      yield* engine.updateSecondaryIndexes(Context.default());
+      const ftsResults1 = yield* engine.queryText({
         query: 'Hello',
         spaceId: null,
         includeAllQueues: false,
@@ -170,7 +252,8 @@ describe('IndexEngine', () => {
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
 
-      const ftsResults2 = yield* ftsIndex.query({
+      yield* engine.updateSecondaryIndexes(Context.default());
+      const ftsResults2 = yield* engine.queryText({
         query: 'World',
         spaceId: null,
         includeAllQueues: false,
@@ -183,9 +266,7 @@ describe('IndexEngine', () => {
   it.effect(
     'should handle multiple objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { engine, metaIndex } = yield* setup;
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -201,6 +282,7 @@ describe('IndexEngine', () => {
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
+            title: 'Alpha one',
             val: 1,
           },
         },
@@ -215,6 +297,7 @@ describe('IndexEngine', () => {
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
+            title: 'Alpha two',
             val: 2,
           },
         },
@@ -229,6 +312,7 @@ describe('IndexEngine', () => {
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_B,
+            title: 'Beta three',
             val: 3,
           },
         },
@@ -244,22 +328,29 @@ describe('IndexEngine', () => {
       const resultsB = yield* metaIndex.query({ spaceId, typeDXN: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
-      const ftsResults = yield* ftsIndex.query({
-        query: 'TypeA',
+      yield* engine.updateSecondaryIndexes(Context.default());
+      // The index holds text, not the object's JSON, so the typename is not a search term.
+      const ftsResults = yield* engine.queryText({
+        query: 'Alpha',
         spaceId: null,
         includeAllQueues: false,
         queues: null,
       });
       expect(ftsResults).toHaveLength(2);
+      const byTypename = yield* engine.queryText({
+        query: 'TypeA',
+        spaceId: null,
+        includeAllQueues: false,
+        queues: null,
+      });
+      expect(byTypename).toHaveLength(0);
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'done is true only when all sub-indexes have no remaining work',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { engine, metaIndex } = yield* setup;
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -299,8 +390,7 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult contains correct sets for a batch with multiple objects across spaces',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { engine, metaIndex } = yield* setup;
       const dataSource = new MockIndexDataSource();
       const spaceId1 = SpaceId.random();
       const spaceId2 = SpaceId.random();
@@ -356,8 +446,7 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult includes typename for deleted objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { engine, metaIndex } = yield* setup;
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -390,8 +479,7 @@ describe('IndexEngine', () => {
   it.effect(
     'IndexingResult is empty when no objects are indexed',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const { engine, metaIndex } = yield* setup;
       const dataSource = new MockIndexDataSource();
 
       const result: IndexingResult = yield* engine.update(Context.default(), dataSource, { spaceId: null });
@@ -405,4 +493,141 @@ describe('IndexEngine', () => {
       expect(result.objects.size).toBe(0);
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'activity survives garbage collection and counts a replicated-again document once',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const spaceId = SpaceId.random();
+      const documentId = 'doc-activity';
+      const objectId = EntityId.random();
+      const dataSource = new ActivityMockDataSource(spaceId, documentId, objectId);
+      const indexAll = Effect.gen(function* () {
+        let done = false;
+        while (!done) {
+          done = (yield* engine.update(Context.default(), dataSource, { spaceId: null })).done;
+        }
+      });
+
+      yield* indexAll;
+      expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
+
+      yield* engine.deleteObjects({ spaceId, documentIds: [documentId], objects: [] });
+      expect(yield* engine.queryActivity({ spaceId })).toHaveLength(1);
+
+      yield* indexAll;
+      expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  describe('secondary indexes', () => {
+    const makeObject = (spaceId: SpaceId, documentId: string, title: string): IndexerObject => ({
+      spaceId,
+      documentId,
+      queueId: null,
+      queueNamespace: null,
+      recordId: null,
+      createdAt: null,
+      updatedAt: Date.now(),
+      data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title },
+    });
+
+    it.effect(
+      'leaves the full-text index behind the snapshot store until a secondary pass runs',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'Deferred Tokenization')]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+        const sql = yield* SqlClient.SqlClient;
+        expect(yield* sql`SELECT rowid FROM ftsIndex`).toHaveLength(0);
+
+        // The snapshot store is written on the primary pass, so everything read from it is current.
+        const meta = yield* engine.queryType({ spaceId, typeDXN: TYPE_DEFAULT });
+        expect(yield* engine.querySnapshotsJSON(meta.map((row) => row.recordId))).toHaveLength(1);
+
+        const { updated } = yield* engine.updateSecondaryIndexes(Context.default());
+        expect(updated).toBe(1);
+        expect(yield* sql`SELECT rowid FROM ftsIndex`).toHaveLength(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'resumes from its cursor, so a later pass indexes only what is new',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'First')]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+        expect((yield* engine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+        expect((yield* engine.updateSecondaryIndexes(Context.default())).done).toBe(true);
+
+        dataSource.push([makeObject(spaceId, 'doc-2', 'Second')]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+        expect((yield* engine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'coalesces repeated writes into a single re-tokenization',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        const object = makeObject(spaceId, 'doc-1', 'Alpha');
+        for (const title of ['Alpha', 'Bravo', 'Charlie', 'Delta']) {
+          object.data.title = title;
+          dataSource.push([object]);
+          yield* engine.update(Context.default(), dataSource, { spaceId: null });
+        }
+
+        expect((yield* engine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+
+        const query = { spaceId: null, includeAllQueues: false, queues: null };
+        expect(yield* engine.queryText({ ...query, query: 'Delta' })).toHaveLength(1);
+        expect(yield* engine.queryText({ ...query, query: 'Alpha' })).toHaveLength(0);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'matching reads the index as it stands rather than indexing at query time',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'Unflushed Content')]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+        const query = { query: 'Unflushed', spaceId: null, includeAllQueues: false, queues: null };
+        expect(yield* engine.queryText(query)).toHaveLength(0);
+
+        // Draining is the caller's to do — `Database.flush({ secondaryIndexes: true })` in the app.
+        yield* engine.updateSecondaryIndexes(Context.default());
+        expect(yield* engine.queryText(query)).toHaveLength(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'rebuilds from scratch when its cursor name is retired',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const dataSource = new MockIndexDataSource();
+        const spaceId = SpaceId.random();
+        dataSource.push([makeObject(spaceId, 'doc-1', 'Rebuilt')]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+        yield* engine.updateSecondaryIndexes(Context.default());
+
+        // What a migration does to retire a secondary index (see `migrations/tracker`).
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM indexCursor WHERE indexName = 'fts7'`;
+        yield* sql`DELETE FROM ftsIndex`;
+
+        expect((yield* engine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
+        expect(yield* sql`SELECT rowid FROM ftsIndex`).toHaveLength(1);
+      }, Effect.provide(TestLayer)),
+    );
+  });
 });

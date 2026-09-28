@@ -579,7 +579,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         data-pdf-canvas=''
         {...composableProps(props, {
           classNames: [
-            'dx-fill bg-deck select-text',
+            'dx-fill bg-deck-surface select-text',
             single ? 'overflow-hidden grid place-items-center' : 'overflow-auto',
           ],
         })}

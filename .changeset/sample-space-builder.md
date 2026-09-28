@@ -14,16 +14,15 @@ root-collection bootstrap, and tag URIs resolved once and stored space-relative 
 survives the space-id remap on import — plus `collection`, `children`, `seed` and `tagBatch`.
 
 One definition runs either way: `applyTo` writes it into a live space, and `buildArchive`
-(in `@dxos/app-toolkit/testing`) builds it headlessly into a `.dx.json` archive. That is what lets
-the content behind a committed onboarding snapshot also serve as a template offered in the app.
+(in `@dxos/app-toolkit/testing`) builds it headlessly into a `.dx.json` archive, which is how a
+build is asserted in a test.
 
-Three sample spaces run on it — Bramble Coffee Roasters (the onboarding snapshot, unchanged in
+Three sample spaces run on it — Bramble Coffee Roasters (the onboarding world, unchanged in
 content: 77 objects, 3 feeds, 127 typed entities), a software-project space, and a CRM pipeline —
 and the Gmail mbox importer was ported to it as well, retiring the last copy of the
 boot/create/populate/export harness those scripts used to duplicate.
 
-Two capabilities carry them. Plugins offer content through `AppCapabilities.SampleSpace`, gated on
-`ActivationEvents.SampleSpacesRequested` so it loads only once something asks for the list;
-`SpaceCapabilities.SpaceTemplate` is what the Create Space dialog lists, letting a new space be
-seeded from a template at creation time. The debug plugin owns the demo content and adapts the
-former into the latter, so neither the dialog nor the space plugin depends on any content package.
+Plugins offer content through `AppCapabilities.SpaceTemplate`, which the Create Space dialog
+lists, so a new space can be seeded from a template at creation time. Contributions are gated on
+`ActivationEvents.SpaceTemplatesRequested` and load only once something asks for the list, so the
+dialog depends on no content package.

@@ -16,9 +16,10 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '
   Schema.Struct({
     name: Schema.optional(Schema.String),
     /** Owned body: `SetParent` cascades it with the spec. */
-    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true), Annotation.FormInputAnnotation.set(false)),
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

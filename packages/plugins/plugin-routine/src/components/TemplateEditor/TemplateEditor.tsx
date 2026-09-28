@@ -7,6 +7,7 @@ import React from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
 import { composeRefs } from '@dxos/react-hooks';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -36,9 +37,10 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
   ({ classNames, id, source, lineNumbers = true, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
+    const [resolved] = useObject(source);
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;
-      if (!target) {
+      if (!resolved || !target) {
         return {};
       }
 
@@ -62,7 +64,7 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
           syntaxHighlighting(defaultHighlightStyle),
         ].filter(isNonNullable),
       };
-    }, [themeMode, source?.target, lineNumbers]);
+    }, [themeMode, resolved, lineNumbers]);
 
     return (
       <div

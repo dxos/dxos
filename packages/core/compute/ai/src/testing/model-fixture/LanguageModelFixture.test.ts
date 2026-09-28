@@ -51,7 +51,7 @@ const layerTest = DateToolkit.toLayer({
 const TestLayer = Layer.mergeAll(
   testingLayer,
   layerTest,
-  AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+  AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
 ).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('edge-remote')));
 
 class TestObjectReadToolkit extends Toolkit.make(
@@ -364,7 +364,7 @@ describe('dynamic value matching', () => {
       Effect.provide(
         Layer.mergeAll(
           TestObjectReadToolkit.layer,
-          AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
         ).pipe(
           Layer.provideMerge(
             LanguageModelFixture.layerTest({

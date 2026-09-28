@@ -39,7 +39,7 @@ describe('extraction (with full-text index)', () => {
   test('links an unambiguous match and reports the rest as candidates', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Organization.Organization] });
     db.add(Obj.make(Organization.Organization, { name: 'Amco' }));
-    await db.flush({ indexes: true });
+    await db.flush({ indexes: true, secondaryIndexes: true });
 
     const stage = makeExtractionStage();
     const block = { _tag: 'transcript' as const, started: 's', text: 'we met Amco and Globex today' };
@@ -61,7 +61,7 @@ describe('extraction (with full-text index)', () => {
     // Two objects match the same surface noun, so the match is ambiguous.
     db.add(Obj.make(Organization.Organization, { name: 'Acme' }));
     db.add(Obj.make(Organization.Organization, { name: 'Acme' }));
-    await db.flush({ indexes: true });
+    await db.flush({ indexes: true, secondaryIndexes: true });
 
     const stage = makeExtractionStage();
     const block = { _tag: 'transcript' as const, started: 's', text: 'we met Acme today' };

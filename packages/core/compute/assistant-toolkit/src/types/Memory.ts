@@ -16,6 +16,5 @@ export class Memory extends Type.makeObject<Memory>(DXN.make('org.dxos.type.memo
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--brain--regular', hue: 'pink' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}

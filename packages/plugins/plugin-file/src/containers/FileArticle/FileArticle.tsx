@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { type File } from '@dxos/types';
 
@@ -15,6 +16,7 @@ import { useFileUrl } from '../../hooks/index.ts';
 export type FileArticleProps = AppSurface.ObjectArticleProps<File.File>;
 
 export const FileArticle = ({ role, subject: file, attendableId }: FileArticleProps) => {
+  useObject(file);
   const rendered = useFileUrl(file);
 
   if (!rendered) {

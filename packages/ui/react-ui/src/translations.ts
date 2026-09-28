@@ -10,6 +10,8 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'empty.label': 'No items',
+
         'toolbar-menu.label': 'Action menu',
         'toolbar-drag-handle.label': 'Drag to rearrange',
         'toolbar-close.label': 'Close',
@@ -35,6 +37,7 @@ export const translations = [
         'system-button.upload.label': 'Upload',
         'system-button.download.label': 'Download',
         'system-button.clipboard.label': 'Copy',
+        'system-button.copied.label': 'Copied',
 
         'carousel-viewport.label': 'Carousel',
         'carousel-prev.label': 'Previous slide',

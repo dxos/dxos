@@ -24,22 +24,26 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/keys": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/protobuf": "catalog:",
+    "@dxos/agent-code-mode": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",

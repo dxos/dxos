@@ -26,9 +26,11 @@ export const useIconHref = (icon?: string) => {
   if (!icon) {
     return undefined;
   }
+
   if (!hasIcon) {
     registry.requestIcon(icon);
     return undefined;
   }
+
   return `#${icon}`;
 };

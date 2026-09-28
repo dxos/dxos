@@ -79,6 +79,11 @@
       "types": "./dist/types/src/types/Scene.d.ts",
       "import": "./dist/lib/Scene.mjs"
     },
+    "./SceneView": {
+      "source": "./src/types/SceneView.ts",
+      "types": "./dist/types/src/types/SceneView.d.ts",
+      "import": "./dist/lib/SceneView.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
@@ -139,8 +144,10 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "babylonjs-gltf2interface": "catalog:",
@@ -152,6 +159,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

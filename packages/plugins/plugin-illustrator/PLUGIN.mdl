@@ -65,7 +65,7 @@ op generate
 
 ## Dialects
 
-Higher-level diagram languages compile to scene commands (see `src/model/dialect.ts`); each
+Higher-level diagram languages compile to scene commands (see `@dxos/diagram`, `packages/common/diagram/src/dialect.ts`); each
 dialect owns its layout, so its output lands as ordinary world objects that stay editable by id.
 
 ```mdl

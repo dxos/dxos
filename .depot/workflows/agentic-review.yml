@@ -1,0 +1,40 @@
+name: Agentic Review
+
+# Advisory: checks that the PR carries a finalized agentic review (`.agents/reviews/<sha>/`) with
+# every issue resolved or ignored, and that no more than 20% of the PR changed since. The review
+# itself is run by an author or agent (`bun .agents/skills/agentic-review/scripts/fast.ts`); this
+# job only reads committed files. A separate workflow so it is never a required `Check` job — keep
+# it out of branch protection, since it is meant to prompt a review, not block a merge.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review-present:
+    runs-on: depot-ubuntu-24.04
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 5
+    steps:
+      # Full history (blobs on demand) for the merge-base and the per-commit drift count.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      # Node strips the script's types natively and it imports only `node:*`, so no install.
+      - name: Check agentic review
+        run: node .agents/skills/agentic-review/scripts/check-pr.ts --base=${{ github.event.pull_request.base.sha }}

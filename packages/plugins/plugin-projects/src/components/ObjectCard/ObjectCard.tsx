@@ -8,7 +8,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { useArchiveMenuItem } from '@dxos/plugin-space/hooks';
+import { Card, Icon, Tag, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -29,6 +30,11 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
   const icon = Obj.getIcon(object)?.icon ?? 'ph--file--regular';
+  const { archived, item: archiveItem } = useArchiveMenuItem(objectProp);
+  const menuItems = [
+    ...(onDelete ? [{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }] : []),
+    ...(archiveItem ? [archiveItem] : []),
+  ];
 
   // `Card.Root` renders `role='button'` when clickable but provides no keyboard handling itself, so
   // Enter/Space activation is wired up here (mirrors native `<button>` key semantics).
@@ -63,12 +69,13 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
           </CardIconSlot>
         </Card.Block>
         <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
-        {onDelete && (
-          <Card.Menu
-            items={[{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }]}
-          />
-        )}
+        {menuItems.length > 0 && <Card.Menu items={menuItems} />}
       </Card.Header>
+      {archived && (
+        <Card.Row>
+          <Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag>
+        </Card.Row>
+      )}
       {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}

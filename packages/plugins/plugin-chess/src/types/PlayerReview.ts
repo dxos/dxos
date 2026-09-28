@@ -23,12 +23,13 @@ export class Review extends Type.makeObject<Review>(DXN.make('org.dxos.type.ches
     playerName: Schema.String.pipe(Schema.optional),
     /** Owned index: `SetParent` cascades it with the review. */
     positionIndex: Ref.Ref(ChessPositionIndex.PositionIndex).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--chart-polar--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

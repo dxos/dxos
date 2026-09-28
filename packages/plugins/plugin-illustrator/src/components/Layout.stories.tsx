@@ -6,15 +6,16 @@ import { syntaxHighlighting } from '@codemirror/language';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { mermaid as mermaidLanguage } from 'codemirror-lang-mermaid';
 import Mermaid from 'mermaid';
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
+import { Diagnostics, Dsl, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
+import { diagram as diagramLanguage } from '@dxos/diagram/extension';
+import { BASIC } from '@dxos/diagram/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions, listener, mermaidHighlightStyle } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-
-import { Diagnostics, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '#model';
 
 import appFramework from '../../docs/diagrams/app-framework.mmd?raw';
 import assistant from '../../docs/diagrams/assistant.mmd?raw';
@@ -22,13 +23,13 @@ import compute from '../../docs/diagrams/compute.mmd?raw';
 import echo from '../../docs/diagrams/echo.mmd?raw';
 import edge from '../../docs/diagrams/edge.mmd?raw';
 import pipeline from '../../docs/diagrams/pipeline.mmd?raw';
-import { BASIC } from '../model/testing.ts';
 import { SceneSvg } from './SceneSvg.tsx';
 
 //
 // Layout bench: the mermaid source (left, editable) with mermaid's own rendering beneath it as the
-// reference the DSL author sees elsewhere, and our engine's layout on the right with the Tier-1
-// report. Edit the source live; both renders follow.
+// reference the DSL author sees elsewhere. On the right, the engine's output as our text DSL above
+// the layout it describes, with the Tier-1 report. Edit the mermaid and everything follows; edit
+// the DSL and the layout follows that instead, until the mermaid changes again.
 //
 
 const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
@@ -55,6 +56,30 @@ const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChan
   return (
     <div {...focusAttributes} ref={parentRef} className='dx-fill overflow-auto' data-testid='layout-bench.source' />
   );
+};
+
+/**
+ * The same scene as our text DSL, in the lezer mode: highlighting off the grammar and lint from
+ * both the parser and `Diagnostics`, so an overlap underlines the object that overlaps.
+ * Remounted on `generation` so a fresh layout replaces the buffer rather than merging into edits.
+ */
+const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
+  const { themeMode } = useThemeContext();
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      initialValue,
+      extensions: [
+        createBasicExtensions({ lineNumbers: true }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+        // Standard lezer tags, so the theme's own highlight style colors it — no bespoke style.
+        diagramLanguage({ layout: true }),
+        listener({ onChange: ({ text }) => onChange(text) }),
+      ],
+    }),
+    [themeMode, initialValue],
+  );
+
+  return <div {...focusAttributes} ref={parentRef} className='dx-fill overflow-auto' data-testid='layout-bench.dsl' />;
 };
 
 /** Reference rendering through mermaid.js; `%% ref` lines are comments to it and are ignored. */
@@ -125,6 +150,9 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
   const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
   const [result, setResult] = useState<MermaidEngine.Result>();
   const [failure, setFailure] = useState<string>();
+  // The engine's output as DSL text. Only a new layout writes it, so editing the DSL does not
+  // remount the editor under the cursor.
+  const [dsl, setDsl] = useState('');
   useEffect(() => {
     let cancelled = false;
     // 0 / auto let the objective choose along that axis; otherwise the axis is fixed.
@@ -137,6 +165,7 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
       .then((layout) => {
         if (!cancelled) {
           setObjects(objectsOf(layout.commands));
+          setDsl(Dsl.printCommands(layout.commands));
           setResult(layout);
           setFailure(undefined);
         }
@@ -153,6 +182,14 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
   const report = useMemo(() => Diagnostics.analyze(objects), [objects]);
   const errors = Diagnostics.errors(report);
 
+  // Editing the DSL drives the layout panel directly; a half-typed line keeps the last good scene.
+  const handleDsl = useCallback((text: string) => {
+    const { commands, problems } = Dsl.parse(text);
+    if (!problems.some(({ severity }) => severity === 'error')) {
+      setObjects([...Dsl.toScene(commands).objects]);
+    }
+  }, []);
+
   return (
     <div className='dx-fill grid grid-cols-[minmax(24rem,2fr)_3fr] gap-px bg-separator'>
       {/* Left: editor above the mermaid reference. */}
@@ -167,8 +204,12 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
           <MermaidDiagram source={source} />
         </div>
       </div>
-      {/* Right: the engine's layout, scaled to fit, with the report. */}
-      <div className='grid grid-rows-[auto_1fr_auto] min-h-0 gap-px bg-separator'>
+      {/* Right: the scene as DSL text above the layout it describes, with the report. */}
+      <div className='grid grid-rows-[auto_1fr_auto_1fr_auto] min-h-0 gap-px bg-separator'>
+        <Header>DSL</Header>
+        <div className='dx-base-surface min-h-0'>
+          <DslEditor initialValue={dsl} onChange={handleDsl} />
+        </div>
         <Header>Layout</Header>
         {/* The SVG is the grid item itself: a percentage height inside a wrapper resolves to the
             viewBox's intrinsic size and the row grows to it instead of the SVG scaling to fit. */}

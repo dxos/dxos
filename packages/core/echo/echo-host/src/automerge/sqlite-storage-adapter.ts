@@ -51,6 +51,11 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     return this.#open;
   }
 
+  /** The SQL runtime the chunks live in, for the data migrations that run beside them. */
+  get runtime(): RuntimeProvider.RuntimeProvider<SqlClient.SqlClient> {
+    return this.#runtime;
+  }
+
   async open(): Promise<void> {
     this.#open = true;
   }
@@ -268,7 +273,7 @@ const SEPARATOR_UPPER_BOUND = String.fromCharCode(SEPARATOR.charCodeAt(0) + 1);
  * Excludes `prefix` itself, which callers select separately — {@link loadRange} must still return a
  * key stored at exactly the queried prefix (the `subduction-ids-<sid>` shape does this).
  */
-const descendantRange = (prefix: string): { lower: string; upper: string } => ({
+export const descendantRange = (prefix: string): { lower: string; upper: string } => ({
   lower: prefix + SEPARATOR,
   upper: prefix + SEPARATOR_UPPER_BOUND,
 });

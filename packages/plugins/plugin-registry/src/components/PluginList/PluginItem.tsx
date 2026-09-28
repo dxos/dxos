@@ -63,6 +63,7 @@ export type PluginItemProps = {
    * phase, reason, and error message.
    */
   failure?: PluginManager.PluginFailure;
+  readOnly?: boolean;
 };
 
 export const PluginItem = ({
@@ -81,6 +82,7 @@ export const PluginItem = ({
   hasSettings: hasSettingsProp,
   onSettings,
   failure,
+  readOnly,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
@@ -174,7 +176,7 @@ export const PluginItem = ({
           <p className='text-description line-clamp-4 min-w-0'>{description}</p>
         </div>
 
-        <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
+        <div className='flex gap-1 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag: string) => (
             <Tag key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
@@ -220,7 +222,7 @@ export const PluginItem = ({
               </Button>
             ) : (
               <Field.Root id={inputId}>
-                <Field.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
+                <Field.Switch classNames='self-center' checked={isEnabled} disabled={readOnly} onClick={handleChange} />
               </Field.Root>
             )}
           </div>

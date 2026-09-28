@@ -4,4 +4,5 @@
 
 import { lazy } from 'react';
 
-export const SpacetimeArticle = lazy(() => import('./SpacetimeArticle/index.ts'));
+export const SceneArticle = lazy(() => import('./SceneArticle/index.ts'));
+export const SceneCard = lazy(() => import('./SceneCard/index.ts'));

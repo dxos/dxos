@@ -25,7 +25,7 @@ import { log } from '@dxos/log';
 import type * as ProcessManager from './ProcessManager.ts';
 import { toError, toStatus } from './remote-process-info.ts';
 import type * as RemoteProcessManager from './RemoteProcessManager.ts';
-import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /** How long to wait before re-reading a process's event log after an empty page. */
 const DEFAULT_POLL_INTERVAL = Duration.millis(250);
@@ -123,7 +123,12 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     this.#definition = options.definition;
     this.#registry = options.registry;
     this.#pollInterval = options.pollInterval ?? DEFAULT_POLL_INTERVAL;
-    this.#remoteTrace = options.remoteTrace;
+    // The noop monitor means the deployment HAS no live source, so it is normalized away here rather
+    // than subscribed to: its empty stream would end `subscribeEphemeral` before the first turn.
+    this.#remoteTrace =
+      options.remoteTrace !== undefined && !RemoteTraceMonitor.isNoop(options.remoteTrace)
+        ? options.remoteTrace
+        : undefined;
     this.#onLifecycleChange = options.onLifecycleChange ?? Effect.void;
     this.#info = options.info;
     this.#statusAtom = Atom.make(toStatus(options.info));

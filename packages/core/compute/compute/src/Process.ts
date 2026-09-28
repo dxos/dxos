@@ -18,11 +18,13 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { Annotation, type Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SerializedError } from '@dxos/protocols';
 
+import { InvalidOperationInputError } from './errors.ts';
 import * as Operation from './Operation.ts';
 import * as OperationHandlerSet from './OperationHandlerSet.ts';
 import * as StorageService from './StorageService.ts';
@@ -417,6 +419,13 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 input,
               });
 
+              // A property the schema does not declare is a caller mistake, not a value to drop:
+              // a misspelled field left `query-objects` with no `text` and no `typename`, which
+              // its handler read as "match everything" and returned as a successful search. The
+              // edge path validates the same way in `wrapFunctionHandler`; validating here too
+              // keeps a local invocation and a remote one to one contract.
+              yield* validateOperationInput(op, input);
+
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
               const output = yield* opHandler
                 .handler(input)
@@ -472,6 +481,11 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
  * Runtime state of a process.
  */
 export enum State {
+  // Command to spawn the process has been accepted locally but the runtime hosting it has not yet
+  // acknowledged it. Only ever reported by a client queueing commands for a remote runtime
+  // (`RemoteCommandQueue`); a process the local runtime owns is never in this state.
+  STARTING = 'STARTING',
+
   // Process is actively running.
   RUNNING = 'RUNNING',
 
@@ -717,3 +731,67 @@ export const prettyProcessTree = (tree: readonly Info[]): string => {
 
   return lines.join('\n');
 };
+
+/**
+ * Reject an operation input the operation's own schema does not admit, naming the offending value.
+ *
+ * The excess-property check is deliberately top-level only: a misspelled field is the mistake worth
+ * catching, and an in-process caller legitimately passes a LIVE ECHO object as a property value,
+ * which carries internal keys no declared schema lists. `reportInput` and `errors: 'all'` put the
+ * rejected value and every bad field in the message, since a remote caller cannot see its own
+ * payload in our logs.
+ */
+const validateOperationInput = <const Op extends Operation.Definition.Any>(
+  op: Op,
+  input: unknown,
+): Effect.Effect<void> => {
+  // An input schema that describes no shape cannot say what an excess property would be, and a
+  // caller handing a payload to an operation declaring `Void` is the trigger dispatcher's normal
+  // contract. `Null` is in the set because a `Void` input comes back as `Null` once the operation
+  // has round-tripped through its serialized schema, which is how the dispatcher rebuilds it.
+  const typeAst = Schema.toType(op.input).ast;
+  if (CONTENTLESS_INPUT_TAGS.has(typeAst._tag)) {
+    return Effect.void;
+  }
+
+  const fail = (message: string, cause?: unknown) =>
+    new InvalidOperationInputError({
+      message: `Operation input did not match schema (${op.meta.key}): ${message}`,
+      cause,
+    });
+
+  // Invoking with no arguments is how a skill template and the trigger dispatcher call an operation
+  // whose fields are all optional, so a nullish payload is validated as the empty object it stands
+  // for rather than rejected outright; a schema that does require fields still names them.
+  const payload = input ?? (SchemaAST.isObjects(typeAst) ? {} : input);
+
+  return Effect.suspend(() => {
+    const undeclared = undeclaredTopLevelKeys(typeAst, payload);
+    if (undeclared.length > 0) {
+      return Effect.die(
+        fail(`unexpected ${undeclared.length === 1 ? 'property' : 'properties'} ${undeclared.join(', ')}`),
+      );
+    }
+
+    return Effect.try({
+      try: () => Schema.decodeUnknownSync(Schema.toType(op.input), { reportInput: true, errors: 'all' })(payload),
+      catch: (error: any) => fail(error?.message ?? String(error), error),
+    }).pipe(Effect.asVoid, Effect.orDie);
+  });
+};
+
+/** Own keys of a struct input that the schema does not declare; empty for any other input shape. */
+const undeclaredTopLevelKeys = (typeAst: SchemaAST.AST, input: unknown): string[] => {
+  if (!SchemaAST.isObjects(typeAst) || typeof input !== 'object' || input === null || Array.isArray(input)) {
+    return [];
+  }
+  // An index signature makes every key declared, so there is nothing to reject.
+  if (typeAst.indexSignatures.length > 0) {
+    return [];
+  }
+
+  const declared = new Set(SchemaAST.getPropertySignatures(typeAst).map((prop) => prop.name.toString()));
+  return Object.keys(input).filter((key) => !declared.has(key));
+};
+
+const CONTENTLESS_INPUT_TAGS: ReadonlySet<string> = new Set(['Any', 'Unknown', 'Void', 'Undefined', 'Null', 'Never']);

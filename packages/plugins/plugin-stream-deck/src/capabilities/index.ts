@@ -18,7 +18,7 @@ export const BridgeDriver = Capability.lazyModule(
     environments: [],
     requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker, SpaceCapabilities.Dashboard],
     provides: [StreamDeckCapabilities.BridgeStatus],
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./bridge-driver.ts'),
 );

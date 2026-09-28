@@ -31,7 +31,7 @@ import {
 } from '../JsonSchema/index.ts';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref/index.ts';
 import { TypeSchema } from '../Type/index.ts';
-import { toEffectSchema, toJsonSchema } from './json-schema.ts';
+import { foldRestSignatures, toEffectSchema, toJsonSchema } from './json-schema.ts';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -304,6 +304,18 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(A);
     expect(jsonSchema.properties?.kind).toEqual({ type: 'string', enum: ['a'] });
     expect(jsonSchema.properties?.b).toBeDefined();
+  });
+
+  test('a named recursive schema reached through two properties is one definition', () => {
+    interface Node {
+      readonly children: readonly Node[];
+    }
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      children: Schema.Array(Schema.suspend((): Schema.Codec<Node> => Node)),
+    }).annotate({ identifier: 'node' });
+
+    const jsonSchema = toJsonSchema(Schema.Struct({ first: Node, second: Node }));
+    expect(Object.keys(jsonSchema.$defs ?? {})).toEqual(['node']);
   });
 
   test('tuple schema with description', () => {
@@ -814,6 +826,22 @@ describe('json-to-effect', () => {
       closed: { name: 'ok', extra: 'stripped' },
     });
     expect((stripped as { closed: Record<string, unknown> }).closed).to.deep.eq({ name: 'ok' });
+  });
+
+  // Callers emitting through Effect directly get the same fold, at any depth.
+  test('foldRestSignatures restores a nested rest signature from Effect output', () => {
+    const Draft = Schema.StructWithRest(Schema.Struct({ '@type': Schema.String }), [
+      Schema.Record(Schema.String, Schema.Unknown),
+    ]);
+    const { schema } = Schema.toJsonSchemaDocument(Schema.Struct({ drafts: Schema.Array(Draft) }));
+
+    expect(schema.properties).toMatchObject({ drafts: { items: { allOf: [{ type: 'object' }] } } });
+    expect(foldRestSignatures(schema).properties.drafts.items).to.deep.eq({
+      type: 'object',
+      properties: { '@type': { type: 'string' } },
+      required: ['@type'],
+      additionalProperties: true,
+    });
   });
 
   // A `$ref` is only ever emitted for a genuine cycle (an acyclic suspend is inlined), so the

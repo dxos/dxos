@@ -104,6 +104,25 @@ describe('definition', () => {
   });
 });
 
+describe('makeTemplate', () => {
+  test('takes its name, icon and hue from the definition', ({ expect }) => {
+    const template = SampleSpace.makeTemplate({ id: 'com.example.template', definition });
+    expect(template.label).toBe('Sample');
+    expect(template.icon).toBe('potted-plant');
+    expect(template.hue).toBe('amber');
+  });
+
+  test('drops an icon the picker cannot produce, rather than offering a blank', ({ expect }) => {
+    // The Phosphor spelling is the near-miss: a consumer wraps a bare name as `ph--<name>--regular`.
+    const template = SampleSpace.makeTemplate({
+      id: 'com.example.template',
+      icon: 'ph--potted-plant--regular',
+      definition,
+    });
+    expect(template.icon).toBeUndefined();
+  });
+});
+
 describe('clock', () => {
   test('resolves offsets against the reference date, not the wall clock', ({ expect }) => {
     const clock = SampleSpace.makeClock('2026-05-20T15:00:00Z');

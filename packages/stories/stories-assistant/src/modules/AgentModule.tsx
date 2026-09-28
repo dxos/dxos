@@ -52,7 +52,7 @@ const isSuperseded = (
 const blockClass = (block: ContentBlock.Any): string => {
   switch (block._tag) {
     case 'toolResult':
-      return block.error ? 'text-errorText' : 'text-successText';
+      return block.error ? 'text-error-text' : 'text-success-text';
     case 'toolCall':
       return 'text-subdued';
     case 'reasoning':
@@ -162,7 +162,7 @@ export const AgentModule = () => {
             </div>
           ))}
           {running && <div className='text-sm text-description'>running…</div>}
-          {error && <div className='text-sm text-errorText'>{error}</div>}
+          {error && <div className='text-sm text-error-text'>{error}</div>}
         </div>
       </div>
 

@@ -100,6 +100,11 @@
       "types": "./dist/types/src/types/AccountCache.d.ts",
       "import": "./dist/lib/AccountCache.mjs"
     },
+    "./CliLogin": {
+      "source": "./src/types/CliLogin.ts",
+      "types": "./dist/types/src/types/CliLogin.d.ts",
+      "import": "./dist/lib/CliLogin.mjs"
+    },
     "./ClientAction": {
       "source": "./src/types/ClientAction.ts",
       "types": "./dist/types/src/types/ClientAction.d.ts",

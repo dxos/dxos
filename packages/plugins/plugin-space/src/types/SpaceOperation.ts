@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { SpaceSchema } from '@dxos/client/echo';
+import { SpaceMember_Role, SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation_AuthMethod, Invitation_Type } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Ref, Tag, Type, View } from '@dxos/echo';
@@ -110,6 +110,26 @@ export const Share = Operation.make({
   output: Schema.instanceOf(CancellableInvitationObservable),
 });
 
+export const AddMembers = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.addMembers'),
+    name: 'Add Members',
+    description: 'Admit known contacts to a space by identity key.',
+    icon: 'ph--user-plus--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+    identityKeys: Schema.Array(Schema.String),
+    role: Schema.Enum(SpaceMember_Role),
+  }),
+  output: Schema.Struct({
+    joinUrl: Schema.String,
+    admitted: Schema.Array(Schema.String),
+    failed: Schema.Array(Schema.Struct({ key: Schema.String, error: Schema.String })),
+  }),
+});
+
 export const OpenSettings = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.openSettings'),
@@ -119,20 +139,6 @@ export const OpenSettings = Operation.make({
   },
   input: Schema.Struct({
     space: SpaceSchema,
-  }),
-  output: Schema.Void,
-});
-
-export const WaitForObject = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.space.waitForObject'),
-    name: 'Wait For Object',
-    description: 'Wait for an object to be available.',
-    icon: 'ph--clock-countdown--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    id: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
@@ -159,12 +165,14 @@ export const AddObject = Operation.make({
     description:
       'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
       '`{ "@type": "<typename>", ...properties }`; the type must already be registered ' +
-      '(see queryObjects). Omit `target` to file it at the space root.',
+      '(see queryObjects). Omit `target` to file it where its type belongs by default: a document, ' +
+      'sheet, file, or collection goes into the space root collection; other types are only added to the space.',
     icon: 'ph--plus--regular',
   },
   // Required: the caller names the database — an explicit spaceId, or a database provided in the
-  // calling context (the app's create-object dispatch does the latter).
-  services: [Database.Service],
+  // calling context (the app's create-object dispatch does the latter). The capability manager
+  // carries the `DefaultParent` rules that file an object given no target; every host binds it.
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     // A union rather than two optional fields, so the schema itself admits exactly one form: a
     // caller that cannot hold a live object — anything across an RPC boundary — describes one, and
@@ -174,12 +182,12 @@ export const AddObject = Operation.make({
     }),
     // A reference is the only form that survives an RPC boundary, so a remote caller names the
     // target collection that way; in-process callers keep passing the live entity. Absent, the
-    // object is filed at the space root of the database the runtime resolved from the space id —
-    // a database is never an input, since it cannot cross a process boundary.
-    target: Schema.optional(
-      Schema.Union([Type.getSchema(Collection.Collection), Ref.Ref(Collection.Collection)]),
-    ).annotate({
-      description: 'The collection to add to, or a reference to it. Omit to file at the space root.',
+    // object's type decides its parent (`DefaultParent`), in the database the runtime resolved from
+    // the space id — a database is never an input, since it cannot cross a process boundary.
+    target: Schema.optional(Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)])).annotate({
+      description:
+        'The parent of the object, or a reference to it. A collection files it; any other object ' +
+        'files it itself, so the object is only persisted. Omit to file it where its type belongs by default.',
     }),
   }),
   output: Schema.Struct({
@@ -286,7 +294,7 @@ export const DeleteField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to delete the field from.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to delete the field from.' }),
     fieldId: Schema.String,
   }),
   output: DeleteFieldOutput,
@@ -311,8 +319,11 @@ export const OpenObjectForm = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
-      description: 'The database or collection to create in.',
+    target: Schema.Union([Database.Database, Obj.Unknown]).annotate({
+      description:
+        'Where the object is created and what its parent is. A database means the space root; a ' +
+        'collection files it; any other object, such as a project taking it into its artifacts, ' +
+        'files it itself.',
     }),
     mode: Schema.optional(
       Schema.Literals(['draft', 'live']).annotate({
@@ -580,7 +591,7 @@ export const RestoreField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: Type.getSchema(View.View).annotate({ description: 'The view to restore the field to.' }),
+    view: Ref.Ref(View.View).annotate({ description: 'The view to restore the field to.' }),
     field: View.FieldSchema.annotate({ description: 'The field schema to restore.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.
     props: Schema.Any.annotate({ description: 'The field properties to restore.' }),
@@ -763,6 +774,25 @@ export const AddTag = Operation.make({
   }),
   output: Schema.Struct({
     object: Schema.Unknown,
+  }),
+}).pipe(Operation.mutation('write'));
+
+export const SetArchived = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.setArchived'),
+    name: 'Set Archived',
+    description:
+      'Archive or unarchive objects. Archived objects are hidden from the navigation tree but stay in the database.',
+    icon: 'ph--archive--regular',
+  },
+  input: Schema.Struct({
+    objects: Schema.Array(Obj.Unknown).annotate({ description: 'The objects to archive or unarchive.' }),
+    archived: Schema.Boolean.annotate({ description: 'Whether the objects should be archived.' }),
+  }),
+  output: Schema.Struct({
+    objects: Schema.Array(Obj.Unknown).annotate({
+      description: 'The objects whose state changed; those already in the requested state are omitted.',
+    }),
   }),
 }).pipe(Operation.mutation('write'));
 

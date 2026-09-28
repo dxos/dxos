@@ -78,6 +78,9 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // session has it, and the chat's agent is who holds it.
     expect(task.status).toBe('started');
     expect(task.assignee?.role).toBe('assistant');
+    // Held by that chat, named as the assignee's subject: a bare assistant role is the supervisor's
+    // spawn request, whose orphan sweep would fail a started task no sub-agent is running.
+    expect(Task.refEntityId(task.assignee?.subject)).toBe(chat.id);
 
     // The delegating identity reviews the result, which is what will send the task to `review`
     // rather than `done` when the work finishes.
@@ -232,6 +235,6 @@ const setup = async () => {
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return harness;
 };

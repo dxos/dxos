@@ -149,12 +149,13 @@ export const PopoverContent = () => {
     [handleClose],
   );
 
-  const roundedClassNames = 'rounded-md';
+  const roundedClassNames = 'rounded-sm';
 
   return (
     <Popover.Portal>
       <Popover.Content
         side={side}
+        border
         hideWhenDetached
         onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}

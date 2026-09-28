@@ -21,6 +21,7 @@ export class Dream extends Type.makeObject<Dream>(DXN.make('dxos.org.type.Dream'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--moon-stars--regular', hue: 'violet' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

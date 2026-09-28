@@ -50,7 +50,7 @@ const handler: Operation.WithHandler<typeof LingoOperation.TranslateTerm> = Ling
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

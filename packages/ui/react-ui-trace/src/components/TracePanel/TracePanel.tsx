@@ -22,6 +22,7 @@ import { type ExecutionGraph } from '../../execution-graph/index.ts';
 import { translationKey } from '../../translations.ts';
 import { ProcessTree, type ProcessTreeProps } from '../ProcessTree/index.ts';
 import { type Commit, Timeline } from '../Timeline/index.ts';
+import { SpanTreeView } from './SpanTreeView.tsx';
 import { type ProcessEnvironment, filterProcesses } from './trace-filter.ts';
 import { useTraceMenu } from './useTraceMenu.ts';
 
@@ -85,6 +86,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
     // Remembered across selections, so collapsing a section once keeps it collapsed.
     const [openSections, setOpenSections] = useState<string[]>(SECTIONS.map((section) => section.id));
+    // The timeline windows its rows against this scroller.
+    const [traceViewport, setTraceViewport] = useState<HTMLDivElement | null>(null);
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
@@ -112,14 +115,16 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
             items={SECTIONS}
             value={openSections}
             onValueChange={setOpenSections}
-            classNames='h-full min-h-0 rounded-none border-y-0'
+            classNames='h-full min-h-0'
+            border={false}
+            rounded={false}
           >
             {({ items }) =>
               items.map((section) => {
                 switch (section.id) {
                   case 'processes':
                     return (
-                      <Accordion.Item key={section.id} item={section} classNames='border-x-0'>
+                      <Accordion.Item key={section.id} item={section}>
                         <Accordion.ItemHeader hover>
                           <span className='text-sm text-description'>{t('trace-processes.label')}</span>
                         </Accordion.ItemHeader>
@@ -145,8 +150,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                       <Accordion.Item
                         key={section.id}
                         item={section}
+                        disabled
                         classNames={mx(
-                          'border-x-0 dx-grow flex flex-col',
+                          'dx-grow flex flex-col',
                           '[&>[data-part=item-content]]:dx-grow [&>[data-part=item-content]]:flex [&>[data-part=item-content]]:flex-col [&>[data-part=item-content]]:animate-none',
                         )}
                       >
@@ -154,18 +160,20 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                           <span className='text-sm text-description'>{t('trace.label')}</span>
                         </Accordion.ItemHeader>
                         <Accordion.ItemBody classNames='dx-grow grid grid-rows-[minmax(0,1fr)]'>
-                          <ScrollContainer.Root pin>
+                          {/* Opens at the top; the pin arms itself once the reader scrolls to the tail. */}
+                          <ScrollContainer.Root>
                             <ScrollContainer.Content thin>
-                              <ScrollContainer.Fade />
-                              <ScrollContainer.Viewport>
+                              <ScrollContainer.Fade classNames='h-8' />
+                              <ScrollContainer.Viewport ref={setTraceViewport}>
                                 {debug ? (
-                                  <JsonHighlighter data={spanTree} classNames='text-xs' />
+                                  <SpanTreeView spanTree={spanTree} />
                                 ) : (
                                   <Timeline
                                     branches={branches}
                                     branch={currentBranch}
                                     commits={commits}
                                     showTimestamp
+                                    scroller={traceViewport}
                                     onSelect={handleCommitSelect}
                                   />
                                 )}
@@ -180,15 +188,18 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                     const commit = debug ? undefined : selectedCommit;
                     return (
                       // With nothing selected the section stays as a plain, closed row.
-                      <Accordion.Item key={section.id} item={section} disabled={!commit} classNames='border-x-0'>
+                      <Accordion.Item key={section.id} item={section} disabled={!commit}>
                         <Accordion.ItemHeader hover>
-                          <span className='block truncate text-sm text-description'>
-                            {commit?.message ?? t('trace-details.label')}
+                          <span className='flex items-center truncate text-sm text-description'>
+                            {t('trace-details.label')}
                           </span>
                         </Accordion.ItemHeader>
                         {commit && (
                           <Accordion.ItemBody classNames='p-0'>
-                            <JsonHighlighter data={details[commit.id] ?? commit} classNames='max-h-[20lh] text-xs' />
+                            <JsonHighlighter
+                              data={details[commit.id] ?? commit}
+                              classNames='max-h-[20lh] text-xs p-1.5'
+                            />
                           </Accordion.ItemBody>
                         )}
                       </Accordion.Item>

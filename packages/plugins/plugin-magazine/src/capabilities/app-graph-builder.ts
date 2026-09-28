@@ -72,6 +72,7 @@ export default Capability.makeModule(
       // Companion panel: resolve the selected Post under a Magazine node.
       AppGraphBuilder.createExtension({
         id: 'magazinePost',
+        relation: AppNode.companion,
         match: (node) =>
           Magazine.instanceOf(node.data)
             ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })

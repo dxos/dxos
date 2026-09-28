@@ -8,6 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-routine/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -46,13 +47,13 @@ export type NotebookCellProps = {
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  const extensions = useMemo(() => {
-    return cell.source?.target
-      ? [createDataExtensions({ id: cell.id, text: Doc.createAccessor(cell.source.target, ['content']) })]
-      : [];
-  }, [cell.source?.target]);
+  const source = useResolveRef(cell.source);
+  const prompt = useResolveRef(cell.prompt);
+  const explorerGraph = useResolveRef(cell.graph);
 
-  const explorerGraph = cell.graph?.target;
+  const extensions = useMemo(() => {
+    return source ? [createDataExtensions({ id: cell.id, text: Doc.createAccessor(source, ['content']) })] : [];
+  }, [source]);
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
@@ -66,7 +67,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
   switch (cell.type) {
     case 'markdown':
-      if (!cell.source?.target) {
+      if (!source) {
         return null;
       }
 
@@ -74,13 +75,13 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         <NotebookTextEditor
           id={cell.id}
           classNames={editorStyles}
-          initialValue={cell.source.target.content}
+          initialValue={source.content}
           extensions={extensions}
         />
       );
 
     case 'script':
-      if (!cell.source?.target) {
+      if (!source) {
         return null;
       }
 
@@ -90,7 +91,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             id={cell.id}
             role='section'
             classNames={editorStyles}
-            initialValue={cell.source.target.content}
+            initialValue={source.content}
             extensions={extensions}
             env={env}
             options={{
@@ -104,7 +105,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       );
 
     case 'query':
-      if (!cell.source?.target) {
+      if (!source) {
         return null;
       }
 
@@ -115,7 +116,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             id={cell.id}
             classNames={editorStyles}
             db={db}
-            value={cell.source.target.content}
+            value={source.content}
             onChange={handleQueryChange}
           />
           {explorerGraph && !dragging && (
@@ -130,13 +131,13 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
     // TODO(burdon): Use streaming response from Chat.
     case 'prompt':
-      if (!cell.prompt?.target) {
+      if (!prompt) {
         return null;
       }
 
       return (
         <>
-          <TemplateEditor id={cell.id} source={cell.prompt.target.text} lineNumbers={false} classNames={editorStyles} />
+          <TemplateEditor id={cell.id} source={prompt.text} lineNumbers={false} classNames={editorStyles} />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
       );

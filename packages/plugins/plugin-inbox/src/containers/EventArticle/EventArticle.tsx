@@ -13,7 +13,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
@@ -50,7 +50,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = eventCalendar?.tags?.target;
+  const tagIndex = useResolveRef(eventCalendar?.tags);
   const starredAtom = useMemo(
     () => (tagIndex && starredUri ? TagIndex.atom(tagIndex, event.id, starredUri) : NOT_STARRED),
     [tagIndex, event.id, starredUri],

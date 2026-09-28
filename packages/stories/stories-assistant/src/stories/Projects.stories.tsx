@@ -50,7 +50,7 @@ const storyOptions = {
       { Collection, Feed },
       { Text, TagIndex },
       { Mailbox },
-      { Question, Task, TaskSet },
+      { Task, TaskSet },
       { SpacePlugin },
       { InboxPlugin },
       ProjectsPlugin,
@@ -82,7 +82,7 @@ const storyOptions = {
         // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
         TasksPlugin.make(),
         CrmPlugin.make(),
-        // Contributes the sample spaces (Northwind Sales, Tidepool, Chess MCP) as space
+        // Contributes the space templates (Northwind Sales, Tidepool, Chess MCP) as space
         // templates — the ones the app's create-space dialog offers.
         DebugPlugin.make(),
         // Contributes the Sandbox skill and its operations: without it the agent has no
@@ -102,10 +102,9 @@ const storyOptions = {
         Feed.Feed,
         TagIndex.TagIndex,
         Sandbox.Sandbox,
-        // The Helpdesk template's ledger, and the questions an agent files against it.
+        // The Helpdesk template's ledger; an agent's questions live in its tasks' history.
         TaskSet.TaskSet,
         Task.Task,
-        Question.Question,
       ],
     };
   },

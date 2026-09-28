@@ -36,12 +36,12 @@ describe('TriggerRuntimeController', () => {
       plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
-    // Creating identity also creates the default space and emits SpacesReady,
+    // Creating identity also creates the default space and emits SpacesAvailable,
     // which is what gates the TriggerRuntimeController module's activation.
     const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     const dispatcher = await getDispatcher(harness, defaultSpace.id);
 
@@ -83,7 +83,7 @@ describe('TriggerRuntimeController', () => {
     const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     const dispatcher = await getDispatcher(harness, defaultSpace.id);
 

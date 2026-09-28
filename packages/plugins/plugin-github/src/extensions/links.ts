@@ -34,11 +34,24 @@ export type GitHubLinksOptions = {
  * the preview popover, where this plugin's link resolver answers with the pull request or issue.
  * Contributed through `MarkdownCapabilities.ExtensionProvider` rather than built into the editor.
  */
+/**
+ * What a chip says for a link the reader wrote as a bare URL: `#123`, or `owner/repo` for a
+ * repository. The URL is its own text in that form, and a chip repeating it is longer than the text
+ * it replaced — the read-only renderer makes the same substitution.
+ */
+const bareLabel = ({ number, owner, repo }: GitHubLink): string => (number ? `#${number}` : `${owner}/${repo}`);
+
 export const githubLinks = ({
   trigger,
   link = {
-    factory: ({ label, url, kind }) =>
-      new AnchorWidget(label, url, trigger, undefined, kind === 'pull' ? PULL_REQUEST_ICON : undefined),
+    factory: (props) =>
+      new AnchorWidget(
+        props.label === props.url ? bareLabel(props) : props.label,
+        props.url,
+        trigger,
+        undefined,
+        props.kind === 'pull' ? PULL_REQUEST_ICON : undefined,
+      ),
   },
 }: GitHubLinksOptions = {}): Extension =>
   linkWidgets({

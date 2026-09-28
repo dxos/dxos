@@ -10,6 +10,8 @@ import { random } from '@dxos/random';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
+
 import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter.tsx';
 
 const TICK_MS = 200;
@@ -17,12 +19,6 @@ const TICK_MS = 200;
 const ITEMS = 40;
 /** How long an uncounted phase runs before the run moves on. */
 const HOLD_MS = 2_500;
-/**
- * Items completed per tick. Uneven, because real work is: a fixed step glides so smoothly that the
- * transition has nothing to smooth.
- */
-const step = () => random.number.int({ min: 1, max: 4 });
-
 /** Phase names, so the crawl has somewhere to go. */
 const NOTES = ['Syncing feeds', 'Selecting articles', 'Adding to magazine'];
 
@@ -86,7 +82,7 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
         return;
       }
 
-      count += indeterminate ? TICK_MS : step();
+      count += indeterminate ? TICK_MS : random.number.int({ min: 1, max: 4 });
       patch({
         status: 'running',
         phase: stages ? phase : undefined,
@@ -151,9 +147,7 @@ const meta = {
   title: 'ui/react-ui-components/ProgressMeter',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -121,8 +121,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     // On success the onboarding manager dismisses this dialog off the back of the new identity.
     const { error: redeemError } = await invokePromise(ClientOperation.RedeemPasskey);
     if (redeemError) {
-      log.catch(redeemError);
-      setError(passkeyError(PasskeyError.classify(redeemError)));
+      // `report` logs a dismissal at info and a genuine failure at error, then classifies for the UI.
+      setError(passkeyError(PasskeyError.report(redeemError)));
     }
   }, [invokePromise]);
 

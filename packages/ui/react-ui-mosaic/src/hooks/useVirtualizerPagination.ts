@@ -3,7 +3,7 @@
 //
 
 import { type Virtualizer } from '@tanstack/react-virtual';
-import { type MutableRefObject, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { type GetId } from '@dxos/react-ui-dnd';
 
@@ -129,11 +129,11 @@ const isBlankBelow = (geometry: EdgeGeometry): boolean =>
 
 /** Per-direction dedup/throttle state for `evaluateTriggers`, independent of item type. */
 type TriggerState = {
-  lastNextRequestedItemsRef: MutableRefObject<unknown>;
-  lastPreviousRequestedItemsRef: MutableRefObject<unknown>;
-  lastGetNextScrollRef: MutableRefObject<number | null>;
-  lastGetPreviousScrollRef: MutableRefObject<number | null>;
-  paginationRef: MutableRefObject<VirtualizerPaginationController | undefined>;
+  lastNextRequestedItemsRef: RefObject<unknown>;
+  lastPreviousRequestedItemsRef: RefObject<unknown>;
+  lastGetNextScrollRef: RefObject<number | null>;
+  lastGetPreviousScrollRef: RefObject<number | null>;
+  paginationRef: RefObject<VirtualizerPaginationController | undefined>;
 };
 
 /** Not fired at this exact scroll offset since the edge was last left, unless blank re-arms it. */
@@ -431,11 +431,16 @@ export const useVirtualizerPagination = <TItem = any>({
     if (pagination) {
       const change = classifyFrontEdgeChange(prevItemsRef.current, items, getId, virtualizerRef.current);
       if (change.kind === 'evicted') {
-        setSpacer(leadingSpaceRef.current + change.evictedHeight);
+        // Only a window that has slid off the live head evicts; at the head, a kept run of rows is
+        // a filter, and reading it as a slide leaves the dropped rows' height as blank space above.
+        setSpacer(pagination.atHead ? 0 : leadingSpaceRef.current + change.evictedHeight);
         anchorRef.current = null;
       } else if (change.kind === 'prepended') {
-        anchorRef.current = change.anchor;
-        if (!change.anchor) {
+        // A reader at the very top of the live head is shown what arrives there; holding the old
+        // first row in place would scroll the new rows out of view above it.
+        const atTop = pagination.atHead === true && (virtualizerRef.current?.scrollOffset ?? 0) === 0;
+        anchorRef.current = atTop ? null : change.anchor;
+        if (!change.anchor || atTop) {
           // No retained item to anchor on (a disjoint reset): the layout effect below still
           // re-arms triggers for this case, but its own correction/reset is anchor-driven, so
           // clear the spacer here instead of waiting on it.

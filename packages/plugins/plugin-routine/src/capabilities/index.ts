@@ -67,7 +67,7 @@ export const TriggerRuntimeController = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [],
     // Runtime event: triggers only need to react to spaces once the client observes them.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
     environments: ['node'],
   },
   () => import('./trigger-runtime-controller.ts'),

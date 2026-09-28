@@ -53,7 +53,7 @@ const nameOf = (error: unknown): string | undefined => {
  *
  * A DXOS error is returned as it is. Anything else is rebuilt as a `BaseError` under its own
  * `name` and stack, the fields `encodeError` puts on the wire and `decodeError` rebuilds from.
- * `cause` survives in-process only, since the wire format has no field for it.
+ * The wire format has no `cause` field, so `encodeError` folds the chain into the stack.
  */
 export const toServiceError = (error: unknown): BaseError => {
   if (error instanceof BaseError) {

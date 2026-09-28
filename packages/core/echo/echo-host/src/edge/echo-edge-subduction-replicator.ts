@@ -60,6 +60,12 @@ const RESTART_DELAY_JITTER = 250;
 const MAX_RESTART_DELAY = 5000;
 
 /**
+ * Consecutive error signals answered by an in-place re-handshake before the connection is restarted
+ * instead (DX-1275). Bounded so an edge that keeps refusing the rebound session cannot loop here.
+ */
+export const MAX_IN_PLACE_REHANDSHAKES = 3;
+
+/**
  * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
  * coalesced into one {@link SubductionBatchEnvelope}, flushed on whichever bound trips first:
  * {@link SUBDUCTION_BATCH_MAX_FRAMES} frames, {@link SUBDUCTION_BATCH_MAX_BYTES} accumulated, or
@@ -361,6 +367,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   #firstFrameSent = false;
   #inFlightFlush?: Promise<void>;
 
+  /** Error signals answered in place since the last inbound frame; see {@link MAX_IN_PLACE_REHANDSHAKES}. */
+  #inPlaceRehandshakes = 0;
+
   private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
   public readable: ReadableStream<SubductionProtocolMessage>;
@@ -518,7 +527,21 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           });
           return;
         }
-        log.info('received subduction error; restarting', { message: payload.message });
+        // The edge lost the session, not the link: re-running the handshake here keeps the peer id
+        // and every piece of sync state keyed by it.
+        if (this.#inPlaceRehandshakes < MAX_IN_PLACE_REHANDSHAKES && this._context.onConnectionTransportReset(this)) {
+          this.#discardPendingFrames();
+          this.#inPlaceRehandshakes++;
+          log.info('received subduction error; re-handshaking in place', {
+            message: payload.message,
+            attempt: this.#inPlaceRehandshakes,
+          });
+          return;
+        }
+        log.info('received subduction error; restarting', {
+          message: payload.message,
+          inPlaceRehandshakes: this.#inPlaceRehandshakes,
+        });
         this._onRestartRequested();
         return;
       }
@@ -539,7 +562,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           return;
         }
         log.verbose('received subduction frame', { remoteId: this._remotePeerId });
-        this.lastInboundAt = Date.now();
+        this.#onInboundFrame();
         // Fix the peer id so subduction routing inside the Repo accepts the frame.
         inner.senderId = this._remotePeerId as PeerId;
         this._readableStreamController.enqueue(inner);
@@ -559,14 +582,19 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           log.warn('dropping subduction-batch with missing frames', { payload });
           return;
         }
-        this.lastInboundAt = Date.now();
         log.verbose('received subduction batch', { frames: payload.frames.length, remoteId: this._remotePeerId });
+        let enqueued = 0;
         for (const inner of payload.frames) {
           if (inner === null || typeof inner !== 'object') {
             continue;
           }
           inner.senderId = this._remotePeerId as PeerId;
           this._readableStreamController.enqueue(inner);
+          enqueued++;
+        }
+        // Counted, not assumed: an empty or malformed batch must not refill the budget.
+        if (enqueued > 0) {
+          this.#onInboundFrame();
         }
         return;
       }
@@ -653,6 +681,26 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
     }
+  }
+
+  /** A frame arrived, so the session behind this connection works: clear the re-handshake budget. */
+  #onInboundFrame(): void {
+    this.lastInboundAt = Date.now();
+    this.#inPlaceRehandshakes = 0;
+  }
+
+  /**
+   * Drop what is buffered for a session that no longer exists, and let the next frame ship alone:
+   * flushing stale `SUM` bytes after a rebind would reach the fresh transport mid-handshake.
+   */
+  #discardPendingFrames(): void {
+    if (this.#flushTimer !== undefined) {
+      clearTimeout(this.#flushTimer);
+      this.#flushTimer = undefined;
+    }
+    this.#pendingFrames = [];
+    this.#pendingBytes = 0;
+    this.#firstFrameSent = false;
   }
 
   /** Buffer an inner frame for the next batch flush, arming the delay timer / tripping bounds. */

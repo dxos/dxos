@@ -9,7 +9,7 @@ import { keySymbols } from '@dxos/react-focus';
 import { Button, type ButtonProps, Icon, Menu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { mx, osTranslations } from '@dxos/ui-theme';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
 export type KeyBinding = {
   windows?: string;
@@ -132,10 +132,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                   <Fragment key={index}>
                     {separator}
                     {actions.map((action) => {
-                      const shortcut =
-                        typeof action.properties.keyBinding === 'string'
-                          ? action.properties.keyBinding
-                          : action.properties.keyBinding?.[getHostPlatform()];
+                      const shortcut = resolveKeyBinding(action.properties.keyBinding);
 
                       const menuItemType = action.properties.menuItemType;
                       const Root = menuItemType === 'toggle' ? Menu.CheckboxItem : Menu.Item;

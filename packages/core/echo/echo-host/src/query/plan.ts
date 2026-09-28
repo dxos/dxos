@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { EntityId, URI } from '@dxos/keys';
+import type { EID, EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
@@ -36,7 +36,23 @@ export namespace QueryPlan {
     | OrderStep
     | LimitStep
     | SkipStep
-    | AggregateStep;
+    | AggregateStep
+    | SqlStep;
+
+  /**
+   * A contiguous run of steps compiled into a single SQLite statement over the index tables.
+   * Emitted by `SqlPlanCompiler` in place of the steps it stands for, so the compiled path runs a
+   * plan like any other rather than a separate execution mode.
+   */
+  export type SqlStep = {
+    _tag: 'SqlStep';
+    /** Statement text with placeholders. */
+    sql: string;
+    /** Values bound to the statement's placeholders, in order. */
+    params: readonly unknown[];
+    /** The steps the statement stands for, kept so traces and scope analysis still see them. */
+    steps: readonly Step[];
+  };
 
   /**
    * Clear the current working set.
@@ -113,7 +129,25 @@ export namespace QueryPlan {
     | TypeSelector
     | TextSelector
     | TimestampSelector
-    | IncomingReferenceSelector;
+    | IncomingReferenceSelector
+    | ChangesSelector;
+
+  /**
+   * Select Automerge changes (`Filter.changes`) rather than objects. The working set holds change
+   * records, so only ordering, paging and aggregation may follow.
+   */
+  export type ChangesSelector = {
+    _tag: 'ChangesSelector';
+
+    /** Entities whose documents to read; every document in scope when absent. */
+    targets?: readonly EID.EID[];
+
+    /**
+     * `index` reads hourly buckets from the activity index, valid only for the aggregates it can
+     * answer; `replay` lists each target document's change history.
+     */
+    source: 'index' | 'replay';
+  };
 
   export type WildcardSelector = {
     _tag: 'WildcardSelector';

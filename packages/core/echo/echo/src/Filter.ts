@@ -14,6 +14,8 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
+import type * as Annotation from './Annotation.ts';
+import type * as Change from './Change.ts';
 import type * as Entity from './Entity.ts';
 import type * as Feed from './Feed.ts';
 import * as internal from './internal/index.ts';
@@ -107,6 +109,19 @@ export const id = (...ids: EntityId[]): Any => {
 };
 
 /**
+ * Filter by the id of an entity already in hand, keeping its type for the rest of the chain.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.entity(task)).reference('watchers'));
+ * ```
+ */
+export const entity: {
+  <T extends Entity.Unknown>(entity: T): Filter<T>;
+  <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Filter<T>;
+} = (entity: Entity.Unknown | Entity.Snapshot): Filter<any> => id(entity.id);
+
+/**
  * Filter by mnemonic — the human-memorable short form of an object's id (see `Obj.getMnemonic`).
  * Input is case-insensitive.
  *
@@ -183,6 +198,22 @@ export const tag = (tag: string): Any => {
   return new FilterClass({
     type: 'tag',
     tag,
+  });
+};
+
+/**
+ * Filter by an annotation set on the entity with `Annotation.set`.
+ */
+export const annotation: {
+  /** Matches entities that carry the annotation, whatever its value. */
+  <T>(annotation: Annotation.Annotation<T>): Any;
+  /** Matches entities whose value equals `value`; only scalar values can be compared. */
+  <T extends string | number | boolean>(annotation: Annotation.Annotation<T>, value: T): Any;
+} = (annotation: Annotation.Annotation<unknown>, value?: string | number | boolean): Any => {
+  return new FilterClass({
+    type: 'annotation',
+    key: annotation.key,
+    ...(value !== undefined ? { value } : {}),
   });
 };
 
@@ -477,6 +508,34 @@ export const childOf = (
     type: 'child-of',
     parents: dxns,
     transitive: options?.transitive ?? true,
+  });
+};
+
+/**
+ * Select Automerge changes instead of objects: one {@link Change.Change} per change to the documents
+ * holding `targets`, or to every document in the space when called with no argument.
+ *
+ * Changes belong to documents, not entities. Entities that share a document share its changes, and
+ * content held by another entity (a document's `Text`) needs its own target. Only the host answers
+ * these queries; a space-wide query must aggregate, and the index answers it only at hour
+ * granularity (see `Aggregate.time`).
+ *
+ * @example
+ * ```ts
+ * Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), changes: Aggregate.count() });
+ * Query.select(Filter.changes([doc, doc.content])).orderBy(Order.property('time', 'desc')).limit(50);
+ * ```
+ */
+export const changes = (
+  targets?: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
+): Filter<Change.Change> => {
+  if (targets === undefined) {
+    return new FilterClass({ type: 'changes' });
+  }
+  const items = Array.isArray(targets) ? targets : [targets];
+  return new FilterClass({
+    type: 'changes',
+    targets: items.map((item) => (Ref.isRef(item) ? EID.parse(item.uri) : EID.parse(internal.getUri(item)))),
   });
 };
 

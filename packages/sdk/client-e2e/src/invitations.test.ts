@@ -13,15 +13,12 @@ import { Trigger, chain, waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import {
-  type DataSpace,
-  DataSpaceManagerService,
-  IdentityManagerService,
-  InvitationsHandlerService,
-  InvitationsManager,
-  InvitationsManagerService,
-  InvitationsServiceImpl,
-  MetadataStore,
-  createAdmissionKeypair,
+  IdentityContract,
+  Invitations,
+  InvitationsContract,
+  Metadata,
+  Spaces,
+  SpacesContract,
 } from '@dxos/client-services';
 import {
   type PerformInvitationProps,
@@ -34,6 +31,7 @@ import {
 import { InvitationsProxy } from '@dxos/client/invitations';
 import { type LocalClientServices } from '@dxos/client/local';
 import { TestBuilder } from '@dxos/client/testing';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -127,26 +125,45 @@ type InvitationPeer = Pick<
 >;
 
 /** The invitation components of a client running its services in-process. */
-const peerFromClient = (client: Client): InvitationPeer => {
+const peerFromClient = async (client: Client): Promise<InvitationPeer> => {
   const { stack } = client.services as LocalClientServices;
+  const services = await EffectEx.runPromise(
+    ServiceResolver.resolveAll(
+      [
+        Invitations.InvitationsHandlerService,
+        InvitationsContract.ManagerService,
+        SwarmNetworkManagerService,
+        SpacesContract.ManagerService,
+        IdentityContract.ManagerService,
+      ],
+      {},
+    ).pipe(
+      Effect.provideService(ServiceResolver.ServiceResolver, stack.getServiceResolver()),
+      Effect.orDie,
+      Effect.scoped,
+    ),
+  );
   return {
-    invitations: EffectContext.get(stack, InvitationsHandlerService),
-    invitationsManager: EffectContext.get(stack, InvitationsManagerService),
-    networkManager: EffectContext.get(stack, SwarmNetworkManagerService),
-    dataSpaceManager: EffectContext.get(stack, DataSpaceManagerService),
-    identityManager: EffectContext.get(stack, IdentityManagerService),
+    invitations: EffectContext.getUnsafe(services, Invitations.InvitationsHandlerService),
+    invitationsManager: EffectContext.getUnsafe(services, InvitationsContract.ManagerService),
+    networkManager: EffectContext.getUnsafe(services, SwarmNetworkManagerService),
+    dataSpaceManager: EffectContext.getUnsafe(services, SpacesContract.ManagerService),
+    identityManager: EffectContext.getUnsafe(services, IdentityContract.ManagerService),
   };
 };
 
-const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [InvitationPeer, InvitationPeer]) => {
+const testSuite = (
+  getProps: () => PerformInvitationProps,
+  getPeers: () => Promise<[InvitationPeer, InvitationPeer]>,
+) => {
   test('no auth', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const [hostResult, guestResult] = await Promise.all(performInvitation(getProps()));
     await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
   test('already joined', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const [hostResult, guestResult] = await Promise.all(performInvitation(getProps()));
     await successfulInvitation({ host, guest, hostResult, guestResult });
     const [_, result] = performInvitation(getProps());
@@ -154,7 +171,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('with shared secret', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -167,9 +184,9 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('with shared keypair', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
-    const guestKeypair = createAdmissionKeypair();
+    const guestKeypair = Invitations.createAdmissionKeypair();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -182,8 +199,8 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
 
   test('invalid shared keypair', async () => {
     const params = getProps();
-    const keypair1 = createAdmissionKeypair();
-    const keypair2 = createAdmissionKeypair();
+    const keypair1 = Invitations.createAdmissionKeypair();
+    const keypair2 = Invitations.createAdmissionKeypair();
     const invalidKeypair = buf.create(AdmissionKeypairSchema, {
       publicKey: keypair1.publicKey,
       privateKey: keypair2.privateKey,
@@ -204,7 +221,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
 
   test('incomplete shared keypair', async () => {
     const params = getProps();
-    const keypair = createAdmissionKeypair();
+    const keypair = Invitations.createAdmissionKeypair();
     delete keypair.privateKey;
     const [hostResult, guestResult] = performInvitation({
       ...params,
@@ -219,7 +236,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('with target', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -232,7 +249,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('invalid auth code', async () => {
-    const [host, guest] = getPeers();
+    const [host, guest] = await getPeers();
     const params = getProps();
     let attempt = 1;
     const [hostResult, guestResult] = await Promise.all(
@@ -340,7 +357,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Invi
   });
 
   test('network error', async () => {
-    const [, guest] = getPeers();
+    const [, guest] = await getPeers();
     const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -369,7 +386,7 @@ describe('Invitations', () => {
     describe('space', () => {
       let host: ServiceContext;
       let guest: ServiceContext;
-      let space: DataSpace;
+      let space: Spaces.DataSpace;
 
       beforeEach(async () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
@@ -384,7 +401,7 @@ describe('Invitations', () => {
           guest,
           options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(space.key) },
         }),
-        () => [host, guest],
+        async () => [host, guest],
       );
     });
 
@@ -401,7 +418,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest, options: { kind: Invitation_Kind.DEVICE } }),
-        () => [host, guest],
+        async () => [host, guest],
       );
     });
   });
@@ -411,8 +428,8 @@ describe('Invitations', () => {
       let hostContext: ServiceContext;
       let guestContext: ServiceContext;
       let host: InvitationsProxy;
-      let space: DataSpace;
-      let hostMetadata: MetadataStore;
+      let space: Spaces.DataSpace;
+      let hostMetadata: Metadata.MetadataStore;
 
       beforeEach(async () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
@@ -621,7 +638,7 @@ describe('Invitations', () => {
       let guestContext: ServiceContext;
       let host: InvitationsProxy;
       let guest: InvitationsProxy;
-      let space: DataSpace;
+      let space: Spaces.DataSpace;
 
       beforeEach(async () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
@@ -645,7 +662,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest }),
-        () => [hostContext, guestContext],
+        async () => [hostContext, guestContext],
       );
     });
 
@@ -671,7 +688,7 @@ describe('Invitations', () => {
 
       testSuite(
         () => ({ host, guest }),
-        () => [hostContext, guestContext],
+        async () => [hostContext, guestContext],
       );
     });
   });
@@ -700,7 +717,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: host.halo, guest: guest.halo }),
-      () => [peerFromClient(host), peerFromClient(guest)],
+      async () => [await peerFromClient(host), await peerFromClient(guest)],
     );
   });
 
@@ -730,7 +747,7 @@ describe('Invitations', () => {
 
     testSuite(
       () => ({ host: space, guest: guest.spaces }),
-      () => [peerFromClient(host), peerFromClient(guest)],
+      async () => [await peerFromClient(host), await peerFromClient(guest)],
     );
   });
 });
@@ -753,9 +770,11 @@ const expectErrorState = async (args: {
 
 const createInvitationsApi = async (
   context: InvitationPeer,
-  metadata: MetadataStore = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+  metadata: Metadata.MetadataStore = new Metadata.MetadataStore(
+    createStorage({ type: StorageType.RAM }).createDirectory(),
+  ),
 ) => {
-  const manager = new InvitationsManager(context.invitations, metadata);
+  const manager = new Invitations.InvitationsManager(context.invitations, metadata);
   manager.setInvitationHandlerFactory((invitation) => context.invitationsManager.getInvitationHandler(invitation));
   // InvitationsProxy consumes the Promise/Stream shaped proto service; bridge the effect-rpc Handlers
   // impl in-process (no wire hop) and derive the proto surface from it. The endpoint is kept open for
@@ -764,9 +783,9 @@ const createInvitationsApi = async (
   const scope = Effect.runSync(Scope.make());
   invitationsApiScopes.push(scope);
   const rpc = await EffectEx.runPromise(
-    makeInProcessClientServicesRpc(() => ({ InvitationsService: new InvitationsServiceImpl(manager) })).pipe(
-      Scope.provide(scope),
-    ),
+    makeInProcessClientServicesRpc(() => ({
+      InvitationsService: new Invitations.InvitationsServiceImpl(manager),
+    })).pipe(Scope.provide(scope)),
   );
   const service = makeServicesFromRpc(rpc, EffectContext.empty()).InvitationsService!;
   return { manager, service, metadata };

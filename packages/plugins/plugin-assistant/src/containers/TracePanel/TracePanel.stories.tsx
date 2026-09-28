@@ -184,6 +184,7 @@ const TimelinePlayback = ({
   const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
   const [playing, setPlaying] = useState(false);
   const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+  const [timelineViewport, setTimelineViewport] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setStep((current) => Math.min(Math.max(current, 0), total));
@@ -302,8 +303,14 @@ const TimelinePlayback = ({
         <div className='min-h-0'>
           <ScrollContainer.Root pin>
             <ScrollContainer.Content thin>
-              <ScrollContainer.Viewport>
-                <Timeline branches={branches} commits={commits} showTimestamp onSelect={setSelectedCommit} />
+              <ScrollContainer.Viewport ref={setTimelineViewport}>
+                <Timeline
+                  branches={branches}
+                  commits={commits}
+                  showTimestamp
+                  scroller={timelineViewport}
+                  onSelect={setSelectedCommit}
+                />
               </ScrollContainer.Viewport>
               <ScrollContainer.ScrollDownButton />
               <ScrollContainer.Fade />

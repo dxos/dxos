@@ -18,7 +18,7 @@
     "withGlobalTauri": true
   },
   "build": {
-    "beforeDevCommand": "node scripts/fetch-ollama.mjs && vite dev --configLoader native",
+    "beforeDevCommand": "node scripts/fetch-ollama.mjs && node scripts/stage-sandbox-helper.mjs && vite dev --configLoader native",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../out/composer"
   },
@@ -38,7 +38,8 @@
       "files": {
         "embedded.provisionprofile": "./embedded.provisionprofile",
         "Resources/lib/ollama": "sidecar/ollama-runtime",
-        "Resources/ollama": "sidecar/ollama-runtime/ollama"
+        "Resources/ollama": "sidecar/ollama-runtime/ollama",
+        "Resources/dx-sandbox": "sandbox/dx-sandbox"
       }
     },
     "targets": "all"
@@ -56,5 +57,5 @@
     }
   },
   "productName": "Composer",
-  "version": "0.11.4"
+  "version": "0.11.5"
 }

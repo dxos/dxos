@@ -19,6 +19,11 @@ export const toEffectSchema = jsonSchemaInternal.toEffectSchema;
 export const toJsonSchema = jsonSchemaInternal.toJsonSchema;
 
 /**
+ * Restores every `StructWithRest` signature Effect nests under `allOf` to its node's `additionalProperties`.
+ */
+export const foldRestSignatures = jsonSchemaInternal.foldRestSignatures;
+
+/**
  * Serializable JsonSchema type definition.
  */
 export type JsonSchema = jsonSchemaInternal.JsonSchemaType;

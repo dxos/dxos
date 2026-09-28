@@ -20,12 +20,13 @@ export class Storyboard extends Type.makeObject<Storyboard>(DXN.make('org.dxos.t
   Schema.Struct({
     name: Schema.optional(Schema.String),
     frames: Schema.Array(Ref.Ref(Frame.Frame)).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--film-strip--regular', hue: 'indigo' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

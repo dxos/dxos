@@ -3,7 +3,6 @@
 //
 
 import type * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import type { Obj } from '@dxos/echo';
@@ -62,6 +61,26 @@ export interface IndexerObject {
   updatedAt: number;
 }
 
+export interface ChangeSummary {
+  /** Author's clock, unix ms. */
+  time: number;
+  ops: number;
+}
+
+/**
+ * Changes to one document since its activity cursor.
+ */
+export interface DocumentActivity {
+  spaceId: SpaceId;
+  documentId: string;
+  /**
+   * `changes` is the document's whole history and replaces whatever was recorded for it; with no
+   * changes the document's rows are discarded (a branch document).
+   */
+  full: boolean;
+  changes: readonly ChangeSummary[];
+}
+
 /**
  * SQLite-based index for storing and querying object data.
  */
@@ -70,11 +89,11 @@ export interface Index {
    * Runs necessary migrations to the index before it is usable.
    * Idempotent.
    */
-  migrate: () => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
+  migrate: () => Effect.Effect<void, SqlError.SqlError>;
 
   /**
    * Updates the index with the given objects.
    * Idempotent.
    */
-  update: (objects: IndexerObject[]) => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
+  update: (objects: IndexerObject[]) => Effect.Effect<void, SqlError.SqlError>;
 }

@@ -137,6 +137,10 @@ export class Rpcs extends RpcGroup.make(
     success: bufMessage(PresentationSchema),
     error: serviceError,
   }),
+  Rpc.make('deleteIdentity', {
+    success: Schema.Void,
+    error: serviceError,
+  }),
   Rpc.make('createAuthCredential', {
     success: bufMessage(CredentialSchema),
     error: serviceError,

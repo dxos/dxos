@@ -24,6 +24,11 @@ const NO_PIDS: readonly string[] = [];
 // benefit to re-deriving the graph more often than this just to catch the timeout crossing.
 const SPAN_TIMEOUT_CHECK_INTERVAL_MS = 60_000;
 
+// The trace feed emits per message while anything runs, and the process monitor re-polls on its own
+// clock; every emission rebuilds the graph from the whole history, so the rebuild rate is capped
+// rather than either input's, as `useSessionTimeline` already does.
+const REBUILD_DEBOUNCE = Duration.millis(500);
+
 export type UseExecutionGraphOptions = {
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
@@ -76,12 +81,13 @@ const getExecutionGraph = (
   }: UseExecutionGraphOptions & { now: number },
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space).pipe(
+    Atom.debounce(REBUILD_DEBOUNCE),
     Atom.map((messages) => filterTraceMessages(messages, selectedPids)),
   );
 
   const activeProcesses = pipe(
     processesAtom,
-    Atom.debounce(Duration.millis(500)),
+    Atom.debounce(REBUILD_DEBOUNCE),
     Atom.map((processes) =>
       filterProcessesBySelection(processes, selectedPids).filter(
         (process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING,

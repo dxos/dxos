@@ -43,7 +43,7 @@ export const useEmailComposerExtensions = (
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+            AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),

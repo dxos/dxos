@@ -15,6 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Blob from './Blob.ts';
+import type * as Change from './Change.ts';
 import type * as Entity from './Entity.ts';
 import * as Error from './Error.ts';
 import type * as Feed from './Feed.ts';
@@ -25,7 +26,7 @@ import { type AnyProperties, EntityKind, KindId } from './internal/common/types/
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri.ts';
 import * as queryInternal from './internal/Query/index.ts';
-import type { Ref } from './internal/Ref/ref.ts';
+import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
 import type * as Obj from './Obj.ts';
 import type * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
@@ -96,6 +97,12 @@ export type FlushOptions = {
    * @default true
    */
   indexes?: boolean;
+
+  /**
+   * Also wait for the secondary indexes (full text), which lag the primary pass by design.
+   * @default false
+   */
+  secondaryIndexes?: boolean;
 
   /**
    * Flush pending updates to objects and queries.
@@ -231,6 +238,12 @@ export interface Database extends Queryable {
    * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
    */
   getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
+
+  /**
+   * The object's history, oldest first: one entry per document change that touched the object (or,
+   * given `property`, that property). Prefer `Obj.getChanges(obj, opts)`.
+   */
+  getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[];
 
   /** All branch names available for an object, including the implicit `'main'` (always first). */
   listBranches(objectId: string): string[];
@@ -463,7 +476,12 @@ export const resolve: {
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
- * Loads an object reference.
+ * Loads an object reference. A deleted target reads as absent unless `{ deleted: 'include' }` asks
+ * for it.
+ *
+ * The options parameter means this cannot be passed point-free where the caller supplies a second
+ * argument — `Effect.forEach(refs, (ref) => load(ref))`, not `Effect.forEach(refs, load)`, since the
+ * iteratee index would land on `options`.
  *
  * Catching not found error:
  *
@@ -472,15 +490,14 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
-  function* (ref) {
-    const object = yield* Effect.promise(() => ref.tryLoad());
+export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, Error.EntityNotFoundError, never> =
+  Effect.fn('Database.load')(function* (ref, options) {
+    const object = yield* Effect.promise(() => ref.tryLoad(options));
     if (!object) {
       return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
-  },
-);
+  });
 
 /**
  * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
@@ -704,6 +721,8 @@ export interface HostLoadedStats {
   readonly documentsTotal: number;
   /** Active reactive queries registered with the host, across every space. */
   readonly queriesTotal: number;
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  readonly leases: number;
 }
 
 /**

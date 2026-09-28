@@ -51,7 +51,6 @@ export type DateRange = { from: Date; to?: Date };
 
 type BaseCalendarProps = {
   classNames?: ClassNameValue;
-  className?: string;
   isDisabled?: boolean;
   minValue?: Date;
   maxValue?: Date;
@@ -75,13 +74,11 @@ export type CalendarRootProps = SingleProps | RangeProps;
 
 const CalendarShell = ({
   classNames,
-  className,
   isDisabled,
   forwardedRef,
   children,
 }: {
   classNames?: ClassNameValue;
-  className?: string;
   isDisabled?: boolean;
   forwardedRef?: React.Ref<HTMLDivElement>;
   children: ReactNode;
@@ -90,7 +87,7 @@ const CalendarShell = ({
   return (
     <div
       ref={forwardedRef}
-      className={tx('calendar.root', {}, classNames, className) ?? undefined}
+      className={tx('calendar.root', {}, classNames) ?? undefined}
       aria-disabled={isDisabled || undefined}
     >
       {children}
@@ -130,7 +127,7 @@ const CalendarGridContent = () => {
 };
 
 const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, forwardedRef) => {
-  const { classNames, className, isDisabled, minValue, maxValue, defaultMonth } = props;
+  const { classNames, isDisabled, minValue, maxValue, defaultMonth } = props;
   const defaultFocused = toCalendarDate(defaultMonth) ?? undefined;
 
   if (props.mode === 'range') {
@@ -158,7 +155,7 @@ const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, forwa
       },
     };
     return (
-      <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled} forwardedRef={forwardedRef}>
+      <CalendarShell classNames={classNames} isDisabled={isDisabled} forwardedRef={forwardedRef}>
         <RACRangeCalendar {...racProps}>
           <CalendarChrome />
           <CalendarGridContent />
@@ -176,7 +173,7 @@ const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, forwa
     onChange: (next) => props.onSelect?.(fromCalendarDate(next)),
   };
   return (
-    <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled} forwardedRef={forwardedRef}>
+    <CalendarShell classNames={classNames} isDisabled={isDisabled} forwardedRef={forwardedRef}>
       <RACCalendar {...racProps}>
         <CalendarChrome />
         <CalendarGridContent />

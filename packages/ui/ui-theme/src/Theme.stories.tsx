@@ -278,7 +278,7 @@ export const Animation = {
         <div className='dx-density-lg border border-separator rounded-md'>
           <div
             className={mx(
-              'flex items-center font-mono text-2xl text-test-experimental',
+              'flex items-center font-mono text-2xl text-error-text',
               'p-form-padding w-card-min-width grid grid-cols-[min-content_1fr_min-content]',
             )}
           >

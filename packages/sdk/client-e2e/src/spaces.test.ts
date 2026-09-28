@@ -3,13 +3,13 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
-import { DataSpaceManagerService } from '@dxos/client-services';
+import { SpacesContract } from '@dxos/client-services';
 import { performInvitation } from '@dxos/client-services/testing';
 import { SpaceState, getSpace, importSpace } from '@dxos/client/echo';
 import { SpacesService } from '@dxos/client/halo';
@@ -27,6 +27,7 @@ import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
 import { HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -60,6 +61,33 @@ describe('Spaces', () => {
 
     // Get by key.
     expect(client.spaces.get(space.key) === space).to.be.true;
+  });
+
+  test('creates a space whose database opens only after a long stall', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    const openStarted = new Trigger();
+    const openReleased = new Trigger();
+    const open = DatabaseImpl.prototype.open;
+    const openSpy = vi
+      .spyOn(DatabaseImpl.prototype, 'open')
+      .mockImplementationOnce(async function (this: DatabaseImpl, ctx) {
+        openStarted.wake();
+        await openReleased.wait();
+        return open.call(this, ctx);
+      });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+      openSpy.mockRestore();
+    });
+
+    const created = client.spaces.create({ name: 'Stalled' });
+    await openStarted.wait();
+    await vi.advanceTimersByTimeAsync(10_000);
+    openReleased.wake();
+
+    const space = await created;
+    expect(space.properties.name).toEqual('Stalled');
   });
 
   test('create rejects with the error when the space database fails to open', async () => {
@@ -230,9 +258,15 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
 
-    const dataSpace1 = EffectContext.get(services1.stack, DataSpaceManagerService).spaces.get(space1.key);
+    const dataSpaceManager1 = await EffectEx.runPromise(
+      services1.stack.getServiceResolver().resolve(SpacesContract.ManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+    );
+    const dataSpace1 = dataSpaceManager1.spaces.get(space1.key);
     const feedKey = dataSpace1!.inner.dataFeedKey;
-    const feed1 = EffectContext.get(services1.stack, HypercoreStoreService).getHypercore(feedKey!)!;
+    const hypercoreStore1 = await EffectEx.runPromise(
+      services1.stack.getServiceResolver().resolve(HypercoreStoreService, {}).pipe(Effect.orDie, Effect.scoped),
+    );
+    const feed1 = hypercoreStore1.getHypercore(feedKey!)!;
 
     const amount = 10;
     {
@@ -255,7 +289,10 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const feed2 = EffectContext.get(services2.stack, HypercoreStoreService).getHypercore(feedKey!)!;
+    const hypercoreStore2 = await EffectEx.runPromise(
+      services2.stack.getServiceResolver().resolve(HypercoreStoreService, {}).pipe(Effect.orDie, Effect.scoped),
+    );
+    const feed2 = hypercoreStore2.getHypercore(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
 
@@ -682,8 +719,8 @@ describe('Spaces', () => {
     const archive = await space.internal.export();
     expect(archive.contents.length).to.be.greaterThan(0);
 
-    const { extractSpaceArchive } = await import('@dxos/client-services');
-    const extracted = await extractSpaceArchive(archive);
+    const { Spaces } = await import('@dxos/client-services');
+    const extracted = await Spaces.extractSpaceArchive(archive);
     expect(Object.keys(extracted.feeds).length).to.be.greaterThan(0);
 
     const feedIds = Object.keys(extracted.feeds);

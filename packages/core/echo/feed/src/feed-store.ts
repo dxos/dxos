@@ -29,6 +29,15 @@ type QueryResponse = FeedProtocol.QueryResponse;
 type SubscribeRequest = FeedProtocol.SubscribeRequest;
 type SubscribeResponse = FeedProtocol.SubscribeResponse;
 
+/** A stored block's identity, order and position, without its payload. */
+export type BlockHead = {
+  insertionId: number;
+  feedId: string;
+  actorId: string;
+  sequence: number;
+  position: number | null;
+};
+
 /** A block payload ready for insertion, encrypted when the cypher asked for it. */
 type SealedBlock = { data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null };
 
@@ -157,20 +166,26 @@ export class FeedStore {
       }).pipe(Effect.withSpan('FeedStore.ensureFeed'), SpanAttributes.annotateSpace(spaceId)),
   );
 
-  /**
-   * Ensures cursor token exists for a space and returns it.
-   */
+  /** Keyed by space; safe to hold unbounded and never invalidate because a space's token is written once. */
+  readonly #cursorTokens = new Map<string, string>();
+
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen({ self: this }, function* () {
+        const cached = this.#cursorTokens.get(spaceId);
+        if (cached !== undefined) {
+          return cached;
+        }
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens WHERE spaceId = ${spaceId}`;
         if (rows.length > 0) {
+          this.#cursorTokens.set(spaceId, rows[0].token);
           return rows[0].token;
         }
 
         const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
         yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;
+        this.#cursorTokens.set(spaceId, token);
         return token;
       }).pipe(Effect.withSpan('FeedStore.ensureCursorToken'), SpanAttributes.annotateSpace(spaceId)),
   );
@@ -205,7 +220,12 @@ export class FeedStore {
    * Makes room for `holder` at `position`: clears the position of every other block in the
    * space/namespace holding that slot (`displaced`) and of the holder itself when it sits at a
    * different one (`moved`), so the caller can write the position without tripping the unique
-   * index. One statement, since it runs once per pulled block.
+   * index. It runs once per pulled block, so each half has to be a single index search: written as
+   * one `UPDATE … WHERE (displaced OR moved)`, SQLite planned a multi-index OR whose `displaced`
+   * branch scanned every block in the store — 220 ms per pulled block on a 12k-block OPFS profile,
+   * which kept the storage worker saturated for the whole initial feed sync. The halves cannot
+   * match the same row (one excludes the holder, the other requires it), and every caller runs
+   * inside a transaction, so splitting them changes nothing else.
    *
    * A position only ever reaches a replica from its authority, so either finding means the replica
    * cached an ordering the authority has since abandoned (its storage was rolled back and it
@@ -223,32 +243,25 @@ export class FeedStore {
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // Feeds first so the (feedPrivateId, position) index answers this, rather than a scan on position.
-      const rows = yield* sql<{ feedPrivateId: number; actorId: string; sequence: number }>`
+      const displaced = yield* sql<{ feedPrivateId: number }>`
         UPDATE blocks SET position = NULL
         WHERE feedPrivateId IN (
             SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
           )
-          AND (
-            (
-              position = ${position}
-              AND NOT (
-                feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
-              )
-            )
-            OR (
-              feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
-              AND position IS NOT NULL AND position != ${position}
-            )
+          AND position = ${position}
+          AND NOT (
+            feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
           )
-        RETURNING feedPrivateId, actorId, sequence
+        RETURNING feedPrivateId
       `;
-      const moved = rows.filter(
-        (row) =>
-          row.feedPrivateId === holder.feedPrivateId &&
-          row.actorId === holder.actorId &&
-          row.sequence === holder.sequence,
-      ).length;
-      return { displaced: rows.length - moved, moved };
+      // The (feedPrivateId, sequence, actorId) index.
+      const moved = yield* sql<{ feedPrivateId: number }>`
+        UPDATE blocks SET position = NULL
+        WHERE feedPrivateId = ${holder.feedPrivateId} AND actorId = ${holder.actorId} AND sequence = ${holder.sequence}
+          AND position IS NOT NULL AND position != ${position}
+        RETURNING feedPrivateId
+      `;
+      return { displaced: displaced.length, moved: moved.length };
     });
 
   /**
@@ -315,6 +328,72 @@ export class FeedStore {
       });
       return { ...row, data: plaintext, encryptionKeyId: undefined, iv: undefined };
     });
+
+  /**
+   * Opens stored rows for callers. Without a cypher it takes the synchronous path, so decryption adds
+   * no async turns to the hot query path when encryption is off.
+   */
+  #openRows = (rows: readonly Block[], spaceId: string, feedNamespace: string): Effect.Effect<Block[], CypherError> =>
+    this.#options.cypher
+      ? Effect.forEach(rows, (row) => this.#openBlock(row, spaceId, feedNamespace), { concurrency: 'unbounded' })
+      : // Normalise the SQLite NULL envelope columns to undefined — the Block schema types them
+        // `string | undefined`, not nullable, so a raw null trips schema encode on the sync path.
+        // Cloning the buffer avoids an empty Uint8Array.
+        Effect.succeed(
+          rows.map((row) => ({
+            ...row,
+            data: new Uint8Array(row.data),
+            encryptionKeyId: row.encryptionKeyId ?? undefined,
+            iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
+          })),
+        );
+
+  /**
+   * Every block of a namespace's feeds as a {@link BlockHead}, in insertion order, plus the opened
+   * blocks inserted after `dataAfter`. A subscriber diffs the heads to see positions assigned or
+   * cleared, and reads payloads only for blocks it has not been sent.
+   */
+  queryHeads = Effect.fn('Feed.queryHeads')(
+    (request: {
+      spaceId: string;
+      feedNamespace: string;
+      /** All feeds of the namespace when absent. */
+      feedIds?: readonly string[];
+      /** Insertion id of the newest block already read; -1 reads every payload. */
+      dataAfter: number;
+    }): Effect.Effect<
+      { heads: readonly BlockHead[]; blocks: Block[] },
+      SqlError.SqlError | CypherError,
+      SqlClient.SqlClient
+    > =>
+      Effect.gen({ self: this }, function* () {
+        const sql = yield* SqlClient.SqlClient;
+        if (request.feedIds !== undefined && request.feedIds.length === 0) {
+          return { heads: [], blocks: [] };
+        }
+        const scope = sql`
+          FROM blocks
+          JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE feeds.spaceId = ${request.spaceId} AND feeds.feedNamespace = ${request.feedNamespace}
+          ${request.feedIds !== undefined ? sql`AND feeds.feedId IN ${sql.in([...request.feedIds])}` : sql``}
+        `;
+        const heads = yield* sql<BlockHead>`
+          SELECT blocks.insertionId, feeds.feedId, blocks.actorId, blocks.sequence, blocks.position
+          ${scope}
+          ORDER BY blocks.insertionId ASC
+        `;
+        const rows = heads.some((head) => head.insertionId > request.dataAfter)
+          ? yield* sql<Block>`
+              SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+              ${scope}
+              AND blocks.insertionId > ${request.dataAfter}
+              ORDER BY blocks.insertionId ASC
+            `
+          : [];
+        const blocks = yield* this.#openRows(rows, request.spaceId, request.feedNamespace);
+        return { heads, blocks };
+      }).pipe(Effect.withSpan('FeedStore.queryHeads'), SpanAttributes.annotateSpace(request.spaceId)),
+  );
 
   /**
    * Queries feed blocks by feed IDs or subscription with cursor/position pagination.
@@ -458,20 +537,7 @@ export class FeedStore {
 
         const hasMore = requestLimit != null && rows.length > requestLimit;
         const slice = hasMore ? rows.slice(0, requestLimit) : rows;
-        // Without a cypher, take the original synchronous path — decryption adds no async turns to
-        // the hot query path when encryption is off. Cloning the buffer avoids an empty Uint8Array.
-        const blocks = this.#options.cypher
-          ? yield* Effect.forEach(slice, (row) => this.#openBlock(row, request.spaceId, request.feedNamespace), {
-              concurrency: 'unbounded',
-            })
-          : // Normalise the SQLite NULL envelope columns to undefined — the Block schema types them
-            // `string | undefined`, not nullable, so a raw null trips schema encode on the sync path.
-            slice.map((row) => ({
-              ...row,
-              data: new Uint8Array(row.data),
-              encryptionKeyId: row.encryptionKeyId ?? undefined,
-              iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
-            }));
+        const blocks = yield* this.#openRows(slice, request.spaceId, request.feedNamespace);
 
         let nextCursor: FeedCursor = request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`);
         if (blocks.length > 0 && request.spaceId) {

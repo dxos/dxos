@@ -166,10 +166,11 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@dagrejs/dagre": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -180,15 +181,17 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:",
-    "elkjs": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@codemirror/language": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",

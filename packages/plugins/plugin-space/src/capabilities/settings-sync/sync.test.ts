@@ -11,8 +11,10 @@ import { Sync } from './sync.ts';
 
 const NS = 'org.dxos.plugin.markdown';
 
+const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
 describe('Sync', () => {
-  test("reseeding against a different object takes its values and publishes this device's own", ({ expect }) => {
+  test("reseeding against a different object takes its values and publishes this device's own", async ({ expect }) => {
     const first: AppSettings.Namespaces = {};
     const second: AppSettings.Namespaces = { [NS]: { toolbar: false } };
     let shared = first;
@@ -27,7 +29,7 @@ describe('Sync', () => {
     sync.bind({
       namespace: NS,
       read: () => value,
-      write: (next) => {
+      write: async (next) => {
         value = next;
       },
     });
@@ -35,6 +37,7 @@ describe('Sync', () => {
 
     shared = second;
     sync.seed();
+    await flush();
 
     expect(value).toEqual({ toolbar: false, folding: true });
     expect(second[NS]).toEqual({ toolbar: false, folding: true });

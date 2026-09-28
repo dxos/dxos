@@ -26,7 +26,7 @@ describe('SpaceOperation.Create', () => {
 
     const client = harness.get(ClientCapabilities.Client);
     await EffectEx.runAndForwardErrors(initializeIdentity(client));
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     const create = client.spaces.create.bind(client.spaces);
     client.spaces.create = async (...args: Parameters<typeof create>) =>

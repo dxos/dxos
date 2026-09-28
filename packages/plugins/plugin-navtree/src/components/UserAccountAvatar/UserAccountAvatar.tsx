@@ -15,9 +15,11 @@ export type UserAccountAvatarProps = {
   hue?: string;
   emoji?: string;
   status?: AvatarStatus;
+  /** Shows a dot on the avatar, e.g. while invitations are pending. */
+  badge?: boolean;
 };
 
-export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAccountAvatarProps) => {
+export const UserAccountAvatar = ({ size, userId, hue, emoji, status, badge }: UserAccountAvatarProps) => {
   const fallbackValue = userId ? hexToFallback(userId) : undefined;
   const resolved = fallbackValue !== undefined;
 
@@ -28,16 +30,25 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAcco
         className='grid place-items-center dx-focus-ring-group-indicator rounded-full'
         data-joyride='welcome/account'
       >
-        <Avatar.Root>
-          <Avatar.Content
-            variant='circle'
-            size={size ?? 12}
-            {...(resolved && { status: status ?? 'active' })}
-            hue={hue || fallbackValue?.hue}
-            fallback={emoji || fallbackValue?.emoji || ''}
-            data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
-          />
-        </Avatar.Root>
+        {/* Sized by the avatar so the badge sits on its corner, not the cell's. */}
+        <span className='relative inline-grid'>
+          <Avatar.Root>
+            <Avatar.Content
+              variant='circle'
+              size={size ?? 12}
+              {...(resolved && { status: status ?? 'active' })}
+              hue={hue || fallbackValue?.hue}
+              fallback={emoji || fallbackValue?.emoji || ''}
+              data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
+            />
+          </Avatar.Root>
+          {badge && (
+            <span
+              className='absolute top-0 right-0 size-2.5 rounded-full bg-error-text'
+              data-testid='treeView.userAccount.badge'
+            />
+          )}
+        </span>
       </div>
     </>
   );

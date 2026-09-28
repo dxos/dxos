@@ -20,7 +20,7 @@ import {
   useSettingsSpaceProperties,
 } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { useType } from '@dxos/echo-react';
+import { useResolveRef, useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -239,12 +239,13 @@ export type NavbarPresenceSurfaceProps = {
 /** For a space the presence target is its root collection; for an object it is the object itself. */
 export const NavbarPresenceSurface = ({ subject }: NavbarPresenceSurfaceProps) => {
   const space = isSpace(subject) ? subject : getSpace(subject);
-  const object = isSpace(subject)
-    ? subject.state.get() === SpaceState.SPACE_READY
-      ? space &&
-        Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target
-      : undefined
-    : subject;
+  const isSpaceReady = isSpace(subject) && subject.state.get() === SpaceState.SPACE_READY;
+  const rootCollectionRef =
+    isSpaceReady && space
+      ? Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+      : undefined;
+  const rootCollection = useResolveRef(rootCollectionRef);
+  const object = isSpace(subject) ? (isSpaceReady ? rootCollection : undefined) : subject;
 
   return object ? <SpacePresence object={object} /> : null;
 };

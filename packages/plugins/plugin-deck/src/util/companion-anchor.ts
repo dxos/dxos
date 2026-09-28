@@ -25,14 +25,28 @@ export const getRenderedPlanks = (active: readonly string[], flatten: boolean | 
  * closes it everywhere. Which TAB it shows still resolves per plank, from the plank's own companions and
  * the globally-selected variant. Stacked mode keeps the flag per plank — several planks are visible at
  * once, so each carries its own.
+ *
+ * A deck holding no flag at all follows the same split: flat opens its single pane, while stacked stays
+ * closed rather than hanging a companion off every plank at once.
  */
 export const isCompanionOpen = (
   companionPlanks: readonly string[] | undefined,
   flatten: boolean | undefined,
   plankId: string | undefined,
 ): boolean =>
-  companionPlanks === undefined ||
-  (flatten ? companionPlanks.length > 0 : !!plankId && companionPlanks.includes(plankId));
+  flatten || companionPlanks === undefined
+    ? isAnyCompanionOpen(companionPlanks, flatten)
+    : !!plankId && companionPlanks.includes(plankId);
+
+/**
+ * Whether the deck shows a companion at all, which is the most a consumer outside the layout can ask:
+ * a stacked deck answers per plank. Flat mode's own answer, and what an untouched flag means, live here
+ * so {@link isCompanionOpen} and its callers cannot drift apart.
+ */
+export const isAnyCompanionOpen = (
+  companionPlanks: readonly string[] | undefined,
+  flatten: boolean | undefined,
+): boolean => (companionPlanks === undefined ? !!flatten : companionPlanks.length > 0);
 
 /**
  * `companionPlanks` with `plankId` marked open. Flat mode holds a single entry (the flag is deck-wide),
@@ -56,8 +70,7 @@ export const closeCompanionPlank = (
   companionPlanks: readonly string[] | undefined,
   flatten: boolean | undefined,
   plankId: string | undefined,
-  rendered: readonly string[] = [],
-): string[] => (flatten ? [] : (companionPlanks ?? rendered).filter((id) => id !== plankId));
+): string[] => (flatten ? [] : (companionPlanks ?? []).filter((id) => id !== plankId));
 
 /**
  * The open plank attention currently points into, or undefined when it points nowhere in the deck.

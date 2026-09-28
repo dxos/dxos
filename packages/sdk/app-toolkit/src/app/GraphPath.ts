@@ -227,12 +227,17 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  * ```
  *
  * Always use alongside {@link TypeSection.createTypeSectionExtension}, passing the same `groupId`
- * to both.
+ * and `sectionUrlKey` to both.
  */
-export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId?: string }) => {
+export const createTypeSectionPaths = (
+  type: Type.AnyEntity,
+  options?: { groupId?: string; sectionUrlKey?: string },
+) => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create type section paths.');
-  const baseSegments: string[] = options?.groupId ? [options.groupId, typename] : [typename];
+  // A section with a URL key of its own is named by it, as `createTypeSectionExtension` names it.
+  const section = options?.sectionUrlKey ?? typename;
+  const baseSegments: string[] = options?.groupId ? [options.groupId, section] : [section];
   return {
     /** Canonical qualified path to the type's section node within a space. */
     getSectionPath: (spaceId: string): string => getSpacePath(spaceId, ...baseSegments),

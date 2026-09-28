@@ -45,11 +45,12 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
-import { initAutomergeWasm } from './util/automerge-wasm.ts';
+import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
   PARAM_LOG_LEVEL,
+  PARAM_MODEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
   type Profiler,
@@ -60,6 +61,7 @@ import {
   isFalse,
   isTrue,
   readBootAssetFailure,
+  registerPreloadErrorHandler,
   reportBootAssetFailure,
   reportWebProcessTerminations,
   runStorageResetMigration,
@@ -225,6 +227,10 @@ const main = async () => {
   const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
   startupMark('main:start');
   const profiler = profilerEnabled ? startupProfiler() : undefined;
+
+  // Registered before any lazy route can be reached, since a chunk missing after a deploy fails
+  // the moment the route is opened.
+  registerPreloadErrorHandler();
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
@@ -493,6 +499,10 @@ const main = async () => {
   const servicesMode = useLocalServices
     ? defs.Runtime_Client_ServicesMode.HOST
     : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
+  if (useLocalServices) {
+    // Echo runs in this page, and its Repo constructs Subduction; a worker-mode tab never does.
+    await initEchoHostWasm();
+  }
 
   config = new Config(
     {
@@ -587,6 +597,10 @@ const main = async () => {
     isPopover,
     isMobile,
     isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
+    // Loopback only: a shared link must not swap a reader's assistant for the perf script.
+    scriptedModel:
+      url.searchParams.get(PARAM_MODEL) === 'scripted' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

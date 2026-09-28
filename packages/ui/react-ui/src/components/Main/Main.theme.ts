@@ -18,6 +18,7 @@ export type MainStyleProps = Partial<{
 // aspect inside it (bars, wells, hover/current rows) derives from.
 const content: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
   mx(
+    'dx-main-content',
     padding,
     mainPaddingTransitions,
     bounce && 'dx-main-bounce-layout',

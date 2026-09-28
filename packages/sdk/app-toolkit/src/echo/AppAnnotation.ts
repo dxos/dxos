@@ -25,6 +25,15 @@ export const AppSettingsAnnotation = Annotation.make({
 });
 
 /**
+ * Id of the {@link AppCapabilities.SpaceTemplate} a space was created from, recorded on its
+ * `properties`.
+ */
+export const SpaceTemplateAnnotation = Annotation.make({
+  id: 'org.dxos.space.spaceTemplate',
+  schema: Schema.String,
+});
+
+/**
  * Id of the space the user has designated as their default space. Stored on the settings space's
  * `properties` so the choice replicates across devices and can be repointed at any space.
  */

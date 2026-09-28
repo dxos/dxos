@@ -14,10 +14,9 @@ import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { Organization, Person } from '@dxos/types';
 

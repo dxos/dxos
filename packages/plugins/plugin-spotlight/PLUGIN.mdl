@@ -87,15 +87,21 @@ op UpdateDialog
 ```mdl
 op Open
   desc: |
-    Intercepts LayoutOperation.Open. Forwards the navigation payload to the main
+    Intercepts LayoutOperation.Open. Forwards the whole Open input to the main
     Tauri window via `emitTo('main', 'spotlight:invoke', { operation: 'open', payload })`,
     then immediately hides the spotlight panel by invoking `hide_spotlight`.
   input:
     subject: string[]
-    state?: any
     variant?: string
+    name?: string
+    root?: string
+    level?: string
     workspace?: string
     scrollIntoView?: boolean
+    navigation?: string
+    pivotId?: string
+    disposition?: string
+    modifiers?: { shift?: boolean }
   output: void
   effects: [tauri:event, tauri:invoke]
 ```

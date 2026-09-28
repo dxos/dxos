@@ -165,10 +165,10 @@ describe('IndexQuerySource', () => {
     expect(results).toEqual([]);
     expect(calls).toHaveLength(0);
 
-    // Reactive: no remote stream is opened either.
+    // Reactive: no remote stream is opened either. A registry-only query never targets spaces/feeds,
+    // so `update()` returns before scheduling anything async — the assertion needs no wait.
     source.open();
     source.update(registryOnlyQuery);
-    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(calls).toHaveLength(0);
 
     // A mixed-scope query (space + registry) still queries the index for the space part.
@@ -285,6 +285,104 @@ describe('IndexQuerySource', () => {
     const results = await source.run(Context.default(), makeQuery(spaceId));
 
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
+  });
+
+  // Regression: the one-shot budget covered hydration as well as the host round-trip, so a single
+  // document that never arrived held the query open for the whole 20s and then reported itself as
+  // an "index query" timeout — naming the index, which had in fact answered in microseconds.
+  // Blocks AI chat in production (`assistant.createChat`, `assistant.generateHomeSuggestions`).
+  describe('an answered index query is not charged for stalled hydration', () => {
+    test('the index-query budget is not spent on hydration, and the error names the stall', async () => {
+      const spaceId = SpaceId$.random();
+      const stalled = EntityId.random();
+
+      const service = await makeQueryClient({
+        'QueryService.setConfig': () => Effect.void,
+        'QueryService.execQuery': (request) =>
+          EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+            // The host answers immediately: the index is not the slow party.
+            queueMicrotask(
+              () => void emit.single({ queryId: request.queryId, results: [{ id: stalled, spaceId, rank: 0 }] }),
+            );
+          }),
+        'QueryService.reindex': () => Effect.void,
+      });
+
+      const source = new IndexQuerySource({
+        service,
+        runtime: EffectContext.empty(),
+        objectLoader: {
+          // Models an unavailable document: `loadObject` never settles (see `query-api-stall.test.ts`).
+          loadObject: () => new Promise<Entity.Unknown | undefined>(() => {}),
+          updateEvent: noopUpdateEvent,
+        },
+        graph: mockGraph,
+        // The index-query budget is an order of magnitude larger than the hydration budget, so a
+        // failure attributable to it cannot be reached within this test's runtime.
+        queryTimeout: 5_000,
+        hydrationTimeout: 100,
+      });
+      onTestFinished(() => source.close());
+
+      const started = Date.now();
+      await expect(source.run(Context.default(), makeQuery(spaceId))).rejects.toThrow(
+        /index query result hydration \(1 of 1 objects did not load/,
+      );
+      // Settled on the hydration budget, not the index-query one.
+      expect(Date.now() - started).toBeLessThan(2_000);
+    });
+
+    test('reactive queries publish the hits that did hydrate and re-hydrate the stalled one', async () => {
+      const spaceId = SpaceId$.random();
+      const stalled = EntityId.random();
+
+      let emit: ((results: QueryService.QueryResult[]) => void) | undefined;
+      const service = await makeQueryClient({
+        'QueryService.setConfig': () => Effect.void,
+        'QueryService.execQuery': (request) =>
+          EffectEx.streamFromEmitter<QueryService.QueryResponse>((streamEmit) => {
+            emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
+          }),
+        'QueryService.reindex': () => Effect.void,
+      });
+
+      const updateEvent = new Event<ObjectUpdate>();
+      let available = false;
+      const source = new IndexQuerySource({
+        service,
+        runtime: EffectContext.empty(),
+        objectLoader: {
+          loadObject: ({ objectId }) =>
+            available
+              ? Promise.resolve({ id: objectId } as unknown as Entity.Unknown)
+              : new Promise<Entity.Unknown | undefined>(() => {}),
+          updateEvent,
+        },
+        graph: mockGraph,
+        hydrationTimeout: 100,
+      });
+      onTestFinished(() => source.close());
+
+      const nextChanged = () => new Promise<void>((resolve) => source.changed.once(() => resolve()));
+
+      source.open();
+      source.update(makeQuery(spaceId));
+      await expect.poll(() => emit).toBeDefined();
+      invariant(emit);
+
+      // The stalled hit is not published, but the pass completes on the hydration budget.
+      const settled = nextChanged();
+      emit([{ id: stalled, spaceId, rank: 0 }]);
+      await settled;
+      expect(source.getResults()).toEqual([]);
+
+      // Once the document arrives the remembered record is re-hydrated without a host round-trip.
+      available = true;
+      const rehydrated = nextChanged();
+      updateEvent.emit({ spaceId, objectIds: [stalled] });
+      await rehydrated;
+      expect(source.getResults().map((entry) => entry.id)).toEqual([stalled]);
+    });
   });
 });
 

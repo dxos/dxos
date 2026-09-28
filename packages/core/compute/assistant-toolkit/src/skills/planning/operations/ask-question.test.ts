@@ -18,7 +18,7 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Outline, Question, Task } from '@dxos/types';
+import { Outline, Task } from '@dxos/types';
 
 import PlanningSkill from '../skill.ts';
 import { AskQuestion, UpdateTasks } from './definitions.ts';
@@ -28,7 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const layerOptions = {
   operationHandlers: PlanningHandlers,
-  types: [Agent.Agent, Outline.Outline, Task.Task, Question.Question, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
   disableLlmMemoization: true,
 };
@@ -51,8 +51,11 @@ const setupChat = Effect.gen(function* () {
   };
 });
 
-/** The questions filed in the database, newest last. */
-const loadQuestions = Database.query(Filter.type(Question.Question)).run;
+/** The questions filed on the chat's checklist, oldest first. */
+const loadQuestions = (chat: Chat.Chat) =>
+  Chat.loadTasks(chat).pipe(
+    Effect.map((tasks) => tasks.flatMap((task) => Task.getQuestions(task.history).map(({ question }) => question))),
+  );
 
 describe('AskQuestion', () => {
   it.effect(
@@ -73,17 +76,15 @@ describe('AskQuestion', () => {
         const [task] = yield* Chat.loadTasks(chat);
         expect(task.status).toBe('blocked');
 
-        const [question] = yield* loadQuestions;
+        // Filed in the task's own history, so a reader arriving at the blocked task finds what is
+        // holding it, and the question cannot outlive the work it was about.
+        const [question] = Task.getPendingQuestions(task.history);
         expect(question.text).toBe('What is our refund window?');
+        expect(question.context).toBe('The order is 45 days old and nothing in the project states the policy.');
         expect(question.options?.map(({ title }) => title)).toEqual(['30 days', '60 days']);
-        expect(Task.refEntityId(question.task)).toBe(task.id);
         expect(question.conversation?.target?.id).toBe(chat.id);
-        expect(Question.isAnswered(question)).toBe(false);
-
-        // Filed on the task, so a reader arriving at the blocked task finds what is holding it.
-        expect(task.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([question.id]);
-        // Owned by the task, so it does not outlive the work it was about.
-        expect(Obj.getParent(question)?.id).toBe(task.id);
+        expect(question.actor?.role).toBe('assistant');
+        expect(task.artifacts ?? []).toEqual([]);
         // The result carries the checklist back, as every planning tool does.
         expect(String(result)).toContain('Draft the reply');
       },
@@ -102,7 +103,7 @@ describe('AskQuestion', () => {
         const result = yield* invoke(AskQuestion, { task: 'Some other task', question: 'Anything?' });
         yield* Database.flush();
 
-        expect(yield* loadQuestions).toEqual([]);
+        expect(yield* loadQuestions(chat)).toEqual([]);
         const [task] = yield* Chat.loadTasks(chat);
         expect(task.status).toBe('started');
         expect(String(result)).toContain('No task titled');
@@ -124,11 +125,9 @@ describe('AskQuestion', () => {
         const result = yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'Asking again?' });
         yield* Database.flush();
 
-        const questions = yield* loadQuestions;
+        const questions = yield* loadQuestions(chat);
         expect(questions.map(({ text }) => text)).toEqual(['What is our refund window?']);
         expect(String(result)).toContain('already has an unanswered question');
-        const [task] = yield* Chat.loadTasks(chat);
-        expect(task.artifacts?.length).toBe(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -150,7 +149,7 @@ describe('AskQuestion', () => {
         const result = yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'Which one?' });
         yield* Database.flush();
 
-        expect(yield* loadQuestions).toEqual([]);
+        expect(yield* loadQuestions(chat)).toEqual([]);
         expect(String(result)).toContain('is the title of 2 tasks');
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks.map(({ status }) => status)).toEqual(['todo', 'todo']);
@@ -164,18 +163,19 @@ describe('AskQuestion', () => {
     'asks again once the first question has been answered',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { invoke } = yield* setupChat;
+        const { chat, invoke } = yield* setupChat;
         yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
         yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'First?' });
-        const [first] = yield* loadQuestions;
-        Question.answer(first, '30 days');
+        const [task] = yield* Chat.loadTasks(chat);
+        const [first] = yield* loadQuestions(chat);
+        Task.answer(task, first.id, '30 days');
         yield* Database.flush();
 
         yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'Second?' });
         yield* Database.flush();
 
-        const questions = yield* loadQuestions;
-        expect(questions.map(({ text }) => text).sort()).toEqual(['First?', 'Second?']);
+        const questions = yield* loadQuestions(chat);
+        expect(questions.map(({ text }) => text)).toEqual(['First?', 'Second?']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -196,7 +196,7 @@ describe('AskQuestion', () => {
         yield* Database.flush();
 
         const [task] = yield* Chat.loadTasks(chat);
-        const [question] = yield* loadQuestions;
+        const [question] = yield* loadQuestions(chat);
         expect(yield* readEvents(Trace.TaskStatusChanged)).toEqual([
           { taskId: task.id, title: 'Draft the reply', status: 'started' },
           { taskId: task.id, title: 'Draft the reply', status: 'blocked', previousStatus: 'started' },

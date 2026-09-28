@@ -28,6 +28,16 @@ const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
  */
 const KEEPALIVE_WATCHDOG_LATE_TOLERANCE = 3_000;
 
+/** `WebSocket.CONNECTING`, inlined because `isomorphic-ws` exposes no static in every runtime. */
+const WS_CONNECTING = 0;
+
+/**
+ * Bound on messages held while the socket completes its handshake. A handshake takes a
+ * round trip, so the backlog is small in practice; the cap stops a server that never
+ * finishes connecting from growing the queue without limit.
+ */
+const MAX_PENDING_MESSAGES = 256;
+
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
   onMessage: (message: Message) => void;
@@ -65,6 +75,12 @@ export class EdgeWsConnection extends Resource {
    * processing is serialized through this lock.
    */
   private readonly _receiveMutex = new Mutex();
+
+  /**
+   * Messages submitted before the handshake completed. `send()` on a CONNECTING socket throws
+   * `InvalidStateError`, and callers holding the connection across a reconnect do exactly that.
+   */
+  private _pendingMessages: Message[] = [];
 
   constructor(
     private readonly _identity: EdgeIdentity,
@@ -111,6 +127,17 @@ export class EdgeWsConnection extends Resource {
   public send(message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);
+    if (this._ws.readyState === WS_CONNECTING) {
+      if (this._pendingMessages.length >= MAX_PENDING_MESSAGES) {
+        // Drop the oldest: during a reconnect the freshest signalling state is the useful one.
+        const dropped = this._pendingMessages.shift();
+        log.warn('pending message dropped (queue full while connecting)', {
+          payload: dropped && protocol.getPayloadType(dropped),
+        });
+      }
+      this._pendingMessages.push(message);
+      return;
+    }
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
     this._messagesSent++;
     if (this._ws?.protocol.includes(EdgeWebsocketProtocol.V0)) {
@@ -153,10 +180,12 @@ export class EdgeWsConnection extends Resource {
       if (this.isOpen) {
         log('connected');
         this._openTimestamp = Date.now();
+        this._flushPendingMessages();
         this._callbacks.onConnected();
         this._scheduleHeartbeats();
         this._scheduleRateCalculation();
       } else {
+        this._pendingMessages = [];
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
     };
@@ -164,6 +193,7 @@ export class EdgeWsConnection extends Resource {
       if (this.isOpen) {
         const reason = classifyCloseCode(event.code, isOnline());
         log.warn('server disconnected', { code: event.code, reason: event.reason, classified: reason });
+        this._pendingMessages = [];
         this._callbacks.onRestartRequired(reason);
         muxer.destroy();
       }
@@ -201,6 +231,15 @@ export class EdgeWsConnection extends Resource {
     };
   }
 
+  /** Replays messages buffered during the handshake, in submission order. */
+  private _flushPendingMessages(): void {
+    const pending = this._pendingMessages;
+    this._pendingMessages = [];
+    for (const message of pending) {
+      this.send(message);
+    }
+  }
+
   private async _receiveMessage(data: WebSocket.Data, muxer: WebSocketMuxer): Promise<void> {
     // Serialize processing so bytes reach `muxer.receiveData` in arrival order. The guard
     // releases on scope exit even if processing throws, so a single bad message is logged
@@ -226,6 +265,7 @@ export class EdgeWsConnection extends Resource {
 
   protected override async _close(): Promise<void> {
     void this._inactivityTimeoutCtx?.dispose().catch(() => {});
+    this._pendingMessages = [];
 
     try {
       this._ws?.close();

@@ -46,7 +46,7 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
   }
 
   return (
-    <div className='flex'>
+    <div className='flex gap-1'>
       <Box
         className={mx('flex py-0.5 select-none text-sm cursor-pointer', classNames)}
         role='button'

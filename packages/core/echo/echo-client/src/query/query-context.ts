@@ -28,6 +28,7 @@ export type EntryGroup = {
  */
 export type SourceEntry<O extends Entity.Unknown = Entity.Unknown> = QueryResult.EntityEntry<O> & {
   group?: EntryGroup;
+  record?: Readonly<Record<string, unknown>>;
 };
 
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
@@ -39,6 +40,12 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    * the initial subscription event until real results arrive instead of emitting an empty snapshot.
    */
   isSynchronous(): boolean;
+
+  /**
+   * Whether a source serving the current query has yet to answer, so {@link getResults} is only the
+   * part of the result the sources that have answered know about.
+   */
+  hasPendingSources(): boolean;
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;

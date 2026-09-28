@@ -46,7 +46,7 @@ export const WhoAmI = Tool.make('whoami', {
     'Returns the authenticated DXOS identity and the data spaces this session can operate on, each ' +
     'with its name and member count — refer to a space by name when talking to the user, and pass ' +
     'its id when calling a tool.',
-  parameters: McpServer.NoParameters,
+  parameters: Tool.EmptyParams,
   success: Schema.Struct({
     // The DID, not the identity key: it is the identity's public name — what EDGE authorizes
     // against and what every other surface reports — where the key is an implementation detail.

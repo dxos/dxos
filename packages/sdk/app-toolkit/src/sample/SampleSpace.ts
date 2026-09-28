@@ -13,6 +13,7 @@ import { Annotation, Collection, Database, type Feed, Obj, Ref, Tag, type Type }
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { Tagging } from '@dxos/schema';
+import { iconValues } from '@dxos/ui-types';
 
 import * as AppAnnotation from '../echo/AppAnnotation.ts';
 
@@ -338,6 +339,7 @@ export type PhaseRunners<Phases extends PhaseMap> = { readonly [K in keyof Phase
 
 export type SpaceOptions = {
   readonly name: string;
+  /** An `iconValues` name (`stack`), not its Phosphor spelling, so the icon picker can produce it too. */
   readonly icon?: string;
   readonly hue?: string;
 };
@@ -396,7 +398,7 @@ export const layer = (options: {
 /**
  * Runs a definition's recipe against an existing space, then drains queued feed appends and
  * flushes. The same definition runs headless (into an exported archive) or against a live space,
- * which is what lets a sample space double as a debug-plugin preset.
+ * which is what lets one sample space serve both a test and the app.
  */
 export const applyTo = <Phases extends PhaseMap, A>(
   definition: Definition<Phases, A>,
@@ -422,28 +424,44 @@ export const applyTo = <Phases extends PhaseMap, A>(
 };
 
 /**
- * Wraps a definition as an offerable preset: registers its types on the client, then applies it.
+ * Offers a sample space as a {@link AppCapabilities.SpaceTemplate}: registers its types on the
+ * client, then applies it.
  *
- * The result is a plain `{ id, label, apply }` record, which is what the `SampleSpace` capability
- * carries — a picker that lists one needs neither the definition nor Effect.
+ * Name, icon and hue default to the definition's own `space` options.
  */
-export const preset = <Phases extends PhaseMap, A>(options: {
+const asIconValue = (icon: string | undefined): string | undefined =>
+  icon && iconValues.includes(icon) ? icon : undefined;
+
+export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   readonly id: string;
-  readonly label: string;
+  /** Defaults to the definition's space name, which is what the created space is called. */
+  readonly label?: string;
   readonly description?: string;
+  readonly icon?: string;
+  readonly hue?: string;
+  /** Omit from the create picker; reachable only by id. */
+  readonly hidden?: boolean;
   readonly definition: Definition<Phases, A>;
 }): {
   readonly id: string;
   readonly label: string;
   readonly description?: string;
+  readonly icon?: string;
+  readonly hue?: string;
+  readonly hidden?: boolean;
   readonly apply: (options: {
     readonly client: { addTypes: (types: Type.AnyEntity[]) => Promise<void> };
     readonly space: { readonly db: Database.Database; readonly properties: Obj.Any };
   }) => Promise<void>;
 } => ({
   id: options.id,
-  label: options.label,
+  label: options.label ?? options.definition.space.name,
   description: options.description,
+  // Dropped rather than passed on when it is not a name the icon picker can produce: a template
+  // carrying a Phosphor-spelled icon renders as a blank everywhere it is offered.
+  icon: asIconValue(options.icon ?? options.definition.space.icon),
+  hue: options.hue ?? options.definition.space.hue,
+  hidden: options.hidden,
   apply: async ({ client, space }) => {
     await client.addTypes([...options.definition.schemas]);
     await EffectEx.runPromise(applyTo(options.definition, space));

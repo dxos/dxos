@@ -13,6 +13,7 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
   type Blob,
+  type Change,
   Database,
   Entity,
   Feed,
@@ -62,6 +63,7 @@ import {
   type ProxyTarget,
   checkoutVersionSnapshot,
   createObject,
+  getObjectChanges,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
@@ -379,6 +381,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   get rootChanged() {
     return this._entityManager.rootChanged;
+  }
+
+  get linksAdded() {
+    return this._entityManager.linksAdded;
   }
 
   // ── Resource lifecycle ──────────────────────────────────────────────────
@@ -991,6 +997,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return checkoutVersionSnapshot(obj, [...heads]);
   }
 
+  getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[] {
+    return getObjectChanges(obj, opts);
+  }
+
   listBranches(objectId: string): string[] {
     return this._entityManager.listBranches(objectId);
   }
@@ -1056,6 +1066,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {
     return this._entityManager.areStrongDepsSatisfied(core);
+  }
+
+  areStrongDepsResolved(core: Parameters<EntityManager['areStrongDepsResolved']>[0]) {
+    return this._entityManager.areStrongDepsResolved(core);
   }
 
   getDocumentHeads() {

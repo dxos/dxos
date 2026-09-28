@@ -74,6 +74,10 @@ export type MarkdownEditorProviderProps = Merge<
   Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'identity' | 'onSelectLink'>
 >;
 
+/**
+ * Builds the editor's extensions and menu options and shares them with `MarkdownEditor.Content` and
+ * `MarkdownEditor.Toolbar`. `attendableId` reaches the extensions so inline embeds nest under it.
+ */
 export const MarkdownEditorProvider = ({
   children,
   id,
@@ -102,6 +106,7 @@ export const MarkdownEditorProvider = ({
   // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
+    attendableId,
     object,
     compact,
     viewMode,

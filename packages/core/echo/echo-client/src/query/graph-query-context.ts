@@ -6,7 +6,7 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
+import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -55,6 +55,12 @@ export interface QuerySource {
    * false so callers can defer the initial subscription event until real results arrive.
    */
   isSynchronous(): boolean;
+
+  /**
+   * Whether this source serves the current query and has yet to answer it. An asynchronous source
+   * stops pending once its first answer has been integrated, or once it fails.
+   */
+  isPending(): boolean;
 
   /**
    * One-shot query.
@@ -126,6 +132,13 @@ export class GraphQueryContext implements QueryContext {
       return false;
     }
     return Array.from(this._sources).some((source) => source.isSynchronous());
+  }
+
+  hasPendingSources(): boolean {
+    if (!this._query) {
+      return true;
+    }
+    return Array.from(this._sources).some((source) => source.isPending());
   }
 
   async run(
@@ -202,6 +215,7 @@ export class SpaceQuerySource implements QuerySource {
       allCores: () => _database.allObjectCores(),
       getCoreById: (id, load) => _database.getObjectCoreById(id, { load: load ?? false }),
       areStrongDepsSatisfied: (core) => _database.areStrongDepsSatisfied(core),
+      areStrongDepsResolved: (core) => _database.areStrongDepsResolved(core),
     };
     this._executor = new WorkingSetQueryExecutor(provider);
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
@@ -303,6 +317,11 @@ export class SpaceQuerySource implements QuerySource {
     );
   }
 
+  /** The working set is scanned on read, so this source never has an answer outstanding. */
+  isPending(): boolean {
+    return false;
+  }
+
   getResults(): SourceEntry<Obj.Unknown>[] {
     if (!this._query) {
       return [];
@@ -384,6 +403,10 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _isValidSourceForQuery(query: QueryAST.Query): boolean {
+    if (queryContainsChanges(query)) {
+      return false;
+    }
+
     const targetSpaces = getTargetSpacesForQuery(query);
     // Disabled by spaces filter.
     if (targetSpaces.length > 0 && !targetSpaces.includes(this.spaceId)) {
@@ -418,12 +441,17 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
+    // A core whose body has not landed matches nothing — there is no document to filter against.
+    const structure = core.getObjectStructure();
+    if (structure === undefined) {
+      return false;
+    }
     return (
       this._database.areStrongDepsSatisfied(core) &&
       filterCoreByDeletedFlag(core, options) &&
       filterMatchDoc(filter, {
         id: core.id,
-        doc: core.getObjectStructure(),
+        doc: structure,
         spaceId: this.spaceId,
       })
     );

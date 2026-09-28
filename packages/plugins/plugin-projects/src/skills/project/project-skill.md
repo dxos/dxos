@@ -128,7 +128,10 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   it stores **no status** — `tasks-list-milestone` derives `done`/`total` from the tasks filed under it, so
   progress can never disagree with the work.
 - **Task set** — the ledger. Milestone membership is the task's `milestone` (`tasks-create` with
-  `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); sub-tasks use `parentTask`.
+  `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); pass `parentTask` to
+  file a sub-task under its parent, which then lists it in its own `subtasks`. Reorder or re-parent
+  a task with `tasks-move`; move it, with its sub-tasks, to another project with `tasks-move-to-set`
+  (the target project's `taskSet`). Never edit a task set's `tasks` array by hand.
   Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
@@ -148,6 +151,26 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   then a document whose `content` references it (`space-add-object` typenames `org.dxos.type.text`
   and `org.dxos.type.document`).
 
+## Asking the user about a task
+
+When a task is stuck on a decision only the user can make, ask it on the task rather than
+guessing: an assumption the ledger then carries as fact costs more than the round trip.
+
+- `tasks-ask-question { task: {"/": "echo:///<task-id>"}, question, context?, options?, actor?, spaceId }`
+  files the question in the task's `history` and sets the task to `blocked`. Put what you are
+  stuck on in `context`, offer the likely answers in `options` (`{ title, description? }` — the
+  user may still type their own), and pass your own actor as `actor` (see "Assignee" above). It
+  returns the question's `questionId`.
+- One open question per task: a second call while the first is unanswered is refused. Ask
+  everything you need in one question.
+- The user answers in Composer, on the task. Nothing wakes you: read the answer back with
+  `tasks-list` (or any read that returns the task) — it is the `history` entry with
+  `event: "answer"` whose `questionId` matches. Until it is there, work on something else or stop.
+- Once answered, unblock the task yourself with `tasks-update { status }` if the answer cleared
+  it, or ask again if it did not. The answer does not change the status on its own.
+- If the user is in this conversation with you, ask them here instead; `tasks-ask-question` is for a
+  question that has to wait on the task until someone answers it in Composer.
+
 ## Artifacts — the project's work products
 
 A project owns a collection of **artifacts**: the durable objects the work produced (documents,
@@ -156,6 +179,10 @@ outlines, sheets, contacts, …), distinct from its tasks and its outline.
 - After creating an object the user asked for while working in a project's context, file it with
   `projects-add-artifact { project, object }` so the project owns it and it appears in the project's list.
   Filing the same object twice is a no-op.
+- When the object was made for one task — a screenshot a task asked for, a report it produced —
+  record it on that task with `tasks-add-artifact { task, object }`. It needs no project, so it is also
+  the verb for a task that lives in a plain task set. For a file on your own disk, create the `File`
+  first (see the File skill's upload flow) and pass its reference as `object`.
 - Before searching the whole space for something the project should already hold, call
   `projects-list-artifact { project }` — it returns a DXN, type and label per artifact, and you load the
   content of the one you want.
@@ -232,7 +259,8 @@ spaceId }`. Report the new project id.
   guess. For each selected row call this session's task-chip tool once, with a prompt that **stands
   alone**: the receiving agent has none of this conversation, so include the project name, the task
   headline and its notes verbatim, any file paths or PR numbers it references, and the project and
-  task-set ids. Do **not** start the work yourself and do **not** complete the task — a chip is a
+  task-set ids. A selected sub-task is **promoted to its root task**: the chip carries the root and
+  ALL its sub-tasks, and two chips never share a tree. Do **not** start the work yourself and do **not** complete the task — a chip is a
   handoff, and the task stays open until the spawned session finishes it. If this session has no
   task-chip tool, say so and stop; a subagent is not a substitute, since it would run the work now
   instead of handing it off.
@@ -257,6 +285,9 @@ spaceId }`. Report the new project id.
 5. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
    (`/project track`). `spawn` is the one sanctioned use of a chip, and it only ever acts on a
    task already recorded in the ledger.
+6. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
+   never a lone sub-task; the PR covers every sub-task, and is attached to the root
+   (`tasks-add-artifact` redirects it there). Claiming or starting any task claims its whole tree.
 
 ## Common mistakes
 
@@ -274,6 +305,7 @@ spaceId }`. Report the new project id.
 | Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.               |
 | Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.        |
 | Creating a new project when one for this work already exists       | Query for projects first; resume/extend the existing one instead of forking state.           |
+| Guessing at a decision only the user can make                      | `tasks-ask-question` on the task, then read the answer back from its `history`.              |
 | Spawning a task chip for a follow-up you just discovered           | Record it with `tasks-create`; `spawn` only hands off a task already in the ledger.          |
 | A `spawn` prompt that assumes this conversation                    | The receiving session has none of it — restate project, task, ids and paths verbatim.        |
 | Renumbering between `tasks` and `spawn`                            | Same order, same numbers; the user is quoting a row they just saw.                           |

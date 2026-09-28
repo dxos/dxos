@@ -219,7 +219,7 @@ export default Capability.makeModule(
     // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
     // down the stack's keep-alive slices.
     yield* Effect.addFinalizer(() =>
-      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(Effect.promise(() => layerStack.destroy()))),
+      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(layerStack.destroy())),
     );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {

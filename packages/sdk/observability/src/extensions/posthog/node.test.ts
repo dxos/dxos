@@ -14,6 +14,7 @@ import { extensions } from './node.ts';
 const DID = 'did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK';
 const INSTALLATION_ID = '8a1d1d1e-8d4c-4c2a-9a4a-3a6e0b6f1f2b';
 const TOKEN = 'phc_test';
+const SESSION = { sessionId: 'session-1', clientName: 'claude-code', clientVersion: '2.1.0' };
 
 const captured: { event: string; distinctId?: string; properties?: Record<string, unknown> }[] = [];
 const mcpCaptured: Record<string, unknown>[] = [];
@@ -93,22 +94,60 @@ describe('posthog node extension', () => {
     expect(captured).to.have.length(1);
   });
 
-  test('serves the MCP events under their own kind', async () => {
+  test('serves MCP tool calls under their own kind', async () => {
     mcpCaptured.length = 0;
     const extension = await make(DID);
     const mcp = api(extension, 'mcp');
 
-    const session = { sessionId: 'session-1', clientName: 'claude-code', clientVersion: '2.1.0' };
-    mcp.captureInitialize(session);
-    mcp.captureToolCall({ ...session, toolName: 'whoami', durationMs: 12, isError: false });
+    mcp.captureToolCall({ ...SESSION, toolName: 'whoami', durationMs: 12, isError: false });
 
-    expect(mcpCaptured[0]).to.include({ event: '$mcp_initialize', clientName: 'claude-code', sessionId: 'session-1' });
-    expect(mcpCaptured[1]).to.include({ event: '$mcp_tool_call', toolName: 'whoami', sessionId: 'session-1' });
-    expect(mcpCaptured[1].properties).to.include({
+    expect(mcpCaptured[0]).to.include({ event: '$mcp_tool_call', toolName: 'whoami', sessionId: 'session-1' });
+    expect(mcpCaptured[0].properties).to.include({
       $mcp_client_name: 'claude-code',
       $mcp_server_name: 'dxos-cli',
       $mcp_server_version: '1.2.3',
     });
+  });
+
+  test('names a tool call that carries no client as the unknown client', async () => {
+    mcpCaptured.length = 0;
+    const extension = await make(DID);
+
+    api(extension, 'mcp').captureToolCall({
+      sessionId: 'session-1',
+      toolName: 'whoami',
+      durationMs: 1,
+      isError: false,
+    });
+
+    expect(mcpCaptured[0].properties).to.include({ $mcp_client_name: 'unknown' });
+  });
+
+  test('serves the initialize event under the mcp kind', async () => {
+    mcpCaptured.length = 0;
+    const extension = await make(DID);
+
+    api(extension, 'mcp').captureInitialize(SESSION);
+
+    expect(mcpCaptured[0]).to.include({
+      event: '$mcp_initialize',
+      clientName: 'claude-code',
+      sessionId: 'session-1',
+    });
+  });
+
+  test('names an initialize that carries no client as the unknown client', async () => {
+    mcpCaptured.length = 0;
+    const extension = await make(DID);
+
+    api(extension, 'mcp').captureInitialize({ sessionId: 'session-1' });
+    api(extension, 'mcp').captureInitialize({ sessionId: 'session-1', clientName: '', clientVersion: '' });
+
+    expect(mcpCaptured).to.have.length(2);
+    for (const event of mcpCaptured) {
+      expect(event).to.include({ event: '$mcp_initialize', clientName: 'unknown' });
+      expect(event.clientVersion).to.be.undefined;
+    }
   });
 
   // Events carry the identity DID, so a host that would put it on the wire in the clear reports

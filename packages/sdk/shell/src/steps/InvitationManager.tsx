@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { Clipboard, Icon, QrCode, useId, useTranslation } from '@dxos/react-ui';
+import { Icon, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -79,7 +79,7 @@ export const InvitationManager = ({
             <span id={qrLabel} className='sr-only'>
               {t('qr.label')}
             </span>
-            <Clipboard.Button variant='ghost' value={invitationUrl ?? 'never'} />
+            <SystemIconButton.Clipboard variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
           <InvitationManagerView id='showing-auth-code'>
             <Label>{t('auth-code.message')}</Label>

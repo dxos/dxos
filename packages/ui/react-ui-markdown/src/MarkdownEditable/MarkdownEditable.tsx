@@ -152,11 +152,9 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
       // config, not to the DOM, and the preview is a box of the same kind — so the two match.
       return (
         // CodeMirror insets its own content, which would sit the text further in than the preview it
-        // replaced; the field owns its inset, so the editor's is removed.
-        <div
-          data-testid='markdownEditable.editor'
-          className={mx('w-full [&_.cm-content]:!p-0 [&_.cm-line]:!px-0', classNames)}
-        >
+        // replaced; the field owns its inset, so the editor's is removed. Lines keep theirs, since
+        // forcing it to zero would override a list item's hanging indent and hide its bullet.
+        <div data-testid='markdownEditable.editor' className={mx('w-full [&_.cm-content]:!p-0', classNames)}>
           {/* `initialValue`, not a controlled value: the editor owns its document once open, and
             feeding `draft` back in on every keystroke would fight the cursor. */}
           <TextEditor
