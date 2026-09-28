@@ -35,8 +35,8 @@ export const TreeItemToggle = memo(
             // line, and stretching the toggle centred the chevron against the whole row instead of
             // against the title it discloses. One control wide too — the same rail-item square as
             // every other cell in a row, so a grid laid out beside it tiles with no gap.
-            // Its inline size is the tree's block, so a compact tree's narrower column holds it exactly.
-            'h-(--dx-control) w-(--dx-tree-block,var(--dx-control)) px-0',
+            // Its inline size is the tree's block (`TREE_BLOCK`), so the toggle column holds it exactly.
+            'h-(--dx-control) w-6 px-0',
             '[&_svg]:transition-transform [&_svg]:duration-(--duration-tree-disclosure)',
             // Closing holds the turn for the conceal it shares a duration with, so the chevron
             // lands with the last row out; opening leads, and the rows follow it in.

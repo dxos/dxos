@@ -151,7 +151,6 @@ const L1PanelContent = ({
       <ScrollArea.Root centered padding thin orientation='vertical'>
         <ScrollArea.Viewport>
           <Tree
-            compact
             classNames='pt-[2px]'
             model={navTreeContext.model}
             id={item.id}

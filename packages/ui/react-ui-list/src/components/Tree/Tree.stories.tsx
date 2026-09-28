@@ -49,7 +49,6 @@ const DefaultStory = ({
   branches,
   features,
   indentGuides,
-  compact,
   openDepth = 0,
   onItemHover,
 }: {
@@ -67,8 +66,6 @@ const DefaultStory = ({
   features?: boolean;
   /** Draw a guide line down each open branch's children. */
   indentGuides?: boolean;
-  /** A narrow block (icon plus compact padding) rather than a whole control. */
-  compact?: boolean;
   /** Opens this many levels down the first branch at each depth, so a story shows nesting without a click. */
   openDepth?: number;
   onItemHover?: (params: { item: TestItem }) => void;
@@ -303,7 +300,6 @@ const DefaultStory = ({
       virtualize={virtualize}
       dropAtEnd={features}
       indentGuides={indentGuides}
-      compact={compact}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -343,6 +339,11 @@ export const Draggable: Story = {
   args: {
     draggable: true,
   },
+};
+
+/** Guides down each open branch, under its own chevron; each child's chevron is centred under its parent's icon. */
+export const WithIndent: Story = {
+  args: { indentGuides: true, openDepth: 2 },
 };
 
 export const WithGroups: Story = {
@@ -462,16 +463,6 @@ export const Collapse: Story = {
 const queryPart = (root: Element | null, selector: string): HTMLElement =>
   root?.querySelector<HTMLElement>(selector) ?? raise(new Error(`Missing ${selector}`));
 
-/** Guides down each open branch, under its own chevron; each child's chevron is centred under its parent's icon. */
-export const IndentGuides: Story = {
-  args: { indentGuides: true, openDepth: 2 },
-};
-
-/** The same rule on a narrow block: the icon plus a compact button's padding. */
-export const IndentGuidesCompact: Story = {
-  args: { indentGuides: true, compact: true, openDepth: 2 },
-};
-
 const expectBlockAlignment = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
   await canvas.findByRole('tree');
@@ -496,15 +487,9 @@ const expectBlockAlignment = async (canvasElement: HTMLElement) => {
   }
 };
 
-/** Block alignment, measured on the open rendering `IndentGuides` shows. */
+/** Block alignment, measured on the open rendering `WithIndent` shows. */
 export const TestIndentGuides: Story = {
   args: { indentGuides: true, openDepth: 2 },
-  play: async ({ canvasElement }) => expectBlockAlignment(canvasElement),
-};
-
-/** The same alignment on the compact block. */
-export const TestIndentGuidesCompact: Story = {
-  args: { indentGuides: true, compact: true, openDepth: 2 },
   play: async ({ canvasElement }) => expectBlockAlignment(canvasElement),
 };
 

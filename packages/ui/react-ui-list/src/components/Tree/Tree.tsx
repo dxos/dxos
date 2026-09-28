@@ -26,7 +26,6 @@ import {
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
-  type CSSProperties,
   type FC,
   type MouseEvent,
   type PointerEvent,
@@ -51,7 +50,7 @@ import {
 import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
-import { COMPACT_TREE_BLOCK, DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
+import { DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
 import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
@@ -86,12 +85,6 @@ const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false
  * parent inside it, and a row's `col-[tree-row]` has to resolve against whichever one holds it.
  */
 const TREE_TRACK = '[tree-row-start] minmax(0, 1fr) [tree-row-end]';
-
-/** Sets the block every row sizes its toggle, icon and indent from; a windowed tree's grid lives on its mounted parent. */
-const treeStyle = (compact: boolean, windowed: boolean): CSSProperties & { '--dx-tree-block': string } => ({
-  '--dx-tree-block': compact ? COMPACT_TREE_BLOCK : 'var(--dx-control)',
-  ...(windowed ? {} : { gridTemplateColumns: TREE_TRACK }),
-});
 const TREE_GRID = 'grid gap-0.5';
 
 type TreeWalkState<T extends { id: string }> = {
@@ -317,12 +310,6 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   indentGuides?: boolean;
   /**
-   * A narrow block (the icon plus a compact button's padding) rather than a whole control. Either way
-   * the toggle column, the icon cell and each level's indent share the block, so a child's toggle is
-   * centred under its parent's icon; the guides and the drop line follow it.
-   */
-  compact?: boolean;
-  /**
    * The element that scrolls the tree, when the consumer owns one.
    *
    * Optional because a tree is usually inside somebody else's scroller; without it the nearest
@@ -381,7 +368,6 @@ export const Tree = <T extends { id: string } = any>({
   hideDragSource = false,
   virtualize = false,
   indentGuides = false,
-  compact = false,
   scrollerRef,
   canSelect,
   onOpenChange,
@@ -821,7 +807,7 @@ export const Tree = <T extends { id: string } = any>({
           // template is applied per row, behind an indent track, rather than here — a subgrid would
           // share one set of tracks down the tree, and padding a subgrid only shrinks its first
           // track, so nested rows could not indent their leading cells.
-          style={treeStyle(compact, windowed)}
+          style={windowed ? undefined : { gridTemplateColumns: TREE_TRACK }}
           onPointerDownCapture={handlePointerDownCapture}
           onKeyDown={handleKeyDown}
         >
@@ -1438,7 +1424,7 @@ const TreeNodeHeading = <T extends { id: string }>({
               size={5}
               icon={props.icon}
               // Centred in a block, the column a child row's toggle sits in.
-              classNames={['my-1 mx-[calc((var(--dx-tree-block)-1.25rem)/2)]', styles?.text]}
+              classNames={['my-1 mx-0.5', styles?.text]}
             />
           )
         )}
@@ -1458,7 +1444,7 @@ const TreeNodeHeading = <T extends { id: string }>({
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
       </Tag>
     );
@@ -1466,7 +1452,7 @@ const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 
 
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
       </Tag>
     );

@@ -93,7 +93,6 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
 
   return (
     <Tree<FileNode>
-      compact
       id={root.id}
       model={model}
       ariaLabel={t('files-tree.label')}

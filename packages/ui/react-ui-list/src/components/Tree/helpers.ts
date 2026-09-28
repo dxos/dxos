@@ -14,11 +14,9 @@ export const DROP_INDENTATION = 24;
 
 /**
  * The tree's block: the width of the toggle column, of the icon cell and of one level's indent, so a
- * child's toggle is centred under its parent's icon. Set on the tree element from `compact`.
+ * child's toggle is centred under its parent's icon. The icon plus the `px-0.5` a compact `IconButton`
+ * keeps (1.25rem + 0.25rem).
  */
-export const TREE_BLOCK = 'var(--dx-tree-block)';
-
-/** A compact tree's block: the icon plus the `px-0.5` a compact `IconButton` keeps (1.25rem + 0.25rem). */
-export const COMPACT_TREE_BLOCK = '1.5rem';
+export const TREE_BLOCK = '1.5rem';
 
 export const indentTrack = (level: number): string => `calc(${level - 1} * ${TREE_BLOCK})`;

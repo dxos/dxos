@@ -72,7 +72,6 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
       <ScrollArea.Root classNames='dx-expand' thin>
         <ScrollArea.Viewport>
           <Tree<ObjectsTreeItem>
-            compact
             id={ROOT_ANCHOR}
             model={model.treeModel}
             // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic

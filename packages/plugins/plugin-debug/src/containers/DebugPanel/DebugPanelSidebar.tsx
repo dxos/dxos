@@ -108,7 +108,6 @@ export const DebugPanelSidebar = () => {
     <ScrollArea.Root thin orientation='vertical'>
       <ScrollArea.Viewport>
         <Tree
-          compact
           id={contextId}
           rootId={DebugNodes.DEBUG_ROOT_ID}
           path={ROOT_PATH}
