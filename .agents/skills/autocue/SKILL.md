@@ -134,7 +134,9 @@ Mark off-camera preparation with `setup: true` (enabling a plugin, picking a mod
 first step after the setup ones it plays a countdown in the page: a play button, then a 3-2-1 film leader.
 In manual mode the button waits for a click, so the user starts their recorder, clicks play, and the take
 begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays it without the click, and the
-`countdown` op plays one on demand.
+`countdown` op plays one on demand. The leader is react-ui-experimental's `Countdown` (story
+`ui/react-ui-experimental/Countdown`): its DOM half, `film-leader.ts`, has no imports, and the overlay
+transpiles and injects that same file rather than keeping a copy, so change the look there.
 
 ### Browser logs
 
