@@ -17,10 +17,13 @@ import {
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 
 import { TestAdapter } from '../testing/index.ts';
+import { type SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 import {
   FIND_STATES,
+  HOST_AND_CLIENT,
   NO_TRAFFIC_WINDOW_MS,
   SUBDUCTION_MESSAGE_TYPE,
   SUBDUCTION_SERVICE_NAME,
@@ -39,6 +42,47 @@ import {
   waitForQueryState,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
+
+/**
+ * A host writes `versions` of one document in turn, and a client persisting to `storage` receives each
+ * before it shuts down, leaving `storage` open for a repo that reloads from it. Returns the client's
+ * copy of the document after each version arrived.
+ */
+const replicateToClientStorage = async (
+  storage: SqliteStorageAdapter,
+  versions: string[],
+): Promise<{ url: AutomergeUrl; clientCopies: Uint8Array[] }> => {
+  const { repos, adapters, repoPairs } = await createRepoTopology({
+    peers: HOST_AND_CLIENT,
+    connections: [HOST_AND_CLIENT],
+    options: { storages: [await createSqliteAdapter(), storage] },
+  });
+  const [host, client] = repos;
+  await connectAdapters(adapters, { repoPairs });
+
+  const hostHandle = host.create<{ text?: string }>({ text: versions[0] });
+  const clientCopies: Uint8Array[] = [];
+  for (const [index, text] of versions.entries()) {
+    if (index > 0) {
+      hostHandle.change((doc) => {
+        doc.text = text;
+      });
+    }
+    await waitForSubductionSave([host]);
+    const clientHandle = await findInStates<{ text?: string }>(client, hostHandle.url, FIND_STATES);
+    await expect.poll(() => clientHandle.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual(text);
+    const clientDoc = clientHandle.doc();
+    invariant(clientDoc, 'the client holds the document it just received');
+    clientCopies.push(A.save(clientDoc));
+  }
+
+  await client.flush();
+  disconnectAdapters(adapters);
+  await shutdownRepo(client);
+  // `Repo.shutdown()` closes its storage adapter; reopen it for the repo that simulates the reload.
+  await storage.open();
+  return { url: hostHandle.url, clientCopies };
+};
 
 describe('AutomergeRepo with Subduction', () => {
   beforeAll(async () => {
@@ -78,6 +122,47 @@ describe('AutomergeRepo with Subduction', () => {
       expect(handle.doc()?.field).to.equal('value');
     }
   });
+
+  //
+  // A peer's document reaches disk through Subduction alone when it arrives while its handle is not
+  // open, so the classic chunks a local save writes never exist for it. Loading it then has only the
+  // commit store to read, and must not wait for a peer to confirm what is already on disk.
+  //
+  test('a document held only in the Subduction store opens from disk with no peer', async () => {
+    const storage = await createSqliteAdapter();
+    const { url } = await replicateToClientStorage(storage, ['on disk']);
+    const documentId = parseAutomergeUrl(url).documentId;
+    await storage.removeRange([documentId]);
+    expect(await storage.loadRange([documentId])).toHaveLength(0);
+
+    const repo = createRepo({ network: [], storage });
+    const progress = repo.findWithProgress<{ text?: string }>(url);
+    await waitForQueryState(progress, ['ready', 'unavailable'], { timeout: SYNC_WINDOW_MS });
+    expect(progress.peek().state).to.equal('ready');
+    expect(repo.handles[documentId]?.doc()).toEqual({ text: 'on disk' });
+    // The loaded document is saved to classic storage again, whose save hook is what indexes its heads.
+    await expect.poll(async () => (await storage.loadRange([documentId])).length).toBeGreaterThan(0);
+  });
+
+  //
+  // Changes a peer pushes while a document is closed land in its commit store only, so the classic
+  // copy it loads from is older than what this peer holds.
+  //
+  test(
+    'a document whose classic copy is older than its Subduction store opens at the newer heads',
+    { timeout: 30_000 },
+    async () => {
+      const storage = await createSqliteAdapter();
+      const { url, clientCopies } = await replicateToClientStorage(storage, ['old', 'new']);
+      const documentId = parseAutomergeUrl(url).documentId;
+      await storage.removeRange([documentId]);
+      await storage.save([documentId, 'snapshot', 'stale'], clientCopies[0]);
+
+      const repo = createRepo({ network: [], storage });
+      const handle = await findInStates<{ text?: string }>(repo, url, ['ready'], { timeout: SYNC_WINDOW_MS });
+      await expect.poll(() => handle.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('new');
+    },
+  );
 
   describe('network', () => {
     test('basic networking', async () => {
