@@ -21,6 +21,8 @@ import {
   IconButton as NextIconButton,
   type IconButtonProps as NextIconButtonProps,
   type IconProps as NextIconProps,
+  Image as NextImage,
+  type ImageProps as NextImageProps,
   Input as NextInput,
   type InputProps as NextInputProps,
   Label as NextLabel,
@@ -69,4 +71,6 @@ export namespace Next {
   export const Switch = NextSwitch;
   export type SwitchProps = NextSwitchProps;
   export const FieldSet = NextFieldSet;
+  export const Image = NextImage;
+  export type ImageProps = NextImageProps;
 }

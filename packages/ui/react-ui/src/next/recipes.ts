@@ -43,4 +43,5 @@ export const recipes = {
   switchThumb: () => 'nx-switch-thumb',
   fieldsetRoot: () => 'nx-fieldset',
   fieldsetLegend: () => 'nx-fieldset-legend',
+  image: () => 'nx-image',
 } as const;

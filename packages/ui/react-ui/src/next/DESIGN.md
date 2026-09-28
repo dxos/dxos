@@ -164,3 +164,6 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 12. **FieldSet** is Ark Fieldset: a borderless `<fieldset>` stacking its Fields with `--nx-gap-size`, headed by a
     Legend that is an sm label row like `Field.Header`. Ark passes only `disabled` down to Fields, so `Field.Root`
     also defaults `invalid` from the enclosing set.
+13. **Image** is an `<img>` (required `alt`, lazy, async decode) in a frame with a fixed `aspectRatio` (16 / 9 by
+    default) and `fit` (cover|contain), so layout does not shift while it loads; the frame shows the well until then
+    and a broken-image Icon, named by `alt`, on error.
