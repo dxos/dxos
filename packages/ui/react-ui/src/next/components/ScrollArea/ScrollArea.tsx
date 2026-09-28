@@ -6,6 +6,7 @@ import { ark } from '@ark-ui/react/factory';
 import React, { useState } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
+import { type AllowedAxis } from '@dxos/ui-types';
 
 import { ScrollAreaThumbs } from '../../../components/ScrollArea/ScrollAreaThumbs.tsx';
 import { scrollbar } from '../../../components/ScrollArea/scrollbar.ts';
@@ -32,13 +33,45 @@ export type ScrollAreaRootProps = {
   width?: 'thin' | 'regular';
   /** Platform scrollbar instead of overlay thumbs; implies `reserve`. */
   native?: boolean;
+  /** Scrolling axis; `all` scrolls both (the current ScrollArea's values). */
+  orientation?: AllowedAxis;
+  /** Overlay thumbs show only while the pointer is over the frame (or a thumb is dragged). */
+  autoHide?: boolean;
+  /** Mandatory snapping on the scrolling axis; children carry their own `scroll-snap-align`. */
+  snap?: boolean;
+  /** `false` scrolls without any visible bar, overlay or native. */
+  scrollbars?: boolean;
+};
+
+/** Tailwind group names the overlay thumbs' `autoHide` hover rule targets (`ScrollAreaThumbs`). */
+const AUTO_HIDE_GROUP: Record<AllowedAxis, string> = {
+  vertical: 'group/scroll-v',
+  horizontal: 'group/scroll-h',
+  all: 'group/scroll-all',
 };
 
 /** Non-scrolling frame: hosts the overlay thumbs and is the query container for its content. */
 const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
-  ({ children, asChild, size, mode = 'overlay', width = 'thin', native = false, ...props }, forwardedRef) => {
+  (
+    {
+      children,
+      asChild,
+      size,
+      mode = 'overlay',
+      width = 'thin',
+      native = false,
+      orientation = 'vertical',
+      autoHide = false,
+      snap = false,
+      scrollbars = true,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    const { className, ...rest } = composableProps(props, { classNames: recipes.scrollRoot() });
+    const { className, ...rest } = composableProps(props, {
+      classNames: [recipes.scrollRoot(), autoHide && AUTO_HIDE_GROUP[orientation]],
+    });
     return (
       <ScrollAreaProvider native={native} setViewport={setViewport}>
         <ark.div
@@ -49,16 +82,19 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
           data-size={size}
           data-mode={native ? 'reserve' : mode}
           data-width={width}
+          data-orientation={orientation}
+          data-snap={snap ? '' : undefined}
+          data-scrollbars={scrollbars ? undefined : 'false'}
           className={className}
           ref={forwardedRef}
         >
           {children}
-          {!native && viewport && (
+          {!native && scrollbars && viewport && (
             <ScrollAreaThumbs
               viewport={viewport}
-              orientation='vertical'
+              orientation={orientation}
               density={width === 'thin' ? scrollbar.md : scrollbar.lg}
-              autoHide={false}
+              autoHide={autoHide}
             />
           )}
         </ark.div>
