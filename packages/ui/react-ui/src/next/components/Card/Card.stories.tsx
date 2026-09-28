@@ -6,10 +6,11 @@ import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { expectTooltip } from '../../testing.ts';
 
 /** Inline SVG, so the story never fetches from the network. */
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
@@ -139,5 +140,14 @@ export const BrokenPoster: Story = {
     await expect(within(poster).getByRole('img', { name: 'Launch artwork' }).tagName.toLowerCase()).toBe('svg');
     const box = poster.getBoundingClientRect();
     await expect(box.width / box.height).toBeCloseTo(16 / 9, 1);
+  },
+};
+
+/** A trailing IconButton in `Card.Header` shows its label in a Tooltip. */
+export const HeaderTooltip: Story = {
+  play: async ({ canvasElement }) => {
+    const more = within(canvasElement).getByRole('button', { name: 'More actions' });
+    await userEvent.hover(more);
+    await expectTooltip(more, 'More actions');
   },
 };

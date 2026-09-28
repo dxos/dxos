@@ -13,6 +13,7 @@ import { random } from '@dxos/random';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
+import { expectTooltip } from '../../testing.ts';
 
 random.seed(123);
 
@@ -224,5 +225,18 @@ export const Sizes: Story = {
         await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('dialog')).toBeNull());
       }
     }
+  },
+};
+
+/** The header's close IconButton shows its label in a Tooltip above the modal dialog, which stays open. */
+export const CloseTooltip: Story = {
+  play: async ({ canvasElement }) => {
+    const dialog = await open(canvasElement, 'md');
+    const close = within(dialog).getByRole('button', { name: 'Close' });
+    await userEvent.hover(close);
+    const tooltip = await expectTooltip(close, 'Close');
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip.closest('[aria-hidden="true"]')).toBeNull();
+    await expect(within(canvasElement.ownerDocument.body).getByRole('dialog')).toBeVisible();
   },
 };

@@ -6,12 +6,12 @@ import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectScoped, expectTooltip } from '../../testing.ts';
 
 type StoryArgs = {
   /** Marks the Website field invalid. */
@@ -88,5 +88,14 @@ export const Invalid: Story = {
     await expect(canvas.getByText('Enter a valid URL.')).toBeVisible();
     await expect(canvas.getByRole('textbox', { name: 'Website' })).toHaveAttribute('aria-invalid', 'true');
     await expect(byTestId(canvasElement, 'website')).toHaveAttribute('data-invalid');
+  },
+};
+
+/** A trailing IconButton in `Field.Header` shows its label in a Tooltip. */
+export const HeaderTooltip: Story = {
+  play: async ({ canvasElement }) => {
+    const clear = within(canvasElement).getByRole('button', { name: 'Clear website' });
+    await userEvent.hover(clear);
+    await expectTooltip(clear, 'Clear website');
   },
 };

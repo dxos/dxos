@@ -6,12 +6,20 @@ import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, centreY, controlSize, expectDecorativeIconsHidden, expectScoped } from '../../testing.ts';
+import {
+  GEOMETRY,
+  byTestId,
+  centreY,
+  controlSize,
+  expectDecorativeIconsHidden,
+  expectScoped,
+  expectTooltip,
+} from '../../testing.ts';
 
 /** Each toolbar sits over a row with a rail Block, so the first button's icon can be compared with the rail's. */
 const DefaultStory = () => (
@@ -80,16 +88,47 @@ export const Sizes: Story = {
   },
 };
 
-/** The required label names the button and titles it; its icon is decorative. */
+/** The required label names the button (no native `title`, which would double the Tooltip); its icon is decorative. */
 export const Roles: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const add = canvas.getByRole('button', { name: 'Add md' });
     await expect(add).toBe(byTestId(canvasElement, 'add-md'));
-    await expect(add).toHaveAttribute('title', 'Add md');
+    await expect(add).not.toHaveAttribute('title');
     await expect(add).toHaveAttribute('type', 'button');
     await expect(canvas.getByRole('button', { name: 'Delete md' })).toBeDisabled();
     await expectDecorativeIconsHidden(canvasElement);
     await expectScoped(canvasElement);
+  },
+};
+
+/**
+ * The label shows in a Tooltip on keyboard focus, follows the toolbar's roving focus, and shows on hover; the story
+ * ends with a tooltip open.
+ */
+export const LabelTooltip: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    await userEvent.tab();
+    const addXs = byTestId(canvasElement, 'add-xs');
+    await expect(addXs).toHaveFocus();
+    await expectTooltip(addXs, 'Add xs');
+    await expect(addXs).toHaveAccessibleDescription('Add xs');
+
+    // Arrow keys move the toolbar's roving focus; the tooltip follows and stays open.
+    await userEvent.keyboard('{ArrowRight}');
+    const removeXs = byTestId(canvasElement, 'remove-xs');
+    await expect(removeXs).toHaveFocus();
+    await expectTooltip(removeXs, 'Remove xs');
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await expect(body.getAllByRole('tooltip')).toHaveLength(1);
+
+    // Hover shows another button's label after the open delay.
+    const addLg = canvas.getByTestId('add-lg');
+    await userEvent.hover(addLg);
+    await expectTooltip(addLg, 'Add lg');
+    await expect(addLg).not.toHaveAttribute('title');
   },
 };

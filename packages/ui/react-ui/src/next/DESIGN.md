@@ -178,8 +178,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     `--color-description`); the highlight is `--color-hover-surface` under the popup's outline focus ring.
 17. **Tooltip** is Ark Tooltip: portalled text at `level='popup'` with an explicit `size` (`sm` by default), padded by
     `--nx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`) and without an arrow.
-    Tabbing between triggers is fixed in `Tooltip.Trigger` (follow-up 20). `IconButton`'s native `title` would double
-    a Tooltip.
+    Tabbing between triggers is fixed in `Tooltip.Trigger` (follow-up 20); IconButton uses it for its label (22).
 18. ~~**Checkbox and Switch occupy an IconButton's cell**~~ (superseded by 19): the box/track was centred in a
     `--nx-control-size`-wide cell.
 19. **IconButton, Checkbox and Switch occupy a block-sized cell** (`--nx-block-size` square, 32px at md). The visible
@@ -198,6 +197,10 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     is a native checkbox without the role, yet the zag switch machine does implement the switch contract (Space
     toggles, checked state), so the role is earned. The native `checked` state supplies `aria-checked` to assistive
     tech; no explicit attribute is set.
+22. **IconButton labels show in a Tooltip**, not a native `title` (which would double it); `aria-label` still names
+    the button and `showTooltip={false}` opts out (e.g. inside a caller's own `Tooltip.Trigger`). The button keeps an
+    id owned by a Toolbar item or an `asChild` parent, so the Tooltip looks its trigger up by that id (`ids.trigger`);
+    otherwise positioning would find no anchor, since the button's own `data-scope`/`data-part` win the merge.
 
 ## Phase 3: react-ui-form port
 

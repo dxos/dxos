@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { expect } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { type Size } from './sizes.ts';
 
@@ -40,4 +40,18 @@ export const expectDecorativeIconsHidden = async (root: HTMLElement) => {
   for (const icon of root.querySelectorAll('svg[data-scope="icon"]:not([aria-label])')) {
     await expect(icon.getAttribute('aria-hidden')).toBe('true');
   }
+};
+
+/** Waits for the one open tooltip to show `text` within the 2px gutter (+ rounding) of `trigger`, and returns it. */
+export const expectTooltip = async (trigger: HTMLElement, text: string) => {
+  const body = within(trigger.ownerDocument.body);
+  await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent(text));
+  const tooltip = body.getByRole('tooltip');
+  await waitFor(() => {
+    const anchor = trigger.getBoundingClientRect();
+    const popup = tooltip.getBoundingClientRect();
+    const gap = Math.max(popup.top - anchor.bottom, anchor.top - popup.bottom);
+    return expect(gap >= 0 && gap <= 3).toBe(true);
+  });
+  return tooltip;
 };
