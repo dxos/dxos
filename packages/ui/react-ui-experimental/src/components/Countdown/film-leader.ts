@@ -10,7 +10,19 @@ export type FilmLeaderOptions = {
   from?: number;
   /** Hold on a play button until it is clicked, so the person recording can start their recorder first. */
   wait?: boolean;
+  /** SVG markup drawn inside the ring behind the numeral; the DXOS mark by default, `false` for none. */
+  logo?: string | false;
 };
+
+/**
+ * The DXOS mark, copied from `@dxos/brand`'s `DXOS` icon rather than imported: this module must stay
+ * import-free (see above), and the brand icon is a React component.
+ */
+export const DXOS_LOGO = `<svg viewBox="0 0 256 256" fill="currentColor">
+  <path d="M127.96,85.307l2.83,-2.058l113.742,156.395l-4.684,5.025l-111.888,-69.93l-111.888,69.93l-4.684,-5.025l113.742,-156.395l2.83,2.058Zm100.309,143.873l-100.309,-137.925l-100.309,137.925l98.455,-61.534l3.708,0l98.455,61.534Z"/>
+  <path d="M127.96,81.181l111.888,-69.93l4.684,5.025l-113.742,156.395l-2.83,-2.058l-2.83,2.058l-113.742,-156.395l4.684,-5.025l111.888,69.93Zm-100.309,-54.441l100.309,137.925l100.309,-137.925l-98.455,61.534l-3.708,-0l-98.455,-61.534Z"/>
+  <rect x="124.467" y="85.307" width="6.998" height="85.307"/>
+</svg>`;
 
 const SECOND = 1_000;
 
@@ -38,6 +50,9 @@ export const FILM_LEADER_STYLES = `
   .cross.h { left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; }
   .cross.v { top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; }
   .ring { position: absolute; inset: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.45); }
+  /* Behind the numeral, so the mark frames the count without competing with it. */
+  .logo { position: absolute; inset: 52px; display: grid; place-items: center; color: rgba(255,255,255,0.22); }
+  .logo svg { width: 100%; height: 100%; }
   .num { position: absolute; inset: 0; display: grid; place-items: center;
     font: 800 132px/1 ui-sans-serif, system-ui, sans-serif; color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
   .num.pop { animation: film-leader-pop 1000ms ease-out; }
@@ -65,7 +80,7 @@ const registerSweep = () => {
  */
 export const playFilmLeader = async (
   root: HTMLElement | ShadowRoot,
-  { from = 3, wait = true }: FilmLeaderOptions = {},
+  { from = 3, wait = true, logo = DXOS_LOGO }: FilmLeaderOptions = {},
 ): Promise<void> => {
   registerSweep();
   const style = document.createElement('style');
@@ -87,7 +102,7 @@ export const playFilmLeader = async (
     await sleep(220);
     curtain.innerHTML = `
       <div class="leader"><div class="sweep"></div><div class="cross h"></div><div class="cross v"></div>
-        <div class="ring"></div><div class="num"></div></div>`;
+        <div class="ring"></div>${logo ? `<div class="logo">${logo}</div>` : ''}<div class="num"></div></div>`;
     const num = curtain.querySelector<HTMLElement>('.num');
     for (let count = from; count > 0 && num; count--) {
       num.textContent = String(count);

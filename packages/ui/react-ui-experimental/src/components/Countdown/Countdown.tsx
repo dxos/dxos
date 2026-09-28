@@ -20,7 +20,7 @@ export type CountdownProps = ThemedClassName<
  * A play button and a 3-2-1 film leader over the viewport, the cue a recording starts on. The DOM and
  * styles live in `film-leader.ts` so autocue's driver can inject the same leader into pages without React.
  */
-export const Countdown = ({ classNames, from, wait, onComplete }: CountdownProps) => {
+export const Countdown = ({ classNames, from, wait, logo, onComplete }: CountdownProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -34,7 +34,7 @@ export const Countdown = ({ classNames, from, wait, onComplete }: CountdownProps
     // A shadow root keeps the leader's class names from meeting the app's styles.
     const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
     let cancelled = false;
-    void playFilmLeader(root, { from, wait }).then(() => {
+    void playFilmLeader(root, { from, wait, logo }).then(() => {
       if (!cancelled) {
         onCompleteRef.current?.();
       }
@@ -43,7 +43,7 @@ export const Countdown = ({ classNames, from, wait, onComplete }: CountdownProps
       cancelled = true;
       root.replaceChildren();
     };
-  }, [from, wait]);
+  }, [from, wait, logo]);
 
   return <div ref={ref} className={mx(classNames)} />;
 };
