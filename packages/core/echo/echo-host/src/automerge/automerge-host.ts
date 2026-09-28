@@ -783,6 +783,12 @@ export class AutomergeHost extends Resource {
       log('cancelled eviction of a re-leased document', { documentId });
       return false;
     }
+    // A document faulted in to catch up is ready from its older local copy, so dropping it before its
+    // sync round lands would discard the round and leave it behind for good.
+    if (this._useSubduction && this._repo.hasPendingSubductionSync(documentId)) {
+      log('deferred eviction of a document with a sync round pending', { documentId });
+      return false;
+    }
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
     }

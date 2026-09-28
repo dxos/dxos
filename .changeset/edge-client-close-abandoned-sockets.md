@@ -1,5 +1,5 @@
 ---
-'@dxos/edge-client': patch
+'@dxos/echo-host': patch
 ---
 
-`EdgeClient` now closes a connection attempt that times out, and any connection it has replaced. A slow reconnect could leave such a socket open, and once EDGE admitted it after the live one, every reply went to the socket the client ignores until the page reloaded.
+A document that sync has to bring up to date now stays loaded until its sync round lands, so a slow peer no longer leaves it on an older copy for good. `EdgeClient` also closes connection attempts that time out and connections it has replaced, so EDGE can no longer deliver its replies to a socket the client ignores.

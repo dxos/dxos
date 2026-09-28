@@ -27,7 +27,7 @@ import { AutomergeHost } from './automerge-host.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 import { deleteSubductionRemoteHeads } from './subduction-migrations/0001_delete_remote_heads.ts';
-import { NO_TRAFFIC_WINDOW_MS, SYNC_WINDOW_MS, createDenyGate } from './subduction-test-utils.ts';
+import { NO_TRAFFIC_WINDOW_MS, SYNC_WINDOW_MS, createDenyGate, waitForEviction } from './subduction-test-utils.ts';
 
 describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
@@ -76,8 +76,7 @@ describe('AutomergeHost with Subduction', () => {
     await host.flush(Context.default());
 
     created[Symbol.dispose]();
-    await host.drainEvictions();
-    expect(host.loadedDocumentIds).not.toContain(documentId);
+    await waitForEviction(expect, host, documentId);
 
     using reacquired = host.acquireDoc<any>(documentId);
     await reacquired.waitUntilReady();
@@ -116,8 +115,7 @@ describe('AutomergeHost with Subduction', () => {
       await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
 
       created[Symbol.dispose]();
-      await host1.drainEvictions();
-      expect(host1.loadedDocumentIds).not.toContain(documentId);
+      await waitForEviction(expect, host1, documentId);
 
       using reacquired = host1.acquireDoc<any>(documentId);
       await reacquired.waitUntilReady();
@@ -133,6 +131,56 @@ describe('AutomergeHost with Subduction', () => {
       await network.close();
     }
   });
+
+  test(
+    'a peer not holding a document catches up when its sync round outlasts the eviction delay',
+    {
+      timeout: 4 * SYNC_WINDOW_MS,
+    },
+    async ({ expect }) => {
+      // Collection sync faults the document in to catch up, and its older local copy makes it ready at once.
+      // Evicted on the idle delay while its sync round was still running, it lost the round every time.
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const writer = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const reader = await setupAutomergeHost({
+        runtime: rt2.runtime,
+        residency: { evictionDelay: 50, minResidentDocuments: 0 },
+      });
+
+      const created = await writer.createDoc<{ edit: number }>({ edit: 0 });
+      const documentId = created.documentId;
+      await writer.flush(Context.default());
+
+      // Each message outlasts the reader's idle delay, so every sync round does too.
+      const network = await new TestReplicationNetwork({ latency: 150 }).open();
+      try {
+        await writer.addReplicator(Context.default(), await network.createReplicator());
+        await reader.addReplicator(Context.default(), await network.createReplicator());
+        const collectionId = 'test-collection';
+        await writer.updateLocalCollectionState(collectionId, [documentId]);
+        await reader.updateLocalCollectionState(collectionId, [documentId]);
+        await expect
+          .poll(async () => (await reader.getHeads([documentId]))[0], { timeout: SYNC_WINDOW_MS })
+          .toEqual(getHeads(created.doc()!));
+        await waitForEviction(expect, reader, documentId);
+
+        created.change((doc) => {
+          doc.edit = 1;
+        });
+        await writer.flush(Context.default());
+        await expect
+          .poll(async () => (await reader.getHeads([documentId]))[0], { timeout: SYNC_WINDOW_MS })
+          .toEqual(getHeads(created.doc()!));
+      } finally {
+        await writer.close();
+        await reader.close();
+        await network.close();
+      }
+    },
+  );
 
   test('sync works both ways after the stored remote heads are deleted', async ({ expect }) => {
     // The recovery page's Repair action deletes these records. They only cache what a peer last reported, so a
@@ -941,10 +989,17 @@ const countStoredRemoteHeads = async (runtime: RuntimeArg): Promise<number> => {
   return (await adapter.loadRange(['subduction', 'remote-heads'])).length;
 };
 
-const setupAutomergeHost = async ({ runtime }: { runtime: RuntimeArg }) => {
+const setupAutomergeHost = async ({
+  runtime,
+  residency,
+}: {
+  runtime: RuntimeArg;
+  residency?: ConstructorParameters<typeof AutomergeHost>[0]['residency'];
+}) => {
   const host = new AutomergeHost({
     runtime,
     useSubduction: true,
+    residency,
   });
   await host.open();
   onTestFinished(async () => {
