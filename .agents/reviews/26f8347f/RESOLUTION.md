@@ -2,16 +2,16 @@
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 26f8347f-1 - unresolved - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:378:3
-- 26f8347f-2 - unresolved - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:400:9
-- 26f8347f-3 - unresolved - extract-non-rendering-logic-from-component - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:436:3
-- 26f8347f-4 - unresolved - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:454:31
-- 26f8347f-5 - unresolved - extract-non-rendering-logic-from-component - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:504:20
+- 26f8347f-1 - ignored - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:378:3
+- 26f8347f-2 - ignored - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:400:9
+- 26f8347f-3 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:436:3
+- 26f8347f-4 - ignored - subscribe-where-you-read - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:454:31
+- 26f8347f-5 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:504:20
 - 26f8347f-6 - resolved - consistent-field-and-list-ordering - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:654:7
-- 26f8347f-7 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:663:9
-- 26f8347f-8 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:697:5
-- 26f8347f-9 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:698:7
-- 26f8347f-10 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:712:7
+- 26f8347f-7 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:663:9
+- 26f8347f-8 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:697:5
+- 26f8347f-9 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:698:7
+- 26f8347f-10 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:712:7
 - 26f8347f-11 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:727
 - 26f8347f-12 - resolved - no-trivial-wrappers-over-official-apis - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:852
 - 26f8347f-13 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:1044
@@ -43,9 +43,9 @@
 - 26f8347f-39 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:2043
 - 26f8347f-40 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:2054
 - 26f8347f-41 - resolved - no-casts - packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx:2068
-- 26f8347f-42 - unresolved - keep-parallel-apis-structurally-aligned - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:44:3
+- 26f8347f-42 - ignored - keep-parallel-apis-structurally-aligned - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:44:3
 - 26f8347f-43 - resolved - consistent-field-and-list-ordering - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:140:1
-- 26f8347f-44 - unresolved - name-for-general-behavior - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:253
+- 26f8347f-44 - ignored - name-for-general-behavior - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:253
 - 26f8347f-45 - ignored - barrel-imports-not-internal-paths - packages/ui/react-ui/src/hooks/useIconHref.ts:7:1
 - 26f8347f-46 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/hooks/useIconHref.ts:29:3
 - 26f8347f-47 - resolved - consistent-file-naming-within-folder - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1
