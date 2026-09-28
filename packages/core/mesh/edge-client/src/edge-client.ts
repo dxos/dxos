@@ -311,7 +311,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
             this._ready.wake();
             this._notifyReconnected();
           } else {
-            log.verbose('connected callback ignored, because connection is not active');
+            log.verbose('closing a connection that connected after it was replaced');
+            this._closeReplacedConnection(connection);
           }
         },
         onRestartRequired: (reason) => {
@@ -332,6 +333,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
               from: message.source,
               type: message.payload?.typeUrl,
             });
+            this._closeReplacedConnection(connection);
           }
         },
       },
@@ -353,10 +355,20 @@ export class EdgeClient extends Resource implements EdgeConnection {
       restartRequired.wait().then(() => false),
     ]);
     if (!becameReady) {
+      // Left dialing, the socket could still be admitted after the retry's, and EDGE writes to the newest.
+      await connection.close();
       throw new EdgeConnectionClosedError();
     }
 
     return connection;
+  }
+
+  /**
+   * EDGE's router writes to a device's newest open socket, so a connection this client no longer reads
+   * must not stay open: admitted after the live one, it takes every reply addressed to the device.
+   */
+  private _closeReplacedConnection(connection: EdgeWsConnection): void {
+    void connection.close().catch((err) => log.catch(err));
   }
 
   /** Registers the observed gauges. Idempotent, so an owner that calls `connect` twice is harmless. */
