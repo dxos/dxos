@@ -73,7 +73,7 @@ const makeSteps = (ref: string): ReadonlyArray<TaskSeed> => {
   return [
     {
       title: 'Create the sandbox and install the toolchain',
-      description: `Create a sandbox named "World Clock". In \`${PLUGIN_DIR}\`, write a \`package.json\` of \`{"name":"world-clock","version":"0.1.0","private":true,"type":"module"}\`, then run in the background \`npm install --no-audit --no-fund ${dxos} ${PACKAGES.join(' ')} > install.log 2>&1; echo $? > install.done\`. It takes about five minutes: poll \`install.done\` until it exists, and read \`install.log\` if it is not \`0\`.`,
+      description: `Create a sandbox named "World Clock". In \`${PLUGIN_DIR}\`, write a \`package.json\` of \`{"name":"world-clock","version":"0.1.0","private":true,"type":"module"}\`, then run in the background \`npm install --no-audit --no-fund ${dxos} ${PACKAGES.join(' ')} > install.log 2>&1; echo $? > install.done\`. It takes five to ten minutes: poll \`install.done\` until it exists, and read \`install.log\` if it is not \`0\`.`,
       estimate: 's',
     },
     {
