@@ -114,7 +114,10 @@ describe('Spaces', () => {
     const { space, error } = await openSpaceWhoseFirstDatabaseOpenFails();
     await expect(space.waitUntilReady()).rejects.toBe(error);
 
-    await expect.poll(() => space.isOpen, { timeout: 5_000 }).toBe(true);
+    const ready = new Trigger();
+    const subscription = space.state.subscribe((state) => state === SpaceState.SPACE_READY && ready.wake());
+    onTestFinished(() => subscription.unsubscribe());
+    await ready.wait({ timeout: 5_000 });
     await space.waitUntilReady();
   });
 
