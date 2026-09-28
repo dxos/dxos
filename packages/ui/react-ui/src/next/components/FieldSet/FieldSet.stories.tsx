@@ -106,13 +106,26 @@ export const Layout: Story = {
     const email = bounds(canvasElement, '[data-testid="email"]');
     const name = bounds(canvasElement, '[data-testid="name"]');
     await expect(email.top - name.bottom).toBeCloseTo(8, 0);
-    for (const control of canvasElement.querySelectorAll('[data-scope="switch"][data-part="control"]')) {
-      await expect(control.getBoundingClientRect().left).toBeCloseTo(input.left, 0);
-    }
-    const box = bounds(canvasElement, '[data-testid="notifications"] [data-scope="checkbox"][data-part="control"]');
+    // Switches and the checkbox each take an IconButton's control-sized cell on the legend's edge, so labels align.
     const notifications = bounds(canvasElement, '[data-testid="notifications"] legend');
-    await expect(box.left).toBeCloseTo(notifications.left, 0);
-    await expect(box.left).toBeCloseTo(legend.left, 0);
+    const controls = canvasElement.querySelectorAll<HTMLElement>(
+      '[data-testid="notifications"] :is([data-scope="switch"], [data-scope="checkbox"])[data-part="control"]',
+    );
+    const labels = canvasElement.querySelectorAll<HTMLElement>(
+      '[data-testid="notifications"] :is([data-scope="switch"], [data-scope="checkbox"])[data-part="label"]',
+    );
+    for (const control of controls) {
+      const style = getComputedStyle(control);
+      const rect = control.getBoundingClientRect();
+      const cellLeft = rect.left - parseFloat(style.marginLeft);
+      const cellWidth = rect.width + parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+      await expect(cellLeft).toBeCloseTo(notifications.left, 0);
+      await expect(cellLeft).toBeCloseTo(legend.left, 0);
+      await expect(cellWidth).toBeCloseTo(28, 0);
+    }
+    for (const label of labels) {
+      await expect(label.getBoundingClientRect().left).toBeCloseTo(labels[0].getBoundingClientRect().left, 0);
+    }
     await expect(canvas.queryByText('Complete your profile.')).toBeNull();
   },
 };

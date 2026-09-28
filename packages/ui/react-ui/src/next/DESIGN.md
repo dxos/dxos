@@ -180,3 +180,5 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     `--nx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`) and without an arrow.
     Open issue: tabbing straight from one tooltip trigger to the next opens the second and closes it at once (zag
     1.43.3); pointer hover and the first keyboard focus behave. `IconButton`'s native `title` would double a Tooltip.
+18. **Checkbox and Switch occupy an IconButton's cell**: the box/track is centred in a `--nx-control-size`-wide
+    cell (inline margin inside the part), so their labels align with each other and with icon-button rows.
