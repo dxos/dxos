@@ -50,9 +50,11 @@ export const FILM_LEADER_STYLES = `
   .cross.h { left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; }
   .cross.v { top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; }
   .ring { position: absolute; inset: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.45); }
-  /* Behind the numeral, so the mark frames the count without competing with it. */
-  .logo { position: absolute; inset: 52px; display: grid; place-items: center; color: rgba(255,255,255,0.22); }
+  /* Behind the numeral, sized so the mark's corners touch the rim: they sit ~162 units from the centre of
+     its 256-unit box, and the rim's inner radius is 114px, so the box is 180px, 24px in from the rim. */
+  .logo { position: absolute; inset: 24px; display: grid; place-items: center; color: rgba(255,255,255,0.22); }
   .logo svg { width: 100%; height: 100%; }
+  .logo { transition: transform 600ms cubic-bezier(.6,0,.3,1); }
   .num { position: absolute; inset: 0; display: grid; place-items: center;
     font: 800 132px/1 ui-sans-serif, system-ui, sans-serif; color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
   .num.pop { animation: film-leader-pop 1000ms ease-out; }
@@ -104,12 +106,17 @@ export const playFilmLeader = async (
       <div class="leader"><div class="sweep"></div><div class="cross h"></div><div class="cross v"></div>
         <div class="ring"></div>${logo ? `<div class="logo">${logo}</div>` : ''}<div class="num"></div></div>`;
     const num = curtain.querySelector<HTMLElement>('.num');
+    const mark = curtain.querySelector<HTMLElement>('.logo');
     for (let count = from; count > 0 && num; count--) {
       num.textContent = String(count);
       num.classList.remove('pop');
       // Reading layout restarts the animation for the next numeral.
       void num.offsetWidth;
       num.classList.add('pop');
+      // A quarter turn per count, accumulated so the mark keeps turning the same way.
+      if (mark) {
+        mark.style.transform = `rotate(${(from - count + 1) * 90}deg)`;
+      }
       await sleep(SECOND);
     }
     curtain.classList.add('out');
