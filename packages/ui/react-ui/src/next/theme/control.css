@@ -307,17 +307,25 @@
     justify-content: space-between;
   }
 
+  /*
+   * The gap is one control inset: square IconButtons already sit in an inset cell, and every other control takes the
+   * same inline margin, so any two adjacent items are three insets apart.
+   */
   .nx-toolbar {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: var(--nx-gap-size);
+    gap: var(--nx-control-inset);
     width: 100%;
     min-height: var(--nx-block-size);
     overflow-x: auto;
     scrollbar-width: none;
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
+  }
+  .nx-toolbar > .nx-control:not([data-square]),
+  .nx-toolbar > .nx-select > .nx-control {
+    margin-inline: var(--nx-control-inset);
   }
   .nx-toolbar > .nx-input {
     flex: 1;

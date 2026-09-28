@@ -109,3 +109,21 @@ export const Keyboard: Story = {
     await expect(select).toHaveFocus();
   },
 };
+
+/**
+ * The visible space between any two adjacent items is three control insets: the toolbar's gap plus each item's
+ * inline margin (an IconButton's inset cell, or the same margin on a Button, Input or Select trigger).
+ */
+export const Spacing: Story = {
+  play: async ({ canvasElement }) => {
+    for (const size of ['md', 'lg'] as const) {
+      const expected = 3 * GEOMETRY[size].inset;
+      const items = ['add', 'remove', 'button', 'input', 'select'].map((part) =>
+        byTestId(canvasElement, `${part}-${size}`).getBoundingClientRect(),
+      );
+      for (let index = 1; index < items.length; index++) {
+        await expect(items[index].left - items[index - 1].right, `${size} gap ${index}`).toBeCloseTo(expected, 0);
+      }
+    }
+  },
+};

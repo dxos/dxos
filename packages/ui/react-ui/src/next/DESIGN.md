@@ -142,7 +142,9 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    for a real keyboard contract; a row Container needs a track per child.
 2. **`Select.Content` keeps an explicit `size`.** Portalled content leaves the sized scope, and inferring the trigger's
    size would need React context or DOM measurement, both ruled out by decisions 3 and 11.
-3. **Toolbar gap is `--nx-gap-size`**, the same spacing token as Group and Container gaps.
+3. **Toolbar gap is `--nx-control-inset`** (was `--nx-gap-size`, superseded once IconButtons took an inset cell, 19):
+   Buttons, Inputs and Select triggers in a toolbar take the same inline margin as an IconButton's cell, so any two
+   adjacent items are three insets apart (6px at md); Toolbar `Spacing` asserts it at md and lg.
 4. **`experimental.stories.tsx` removed**; `components.stories.tsx` covers it.
 5. **Controls fill with the host-derived well** (`--color-input-surface`, a small lightness step off the hosting
    surface) instead of ui-theme's fixed `--color-input-bg`, so they stay close to whatever panel hosts them.
