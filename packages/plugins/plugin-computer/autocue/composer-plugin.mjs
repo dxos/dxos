@@ -58,8 +58,15 @@ const SPACE = '[data-testid="spacePlugin.space"] >> nth=0';
 /** The same tab as a CSS selector, for code that runs in the page. */
 const SPACE_TAB = '[data-testid="spacePlugin.space"]';
 
-/** The project the template creates, by its default name. */
-const PROJECT_NAME = 'Composer Plugin';
+/** The project's title, typed on camera. */
+const PROJECT_TITLE = 'Clock Plugin';
+
+/** Projects an earlier take may have left: this title, and the template's default name. */
+const LEFTOVER_PROJECTS = [PROJECT_TITLE, 'Composer Plugin'];
+
+/** The project plank's rows, and the companion beside it. */
+const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';
+const COMPANION_TAB = (name) => `[data-testid="deck.companion"] >> role=tab[name="${name}"]`;
 
 /** A narrow window collapses the navtree into an overlay; open it before clicking an item in it. */
 const showSidebar = async ({ demo, page }, testId, label) => {
@@ -98,18 +105,18 @@ export const steps = [
         { timeout: 60_000 },
       );
       await page.evaluate(
-        async ({ tab, name }) => {
+        async ({ tab, names }) => {
           const spaceId = document.querySelector(tab).dataset.value.split('/').pop();
           const projects = await dxos
             .spaces(spaceId)
             .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
             .run();
-          const objects = projects.filter((project) => project.name === name);
+          const objects = projects.filter((project) => names.includes(project.name));
           if (objects.length > 0) {
             await composer.invoke('org.dxos.operation.space.removeObjects', { objects }, { spaceId });
           }
         },
-        { tab: SPACE_TAB, name: PROJECT_NAME },
+        { tab: SPACE_TAB, names: LEFTOVER_PROJECTS },
       );
     },
   },
@@ -206,12 +213,13 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
       await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.project"]', label: 'Project' });
-      await demo.type({
-        selector: '[data-testid="create-project-panel.template-input"]',
-        value: 'Composer',
-        label: 'Template',
-      });
+      // Picked from the list, not filtered for: the reader sees the templates on offer.
       await demo.click({ selector: `[role="option"][data-value="${TEMPLATE_ID}"]`, label: 'Composer Plugin' });
+      await demo.type({
+        selector: '[data-testid="create-project-panel.name-input"]',
+        value: PROJECT_TITLE,
+        label: 'Title',
+      });
       await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Create' });
       await page.getByTestId('projectsPlugin.tab.tasks').first().waitFor({ state: 'visible', timeout: 30_000 });
       const plank = await page
@@ -250,7 +258,7 @@ export const steps = [
       // Assigning does not reliably bring the Assistant companion forward: the pane can be closed, or its
       // tab still mounting, so open the pane if needed and confirm the tab took rather than clicking once.
       await page.getByTestId('projectsPlugin.pipeline.chart').waitFor({ state: 'visible', timeout: 30_000 });
-      const TAB = '[data-testid="deck.companion"] >> role=tab[name="Assistant"]';
+      const TAB = COMPANION_TAB('Assistant');
       const tab = page.locator(TAB).first();
       const status = page.getByTestId('assistant.chat-status');
       const visible = (locator, timeout) =>
@@ -273,19 +281,50 @@ export const steps = [
           await demo.click({ selector: TAB, label: 'Assistant' });
         }
         if ((await tab.getAttribute('aria-selected')) === 'true' && (await visible(status, 15_000))) {
-          // The chat's checklist starts collapsed; open it so the viewer sees the tasks the agent holds.
-          const checklist = page.locator('[data-testid="deck.companion"] [data-testid="taskList.item"]').first();
-          if (!(await checklist.isVisible().catch(() => false))) {
-            await demo.click({
-              selector: '[data-testid="deck.companion"] [data-testid="assistant.toggle-tasks"]',
-              label: 'Show tasks',
-            });
-            await checklist.waitFor({ state: 'visible', timeout: 10_000 });
-          }
           return;
         }
       }
       throw new Error('the Assistant companion did not open after assigning the tasks');
+    },
+  },
+  {
+    // The checklist starts collapsed; opened for a moment so the viewer sees the tasks the agent holds.
+    name: "Show the chat's tasks, then hide them",
+    run: async ({ demo, page }) => {
+      const toggle = '[data-testid="deck.companion"] [data-testid="assistant.toggle-tasks"]';
+      const checklist = page.locator('[data-testid="deck.companion"] [data-testid="taskList.item"]').first();
+      await demo.click({ selector: toggle, label: 'Show tasks' });
+      await checklist.waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForTimeout(3_000);
+      await demo.click({ selector: toggle, label: 'Hide tasks' });
+      await checklist.waitFor({ state: 'hidden', timeout: 10_000 });
+    },
+  },
+  {
+    name: 'Open the Trace panel',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: 'role=tab[name="Trace"] >> nth=0', label: 'Trace' });
+      await page.getByTestId('tracePanel.filter').waitFor({ state: 'visible', timeout: 10_000 });
+    },
+  },
+  {
+    // Selecting a task brings its detail into the companion, so walking the rows shows each one's.
+    name: 'Select each task in turn',
+    run: async ({ demo, page }) => {
+      for (let index = 0; index < 4; index++) {
+        await demo.click({
+          selector: `${TASK_ROW} >> nth=${index} >> [data-testid="taskList.item.title"]`,
+          label: 'Task',
+        });
+        await page.waitForTimeout(1_000);
+      }
+    },
+  },
+  {
+    name: 'Return to the chat',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: COMPANION_TAB('Assistant'), label: 'Assistant' });
+      await page.getByTestId('assistant.chat-status').waitFor({ state: 'visible', timeout: 15_000 });
     },
   },
   {

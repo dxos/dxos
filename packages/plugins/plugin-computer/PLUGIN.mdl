@@ -124,9 +124,9 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       an empty folder (the autocue flow's first setup step restores all of this)
   steps:
     - name: Create a project from the Composer Plugin template
-      do: Click + on the space, choose Project, pick the "Composer Plugin" template and click Create.
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "Clock Plugin" and click Create.
       capture: project
-      expect: a "Composer Plugin" project opens
+      expect: a "Clock Plugin" project opens
     - name: Open the project's tasks
       do: Click the project's Tasks tab.
       expect: |
@@ -139,9 +139,21 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
         and its four subtasks
       note: Delegating a parent hands over its whole subtree (DelegateTaskToChat collects it), parent first.
     - name: Open the agent session
-      do: Open the plank's companion, pick its Assistant tab, and show the chat's tasks.
-      expect: the delegated chat is shown with its status line and its checklist of five tasks
+      do: Open the plank's companion and pick its Assistant tab.
+      expect: the companion shows the delegated chat, already working from its opening turn
+    - name: Show the chat's tasks, then hide them
+      do: Click the prompt's tasks toggle, leave the checklist open for a few seconds, then close it.
+      expect: the checklist lists the parent task and its four subtasks
       note: The checklist starts collapsed (it is the assistant's working state), so it is opened on purpose.
+    - name: Open the Trace panel
+      do: Click Trace in the right rail.
+      expect: the Trace panel opens pinned to its latest entries, which follow the agent's work
+    - name: Select each task in turn
+      do: Click each of the first four task rows in the project, a second apart.
+      expect: the companion follows the selection, showing each task's detail
+    - name: Return to the chat
+      do: Pick the companion's Assistant tab.
+      expect: the delegated chat is back, still working
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
       expect: all five tasks are done and the chat shows a "Load plugin" prompt naming Space Clock
@@ -169,7 +181,7 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
         navtree with its own; the guide now teaches a navtree group.
   after:
     - name: Delete the project
-      do: Right-click the "Composer Plugin" project in the navtree and choose Delete.
+      do: Right-click the "Clock Plugin" project in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
       expect: the project and its tasks leave the navtree
     - name: Uninstall Space Clock
