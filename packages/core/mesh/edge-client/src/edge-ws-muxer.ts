@@ -134,9 +134,12 @@ export class WebSocketMuxer {
   }
 
   /**
-   * Writes every frame of the message before returning, with no queue, timer or back-pressure: for a socket that takes
-   * frames at once and throws once closed, such as workerd's. Throws where {@link send} rejects, and on any message
-   * while `send` has messages queued, since its frames would cut into them.
+   * Writes every frame of the message before returning, with no queue, timer or back-pressure.
+   * Server only, such as the EDGE router on workerd: it holds the thread until the whole message is written, which a
+   * server can afford but a client cannot, since its UI and sync work wait behind it. Clients use {@link send}, which
+   * leaves the thread free and waits while the socket's buffer is full.
+   * Throws where {@link send} rejects, and on any message while `send` has messages queued, since its frames would cut
+   * into them.
    */
   public sendSync(message: Message): void {
     invariant(this._outMessageChunks.size === 0, 'sendSync would cut into messages send has queued.');
