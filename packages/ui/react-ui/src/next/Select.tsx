@@ -86,7 +86,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
       >
         <SelectPrimitive.ValueText placeholder={placeholder} />
         <SelectPrimitive.Indicator>
-          <Icon icon='ph--caret-down--regular' />
+          <Icon icon='ph--caret-up-down--regular' />
         </SelectPrimitive.Indicator>
       </SelectPrimitive.Trigger>
     );
