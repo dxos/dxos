@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 
 /**
@@ -19,7 +20,7 @@ import { rm } from 'node:fs/promises';
  *   moon run composer-app:bundle
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
- * Step 1 is off-camera prep and persists in the profile. It also clears the last take: the Space Clock
+ * Steps 1 and 2 are off-camera prep and persist in the profile. They also clear the last take: the Space Clock
  * plugin is uninstalled and its source and build folders are deleted, so the agent starts from nothing.
  */
 
@@ -65,14 +66,22 @@ const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
 
 export const steps = [
   {
-    // No `done`: every action here is idempotent, so a replay simply re-applies it.
-    name: 'Prep (off camera): clear the last take, enable Coding (Dev), pick the model, dismiss notices',
+    // Destructive, so replay-guarded: once the agent has written its source this take is under way, and a
+    // replay from a later step must not delete that work.
+    name: 'Prep (off camera): clear the last take',
     setup: true,
-    run: async ({ demo, page }) => {
+    done: () => existsSync(new URL(LEFTOVERS[0], import.meta.url)),
+    run: async () => {
       for (const folder of LEFTOVERS) {
         await rm(new URL(folder, import.meta.url), { recursive: true, force: true });
       }
-
+    },
+  },
+  {
+    // No `done`: every action here is idempotent, so a replay simply re-applies it.
+    name: 'Prep (off camera): enable Coding (Dev), pick the model, dismiss notices',
+    setup: true,
+    run: async ({ demo, page }) => {
       // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
       const notice = page.locator(
         '[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))',
@@ -110,8 +119,10 @@ export const steps = [
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
 
       // A plugin loaded in an earlier take persists in the profile, enabled (Enabled) or not (Labs, by
-      // its tag); uninstall it from its detail page.
-      for (const category of ['installed', 'labs']) {
+      // its tag); uninstall it from its detail page. Only before the agent has started: a replay after
+      // it has built must keep the plugin it offered.
+      const underway = existsSync(new URL(LEFTOVERS[0], import.meta.url));
+      for (const category of underway ? [] : ['installed', 'labs']) {
         const tab = page.getByTestId(`pluginRegistry.${category}`);
         if ((await tab.count()) === 0) {
           continue;
@@ -148,6 +159,8 @@ export const steps = [
   },
   {
     name: 'Create a project from the Composer Plugin template',
+    // A replay reloads the deck with its planks, so an open project means this take already created one.
+    done: async ({ page }) => (await page.getByTestId('projectsPlugin.tab.tasks').count()) > 0,
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
       await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.project"]', label: 'Project' });

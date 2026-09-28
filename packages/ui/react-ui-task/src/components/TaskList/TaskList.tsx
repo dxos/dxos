@@ -319,8 +319,10 @@ type TaskListViewportProps = ComposableProps<{
 }>;
 
 const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
-  ({ children, rows, ...props }, forwardedRef) => {
+  ({ children, rows: rowsProp, ...props }, forwardedRef) => {
     const { className, style, ...rest } = composableProps(props);
+    // Whole rows only: a fractional count would cut through the next row.
+    const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
     return (
       <Listbox.Viewport
         {...rest}

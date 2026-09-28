@@ -176,4 +176,11 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       do: Right-click the "Composer Plugin" project in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
       expect: the project and its tasks leave the navtree
+    - name: Uninstall Space Clock
+      do: Open Plugins, then Labs, open the Space Clock card's detail page and click Uninstall.
+      expect: Space Clock leaves the registry and its SPACE CLOCK group leaves the navtree
+    - name: Remove the build folders
+      do: Delete `temp/plugins/space-clock` and `out/composer/plugins/space-clock` under the Composer app.
+      expect: both folders are gone, restoring the `given` for the next run
+      note: The autocue flow's first setup step does this and the uninstall before each take.
 ```

@@ -266,7 +266,7 @@ export default defineConfig({
 });
 ```
 
-````json
+```json
 // tsconfig.json
 {
   "compilerOptions": {
@@ -280,7 +280,11 @@ export default defineConfig({
     "allowImportingTsExtensions": true,
     "types": []
   },
-  "include": ["src", "dx.conf```tsx
+  "include": ["src", "dx.config.ts"]
+}
+```
+
+```tsx
 // src/plugin.tsx
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -373,23 +377,18 @@ export default Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
-````
-
-n.make,
-);
-
-````
+```
 
 Typecheck, then build, from the plugin's directory:
 
 ```bash
 tsc -p tsconfig.json   # vite does not typecheck
 vite build             # writes dist/manifest.json and dist/index.mjs
-````
+```
 
 Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads,
-each space's navtree shows a HELLO group with a Hello page under it; selecting the page opens it. The version in the manifest comes from a
-`package.json` next to `dx.config.ts`, or `0.0.0` without one.
+each space's navtree shows a HELLO group with a Hello page under it; selecting the page opens it. The version
+in the manifest comes from a `package.json` next to `dx.config.ts`, or `0.0.0` without one.
 
 Things to know:
 
