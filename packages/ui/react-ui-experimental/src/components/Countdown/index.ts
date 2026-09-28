@@ -3,4 +3,4 @@
 //
 
 export * from './Countdown.tsx';
-export * from './film-leader.ts';
+export * from './play-countdown.ts';

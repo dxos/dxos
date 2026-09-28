@@ -62,24 +62,3 @@ export const Unattended: Story = {
     wait: false,
   },
 };
-
-export const WithReticle: Story = {
-  args: {
-    wait: false,
-    reticle: true,
-  },
-};
-
-export const WithoutSweep: Story = {
-  args: {
-    wait: false,
-    sweep: false,
-  },
-};
-
-export const Loop: Story = {
-  args: {
-    wait: false,
-    variant: 'loop',
-  },
-};

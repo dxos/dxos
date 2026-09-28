@@ -19,25 +19,48 @@ import { readFileSync } from 'node:fs';
 
 const HOST_ID = '__demo_overlay__';
 
-/** react-ui-experimental's film leader, the DOM half of its `Countdown` component, shared rather than copied. */
-const FILM_LEADER = new URL(
-  '../../../../packages/ui/react-ui-experimental/src/components/Countdown/film-leader.ts',
+/** react-ui-experimental's countdown, the DOM half of its `Countdown` component, shared rather than copied. */
+const COUNTDOWN = new URL(
+  '../../../../packages/ui/react-ui-experimental/src/components/Countdown/play-countdown.ts',
   import.meta.url,
 );
 
+/** `@dxos/brand`'s Composer mark as markup, drawn inside the ring; React-free, so it renders in Node. */
+const COMPOSER_LOGO = new URL(
+  '../../../../packages/ui/brand/src/components/experimental/composer-logo.ts',
+  import.meta.url,
+);
+
+let composerLogo;
+const loadComposerLogo = async () => {
+  if (!composerLogo) {
+    const { build } = await import('esbuild');
+    const { outputFiles } = await build({
+      entryPoints: [COMPOSER_LOGO.pathname],
+      bundle: true,
+      format: 'esm',
+      platform: 'neutral',
+      write: false,
+    });
+    const module = await import(`data:text/javascript;base64,${Buffer.from(outputFiles[0].text).toString('base64')}`);
+    composerLogo = module.composerLogoSvg();
+  }
+  return composerLogo;
+};
+
 /** Transpiled once, on first use: esbuild is the repo's own, and the module has no imports to resolve. */
-let filmLeader;
-const loadFilmLeader = async () => {
-  if (!filmLeader) {
+let countdownCode;
+const loadCountdown = async () => {
+  if (!countdownCode) {
     const { transform } = await import('esbuild');
-    const { code } = await transform(readFileSync(FILM_LEADER, 'utf8'), {
+    const { code } = await transform(readFileSync(COUNTDOWN, 'utf8'), {
       loader: 'ts',
       format: 'iife',
-      globalName: '__filmLeader',
+      globalName: '__countdown',
     });
-    filmLeader = code;
+    countdownCode = code;
   }
-  return filmLeader;
+  return countdownCode;
 };
 
 /**
@@ -133,8 +156,8 @@ const install = ({ hostId, feedMs, position, feed: showFeed }) => {
     };
 
     window.__demoOverlay = {
-      // The leader is react-ui-experimental's `Countdown`, injected as `window.__filmLeader` (see below).
-      countdown: (options) => window.__filmLeader.playFilmLeader(root, options),
+      // react-ui-experimental's `Countdown`, injected as `window.__countdown` (see below).
+      countdown: (options) => window.__countdown.playCountdown(root, options),
       moveCursor,
       // `composer.invoke` is assigned by an effect after `composer` exists, so a caller about to invoke
       // re-wraps in its own page task rather than trusting the last install.
@@ -264,11 +287,13 @@ export const createOverlay = (page, { enabled, feed = true, feedMs = 3_500, posi
     click: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.click(x, y), point)),
     moveCursor: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.moveCursor(x, y), point)),
     countdown: async (options) => {
-      const code = await loadFilmLeader();
+      const code = await loadCountdown();
+      // The ring carries the Composer mark, as `Countdown` does in React.
+      options = { ...options, logo: options?.logo ?? (await loadComposerLogo()) };
       return safely(async () => {
-        // An IIFE assigning `var __filmLeader`, run as a script through the protocol rather than `eval`,
+        // An IIFE assigning `var __countdown`, run as a script through the protocol rather than `eval`,
         // so an app's content security policy cannot refuse it.
-        if (!(await page.evaluate(() => Boolean(window.__filmLeader)))) {
+        if (!(await page.evaluate(() => Boolean(window.__countdown)))) {
           await page.evaluate(code);
         }
         await page.evaluate((args) => window.__demoOverlay.countdown(args), options);

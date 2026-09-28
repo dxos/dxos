@@ -751,7 +751,7 @@ const handlers = {
     next: flow.next + 1,
     ...(flow.result ? { result: flow.result } : {}),
   }),
-  /** A play button and a 3-2-1 leader; `wait` (default in manual mode) holds until the button is clicked. */
+  /** A start ring, then a 3-2-1 as it unwinds; `wait` (default in manual mode) holds until the button is clicked. */
   countdown: async (command) => {
     await overlay.countdown({ from: command.from ?? 3, wait: command.wait ?? manual });
     return {};

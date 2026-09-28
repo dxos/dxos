@@ -15,7 +15,7 @@ description: >-
 
 **"Cue" is the verb.** "Cue the projects demo" means: find the committed flow whose name or doc comment
 matches, serve the app its `@app` line names, and list its steps. Cueing never opens the browser or runs.
-"Go" then does all the off-camera prep and replies `ready` once the play button is up; the play button
+"Go" then does all the off-camera prep and replies `ready` once the start ring is up; clicking it
 runs the take to the end (see "The protocol").
 
 The agent drives the real app one gesture at a time and the session is recorded. Three things make
@@ -131,12 +131,13 @@ C '{"op":"abort"}'                                 # stops the run now, mid-step
 ### Setup steps and the countdown
 
 Mark off-camera preparation with `setup: true` (enabling a plugin, picking a model). When `run` reaches the
-first step after the setup ones it plays a countdown in the page: a play button, then a 3-2-1 film leader.
-In manual mode the button waits for a click, so the user starts their recorder, clicks play, and the take
-begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays it without the click, and the
-`countdown` op plays one on demand. The leader is react-ui-experimental's `Countdown` (story
-`ui/react-ui-experimental/Countdown`): its DOM half, `film-leader.ts`, has no imports, and the overlay
-transpiles and injects that same file rather than keeping a copy, so change the look there.
+first step after the setup ones it plays a countdown in the page: a closed ring with a play triangle, then a
+3-2-1 inside the ring as it unwinds. In manual mode the ring waits for a click, so the user starts their
+recorder, clicks it, and the take begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays
+it without the click, and the `countdown` op plays one on demand. It is react-ui-experimental's `Countdown`
+(story `ui/react-ui-experimental/Countdown`): its DOM half, `play-countdown.ts`, has no imports, and the overlay
+transpiles and injects that same file rather than keeping a copy, so change the look there. The Composer mark
+inside the ring is rendered from `@dxos/brand`.
 
 ### Browser logs
 
