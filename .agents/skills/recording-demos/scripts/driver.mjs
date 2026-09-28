@@ -23,13 +23,15 @@
  *
  * `--mode manual` is for a session a person records themselves: a headed window, no recorder, the
  * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
- * and `stop` leaves the browser open. The driver exits when that window is closed.
+ * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
+ * a persistent profile (`--profile`, default `~/.local/state/dxos/recording-demos/profile`).
  */
 
 import { chromium } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { homedir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
@@ -61,6 +63,9 @@ const parseArgs = () => {
     'settle': 5_000,
     'feed': 'top-right',
     'mode': 'record',
+    // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
+    // so the user's recording starts in a prepared app instead of onboarding.
+    'profile': path.join(homedir(), '.local/state/dxos/recording-demos/profile'),
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -100,7 +105,7 @@ if (!manual && !hires) {
 }
 const scale = hires ? options.scale : 1;
 
-const browser = await chromium.launch({
+const launchOptions = {
   headless: !manual,
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
@@ -119,18 +124,26 @@ const browser = await chromium.launch({
     // the "2x" video was 1x frames upscaled; forcing the scale browser-wide makes the frames real 2x.
     ...(scale !== 1 ? [`--force-device-scale-factor=${scale}`] : []),
   ],
-});
+};
 
-const context = await browser.newContext(
-  manual
-    ? { viewport: null }
-    : {
-        viewport,
-        deviceScaleFactor: scale,
-        recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-      },
-);
-const page = await context.newPage();
+// A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
+const browser = manual ? undefined : await chromium.launch(launchOptions);
+const context = manual
+  ? await chromium.launchPersistentContext(options.profile, { ...launchOptions, viewport: null }).catch((error) => {
+      // Chromium locks a profile to one process; the usual cause is the previous session's window.
+      if (/already in use/.test(error.message)) {
+        console.error(`profile ${options.profile} is in use: close the open demo window, or pass --profile`);
+        process.exit(1);
+      }
+      throw error;
+    })
+  : await browser.newContext({
+      viewport,
+      deviceScaleFactor: scale,
+      recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+    });
+// A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
+const page = context.pages()[0] ?? (await context.newPage());
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
   feed: options.pills !== 'off',
@@ -139,8 +152,8 @@ const overlay = createOverlay(page, {
 
 if (manual) {
   // The window is the person's now; closing it is how they end the session.
-  page.on('close', () => browser.close().finally(() => process.exit(0)));
-  browser.on('disconnected', () => process.exit(0));
+  page.on('close', () => context.close().finally(() => process.exit(0)));
+  context.on('close', () => process.exit(0));
 }
 
 const recorder = hires

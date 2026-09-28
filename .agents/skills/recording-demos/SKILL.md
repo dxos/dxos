@@ -52,7 +52,7 @@ node .agents/skills/recording-demos/scripts/driver.mjs --mode manual \
   --port 7333 --url http://localhost:4173 --out /tmp/demo
 ```
 
-Run it in the background. `--mode manual` changes the driver in four ways:
+Run it in the background. `--mode manual` changes the driver in five ways:
 
 - **Headed window, no recorder.** The browser opens in the foreground at `--width`×`--height`, and
   the page follows the window, so the user can resize it for their capture. Nothing is encoded, the
@@ -62,6 +62,13 @@ Run it in the background. `--mode manual` changes the driver in four ways:
   the product. `--pills on` or `--captions on` brings either back when the user asks.
 - **`stop` leaves the browser open.** It answers `ok` and the driver keeps serving. Closing the
   window ends the driver. Never close the browser yourself in this mode unless the user asks.
+- **The browser profile persists.** Every manual session opens the same Chromium profile,
+  `~/.local/state/dxos/recording-demos/profile` by default (`--profile <dir>` for another). The
+  app's identity, its spaces, and any first-run UI already dismissed carry over, so setup done in
+  one session is not redone on camera in the next. Chromium allows one process per profile. If the
+  driver exits with `profile … is in use`, the last session's window is still open: close it, or
+  keep using it if its driver is still serving. A clean slate means a new `--profile` directory.
+  Never delete the default one without asking, since it holds the user's prepared state.
 - **A local display is required.** The cloud sandbox has none, so this is for a session on the
   user's machine.
 
