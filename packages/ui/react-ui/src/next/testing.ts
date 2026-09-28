@@ -100,6 +100,12 @@ export const expectArrow = async (anchor: HTMLElement, popup: HTMLElement) => {
   });
 };
 
+/** Hovers with a real pointer (the storybook runner's Playwright), since synthetic events never apply `:hover`. */
+export const realHover = async (element: HTMLElement) => {
+  const { userEvent } = await import('@vitest/browser/context');
+  await userEvent.hover(element);
+};
+
 /** Every themed part carries Ark's scope/part attributes (decision 10). */
 export const expectScoped = async (root: HTMLElement) => {
   for (const part of root.querySelectorAll('[class*="nx-"]:not(.nx-scope)')) {

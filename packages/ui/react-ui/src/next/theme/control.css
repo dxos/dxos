@@ -76,12 +76,61 @@
   .nx-button:hover:not(:disabled) {
     background: var(--color-hover-surface);
   }
+  /* Variants map the current Button's (ui-theme `button.css`) onto the same color tokens. */
   .nx-button[data-variant='primary'] {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
   .nx-button[data-variant='primary']:hover:not(:disabled) {
     background: var(--color-accent-bg-hover, var(--color-accent-bg));
+  }
+  .nx-button[data-variant='ghost'] {
+    background: transparent;
+  }
+  /*
+   * A border, not an inset shadow, so the focus ring (an inset shadow) still shows over it; the separator rather than
+   * the current Button's `--color-base-surface`, which vanishes on a base surface.
+   */
+  .nx-button[data-variant='outline'] {
+    border: 1px solid var(--color-separator);
+    background: transparent;
+  }
+  .nx-button[data-variant='destructive'] {
+    background: var(--color-error-bg);
+    color: var(--color-accent-fg);
+  }
+  .nx-button[data-variant='destructive']:hover:not(:disabled) {
+    background: var(--color-error-bg-hover);
+  }
+  /* Without `data-valence` it adopts an enclosing valence surface's colours (e.g. a Banner), else neutral. */
+  .nx-button[data-variant='valence'] {
+    --nx-valence-bg: var(--dx-valence-bg, var(--color-neutral-bg));
+    --nx-valence-bg-hover: var(--dx-valence-bg-hover, var(--color-neutral-bg-hover));
+    background: var(--nx-valence-bg);
+    color: var(--color-inverse-fg);
+  }
+  .nx-button[data-variant='valence']:hover:not(:disabled) {
+    background: var(--nx-valence-bg-hover);
+  }
+  .nx-button[data-valence='neutral'] {
+    --nx-valence-bg: var(--color-neutral-bg);
+    --nx-valence-bg-hover: var(--color-neutral-bg-hover);
+  }
+  .nx-button[data-valence='info'] {
+    --nx-valence-bg: var(--color-info-bg);
+    --nx-valence-bg-hover: var(--color-info-bg-hover);
+  }
+  .nx-button[data-valence='success'] {
+    --nx-valence-bg: var(--color-success-bg);
+    --nx-valence-bg-hover: var(--color-success-bg-hover);
+  }
+  .nx-button[data-valence='warning'] {
+    --nx-valence-bg: var(--color-warning-bg);
+    --nx-valence-bg-hover: var(--color-warning-bg-hover);
+  }
+  .nx-button[data-valence='error'] {
+    --nx-valence-bg: var(--color-error-bg);
+    --nx-valence-bg-hover: var(--color-error-bg-hover);
   }
   .nx-button:disabled {
     opacity: 0.5;

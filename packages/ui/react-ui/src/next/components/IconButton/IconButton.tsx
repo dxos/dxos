@@ -6,20 +6,25 @@ import React, { type ButtonHTMLAttributes } from 'react';
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
+import { type ButtonVariantProps } from '../Button/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 import { Tooltip } from '../Tooltip/index.ts';
 
-export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> & {
-  icon: string;
-  /** Required: an icon-only button has no other accessible name; also shown in a Tooltip. */
-  label: string;
-  /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
-  showTooltip?: boolean;
-};
+export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> &
+  ButtonVariantProps & {
+    icon: string;
+    /** Required: an icon-only button has no other accessible name; also shown in a Tooltip. */
+    label: string;
+    /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
+    showTooltip?: boolean;
+  };
 
 export const IconButton = composable<HTMLButtonElement, IconButtonProps>(
-  ({ icon, label, showTooltip = true, type = 'button', id, onFocus, ...props }, forwardedRef) => {
+  (
+    { icon, label, showTooltip = true, type = 'button', variant = 'default', valence, id, onFocus, ...props },
+    forwardedRef,
+  ) => {
     const toolbarItem = useToolbarItem(props.disabled);
     const { className, ...rest } = composableProps(props, { classNames: recipes.button() });
     const button = (
@@ -36,6 +41,8 @@ export const IconButton = composable<HTMLButtonElement, IconButtonProps>(
         data-scope='icon-button'
         data-part='root'
         data-square=''
+        data-variant={variant}
+        data-valence={variant === 'valence' ? valence : undefined}
         className={className}
         ref={forwardedRef}
       >

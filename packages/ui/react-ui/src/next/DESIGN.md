@@ -246,6 +246,22 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     opening and runs the Root's `openDelay` from `pointerenter`; `pointerdown` cancels it and closes, and the trigger
     stays suppressed until the pointer leaves; a focus that is not `:focus-visible` never opens. The follow-up 20
     blur deferral is unchanged. Covered by IconButton `ClickNoTooltip`.
+34. **Button variants and valences** follow the current Button (ui-theme `button.css`) on the same tokens, as
+    `data-variant`/`data-valence` rules in `theme/control.css`, for `Button`, `IconButton` and so `ToggleIconButton`:
+
+    | Variant       | Rest                                          | Hover                        |
+    | ------------- | --------------------------------------------- | ---------------------------- |
+    | `default`     | `--color-input-surface`                       | `--color-hover-surface`      |
+    | `primary`     | `--color-accent-bg` / `--color-accent-fg`     | `--color-accent-bg-hover`    |
+    | `ghost`       | transparent                                   | `--color-hover-surface`      |
+    | `outline`     | transparent, 1px `--color-separator` border   | `--color-hover-surface`      |
+    | `destructive` | `--color-error-bg` / `--color-accent-fg`      | `--color-error-bg-hover`     |
+    | `valence`     | `--color-<valence>-bg` / `--color-inverse-fg` | `--color-<valence>-bg-hover` |
+
+    `valence` is `neutral | info | success | warning | error` (ui-types `MessageValence`); without it the button
+    adopts an enclosing surface's `--dx-valence-bg`/`-bg-hover` (a Banner), else neutral. Outline uses the separator
+    rather than the current `--color-base-surface`, which vanishes on a base surface. The current `tag` variant is
+    left to `Next.Tag`. Pressed ToggleIconButtons keep the accent over any variant.
 
 ## Phase 3: react-ui-form port
 

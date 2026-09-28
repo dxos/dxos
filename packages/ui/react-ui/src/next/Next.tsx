@@ -7,6 +7,8 @@ import {
   type BlockProps as NextBlockProps,
   Button as NextButton,
   type ButtonProps as NextButtonProps,
+  type ButtonValence as NextButtonValence,
+  type ButtonVariant as NextButtonVariant,
   Card as NextCard,
   Checkbox as NextCheckbox,
   type CheckboxProps as NextCheckboxProps,
@@ -78,6 +80,8 @@ export namespace Next {
   export type InputProps = NextInputProps;
   export const Button = NextButton;
   export type ButtonProps = NextButtonProps;
+  export type ButtonVariant = NextButtonVariant;
+  export type ButtonValence = NextButtonValence;
   export const IconButton = NextIconButton;
   export type IconButtonProps = NextIconButtonProps;
   export const Field = NextField;

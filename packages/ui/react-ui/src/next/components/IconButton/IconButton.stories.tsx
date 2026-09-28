@@ -20,35 +20,82 @@ import {
   expectNoTooltip,
   expectScoped,
   expectTooltip,
+  realHover,
 } from '../../testing.ts';
 
-/** Each toolbar sits over a row with a rail Block, so the first button's icon can be compared with the rail's. */
-const DefaultStory = () => (
-  <div className='nx-scope @container flex flex-col gap-2 w-[28rem]' data-size='md'>
-    {SIZES.map((size) => (
-      <div key={size} className='flex flex-col border border-separator'>
-        <Next.Toolbar size={size} data-testid={`toolbar-${size}`}>
-          <Next.IconButton icon='ph--plus--regular' label={`Add ${size}`} data-testid={`add-${size}`} />
-          <Next.IconButton icon='ph--minus--regular' label={`Remove ${size}`} data-testid={`remove-${size}`} />
-          <Next.IconButton icon='ph--trash--regular' label={`Delete ${size}`} disabled />
-        </Next.Toolbar>
-        <Next.Container size={size} gutter='rail' layout='row'>
-          <Next.Block rail='start' data-testid={`rail-${size}`}>
-            <Next.Icon icon='ph--circle--regular' />
-          </Next.Block>
-          <Next.Typography>Row {size}</Next.Typography>
-        </Next.Container>
-      </div>
-    ))}
+const VARIANTS: { name: string; variant: Next.ButtonVariant; valence?: Next.ButtonValence }[] = [
+  { name: 'default', variant: 'default' },
+  { name: 'primary', variant: 'primary' },
+  { name: 'ghost', variant: 'ghost' },
+  { name: 'outline', variant: 'outline' },
+  { name: 'destructive', variant: 'destructive' },
+  { name: 'valence', variant: 'valence' },
+  ...(['neutral', 'info', 'success', 'warning', 'error'] as const).map((valence) => ({
+    name: `valence-${valence}`,
+    variant: 'valence' as const,
+    valence,
+  })),
+];
+
+type StoryArgs = {
+  /** Show every variant at md, then one at every size. */
+  variants?: boolean;
+};
+
+const VariantsStory = () => (
+  <div className='nx-scope flex flex-col gap-2' data-size='md'>
+    <Next.Toolbar>
+      {VARIANTS.map(({ name, variant, valence }) => (
+        <Next.IconButton
+          key={name}
+          icon='ph--star--regular'
+          label={name}
+          variant={variant}
+          valence={valence}
+          data-testid={`variant-${name}`}
+        />
+      ))}
+    </Next.Toolbar>
+    <div className='flex items-center'>
+      {SIZES.map((size) => (
+        <div key={size} className='nx-scope flex' data-size={size}>
+          <Next.IconButton icon='ph--star--regular' label={size} variant='primary' data-testid={`size-${size}`} />
+        </div>
+      ))}
+    </div>
   </div>
 );
+
+/** Each toolbar sits over a row with a rail Block, so the first button's icon can be compared with the rail's. */
+const DefaultStory = ({ variants }: StoryArgs) =>
+  variants ? (
+    <VariantsStory />
+  ) : (
+    <div className='nx-scope @container flex flex-col gap-2 w-[28rem]' data-size='md'>
+      {SIZES.map((size) => (
+        <div key={size} className='flex flex-col border border-separator'>
+          <Next.Toolbar size={size} data-testid={`toolbar-${size}`}>
+            <Next.IconButton icon='ph--plus--regular' label={`Add ${size}`} data-testid={`add-${size}`} />
+            <Next.IconButton icon='ph--minus--regular' label={`Remove ${size}`} data-testid={`remove-${size}`} />
+            <Next.IconButton icon='ph--trash--regular' label={`Delete ${size}`} disabled />
+          </Next.Toolbar>
+          <Next.Container size={size} gutter='rail' layout='row'>
+            <Next.Block rail='start' data-testid={`rail-${size}`}>
+              <Next.Icon icon='ph--circle--regular' />
+            </Next.Block>
+            <Next.Typography>Row {size}</Next.Typography>
+          </Next.Container>
+        </div>
+      ))}
+    </div>
+  );
 
 const meta = {
   title: 'ui/react-ui-core/next/components/icon-button',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
@@ -147,5 +194,28 @@ export const ClickNoTooltip: Story = {
     const next = byTestId(canvasElement, 'add-lg');
     await expect(next).toHaveFocus();
     await expectTooltip(next, 'Add lg');
+  },
+};
+
+/** Every Button variant applies to an icon button too, each distinct from the default and with a hover state. */
+export const Variants: Story = {
+  args: { variants: true },
+  play: async ({ canvasElement }) => {
+    const style = (name: string) => getComputedStyle(byTestId(canvasElement, `variant-${name}`));
+    const base = style('default').backgroundColor;
+    for (const { name } of VARIANTS.slice(1)) {
+      await expect(style(name).backgroundColor, `${name} background`).not.toBe(base);
+    }
+    for (const size of SIZES) {
+      const rect = byTestId(canvasElement, `size-${size}`).getBoundingClientRect();
+      await expect(rect.height, size).toBeCloseTo(controlSize(size), 0);
+      await expect(rect.width, size).toBeCloseTo(controlSize(size), 0);
+    }
+    for (const { name } of VARIANTS) {
+      const button = byTestId(canvasElement, `variant-${name}`);
+      const rest = getComputedStyle(button).backgroundColor;
+      await realHover(button);
+      await expect(getComputedStyle(button).backgroundColor, `${name} hover`).not.toBe(rest);
+    }
   },
 };
