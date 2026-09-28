@@ -11,7 +11,7 @@ import { safeFetchBytes, validateExternalUrl } from '@dxos/util';
 
 import { FileLimits, FileOperation } from '#types';
 
-import { FileReadError, FileTooLargeError, UnsupportedFileTypeError, resolveActiveStorage } from './create.ts';
+import { FileReadError, FileTooLargeError, resolveActiveStorage } from './create.ts';
 
 /**
  * Cap on the `base64` arm. Far below the storage limits on purpose: the payload arrives as a
@@ -76,9 +76,6 @@ const resolveSource = (source: typeof FileOperation.FileSource.Type) =>
           try: () => safeFetchBytes(url, { maxBytes: MAX_FETCHED_BYTES, timeoutMs: FETCH_TIMEOUT_MS }),
           catch: FileReadError.wrap(),
         });
-        if (!downloaded.contentType) {
-          return yield* Effect.fail(new UnsupportedFileTypeError('(none declared)'));
-        }
         return { bytes: downloaded.bytes, type: downloaded.contentType };
       }
     }
@@ -87,10 +84,8 @@ const resolveSource = (source: typeof FileOperation.FileSource.Type) =>
 const handler: Operation.WithHandler<typeof FileOperation.CreateFromSource> = FileOperation.CreateFromSource.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ source, name }) {
-      const { bytes, type } = yield* resolveSource(source);
-      if (!FileLimits.isAcceptedMimeType(type)) {
-        return yield* Effect.fail(new UnsupportedFileTypeError(type));
-      }
+      const { bytes, type: declaredType } = yield* resolveSource(source);
+      const type = FileLimits.toStoredMimeType(declaredType);
 
       // Shared with the UI path, so the two cannot diverge on which backend an upload lands in.
       const storage = yield* resolveActiveStorage;
