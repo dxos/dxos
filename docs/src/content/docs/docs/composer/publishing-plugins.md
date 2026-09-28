@@ -415,8 +415,8 @@ Things to know:
 
 ### Example: data, a form and another plugin's surface
 
-The same plugin grows three things: an ECHO type stored in the space, a form that edits it, and a map drawn by
-another plugin. Only the differences from the example above are shown.
+The same plugin grows an ECHO type stored in the space, a form that edits it, and a map drawn by another plugin
+that follows what the reader selects. The rest of the plugin (navtree group, page, surface) is as above.
 
 Depend on the plugin whose surface you render; enabling yours then enables it too:
 
@@ -433,34 +433,17 @@ export default Config2.make({
 });
 ```
 
-Define the type and register it, so the space can store it:
+Register the type in the pipe, before the other modules, so the space can store it:
 
 ```tsx
-import * as Schema from 'effect/Schema';
-
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
-
-export class Clock extends Type.makeObject<Clock>(DXN.make('org.example.type.worldClock', '0.1.0'))(
-  Schema.Struct({ timezones: Schema.optional(Schema.Array(Schema.String)) }),
-) {}
-
-// In the pipe, before the other modules:
 Plugin.addModule(AppCapability.schema([Clock])),
 ```
 
 A page that needs the space carries it in the node's `data`, and the surface narrows on it:
 
 ```tsx
-type Page = { type: typeof PAGE; space: { db: Database.Database } };
-const isPage = (data: unknown): data is Page =>
-  typeof data === 'object' && data !== null && 'type' in data && data.type === PAGE;
-
-// The page node:
 AppGraphNode.make({ id: PAGE, type: `${meta.profile.key}.page`, data: { type: PAGE, space }, properties: { ... } });
 
-// The surface:
 Surface.create({
   id: 'worldClockArticle',
   filter: AppSurface.subject(AppSurface.Article, isPage),
@@ -469,80 +452,75 @@ Surface.create({
 });
 ```
 
-Query the type, subscribe to the fields you render with `useObject`, and change the object with `Obj.update`:
+Things to know:
+
+- `useQuery` re-renders when the set of objects changes, not when a field of one changes; subscribe to the fields
+  you render with `useObject`, or an update is saved but never shown.
+- Create the object on the first change, not in an effect on first view: the query is empty until it has loaded,
+  so an effect that creates when it finds nothing creates a duplicate on every visit.
+- A form is a schema; a `Schema.Literals` field renders as a select.
+- Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws
+  the world with `markers` on it, flat (`view: 'map'`) or as a globe the reader can toggle to. Give it the object
+  as `subject`: the marker whose id is selected under that object's URI is highlighted, and the globe turns to it.
+- Select with `LayoutOperation.Select` (context id: the object's URI), and read the selection with
+  `useSelection`, so the map and your own view agree on what is selected.
+- `timezones` from `@dxos/react-ui-geo/data` gives each IANA zone its principal city's position.
+- Give the map a sized box: it fills its parent, so a parent with no height draws nothing.
+
+The imports and the article, put together. Every card has one fixed size, so opening the form moves nothing; the
+map fills the page above the row of clocks, which scrolls sideways in a thin scroll area:
 
 ```tsx
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import React, { useEffect, useState } from 'react';
+
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-
-const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
-  const [clock] = useQuery(db, Filter.type(Clock));
-  const [stored] = useObject(clock, 'timezones');
-  const timezones = stored ?? [localZone()];
-  const save = (next: string[]) => {
-    if (clock) {
-      Obj.update(clock, (clock) => {
-        clock.timezones = next;
-      });
-    } else {
-      db?.add(Obj.make(Clock, { timezones: next }));
-    }
-  };
-  const add = (timezone: string) =>
-    !timezones.includes(timezone) && save([...timezones, timezone]);
-  const remove = (timezone: string) =>
-    save(timezones.filter((zone) => zone !== timezone));
-  // ...
-};
-```
-
-- `useQuery` re-renders when the set of objects changes, not when a field of one changes; without `useObject`
-  an update is saved but the view never shows it.
-- Create the object on the first change, not in an effect on first view: the query is empty until it has
-  loaded, so an effect that creates when it finds nothing creates a duplicate on every visit.
-- A list rendered with its values as React keys must not hold the same value twice.
-
-A form is a schema; a `Schema.Literals` field renders as a select:
-
-```tsx
+import { IconButton, ScrollArea } from '@dxos/react-ui';
+import { useSelection } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-
-const schema = Schema.Struct({
-  timezone: Schema.Literals(Intl.supportedValuesOf('timeZone')).annotate({
-    title: 'Timezone',
-  }),
-});
-
-<Form.Root schema={schema} onSave={({ timezone }) => add(timezone)}>
-  <Form.Content>
-    <Form.Fields />
-    <Form.Actions />
-  </Form.Content>
-</Form.Root>;
-```
-
-Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws a
-plain world map: `projection` picks the projection (`equirectangular`, `mercator`, `transverse-mercator` or
-`orthographic`), and `fit` places the whole world inside the surface (`contain`) or fills it (`cover`), as
-`object-fit` does for an image:
-
-```tsx
+import { timezones } from '@dxos/react-ui-geo/data';
 import * as MapRole from '@dxos/plugin-map/MapRole';
 
-<Surface.Surface
-  type={MapRole.World}
-  data={{ projection: 'equirectangular', fit: 'contain' }}
-  limit={1}
-/>;
-```
+// The type: one Clock per space, holding its clocks, each a timezone and where it is on the map.
+const Location = Schema.Struct({ lat: Schema.Number, lng: Schema.Number });
+const ClockEntry = Schema.Struct({
+  timezone: Schema.String,
+  location: Schema.optional(Location),
+});
+type ClockEntry = Schema.Schema.Type<typeof ClockEntry>;
 
-Give the surface a sized container: the map fills its parent, so a parent with no height draws nothing.
+export class Clock extends Type.makeObject<Clock>(
+  DXN.make('org.example.type.worldClock', '0.2.0'),
+)(Schema.Struct({ clocks: Schema.optional(Schema.Array(ClockEntry)) })) {}
 
-Put together, the article and its cards. Every card has one fixed size, so opening the form moves nothing, and
-the map sits in a 2:1 box so it fills the width with the whole world:
+type Page = { type: typeof PAGE; space: { db: Database.Database } };
+const isPage = (data: unknown): data is Page =>
+  typeof data === 'object' &&
+  data !== null &&
+  'type' in data &&
+  data.type === PAGE;
 
-```tsx
+// A timezone's position is its principal city, from the tz database; a zone it does not list has no pin.
+const makeEntry = (timezone: string): ClockEntry => ({
+  timezone,
+  location: timezones[timezone],
+});
+
 const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const useNow = () => {
@@ -577,16 +555,43 @@ const TIME: Intl.DateTimeFormatOptions = {
   second: '2-digit',
 };
 
+type ClockCardProps = {
+  timeZone: string;
+  now: Date;
+  selected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+};
+
 const ClockCard = ({
   timeZone,
   now,
+  selected,
+  onSelect,
   onDelete,
-}: {
-  timeZone: string;
-  now: Date;
-  onDelete: () => void;
-}) => (
-  <div data-testid='worldClock.clock' style={CARD}>
+}: ClockCardProps) => (
+  <div
+    data-testid='worldClock.clock'
+    aria-selected={selected}
+    style={{
+      ...CARD,
+      cursor: 'pointer',
+      ...(selected && { borderColor: 'rgb(14, 165, 233)' }),
+    }}
+    // A focusable button so the keyboard can select a clock as the pointer does.
+    role='button'
+    tabIndex={0}
+    onClick={onSelect}
+    onKeyDown={(event) => {
+      if (
+        event.target === event.currentTarget &&
+        (event.key === 'Enter' || event.key === ' ')
+      ) {
+        event.preventDefault();
+        onSelect();
+      }
+    }}
+  >
     <div style={{ opacity: 0.7 }}>
       {now.toLocaleDateString(undefined, { timeZone, dateStyle: 'medium' })}
     </div>
@@ -602,14 +607,18 @@ const ClockCard = ({
         icon='ph--x--regular'
         iconOnly
         label='Delete clock'
-        onClick={onDelete}
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete();
+        }}
       />
     </div>
   </div>
 );
 
+// The choices are the zones with a known position, so every clock added gets a pin.
 const TimezoneForm = Schema.Struct({
-  timezone: Schema.Literals(Intl.supportedValuesOf('timeZone')).annotate({
+  timezone: Schema.Literals(Object.keys(timezones)).annotate({
     title: 'Timezone',
   }),
 });
@@ -656,45 +665,82 @@ const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
 
 const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
   const now = useNow();
+  const { invokePromise } = useOperationInvoker();
   const [clock] = useQuery(db, Filter.type(Clock));
   // `useQuery` re-renders when the set of objects changes; `useObject` is what re-renders on a field change.
-  const [stored] = useObject(clock, 'timezones');
-  const timezones = stored ?? [localZone()];
+  const [stored] = useObject(clock, 'clocks');
+  const clocks = stored ?? [makeEntry(localZone())];
+  // The selection lives in the view state under the clock's URI, where the map surface reads it.
+  const contextId = clock ? Obj.getURI(clock) : undefined;
+  const selected = useSelection(contextId, 'single');
+  const select = (timezone: string) =>
+    contextId &&
+    void invokePromise(LayoutOperation.Select, {
+      contextId,
+      subject: { mode: 'single', id: timezone },
+    });
+
   // Created on the first change rather than on first view: the query is empty until it has loaded.
-  const save = (next: string[]) => {
+  const save = (next: ClockEntry[]) => {
     if (clock) {
       Obj.update(clock, (clock) => {
-        clock.timezones = next;
+        clock.clocks = next;
       });
     } else {
-      db?.add(Obj.make(Clock, { timezones: next }));
+      db?.add(Obj.make(Clock, { clocks: next }));
     }
   };
-  const add = (timeZone: string) =>
-    !timezones.includes(timeZone) && save([...timezones, timeZone]);
-  const remove = (timeZone: string) =>
-    save(timezones.filter((zone) => zone !== timeZone));
+  const add = (timezone: string) =>
+    !clocks.some((entry) => entry.timezone === timezone) &&
+    save([...clocks, makeEntry(timezone)]);
+  const remove = (timezone: string) =>
+    save(clocks.filter((entry) => entry.timezone !== timezone));
+
+  // West to east, so the row reads left to right like the map; a clock with no position goes last.
+  const sorted = [...clocks].sort(
+    (left, right) =>
+      (left.location?.lng ?? Number.POSITIVE_INFINITY) -
+      (right.location?.lng ?? Number.POSITIVE_INFINITY),
+  );
+
+  const markers = clocks.flatMap(({ timezone, location }) =>
+    location ? [{ id: timezone, title: timezone, location }] : [],
+  );
+
   return (
-    <div style={{ height: '100%', overflowY: 'auto' }}>
-      {/* The world is twice as wide as it is tall, so a 2:1 box fills the width with the whole map. */}
-      <div style={{ width: '100%', aspectRatio: '2 / 1' }}>
+    // The map fills the page above the row of clocks, which scrolls sideways when it outgrows the width.
+    // A grid rather than a flex column: the scroll area expands to fill whatever cell it is in.
+    <div
+      style={{
+        height: '100%',
+        display: 'grid',
+        gridTemplateRows: 'minmax(0, 1fr) min-content',
+      }}
+    >
+      <div style={{ minHeight: 0 }}>
         <Surface.Surface
           type={MapRole.World}
-          data={{ projection: 'equirectangular', fit: 'contain' }}
+          data={{ markers, subject: clock, view: 'map' }}
           limit={1}
         />
       </div>
-      <div style={{ display: 'flex', gap: 16, padding: 16, overflowX: 'auto' }}>
-        {timezones.map((timeZone) => (
-          <ClockCard
-            key={timeZone}
-            timeZone={timeZone}
-            now={now}
-            onDelete={() => remove(timeZone)}
-          />
-        ))}
-        <AddClock onAdd={add} />
-      </div>
+      <ScrollArea.Root orientation='horizontal' thin>
+        <ScrollArea.Viewport>
+          <div style={{ display: 'flex', gap: 16, padding: 16 }}>
+            {sorted.map(({ timezone }) => (
+              <ClockCard
+                key={timezone}
+                timeZone={timezone}
+                now={now}
+                selected={timezone === selected}
+                onSelect={() => select(timezone)}
+                onDelete={() => remove(timezone)}
+              />
+            ))}
+            <AddClock onAdd={add} />
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 };
