@@ -35,14 +35,15 @@ export const Countdown = ({ classNames, from, wait, logo, onComplete }: Countdow
 
     // A shadow root keeps the countdown's class names from meeting the app's styles.
     const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
-    let cancelled = false;
-    void playCountdown(root, { from, wait, logo: logo ?? composerLogoSvg() }).then(() => {
-      if (!cancelled) {
+    // Aborting settles a pending wait for the click, so an unmounted countdown does not linger.
+    const controller = new AbortController();
+    void playCountdown(root, { from, wait, logo: logo ?? composerLogoSvg(), signal: controller.signal }).then(() => {
+      if (!controller.signal.aborted) {
         onCompleteRef.current?.();
       }
     });
     return () => {
-      cancelled = true;
+      controller.abort();
       root.replaceChildren();
     };
   }, [from, wait, logo]);

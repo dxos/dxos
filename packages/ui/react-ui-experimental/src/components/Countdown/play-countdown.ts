@@ -12,6 +12,8 @@ export type CountdownOptions = {
   wait?: boolean;
   /** SVG markup drawn inside the ring at 30% opacity; `Countdown` and autocue pass the Composer mark. */
   logo?: string;
+  /** Stops the countdown (including the wait for a click) and removes it, e.g. when the host unmounts. */
+  signal?: AbortSignal;
 };
 
 const SECOND = 1_000;
@@ -45,6 +47,8 @@ export const COUNTDOWN_STYLES = `
     /* Tailwind sky-400: the countdown is injected where no theme tokens reach. */
     color: #38bdf8; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
   .num.pop { animation: countdown-pop 1000ms ease-out; }
+  /* The count still runs; only its motion goes. */
+  @media (prefers-reduced-motion: reduce) { .arc.unwind, .num.pop { animation: none; } }
   @keyframes countdown-pop { 0% { transform: scale(1.35); opacity: 0; } 15% { transform: scale(1); opacity: 1; }
     85% { opacity: 1; } 100% { transform: scale(0.92); opacity: 0.2; } }
 `;
@@ -53,6 +57,16 @@ const RING = `<svg class="hoop" viewBox="0 0 100 100"><circle class="arc" cx="50
 const TRIANGLE = `<svg class="triangle" viewBox="0 0 24 24"><path d="M5 3.5v17l15-8.5z" fill="currentColor"/></svg>`;
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** Resolves when `signal` aborts (never, without one), so every wait can race it. */
+const aborted = (signal?: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    if (signal?.aborted) {
+      resolve();
+    } else {
+      signal?.addEventListener('abort', () => resolve(), { once: true });
+    }
+  });
 
 /**
  * Adds the counter font's stylesheet to the document once and waits for the digits, but never long: offline
@@ -80,7 +94,7 @@ const loadCounterFont = async () => {
  */
 export const playCountdown = async (
   root: HTMLElement | ShadowRoot,
-  { from = 3, wait = true, logo }: CountdownOptions = {},
+  { from = 3, wait = true, logo, signal }: CountdownOptions = {},
 ): Promise<void> => {
   // Started now, so it loads while the start ring waits for the click.
   const font = loadCounterFont();
@@ -90,16 +104,21 @@ export const playCountdown = async (
   curtain.className = 'curtain';
   curtain.innerHTML = `<button class="ring" aria-label="Start">${RING}${TRIANGLE}</button>`;
   root.append(style, curtain);
+  const stop = aborted(signal);
+  const pause = (ms: number) => Promise.race([sleep(ms), stop]);
   try {
     const start = curtain.querySelector('button');
     if (wait && start) {
-      await new Promise((resolve) => start.addEventListener('click', resolve, { once: true }));
+      await Promise.race([new Promise((resolve) => start.addEventListener('click', resolve, { once: true })), stop]);
     } else {
-      await sleep(1_200);
+      await pause(1_200);
     }
-    await font;
+    await Promise.race([font, stop]);
+    if (signal?.aborted) {
+      return;
+    }
     start?.classList.add('go');
-    await sleep(220);
+    await pause(220);
     curtain.innerHTML = `<div class="ring">${RING}${logo ? `<div class="mark">${logo}</div>` : ''}<div class="num"></div></div>`;
     const num = curtain.querySelector<HTMLElement>('.num');
     const arc = curtain.querySelector<SVGElement>('.arc');
@@ -107,16 +126,16 @@ export const playCountdown = async (
       arc.style.animationDuration = `${from * SECOND}ms`;
       arc.classList.add('unwind');
     }
-    for (let count = from; count > 0 && num; count--) {
+    for (let count = from; count > 0 && num && !signal?.aborted; count--) {
       num.textContent = String(count);
       num.classList.remove('pop');
       // Reading layout restarts the animation for the next numeral.
       void num.offsetWidth;
       num.classList.add('pop');
-      await sleep(SECOND);
+      await pause(SECOND);
     }
     curtain.classList.add('out');
-    await sleep(350);
+    await pause(350);
   } finally {
     curtain.remove();
     style.remove();
