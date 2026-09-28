@@ -1182,7 +1182,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly pendingBatch = new Event<unknown>();
 }
 
-// TODO(burdon): Create APIError class.
 /**
  * Whether objects of this type are ones a user creates and sees: an object type (not a relation or meta-type)
  * persisted in a space or carrying {@link Annotation.UserType}. Mirrors `TypeOptions.isUserType` in
@@ -1193,6 +1192,7 @@ const isUserType = (type: Type.AnyEntity): boolean =>
   !Type.isTypeKind(type) &&
   (Type.getDatabase(type) != null || Option.isSome(Annotation.UserType.get(Type.getSchema(type))));
 
+// TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: Type.AnyEntity) => {
   const message = 'Schema not registered';
   if (schema != null) {
