@@ -788,8 +788,8 @@ projects:
     summary: 'Next-generation react-ui primitives as a parallel `Next.*` namespace: sizes/levels as data-attribute CSS variables, zag-machine behavior (Solid-ready layering), components own padding and containers own gaps, grid/Column model for scrolling containers with gutters.'
     tasks: packages/ui/react-ui/src/next/TASKS.md
     design: packages/ui/react-ui/src/next/DESIGN.md
-    prs: []
-    resume: 'All design decisions (1-7) recorded in DESIGN.md; NEXT: Phase 1 — move size metrics to CSS, then Container rails/columns/scroll.'
+    prs: [13502]
+    resume: 'PR #13502 OPEN (Phase 1: design + 15 Next components incl. Dialog, 15 play tests green). NEXT: respond to review; choose Phase 2 scope (Menu/Listbox/Card, first plugin adoption, React/Solid parity test).'
 ended:
   - name: task-planning-skill
     user: burdon
