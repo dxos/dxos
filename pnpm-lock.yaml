@@ -5228,6 +5228,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
