@@ -3,7 +3,7 @@
 //
 
 import { Portal } from '@ark-ui/react/portal';
-import { Tooltip as TooltipPrimitive } from '@ark-ui/react/tooltip';
+import { Tooltip as TooltipPrimitive, useTooltipContext } from '@ark-ui/react/tooltip';
 import React, { forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -50,9 +50,25 @@ TooltipRoot.displayName = 'Next.Tooltip.Root';
 type TooltipTriggerProps = TooltipPrimitive.TriggerProps;
 
 /** Use `asChild` to describe a `Next.Button` or `Next.IconButton`. */
-const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>((props, forwardedRef) => (
-  <TooltipPrimitive.Trigger {...props} ref={forwardedRef} />
-));
+const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(({ onBlur, ...props }, forwardedRef) => {
+  const tooltip = useTooltipContext();
+  return (
+    <TooltipPrimitive.Trigger
+      {...props}
+      onBlur={(event) => {
+        onBlur?.(event);
+        if (event.defaultPrevented) {
+          return;
+        }
+        // Closing a task late lets a tooltip opened by the same focus move claim zag's shared store first; closing now
+        // would release the store and make every other tooltip, including the new one, queue a close.
+        event.preventDefault();
+        setTimeout(() => tooltip.setOpen(false));
+      }}
+      ref={forwardedRef}
+    />
+  );
+});
 
 TooltipTrigger.displayName = 'Next.Tooltip.Trigger';
 

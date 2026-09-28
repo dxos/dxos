@@ -178,8 +178,8 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     `--color-description`); the highlight is `--color-hover-surface` under the popup's outline focus ring.
 17. **Tooltip** is Ark Tooltip: portalled text at `level='popup'` with an explicit `size` (`sm` by default), padded by
     `--nx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`) and without an arrow.
-    Open issue: tabbing straight from one tooltip trigger to the next opens the second and closes it at once (zag
-    1.43.3); pointer hover and the first keyboard focus behave. `IconButton`'s native `title` would double a Tooltip.
+    Tabbing between triggers is fixed in `Tooltip.Trigger` (follow-up 20). `IconButton`'s native `title` would double
+    a Tooltip.
 18. ~~**Checkbox and Switch occupy an IconButton's cell**~~ (superseded by 19): the box/track was centred in a
     `--nx-control-size`-wide cell.
 19. **IconButton, Checkbox and Switch occupy a block-sized cell** (`--nx-block-size` square, 32px at md). The visible
@@ -189,6 +189,11 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     as a rail Block's, and labels after a checkbox or switch align with icon-button rows. Trailing Blocks in
     `Field.Header`, `FieldSet.Legend` and `Card.Header` take the same visible box and inset, so they keep matching
     IconButtons; the occupied cell, not the visible box, ends at the control's edge.
+20. **Tooltip focus swap.** zag (1.43.3, unchanged in 1.44.0) queues events per microtask: the old trigger's blur
+    closes its tooltip first, which clears the shared open-tooltip store, and every closed tooltip reacts by queueing a
+    `close` — landing after the new trigger's focus `open`. `Tooltip.Trigger` therefore prevents zag's blur handler
+    and closes a task later, so the new tooltip claims the store first (and the old one closes through the store, as on
+    hover). A catalog bump would not fix it.
 
 ## Phase 3: react-ui-form port
 

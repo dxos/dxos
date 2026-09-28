@@ -76,3 +76,36 @@ export const Open: Story = {
     await expect(long.height).toBeGreaterThan(40);
   },
 };
+
+/** Tabbing straight from one trigger to the next swaps tooltips, and the second stays open past the open delay. */
+export const Keyboard: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    await userEvent.tab();
+    await expect(canvas.getByTestId('save')).toHaveFocus();
+    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Save changes'));
+
+    await userEvent.tab();
+    await expect(canvas.getByTestId('publish')).toHaveFocus();
+    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const tooltips = body.getAllByRole('tooltip');
+    await expect(tooltips).toHaveLength(1);
+    await expect(tooltips[0]).toHaveTextContent('Publishing');
+    await expect(canvas.getByTestId('publish')).toHaveAttribute('aria-describedby', tooltips[0].id);
+  },
+};
+
+/** Tabbing off the last trigger still closes its tooltip, although the close is deferred by a task. */
+export const Blur: Story = {
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.tab();
+    await userEvent.tab();
+    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
+    await userEvent.tab();
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+  },
+};

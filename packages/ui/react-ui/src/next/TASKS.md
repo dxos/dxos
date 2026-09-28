@@ -71,7 +71,7 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 
 ### Tasks
 
-- [ ] **Tooltip focus-swap fix** — tabbing between triggers must keep the next tooltip open (zag 1.43.3 closes it).
+- [x] **Tooltip focus-swap fix** — tabbing between triggers must keep the next tooltip open (zag 1.43.3 closes it). — deferred blur close in `Tooltip.Trigger` (DESIGN.md follow-up 20); Keyboard, Blur play tests.
 - [ ] **Switch `role='switch'`** — expose switch semantics on the hidden input (`aria-checked`).
 - [ ] **IconButton Tooltip** — IconButton shows its `label` in a `Next.Tooltip` instead of a native `title`.
 - [ ] **Export Next** — `@dxos/react-ui/next` subpath + `next/theme/index.css`; zag packages back to dependencies.
