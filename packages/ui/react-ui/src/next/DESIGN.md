@@ -45,12 +45,19 @@
      levels; a Container setting its own gutter/columns starts a fresh template. Only fixed tracks align across
      separate subtrees (e.g. sibling scroll panes).
    - **Scrolling.** Composed, not a Container prop: `ScrollArea.Root > ScrollArea.Viewport asChild > Container`.
-     The frame hosts the overlay thumbs and becomes a subgrid when its viewport inherits (detected with `:has`); the
-     viewport's gutter tracks are the padding, so the scrollbar sits in the end gutter. A native bar's width is
-     reserved out of the end track. ScrollArea stays usable for non-grid content.
-   - **Responsive.** Template roots (and non-inheriting scroll frames) set `container-type: inline-size`; below a
-     threshold, `rail` collapses to `inset` and `columns` stack to one track; subgrid descendants follow. Keyed to
-     pane width, not viewport. Inheriting containers must never be query containers: containment disables subgrid.
+     The frame hosts the thumbs and becomes a subgrid when its viewport inherits (detected with `:has`); the
+     viewport's gutter tracks are the padding, so the scrollbar sits in the end gutter. ScrollArea stays usable for
+     non-grid content. The caller picks the trade-off:
+     - `mode='overlay'` (default): the thumb paints over the end gutter; `mode='reserve'` takes the thumb's width out
+       of the end track, keeping the content edge aligned but shifting end-rail Blocks inward.
+     - `width='thin'` (default): `(--nx-block-size - --nx-icon-size) / 2` — 4px at every size — so an overlay thumb
+       sits in the rail Block's margin and never overlaps its icon; `width='regular'` (8px) overlaps it by 4px.
+     - `native` uses the platform scrollbar and implies `reserve`.
+   - **Responsive.** The pane is the query container: whatever hosts a column of content (Panel/plank, Dialog) sets
+     `container-type: inline-size`, so every template root in it — header, body, footer — collapses at the same pane
+     width; ScrollArea frames are containers too. A root cannot query its own width, and inheriting containers must
+     never be query containers (containment disables subgrid). Below the threshold `rail` collapses to `inset`, rail
+     Blocks hide, and `columns` stack to one track.
    - **Mapping.** `Column.Root` → gutter Container; `Column.Row`/`Section` → `gutter='inherit'` Container;
      `Column.Block` → `Block rail`; `Column.Center` → default placement.
 6. **Spacing ownership.** Components own their inline padding; containers own the gaps between children; no component
@@ -94,7 +101,15 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    the frame's `:has(> …)` subgrid detection — scroll composition must target a composable Container.
 6. **`layout` (`stack | row`) is needed.** A stack places each child across the content track; a row flows children
    through the inner tracks, pinning the first non-rail child to `content-start` (`:nth-child(1 of :not([data-rail]))`).
+   A row with more content children than inner tracks spills into the end rail and wraps, so `columns` must provide a
+   track per content child (or the extra children belong in a nested flex group).
 7. **Scroll API (decided: composed).** Both shapes work. Internal (`scroll` prop) must split one prop set across two elements —
    `classNames` to the frame, `ref`/data attributes to the viewport — and `asChild` becomes ambiguous. Composed
    (`ScrollArea.Root > ScrollArea.Viewport asChild > Container`) keeps one element per part, the frame detects an
    inheriting viewport in CSS (`:has`) with no coupling, and ScrollArea stays usable for non-grid content.
+8. **Levels need no React context.** Absolute levels reuse ui-theme's `data-surface` zones, which already paint and
+   re-derive every host aspect (hover, separators, placeholder, scrollbar). Each zone publishes `--nx-level` (its
+   rung), and `level='+1'` resolves against the parent's rung with a style query
+   (`@container style(--nx-level: 2) { … }`), since every element is a style container. Level is independent of
+   rails: an inheriting (subgrid) container can lift its surface and keep the parent's tracks. Style queries need a
+   Firefox support check before production.

@@ -200,3 +200,60 @@ export const Sizes: Story = {
   args: { size: 'lg' },
   play: ({ canvasElement }) => assertAligned(canvasElement),
 };
+
+/** Nested `+1` levels step up the ladder from their parent; a hover row in each derives its state from its own host. */
+const LevelsStory = ({ size }: StoryArgs) => (
+  <>
+    <SpikeStyles />
+    <div data-size={size} className='nx-scope flex flex-col gap-2 w-[40rem]'>
+      <div className='flex gap-2'>
+        {(['base', 'raised', 'overlay'] as const).map((level) => (
+          <div key={level} data-surface={level} data-testid={`swatch-${level}`} className='grow p-1 text-center'>
+            {level}
+          </div>
+        ))}
+      </div>
+      <Container gutter='rail' columns={LABEL_COLUMNS} level='base' data-testid='level-0'>
+        <h2 className='font-medium'>Base</h2>
+        <Field id='l0' label='Base' />
+        {/* Level is independent of rails: an inheriting container lifts its surface but keeps the parent's tracks. */}
+        <Container level='+1' data-testid='level-1'>
+          <Field id='l1' label='Raised' />
+          <div className='hover:bg-hover-surface' data-testid='level-1-hover'>
+            Hover row
+          </div>
+          <Container level='+1' data-testid='level-2'>
+            <Field id='l2' label='Overlay' />
+          </Container>
+        </Container>
+      </Container>
+    </div>
+  </>
+);
+
+const background = (root: HTMLElement, testId: string) => {
+  const element = root.querySelector(`[data-testid="${testId}"]`);
+  if (!element) {
+    throw new Error(`missing ${testId}`);
+  }
+  return getComputedStyle(element);
+};
+
+export const Levels: Story = {
+  render: LevelsStory,
+  play: async ({ canvasElement }) => {
+    await expect(background(canvasElement, 'level-0').backgroundColor).toBe(
+      background(canvasElement, 'swatch-base').backgroundColor,
+    );
+    await expect(background(canvasElement, 'level-1').backgroundColor).toBe(
+      background(canvasElement, 'swatch-raised').backgroundColor,
+    );
+    await expect(background(canvasElement, 'level-2').backgroundColor).toBe(
+      background(canvasElement, 'swatch-overlay').backgroundColor,
+    );
+    // Aspects re-derive per zone: the hover state differs between levels.
+    await expect(background(canvasElement, 'level-1').getPropertyValue('--color-hover-surface')).not.toBe(
+      background(canvasElement, 'level-0').getPropertyValue('--color-hover-surface'),
+    );
+  },
+};

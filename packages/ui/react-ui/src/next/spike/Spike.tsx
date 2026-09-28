@@ -14,6 +14,8 @@ import { composableProps, slottable } from '../../util/index.ts';
 import { type Size } from '../sizes.ts';
 import { styles } from './styles.ts';
 
+export type Level = 'sunken' | 'chrome' | 'base' | 'raised' | 'overlay' | 'popup' | '+1';
+
 export type Gutter = 'rail' | 'inset' | 'sm' | 'md' | 'lg' | 'none' | 'inherit';
 
 export const SpikeStyles = () => <style>{styles}</style>;
@@ -88,10 +90,15 @@ export type ContainerProps = {
   layout?: 'stack' | 'row';
   /** Placement of the container itself within a parent Container. */
   place?: 'content' | 'full';
+  /** A rung of ui-theme's surface ladder, or `+1` for one rung above the enclosing level. */
+  level?: Level;
 };
 
 export const Container = slottable<HTMLDivElement, ContainerProps>(
-  ({ children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, ...props }, forwardedRef) => {
+  (
+    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, ...props },
+    forwardedRef,
+  ) => {
     const localRef = useRef<HTMLDivElement>(null);
     const ref = useComposedRefs(forwardedRef, localRef);
     const { className, style, ...rest } = composableProps(props);
@@ -112,6 +119,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
         data-gutter={gutter}
         data-layout={layout}
         data-place={place}
+        data-surface={level}
         data-columns={columns ? '' : undefined}
         style={{ ...(columns ? { '--nx-columns': columns } : {}), ...style } as CSSProperties}
         className={['nx-grid', className].join(' ')}
