@@ -20,7 +20,7 @@ opened in its place (`@dxos/plugin-deck/DeckSeed.sourceOf`), and choosing one of
 selects it (`NavTreeCapabilities.State.pick`); a flattened deck opens the collection itself instead of
 showing its documents as a breadcrumb trail. `Tree` leaves a dragged row in place at half opacity
 (`hideDragSource` restores removal) and declares drags a move, so the cursor no longer flickers to a
-copy "+". `Gantt.Chart` opens scrolled to its newest events. Plugin settings in the navtree show each plugin's icon in its own hue.
+copy "+". `Gantt.Chart` opens scrolled to its newest events.
 
 Task list rows show a task's pull requests in their own column on the title line, left of the
 assignee; the assignee picker offers the space's members, the owner included (`TaskProperties` takes
