@@ -48,7 +48,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/tooltip',
+  title: 'ui/react-ui-core/next/components/Tooltip',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },

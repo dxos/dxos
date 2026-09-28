@@ -59,7 +59,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/toggle-group',
+  title: 'ui/react-ui-core/next/components/ToggleGroup',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[36rem]' }), withTheme()],
   parameters: { layout: 'centered' },

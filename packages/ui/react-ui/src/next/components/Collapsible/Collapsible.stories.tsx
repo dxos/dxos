@@ -30,7 +30,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/collapsible',
+  title: 'ui/react-ui-core/next/components/Collapsible',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },

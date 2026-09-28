@@ -52,7 +52,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/image',
+  title: 'ui/react-ui-core/next/components/Image',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[40rem]' }), withTheme()],
   parameters: { layout: 'centered' },

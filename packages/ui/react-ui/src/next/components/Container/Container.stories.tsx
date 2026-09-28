@@ -66,7 +66,7 @@ const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/container',
+  title: 'ui/react-ui-core/next/components/Container',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[38rem]' }), withTheme()],
   parameters: { layout: 'centered' },

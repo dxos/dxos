@@ -79,7 +79,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/toolbar',
+  title: 'ui/react-ui-core/next/components/Toolbar',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[40rem]' }), withTheme()],
   parameters: { layout: 'centered' },

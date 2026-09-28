@@ -37,7 +37,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/date-input',
+  title: 'ui/react-ui-core/next/components/DateInput',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },

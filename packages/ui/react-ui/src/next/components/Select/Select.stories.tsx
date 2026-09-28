@@ -104,7 +104,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/select',
+  title: 'ui/react-ui-core/next/components/Select',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[24rem]' }), withTheme()],
   parameters: { layout: 'centered' },

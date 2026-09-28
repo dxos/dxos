@@ -43,7 +43,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/tag',
+  title: 'ui/react-ui-core/next/components/Tag',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[48rem]' }), withTheme()],
   parameters: { layout: 'centered' },

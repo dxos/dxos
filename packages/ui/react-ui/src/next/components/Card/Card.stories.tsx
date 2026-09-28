@@ -139,7 +139,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/card',
+  title: 'ui/react-ui-core/next/components/Card',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[52rem]' }), withTheme()],
   parameters: { layout: 'centered' },
