@@ -46,7 +46,7 @@
 - 26f8347f-42 - unresolved - keep-parallel-apis-structurally-aligned - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:44:3
 - 26f8347f-43 - resolved - consistent-field-and-list-ordering - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:140:1
 - 26f8347f-44 - unresolved - name-for-general-behavior - packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx:253
-- 26f8347f-45 - resolved - barrel-imports-not-internal-paths - packages/ui/react-ui/src/hooks/useIconHref.ts:7:1
+- 26f8347f-45 - ignored - barrel-imports-not-internal-paths - packages/ui/react-ui/src/hooks/useIconHref.ts:7:1 (importing either providers barrel forms a real cycle back through ThemeProvider.tsx -> hooks/index.ts; the deep import is intentional, caught in PR review — see https://github.com/dxos/dxos/pull/13489)
 - 26f8347f-46 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/hooks/useIconHref.ts:29:3
 - 26f8347f-47 - resolved - consistent-file-naming-within-folder - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1 (file deleted)
 - 26f8347f-48 - resolved - diff-scoped-to-pr-purpose - packages/ui/react-ui/src/playground/experimental.stories.tsx:1:1 (file deleted)
