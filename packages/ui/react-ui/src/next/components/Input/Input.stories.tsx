@@ -12,15 +12,13 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectScoped } from '../../testing.ts';
 
-/** A toolbar of plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
+/** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Input placeholder='Search' aria-label={`Search ${size}`} noAutoFill data-testid={`input-${size}`} />
-      <Next.Input placeholder='Disabled' aria-label={`Disabled ${size}`} disabled />
-    </Next.Toolbar.Root>
+    <Next.Input placeholder='Search' aria-label={`Search ${size}`} noAutoFill data-testid={`input-${size}`} />
+    <Next.Input placeholder='Disabled' aria-label={`Disabled ${size}`} disabled />
     <Next.Input
       start={<Next.Icon icon='ph--magnifying-glass--regular' />}
       placeholder='Find…'
@@ -68,10 +66,13 @@ export const Test: Story = {
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
-      const toolbar = byTestId(canvasElement, `toolbar-${size}`).getBoundingClientRect();
-      const rect = byTestId(canvasElement, `input-${size}`).getBoundingClientRect();
+      const input = byTestId(canvasElement, `input-${size}`);
+      const rect = input.getBoundingClientRect();
       await expect(rect.height, `input-${size} height`).toBeCloseTo(controlSize(size), 0);
-      await expect(centreY(rect), `input-${size} centre`).toBeCloseTo(centreY(toolbar), 0);
+      // The stack pads the control out to a block by one inset above and below, so it is centred in its block.
+      const style = getComputedStyle(input);
+      await expect(parseFloat(style.marginTop), `input-${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
+      await expect(parseFloat(style.marginBottom), `input-${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
     }
 
     const canvas = within(canvasElement);

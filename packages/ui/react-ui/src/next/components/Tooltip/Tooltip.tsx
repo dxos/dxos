@@ -193,20 +193,22 @@ const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.Trigge
 type TooltipContentProps = ThemedClassName<TooltipPrimitive.ContentProps> & {
   /** Portalled content leaves the trigger's sized scope, so it takes its own size; `sm` reads as a caption. */
   size?: Size;
-  /** Point at the trigger with an arrow in the popup's surface colour. */
+  /** Point at the trigger with an arrow in the tooltip's inverted surface colour. */
   arrow?: boolean;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
 };
 
-/** Portalled text at `level='popup'`, capped at 20rem wide, with an arrow unless `arrow={false}`. */
+/**
+ * Portalled text on the inverted surface (as the current Tooltip; no `data-surface`, whose popup fill it would fight),
+ * capped at 20rem wide, with an arrow unless `arrow={false}`.
+ */
 const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
   ({ classNames, size = 'sm', arrow = true, container, children, ...props }, forwardedRef) => (
     <Portal container={container}>
       <TooltipPrimitive.Positioner>
         <TooltipPrimitive.Content
           {...props}
-          data-surface='popup'
           data-size={size}
           className={mx(recipes.popup(), recipes.tooltipContent(), classNames)}
           ref={forwardedRef}

@@ -419,6 +419,14 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     ResizeObserver reports a benign "ResizeObserver loop" when a popup resizes with its reference in the same frame
     (the Select `multiple` case); vitest does not fail on it.
 
+50. **Tooltip uses the inverted surface** (amends 17 and 32), as the current Tooltip (`Tooltip.theme.ts`): ui-theme's
+    `--color-inverse-surface` fill and `--color-inverse-fg` text, dark on a light theme and light on a dark one. The
+    content carries no `data-surface`: that attribute enters a level zone whose rule paints the popup fill, which the
+    inversion would have to out-rank, and a tooltip is a deliberate flip rather than a rung on the level ladder, so it
+    publishes no `--nx-level`. It still takes `.nx-popup` for size, radius and shadow, and publishes its fill as
+    `--surface-bg`, so the arrow (which paints `--surface-bg`) needs no rule of its own. Tooltip `Test` asserts the fill
+    and text match the tokens' computed colours and differ from `--dx-surface-popup`; `expectArrow` checks the arrow.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

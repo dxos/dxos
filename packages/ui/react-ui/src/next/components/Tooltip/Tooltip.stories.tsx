@@ -60,6 +60,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** The computed colour of a ui-theme token, read from a probe beside `element` so it resolves in the same scope. */
+const tokenColour = (element: HTMLElement, property: 'background-color' | 'color', token: string) => {
+  const probe = element.ownerDocument.createElement('div');
+  probe.style.setProperty(property, `var(${token})`);
+  element.ownerDocument.body.append(probe);
+  const colour = getComputedStyle(probe).getPropertyValue(property);
+  probe.remove();
+  return colour;
+};
+
 export const Default: Story = {};
 
 /**
@@ -67,7 +77,7 @@ export const Default: Story = {};
  * second stays open past the open delay; tabbing off a trigger still closes its tooltip, although the close is deferred
  * by a task; hovering shows it after the delay, and long text wraps within the 20rem cap. `Tooltip.Trigger content`
  * brings its own Root and Content, on `side`. A TextTooltip ellipsizes its text and shows it in full on hover only
- * while it is truncated. The story ends open.
+ * while it is truncated. The tooltip and its arrow use the inverted surface, not the popup level. The story ends open.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -84,8 +94,13 @@ export const Test: Story = {
     await expect(save).toHaveAccessibleDescription('Save changes (⌘S)');
 
     const content = body.getByTestId('save-tooltip-xs');
-    await expect(content).toHaveAttribute('data-surface', 'popup');
+    await expect(content).not.toHaveAttribute('data-surface');
     await expect(content).toHaveAttribute('data-size', 'sm');
+    // The inverted surface, as the current Tooltip: not the popup level, and the arrow shares the fill.
+    const fill = getComputedStyle(content).backgroundColor;
+    await expect(fill).toBe(tokenColour(content, 'background-color', '--color-inverse-surface'));
+    await expect(getComputedStyle(content).color).toBe(tokenColour(content, 'color', '--color-inverse-fg'));
+    await expect(fill).not.toBe(tokenColour(content, 'background-color', '--dx-surface-popup'));
     await expectArrow(save, content);
 
     await userEvent.tab();
