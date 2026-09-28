@@ -6,7 +6,7 @@
 // records, where no module resolution exists. `Countdown` wraps it for React.
 
 export type FilmLeaderOptions = {
-  /** `leader` is the film leader (sweep, mark); `loop` is a single ring that unwinds clockwise each count. */
+  /** `leader` is the film leader (sweep, mark); `loop` is a single ring that unwinds clockwise over the count. */
   variant?: 'leader' | 'loop';
   /** First number of the count. */
   from?: number;
@@ -70,7 +70,7 @@ export const FILM_LEADER_STYLES = `
     /* Tailwind sky-400: the leader is injected where no theme tokens reach. */
     color: #38bdf8; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
   .num.pop { animation: film-leader-pop 1000ms ease-out; }
-  /* The loop: one closed ring whose start runs clockwise from 12 o'clock until it is gone, once per count. */
+  /* The loop: one closed ring whose start runs clockwise from 12 o'clock until it is gone, over the whole count. */
   .loop { position: relative; width: 240px; height: 240px; }
   .loop svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .loop .arc { fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 3; stroke-linecap: round;
@@ -166,9 +166,9 @@ export const playFilmLeader = async (
       // Reading layout restarts the animation for the next numeral.
       void num.offsetWidth;
       num.classList.add('pop');
-      if (arc) {
-        arc.classList.remove('unwind');
-        void arc.getBoundingClientRect();
+      // One unwind across the whole count rather than one per numeral, so the ring runs out as the count does.
+      if (arc && count === from) {
+        arc.style.animationDuration = `${from * SECOND}ms`;
         arc.classList.add('unwind');
       }
       // A half turn per count, accumulated so the mark keeps turning the same way.
