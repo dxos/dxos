@@ -447,13 +447,32 @@ export const steps = [
         await demo.click({ selector: '[data-testid="worldClock.new"] >> role=combobox', label: 'Timezone' });
         await demo.click({ selector: `role=option[name="${timezone}"]`, label: timezone });
         await demo.click({ selector: '[data-testid="worldClock.new"] [data-testid="save-button"]', label: 'Save' });
-        await page
-          .getByTestId('worldClock.clock')
-          .nth(index + 1)
-          .waitFor({ state: 'visible', timeout: 10_000 });
+        // Counted, not indexed: the row is sorted west to east, so a new clock can land anywhere in it.
+        await page.waitForFunction(
+          (count) => document.querySelectorAll('[data-testid="worldClock.clock"]').length === count,
+          start + index + 1,
+          { timeout: 10_000 },
+        );
         await page.waitForTimeout(LINGER / 2);
       }
       await page.waitForTimeout(3_000);
+    },
+  },
+  {
+    // Selecting a clock highlights its pin; on the globe the earth turns to it about its axis.
+    name: 'Select the clocks on the map, then on the globe',
+    run: async ({ demo, page }) => {
+      const selectEach = async (pause) => {
+        const count = await page.getByTestId('worldClock.clock').count();
+        for (let index = 0; index < count; index++) {
+          await demo.click({ selector: `[data-testid="worldClock.clock"] >> nth=${index}`, label: 'Clock' });
+          await page.waitForTimeout(pause);
+        }
+      };
+      await selectEach(1_000);
+      await demo.click({ selector: '[data-testid="worldMap.toggle"]', label: 'Globe' });
+      await page.waitForTimeout(1_000);
+      await selectEach(2_500);
     },
   },
 ];
