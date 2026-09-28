@@ -530,7 +530,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c
      /** Check whether a sedimentree is currently in heal-backoff. */
      isHealing(sedimentreeId: SedimentreeId): boolean;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b43a245ec 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e97549889 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -620,29 +620,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
              subduction: this.#subduction,
              log: this.#log,
              onSyncDataReceived: async (sedimentreeId, subduction) => {
-@@ -243,7 +279,10 @@ export class SubductionSource {
-         // data (the "one-behind" arrival order), nothing else will wake it
-         // — recomputes are targeted, so other entries' completions no
-         // longer walk this one. Mark it dirty so the walk retries the load.
--        if (entry.syncState === "initializing") {
-+        //
-+        // DXOS patch: after `#hydrateFromDisk` the handle holds the stored document, so an arrival
-+        // is no longer a partial load and applies like one on a running entry.
-+        if (entry.syncState === "initializing" && !entry.hydratedFromDisk) {
-             this.#scheduleRecompute(entry);
-             return;
-         }
-@@ -373,6 +412,9 @@ export class SubductionSource {
-             lastSyncResult: null,
-             lastSyncGeneration: -1,
-             blobLoadInFlight: false,
-+            // DXOS patch: see `#hydrateFromDisk`.
-+            hydrating: true,
-+            hydratedFromDisk: false,
-             blobRetries: 0,
-             needsResync: false,
-             syncSettled: Promise.resolve(),
-@@ -394,7 +436,9 @@ export class SubductionSource {
+@@ -394,7 +430,9 @@ export class SubductionSource {
              transformRetryScheduled: false,
          });
          query.sourcePending("subduction");
@@ -653,19 +631,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
          throttledSave();
          // Subscribe to ephemeral messages for this sedimentree
          void (async () => {
-@@ -415,19 +459,26 @@ export class SubductionSource {
-         // compaction even though it may be defunct relative to the
-         // current minimal sedimentree.
-         void (async () => {
-+            const entry = this.#entries.get(sidStr);
-+            if (!entry)
-+                return;
-             try {
--                const entry = this.#entries.get(sidStr);
--                if (!entry)
--                    return;
-                 const [commitIds, fragmentIds] = await Promise.all([
-                     this.#storage.listCommitIds(sid),
+@@ -424,10 +462,17 @@ export class SubductionSource {
                      this.#storage.listFragmentIds(sid),
                  ]);
                  for (const c of commitIds) {
@@ -685,15 +651,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
                  }
                  if (entry.persistedCommitHashes.size > 0 ||
                      entry.persistedFragmentHashes.size > 0) {
-@@ -440,6 +491,7 @@ export class SubductionSource {
-             catch (e) {
-                 this.#log.debug(`failed to seed persistedHashes for ${sidStr.slice(0, 8)}: %O`, e);
-             }
-+            await this.#hydrateFromDisk(entry);
-         })();
-         // Replay the last-known remote heads for this sedimentree so the
-         // DocHandle reflects the last sync state immediately on (re)attach,
-@@ -457,7 +509,21 @@ export class SubductionSource {
+@@ -457,7 +502,21 @@ export class SubductionSource {
          })();
          this.#scheduleRecompute(this.#entries.get(sidStr));
      }
@@ -716,7 +674,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
      shareConfigChanged() {
          for (const entry of this.#entries.values()) {
              // A share-config change can flip a previously-denied fetch to
-@@ -589,13 +655,18 @@ export class SubductionSource {
+@@ -589,13 +648,18 @@ export class SubductionSource {
       * True when `entry` should open a sync round now: never synced, or it
       * previously synced / found no peers and the connection generation has since
       * advanced (a reconnect — server subscriptions are per-connection, so a
@@ -737,15 +695,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
              entry.lastSyncGeneration !== this.#connectionGeneration());
      }
      #recomputeEntry(entry) {
-@@ -626,6 +697,7 @@ export class SubductionSource {
-                         void this.#doSync(entry);
-                     }
-                     else if (Automerge.getHeads(entry.handle.fullDoc()).length === 0 &&
-+                        !entry.hydrating &&
-                         !this.#anyConnectionManagerConnecting()) {
-                         // All connections settled and sync failed — give up.
-                         this.#log.debug("marking as unavailable");
-@@ -647,12 +719,27 @@ export class SubductionSource {
+@@ -647,12 +711,27 @@ export class SubductionSource {
      async #doSync(entry, timeoutMs) {
          const { sedimentreeId } = entry;
          const sid = sedimentreeId.toString().slice(0, 8);
@@ -774,7 +724,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
              const subduction = await this.#subduction;
              // Flush any pending throttled save and wait for in-progress saves
              // to complete. This ensures that all locally-known commits have
-@@ -662,7 +749,28 @@ export class SubductionSource {
+@@ -662,7 +741,28 @@ export class SubductionSource {
              entry.flushSave.flush();
              await entry.saveSettled;
              this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
@@ -804,7 +754,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
              const results = peerResultMap.entries();
              const anySuccess = results.some(r => r.success);
              this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
-@@ -702,6 +810,7 @@ export class SubductionSource {
+@@ -702,6 +802,7 @@ export class SubductionSource {
                  entry.lastSyncResult = "succeeded";
                  this.#scheduler.resetHealState(sedimentreeId.toString());
              }
@@ -812,7 +762,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
          }
          catch (e) {
              this.#log.error(`doSync THREW for ${sid}:`, e);
-@@ -709,6 +818,10 @@ export class SubductionSource {
+@@ -709,6 +810,10 @@ export class SubductionSource {
              this.#scheduler.scheduleHealSync(sedimentreeId);
          }
          finally {
@@ -823,37 +773,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -835,6 +948,29 @@ export class SubductionSource {
-         this.#scheduleCompaction(entry);
-         return true;
-     }
-+    /**
-+     * DXOS patch: open a document from its own commit store with upstream's loader. Loading otherwise
-+     * waits for a peer round that settles `succeeded` with nothing pending, so a document whose
-+     * history is on disk stays unavailable offline, and behind its store whenever that round is
-+     * interrupted.
-+     */
-+    async #hydrateFromDisk(entry) {
-+        try {
-+            const stored = entry.persistedCommitHashes.size + entry.persistedFragmentHashes.size;
-+            if (stored === 0 || this.#entries.get(entry.sedimentreeId.toString()) !== entry)
-+                return;
-+            entry.hydratedFromDisk = await this.#loadBlobsIntoHandle(entry, await this.#subduction);
-+            if (entry.hydratedFromDisk && Automerge.getHeads(entry.handle.fullDoc()).length > 0)
-+                entry.query.sourcePending("subduction");
-+        }
-+        catch (e) {
-+            this.#log.debug(`hydrateFromDisk ${entry.sedimentreeId.toString().slice(0, 8)} failed: %O`, e);
-+        }
-+        finally {
-+            entry.hydrating = false;
-+            this.#scheduleRecompute(entry);
-+        }
-+    }
-     async #loadBlobsAndTransition(entry) {
-         try {
-             const subduction = await this.#subduction;
-@@ -1026,7 +1162,10 @@ export class SubductionSource {
+@@ -1026,7 +1131,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
