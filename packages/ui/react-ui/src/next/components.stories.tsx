@@ -8,6 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useLayoutEffect, useRef } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { log } from '@dxos/log';
+
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
 import { type Size, SIZES } from './sizes.ts';
@@ -277,6 +279,6 @@ export const Benchmark: Story = {
     await expect(last.left).toBeCloseTo(first.left, 0);
     const root = canvasElement.querySelector('[data-render-ms]');
     // eslint-disable-next-line no-console
-    console.log(`[benchmark] ${ROWS.length} rows mounted and laid out in ${root?.getAttribute('data-render-ms')}ms`);
+    log.info('benchmark', { rows: ROWS.length, ms: root?.getAttribute('data-render-ms') });
   },
 };
