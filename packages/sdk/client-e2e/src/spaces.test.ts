@@ -100,48 +100,21 @@ describe('Spaces', () => {
   });
 
   test('a space whose database failed to open initializes again when it returns to ready', async () => {
-    const testBuilder = new TestBuilder();
-    onTestFinished(() => testBuilder.destroy());
-    const host = testBuilder.createClientServicesHost();
-    await host.open(new Context());
-    onTestFinished(() => host.close(Context.default()));
-
-    const [creator, creatorServer] = testBuilder.createClientServer(host);
-    void creatorServer.open();
-    await creator.initialize();
-    await creator.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
-    const { id: spaceId } = await creator.spaces.create();
-    await creator.destroy();
-    await creatorServer.close();
-
-    const error = new Error('Database open failed.');
-    const open = DatabaseImpl.prototype.open;
-    let failures = 0;
-    const openSpy = vi
-      .spyOn(DatabaseImpl.prototype, 'open')
-      .mockImplementation(async function (this: DatabaseImpl, ctx) {
-        if (this.spaceId === spaceId && failures++ === 0) {
-          throw error;
-        }
-        return open.call(this, ctx);
-      });
-    onTestFinished(() => openSpy.mockRestore());
-
-    const [client, server] = testBuilder.createClientServer(host);
-    void server.open();
-    onTestFinished(() => server.close());
-    await client.initialize();
-    onTestFinished(() => client.destroy());
-
-    await expect.poll(() => failures).toBe(1);
-    const space = client.spaces.get().find((space) => space.id === spaceId);
-    invariant(space);
+    const { space, error } = await openSpaceWhoseFirstDatabaseOpenFails();
     await expect(space.waitUntilReady()).rejects.toBe(error);
 
     // Closing and reopening returns the space to ready, which starts initialization over.
     await space.close();
     await space.open();
     await expect.poll(() => space.state.get(), { timeout: 10_000 }).toBe(SpaceState.SPACE_READY);
+    await space.waitUntilReady();
+  });
+
+  test('a space whose database failed to open initializes again while it stays ready', async () => {
+    const { space, error } = await openSpaceWhoseFirstDatabaseOpenFails();
+    await expect(space.waitUntilReady()).rejects.toBe(error);
+
+    await expect.poll(() => space.isOpen, { timeout: 5_000 }).toBe(true);
     await space.waitUntilReady();
   });
 
@@ -1057,5 +1030,46 @@ describe('Spaces', () => {
 
   const waitForSpaceState = async (space: Space, state: SpaceState, timeout: number) => {
     await expect.poll(() => space.state.get(), { timeout }).toEqual(state);
+  };
+
+  /** A restarted client whose first database open for an existing space throws. */
+  const openSpaceWhoseFirstDatabaseOpenFails = async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+    const host = testBuilder.createClientServicesHost();
+    await host.open(new Context());
+    onTestFinished(() => host.close(Context.default()));
+
+    const [creator, creatorServer] = testBuilder.createClientServer(host);
+    void creatorServer.open();
+    await creator.initialize();
+    await creator.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
+    const { id: spaceId } = await creator.spaces.create();
+    await creator.destroy();
+    await creatorServer.close();
+
+    const error = new Error('Database open failed.');
+    const open = DatabaseImpl.prototype.open;
+    let opens = 0;
+    const openSpy = vi
+      .spyOn(DatabaseImpl.prototype, 'open')
+      .mockImplementation(async function (this: DatabaseImpl, ctx) {
+        if (this.spaceId === spaceId && opens++ === 0) {
+          throw error;
+        }
+        return open.call(this, ctx);
+      });
+    onTestFinished(() => openSpy.mockRestore());
+
+    const [client, server] = testBuilder.createClientServer(host);
+    void server.open();
+    onTestFinished(() => server.close());
+    await client.initialize();
+    onTestFinished(() => client.destroy());
+
+    await expect.poll(() => opens).toBe(1);
+    const space = client.spaces.get().find((space) => space.id === spaceId);
+    invariant(space);
+    return { space, error };
   };
 });

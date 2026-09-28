@@ -39,8 +39,7 @@ export type QueryServiceProps = {
 
   /**
    * True once every indexed object has a snapshot. The compiled executor reads that store rather
-   * than loading documents, so while it is still filling after upgrade a query awaits indexing
-   * before its first execution. Ignored on the in-memory path, which loads documents itself.
+   * than loading documents, so until it is complete a compiled query runs on the in-memory path.
    */
   hasCompleteSnapshots?: () => Promise<boolean>;
 
@@ -188,8 +187,15 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
-        const readsSnapshotStore = queryEntry.executor.compiled;
-        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
+        // Falls back rather than waiting for the store to fill, which means draining the whole index
+        // backlog; a replication burst stretches that past the client's query timeout.
+        if (queryEntry.executor.compiled && !(await this.#snapshotsComplete()) && !ctx.disposed) {
+          const compiled = queryEntry.executor;
+          queryEntry.executor = this._createExecutor(request, compiled.query, 'memory');
+          await compiled.close();
+          await queryEntry.executor.open();
+        }
+        if (queryEntry.feedScoped) {
           await this._params.updateIndexes();
         }
         queryEntry.open = true;
@@ -241,17 +247,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   ): ActiveQuery {
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
     const queryEntry: ActiveQuery = {
-      executor: new QueryExecutor({
-        indexEngine: this._params.indexEngine(),
-        runtime: this._params.runtime,
-        automergeHost: this._params.automergeHost,
-        queryId: request.queryId ?? raise(new Error('query id required')),
-        query: parsedQuery,
-        reactivity: request.reactivity,
-        executor: this._params.executor,
-        sql: this._params.sql(),
-        spaceStateManager: this._params.spaceStateManager,
-      }),
+      executor: this._createExecutor(request, parsedQuery, this._params.executor),
       dirty: true,
       open: false,
       firstResult: true,
@@ -271,6 +267,24 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     };
     this._queries.add(queryEntry);
     return queryEntry;
+  }
+
+  private '_createExecutor'(
+    request: QueryService.QueryRequest,
+    query: QueryAST.Query,
+    executor: QueryExecutorMode | undefined,
+  ): QueryExecutor {
+    return new QueryExecutor({
+      indexEngine: this._params.indexEngine(),
+      runtime: this._params.runtime,
+      automergeHost: this._params.automergeHost,
+      queryId: request.queryId ?? raise(new Error('query id required')),
+      query,
+      reactivity: request.reactivity,
+      executor,
+      sql: this._params.sql(),
+      spaceStateManager: this._params.spaceStateManager,
+    });
   }
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })

@@ -3,12 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Stream from 'effect/Stream';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost } from './echo-host.ts';
@@ -56,6 +61,36 @@ describe('EchoHost.updateIndexes', () => {
       host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [written] }),
     );
     expect(rows.map((row) => row.objectId)).toEqual([written]);
+  });
+});
+
+describe('EchoHost queries', () => {
+  // A replication burst after boot kept the index from draining for 35s; space open timed out behind it.
+  test('a compiled query answers while the snapshot store is incomplete, without waiting on indexing', async () => {
+    const { host, runtime, spaceId, saveObject } = await setup();
+    const written = EntityId.random();
+    await saveObject(written);
+    await host.updateIndexes();
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM objectSnapshot`;
+      }),
+    );
+    const snapshotCheck = vi.spyOn(host.indexEngine, 'hasCompleteSnapshots');
+    vi.spyOn(host, 'updateIndexes').mockReturnValue(new Promise(() => {}));
+
+    const query = Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]);
+    const response = await EffectEx.runPromise(
+      host.queryService['QueryService.execQuery']({
+        query: JSON.stringify(query.ast),
+        queryId: '1',
+        reactivity: QueryReactivity.ONE_SHOT,
+      }).pipe(Stream.runHead),
+    );
+
+    expect(snapshotCheck).toHaveBeenCalled();
+    expect(Option.getOrThrow(response).results?.map((result) => result.id)).toEqual([written]);
   });
 });
 
