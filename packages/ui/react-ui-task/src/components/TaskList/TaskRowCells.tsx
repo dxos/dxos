@@ -132,6 +132,7 @@ export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => 
     label={Obj.getMnemonic(task)}
     onCopy={() => Obj.getURI(task, { prefer: 'absolute' }).toString()}
     data-testid='taskList.item.mnemonic'
+    onClick={(event) => event.stopPropagation()}
   />
 );
 
