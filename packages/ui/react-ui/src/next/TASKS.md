@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 1 done except the Firefox style-query check. Last: controls, Toolbar roving focus, components story, play tests and benchmark._
+_Resume: Phase 1 complete; next is choosing Phase 2 scope. Uncommitted: none. Last: Group for form actions, toolbar gap token, experimental story removed._
 
 ## Phase 0: Design
 
