@@ -107,6 +107,13 @@ export const Default: Story = {
     const box = canvasElement.querySelector('[data-scope="checkbox"][data-part="control"]')?.getBoundingClientRect();
     await expect(box?.left).toBeCloseTo(part(canvasElement, 'name', '.nx-control').left, 0);
 
+    // Checking draws the mark inside the box.
+    await userEvent.click(canvas.getByText('Subscribe to updates'));
+    const mark = canvasElement.querySelector('[data-scope="checkbox"][data-part="indicator"]:not([hidden]) svg');
+    const markBox = mark?.getBoundingClientRect();
+    await expect(markBox && box && markBox.top >= box.top && markBox.bottom <= box.bottom).toBe(true);
+    await userEvent.click(canvas.getByText('Subscribe to updates'));
+
     // Labels read one text step below the controls.
     const labelFont = parseFloat(getComputedStyle(canvas.getByText('Name')).fontSize);
     const inputFont = parseFloat(getComputedStyle(canvas.getByRole('textbox', { name: 'Name' })).fontSize);

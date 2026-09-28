@@ -121,9 +121,10 @@
     border-radius: var(--radius-sm, 0.25rem);
     background: var(--color-input-surface);
   }
+  /* Absolute, not a percentage: the Ark indicator wrapper has no definite height, so 75% fell back to 150px. */
   .nx-checkbox-control .nx-icon {
-    width: 75%;
-    height: 75%;
+    width: calc(var(--nx-icon-size) * 0.75);
+    height: calc(var(--nx-icon-size) * 0.75);
   }
   .nx-checkbox-control[data-state='checked'],
   .nx-checkbox-control[data-state='indeterminate'] {
