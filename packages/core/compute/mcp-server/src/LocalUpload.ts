@@ -104,6 +104,12 @@ export class Stage {
     this.#uploads.delete(uploadId);
   }
 
+  /** Bytes a download can still stage without overrunning {@link MAX_STAGED_BYTES}. */
+  available(): number {
+    this.#prune();
+    return Math.max(0, MAX_STAGED_BYTES - this.#stagedBytes() - this.#inflightBytes);
+  }
+
   /**
    * Holds bytes for a download and returns its id; the matching URL comes from {@link downloadUrl}.
    * Shaped as `@dxos/plugin-file/StagedUpload`'s `Sink`, which is what fills it.

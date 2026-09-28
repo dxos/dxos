@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database, Ref } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { File } from '@dxos/types';
 
 import { FileLimits, FileOperation } from '#types';
@@ -59,9 +60,20 @@ export const createFromUploadHandler = (source: Source) =>
 
 /** Where a local host holds bytes for its download listener to serve. */
 export type Sink = {
+  /** Bytes the sink can still accept, checked before a blob is read so an oversized one is never materialized. */
+  available(): number;
   /** Holds the bytes and returns the id the host's `createDownload` tool signs a URL for. */
   stage(download: Upload): string;
 };
+
+/** Raised when a file is larger than the host can stage for download. */
+export class DownloadTooLargeError extends BaseError.extend('DownloadTooLargeError') {
+  constructor(size: number, available: number) {
+    super({
+      message: `File is ${size} bytes; the host can stage ${available} more bytes for download. Try again in a few minutes.`,
+    });
+  }
+}
 
 /**
  * `file.resolveDownload` for a host that serves downloads itself. Registered in place of the default
@@ -74,6 +86,11 @@ export const resolveDownloadHandler = (sink: Sink) =>
       Effect.fnUntraced(function* ({ file }) {
         const object = yield* Database.load(file);
         const blob = yield* Database.load(object.data);
+        const available = sink.available();
+        if (blob.size > available) {
+          return yield* Effect.fail(new DownloadTooLargeError(blob.size, available));
+        }
+
         const bytes = yield* Blob.read(blob);
         const type = blob.type ?? 'application/octet-stream';
         const downloadId = sink.stage({ bytes, type, name: object.name });

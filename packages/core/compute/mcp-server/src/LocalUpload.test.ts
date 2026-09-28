@@ -76,6 +76,12 @@ describe('LocalUpload downloads', () => {
     }
   });
 
+  test('reports the capacity left after staging', ({ expect }) => {
+    const before = stage.available();
+    stage.stage({ bytes: new Uint8Array(1024), type: 'application/octet-stream' });
+    expect(stage.available()).toBe(before - 1024);
+  });
+
   test('refuses a download URL without its signature', async ({ expect }) => {
     const downloadId = stage.stage({ bytes: new Uint8Array([1]), type: 'text/plain' });
     const unsigned = new URL(await mintedUrl(downloadId));
