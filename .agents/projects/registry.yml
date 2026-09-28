@@ -789,7 +789,7 @@ projects:
     tasks: packages/ui/react-ui/src/next/TASKS.md
     design: packages/ui/react-ui/src/next/DESIGN.md
     prs: [13502]
-    resume: 'PR #13502 OPEN (Phase 1: design + 15 Next components incl. Dialog, 15 play tests green). NEXT: respond to review; choose Phase 2 scope (Menu/Listbox/Card, first plugin adoption, React/Solid parity test).'
+    resume: 'PR #13502 in merge queue (auto-merge on): Phase 1 + Phase 2 (FieldSet, Card+Poster, Image, Collapsible, Menu, Switch, Tooltip), 39 play tests green. NEXT: land; then Phase 3 (first plugin adoption via exported next subpath, Tooltip focus-swap fix, React/Solid parity).'
 ended:
   - name: task-planning-skill
     user: burdon
