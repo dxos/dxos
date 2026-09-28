@@ -3,7 +3,7 @@
 //
 
 import { type Decorator } from '@storybook/react-vite';
-import React, { Fragment } from 'react';
+import React from 'react';
 
 import { Next } from './Next.tsx';
 import { type Size, SIZES } from './sizes.ts';
@@ -30,7 +30,7 @@ export type WithSizesOptions = {
 };
 
 /**
- * Renders the story at its `size` arg (default `md`), or once per size when `allSizes` is set, each in a labelled row: a
+ * Renders the story at its `size` arg (default `md`), or once per size when `allSizes` is set, each in its own row: a
  * `level='base'` rail-gutter Container at that size, `data-testid='size-<size>'`, with the size passed as the `size` arg.
  */
 export const withSizes =
@@ -39,17 +39,11 @@ export const withSizes =
     const selected = SIZES.find((size) => size === context.args.size) ?? 'md';
     const shown = context.args.allSizes === true ? sizes : [selected];
     return (
-      <div
-        className={`nx-scope @container grid grid-cols-[min-content_minmax(0,1fr)] ${width} border border-separator`}
-        data-size='md'
-      >
+      <div className={`nx-scope @container flex flex-col ${width}`} data-size='md'>
         {shown.map((size) => (
-          <Fragment key={size}>
-            <span className='self-center px-2 text-xs text-description'>{size}</span>
-            <Next.Container size={size} gutter='rail' level='base' data-testid={`size-${size}`}>
-              <Story args={{ ...context.args, size }} />
-            </Next.Container>
-          </Fragment>
+          <Next.Container key={size} size={size} gutter='rail' level='base' data-testid={`size-${size}`}>
+            <Story args={{ ...context.args, size }} />
+          </Next.Container>
         ))}
       </div>
     );

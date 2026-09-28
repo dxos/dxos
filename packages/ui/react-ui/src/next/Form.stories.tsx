@@ -10,6 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
 import { expectAnchoredBelow } from './testing.ts';
 
 const ROLES: Next.SelectOption[] = [
@@ -19,8 +20,8 @@ const ROLES: Next.SelectOption[] = [
 ];
 
 /** A basic form: each Field stacks its label above the control (decision 13). */
-const DefaultStory = () => (
-  <div className='nx-scope @container w-[30rem] border border-separator' data-size='md'>
+const DefaultStory = ({ size = 'md' }: SizeArgs) => (
+  <div className='nx-scope @container w-[30rem] border border-separator' data-size={size}>
     <Next.Container gutter='rail' level='base'>
       <Next.Field.Root data-testid='name'>
         <Next.Field.Header>
@@ -47,7 +48,7 @@ const DefaultStory = () => (
             </Next.Block>
           </Next.Field.Header>
           <Next.Select.Trigger placeholder='Select a role' />
-          <Next.Select.Content>
+          <Next.Select.Content size={size}>
             {ROLES.map((item) => (
               <Next.Select.Item key={item.value} item={item} />
             ))}
@@ -81,9 +82,11 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-core/next/form',
   render: DefaultStory,
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
