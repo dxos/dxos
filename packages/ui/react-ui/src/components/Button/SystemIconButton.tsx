@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { composeEventHandlers } from '@dxos/react-hooks';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { downloadBlob } from '@dxos/util';
 
@@ -180,7 +181,7 @@ type ClipboardIconButtonProps = StaticPresetProps & {
 } & ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
 
 const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
-  ({ label, value, onCopy, icon = 'ph--clipboard--regular', hue, classNames, ...props }, forwardedRef) => {
+  ({ label, value, onCopy, icon = 'ph--clipboard--regular', hue, classNames, onClick, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [copied, setCopied] = useState(false);
 
@@ -219,7 +220,7 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
         label={
           copied && props.iconOnly ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))
         }
-        onClick={handleCopy}
+        onClick={composeEventHandlers(onClick, handleCopy)}
         ref={forwardedRef}
       />
     );

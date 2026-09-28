@@ -1292,6 +1292,15 @@ export const TestEdit: Story = {
     await expect(rows()).toHaveLength(before);
     await userEvent.clear(title());
 
+    // The mnemonic chip copies the task's reference; it does not select the row it sits in.
+    const mnemonic = rows()[0].querySelector<HTMLElement>('[data-testid="taskList.item.mnemonic"]');
+    if (!mnemonic) {
+      throw new Error('Task mnemonic not found.');
+    }
+    await userEvent.click(mnemonic);
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    await expect(title().value).toEqual('');
+
     // Selecting a task fills the pane with it.
     const first = rows()[0];
     const firstTitleElement = first.querySelector('[data-testid="taskList.item.title"]');
