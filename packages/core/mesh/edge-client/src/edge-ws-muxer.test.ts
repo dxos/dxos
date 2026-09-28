@@ -293,13 +293,14 @@ describe('WebSocketMuxerTest', () => {
       ['a socket without bufferedAmount, as in workerd', undefined],
       ['a socket with an empty buffer', 0],
     ] as const) {
-      test(`writes every segment before send returns on ${socketKind}`, async ({ expect }) => {
+      test(`writes every segment in one run of the send task on ${socketKind}`, async ({ expect }) => {
         const socket = new TestSocket();
         socket.bufferedAmount = bufferedAmount;
         const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
         const message = textMessage(SEGMENTED_CONTENT);
         const sent = muxer.send(message);
 
+        await vi.advanceTimersToNextTimerAsync();
         expect(socket.frames).toHaveLength(segmentCount(message));
         expect(vi.getTimerCount()).toBe(0);
         await sent;
@@ -315,14 +316,15 @@ describe('WebSocketMuxerTest', () => {
       const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
       const message = textMessage(SEGMENTED_CONTENT);
       const sent = muxer.send(message);
+      await vi.advanceTimersToNextTimerAsync();
       expect(socket.frames).toHaveLength(1);
 
-      vi.advanceTimersToNextTimer();
+      await vi.advanceTimersToNextTimerAsync();
       expect(socket.frames).toHaveLength(1);
 
       socket.onFrame = undefined;
       socket.bufferedAmount = 0;
-      vi.advanceTimersToNextTimer();
+      await vi.advanceTimersToNextTimerAsync();
       expect(socket.frames).toHaveLength(segmentCount(message));
       await sent;
       expect(vi.getTimerCount()).toBe(0);
@@ -345,10 +347,11 @@ describe('WebSocketMuxerTest', () => {
       const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
       const message = textMessage(SEGMENTED_CONTENT);
       const sent = muxer.send(message);
+      await vi.advanceTimersToNextTimerAsync();
       expect(socket.frames).toHaveLength(0);
 
       socket.readyState = WS_OPEN;
-      vi.advanceTimersToNextTimer();
+      await vi.advanceTimersToNextTimerAsync();
       expect(socket.frames).toHaveLength(segmentCount(message));
       await sent;
     });
@@ -365,10 +368,12 @@ describe('WebSocketMuxerTest', () => {
           muxer.send(textMessage(SEGMENTED_CONTENT, 'service-a')),
           muxer.send(textMessage(SEGMENTED_CONTENT, 'service-b')),
         ];
+        const rejected = Promise.all(sends.map((sent) => expect(sent).rejects.toBeInstanceOf(WebSocketClosedError)));
+        await vi.advanceTimersToNextTimerAsync();
         socket.readyState = readyState;
-        vi.advanceTimersToNextTimer();
+        await vi.advanceTimersToNextTimerAsync();
 
-        await Promise.all(sends.map((sent) => expect(sent).rejects.toBeInstanceOf(WebSocketClosedError)));
+        await rejected;
         expect(socket.frames).toHaveLength(0);
         expect(vi.getTimerCount()).toBe(0);
       });
@@ -379,6 +384,7 @@ describe('WebSocketMuxerTest', () => {
       socket.bufferedAmount = SOCKET_BUFFER_FULL;
       const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
       const sent = muxer.send(textMessage(SEGMENTED_CONTENT));
+      await vi.advanceTimersToNextTimerAsync();
 
       // The order `EdgeWsConnection` tears down in: close the socket, then destroy the muxer.
       socket.readyState = WS_CLOSING;
@@ -389,17 +395,27 @@ describe('WebSocketMuxerTest', () => {
       expect(vi.getTimerCount()).toBe(0);
     });
 
+    test('rejects every send on a destroyed muxer, even while the socket is open', async ({ expect }) => {
+      const socket = new TestSocket();
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+      muxer.destroy();
+
+      await expect(muxer.send(unsegmentedMessage('small'))).rejects.toBeInstanceOf(WebSocketClosedError);
+      await expect(muxer.send(textMessage(SEGMENTED_CONTENT))).rejects.toBeInstanceOf(WebSocketClosedError);
+      expect(() => muxer.sendSync(textMessage(SEGMENTED_CONTENT))).toThrow(WebSocketClosedError);
+      expect(socket.frames).toHaveLength(0);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
     test('keeps 300 queued segmented messages apart on one-byte channel ids', async ({ expect }) => {
       const socket = new TestSocket();
-      // Queued behind a full buffer, the messages go out one segment per channel per round.
-      socket.bufferedAmount = SOCKET_BUFFER_FULL;
       const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
       const services = Array.from({ length: 300 }, (_, index) => `service-${index}`);
+      // Queued together, the messages go out one segment per channel per round.
       const sends = services.map((serviceId) =>
         muxer.send(textMessage(`${serviceId}:${SEGMENTED_CONTENT}`, serviceId)),
       );
-      socket.bufferedAmount = 0;
-      vi.runAllTimers();
+      await vi.runAllTimersAsync();
       await Promise.all(sends);
 
       expect(socket.frames[1][1]).not.toBe(socket.frames[0][1]);
@@ -417,17 +433,18 @@ describe('WebSocketMuxerTest', () => {
       };
       const muxer = new WebSocketMuxer(socket);
       const large = textMessage('A'.repeat(2 * WIRE_SEGMENT_BYTES));
-      const sends = [
-        muxer.send(large),
-        muxer.send(textMessage('small')),
-        muxer.send(textMessage('other', 'other-service')),
-      ];
-      // The first segment went out before the buffer filled, and another service has nothing to wait for.
+      const sentLarge = muxer.send(large);
+      await vi.advanceTimersToNextTimerAsync();
+      // The first segment went out before the buffer filled.
+      expect(socket.frames).toHaveLength(1);
+
+      const sends = [sentLarge, muxer.send(textMessage('small')), muxer.send(textMessage('other', 'other-service'))];
+      // Another service's message has nothing to wait for.
       expect(socket.frames).toHaveLength(2);
 
       socket.onFrame = undefined;
       socket.bufferedAmount = 0;
-      vi.runAllTimers();
+      await vi.runAllTimersAsync();
       await Promise.all(sends);
 
       const receiver = new WebSocketMuxer(new TestSocket());
@@ -437,19 +454,22 @@ describe('WebSocketMuxerTest', () => {
 
     test('a small message sent from the queue leaves no sequence open', async ({ expect }) => {
       const socket = new TestSocket();
-      socket.bufferedAmount = SOCKET_BUFFER_FULL;
       const muxer = new WebSocketMuxer(socket);
       const sends = [muxer.send(textMessage('A'.repeat(2 * WIRE_SEGMENT_BYTES))), muxer.send(textMessage('small'))];
-      socket.bufferedAmount = 0;
-      vi.runAllTimers();
+      await vi.runAllTimersAsync();
       await Promise.all(sends);
 
       const failure = new Error('refused');
       socket.sendError = failure;
-      await expect(muxer.send(textMessage('B'.repeat(2 * WIRE_SEGMENT_BYTES)))).rejects.toBe(failure);
+      const refused = expect(muxer.send(textMessage('B'.repeat(2 * WIRE_SEGMENT_BYTES)))).rejects.toBe(failure);
+      await vi.runAllTimersAsync();
+      await refused;
+
       socket.sendError = undefined;
       // The refused message never reached the receiver, so nothing was cut off and the next one goes out.
-      await muxer.send(textMessage('C'.repeat(2 * WIRE_SEGMENT_BYTES)));
+      const next = muxer.send(textMessage('C'.repeat(2 * WIRE_SEGMENT_BYTES)));
+      await vi.runAllTimersAsync();
+      await next;
     });
 
     test('sendSync refuses to cut into segments send has queued', async ({ expect }) => {
@@ -459,8 +479,8 @@ describe('WebSocketMuxerTest', () => {
         socket.bufferedAmount = SOCKET_BUFFER_FULL;
       };
       const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
-      const queued = textMessage(SEGMENTED_CONTENT);
-      const sent = muxer.send(queued);
+      const sent = muxer.send(textMessage(SEGMENTED_CONTENT));
+      await vi.advanceTimersToNextTimerAsync();
       expect(socket.frames).toHaveLength(1);
 
       expect(() => muxer.sendSync(textMessage(SEGMENTED_CONTENT))).toThrow(InvariantViolation);
@@ -468,7 +488,7 @@ describe('WebSocketMuxerTest', () => {
 
       socket.onFrame = undefined;
       socket.bufferedAmount = 0;
-      vi.runAllTimers();
+      await vi.runAllTimersAsync();
       await sent;
       const receiver = new WebSocketMuxer(new TestSocket());
       const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);

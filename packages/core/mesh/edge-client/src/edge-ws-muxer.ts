@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { DeferredTask, Trigger, sleepWithContext } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -69,8 +70,10 @@ export class WebSocketMuxer {
    */
   private _segmentedSendError: Error | undefined;
 
-  /** Set while segments wait for the socket to open or its buffer to drain. */
-  private _sendTimeout: ReturnType<typeof setTimeout> | undefined;
+  /** Disposed by {@link destroy}, which stops the send task mid-wait. */
+  private readonly _ctx = new Context();
+  /** Writes queued frames; one run at a time, and later schedules join the next run. */
+  private readonly _sendTask = new DeferredTask(this._ctx, () => this._sendQueuedFrames());
 
   private readonly _maxChunkLength: number;
 
@@ -82,11 +85,12 @@ export class WebSocketMuxer {
   }
 
   /**
-   * Resolves once the socket has taken the whole message; segments wait only while the socket is connecting or its
-   * buffer is full, and a message never overtakes one its service sent before it.
+   * Resolves once the socket has taken the whole message. Segments go out on the send task, which writes as much as
+   * the socket takes and waits only while it is connecting or its buffer is full; a message never overtakes one its
+   * service sent before it.
    * Rejects with {@link MessageTooLargeError} past the Cloudflare limit, and with {@link WebSocketClosedError} if the
-   * socket is closing or closed, or starts closing or the muxer is destroyed while the message waits. A queued message
-   * also rejects with the error the socket's `send` throws. A close or a throw drops every queued message, and once a
+   * socket is closing or closed or the muxer is destroyed, including while the message waits. A queued message also
+   * rejects with the error the socket's `send` throws. A close or a throw drops every queued message, and once a
    * message was cut off mid-sequence every later segmented message rejects with that error.
    */
   public async send(message: Message): Promise<void> {
@@ -119,7 +123,7 @@ export class WebSocketMuxer {
       this._outMessageChunks.set(channelId, messageChunks);
     }
 
-    this._sendChunkedMessages();
+    this._sendTask.schedule();
 
     await terminatorSentTrigger.wait();
     log.debug('muxer queued message sent', {
@@ -227,10 +231,7 @@ export class WebSocketMuxer {
   }
 
   public destroy(): void {
-    if (this._sendTimeout) {
-      clearTimeout(this._sendTimeout);
-      this._sendTimeout = undefined;
-    }
+    void this._ctx.dispose();
     this._rejectPendingSends(new WebSocketClosedError(this._ws.readyState));
     this._inMessageAccumulator.clear();
     this._inMessageAccumulatorBytes.clear();
@@ -240,10 +241,11 @@ export class WebSocketMuxer {
 
   /**
    * Splits a message into its wire frames: one whole frame, or segments on its service's channel. Returns the channel
-   * of any message that names a service. Throws on a closing or closed socket and past the Cloudflare limit.
+   * of any message that names a service. Throws on a closing or closed socket, on a destroyed muxer and past the
+   * Cloudflare limit.
    */
   private _encode(message: Message): { frames: Uint8Array[]; channelId: number | undefined } {
-    if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
+    if (this._ctx.disposed || this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
       throw new WebSocketClosedError(this._ws.readyState);
     }
     const binary = buf.toBinary(MessageSchema, message);
@@ -278,12 +280,11 @@ export class WebSocketMuxer {
     this._inMessageAccumulatorBytes.delete(channelId);
   }
 
-  /** Writes queued frames one per channel per round until none are left or the socket cannot take more. */
-  private _sendChunkedMessages(): void {
-    if (this._sendTimeout) {
-      return;
-    }
-
+  /**
+   * Writes queued frames one per channel per round until none are left, waiting while the socket is connecting or its
+   * buffer is full. Stops at a closing socket or a throwing `send`, rejecting every queued send.
+   */
+  private async _sendQueuedFrames(): Promise<void> {
     while (this._outMessageChunks.size > 0) {
       for (const [channelId, chunks] of this._outMessageChunks) {
         const { readyState, bufferedAmount } = this._ws;
@@ -305,11 +306,8 @@ export class WebSocketMuxer {
             bufferedAmount,
             pendingChannels: this._outMessageChunks.size,
           });
-          this._sendTimeout = setTimeout(() => {
-            this._sendTimeout = undefined;
-            this._sendChunkedMessages();
-          }, BUFFER_FULL_BACKOFF_TIMEOUT);
-          return;
+          await sleepWithContext(this._ctx, BUFFER_FULL_BACKOFF_TIMEOUT);
+          break;
         }
 
         const chunk = chunks.shift();
@@ -382,8 +380,8 @@ export class SegmentedMessageLimitError extends Error {
 }
 
 /**
- * Rejects a send on a closing or closed socket, or a segmented send whose remaining segments were dropped because the
- * socket began closing, or the muxer was destroyed, before they could be handed to it.
+ * Rejects a send on a closing or closed socket or a destroyed muxer, or a queued send whose remaining frames were
+ * dropped because the socket began closing, or the muxer was destroyed, before they could be handed to it.
  */
 export class WebSocketClosedError extends BaseError.extend(
   'WebSocketClosedError',
