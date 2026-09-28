@@ -302,6 +302,14 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   virtualize?: boolean;
   /**
+   * Draw a vertical guide line down the left of each open branch's children, centred under the
+   * branch's disclosure toggle (or its icon when `toggle` is off), as Ark's indent guides do.
+   *
+   * Not drawn when windowed: a windowed branch's children are rows of the window rather than
+   * content of the branch, so there is no element spanning them to carry the line.
+   */
+  indentGuides?: boolean;
+  /**
    * The element that scrolls the tree, when the consumer owns one.
    *
    * Optional because a tree is usually inside somebody else's scroller; without it the nearest
@@ -359,6 +367,7 @@ export const Tree = <T extends { id: string } = any>({
   dropAtEnd = false,
   hideDragSource = false,
   virtualize = false,
+  indentGuides = false,
   scrollerRef,
   canSelect,
   onOpenChange,
@@ -728,6 +737,7 @@ export const Tree = <T extends { id: string } = any>({
       canSelect,
       selectionMode,
       mountedRef,
+      indentGuides,
       windowed,
       claimFocus,
     }),
@@ -751,6 +761,7 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       onOpenChange,
       onItemHover,
+      indentGuides,
       windowed,
       claimFocus,
     ],
@@ -967,7 +978,9 @@ TreeNodeRow.displayName = 'Tree.NodeRow';
  * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef } = useTreeRender();
+  const { mountedRef, indentGuides, toggle } = useTreeRender();
+  // Only with children to span: the guide would otherwise defeat `empty:hidden` on a childless branch.
+  const guide = indentGuides && (node.children?.length ?? 0) > 0;
 
   const handleRef = useCallback(
     (element: HTMLDivElement | null) => {
@@ -989,6 +1002,8 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
         // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
         // the rows inside an expanded branch.
         'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden empty:hidden',
+        // The containing block the guide spans; an absolute grid child takes no track or gap.
+        guide && 'relative',
         '[interpolate-size:allow-keywords]',
         'data-[animate]:data-[state=open]:animate-tree-disclose',
         'data-[animate]:data-[state=closed]:animate-tree-conceal',
@@ -997,6 +1012,15 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
       {node.children?.map((child) => (
         <TreeNodeRow key={child.value} node={child} />
       ))}
+      {guide && (
+        <TreeView.BranchIndentGuide
+          className='absolute inset-y-0 w-0 border-s border-subdued-separator pointer-events-none'
+          // Centred under the branch's own toggle (or icon), which sits at the start of its indent.
+          style={{
+            insetInlineStart: `calc(${indentTrack(node.level)} + ${toggle ? 'var(--dx-control) / 2' : '0.75rem'})`,
+          }}
+        />
+      )}
     </TreeView.BranchContent>
   );
 };

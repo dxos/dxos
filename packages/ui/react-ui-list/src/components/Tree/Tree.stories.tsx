@@ -10,6 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { raise } from '@dxos/debug';
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -47,6 +48,7 @@ const DefaultStory = ({
   virtualize,
   branches,
   features,
+  indentGuides,
   onItemHover,
 }: {
   draggable?: boolean;
@@ -61,6 +63,8 @@ const DefaultStory = ({
   virtualize?: boolean;
   branches?: boolean;
   features?: boolean;
+  /** Draw a guide line down each open branch's children. */
+  indentGuides?: boolean;
   onItemHover?: (params: { item: TestItem }) => void;
 }) => {
   const rootTree = virtualize
@@ -273,6 +277,7 @@ const DefaultStory = ({
       canSelect={handleCanSelect}
       virtualize={virtualize}
       dropAtEnd={features}
+      indentGuides={indentGuides}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -424,6 +429,49 @@ export const Collapse: Story = {
     toggle.click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() => expect(height()).toBeGreaterThan(0));
+  },
+};
+
+/** The element under `root` matching `selector`, failing the play when it is missing. */
+const queryPart = (root: Element | null, selector: string): HTMLElement =>
+  root?.querySelector<HTMLElement>(selector) ?? raise(new Error(`Missing ${selector}`));
+
+/** Opens the first branch and its first child branch, which is two nested levels of children. */
+const openTwoLevels = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  await canvas.findByRole('tree');
+  const [outer] = await canvas.findAllByTestId('treeItem.toggle');
+  await userEvent.click(outer);
+  await expect(outer).toHaveAttribute('aria-expanded', 'true');
+  const content = queryPart(outer.closest('[data-part="branch"]'), '[data-part="branch-content"]');
+  const [inner] = await within(content).findAllByTestId('treeItem.toggle');
+  await userEvent.click(inner);
+  await expect(inner).toHaveAttribute('aria-expanded', 'true');
+  return [outer, inner];
+};
+
+/** Each open branch draws a guide down its children, centred under its own chevron at every depth. */
+export const IndentGuides: Story = {
+  args: { indentGuides: true },
+  play: async ({ canvasElement }) => {
+    const toggles = await openTwoLevels(canvasElement);
+    await waitFor(() => expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(2));
+    for (const toggle of toggles) {
+      const guide = queryPart(
+        toggle.closest('[data-part="branch"]'),
+        ':scope > [data-part="branch-content"] > [data-part="branch-indent-guide"]',
+      );
+      const { left, width } = toggle.getBoundingClientRect();
+      await expect(Math.abs(guide.getBoundingClientRect().left - (left + width / 2))).toBeLessThanOrEqual(1);
+    }
+  },
+};
+
+/** Guides are opt-in: an open tree without the prop draws none. */
+export const TestNoIndentGuides: Story = {
+  play: async ({ canvasElement }) => {
+    await openTwoLevels(canvasElement);
+    await expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(0);
   },
 };
 
