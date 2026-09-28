@@ -70,7 +70,12 @@ const COMPANION_TAB = (name) => `[data-testid="deck.companion"] >> role=tab[name
 
 /** A narrow window collapses the navtree into an overlay; open it before clicking an item in it. */
 const showSidebar = async ({ demo, page }, testId, label) => {
-  if (!(await page.getByTestId(testId).first().isVisible())) {
+  // A beat for the tree to render first: the button toggles, so pressing it over an open sidebar closes it.
+  // Checked by position, not `isVisible`: the collapsed overlay keeps its items laid out, just off screen.
+  const item = page.getByTestId(testId).first();
+  await item.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
+  const box = await item.boundingBox().catch(() => null);
+  if (!box || box.x < 0) {
     await demo.click({
       selector: 'button:visible:has-text("Open sidebar")',
       label: 'Open sidebar',
@@ -175,8 +180,13 @@ export const steps = [
       // A plugin loaded in an earlier take persists in the profile, enabled (Enabled) or not (Labs, by
       // its tag); uninstall it from its detail page. Only before the agent has started: a replay after
       // it has built must keep the plugin it offered.
+      // Skipped when nothing is loaded under that name, which also keeps a clean take off the sidebar.
       const underway = existsSync(new URL(LEFTOVERS[0], import.meta.url));
-      for (const category of underway ? [] : ['installed', 'labs']) {
+      const loaded = await page.evaluate(
+        (name) => composer.plugins().some((plugin) => plugin.name === name),
+        PLUGIN_NAME,
+      );
+      for (const category of underway || !loaded ? [] : ['installed', 'labs']) {
         const tab = page.getByTestId(`pluginRegistry.${category}`);
         if ((await tab.count()) === 0) {
           continue;
