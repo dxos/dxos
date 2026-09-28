@@ -53,6 +53,7 @@ import {
 import {
   type Features,
   type StyleSet,
+  createAxisRotationTween,
   createLayers,
   createRotationTween,
   flyDuration,
@@ -330,14 +331,19 @@ const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styl
       setTranslation,
       setRotation,
       flyTo: (target, options = {}) => {
-        const { duration = 1_200, tilt = 0, onTick } = options;
+        const { duration = 1_200, tilt = 0, onTick, path = 'arc' } = options;
         const p2 = geoToPosition(target);
         const r1 = projection.rotate() as Vector;
         const r2 = positionToRotation(p2, tilt);
 
         // Approximate current centre from the inverse of the rotation.
         const p1: [number, number] = [-r1[0], -r1[1]];
-        const rotationTween = createRotationTween(projection, setRotation, r1, r2);
+        const rotationTween = (path === 'axis' ? createAxisRotationTween : createRotationTween)(
+          projection,
+          setRotation,
+          r1,
+          r2,
+        );
         const iz = target.zoom !== undefined ? interpolateNumber(zoomRef.current, target.zoom) : undefined;
 
         flyToSelection.interrupt(flyToTransitionName);

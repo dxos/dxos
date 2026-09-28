@@ -49,6 +49,11 @@ export type FlyToOptions = {
    * `t` runs 0→1 across the eased duration.
    */
   onTick?: (t: number) => void;
+  /**
+   * `arc` (default) takes the great-circle path; `axis` turns the globe about its axis, keeping the
+   * poles upright, so the move reads as the earth spinning to the place.
+   */
+  path?: 'arc' | 'axis';
 };
 
 export type FlyToTarget = LatLngLiteral & {

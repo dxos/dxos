@@ -183,8 +183,13 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
         navtree with its own; the guide now teaches a navtree group.
     - name: Add two timezones
       do: Click the plus, pick a timezone from the select and save; do it again with a second timezone.
-      expect: the row shows three clock cards, each ticking in its own timezone, and the plus card after them
+      expect: the row shows three clock cards sorted west to east, each ticking in its own timezone, with a pin on the map, and the plus card after them
       note: The timezones live on the space's `Clock` object, so they survive a reload.
+    - name: Select the clocks on the map, then on the globe
+      do: Click each clock in turn, then switch the map to the globe and click each clock again.
+      expect: |
+        the selected clock's card is outlined and its pin is highlighted; on the globe the earth turns about
+        its axis to the selected clock's meridian
   after:
     - name: Delete the project
       do: Right-click the "World Clock" project in the navtree and choose Delete.
