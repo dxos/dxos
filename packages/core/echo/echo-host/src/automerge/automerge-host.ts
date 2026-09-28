@@ -21,6 +21,7 @@ import {
   type PeerId,
   Repo,
   type StorageKey,
+  type SubductionPeerBindFailure,
   type SubductionPeerBinding,
   type SubductionPeerId,
   type SubductionPolicy,
@@ -430,7 +431,12 @@ export class AutomergeHost extends Resource {
       Event.wrap<SubductionPeerBinding>(this._repo, 'subduction-peer-bound').on(this._ctx, (binding) => {
         if ('repoPeerId' in binding) {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
+          this._echoNetworkAdapter.onPeerTransportBound(binding.repoPeerId);
         }
+      });
+      Event.wrap<SubductionPeerBindFailure>(this._repo, 'subduction-peer-bind-failed').on(this._ctx, (failure) => {
+        log.verbose('subduction handshake failed', { peerId: failure.repoPeerId, error: failure.error });
+        this._echoNetworkAdapter.onPeerTransportFailed(failure.repoPeerId, failure.error);
       });
 
       // Quiet subduction_core's console WARNs: every per-sedimentree sync round fans out to all

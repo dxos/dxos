@@ -138,6 +138,16 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return this._resettingTransports.has(peerId);
   }
 
+  /** Forwards a Subduction bind for `peerId` to its connection. */
+  public onPeerTransportBound(peerId: PeerId): void {
+    this._connections.get(peerId)?.connection.onTransportBound?.();
+  }
+
+  /** Forwards a failed Subduction handshake for `peerId` to its connection. */
+  public onPeerTransportFailed(peerId: PeerId, error: unknown): void {
+    this._connections.get(peerId)?.connection.onTransportFailed?.(error);
+  }
+
   public onConnectionAuthScopeChanged(peer: PeerId): void {
     const entry = this._connections.get(peer);
     if (entry) {

@@ -2,11 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DocHandle, type SubductionPolicy, initSubduction, parseAutomergeUrl } from '@automerge/automerge-repo';
+import {
+  type DocHandle,
+  type SubductionPeerBindFailure,
+  type SubductionPolicy,
+  initSubduction,
+  parseAutomergeUrl,
+} from '@automerge/automerge-repo';
 import { MemorySigner } from '@automerge/automerge-subduction';
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { sleep } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 
 import {
   FIND_STATES,
@@ -442,6 +448,27 @@ describe('SubductionPolicy', () => {
       await gate.waitForDenial();
       expect(hostProgressOfClientDoc.peek().state).to.not.equal('ready');
       expect(clientProgressOfHostDoc.peek().state).to.not.equal('ready');
+    });
+
+    test('a refused handshake is reported to the repo, not swallowed', async () => {
+      const { repos, adapters } = await createHostClientRepoTopology({
+        subductionPolicies: {
+          client: {
+            ...PERMISSIVE_POLICY,
+            authorizeConnect: async () => {
+              throw new Error('connect denied');
+            },
+          },
+        },
+      });
+      const [host, client] = repos;
+      const failed = new Trigger<SubductionPeerBindFailure>();
+      client.once('subduction-peer-bind-failed', (failure) => failed.wake(failure));
+      await connectAdapters(adapters);
+
+      const failure = await failed.wait({ timeout: SYNC_WINDOW_MS });
+      expect(failure.repoPeerId).toEqual(host.peerId);
+      expect(failure.error).toBeDefined();
     });
   });
 

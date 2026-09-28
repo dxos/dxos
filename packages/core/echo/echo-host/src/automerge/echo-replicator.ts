@@ -118,6 +118,16 @@ export interface AutomergeReplicatorConnection {
    * @returns true if the collection should be synced to this peer.
    */
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
+
+  /**
+   * Subduction bound a verified transport to this peer.
+   */
+  onTransportBound?(): void;
+
+  /**
+   * Subduction's handshake with this peer failed while the connection stayed open, so no bytes can flow on it.
+   */
+  onTransportFailed?(error: unknown): void;
 }
 
 export type ShouldAdvertiseProps = {
