@@ -374,6 +374,19 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     initial-focus lookup already honours in a Dialog), else `Cancel`; `Action` is a `primary` Button that closes after
     its handler unless the handler prevents default. Next ships no labels for Cancel or Action (AUDIT 2.10).
 
+46. **Card parity.** `Card.Section` is an inheriting Container, a `group` named by its optional caption. `Card.Row`
+    is its own small grid rather than a subgrid of the card: a fixed block-sized icon cell (fixed tracks align across
+    subtrees, decision 5, so every row's text starts at the same x without the card defining columns that the narrow
+    pane collapse would drop), the text truncating, and a trailing cell kept whole. A Root or Row with `onClick` is a
+    `button`, activated by Enter and Space only when it is itself the target; `Card.Action` (a ghost icon-only
+    Button), `Card.Link` and `Card.Menu` (a ghost ⋮ trigger with a sized Menu) stop their clicks so a clickable card is
+    not activated through them. The current `Card.Action`, a full-row button, maps to `Card.Row onClick`; the new
+    `Card.Action` is the icon-only one the header and rows need. `Card.Text` is Typography with the current
+    `truncate`/`variant`. `selected` sets `data-selected` and `aria-current` with an accent border; `border={false}`
+    hides the frame. `fullWidth` is not copied: a Next card fills its track and its host decides the width (6).
+    `DragHandle` moved out of the Toolbar namespace into `Next.DragHandle`, shared as `Toolbar.DragHandle` and
+    `Card.DragHandle`.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

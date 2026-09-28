@@ -146,17 +146,17 @@ ToolbarLink.displayName = 'Next.Toolbar.Link';
 // DragHandle
 //
 
-type ToolbarDragHandleProps = {
+type DragHandleProps = {
   /** Names the handle for assistive tech; required, since Next ships no translated defaults (AUDIT 2.10). */
   'label': string;
   'data-testid'?: string;
 };
 
 /**
- * A ghost icon-only Button with the six-dot grip for a drag-and-drop source to bind. It stays out of the roving focus
- * (dragging is a pointer gesture) and shows no Tooltip.
+ * A ghost icon-only Button with the six-dot grip for a drag-and-drop source to bind (`Toolbar.DragHandle`,
+ * `Card.DragHandle`). It never joins a toolbar's roving focus (dragging is a pointer gesture) and shows no Tooltip.
  */
-const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
+export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
   ({ label, 'data-testid': testId }, forwardedRef) => (
     <ToolbarContext.Provider value={undefined}>
       <Button
@@ -174,7 +174,7 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
   ),
 );
 
-ToolbarDragHandle.displayName = 'Next.Toolbar.DragHandle';
+DragHandle.displayName = 'Next.DragHandle';
 
 //
 // ToggleGroup
@@ -193,14 +193,14 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Text: ToolbarText,
   Link: ToolbarLink,
-  DragHandle: ToolbarDragHandle,
+  DragHandle,
   Separator: ToolbarSeparator,
   ToggleGroup: ToolbarToggleGroup,
   ToggleGroupItem: ToggleGroup.Item,
 };
 
 export type {
-  ToolbarDragHandleProps,
+  DragHandleProps,
   ToolbarLinkProps,
   ToolbarRootProps,
   ToolbarSeparatorProps,

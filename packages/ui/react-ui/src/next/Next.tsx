@@ -26,6 +26,8 @@ import {
   type DateInputProps as NextDateInputProps,
   type DateInputType as NextDateInputType,
   Dialog as NextDialog,
+  DragHandle as NextDragHandle,
+  type DragHandleProps as NextDragHandleProps,
   Field as NextField,
   FieldSet as NextFieldSet,
   type FieldValence as NextFieldValence,
@@ -109,6 +111,8 @@ export namespace Next {
   export const Image = NextImage;
   export type ImageProps = NextImageProps;
   export const Card = NextCard;
+  export const DragHandle = NextDragHandle;
+  export type DragHandleProps = NextDragHandleProps;
   export const Collapsible = NextCollapsible;
   export const Menu = NextMenu;
   export const Tooltip = NextTooltip;
