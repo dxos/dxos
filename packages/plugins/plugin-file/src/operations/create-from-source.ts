@@ -41,45 +41,42 @@ const decodeBase64 = (data: string): Uint8Array => {
  * `Content-Type` — never from the URL's extension. A `.png` URL that serves something else is the
  * exact case that makes extension-sniffing exploitable.
  */
-const resolveSource = (source: typeof FileOperation.FileSource.Type) =>
-  Effect.gen(function* () {
-    switch (source.type) {
-      case 'base64': {
-        // Checked before `atob`, not after: the decoded length is knowable from the encoded one, so
-        // there is no reason to materialize an oversized buffer just to reject it.
-        const encodedLength = source.data.replace(/\s/g, '').length;
-        if (Math.floor((encodedLength * 3) / 4) > MAX_INLINE_SOURCE_BYTES) {
-          return yield* Effect.fail(
-            new FileTooLargeError(Math.floor((encodedLength * 3) / 4), MAX_INLINE_SOURCE_BYTES),
-          );
-        }
-
-        const bytes = yield* Effect.try({
-          try: () => decodeBase64(source.data),
-          catch: FileReadError.wrap(),
-        });
-        if (bytes.byteLength > MAX_INLINE_SOURCE_BYTES) {
-          return yield* Effect.fail(new FileTooLargeError(bytes.byteLength, MAX_INLINE_SOURCE_BYTES));
-        }
-        return { bytes, type: source.mediaType };
+const resolveSource = Effect.fnUntraced(function* (source: typeof FileOperation.FileSource.Type) {
+  switch (source.type) {
+    case 'base64': {
+      // Checked before `atob`, not after: the decoded length is knowable from the encoded one, so
+      // there is no reason to materialize an oversized buffer just to reject it.
+      const encodedLength = source.data.replace(/\s/g, '').length;
+      if (Math.floor((encodedLength * 3) / 4) > MAX_INLINE_SOURCE_BYTES) {
+        return yield* Effect.fail(new FileTooLargeError(Math.floor((encodedLength * 3) / 4), MAX_INLINE_SOURCE_BYTES));
       }
 
-      case 'http': {
-        // The URL is chosen by the caller — a model, in the case this operation exists for — so the
-        // guard is not optional. No proxy: this runs headless, where there is no CORS constraint to
-        // work around and no reason to route the bytes through an extra hop.
-        const url = yield* Effect.try({
-          try: () => validateExternalUrl(source.url),
-          catch: FileReadError.wrap(),
-        });
-        const downloaded = yield* Effect.tryPromise({
-          try: () => safeFetchBytes(url, { maxBytes: MAX_FETCHED_BYTES, timeoutMs: FETCH_TIMEOUT_MS }),
-          catch: FileReadError.wrap(),
-        });
-        return { bytes: downloaded.bytes, type: downloaded.contentType };
+      const bytes = yield* Effect.try({
+        try: () => decodeBase64(source.data),
+        catch: FileReadError.wrap(),
+      });
+      if (bytes.byteLength > MAX_INLINE_SOURCE_BYTES) {
+        return yield* Effect.fail(new FileTooLargeError(bytes.byteLength, MAX_INLINE_SOURCE_BYTES));
       }
+      return { bytes, type: source.mediaType };
     }
-  });
+
+    case 'http': {
+      // The URL is chosen by the caller — a model, in the case this operation exists for — so the
+      // guard is not optional. No proxy: this runs headless, where there is no CORS constraint to
+      // work around and no reason to route the bytes through an extra hop.
+      const url = yield* Effect.try({
+        try: () => validateExternalUrl(source.url),
+        catch: FileReadError.wrap(),
+      });
+      const downloaded = yield* Effect.tryPromise({
+        try: () => safeFetchBytes(url, { maxBytes: MAX_FETCHED_BYTES, timeoutMs: FETCH_TIMEOUT_MS }),
+        catch: FileReadError.wrap(),
+      });
+      return { bytes: downloaded.bytes, type: downloaded.contentType };
+    }
+  }
+});
 
 const handler: Operation.WithHandler<typeof FileOperation.CreateFromSource> = FileOperation.CreateFromSource.pipe(
   Operation.withHandler(
