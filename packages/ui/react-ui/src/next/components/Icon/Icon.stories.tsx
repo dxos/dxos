@@ -11,7 +11,7 @@ import { expect, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, expectDecorativeIconsHidden, expectScoped } from '../../testing.ts';
 
 const DefaultStory = ({ size }: SizeArgs) => (
@@ -30,6 +30,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Icon',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -44,6 +46,7 @@ export const Default: Story = {};
  * an unlabelled one is hidden from assistive tech (decision 9).
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const icon = byTestId(canvasElement, `rail-${size}`).querySelector('svg')?.getBoundingClientRect();

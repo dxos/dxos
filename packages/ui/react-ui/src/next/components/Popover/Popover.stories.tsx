@@ -12,7 +12,7 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow } from '../../testing.ts';
 
 type SharePopoverProps = SizeArgs & {
@@ -124,6 +124,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Popover',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -141,6 +143,7 @@ export const Default: Story = {};
  * popover without a trigger anchors to `positioning.getAnchorRect`. The story ends open.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const trigger = byTestId(canvasElement, 'popover-md-trigger');
     const body = within(canvasElement.ownerDocument.body);

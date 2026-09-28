@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, expectScoped } from '../../testing.ts';
 
 type StoryArgs = SizeArgs & {
@@ -44,6 +44,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Textarea',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<StoryArgs>;
 
@@ -58,6 +60,7 @@ export const Default: Story = {};
  * Field label; with `autoResize` it grows with its content instead of scrolling.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const textarea = byTestId(canvasElement, `textarea-${size}`);

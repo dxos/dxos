@@ -11,7 +11,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 
 const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
@@ -58,6 +58,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Field',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -75,6 +77,7 @@ export const Default: Story = {};
  * names its control.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const input = byTestId(canvasElement, `field-input-${size}`);

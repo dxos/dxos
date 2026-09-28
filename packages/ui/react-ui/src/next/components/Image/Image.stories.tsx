@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { sizeRow } from '../../testing.ts';
 
 /** Inline SVG, so the stories never fetch from the network. */
@@ -55,6 +55,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Image',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[40rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -69,6 +71,7 @@ export const Default: Story = {};
  * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     for (const [testId, ratio] of [

@@ -13,7 +13,7 @@ import { hues } from '@dxos/ui-types';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 
 /** Label text (one step below the body) per size, in px. */
@@ -46,6 +46,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Tag',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[48rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -60,6 +62,7 @@ export const Default: Story = {};
  * to ui-theme's surface/fg tokens, and valences share the current Tag's hues (error is rose).
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const tag = byTestId(canvasElement, `tag-${size}`);

@@ -12,7 +12,7 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectScoped, realHover } from '../../testing.ts';
 import { type ScrollAreaRootProps } from './ScrollArea.tsx';
 
@@ -103,6 +103,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/ScrollArea',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[56rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<StoryArgs>;
 
@@ -134,6 +136,7 @@ export const Default: Story = {};
  * pointer is over it; `scrollbars={false}` shows no bar.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     await assertAligned(canvasElement, 'overlay-md');
     const viewport = byTestId(canvasElement, 'overlay-md-viewport');

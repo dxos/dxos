@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { sizeRow } from '../../testing.ts';
 
 const DefaultStory = () => (
@@ -33,6 +33,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Collapsible',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -44,6 +46,7 @@ export const Default: Story = {};
 
 /** The trigger toggles the section by pointer and keyboard; the story ends open. */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     const trigger = canvas.getByRole('button', { name: 'Advanced settings' });

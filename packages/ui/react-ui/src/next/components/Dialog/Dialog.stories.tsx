@@ -13,7 +13,7 @@ import { random } from '@dxos/random';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectTooltip } from '../../testing.ts';
 
 random.seed(123);
@@ -109,6 +109,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Dialog',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -147,6 +149,7 @@ const HEADER_BLOCK: [Size, number][] = [
  * The story ends with the dialog and tooltip open.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const trigger = byTestId(canvasElement, 'dialog-md-trigger');
     const body = within(canvasElement.ownerDocument.body);

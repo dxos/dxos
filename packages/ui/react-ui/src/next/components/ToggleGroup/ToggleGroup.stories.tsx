@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 
 /** A single-select group of icon-only items (alignment) and a multiple-select group of text items (marks). */
@@ -62,6 +62,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/ToggleGroup',
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[36rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -77,6 +79,7 @@ export const Default: Story = {};
  * arrow keys rove between its items (skipping disabled ones) and Space or Enter changes the value.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const group = byTestId(canvasElement, `align-${size}`).getBoundingClientRect();

@@ -11,7 +11,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectScoped } from '../../testing.ts';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
@@ -44,6 +44,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Label',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -59,6 +61,7 @@ export const Default: Story = {};
  * box, yet still names its input.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     for (const size of SIZES) {

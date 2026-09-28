@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 
 /** Icon size (and so track height) per size, in px. */
 const ICON: Record<Size, number> = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };
@@ -27,6 +27,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Switch',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -38,6 +40,7 @@ export const Default: Story = {};
 
 /** Toggling flips the checked state; the track is icon-tall and the root block-tall at every size. */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     for (const size of SIZES) {

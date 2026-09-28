@@ -11,7 +11,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
 
 /** A toolbar of plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
@@ -47,6 +47,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Input',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -63,6 +65,7 @@ export const Default: Story = {};
  * input's focus; a trailing icon-only Button fits inside the row. `subdued` drops the well.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const toolbar = byTestId(canvasElement, `toolbar-${size}`).getBoundingClientRect();

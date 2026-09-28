@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectScoped } from '../../testing.ts';
 
 const DefaultStory = ({ size }: SizeArgs) => (
@@ -40,6 +40,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/DateInput',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -54,6 +56,7 @@ export const Default: Story = {};
  * date, time and date-time inputs are named by their Field labels, with calendar or clock icons.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const root = byTestId(canvasElement, `date-${size}`);

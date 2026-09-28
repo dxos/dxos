@@ -10,7 +10,7 @@ import { expect, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 
 const JUSTIFY = ['start', 'end', 'between'] as const;
@@ -48,6 +48,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Group',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -69,6 +71,7 @@ export const Default: Story = {};
  * child stretches across the group.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     await expect(canvas.queryByRole('toolbar')).toBeNull();

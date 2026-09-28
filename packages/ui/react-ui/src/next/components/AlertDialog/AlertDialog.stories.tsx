@@ -10,7 +10,7 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId } from '../../testing.ts';
 
 type ConfirmProps = SizeArgs & {
@@ -67,6 +67,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/AlertDialog',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -82,6 +84,7 @@ export const Default: Story = {};
  * Cancel and Escape close it without acting; Action runs its handler and closes. The story ends open.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     const trigger = byTestId(canvasElement, 'confirm-md-trigger');

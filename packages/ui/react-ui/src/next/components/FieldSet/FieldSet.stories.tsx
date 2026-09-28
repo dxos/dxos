@@ -10,7 +10,7 @@ import { expect, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { sizeRow } from '../../testing.ts';
 
 /** Valid and enabled sets, then an invalid and a disabled one; test ids are scoped by the size row. */
@@ -84,6 +84,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/FieldSet',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -106,6 +108,7 @@ export const Default: Story = {};
  * control inside it, and an invalid set shows its error and marks its fields invalid.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement: canvasRoot }) => {
     const canvasElement = sizeRow(canvasRoot, 'md');
     const canvas = within(canvasElement);

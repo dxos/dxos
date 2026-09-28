@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import {
   GEOMETRY,
   byTestId,
@@ -153,7 +153,9 @@ const meta = {
   render: DefaultStory,
   decorators: [withSizes({ width: 'w-[48rem]' }), withTheme()],
   parameters: { layout: 'centered' },
+  args: { size: 'md' },
   argTypes: {
+    ...SIZE_ARG_TYPES,
     variant: { control: 'select', options: VARIANTS.map(({ variant }) => variant) },
     valence: { control: 'select', options: ['neutral', 'info', 'success', 'warning', 'error'] },
   },
@@ -178,7 +180,7 @@ export const Default: Story = {};
  * hue, shifting brightness on hover. The story ends with a tooltip open.
  */
 export const Test: Story = {
-  args: { variants: true },
+  args: { allSizes: true, variants: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

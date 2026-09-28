@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectAnchoredBelow, expectScoped, sizeRow } from '../../testing.ts';
 
 const OPTIONS: Next.ComboboxOption[] = [
@@ -67,6 +67,8 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Combobox',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -83,6 +85,7 @@ export const Default: Story = {};
  * choosing fills the input; the story ends open.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const control = byTestId(canvasElement, `combobox-${size}`);
