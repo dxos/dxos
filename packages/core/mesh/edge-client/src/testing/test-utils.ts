@@ -5,6 +5,7 @@
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
@@ -35,11 +36,16 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   // Open sockets in admission order. Like EDGE's router, the server talks to the newest open one.
   const connections: { ws: WebSocket; muxer: WebSocketMuxer }[] = [];
   const newestConnection = () => connections.at(-1);
+  const requireNewestConnection = () => {
+    const connection = newestConnection();
+    invariant(connection, 'The test server has no open connection.');
+    return connection;
+  };
 
   const messageSink: any[] = [];
   const messageSourceLog: any[] = [];
   const closeTrigger = new Trigger();
-  const sendResponseMessage = createResponseSender(() => newestConnection()!.muxer);
+  const sendResponseMessage = createResponseSender(() => requireNewestConnection().muxer);
 
   wsServer.on('connection', (ws: WebSocket) => {
     const muxer = new WebSocketMuxer(ws);
@@ -88,11 +94,11 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     admittedAttempts: () => [...admittedAttempts],
     sendResponseMessage,
     sendMessage: (msg: Message) => {
-      return newestConnection()!.muxer.send(msg);
+      return requireNewestConnection().muxer.send(msg);
     },
     closeConnection: () => {
       closeTrigger.reset();
-      newestConnection()!.ws.close(1011);
+      requireNewestConnection().ws.close(1011);
       return closeTrigger.wait();
     },
   };
