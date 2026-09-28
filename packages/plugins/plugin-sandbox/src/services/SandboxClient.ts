@@ -26,8 +26,17 @@ export const ExecResult = Schema.Struct({
   stderr: Schema.String,
   exitCode: Schema.Number,
   success: Schema.Boolean,
+  /** Set for a command started in the background, which is all that `success` then means. */
+  processId: Schema.optional(Schema.String),
 });
 export type ExecResult = Schema.Schema.Type<typeof ExecResult>;
+
+export const ExposedPort = Schema.Struct({
+  port: Schema.Number,
+  /** Public URL of the port, ending in `/`; the token in it is the only credential it needs. */
+  url: Schema.String,
+});
+export type ExposedPort = Schema.Schema.Type<typeof ExposedPort>;
 
 export const FileEntry = Schema.Struct({
   name: Schema.String,
@@ -60,6 +69,8 @@ export type ExecRequest = {
   cwd?: string;
   env?: Record<string, string>;
   timeout?: number;
+  /** Start the command and return at once, for a server that must outlive the request. */
+  background?: boolean;
 };
 
 /**
@@ -210,6 +221,15 @@ export class SandboxClient {
       Schema.Struct({ entries: Schema.Array(FileEntry) }),
       METADATA_TIMEOUT,
     ).pipe(Effect.map((body) => body.entries));
+  }
+
+  exposePort(spaceId: string, sandboxId: string, port: number): RequestEffect<ExposedPort> {
+    return this.#send(
+      HttpClientRequest.post(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/ports`)),
+      { port },
+      ExposedPort,
+      METADATA_TIMEOUT,
+    );
   }
 
   /**

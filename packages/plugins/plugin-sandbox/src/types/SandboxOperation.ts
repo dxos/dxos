@@ -65,12 +65,41 @@ export const Exec = Operation.make({
     timeout: Schema.optional(Schema.Union([Schema.Number, Schema.NumberFromString])).annotate({
       description: 'Timeout in milliseconds. Defaults to five minutes.',
     }),
+    background: Schema.optional(Schema.Boolean).annotate({
+      description:
+        'Start the command and return at once without its output, leaving it running — for a server. EDGE sandboxes only.',
+    }),
   }),
   output: Schema.Struct({
     stdout: Schema.String,
     stderr: Schema.String,
     exitCode: Schema.Number,
     success: Schema.Boolean,
+    processId: Schema.optional(Schema.String).annotate({
+      description: 'Id of the process a background command started.',
+    }),
+  }),
+  services: [Database.Service, SandboxService.Service],
+});
+
+export const ExposePort = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sandbox.exposePort'),
+    name: 'ExposePort',
+    description:
+      'Publishes a port the sandbox listens on at a public HTTPS URL that a browser can load without credentials, with CORS for any origin. EDGE sandboxes only.',
+    icon: 'ph--globe--regular',
+  },
+  input: Schema.Struct({
+    sandbox: SandboxRef,
+    port: Schema.Union([Schema.Number, Schema.NumberFromString]).annotate({
+      description: 'Port a process in the sandbox listens on: 1024-65535, except 3000.',
+    }),
+  }),
+  output: Schema.Struct({
+    url: Schema.String.annotate({
+      description: 'Public URL of the port, ending in `/`; append a path to reach a file the server serves.',
+    }),
   }),
   services: [Database.Service, SandboxService.Service],
 });

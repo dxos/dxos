@@ -62,6 +62,7 @@ describe('SandboxService layer from capabilities', () => {
       readFileBytes: () => Effect.die('unused'),
       writeFile: () => Effect.die('unused'),
       listFiles: () => Effect.die('unused'),
+      exposePort: () => Effect.die('unused'),
     };
     manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: registry });
     manager.contribute({ module: 'test', interface: SandboxCapabilities.Settings, implementation: settings });

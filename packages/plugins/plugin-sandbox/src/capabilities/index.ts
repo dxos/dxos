@@ -5,6 +5,9 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
 import { meta } from '#meta';
 import { SandboxCapabilities } from '#types';
@@ -25,6 +28,15 @@ export const LocalLauncher = Capability.lazyModule(
   'LocalLauncher',
   { provides: [SandboxCapabilities.LocalLauncher], activatesOn: ActivationEvents.Startup, environments: [] },
   () => import('./local-launcher.ts'),
+);
+export const ProjectTemplates = Capability.lazyModule(
+  'ProjectTemplates',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ProjectCapabilities.Template],
+    activatesOn: ProjectsEvents.Start,
+  },
+  () => import('./project-templates.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Settings = AppCapability.settings(() => import('./settings.ts'), {

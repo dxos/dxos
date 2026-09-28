@@ -6,6 +6,19 @@ version: 0.1.0
 
 Sandbox plugin for DXOS Composer providing isolated shell environments.
 
+It also contributes the **Composer Plugin (Sandbox)** project template: a project whose agent builds a
+TypeScript Composer plugin in an EDGE sandbox, serves the build from the container, and offers the exposed
+URL back to load — the Coding (Dev) template's demo without a locally served Composer.
+
+## Exposed ports
+
+A process started with `background: true` keeps running after `exec` returns. `exposePort` then issues
+`<edge>/sandbox/preview/<sandboxId>/<port>/<token>/`, which proxies any request below it to that port in
+the container with CORS for any origin and no `Authorization` — so a browser can fetch a manifest and
+import a module from it. The random token in the path is the only credential, and it is checked before the
+container is touched. The URL lives as long as the sandbox; a background process stops when the container
+sleeps after some minutes idle, and is started again with another `exec`.
+
 ## Backends
 
 The operations run against `SandboxService.Service`, which the plugin contributes to the process
@@ -71,12 +84,26 @@ op exec
     env?: Record<string, string>
     timeout?: number
     stdin?: string
+    background?: boolean # start and return at once, leaving the command running (EDGE only)
   output:
     stdout: string
     stderr: string
     exitCode: number
     success: boolean
+    processId?: string   # set for a background command
   effects: [sandbox:exec]
+```
+
+```mdl
+op exposePort
+  key: org.dxos.operation.sandbox.exposePort
+  desc: Publishes a port the sandbox listens on at a public URL loadable without credentials (EDGE only).
+  input:
+    sandbox: Ref<Sandbox>
+    port: number         # 1024-65535, except 3000
+  output:
+    url: string          # ends in `/`; the token in the path is the only credential
+  effects: [sandbox:expose]
 ```
 
 ```mdl

@@ -128,10 +128,22 @@ export class LocalSandboxBackend implements SandboxService.Backend {
     request: ExecRequest,
   ): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
+      // Every command is bounded by its wall-clock timeout and runs one at a time, so one that
+      // outlives the call would hold the sandbox for everything after it.
+      if (request.background) {
+        return yield* Effect.fail(
+          new SandboxService.SandboxError({ message: 'Local sandboxes cannot run background commands.' }),
+        );
+      }
       const entry = yield* this.#open(spaceId, sandboxId);
       const cwd = request.cwd ? yield* this.#resolve(entry, request.cwd) : entry.workspaceDir;
       return yield* this.#run(entry, request, cwd);
     });
+  }
+
+  /** Commands reach only the allowed domains and nothing reaches them, so there is nothing to expose. */
+  exposePort(): Effect.Effect<never, SandboxService.SandboxError> {
+    return Effect.fail(new SandboxService.SandboxError({ message: 'Local sandboxes cannot expose ports; use EDGE.' }));
   }
 
   readFileBytes(

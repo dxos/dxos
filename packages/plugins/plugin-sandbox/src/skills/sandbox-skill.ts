@@ -17,6 +17,7 @@ const make = () =>
       operations: [
         SandboxOperation.CreateSandbox,
         SandboxOperation.Exec,
+        SandboxOperation.ExposePort,
         SandboxOperation.UploadFile,
         SandboxOperation.DownloadFile,
       ],
@@ -30,6 +31,10 @@ const make = () =>
         The sandbox service is lazily initialized: the container starts on first use.
         A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds).
         A command that is cut off has not finished.
+        To serve something (a static site, a dev server), start the server with \`background: true\`, which
+        returns at once and leaves it running, then call ExposePort with its port for a public URL.
+        A background server stops when the container sleeps after some minutes idle; start it again if its
+        URL stops answering.
       `,
     }),
   });
