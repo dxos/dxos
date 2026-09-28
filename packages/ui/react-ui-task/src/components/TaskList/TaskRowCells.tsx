@@ -132,6 +132,8 @@ export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => 
     label={Obj.getMnemonic(task)}
     onCopy={() => Obj.getURI(task, { prefer: 'absolute' }).toString()}
     data-testid='taskList.item.mnemonic'
+    // The row is the selection target; copying must not also select it.
+    onClick={(event) => event.stopPropagation()}
   />
 );
 
