@@ -3,8 +3,9 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { type CSSProperties, type PropsWithChildren } from 'react';
+import React, { type ComponentPropsWithoutRef, type CSSProperties, type PropsWithChildren } from 'react';
 
+import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useIconHref } from '../hooks/index.ts';
@@ -58,29 +59,34 @@ export namespace Next {
   };
 
   // TODO(burdon): Implement geometry (padding).
-  export const Input = () => {
+  export const Input = ({ className, type = 'text', ...props }: ComponentPropsWithoutRef<'input'>) => {
     return (
       <input
-        type='text'
-        placeholder='Input'
-        className={[
+        {...props}
+        type={type}
+        className={mx(
           'w-full px-(--gap-size) py-0',
           'text-[length:var(--font-size,1rem)] leading-(--line-height)',
           'bg-base-surface border-none dx-focus-ring-inset',
-        ].join(' ')}
+          className,
+        )}
       />
     );
   };
 
   // TODO(burdon): Implement geometry (padding).
-  export const Button = ({ children }: PropsWithChildren) => {
+  // `button` by default: the browser's `submit` would post an enclosing form on every click.
+  export const Button = ({ className, type = 'button', children, ...props }: ComponentPropsWithoutRef<'button'>) => {
     return (
       <button
-        className={[
+        {...props}
+        type={type}
+        className={mx(
           'w-fit px-(--gap-size) py-0',
           'text-[length:var(--font-size,1rem)] leading-(--line-height)',
           'bg-base-surface hover:bg-hover-surface border-none dx-focus-ring-inset',
-        ].join(' ')}
+          className,
+        )}
       >
         {children}
       </button>

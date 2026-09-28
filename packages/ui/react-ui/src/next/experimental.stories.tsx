@@ -44,7 +44,7 @@ const DefaultStory = () => {
             <Next.Block>
               <Next.Icon icon='ph--circle--regular' />
             </Next.Block>
-            <Next.Input />
+            <Next.Input placeholder='Input' aria-label={`Name (${size})`} />
             <Next.Button>Save</Next.Button>
             <Next.Block>
               <Next.Icon icon='ph--circle--regular' />
