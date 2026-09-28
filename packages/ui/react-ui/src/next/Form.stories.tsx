@@ -56,7 +56,9 @@ const DefaultStory = () => (
 
       <Next.Group justify='end' data-testid='actions'>
         <Next.Button>Cancel</Next.Button>
-        <Next.Button type='submit'>Save</Next.Button>
+        <Next.Button type='submit' variant='primary'>
+          Save
+        </Next.Button>
       </Next.Group>
     </Next.Container>
   </div>
@@ -97,7 +99,11 @@ export const Default: Story = {
     await expect(canvas.getByText('Enter a valid URL.')).toBeVisible();
     await expect(canvas.getByRole('combobox', { name: 'Role' })).toBeInTheDocument();
     await expect(canvas.getByRole('checkbox', { name: 'Subscribe to updates' })).not.toBeChecked();
-    await expect(canvas.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'submit');
+    const save = canvas.getByRole('button', { name: 'Save' });
+    await expect(save).toHaveAttribute('type', 'submit');
+    await expect(getComputedStyle(save).backgroundColor).not.toBe(
+      getComputedStyle(canvas.getByRole('button', { name: 'Cancel' })).backgroundColor,
+    );
     // Focus shows the themable ring (`--nx-focus-ring-color`), not ui-theme's.
     const name = canvas.getByRole('textbox', { name: 'Name' });
     await userEvent.click(name);

@@ -64,6 +64,13 @@
   .nx-button:hover:not(:disabled) {
     background: var(--color-hover-surface);
   }
+  .nx-button[data-variant='primary'] {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+  .nx-button[data-variant='primary']:hover:not(:disabled) {
+    background: var(--color-accent-bg-hover, var(--color-accent-bg));
+  }
   .nx-button:disabled {
     opacity: 0.5;
     cursor: default;
@@ -188,11 +195,13 @@
     flex: 1;
   }
 
+  /* Padded top and bottom so an action row reads apart from the fields above it. */
   .nx-group {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--nx-gap-size);
+    padding-block: var(--nx-gap-size);
     min-height: var(--nx-block-size);
   }
   .nx-group[data-justify='end'] {
