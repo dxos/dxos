@@ -288,3 +288,8 @@ parallel-namespace approach; no compatibility shims).
    13's label-above fields and needs a Container-`columns` settings layout.
 5. **Order:** export → new components → `react-ui-form/next` core on ready fields (reusing the tested
    `resolveFieldRenderer`) → settings layout → Ref/lookup fields → pilot plugin.
+6. **Wrapper focus rings are outlines.** Combobox, DateInput, Checkbox and Switch draw their ring on a wrapper with
+   children that fill (the Combobox trigger, the Switch thumb), so they use an inset outline — outlines paint above
+   descendants, inset shadows below. The FocusRings audit fails when an inset-shadow ring host has a filled child.
+7. **Combobox Enter picks the first match.** `inputBehavior` defaults to `autohighlight`, so typing highlights the
+   first matching option and Enter selects it.

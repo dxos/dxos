@@ -55,6 +55,7 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
       positioning,
       lazyMount = true,
       unmountOnExit = true,
+      inputBehavior = 'autohighlight',
       onInputValueChange,
       children,
       ...props
@@ -69,6 +70,8 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
         lazyMount={lazyMount}
         unmountOnExit={unmountOnExit}
         positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+        // Typing highlights the first match, so Enter picks it without an arrow key first.
+        inputBehavior={inputBehavior}
         collection={collection}
         onInputValueChange={(details) => {
           // Only typing narrows the list; a selection or clear fills the input but reopening should show every option.

@@ -151,3 +151,14 @@ export const AsyncItems: Story = {
     await waitFor(() => expect(input).toHaveValue(OPTIONS[1].label));
   },
 };
+
+/** Typing then Enter selects the first match. */
+export const EnterSelectsFirst: Story = {
+  play: async ({ canvasElement }) => {
+    const input = within(canvasElement).getAllByRole('combobox')[0];
+    await userEvent.click(input);
+    await userEvent.type(input, 'ali');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(input).toHaveValue('Alice Green'));
+  },
+};

@@ -41,7 +41,8 @@
     background: var(--color-accent-bg);
   }
   .nx-switch-control[data-focus-visible] {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
 
   .nx-switch-thumb {

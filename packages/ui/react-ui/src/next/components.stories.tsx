@@ -257,6 +257,16 @@ export const FocusRings: Story = {
         await expect(border, name).not.toContain(FOREIGN_RING);
       }
       const ringed = paint.some(({ shadow, outline }) => shadow.includes(AUDIT_RING) || outline.includes(AUDIT_RING));
+      // An inset shadow paints under children, so a ring host drawn that way must have no filled child covering it.
+      for (const host of [active, active.parentElement]) {
+        if (host && getComputedStyle(host).boxShadow.includes(AUDIT_RING)) {
+          for (const child of host.children) {
+            await expect(getComputedStyle(child).backgroundColor, `${name} child covers the ring`).toBe(
+              'rgba(0, 0, 0, 0)',
+            );
+          }
+        }
+      }
       await expect(ringed, `${name} shows the Next ring`).toBe(true);
     }
     // A Toolbar is one tab stop (roving focus), so its three buttons count once.

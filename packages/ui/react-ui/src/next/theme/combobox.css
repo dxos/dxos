@@ -20,8 +20,10 @@
     padding-inline-end: 0;
     background: var(--color-input-surface);
   }
+  /* An outline, not an inset shadow: it paints above the trigger's own fill instead of under it. */
   .nx-combobox-control:has(> .nx-combobox-input:focus-visible) {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
 
   .nx-combobox-input {

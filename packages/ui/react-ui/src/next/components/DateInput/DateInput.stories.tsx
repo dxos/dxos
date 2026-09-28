@@ -92,9 +92,9 @@ export const Types: Story = {
     await waitFor(() => expect(icon('datetime')).toContain('calendar-dots'));
 
     // Focus draws the ring on the row, since the bare input has no box of its own.
-    await expect(getComputedStyle(byTestId(canvasElement, 'date-md')).boxShadow).toBe('none');
+    await expect(getComputedStyle(byTestId(canvasElement, 'date-md')).outlineStyle).toBe('none');
     await userEvent.click(date);
     await waitFor(() => expect(date).toHaveFocus());
-    await expect(getComputedStyle(byTestId(canvasElement, 'date-md')).boxShadow).not.toBe('none');
+    await expect(getComputedStyle(byTestId(canvasElement, 'date-md')).outlineStyle).toBe('solid');
   },
 };
