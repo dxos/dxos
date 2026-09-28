@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@automerge/automerge';
 import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';

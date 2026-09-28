@@ -4,8 +4,7 @@
 
 // @import-as-namespace
 
-import { next as A } from '@automerge/automerge';
-
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Doc, createObject, getObjectCore, isEchoObject } from '@dxos/echo-client';
 import { type AnyProperties, isProxy } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';

@@ -1,0 +1,111 @@
+{
+  "name": "@dxos/automerge-proxy",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Automerge-shaped documents with synchronous reads and writes, backed by an asynchronous contract with a host that holds the real Automerge documents.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": [
+    "./src/internal/register-node.ts",
+    "./dist/lib/internal/register-node.mjs"
+  ],
+  "type": "module",
+  "imports": {
+    "#automerge-realm": {
+      "source": {
+        "browser": "./src/internal/register-none.ts",
+        "workerd": "./src/internal/register-none.ts",
+        "default": "./src/internal/register-node.ts"
+      },
+      "types": "./dist/types/src/internal/register-node.d.ts",
+      "browser": "./dist/lib/internal/register-none.mjs",
+      "workerd": "./dist/lib/internal/register-none.mjs",
+      "default": "./dist/lib/internal/register-node.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./Automerge": {
+      "source": "./src/Automerge.ts",
+      "types": "./dist/types/src/Automerge.d.ts",
+      "import": "./dist/lib/Automerge.mjs"
+    },
+    "./Contract": {
+      "source": "./src/Contract.ts",
+      "types": "./dist/types/src/Contract.d.ts",
+      "import": "./dist/lib/Contract.mjs"
+    },
+    "./Draft": {
+      "source": "./src/Draft.ts",
+      "types": "./dist/types/src/Draft.d.ts",
+      "import": "./dist/lib/Draft.mjs"
+    },
+    "./Handle": {
+      "source": "./src/Handle.ts",
+      "types": "./dist/types/src/Handle.d.ts",
+      "import": "./dist/lib/Handle.mjs"
+    },
+    "./Host": {
+      "source": "./src/Host.ts",
+      "types": "./dist/types/src/Host.d.ts",
+      "import": "./dist/lib/Host.mjs"
+    },
+    "./Op": {
+      "source": "./src/Op.ts",
+      "types": "./dist/types/src/Op.d.ts",
+      "import": "./dist/lib/Op.mjs"
+    },
+    "./Repo": {
+      "source": "./src/Repo.ts",
+      "types": "./dist/types/src/Repo.d.ts",
+      "import": "./dist/lib/Repo.mjs"
+    },
+    "./Wire": {
+      "source": "./src/Wire.ts",
+      "types": "./dist/types/src/Wire.d.ts",
+      "import": "./dist/lib/Wire.mjs"
+    },
+    "./errors": {
+      "source": "./src/errors.ts",
+      "types": "./dist/types/src/errors.d.ts",
+      "import": "./dist/lib/errors.mjs"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@noble/hashes": "catalog:",
+    "effect": "catalog:",
+    "eventemitter3": "catalog:"
+  },
+  "devDependencies": {
+    "fast-check": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

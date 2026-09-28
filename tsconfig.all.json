@@ -43,6 +43,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/automerge-proxy/tsconfig.json"
+    },
+    {
       "path": "packages/common/av/tsconfig.json"
     },
     {

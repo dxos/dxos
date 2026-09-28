@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Automerge from '@automerge/automerge';
 import {
   type Doc,
   type Heads,
@@ -34,6 +35,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { DeferredTask, Event, asyncTimeout, scheduleTask } from '@dxos/async';
+import { registerAutomerge } from '@dxos/automerge-proxy/Automerge';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -340,6 +342,8 @@ export class AutomergeHost extends Resource {
     residency,
   }: AutomergeHostProps) {
     super();
+    // Code this realm runs through `@dxos/automerge-proxy/Automerge` reaches the host's documents too.
+    registerAutomerge(Automerge);
     this._leases = new DocumentLeaseRegistry({
       open: (documentId) => {
         const query = this._repo.findWithProgress(documentId);

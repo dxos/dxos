@@ -15,6 +15,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../automerge-proxy"
+    },
+    {
       "path": "../echo"
     },
     {

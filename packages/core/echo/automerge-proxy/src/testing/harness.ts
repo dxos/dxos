@@ -1,0 +1,81 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Handle from '../Handle.ts';
+import * as Host from '../Host.ts';
+import * as Repo from '../Repo.ts';
+import { MemoryCopies, MemoryStore, Transport } from './memory.ts';
+import { createRandom } from './random.ts';
+
+export type TabHarnessOptions = {
+  /** Seeds the transports' delays, so a run's interleavings repeat. */
+  seed?: number;
+  /** Longest delay in milliseconds a transport holds a call or event. */
+  maxDelay?: number;
+};
+
+/**
+ * A host over a memory store, and tabs that reach it through transports it can drop, as a restart
+ * does. Every document shares the shape `T`, so each tab's handles are typed with it.
+ */
+export class TabHarness<T = unknown> {
+  readonly store = new MemoryStore();
+  /** Index copies the host serves to tabs that read documents through them. */
+  readonly copies = new MemoryCopies();
+  readonly transports: Transport[] = [];
+  readonly repos: Repo.TabRepo<string, Handle.DocHandle<T>>[] = [];
+  readonly pageEvents: EventTarget[] = [];
+  readonly #random: ReturnType<typeof createRandom>;
+  readonly #maxDelay: number;
+  host: Host.DocumentHost;
+
+  constructor({ seed = 7, maxDelay = 2 }: TabHarnessOptions = {}) {
+    this.#random = createRandom(seed);
+    this.#maxDelay = maxDelay;
+    this.host = new Host.DocumentHost({ store: this.store, copies: this.copies });
+  }
+
+  async open(): Promise<void> {
+    await this.host.open();
+  }
+
+  /**
+   * A new tab: a repo of tab documents behind its own transport.
+   * @param maxSendRate The repo's send passes a second, lowered by tests that time a pass's slot.
+   */
+  async tab({ maxSendRate }: { maxSendRate?: number } = {}): Promise<Repo.TabRepo<string, Handle.DocHandle<T>>> {
+    const transport = new Transport({
+      host: () => this.host,
+      random: () => this.#random.next(),
+      maxDelay: this.#maxDelay,
+    });
+    const pageEvents = new EventTarget();
+    const repo = new Repo.TabRepo({
+      host: transport,
+      createHandle: (options) => new Handle.DocHandle<T>(options),
+      pageEvents,
+      resubscribeDelay: 5,
+      maxSendRate,
+    });
+    await repo.open();
+    this.transports.push(transport);
+    this.repos.push(repo);
+    this.pageEvents.push(pageEvents);
+    return repo;
+  }
+
+  /** Replaces the host with a new one over what the store saved, and drops every stream. */
+  async restart(): Promise<void> {
+    await this.host.close();
+    this.store.restart();
+    this.host = new Host.DocumentHost({ store: this.store, copies: this.copies });
+    await this.host.open();
+    this.transports.forEach((transport) => transport.drop());
+  }
+
+  async close(): Promise<void> {
+    await Promise.all(this.repos.map((repo) => repo.close()));
+    await this.host.close();
+  }
+}

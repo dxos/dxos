@@ -74,6 +74,13 @@ export const translations = [
 
         'settings.data-store.label': 'Data Store',
 
+        'settings.document-mode.label': 'ECHO documents (reload required).',
+        'settings.document-mode.description':
+          'How this browser holds documents. Proxies keep Automerge in the worker only; reading from the index also leaves documents a tab only shows unloaded in the worker. Experimental.',
+        'settings.document-mode.replica.label': 'Automerge replicas',
+        'settings.document-mode.proxy.label': 'Proxies',
+        'settings.document-mode.indexed.label': 'Proxies read from the index',
+
         'settings.debug-port.section.label': 'Agent debug port',
         'settings.debug-port.section.description':
           'Lets a local agent evaluate code against this page via composer-recovery.js. Off by default; stops on reload.',

@@ -43,6 +43,8 @@ export type ServiceContextRuntimeProps = Pick<
     enableVectorIndexing?: boolean;
     /** Query evaluation path for every host query; see `QueryExecutorMode`. */
     queryExecutor?: QueryExecutorMode;
+    /** Keep the index copies proxy clients read objects from; off unless their config reads the index. */
+    indexCopies?: boolean;
   };
 
 /**
@@ -165,7 +167,11 @@ export const storageLifecycleLayer = Layer.effectDiscard(
  * open/close is owned by the layer scope: it opens when the stack is built and closes when the
  * runtime is disposed. Identity-, network-, and storage-bound lifecycle is driven by the events.
  */
-export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?: QueryExecutorMode }) =>
+export const echoHostLayer = (options: {
+  useSubduction?: boolean;
+  queryExecutor?: QueryExecutorMode;
+  indexCopies?: boolean;
+}) =>
   Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
@@ -190,6 +196,7 @@ export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?
             getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
             useSubduction: options.useSubduction,
             queryExecutor: options.queryExecutor,
+            indexCopies: options.indexCopies,
           });
         }),
       ),

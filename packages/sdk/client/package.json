@@ -101,10 +101,10 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/automerge-proxy": "workspace:*",
     "@dxos/blob": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -140,7 +140,6 @@
     "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "catalog:",
     "@types/lodash.isequalwith": "catalog:",
     "typedoc": "catalog:"
   },

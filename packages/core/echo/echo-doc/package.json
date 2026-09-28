@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "@automerge/automerge": "catalog:",
+    "@dxos/automerge-proxy": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/invariant": "workspace:*",

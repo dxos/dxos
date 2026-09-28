@@ -27,6 +27,7 @@ import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 
+import { type DocumentMode } from '../automerge/index.ts';
 import { EchoClient } from '../client/index.ts';
 import { type BranchStore } from '../core-db/index.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
@@ -45,6 +46,15 @@ type PeerOptions = {
   storagePath?: string;
   /** Host query evaluation path; defaults to the environment's `DX_ECHO_QUERY_EXECUTOR`, else `sql`. */
   queryExecutor?: QueryExecutorMode;
+  /** The host keeps the index copies proxy clients read; defaults to `DX_ECHO_PROXY_INDEX_READS`. */
+  indexCopies?: boolean;
+} & PeerClientOptions;
+
+type PeerClientOptions = {
+  /** How the peer's clients hold documents; defaults to the environment's `DX_ECHO_DOCUMENT_MODE`, else `replica`. */
+  documentMode?: DocumentMode;
+  /** With `proxy` documents, read objects from the index; defaults to `DX_ECHO_PROXY_INDEX_READS`. */
+  proxyIndexReads?: boolean;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -89,6 +99,8 @@ export class EchoTestPeer extends Resource {
   private readonly _assignQueuePositions?: boolean;
   private readonly _storagePath?: string;
   private readonly _queryExecutor?: QueryExecutorMode;
+  private readonly _indexCopies?: boolean;
+  private readonly _clientOptions: PeerClientOptions;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
@@ -124,9 +136,20 @@ export class EchoTestPeer extends Resource {
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
-  constructor({ types, registry, assignQueuePositions, storagePath, queryExecutor }: PeerOptions = {}) {
+  constructor({
+    types,
+    registry,
+    assignQueuePositions,
+    storagePath,
+    queryExecutor,
+    indexCopies,
+    documentMode,
+    proxyIndexReads,
+  }: PeerOptions = {}) {
     super();
     this._queryExecutor = queryExecutor;
+    this._indexCopies = indexCopies;
+    this._clientOptions = { documentMode, proxyIndexReads };
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._registry = registry ?? [];
@@ -164,6 +187,7 @@ export class EchoTestPeer extends Resource {
       runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
       queryExecutor: this._queryExecutor,
+      indexCopies: this._indexCopies,
     });
     this._clients.clear();
     this._echoClient = new EchoClient();
@@ -192,7 +216,11 @@ export class EchoTestPeer extends Resource {
    * Bridges the host's effect-rpc Handlers to the effect-rpc client surface in-process (no wire),
    * and connects the given client. The bridged clients live on {@link _serviceScope}.
    */
-  private async _connectServices(client: EchoClient): Promise<void> {
+  private async _connectServices(client: EchoClient, options: PeerClientOptions = this._clientOptions): Promise<void> {
+    client.connectToService({ ...(await this._makeServiceClients()), ...options });
+  }
+
+  private async _makeServiceClients() {
     invariant(this._serviceScope, 'Service scope not initialized');
     const [dataService, queryService, feedService] = await EffectEx.runPromise(
       Effect.all([
@@ -201,7 +229,35 @@ export class EchoTestPeer extends Resource {
         makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
       ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
     );
-    client.connectToService({ dataService, queryService, feedService });
+    return { dataService, queryService, feedService };
+  }
+
+  /**
+   * Replaces the host with a new one over the same storage while clients stay open, as when a
+   * dedicated worker restarts and tabs reconnect in place.
+   * @param whileDown Runs after the old host closed and before clients reconnect.
+   */
+  async restartHost(whileDown?: () => Promise<void> | void): Promise<void> {
+    await this._echoHost.close(this._ctx);
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+    }
+    await this._managedRuntime.dispose();
+    await whileDown?.();
+
+    this._managedRuntime = this._createManagedRuntime();
+    this._echoHost = new EchoHost({
+      runtime: this._managedRuntime.contextEffect,
+      assignQueuePositions: this._assignQueuePositions,
+      queryExecutor: this._queryExecutor,
+      indexCopies: this._indexCopies,
+    });
+    this._serviceScope = Effect.runSync(Scope.make());
+    await this._echoHost.open(this._ctx);
+    for (const client of this._clients) {
+      client._updateServices(await this._makeServiceClients());
+      await client._notifyReconnect();
+    }
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -265,13 +321,20 @@ export class EchoTestPeer extends Resource {
     await this.open();
   }
 
-  async createClient(): Promise<EchoClient> {
+  /** Creates another client of this peer's host, as another tab would be; options default to the peer's. */
+  async createClient(options: PeerClientOptions = {}): Promise<EchoClient> {
     const client = new EchoClient();
     await client.graph.registry.add(this._types);
     this._clients.add(client);
-    await this._connectServices(client);
+    await this._connectServices(client, { ...this._clientOptions, ...options });
     await client.open();
     return client;
+  }
+
+  /** Closes a client this peer created and stops reconnecting it after a host restart. */
+  async closeClient(client: EchoClient): Promise<void> {
+    this._clients.delete(client);
+    await client.close();
   }
 
   async createDatabase(

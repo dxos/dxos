@@ -249,6 +249,11 @@ export class IndexEngine {
     return this.#objectSnapshotIndex.countMissingSnapshots().pipe(Effect.map((missing) => missing === 0));
   }
 
+  /** The objects stored in the given documents, with what a reader needs to rebuild each document. */
+  queryDocumentObjects(documentIds: readonly string[]) {
+    return this.#objectSnapshotIndex.queryDocumentObjects(documentIds);
+  }
+
   /**
    * Query snapshots by recordIds.
    * Used to load queue objects from indexed snapshots.

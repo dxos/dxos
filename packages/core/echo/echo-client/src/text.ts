@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
-
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { type Obj } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';

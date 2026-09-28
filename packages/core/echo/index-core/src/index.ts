@@ -10,7 +10,7 @@ export { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
 export { ActivityIndex, type ActivityRow } from './indexes/activity-index.ts';
 export { type ChangeSummary, type DocumentActivity, type Index, type IndexerObject } from './indexes/interface.ts';
 export { FtsIndex, type FtsQuery, buildFtsCondition } from './indexes/fts-index.ts';
-export { ObjectSnapshotIndex } from './indexes/object-snapshot-index.ts';
+export { type DocumentObjectRow, ObjectSnapshotIndex } from './indexes/object-snapshot-index.ts';
 export {
   type EntityMeta,
   EntityMetaIndex,

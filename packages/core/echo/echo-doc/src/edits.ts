@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
+
+import * as A from '@dxos/automerge-proxy/Automerge';
 
 import * as Doc from './Doc.ts';
 

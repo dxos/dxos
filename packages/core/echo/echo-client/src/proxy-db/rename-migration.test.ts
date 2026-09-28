@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

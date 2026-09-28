@@ -17,6 +17,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./storage": {
+      "types": "./dist/types/src/internal/storage/storage.d.ts",
+      "import": "./dist/lib/storage.mjs"
+    },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"

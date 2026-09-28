@@ -69,6 +69,7 @@ export const runtimePropsFromConfig = (
   disableP2pReplication: config.get('runtime.client.disableP2pReplication', false),
   enableVectorIndexing: config.get('runtime.client.enableVectorIndexing', false),
   queryExecutor: queryExecutorFromConfig(config),
+  indexCopies: config.get('runtime.client.proxyIndexReads'),
   automergeCredentials: config.get('runtime.client.automergeCredentials', false),
   ...Object.fromEntries(Object.entries(overrides).filter(([, value]) => value !== undefined)),
 });

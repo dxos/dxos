@@ -8,6 +8,8 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import * as Contract from '@dxos/automerge-proxy/Contract';
+
 import { serviceError } from './service-rpc.ts';
 import { mutableArray, protoStruct } from './service-schemas.ts';
 
@@ -50,6 +52,11 @@ export const CreateDocumentRequest = Schema.Struct({
    * Optional - if not provided, an empty document will be created.
    */
   initialValue: Schema.optional(protoStruct),
+  /**
+   * A tab document's first changes, as change chunks: the host checks them and creates the document
+   * holding exactly them, so the tab's history and the host's are one. Takes the place of `initialValue`.
+   */
+  changes: Schema.optional(mutableArray(Schema.Uint8Array)),
 });
 export interface CreateDocumentRequest extends Schema.Schema.Type<typeof CreateDocumentRequest> {}
 
@@ -276,6 +283,40 @@ export const GarbageCollectionReport = Schema.Struct({
 });
 export interface GarbageCollectionReport extends Schema.Schema.Type<typeof GarbageCollectionReport> {}
 
+//
+// Tab document protocol, for clients that keep `@dxos/automerge-proxy` tab documents instead of
+// Automerge replicas. The payloads are the package's contract; these add the subscription and space.
+//
+
+export const SubscribeProxyRequest = Schema.Struct({
+  subscriptionId: Schema.String,
+  /** Random per client session; names the client in the host's logs. */
+  clientId: Schema.String,
+  spaceId: Schema.String,
+});
+export interface SubscribeProxyRequest extends Schema.Schema.Type<typeof SubscribeProxyRequest> {}
+
+export const UpdateProxySubscriptionRequest = Schema.Struct({
+  subscriptionId: Schema.String,
+  /** Documents to follow, with the heads the client holds when it holds any. */
+  add: Schema.optional(mutableArray(Contract.Follow)),
+  remove: Schema.optional(mutableArray(Schema.String)),
+});
+export interface UpdateProxySubscriptionRequest extends Schema.Schema.Type<typeof UpdateProxySubscriptionRequest> {}
+
+/** Events for the documents a tab subscription follows. */
+export const ProxyEventBatch = Contract.EventBatch;
+export interface ProxyEventBatch extends Schema.Schema.Type<typeof ProxyEventBatch> {}
+
+export const SubmitRequest = Schema.Struct({
+  subscriptionId: Schema.String,
+  batches: mutableArray(Contract.SubmitBatch),
+});
+export interface SubmitRequest extends Schema.Schema.Type<typeof SubmitRequest> {}
+
+export const SubmitResponse = Schema.Struct({ results: mutableArray(Contract.SubmitResult) });
+export interface SubmitResponse extends Schema.Schema.Type<typeof SubmitResponse> {}
+
 /**
  * Effect RPC definitions for `dxos.echo.service.DataService`.
  * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
@@ -369,6 +410,26 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('runGarbageCollection', {
     payload: RunGarbageCollectionRequest,
     success: GarbageCollectionReport,
+    error: serviceError,
+  }),
+  /**
+   * Stream of events for the documents a tab subscription follows; `subscribe` is the same for
+   * Automerge replicas.
+   */
+  Rpc.make('subscribeProxy', {
+    payload: SubscribeProxyRequest,
+    success: ProxyEventBatch,
+    error: serviceError,
+    stream: true,
+  }),
+  Rpc.make('updateProxySubscription', {
+    payload: UpdateProxySubscriptionRequest,
+    error: serviceError,
+  }),
+  /** Checks a tab client's changes; each is answered with an `ack` or a `refuse` on the stream. */
+  Rpc.make('submit', {
+    payload: SubmitRequest,
+    success: SubmitResponse,
     error: serviceError,
   }),
 ).prefix('DataService.') {}

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';

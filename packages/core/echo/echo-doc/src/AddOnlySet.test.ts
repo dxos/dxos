@@ -3,7 +3,9 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { describe, test } from 'vitest';
+import { afterEach, describe, test } from 'vitest';
+
+import { TabHarness, withoutAutomerge } from '@dxos/automerge-proxy/testing';
 
 import * as AddOnlySet from './AddOnlySet.ts';
 
@@ -132,5 +134,45 @@ describe('AddOnlySet', () => {
     const doc = withEntries(empty(), [['alice', [1]]]);
     expect(AddOnlySet.read(doc, ['nope']).size).to.equal(0);
     expect(() => AddOnlySet.read(doc, [])).to.throw();
+  });
+});
+
+describe('AddOnlySet over tab documents', () => {
+  let harness: TabHarness<TestDoc> | undefined;
+
+  afterEach(async () => {
+    await harness?.close();
+    harness = undefined;
+  });
+
+  test("read walks a tab document's changes as it walks Automerge's, with or without Automerge registered", async ({
+    expect,
+  }) => {
+    harness = new TabHarness<TestDoc>();
+    await harness.open();
+    harness.store.put('doc', empty());
+    const repos = [await harness.tab(), await harness.tab()];
+    const [left, right] = repos.map((repo) => repo.find('doc'));
+    await Promise.all([left.whenReady(), right.whenReady()]);
+    left.change((draft: TestDoc) => {
+      AddOnlySet.add(draft.credentials, 'alice', new Uint8Array([1]));
+      AddOnlySet.add(draft.credentials, 'bob', new Uint8Array([2]));
+    });
+    right.change((draft: TestDoc) => {
+      AddOnlySet.add(draft.credentials, 'carol', new Uint8Array([3]));
+    });
+    await Promise.all(repos.map((repo) => repo.flush()));
+    await expect.poll(() => left.heads.join() === right.heads.join(), { timeout: 5_000 }).toBe(true);
+    left.change((draft: TestDoc) => {
+      delete draft.credentials.alice;
+    });
+    await Promise.all(repos.map((repo) => repo.flush()));
+    await expect.poll(() => right.heads.join() === left.heads.join(), { timeout: 5_000 }).toBe(true);
+
+    const expected = AddOnlySet.read(harness.store.get<TestDoc>('doc'), PATH);
+    expect([...expected.keys()].sort()).to.deep.equal(['alice', 'bob', 'carol']);
+    expect(AddOnlySet.read(right.doc(), PATH)).to.deep.equal(expected);
+    // A proxy-mode tab in a browser has no Automerge, so the namespace decodes the changes in JS.
+    expect(withoutAutomerge(() => AddOnlySet.read(right.doc(), PATH))).to.deep.equal(expected);
   });
 });

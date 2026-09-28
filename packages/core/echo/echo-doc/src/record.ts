@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
-
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { isNonNullable } from '@dxos/util';
 
 import * as Doc from './Doc.ts';

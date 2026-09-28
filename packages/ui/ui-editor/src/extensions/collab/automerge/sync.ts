@@ -4,10 +4,10 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { next as A } from '@automerge/automerge';
 import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 

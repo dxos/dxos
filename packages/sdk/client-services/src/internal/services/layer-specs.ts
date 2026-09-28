@@ -417,6 +417,7 @@ export const EchoHostSpec = (options: ServiceStackServices) =>
       echoHostLayer({
         useSubduction: options.edgeFeatures?.subductionReplicator,
         queryExecutor: options.queryExecutor,
+        indexCopies: options.indexCopies,
       }),
   );
 

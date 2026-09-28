@@ -15,6 +15,7 @@ import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
+import type * as Host from '@dxos/automerge-proxy/Host';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -28,7 +29,7 @@ import {
 } from '@dxos/echo-protocol';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import { type DocumentObjectRow, IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -48,6 +49,8 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { documentsFromIndex } from '../proxy/indexed.ts';
+import { createProxyHost } from '../proxy/proxy-host.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
@@ -113,9 +116,22 @@ const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMo
   return fromEnv === 'memory' ? 'memory' : 'sql';
 };
 
+/**
+ * Whether the index keeps document copies: the explicit option, which a browser takes from config,
+ * else `DX_ECHO_PROXY_INDEX_READS` in Node.
+ */
+const resolveIndexCopies = (explicit?: boolean): boolean =>
+  explicit ?? (typeof process === 'undefined' ? undefined : process.env.DX_ECHO_PROXY_INDEX_READS) === 'true';
+
 export type EchoHostProps = {
   /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
   queryExecutor?: QueryExecutorMode;
+
+  /**
+   * Keep in the index the copies proxy tabs read objects from until they write, at a cost to every
+   * index update; defaults to `DX_ECHO_PROXY_INDEX_READS`, else off.
+   */
+  indexCopies?: boolean;
 
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -173,6 +189,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
+  private readonly _proxyHost: Host.DocumentHost;
   private readonly _spaceStateManager: SpaceStateManager;
   private readonly _echoDataMonitor: EchoDataMonitor;
 
@@ -228,6 +245,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     queryExecutor,
+    indexCopies,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
@@ -246,6 +264,7 @@ export class EchoHost extends Resource {
     this._spaceStateManager = new SpaceStateManager({ runtime });
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
       isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
+      documentCopies: resolveIndexCopies(indexCopies),
     });
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
@@ -286,10 +305,16 @@ export class EchoHost extends Resource {
         return this._sql;
       },
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      readDocumentCopies: async (documentIds) => documentsFromIndex(await this.#readIndexedDocuments(documentIds)),
     });
 
+    this._proxyHost = createProxyHost({
+      automergeHost: this._automergeHost,
+      readIndexed: (documentIds) => this.#readIndexedDocuments(documentIds),
+    });
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
+      proxyHost: this._proxyHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
@@ -351,6 +376,11 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
+  /** Serves clients that keep proxies of documents; `dataService` exposes it as RPCs. */
+  get proxyHost(): Host.DocumentHost {
+    return this._proxyHost;
+  }
+
   get feedService(): FeedService.Handlers {
     return this._feedService;
   }
@@ -405,6 +435,7 @@ export class EchoHost extends Resource {
     log('echo-host: opening automerge host...');
     await this._automergeHost.open(ctx);
     log('echo-host: automerge host opened');
+    await this._proxyHost.open(ctx);
 
     log('echo-host: opening query service...');
     await this._queryService.open(ctx);
@@ -464,6 +495,7 @@ export class EchoHost extends Resource {
     // iteration finishes.
     await this._updateIndexes?.join();
 
+    await this._proxyHost.close();
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._automergeHost.close();
@@ -1288,6 +1320,14 @@ export class EchoHost extends Resource {
     }
   };
 
+  /** The objects of the given documents as the index holds them; reads no document. */
+  async #readIndexedDocuments(documentIds: readonly string[]): Promise<readonly DocumentObjectRow[]> {
+    if (!this._indexEngine) {
+      return [];
+    }
+    return this._indexEngine.queryDocumentObjects(documentIds).pipe(RuntimeProvider.runPromise(this._runtime));
+  }
+
   /**
    * One indexing pass over both data sources.
    *
@@ -1425,6 +1465,8 @@ export class EchoHost extends Resource {
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
+        // Followers of an index copy get it again, and one the index no longer reproduces goes live.
+        this._proxyHost.copiesChanged(combinedResult.documents);
       }
 
       return {
@@ -1520,7 +1562,12 @@ export type CreatedSpace = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction' | 'queryExecutor'
+  | 'peerIdProvider'
+  | 'getSpaceKeyByRootDocumentId'
+  | 'assignQueuePositions'
+  | 'useSubduction'
+  | 'queryExecutor'
+  | 'indexCopies'
 >;
 
 /**

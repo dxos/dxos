@@ -55,8 +55,9 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import type { SaveStateChangedEvent } from '../automerge/index.ts';
-import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
+import { type CreateRepo } from '../automerge/create-repo.ts';
+import type { EditsRejectedEvent, SaveStateChangedEvent } from '../automerge/index.ts';
+import { type ClientDocHandle, type ClientRepo } from '../automerge/index.ts';
 import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
@@ -76,6 +77,12 @@ export interface EchoDatabase extends Database.Database {
    * Get notification about the data being saved to disk.
    */
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /**
+   * Edits the host refused: they are no longer visible and will never be saved. A refusal means a
+   * bug, so an app should tell the user their last edits were lost.
+   */
+  readonly editsRejected: ReadOnlyEvent<EditsRejectedEvent>;
 
   /** @deprecated */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
@@ -125,19 +132,19 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Returns the loaded automerge document handles.
    */
-  getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
+  getLoadedDocumentHandles(): ClientDocHandle<unknown>[];
 
   /**
    * Migration-scoped accessor to the automerge repo.
    * Will be moved to a dedicated internal entrypoint in a future stage.
    */
-  readonly _repo: RepoProxy;
+  readonly _repo: ClientRepo;
 
   /**
    * Returns the space root document handle for migration tools.
    * Will be moved to a dedicated internal entrypoint in a future stage.
    */
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
+  _getSpaceRootDocHandle(): ClientDocHandle<DatabaseDirectory>;
 
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
@@ -182,6 +189,10 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.Branch
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
+  /** Builds the repo this database holds its documents in, for its document mode. */
+  createRepo: CreateRepo;
+  /** With `proxy` documents, show objects from the services' index until this database writes to them. */
+  proxyIndexReads?: boolean;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
   runtime: EffectContext.Context<never>;
@@ -288,6 +299,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
+  readonly editsRejected: ReadOnlyEvent<EditsRejectedEvent>;
+
   private readonly _hypergraph: HypergraphImpl;
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
@@ -323,6 +336,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
+      createRepo: params.createRepo,
+      proxyIndexReads: params.proxyIndexReads,
       queryService: params.queryService,
       runtime: params.runtime,
       spaceId: params.spaceId,
@@ -332,6 +347,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+    this.editsRejected = this._entityManager.editsRejected;
 
     // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
     // that recurses through the whole entity graph and throws on the first strict-mode function it
@@ -961,23 +977,28 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getTotalNumberOfObjects();
   }
 
-  getLoadedDocumentHandles(): DocHandleProxy<unknown>[] {
+  getLoadedDocumentHandles(): ClientDocHandle<unknown>[] {
     return this._entityManager.getLoadedDocumentHandles();
   }
 
-  get _repo(): RepoProxy {
+  /** @see EntityManager._primeDocumentCopy */
+  _primeDocumentCopy(copy: QueryService.DocumentCopy): void {
+    this._entityManager._primeDocumentCopy(copy);
+  }
+
+  get _repo(): ClientRepo {
     return this._entityManager._repoProxy;
   }
 
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+  _getSpaceRootDocHandle(): ClientDocHandle<DatabaseDirectory> {
     return this._entityManager.getSpaceRootDocHandle();
   }
 
-  getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+  getSpaceRootDocHandle(): ClientDocHandle<DatabaseDirectory> {
     return this._entityManager.getSpaceRootDocHandle();
   }
 
-  getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
+  getLinkedDocHandles(): ClientDocHandle<DatabaseDirectory>[] {
     return this._entityManager.getLinkedDocHandles();
   }
 

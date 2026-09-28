@@ -7,5 +7,6 @@
 
 export { ObjectCore } from '../core-db/object-core.ts';
 export { type DocHandleProxy } from '../automerge/doc-handle-proxy.ts';
+export { type ClientDocHandle, type ClientRepo } from '../automerge/client-handle.ts';
 export { type RepoProxy } from '../automerge/repo-proxy.ts';
 export { migrateDocument } from '../util/migrate-document.ts';

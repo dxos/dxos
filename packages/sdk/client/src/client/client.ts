@@ -17,10 +17,10 @@ import {
   makeHandlersFromRpc,
   serveClientServicesOverIFrame,
 } from '@dxos/client-protocol';
-import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
+import { Config, SaveConfig, getEnvString, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
-import { EchoClient } from '@dxos/echo-client';
+import { type DocumentMode, EchoClient, parseDocumentMode } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -36,6 +36,7 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Runtime_Client_DocumentMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
@@ -497,12 +498,15 @@ export class Client {
     }
 
     log('client._open: connecting echo client to service...');
+    invariant(this._config, 'Client config is set before opening.');
     // The effect-rpc client nests every service under its key, so the same `rpc` surface satisfies
     // each per-service Client (DataService.Client, etc.).
     this._echoClient.connectToService({
       dataService: this._services.rpc,
       queryService: this._services.rpc,
       feedService: this._services.rpc,
+      documentMode: documentModeFromConfig(this._config),
+      proxyIndexReads: proxyIndexReadsFromConfig(this._config),
       runtime: this._effectRuntime,
     });
     log('client._open: opening echo client...');
@@ -763,3 +767,25 @@ export class Client {
 }
 
 const isHostShutDownByReset = (err: unknown): boolean => err instanceof RpcClosedError;
+
+/**
+ * The configured document mode, else `DX_ECHO_DOCUMENT_MODE` as the build carried it into config.
+ * `EchoClient` falls back to the process environment and then to replicas, so an unset mode stays
+ * undefined here.
+ */
+export const documentModeFromConfig = (config: Config): DocumentMode | undefined => {
+  switch (config.get('runtime.client.documentMode')) {
+    case Runtime_Client_DocumentMode.REPLICA:
+      return 'replica';
+    case Runtime_Client_DocumentMode.PROXY:
+      return 'proxy';
+    default:
+      return parseDocumentMode(getEnvString(config, 'DX_ECHO_DOCUMENT_MODE'));
+  }
+};
+
+/** The configured index reads for proxy documents, else `DX_ECHO_PROXY_INDEX_READS` as the build carried it. */
+const proxyIndexReadsFromConfig = (config: Config): boolean | undefined => {
+  const fromEnv = getEnvString(config, 'DX_ECHO_PROXY_INDEX_READS');
+  return config.get('runtime.client.proxyIndexReads') ?? (fromEnv === undefined ? undefined : fromEnv === 'true');
+};

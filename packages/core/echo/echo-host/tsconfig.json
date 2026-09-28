@@ -67,6 +67,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../automerge-proxy"
+    },
+    {
       "path": "../echo"
     },
     {

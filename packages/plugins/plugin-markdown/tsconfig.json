@@ -50,6 +50,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/echo/automerge-proxy"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

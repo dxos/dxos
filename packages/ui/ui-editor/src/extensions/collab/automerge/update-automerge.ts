@@ -4,9 +4,10 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { next as A, type Heads } from '@automerge/automerge';
+import { type Heads } from '@automerge/automerge';
 import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Doc } from '@dxos/echo-doc';
 
 import { type State } from './defs.ts';

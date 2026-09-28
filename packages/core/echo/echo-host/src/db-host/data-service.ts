@@ -7,6 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { UpdateScheduler } from '@dxos/async';
+import type * as Contract from '@dxos/automerge-proxy/Contract';
+import type * as Host from '@dxos/automerge-proxy/Host';
+import * as Wire from '@dxos/automerge-proxy/Wire';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -21,6 +24,8 @@ import { type SpaceStateManager } from './space-state-manager.ts';
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
+  /** Serves clients that keep proxies of documents instead of Automerge replicas; without it they are refused. */
+  proxyHost?: Host.DocumentHost;
   spaceStateManager: SpaceStateManager;
   updateIndexes: (request: DataService.UpdateIndexesRequest) => Promise<void>;
   getSpaceStats: (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
@@ -28,6 +33,13 @@ export type DataServiceProps = {
     spaceId: SpaceId,
     options: DataService.RunGarbageCollectionRequest,
   ) => Promise<DataService.GarbageCollectionReport>;
+};
+
+/** A client's stream of proxy events. */
+type ProxyStream = {
+  send: (events: readonly Contract.DocumentEvent[]) => void;
+  /** Events held back while updates are paused. */
+  held?: Contract.DocumentEvent[];
 };
 
 /**
@@ -46,9 +58,13 @@ export class DataServiceImpl implements DataService.Handlers {
    * lives only in memory until it is saved, and its creator subscribes in a later call, so releasing
    * it at creation lets the host evict it out from under the write that follows.
    */
-  private readonly '_pendingCreations' = new Map<DocumentId, DocumentLease>();
+  private readonly '_pendingCreations' = new Map<string, DocumentLease>();
 
   private readonly '_automergeHost': AutomergeHost;
+  readonly #proxyHost: Host.DocumentHost | undefined;
+  /** Open proxy subscriptions by id, which count with {@link _subscriptions} toward the last client leaving. */
+  readonly #proxySubscriptions = new Map<string, ProxyStream>();
+  #proxyUpdatesPaused = false;
   private readonly '_spaceStateManager': SpaceStateManager;
   private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
@@ -59,6 +75,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   'constructor'(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
+    this.#proxyHost = params.proxyHost;
     this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;
     this._getSpaceStats = params.getSpaceStats;
@@ -92,14 +109,7 @@ export class DataServiceImpl implements DataService.Handlers {
         if (this._subscriptions.get(request.subscriptionId) === synchronizer) {
           this._subscriptions.delete(request.subscriptionId);
         }
-        // Nothing is left to subscribe to a created document once the last client is gone, so its
-        // creation lease would otherwise outlive every reader.
-        if (this._subscriptions.size === 0) {
-          for (const lease of this._pendingCreations.values()) {
-            lease[Symbol.dispose]();
-          }
-          this._pendingCreations.clear();
-        }
+        this.#releaseCreationsIfNoClients();
         void synchronizer.close();
       });
     });
@@ -114,10 +124,7 @@ export class DataServiceImpl implements DataService.Handlers {
         if (request.addIds?.length) {
           await synchronizer.addDocuments(request.addIds as DocumentId[]);
           // The subscription now holds each document, so the creation lease has nothing left to guard.
-          for (const documentId of request.addIds as DocumentId[]) {
-            this._pendingCreations.get(documentId)?.[Symbol.dispose]();
-            this._pendingCreations.delete(documentId);
-          }
+          this.#releaseCreations(request.addIds);
         }
         if (request.removeIds?.length) {
           await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
@@ -132,6 +139,12 @@ export class DataServiceImpl implements DataService.Handlers {
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
+        if (request.changes) {
+          // A tab document's first changes, which the tab host checks before the store imports them.
+          const documentId = await this.#proxy.createDocument(request.changes);
+          this._pendingCreations.set(documentId, this._automergeHost.acquireDoc(documentId as DocumentId));
+          return { documentId };
+        }
         const created = await this._automergeHost.createDoc(request.initialValue);
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
@@ -235,6 +248,62 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
+  ['DataService.subscribeProxy'](
+    request: DataService.SubscribeProxyRequest,
+  ): EffectStream.Stream<DataService.ProxyEventBatch, Error> {
+    return EffectEx.streamFromEmitter<DataService.ProxyEventBatch, Error>((emit) => {
+      const proxyHost = this.#proxyHost;
+      if (!proxyHost) {
+        void emit.fail(new Error('This data service serves no proxy documents.'));
+        return Effect.void;
+      }
+      const stream: ProxyStream = {
+        send: (events) => void emit.single({ events: events.map(Wire.encodeEvent) }),
+        held: this.#proxyUpdatesPaused ? [] : undefined,
+      };
+      this.#proxySubscriptions.set(request.subscriptionId, stream);
+      const close = proxyHost.subscribe(
+        { subscriptionId: request.subscriptionId, clientId: request.clientId },
+        {
+          onEvents: (events) => {
+            // An empty batch opens the stream rather than updating a document, so a pause never holds it.
+            if (stream.held && events.length > 0) {
+              stream.held.push(...events);
+            } else {
+              stream.send(events);
+            }
+          },
+        },
+      );
+      return Effect.sync(() => {
+        close();
+        this.#proxySubscriptions.delete(request.subscriptionId);
+        this.#releaseCreationsIfNoClients();
+      });
+    });
+  }
+
+  ['DataService.updateProxySubscription'](
+    request: DataService.UpdateProxySubscriptionRequest,
+  ): Effect.Effect<void, Error> {
+    return Effect.tryPromise({
+      try: async () => {
+        await this.#proxy.updateSubscription(request);
+        // The tab host leases a document only for each call on it, and an idle document is saved
+        // before it is evicted, so the creation lease has nothing left to guard once it is followed.
+        this.#releaseCreations(request.add?.map(({ documentId }) => documentId) ?? []);
+      },
+      catch: toServiceError,
+    });
+  }
+
+  ['DataService.submit'](request: DataService.SubmitRequest): Effect.Effect<DataService.SubmitResponse, Error> {
+    return Effect.tryPromise({
+      try: async () => ({ results: await this.#proxy.submit(request) }),
+      catch: toServiceError,
+    });
+  }
+
   /**
    * Test affordance: pause/resume flushing of document updates on every
    * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
@@ -243,6 +312,40 @@ export class DataServiceImpl implements DataService.Handlers {
     for (const synchronizer of this._subscriptions.values()) {
       synchronizer.setSendUpdatesPaused(paused);
     }
+    this.#proxyUpdatesPaused = paused;
+    for (const stream of this.#proxySubscriptions.values()) {
+      const held = stream.held;
+      stream.held = paused ? (held ?? []) : undefined;
+      if (!paused && held && held.length > 0) {
+        stream.send(held);
+      }
+    }
+  }
+
+  get #proxy(): Host.DocumentHost {
+    invariant(this.#proxyHost, 'This data service serves no proxy documents.');
+    return this.#proxyHost;
+  }
+
+  #releaseCreations(documentIds: readonly string[]): void {
+    for (const documentId of documentIds) {
+      this._pendingCreations.get(documentId)?.[Symbol.dispose]();
+      this._pendingCreations.delete(documentId);
+    }
+  }
+
+  /**
+   * Nothing is left to follow a created document once the last client is gone, so its creation lease
+   * would otherwise outlive every reader.
+   */
+  #releaseCreationsIfNoClients(): void {
+    if (this._subscriptions.size > 0 || this.#proxySubscriptions.size > 0) {
+      return;
+    }
+    for (const lease of this._pendingCreations.values()) {
+      lease[Symbol.dispose]();
+    }
+    this._pendingCreations.clear();
   }
 
   ['DataService.subscribeSpaceSyncState'](

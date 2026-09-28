@@ -67,6 +67,11 @@ export const QueryRequest = Schema.Struct({
    * JSON-encoded `QueryAST.Query`.
    */
   query: Schema.String,
+  /**
+   * Also send the index copy of each document the results come from (see {@link DocumentCopy}), for a
+   * client that shows proxies of documents from the index.
+   */
+  documentCopies: Schema.optional(Schema.Boolean),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
@@ -104,9 +109,27 @@ export const QueryResult = Schema.Struct({
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 
+/**
+ * A document as the host's index rebuilds it, at the Automerge heads it was read at. Only documents
+ * the index reproduces exactly have one, so the value holds nothing JSON cannot carry.
+ */
+export const DocumentCopy = Schema.Struct({
+  spaceId: Schema.String,
+  documentId: Schema.String,
+  heads: mutableArray(Schema.String),
+  /** JSON-encoded document. */
+  json: Schema.String,
+});
+export interface DocumentCopy extends Schema.Schema.Type<typeof DocumentCopy> {}
+
 export const QueryResponse = Schema.Struct({
   queryId: Schema.optional(Schema.String),
   results: Schema.optional(mutableArray(QueryResult)),
+  /**
+   * With `documentCopies` requested: copies of the results' documents that are new to this query or
+   * changed since it last sent them.
+   */
+  documentCopies: Schema.optional(mutableArray(DocumentCopy)),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 

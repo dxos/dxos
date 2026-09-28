@@ -2,18 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  next as A,
-  type Doc as AutomergeDoc,
-  type ChangeFn,
-  type ChangeOptions,
-  type Heads,
-} from '@automerge/automerge';
+import { type Doc as AutomergeDoc, type ChangeFn, type ChangeOptions, type Heads } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import type { InspectOptionsStylized, inspect } from 'util';
 
 import { type CleanupFn, Event } from '@dxos/async';
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { inspectCustom } from '@dxos/debug';
 import { type Entity, type Type } from '@dxos/echo';
 import {
@@ -31,7 +26,7 @@ import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc.ts';
-import { type DocHandleProxy } from '../automerge/index.ts';
+import { type ClientDocHandle } from '../automerge/index.ts';
 import { docChangeSemaphore } from './doc-semaphore.ts';
 import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
@@ -59,6 +54,15 @@ const SYSTEM_NAMESPACE = 'system';
  * lookup for every object on every call.
  */
 const updatedAtCache = new WeakMap<AutomergeDoc<unknown>, { heads: string; updatedAt: number | undefined }>();
+
+/** The core behind each accessor handle, so text helpers can reach the document an accessor mirrors. */
+const accessorCores = new WeakMap<Doc.Handle, ObjectCore>();
+
+/**
+ * The object core an accessor from {@link ObjectCore.getDocAccessor} reads through.
+ * @internal
+ */
+export const getAccessorCore = (accessor: Doc.Accessor): ObjectCore | undefined => accessorCores.get(accessor.handle);
 
 export type ObjectCoreOptions = {
   type?: EncodedReference;
@@ -98,7 +102,7 @@ export class ObjectCore {
   /**
    * Set when the object is bound to a database.
    */
-  public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
+  public docHandle?: ClientDocHandle<DatabaseDirectory> = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -243,6 +247,8 @@ export class ObjectCore {
 
     initialProps ??= {};
 
+    // An Automerge document whichever mode the database it joins holds, since no database is known
+    // yet; binding to a proxy handle copies its value (see `bind`).
     this.doc = A.from<EntityStructure>({
       data: this.encode(initialProps),
       meta: this.encode({
@@ -373,30 +379,32 @@ export class ObjectCore {
   getDocAccessor(path: Doc.KeyPath = []): Doc.Accessor {
     assertArgument(Doc.isKeyPath(path), 'path');
     const self = this;
-    return {
-      handle: {
-        doc: () => this.getDoc(),
-        change: (callback, options) => {
-          this.change(callback, options);
-        },
-        changeAt: (heads, callback, options) => {
-          return this.changeAt(heads, callback, options);
-        },
-        addListener: (event, listener) => {
-          if (event === 'change') {
-            // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
-            this.docHandle?.on('change', listener);
-            this.updates.on(listener);
-          }
-        },
-        removeListener: (event, listener) => {
-          if (event === 'change') {
-            // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
-            this.docHandle?.off('change', listener);
-            this.updates.off(listener);
-          }
-        },
+    const handle: Doc.Handle = {
+      doc: () => this.getDoc(),
+      change: (callback, options) => {
+        this.change(callback, options);
       },
+      changeAt: (heads, callback, options) => {
+        return this.changeAt(heads, callback, options);
+      },
+      addListener: (event, listener) => {
+        if (event === 'change') {
+          // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
+          this.docHandle?.on('change', listener);
+          this.updates.on(listener);
+        }
+      },
+      removeListener: (event, listener) => {
+        if (event === 'change') {
+          // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
+          this.docHandle?.off('change', listener);
+          this.updates.off(listener);
+        }
+      },
+    };
+    accessorCores.set(handle, this);
+    return {
+      handle,
       get path() {
         return [...self.mountPath, 'data', ...path];
       },
@@ -901,7 +909,7 @@ export class ObjectCore {
 
 export type BindOptions = {
   db: IDatabaseBinding;
-  docHandle: DocHandleProxy<DatabaseDirectory>;
+  docHandle: ClientDocHandle<DatabaseDirectory>;
   path: Doc.KeyPath;
   /** Assign the state from the local doc into the shared structure for the database. */
   assignFromLocalState?: boolean;

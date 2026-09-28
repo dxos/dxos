@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
+import { registerAutomerge } from '@dxos/automerge-proxy/Automerge';
 import { LifecycleState, Resource } from '@dxos/context';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,7 +15,13 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { RepoClosedError } from '../errors.ts';
-import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
+import {
+  type ChangeEvent,
+  type ClientRepo,
+  type EditsRejectedEvent,
+  type SaveStateChangedEvent,
+} from './client-handle.ts';
+import { DocHandleProxy } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
@@ -46,7 +53,7 @@ const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
  * A proxy (thin client) to the Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
-export class RepoProxy extends Resource {
+export class RepoProxy extends Resource implements ClientRepo {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
   private _handles: Record<string, DocHandleProxy<any>> = {};
   private readonly _subscriptionId = PublicKey.random().toHex();
@@ -138,6 +145,9 @@ export class RepoProxy extends Resource {
   #draining = false;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+
+  /** A replica applies its edits locally, so the host never refuses one. */
+  readonly editsRejected = new Event<EditsRejectedEvent>();
   private _lastSaveStateKey = '';
 
   constructor(
@@ -146,6 +156,8 @@ export class RepoProxy extends Resource {
     private readonly _spaceId: SpaceId,
   ) {
     super();
+    // Replicas are Automerge documents, which the tab's code reaches through the namespace.
+    registerAutomerge(A);
   }
 
   /**
@@ -204,6 +216,14 @@ export class RepoProxy extends Resource {
     const documentId = toDocumentId(id);
     return this._getOrLoadHandle<T>({ documentId });
   }
+
+  /** A replica loads every document it reads, so there is no index copy to show. */
+  findIndexed<T>(id: AnyDocumentId): DocHandleProxy<T> {
+    return this.find(id);
+  }
+
+  /** A replica has no use for index copies. */
+  primeCopy(): void {}
 
   import<T>(dump: Uint8Array): DocHandleProxy<T> {
     const handle = this.create<T>();
@@ -351,7 +371,7 @@ export class RepoProxy extends Resource {
   /**
    * Update the data service reference after reconnection.
    */
-  _updateDataService(dataService: DataService.Client): void {
+  _updateServices({ dataService }: { dataService: DataService.Client }): void {
     this._dataService = dataService;
   }
 
@@ -843,6 +863,4 @@ export class RepoProxy extends Resource {
   }
 }
 
-export type SaveStateChangedEvent = {
-  unsavedDocuments: DocumentId[];
-};
+export type { SaveStateChangedEvent };

@@ -8,10 +8,12 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
+import { type CreateRepo, loadCreateRepo } from '../automerge/create-repo.ts';
+import { type DocumentMode, parseDocumentMode } from '../automerge/index.ts';
 import { type BranchStore } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
@@ -26,6 +28,15 @@ export type ConnectToServiceProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
+
+  /** Defaults to `DX_ECHO_DOCUMENT_MODE` in the process environment, else `replica`. */
+  documentMode?: DocumentMode;
+
+  /**
+   * With `proxy` documents, show objects from the services' index until this client writes to them.
+   * Defaults to `DX_ECHO_PROXY_INDEX_READS` in the process environment, else off.
+   */
+  proxyIndexReads?: boolean;
 
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
   runtime?: EffectContext.Context<never>;
@@ -74,6 +85,10 @@ export class EchoClient extends Resource {
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
+  private _documentMode: DocumentMode = 'replica';
+  private _proxyIndexReads = false;
+  /** Set on open, since a replica's repo loads Automerge only in replica mode. */
+  private _createRepo?: CreateRepo = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -93,12 +108,28 @@ export class EchoClient extends Resource {
     return this._databases.values();
   }
 
+  /** How this client holds documents, settled by {@link connectToService}. */
+  get documentMode(): DocumentMode {
+    return this._documentMode;
+  }
+
   /**
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, feedService, runtime }: ConnectToServiceProps): this {
+  connectToService({
+    dataService,
+    queryService,
+    feedService,
+    documentMode,
+    proxyIndexReads,
+    runtime,
+  }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
+    // Resolved here, where the setting enters, so nothing below reads the environment.
+    this._documentMode = documentMode ?? parseDocumentMode(processEnv('DX_ECHO_DOCUMENT_MODE')) ?? 'replica';
+    this._proxyIndexReads =
+      this._documentMode === 'proxy' && (proxyIndexReads ?? processEnv('DX_ECHO_PROXY_INDEX_READS') === 'true');
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
@@ -115,16 +146,9 @@ export class EchoClient extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
+    this._createRepo = await loadCreateRepo(this._documentMode);
 
-    this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-      service: this._queryService,
-      runtime: this._runtime,
-      objectLoader: {
-        loadObject: this._loadObjectFromDocument.bind(this),
-        updateEvent: this._objectsUpdated,
-      },
-      graph: this._graph,
-    });
+    this._indexQuerySourceProvider = this._createQuerySourceProvider(this._queryService);
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
 
@@ -152,10 +176,12 @@ export class EchoClient extends Resource {
     spaceKey,
     branchStore,
   }: ConstructDatabaseProps): DatabaseImpl {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    invariant(this._lifecycleState === LifecycleState.OPEN && this._createRepo);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new DatabaseImpl({
       dataService: this._dataService!,
+      createRepo: this._createRepo,
+      proxyIndexReads: this._proxyIndexReads,
       queryService: this._queryService!,
       feedService: this._feedService,
       runtime: this._runtime,
@@ -223,15 +249,7 @@ export class EchoClient extends Resource {
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
-      this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-        service: this._queryService,
-        runtime: this._runtime,
-        objectLoader: {
-          loadObject: this._loadObjectFromDocument.bind(this),
-          updateEvent: this._objectsUpdated,
-        },
-        graph: this._graph,
-      });
+      this._indexQuerySourceProvider = this._createQuerySourceProvider(this._queryService);
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }
 
@@ -250,6 +268,26 @@ export class EchoClient extends Resource {
     for (const db of this._databases.values()) {
       await db._onReconnect();
     }
+  }
+
+  private _createQuerySourceProvider(service: QueryService.Client): IndexQuerySourceProvider {
+    return new IndexQuerySourceProvider({
+      service,
+      runtime: this._runtime,
+      objectLoader: {
+        loadObject: this._loadObjectFromDocument.bind(this),
+        primeDocumentCopies: (copies) => {
+          for (const copy of copies) {
+            if (SpaceId.isValid(copy.spaceId)) {
+              this._databases.get(copy.spaceId)?._primeDocumentCopy(copy);
+            }
+          }
+        },
+        updateEvent: this._objectsUpdated,
+      },
+      graph: this._graph,
+      documentCopies: this._proxyIndexReads,
+    });
   }
 
   private async _loadObjectFromDocument({
@@ -315,3 +353,6 @@ export class EchoClient extends Resource {
     });
   }
 }
+
+/** A process environment variable, where there is a process; browsers and workers have none. */
+const processEnv = (key: string): string | undefined => (typeof process === 'undefined' ? undefined : process.env[key]);

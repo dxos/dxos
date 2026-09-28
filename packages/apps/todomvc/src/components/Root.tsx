@@ -3,15 +3,17 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { Config, defs } from '@dxos/config';
+import { Annotation, Obj, Ref } from '@dxos/echo';
 import { AtomEx } from '@dxos/effect';
-import { ClientProvider, createClientServices } from '@dxos/react-client';
+import { type Client, ClientProvider, createClientServices } from '@dxos/react-client';
 
 import { getConfig } from '../config.ts';
-import { Todo, TodoList, createTodoList } from '../types.ts';
+import { Todo, TodoList, TodoListAnnotation, createTodoList } from '../types.ts';
 import { Main } from './Main.tsx';
 
 // Dedicated-worker client services. A coordinator SharedWorker elects a single leader tab that owns
@@ -36,6 +38,26 @@ const createServices = (config?: Config) =>
     },
   );
 
+/** Adds todos until the list holds `count`, to measure a list of that size (`?seed=count`). */
+const seedTodos = async (client: Client, count: number) => {
+  for (const space of client.spaces.get()) {
+    await space.waitUntilReady();
+    const list = await Annotation.get(space.properties, TodoListAnnotation).pipe(Option.getOrUndefined)?.load();
+    if (!list) {
+      continue;
+    }
+    const start = list.todos.length;
+    const todos = Array.from({ length: Math.max(0, count - start) }, (_, index) =>
+      space.db.add(Obj.make(Todo, { title: `todo ${start + index}`, completed: false })),
+    );
+    Obj.update(list, (list) => {
+      list.todos.push(...todos.map((todo) => Ref.make(todo)));
+    });
+    await space.db.flush();
+    return;
+  }
+};
+
 export const Root = () => {
   const navigate = useNavigate();
   const registry = useMemo(() => AtomEx.makeRegistry(), []);
@@ -54,6 +76,11 @@ export const Root = () => {
           const space = await client.spaces.create();
           await space.waitUntilReady();
           createTodoList(space);
+        }
+
+        const seed = Number(searchProps.get('seed') ?? 0);
+        if (seed > 0) {
+          await seedTodos(client, seed);
         }
 
         const spaceInvitationCode = searchProps.get('spaceInvitationCode');

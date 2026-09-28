@@ -14,8 +14,7 @@
 // overwrite cannot displace an entry either.
 //
 
-import { next as A } from '@automerge/automerge';
-
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { assertArgument } from '@dxos/invariant';
 
 /**

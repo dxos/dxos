@@ -15,7 +15,7 @@ import { DXN, EntityId, PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
+import { type ClientDocHandle, type ClientRepo } from '../automerge/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
@@ -581,12 +581,12 @@ const createClientDbInSpaceWithObject = async (
 };
 
 interface DocumentHandles {
-  spaceRootHandle: DocHandleProxy<DatabaseDirectory>;
-  linkedDocHandles: DocHandleProxy<DatabaseDirectory>[];
+  spaceRootHandle: ClientDocHandle<DatabaseDirectory>;
+  linkedDocHandles: ClientDocHandle<DatabaseDirectory>[];
 }
 
 const addObjectToDoc = <T extends { id: string }>(
-  docHandle: DocHandleProxy<DatabaseDirectory>,
+  docHandle: ClientDocHandle<DatabaseDirectory>,
   object: T,
   typename: string = Type.getTypename(TestSchema.Expando),
   version: string = Type.getVersion(TestSchema.Expando),
@@ -605,7 +605,7 @@ const addObjectToDoc = <T extends { id: string }>(
   return object;
 };
 
-const createTestRootDoc = async (repo: RepoProxy): Promise<DocHandleProxy<DatabaseDirectory>> => {
+const createTestRootDoc = async (repo: ClientRepo): Promise<ClientDocHandle<DatabaseDirectory>> => {
   const handle = repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
   await handle.whenReady();
   return handle;

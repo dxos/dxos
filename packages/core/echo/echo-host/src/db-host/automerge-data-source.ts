@@ -22,6 +22,24 @@ import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
 
+/** Whether a stored value survives JSON unchanged; RawString, bytes, dates and counters do not. */
+const isJsonValue = (value: unknown): boolean => {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') {
+    return true;
+  }
+  if (typeof value === 'number') {
+    return Number.isFinite(value);
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+  return (
+    typeof value === 'object' &&
+    Object.getPrototypeOf(value) === Object.prototype &&
+    Object.values(value).every(isJsonValue)
+  );
+};
+
 /**
  * Codec for serializing/deserializing Automerge heads to cursor strings.
  */
@@ -50,6 +68,8 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean 
 
 export type AutomergeDataSourceOptions = {
   isBranchDocument?: (documentId: DocumentId) => boolean;
+  /** Index each object with its document's heads and stored fields, which a proxy tab's index read shows. */
+  documentCopies?: boolean;
 };
 
 /**
@@ -61,6 +81,7 @@ export class AutomergeDataSource implements IndexDataSource {
 
   readonly #automergeHost: AutomergeHost;
   readonly #isBranchDocument: ((documentId: DocumentId) => boolean) | undefined;
+  readonly #documentCopies: boolean;
 
   /**
    * Heads for every document, captured once per `IndexEngine.update` pass. `listDocumentHeads()` is
@@ -81,6 +102,7 @@ export class AutomergeDataSource implements IndexDataSource {
   constructor(automergeHost: AutomergeHost, options?: AutomergeDataSourceOptions) {
     this.#automergeHost = automergeHost;
     this.#isBranchDocument = options?.isBranchDocument;
+    this.#documentCopies = options?.documentCopies ?? false;
   }
 
   beginPass(): void {
@@ -160,6 +182,7 @@ export class AutomergeDataSource implements IndexDataSource {
             continue;
           }
           const doc: DatabaseDirectory = lease.doc();
+          const readHeads = A.getHeads(lease.doc());
 
           // Skip outdated docs.
           if (doc.version !== SpaceDocVersion.CURRENT) {
@@ -196,6 +219,7 @@ export class AutomergeDataSource implements IndexDataSource {
               continue;
             }
             const storedCreatedAt = structure.system?.createdAt;
+            const { data: _data, ...stored } = structure;
             objects.push({
               spaceId,
               documentId,
@@ -204,6 +228,16 @@ export class AutomergeDataSource implements IndexDataSource {
               queuePosition: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
+              ...(this.#documentCopies
+                ? {
+                    documentCopy: {
+                      heads: readHeads,
+                      ...(isJsonValue(doc.access ?? null) && isJsonValue(structure)
+                        ? { stored: { access: doc.access, structure: stored } }
+                        : {}),
+                    },
+                  }
+                : {}),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
             });

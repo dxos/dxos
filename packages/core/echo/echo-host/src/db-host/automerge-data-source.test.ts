@@ -103,6 +103,31 @@ describe('AutomergeDataSource', () => {
     expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.doc()!)));
   });
 
+  test('objects carry document copies only when the index keeps them for proxy clients', async () => {
+    const host = await setupAutomergeHost();
+    const spaceId = SpaceId.random();
+    const handle = await createDatabaseDirectory(host, spaceId, {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Copied' } }),
+    });
+    await host.flush(Context.default());
+
+    const plain = await EffectEx.runAndForwardErrors(
+      new AutomergeDataSource(host).getChangedObjects(Context.default(), []),
+    );
+    expect(plain.objects[0].documentCopy).toBeUndefined();
+
+    const copied = await EffectEx.runAndForwardErrors(
+      new AutomergeDataSource(host, { documentCopies: true }).getChangedObjects(Context.default(), []),
+    );
+    const doc = handle.doc();
+    expect(doc).toBeDefined();
+    if (!doc) {
+      return;
+    }
+    expect(copied.objects[0].documentCopy?.heads).toEqual(getHeads(doc));
+    expect(copied.objects[0].documentCopy?.stored).toBeDefined();
+  });
+
   test('returns documents with changed heads', async () => {
     const host = await setupAutomergeHost();
     const spaceId = SpaceId.random();

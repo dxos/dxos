@@ -4,10 +4,10 @@
 // Ref: https://github.com/automerge/automerge-codemirror
 //
 
-import { next as A } from '@automerge/automerge';
 import { type Extension, StateField, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
+import * as A from '@dxos/automerge-proxy/Automerge';
 import { Doc } from '@dxos/echo-doc';
 
 import { Cursor } from '../../../util/index.ts';
