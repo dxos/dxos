@@ -41,7 +41,9 @@ const DefaultStory = () => (
         <Next.Select.Root items={ROLES} positioning={{ sameWidth: true }}>
           <Next.Field.Header>
             <Next.Select.Label>Role</Next.Select.Label>
-            <Next.Icon icon='ph--lock-simple--regular' label='Restricted' />
+            <Next.Block data-testid='role-lock'>
+              <Next.Icon icon='ph--lock-simple--regular' label='Restricted' />
+            </Next.Block>
           </Next.Field.Header>
           <Next.Select.Trigger placeholder='Select a role' />
           <Next.Select.Content>
@@ -133,6 +135,12 @@ export const Layout: Story = {
     await expect(header?.height).toBeCloseTo(24, 0);
     await expect(info.height).toBeCloseTo(20, 0);
     await expect(info.right).toBeCloseTo(part(canvasElement, 'email', '.nx-input').right, 0);
+
+    // A trailing Block (a static icon) takes the same cell as an IconButton, so both line up at the row's end.
+    const lock = canvas.getByTestId('role-lock').getBoundingClientRect();
+    await expect(lock.width).toBeCloseTo(info.width, 0);
+    await expect(lock.height).toBeCloseTo(info.height, 0);
+    await expect(lock.right).toBeCloseTo(info.right, 0);
 
     // Checking draws the mark inside the box.
     await userEvent.click(canvas.getByText('Subscribe to updates'));

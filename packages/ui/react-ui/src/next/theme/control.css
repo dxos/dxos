@@ -101,6 +101,11 @@
     gap: var(--nx-gap-size);
     min-height: var(--nx-block-size);
   }
+  /* A trailing Block matches an IconButton's control-sized cell, so static and interactive icons align. */
+  .nx-field-header > .nx-block {
+    width: var(--nx-control-size);
+    height: var(--nx-control-size);
+  }
   .nx-field-header > .nx-label {
     flex: 1;
     min-width: 0;
