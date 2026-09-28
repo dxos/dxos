@@ -10,64 +10,82 @@ import { expect, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { sizeRow } from '../../testing.ts';
 
-type StoryArgs = {
-  /** Disables the Notifications set. */
-  disabled?: boolean;
-  /** Marks the Profile set invalid. */
-  invalid?: boolean;
-};
+/** Valid and enabled sets, then an invalid and a disabled one; test ids are scoped by the size row. */
+const DefaultStory = () => (
+  <>
+    <Next.FieldSet.Root data-testid='profile'>
+      <Next.FieldSet.Legend>
+        Profile
+        <Next.Block data-testid='profile-lock'>
+          <Next.Icon icon='ph--user--regular' />
+        </Next.Block>
+      </Next.FieldSet.Legend>
+      <Next.Field.Root data-testid='name'>
+        <Next.Field.Header>
+          <Next.Field.Label>Name</Next.Field.Label>
+        </Next.Field.Header>
+        <Next.Input placeholder='Ada Lovelace' />
+      </Next.Field.Root>
+      <Next.Field.Root data-testid='email'>
+        <Next.Field.Header>
+          <Next.Field.Label>Email</Next.Field.Label>
+        </Next.Field.Header>
+        <Next.Input type='email' placeholder='ada@example.com' />
+      </Next.Field.Root>
+      <Next.FieldSet.HelperText>Shown on your public page.</Next.FieldSet.HelperText>
+      <Next.FieldSet.ErrorText>Complete your profile.</Next.FieldSet.ErrorText>
+    </Next.FieldSet.Root>
 
-const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
-  <div className='nx-scope @container w-[30rem] border border-separator' data-size='md'>
-    <Next.Container gutter='rail' level='base'>
-      <Next.FieldSet.Root invalid={invalid} data-testid='profile'>
-        <Next.FieldSet.Legend>
-          Profile
-          <Next.Block data-testid='profile-lock'>
-            <Next.Icon icon='ph--user--regular' />
-          </Next.Block>
-        </Next.FieldSet.Legend>
-        <Next.Field.Root data-testid='name'>
-          <Next.Field.Header>
-            <Next.Field.Label>Name</Next.Field.Label>
-          </Next.Field.Header>
-          <Next.Input placeholder='Ada Lovelace' />
-        </Next.Field.Root>
-        <Next.Field.Root data-testid='email'>
-          <Next.Field.Header>
-            <Next.Field.Label>Email</Next.Field.Label>
-          </Next.Field.Header>
-          <Next.Input type='email' placeholder='ada@example.com' />
-        </Next.Field.Root>
-        <Next.FieldSet.HelperText>Shown on your public page.</Next.FieldSet.HelperText>
-        <Next.FieldSet.ErrorText>Complete your profile.</Next.FieldSet.ErrorText>
-      </Next.FieldSet.Root>
+    <Next.FieldSet.Root data-testid='notifications'>
+      <Next.FieldSet.Legend>Notifications</Next.FieldSet.Legend>
+      <Next.Switch label='Email digests' defaultChecked />
+      <Next.Switch label='Mentions' />
+      <Next.Switch label='Product updates' />
+      <Next.Checkbox label='Email me a weekly digest' />
+    </Next.FieldSet.Root>
 
-      <Next.FieldSet.Root disabled={disabled} data-testid='notifications'>
-        <Next.FieldSet.Legend>Notifications</Next.FieldSet.Legend>
-        <Next.Switch label='Email digests' defaultChecked />
-        <Next.Switch label='Mentions' />
-        <Next.Switch label='Product updates' />
-        <Next.Checkbox label='Email me a weekly digest' />
-      </Next.FieldSet.Root>
+    <Next.FieldSet.Root invalid>
+      <Next.FieldSet.Legend>Account</Next.FieldSet.Legend>
+      <Next.Field.Root>
+        <Next.Field.Header>
+          <Next.Field.Label>Handle</Next.Field.Label>
+        </Next.Field.Header>
+        <Next.Input />
+      </Next.Field.Root>
+      <Next.Field.Root>
+        <Next.Field.Header>
+          <Next.Field.Label>Recovery email</Next.Field.Label>
+        </Next.Field.Header>
+        <Next.Input type='email' />
+      </Next.Field.Root>
+      <Next.FieldSet.ErrorText>Complete your account.</Next.FieldSet.ErrorText>
+    </Next.FieldSet.Root>
 
-      <Next.Group justify='end'>
-        <Next.Button>Cancel</Next.Button>
-        <Next.Button type='submit' variant='primary'>
-          Save
-        </Next.Button>
-      </Next.Group>
-    </Next.Container>
-  </div>
+    <Next.FieldSet.Root disabled>
+      <Next.FieldSet.Legend>Privacy</Next.FieldSet.Legend>
+      <Next.Switch label='Show online status' />
+      <Next.Switch label='Read receipts' />
+      <Next.Checkbox label='Share usage data' />
+    </Next.FieldSet.Root>
+
+    <Next.Group justify='end'>
+      <Next.Button>Cancel</Next.Button>
+      <Next.Button type='submit' variant='primary'>
+        Save
+      </Next.Button>
+    </Next.Group>
+  </>
 );
 
 const meta = {
   title: 'ui/react-ui-core/next/components/fieldset',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta<StoryArgs>;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -83,9 +101,13 @@ const bounds = (root: HTMLElement, selector: string) => {
 
 export const Default: Story = {};
 
-/** Sets are named groups whose legend row lines up with the fields' labels and controls. */
-export const Layout: Story = {
-  play: async ({ canvasElement }) => {
+/**
+ * Sets are named groups whose legend row lines up with the fields' labels and controls; a disabled set disables every
+ * control inside it, and an invalid set shows its error and marks its fields invalid.
+ */
+export const Test: Story = {
+  play: async ({ canvasElement: canvasRoot }) => {
+    const canvasElement = sizeRow(canvasRoot, 'md');
     const canvas = within(canvasElement);
     const profile = canvas.getByRole('group', { name: 'Profile' });
     await expect(profile.tagName).toBe('FIELDSET');
@@ -128,31 +150,19 @@ export const Layout: Story = {
       await expect(label.getBoundingClientRect().left).toBeCloseTo(labels[0].getBoundingClientRect().left, 0);
     }
     await expect(canvas.queryByText('Complete your profile.')).toBeNull();
-  },
-};
+    await expect(canvas.getByRole('group', { name: 'Profile' })).not.toHaveAttribute('data-invalid');
+    await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeEnabled();
 
-/** A disabled set disables every control inside it. */
-export const Disabled: Story = {
-  args: { disabled: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeDisabled();
-    for (const name of ['Email digests', 'Mentions', 'Product updates']) {
+    await expect(canvas.getByRole('group', { name: 'Privacy' })).toBeDisabled();
+    for (const name of ['Show online status', 'Read receipts']) {
       await expect(canvas.getByRole('switch', { name })).toBeDisabled();
     }
-    await expect(canvas.getByRole('checkbox', { name: 'Email me a weekly digest' })).toBeDisabled();
+    await expect(canvas.getByRole('checkbox', { name: 'Share usage data' })).toBeDisabled();
     await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeEnabled();
-  },
-};
 
-/** An invalid set shows its error and marks its fields invalid. */
-export const Invalid: Story = {
-  args: { invalid: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByText('Complete your profile.')).toBeVisible();
-    await expect(canvas.getByRole('group', { name: 'Profile' })).toHaveAttribute('data-invalid');
-    for (const name of ['Name', 'Email']) {
+    await expect(canvas.getByText('Complete your account.')).toBeVisible();
+    await expect(canvas.getByRole('group', { name: 'Account' })).toHaveAttribute('data-invalid');
+    for (const name of ['Handle', 'Recovery email']) {
       await expect(canvas.getByRole('textbox', { name })).toHaveAttribute('aria-invalid', 'true');
     }
   },

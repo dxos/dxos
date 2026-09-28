@@ -13,41 +13,41 @@ import { hues } from '@dxos/ui-types';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 
 /** Label text (one step below the body) per size, in px. */
 const LABEL_FONT: Record<Size, number> = { xs: 12, sm: 12, md: 14, lg: 16, xl: 18 };
 
 const VALENCES: Next.TagHue[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
-const DefaultStory = () => (
-  <div className='nx-scope flex flex-col gap-2 w-[32rem]' data-size='md'>
-    {SIZES.map((size) => (
-      <Next.Container key={size} size={size} gutter='rail' layout='row' data-testid={`row-${size}`}>
-        <Next.Group>
-          <Next.Tag hue='blue' data-testid={`tag-${size}`}>
-            Release {size}
-          </Next.Tag>
-          <Next.Tag hue='amber'>Draft</Next.Tag>
-        </Next.Group>
-      </Next.Container>
-    ))}
-    <div className='flex flex-wrap gap-1'>
+/** A row of tags centred in a block row, then every valence and hue. */
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    <Next.Container layout='row' data-testid={`row-${size}`}>
+      <Next.Group>
+        <Next.Tag hue='blue' data-testid={`tag-${size}`}>
+          Release {size}
+        </Next.Tag>
+        <Next.Tag hue='amber'>Draft</Next.Tag>
+      </Next.Group>
+    </Next.Container>
+    <Next.Group>
       {[...VALENCES, ...hues].map((hue) => (
-        <Next.Tag key={hue} hue={hue} data-testid={`hue-${hue}`}>
+        <Next.Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
           {hue}
         </Next.Tag>
       ))}
-    </div>
-  </div>
+    </Next.Group>
+  </>
 );
 
 const meta = {
   title: 'ui/react-ui-core/next/components/tag',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes({ width: 'w-[48rem]' }), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -55,8 +55,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** A tag is one inset shorter than a control on each side, centred in its row, in the size's label text. */
-export const Sizes: Story = {
+/**
+ * A tag is one inset shorter than a control on each side, centred in its row, in the size's label text; each hue maps
+ * to ui-theme's surface/fg tokens, and valences share the current Tag's hues (error is rose).
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const tag = byTestId(canvasElement, `tag-${size}`);
@@ -68,14 +71,9 @@ export const Sizes: Story = {
       await expect(parseFloat(getComputedStyle(tag).fontSize), size).toBe(LABEL_FONT[size]);
     }
     await expectScoped(canvasElement);
-  },
-};
 
-/** Each hue maps to ui-theme's surface/fg tokens; valences share the current Tag's hues (error is rose). */
-export const Hues: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const background = (hue: string) => getComputedStyle(byTestId(canvasElement, `hue-${hue}`)).backgroundColor;
+    const canvas = within(sizeRow(canvasElement, 'md'));
+    const background = (hue: string) => getComputedStyle(byTestId(canvasElement, `hue-${hue}-md`)).backgroundColor;
     const colours = new Set(hues.map(background));
     await expect(colours.size).toBe(hues.length);
     await expect(background('error')).toBe(background('rose'));

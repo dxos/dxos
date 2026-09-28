@@ -11,42 +11,37 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectScoped } from '../../testing.ts';
 
-const DefaultStory = () => (
-  <div className='nx-scope @container flex flex-col w-[24rem] border border-separator' data-size='md'>
-    {SIZES.map((size) => (
-      <Next.Container key={size} size={size} gutter='rail' level='base'>
-        <Next.Field.Root>
-          <Next.Field.Label>Due {size}</Next.Field.Label>
-          <Next.DateInput defaultValue='2026-09-29' data-testid={`date-${size}`} />
-          <Next.Input aria-label={`Note ${size}`} data-testid={`input-${size}`} />
-        </Next.Field.Root>
-      </Next.Container>
-    ))}
-    <Next.Container gutter='rail' level='base'>
-      <Next.Field.Root>
-        <Next.Field.Label>Starts at</Next.Field.Label>
-        <Next.DateInput type='time' defaultValue='09:30' data-testid='time' />
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Label>Reminder</Next.Field.Label>
-        <Next.DateInput type='datetime-local' defaultValue='2026-09-29T09:30' data-testid='datetime' />
-      </Next.Field.Root>
-      <Next.Field.Root disabled>
-        <Next.Field.Label>Archived</Next.Field.Label>
-        <Next.DateInput data-testid='disabled' />
-      </Next.Field.Root>
-    </Next.Container>
-  </div>
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    <Next.Field.Root>
+      <Next.Field.Label>Due {size}</Next.Field.Label>
+      <Next.DateInput defaultValue='2026-09-29' data-testid={`date-${size}`} />
+      <Next.Input aria-label={`Note ${size}`} data-testid={`input-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Starts at {size}</Next.Field.Label>
+      <Next.DateInput type='time' defaultValue='09:30' data-testid={`time-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Reminder {size}</Next.Field.Label>
+      <Next.DateInput type='datetime-local' defaultValue='2026-09-29T09:30' data-testid={`datetime-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root disabled>
+      <Next.Field.Label>Archived {size}</Next.Field.Label>
+      <Next.DateInput data-testid={`disabled-${size}`} />
+    </Next.Field.Root>
+  </>
 );
 
 const meta = {
   title: 'ui/react-ui-core/next/components/date-input',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -54,8 +49,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** The row is a control at every size, as wide as an Input, with the trailing Icon at the control's icon size. */
-export const Sizes: Story = {
+/**
+ * The row is a control at every size, as wide as an Input, with the trailing Icon at the control's icon size; native
+ * date, time and date-time inputs are named by their Field labels, with calendar or clock icons.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const root = byTestId(canvasElement, `date-${size}`);
@@ -70,26 +68,21 @@ export const Sizes: Story = {
       await expect(rect.right - (icon?.right ?? 0), `${size} icon end`).toBeLessThanOrEqual(GEOMETRY[size].block / 2);
     }
     await expectScoped(canvasElement);
-  },
-};
 
-/** Native date, time and date-time inputs, named by their Field labels, with calendar or clock icons. */
-export const Types: Story = {
-  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const date = canvas.getByLabelText('Due md');
     await expect(date).toHaveAttribute('type', 'date');
     await expect(date).toHaveValue('2026-09-29');
-    await expect(canvas.getByLabelText('Starts at')).toHaveAttribute('type', 'time');
-    await expect(canvas.getByLabelText('Reminder')).toHaveAttribute('type', 'datetime-local');
-    await expect(canvas.getByLabelText('Archived')).toBeDisabled();
-    await expect(getComputedStyle(byTestId(canvasElement, 'disabled')).opacity).toBe('0.5');
+    await expect(canvas.getByLabelText('Starts at md')).toHaveAttribute('type', 'time');
+    await expect(canvas.getByLabelText('Reminder md')).toHaveAttribute('type', 'datetime-local');
+    await expect(canvas.getByLabelText('Archived md')).toBeDisabled();
+    await expect(getComputedStyle(byTestId(canvasElement, 'disabled-md')).opacity).toBe('0.5');
 
     const icon = (testId: string) => byTestId(canvasElement, testId).querySelector('use')?.getAttribute('href') ?? '';
     // Icons resolve from the sprite asynchronously.
     await waitFor(() => expect(icon('date-md')).toContain('calendar-blank'));
-    await waitFor(() => expect(icon('time')).toContain('clock'));
-    await waitFor(() => expect(icon('datetime')).toContain('calendar-dots'));
+    await waitFor(() => expect(icon('time-md')).toContain('clock'));
+    await waitFor(() => expect(icon('datetime-md')).toContain('calendar-dots'));
 
     // Focus draws the ring on the row, since the bare input has no box of its own.
     await expect(getComputedStyle(byTestId(canvasElement, 'date-md')).outlineStyle).toBe('none');

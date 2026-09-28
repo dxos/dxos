@@ -77,6 +77,7 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 - [x] **Export Next** — `@dxos/react-ui/next` subpath + `next/theme/index.css`; zag packages back to dependencies. — `./next` + `./next/theme.css` exports, `next` vite entry (DESIGN.md follow-up 23).
 - [x] **New components** — `Textarea`, `DateInput` (date/time/datetime), `Popover` + `Combobox`, `Tag`, `ToggleIconButton`; Select option icons. — DESIGN.md follow-ups 24–30; 111 storybook tests pass.
 - [x] **Merge IconButton into Button** — `icon`/`iconEnd`/`label`/`iconOnly` on `Next.Button`; `Next.Toggle` replaces ToggleIconButton (DESIGN.md follow-up 36). — 119 storybook tests pass.
+- [x] **Standardize component stories** — `withSizes()` decorator; `Default` + one `Test` per component (DESIGN.md follow-up 37). — 67 storybook tests pass (was 120).
 - [ ] **`react-ui-form/next`** — Viewport/Content/Fields/FieldSet/Actions on Next; reuse `resolveFieldRenderer`; port Form stories.
 - [ ] **Settings layout** — design the two-column `variant='settings'` (Container `columns`) — needs a decision.
 - [ ] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`.

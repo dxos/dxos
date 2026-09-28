@@ -10,17 +10,18 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { expectAnchoredBelow } from '../../testing.ts';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { byTestId, expectAnchoredBelow } from '../../testing.ts';
 
-const DefaultStory = () => {
+const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [selected, setSelected] = useState<string>();
   return (
-    <div className='flex flex-col items-start gap-2'>
+    <>
       <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Next.Menu.Trigger asChild>
-          <Next.Button data-testid='trigger'>Actions</Next.Button>
+          <Next.Button data-testid={`trigger-${size}`}>Actions</Next.Button>
         </Next.Menu.Trigger>
-        <Next.Menu.Content size='md' data-testid='menu'>
+        <Next.Menu.Content size={size}>
           <Next.Menu.ItemGroup>
             <Next.Menu.ItemGroupLabel>Edit</Next.Menu.ItemGroupLabel>
             <Next.Menu.Item value='cut' icon='ph--scissors--regular' shortcut='⌘X'>
@@ -42,19 +43,19 @@ const DefaultStory = () => {
           </Next.Menu.Item>
         </Next.Menu.Content>
       </Next.Menu.Root>
-      <Next.Typography data-testid='selected'>
+      <Next.Typography data-testid={`selected-${size}`}>
         {selected ? `Selected: ${selected}` : 'Nothing selected'}
       </Next.Typography>
-    </div>
+    </>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/next/components/menu',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -62,7 +63,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Opens the menu from its trigger and returns it once it has focus. */
 const open = async (canvasElement: HTMLElement) => {
-  await userEvent.click(within(canvasElement).getByTestId('trigger'));
+  await userEvent.click(byTestId(canvasElement, 'trigger-md'));
   const menu = await within(canvasElement.ownerDocument.body).findByRole('menu');
   await waitFor(() => expect(menu).toHaveFocus());
   return menu;
@@ -72,11 +73,18 @@ const highlighted = (menu: HTMLElement) => menu.querySelector('[data-highlighted
 
 export const Default: Story = {};
 
-/** Arrow keys move the highlight, Enter selects, and the story ends with the menu open. */
-export const Open: Story = {
+/**
+ * Escape closes the menu and returns focus to the trigger. Arrow keys move the highlight, skipping disabled items, and
+ * Enter selects; the story ends with the menu open.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const trigger = canvas.getByTestId('trigger');
+    await open(canvasElement);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
+    await waitFor(() => expect(byTestId(canvasElement, 'trigger-md')).toHaveFocus());
+
+    const trigger = byTestId(canvasElement, 'trigger-md');
     await expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
     let menu = await open(canvasElement);
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -111,21 +119,11 @@ export const Open: Story = {
 
     // Enter selects the highlighted item and closes the menu.
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(canvas.getByTestId('selected')).toHaveTextContent('Selected: paste'));
+    await waitFor(() => expect(byTestId(canvasElement, 'selected-md')).toHaveTextContent('Selected: paste'));
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
 
     // Reopen so the story rests on the menu.
     menu = await open(canvasElement);
     await expect(menu).toBeVisible();
-  },
-};
-
-/** Escape closes the menu and returns focus to the trigger; this story ends closed by design. */
-export const Dismiss: Story = {
-  play: async ({ canvasElement }) => {
-    await open(canvasElement);
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
-    await waitFor(() => expect(within(canvasElement).getByTestId('trigger')).toHaveFocus());
   },
 };

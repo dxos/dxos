@@ -10,33 +10,31 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { sizeRow } from '../../testing.ts';
 
 const DefaultStory = () => (
-  <div className='nx-scope @container w-[30rem] border border-separator' data-size='md'>
-    <Next.Container gutter='rail' level='base'>
-      <Next.Collapsible.Root data-testid='advanced'>
-        <Next.Collapsible.Trigger>Advanced settings</Next.Collapsible.Trigger>
-        <Next.Collapsible.Content data-testid='content'>
-          <Next.Typography>These settings change how your space syncs.</Next.Typography>
-          <Next.Field.Root>
-            <Next.Field.Header>
-              <Next.Field.Label>Sync interval</Next.Field.Label>
-            </Next.Field.Header>
-            <Next.Input defaultValue='30s' />
-          </Next.Field.Root>
-          <Next.Switch label='Sync over cellular' />
-        </Next.Collapsible.Content>
-      </Next.Collapsible.Root>
-    </Next.Container>
-  </div>
+  <Next.Collapsible.Root>
+    <Next.Collapsible.Trigger>Advanced settings</Next.Collapsible.Trigger>
+    <Next.Collapsible.Content data-testid='content'>
+      <Next.Typography>These settings change how your space syncs.</Next.Typography>
+      <Next.Field.Root>
+        <Next.Field.Header>
+          <Next.Field.Label>Sync interval</Next.Field.Label>
+        </Next.Field.Header>
+        <Next.Input defaultValue='30s' />
+      </Next.Field.Root>
+      <Next.Switch label='Sync over cellular' />
+    </Next.Collapsible.Content>
+  </Next.Collapsible.Root>
 );
 
 const meta = {
   title: 'ui/react-ui-core/next/components/collapsible',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -45,9 +43,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** The trigger toggles the section by pointer and keyboard; the story ends open. */
-export const Toggle: Story = {
+export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(sizeRow(canvasElement, 'md'));
     const trigger = canvas.getByRole('button', { name: 'Advanced settings' });
     const content = canvas.getByTestId('content');
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');

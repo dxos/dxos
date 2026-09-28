@@ -11,39 +11,36 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { byTestId, controlSize, expectScoped, expectTooltip } from '../../testing.ts';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 
-const DefaultStory = () => {
+/** Icon-only toggles (one pressed, one disabled), a labelled toggle, and a controlled one. */
+const DefaultStory = ({ size }: SizeArgs) => {
   const [wrap, setWrap] = useState(false);
   return (
-    <div className='nx-scope flex flex-col w-[20rem] border border-separator' data-size='md'>
-      {SIZES.map((size) => (
-        <Next.Toolbar key={size} size={size}>
-          <Next.Toggle icon='ph--text-b--regular' label={`Bold ${size}`} iconOnly data-testid={`bold-${size}`} />
-          <Next.Toggle icon='ph--text-italic--regular' label={`Italic ${size}`} iconOnly defaultPressed />
-          <Next.Toggle icon='ph--text-underline--regular' label={`Underline ${size}`} iconOnly disabled />
-        </Next.Toolbar>
-      ))}
-      <Next.Toolbar>
-        <Next.Toggle
-          icon='ph--arrows-in-line-horizontal--regular'
-          label='Wrap lines'
-          iconOnly
-          pressed={wrap}
-          onPressedChange={setWrap}
-        />
-        <Next.Typography data-testid='wrap-state'>{wrap ? 'Wrapping' : 'Not wrapping'}</Next.Typography>
-      </Next.Toolbar>
-    </div>
+    <Next.Toolbar>
+      <Next.Toggle icon='ph--text-b--regular' label={`Bold ${size}`} iconOnly data-testid={`bold-${size}`} />
+      <Next.Toggle icon='ph--text-italic--regular' label={`Italic ${size}`} iconOnly defaultPressed />
+      <Next.Toggle icon='ph--text-underline--regular' label={`Underline ${size}`} iconOnly disabled />
+      <Next.Toggle icon='ph--eye--regular' label={`Preview ${size}`} data-testid={`preview-${size}`} />
+      <Next.Toggle
+        icon='ph--arrows-in-line-horizontal--regular'
+        label={`Wrap lines ${size}`}
+        iconOnly
+        pressed={wrap}
+        onPressedChange={setWrap}
+      />
+      <Next.Typography data-testid={`wrap-state-${size}`}>{wrap ? 'Wrapping' : 'Not wrapping'}</Next.Typography>
+    </Next.Toolbar>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/next/components/toggle',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes({ width: 'w-[36rem]' }), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -51,10 +48,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** A button with `aria-pressed` that toggles on click and Space; the pressed state takes the accent fill. */
-export const Toggle: Story = {
+/**
+ * A button with `aria-pressed` that toggles on click and Space, and the pressed state takes the accent fill; a
+ * labelled toggle is named by its text; like an icon-only Button, the label shows in a Tooltip (left open).
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(sizeRow(canvasElement, 'md'));
     for (const size of SIZES) {
       const rect = byTestId(canvasElement, `bold-${size}`).getBoundingClientRect();
       await expect(rect.height, size).toBeCloseTo(controlSize(size), 0);
@@ -72,22 +72,23 @@ export const Toggle: Story = {
     await waitFor(() => expect(bold).toHaveAttribute('aria-pressed', 'false'));
 
     // Controlled: the caller's state follows the toggle.
-    await userEvent.click(canvas.getByRole('button', { name: 'Wrap lines' }));
-    await waitFor(() => expect(canvas.getByTestId('wrap-state')).toHaveTextContent('Wrapping'));
-    await expect(canvas.getByRole('button', { name: 'Wrap lines' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(canvas.getByRole('button', { name: 'Wrap lines md' }));
+    await waitFor(() => expect(canvas.getByTestId('wrap-state-md')).toHaveTextContent('Wrapping'));
+    await expect(canvas.getByRole('button', { name: 'Wrap lines md' })).toHaveAttribute('aria-pressed', 'true');
 
     const underline = canvas.getByRole('button', { name: 'Underline md' });
     await expect(underline).toBeDisabled();
     await expect(underline).not.toHaveAttribute('title');
     await expectScoped(canvasElement);
-  },
-};
 
-/** Like an icon-only Button, the label shows in a Tooltip; the story ends with it open. */
-export const LabelTooltip: Story = {
-  play: async ({ canvasElement }) => {
-    const bold = within(canvasElement).getByRole('button', { name: 'Bold md' });
-    await userEvent.hover(bold);
-    await expectTooltip(bold, 'Bold md');
+    const preview = byTestId(canvasElement, 'preview-md');
+    await expect(canvas.getByRole('button', { name: 'Preview md' })).toBe(preview);
+    await expect(preview).not.toHaveAttribute('aria-label');
+    await userEvent.click(preview);
+    await waitFor(() => expect(preview).toHaveAttribute('aria-pressed', 'true'));
+
+    const italic = canvas.getByRole('button', { name: 'Italic md' });
+    await userEvent.hover(italic);
+    await expectTooltip(italic, 'Italic md');
   },
 };

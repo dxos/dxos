@@ -10,34 +10,37 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { expectArrow } from '../../testing.ts';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { byTestId, expectArrow } from '../../testing.ts';
 
 const LONG =
   'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';
 
-const DefaultStory = () => (
-  <div className='flex gap-2'>
+/** Two triggers, then an Input without a tooltip to tab onto. */
+const DefaultStory = ({ size }: SizeArgs) => (
+  <Next.Group>
     <Next.Tooltip.Root>
       <Next.Tooltip.Trigger asChild>
-        <Next.Button data-testid='save'>Save</Next.Button>
+        <Next.Button data-testid={`save-${size}`}>Save</Next.Button>
       </Next.Tooltip.Trigger>
-      <Next.Tooltip.Content data-testid='save-tooltip'>Save changes (⌘S)</Next.Tooltip.Content>
+      <Next.Tooltip.Content data-testid={`save-tooltip-${size}`}>Save changes (⌘S)</Next.Tooltip.Content>
     </Next.Tooltip.Root>
     <Next.Tooltip.Root>
       <Next.Tooltip.Trigger asChild>
-        <Next.Button data-testid='publish'>Publish</Next.Button>
+        <Next.Button data-testid={`publish-${size}`}>Publish</Next.Button>
       </Next.Tooltip.Trigger>
       <Next.Tooltip.Content>{LONG}</Next.Tooltip.Content>
     </Next.Tooltip.Root>
-  </div>
+    <Next.Input aria-label={`Note ${size}`} data-testid={`note-${size}`} />
+  </Next.Group>
 );
 
 const meta = {
   title: 'ui/react-ui-core/next/components/tooltip',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -45,12 +48,16 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Keyboard focus shows the tooltip, linked to its trigger; the story ends with the long tooltip open. */
-export const Open: Story = {
+/**
+ * Keyboard focus shows the tooltip, linked to its trigger; tabbing straight to the next trigger swaps tooltips and the
+ * second stays open past the open delay; tabbing off a trigger still closes its tooltip, although the close is deferred
+ * by a task; hovering shows it after the delay, and long text wraps within the 20rem cap. The story ends open.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
     const body = within(canvasElement.ownerDocument.body);
-    const save = canvas.getByTestId('save');
+    const save = byTestId(canvasElement, 'save-xs');
+    const publish = byTestId(canvasElement, 'publish-xs');
 
     await userEvent.tab();
     await expect(save).toHaveFocus();
@@ -59,49 +66,28 @@ export const Open: Story = {
     await expect(save).toHaveAttribute('aria-describedby', tooltip.id);
     await expect(save).toHaveAccessibleDescription('Save changes (⌘S)');
 
-    const content = body.getByTestId('save-tooltip');
+    const content = body.getByTestId('save-tooltip-xs');
     await expect(content).toHaveAttribute('data-surface', 'popup');
     await expect(content).toHaveAttribute('data-size', 'sm');
     await expectArrow(save, content);
 
-    // Hovering another trigger swaps tooltips after the open delay; long text wraps within the 20rem cap.
-    await userEvent.hover(canvas.getByTestId('publish'));
-    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
-    const long = body.getByRole('tooltip').getBoundingClientRect();
-    await expect(long.width).toBeLessThanOrEqual(320.5);
-    await expect(long.height).toBeGreaterThan(40);
-  },
-};
-
-/** Tabbing straight from one trigger to the next swaps tooltips, and the second stays open past the open delay. */
-export const Keyboard: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
-
     await userEvent.tab();
-    await expect(canvas.getByTestId('save')).toHaveFocus();
-    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Save changes'));
-
-    await userEvent.tab();
-    await expect(canvas.getByTestId('publish')).toHaveFocus();
+    await expect(publish).toHaveFocus();
     await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
     await new Promise((resolve) => setTimeout(resolve, 500));
     const tooltips = body.getAllByRole('tooltip');
     await expect(tooltips).toHaveLength(1);
     await expect(tooltips[0]).toHaveTextContent('Publishing');
-    await expect(canvas.getByTestId('publish')).toHaveAttribute('aria-describedby', tooltips[0].id);
-  },
-};
+    await expect(publish).toHaveAttribute('aria-describedby', tooltips[0].id);
 
-/** Tabbing off the last trigger still closes its tooltip, although the close is deferred by a task. */
-export const Blur: Story = {
-  play: async ({ canvasElement }) => {
-    const body = within(canvasElement.ownerDocument.body);
     await userEvent.tab();
-    await userEvent.tab();
-    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
-    await userEvent.tab();
+    await expect(byTestId(canvasElement, 'note-xs')).toHaveFocus();
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+
+    await userEvent.hover(byTestId(canvasElement, 'publish-md'));
+    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
+    const long = body.getByRole('tooltip').getBoundingClientRect();
+    await expect(long.width).toBeLessThanOrEqual(320.5);
+    await expect(long.height).toBeGreaterThan(40);
   },
 };

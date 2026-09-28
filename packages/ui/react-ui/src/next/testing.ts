@@ -26,6 +26,9 @@ export const byTestId = (root: HTMLElement, testId: string) => {
   return element;
 };
 
+/** The `withSizes` row (`stories.tsx`) holding the story rendered at `size`. */
+export const sizeRow = (root: HTMLElement, size: Size) => byTestId(root, `size-${size}`);
+
 export const centreY = (rect: DOMRect) => rect.top + rect.height / 2;
 
 export const centreX = (rect: DOMRect) => rect.left + rect.width / 2;

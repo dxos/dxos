@@ -144,7 +144,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    size would need React context or DOM measurement, both ruled out by decisions 3 and 11.
 3. **Toolbar gap is `--nx-control-inset`** (was `--nx-gap-size`, superseded once IconButtons took an inset cell, 19):
    Buttons, Inputs and Select triggers in a toolbar take the same inline margin as an IconButton's cell, so any two
-   adjacent items are three insets apart (6px at md); Toolbar `Spacing` asserts it at md and lg.
+   adjacent items are three insets apart (6px at md); Toolbar `Test` asserts it at md and lg.
 4. **`experimental.stories.tsx` removed**; `components.stories.tsx` covers it.
 5. **Controls fill with the host-derived well** (`--color-input-surface`, a small lightness step off the hosting
    surface) instead of ui-theme's fixed `--color-input-bg`, so they stay close to whatever panel hosts them.
@@ -247,7 +247,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     trigger opened the tooltip and closed it on `pointerdown`: a flash. `Tooltip.Trigger` blocks zag's pointer-move
     opening and runs the Root's `openDelay` from `pointerenter`; `pointerdown` cancels it and closes, and the trigger
     stays suppressed until the pointer leaves; a focus that is not `:focus-visible` never opens. The follow-up 20
-    blur deferral is unchanged. Covered by IconButton `ClickNoTooltip`.
+    blur deferral is unchanged. Covered by Button `Test`.
 34. **Button variants and valences** follow the current Button (ui-theme `button.css`) on the same tokens, as
     `data-variant`/`data-valence` rules in `theme/control.css`, for `Button` and so `Toggle` (36):
 
@@ -278,6 +278,15 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     text is hidden. Icons are spaced from the label by `--nx-gap-size`. `Next.Toggle` is Ark Toggle over this Button
     with the same icon/label/`iconOnly` API, so a text toggle ("Bold") needs no second component; `aria-pressed`
     still comes from the zag toggle machine. All parts emit `data-scope='button'`.
+
+37. **One `Default` and one `Test` story per component.** `withSizes()` (`stories.tsx`) renders the story once per
+    size, each in a labelled `level='base'` rail-gutter Container (`data-testid='size-<size>'`, found by `sizeRow`
+    in `testing.ts`) that passes the row's `size` as an arg, so every `Default` shows all sizes without per-file
+    scaffolding; portalled parts forward that arg to their own `size` (finding 9). Visual variants (states, valences,
+    arrows, justify) are rows or args of the same story rather than extra stories, and a single `Test` play function
+    holds every geometry, role and behaviour assertion for the component, ending with any overlay open unless it
+    tests dismissal. A variants × sizes matrix decorator was not needed: variants render as a row per size.
+    `components.stories.tsx`, `Form.stories.tsx` and `spike/*` keep their own layouts.
 
 ## Phase 3: react-ui-form port
 

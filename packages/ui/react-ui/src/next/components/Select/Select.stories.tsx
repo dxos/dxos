@@ -11,7 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { byTestId, centreY, controlSize, expectAnchoredBelow, expectScoped } from '../../testing.ts';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { byTestId, centreY, controlSize, expectAnchoredBelow, expectScoped, sizeRow } from '../../testing.ts';
 
 const OPTIONS: Next.SelectOption[] = [
   { value: 'red', label: 'Red' },
@@ -26,34 +27,34 @@ const ICON_OPTIONS: Next.SelectOption[] = [
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
-type StoryArgs = {
-  /** Options with leading icons. */
-  icons?: boolean;
-};
-
-const DefaultStory = ({ icons }: StoryArgs) => (
-  <div className='nx-scope flex flex-col w-[16rem]' data-size='md'>
-    {SIZES.map((size) => (
-      <Next.Toolbar key={size} size={size} data-testid={`toolbar-${size}`}>
-        <Next.Select.Root items={icons ? ICON_OPTIONS : OPTIONS} positioning={{ sameWidth: true }}>
-          <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
-          <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
-            {(icons ? ICON_OPTIONS : OPTIONS).map((item) => (
-              <Next.Select.Item key={item.value} item={item} />
-            ))}
-          </Next.Select.Content>
-        </Next.Select.Root>
-      </Next.Toolbar>
-    ))}
-  </div>
+/** A plain select and one whose options have leading icons; `Select.Content` takes the row's size (finding 9). */
+const DefaultStory = ({ size = 'md' }: SizeArgs) => (
+  <Next.Toolbar data-testid={`toolbar-${size}`}>
+    <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
+      <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
+      <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
+        {OPTIONS.map((item) => (
+          <Next.Select.Item key={item.value} item={item} />
+        ))}
+      </Next.Select.Content>
+    </Next.Select.Root>
+    <Next.Select.Root items={ICON_OPTIONS} positioning={{ sameWidth: true }}>
+      <Next.Select.Trigger placeholder='View' aria-label={`View ${size}`} />
+      <Next.Select.Content size={size}>
+        {ICON_OPTIONS.map((item) => (
+          <Next.Select.Item key={item.value} item={item} />
+        ))}
+      </Next.Select.Content>
+    </Next.Select.Root>
+  </Next.Toolbar>
 );
 
 const meta = {
   title: 'ui/react-ui-core/next/components/select',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes({ width: 'w-[24rem]' }), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta<StoryArgs>;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -61,8 +62,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Triggers are control-tall and centred in their block at every size (decision 12). */
-export const Sizes: Story = {
+/**
+ * Triggers are control-tall and centred in their block at every size (decision 12). Clicking the trigger opens a
+ * portalled listbox at `level='popup'`; choosing an option closes it and shows the choice, and Escape closes it without
+ * choosing. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
+ * ends with the icon listbox open.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const toolbar = byTestId(canvasElement, `toolbar-${size}`).getBoundingClientRect();
@@ -71,13 +77,8 @@ export const Sizes: Story = {
       await expect(centreY(rect), `select-${size} centre`).toBeCloseTo(centreY(toolbar), 0);
     }
     await expectScoped(canvasElement);
-  },
-};
 
-/** Clicking the trigger opens a portalled listbox at `level='popup'`; the story ends with it open. */
-export const Open: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(sizeRow(canvasElement, 'md'));
     const body = within(canvasElement.ownerDocument.body);
     const trigger = canvas.getByRole('combobox', { name: 'Color md' });
     await userEvent.click(trigger);
@@ -89,17 +90,8 @@ export const Open: Story = {
     await expect(getComputedStyle(listbox).getPropertyValue('--nx-level').trim()).toBe('5');
     await expect(within(listbox).getAllByRole('option')).toHaveLength(OPTIONS.length);
     await expect(within(listbox).getByRole('option', { name: 'Black' })).toHaveAttribute('data-disabled');
-  },
-};
 
-/** Choosing an option closes the listbox and shows the choice; Escape closes it without choosing. */
-export const Dismiss: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
-    const trigger = canvas.getByRole('combobox', { name: 'Color md' });
-    await userEvent.click(trigger);
-    await userEvent.click(await body.findByRole('option', { name: 'Green' }));
+    await userEvent.click(within(listbox).getByRole('option', { name: 'Green' }));
     await waitFor(() => expect(trigger).toHaveTextContent('Green'));
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
@@ -108,32 +100,23 @@ export const Dismiss: Story = {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
     await expect(trigger).toHaveTextContent('Green');
-  },
-};
 
-/** Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale; the story ends open. */
-export const Icons: Story = {
-  args: { icons: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(canvasElement.ownerDocument.body);
-    const trigger = canvas.getByRole('combobox', { name: 'Color md' });
-    await expect(trigger.querySelectorAll('.nx-icon')).toHaveLength(1);
-
-    await userEvent.click(trigger);
+    const view = canvas.getByRole('combobox', { name: 'View md' });
+    await expect(view.querySelectorAll('.nx-icon')).toHaveLength(1);
+    await userEvent.click(view);
     await userEvent.click(await body.findByRole('option', { name: 'Grid' }));
-    await waitFor(() => expect(trigger).toHaveTextContent('Grid'));
-    const icons = trigger.querySelectorAll<SVGElement>('.nx-icon');
+    await waitFor(() => expect(view).toHaveTextContent('Grid'));
+    const icons = view.querySelectorAll<SVGElement>('.nx-icon');
     await expect(icons).toHaveLength(2);
     await expect(icons[0].getAttribute('aria-hidden')).toBe('true');
     await expect(icons[0].getBoundingClientRect().left).toBeLessThan(
-      within(trigger).getByText('Grid').getBoundingClientRect().left,
+      within(view).getByText('Grid').getBoundingClientRect().left,
     );
     await expect(icons[0].getBoundingClientRect().width).toBeCloseTo(16, 0);
 
-    await userEvent.click(trigger);
-    const listbox = await body.findByRole('listbox');
-    for (const option of within(listbox).getAllByRole('option')) {
+    await userEvent.click(view);
+    const views = await body.findByRole('listbox');
+    for (const option of within(views).getAllByRole('option')) {
       const icon = option.querySelector<SVGElement>('.nx-icon');
       await expect(icon?.getBoundingClientRect().width).toBeCloseTo(16, 0);
       await expect(icon?.getBoundingClientRect().left).toBeLessThan(option.getBoundingClientRect().left + 16);
