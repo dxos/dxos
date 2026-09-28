@@ -185,6 +185,14 @@
     cursor: pointer;
     text-align: start;
   }
+  /* The value takes the free space, so a leading option icon sits at the start and the caret at the end. */
+  .nx-select-trigger > [data-part='value-text'] {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   /* Portalled content leaves every sized scope, so it sets its own metrics and level. */
   .nx-popup {

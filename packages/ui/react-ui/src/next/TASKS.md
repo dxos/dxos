@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 2 complete (FieldSet, Card + Image poster, Collapsible, Menu, Switch, Tooltip); next is landing the PR. Uncommitted: none._
+_Resume: Phase 3 fixes, Next export and new components done; next is `react-ui-form/next`. Uncommitted: none._
 
 ## Phase 0: Design
 
@@ -75,7 +75,7 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 - [x] **Switch `role='switch'`** — expose switch semantics on the hidden input (`aria-checked`). — hidden checkbox takes `role=switch` (DESIGN.md follow-up 21); Toggle asserts role, checked state and Space.
 - [x] **IconButton Tooltip** — IconButton shows its `label` in a `Next.Tooltip` instead of a native `title`. — `showTooltip` opt-out (DESIGN.md follow-up 22); LabelTooltip (Toolbar), Dialog CloseTooltip, Field/Card HeaderTooltip play tests.
 - [x] **Export Next** — `@dxos/react-ui/next` subpath + `next/theme/index.css`; zag packages back to dependencies. — `./next` + `./next/theme.css` exports, `next` vite entry (DESIGN.md follow-up 23).
-- [ ] **New components** — `Textarea`, `DateInput` (date/time/datetime), `Popover` + `Combobox`, `Tag`, `ToggleIconButton`; Select option icons.
+- [x] **New components** — `Textarea`, `DateInput` (date/time/datetime), `Popover` + `Combobox`, `Tag`, `ToggleIconButton`; Select option icons. — DESIGN.md follow-ups 24–30; 111 storybook tests pass.
 - [ ] **`react-ui-form/next`** — Viewport/Content/Fields/FieldSet/Actions on Next; reuse `resolveFieldRenderer`; port Form stories.
 - [ ] **Settings layout** — design the two-column `variant='settings'` (Container `columns`) — needs a decision.
 - [ ] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`.

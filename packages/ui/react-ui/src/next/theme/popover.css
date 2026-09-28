@@ -1,0 +1,36 @@
+/*
+ * Popover: a portalled panel on the popup level (`.nx-popup` supplies size, level and radius), padded by the gap.
+ */
+
+@layer dx-components {
+  .nx-popover {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-gap-size);
+    min-width: 12rem;
+    max-width: min(24rem, 100vw - 1rem);
+    padding: var(--nx-gap-size);
+  }
+
+  /* A trailing CloseTrigger's inset cell ends at the panel's padding edge, like `Field.Header`'s trailing IconButton. */
+  .nx-popover-header {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+
+  .nx-popover-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    font-weight: 500;
+  }
+
+  .nx-popover-description {
+    margin: 0;
+    color: var(--color-description);
+  }
+}

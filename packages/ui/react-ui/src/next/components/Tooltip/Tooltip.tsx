@@ -60,8 +60,7 @@ const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(({ onB
         if (event.defaultPrevented) {
           return;
         }
-        // Closing a task late lets a tooltip opened by the same focus move claim zag's shared store first; closing now
-        // would release the store and make every other tooltip, including the new one, queue a close.
+        // Deferred so a tooltip opened by the same focus move claims zag's shared store first (DESIGN.md follow-up 20).
         event.preventDefault();
         setTimeout(() => tooltip.setOpen(false));
       }}

@@ -1,0 +1,13 @@
+/*
+ * ToggleIconButton: an IconButton whose pressed state (`aria-pressed`, from the zag toggle machine) takes the accent.
+ */
+
+@layer dx-components {
+  .nx-button[aria-pressed='true'] {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+  .nx-button[aria-pressed='true']:hover:not(:disabled) {
+    background: var(--color-accent-bg-hover, var(--color-accent-bg));
+  }
+}

@@ -11,8 +11,14 @@ import {
   Checkbox as NextCheckbox,
   type CheckboxProps as NextCheckboxProps,
   Collapsible as NextCollapsible,
+  Combobox as NextCombobox,
+  type ComboboxFilter as NextComboboxFilter,
+  type ComboboxOption as NextComboboxOption,
   Container as NextContainer,
   type ContainerProps as NextContainerProps,
+  DateInput as NextDateInput,
+  type DateInputProps as NextDateInputProps,
+  type DateInputType as NextDateInputType,
   Dialog as NextDialog,
   Field as NextField,
   FieldSet as NextFieldSet,
@@ -31,11 +37,19 @@ import {
   type LabelProps as NextLabelProps,
   type Level as NextLevel,
   Menu as NextMenu,
+  Popover as NextPopover,
   ScrollArea as NextScrollArea,
   Select as NextSelect,
   type SelectOption as NextSelectOption,
   Switch as NextSwitch,
   type SwitchProps as NextSwitchProps,
+  Tag as NextTag,
+  type TagHue as NextTagHue,
+  type TagProps as NextTagProps,
+  Textarea as NextTextarea,
+  type TextareaProps as NextTextareaProps,
+  ToggleIconButton as NextToggleIconButton,
+  type ToggleIconButtonProps as NextToggleIconButtonProps,
   Toolbar as NextToolbar,
   type ToolbarProps as NextToolbarProps,
   Tooltip as NextTooltip,
@@ -81,4 +95,18 @@ export namespace Next {
   export const Collapsible = NextCollapsible;
   export const Menu = NextMenu;
   export const Tooltip = NextTooltip;
+  export const Textarea = NextTextarea;
+  export type TextareaProps = NextTextareaProps;
+  export const DateInput = NextDateInput;
+  export type DateInputProps = NextDateInputProps;
+  export type DateInputType = NextDateInputType;
+  export const Popover = NextPopover;
+  export const Combobox = NextCombobox;
+  export type ComboboxOption = NextComboboxOption;
+  export type ComboboxFilter = NextComboboxFilter;
+  export const Tag = NextTag;
+  export type TagProps = NextTagProps;
+  export type TagHue = NextTagHue;
+  export const ToggleIconButton = NextToggleIconButton;
+  export type ToggleIconButtonProps = NextToggleIconButtonProps;
 }

@@ -206,6 +206,30 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     (`src/next/theme/index.css`, following ui-theme's `./tokens.css` `style`/`default` export), resolved by the
     consumer's CSS pipeline. `sideEffects` became `["*.css"]` so bundlers keep that import. `@zag-js/core` and
     `@zag-js/react` are runtime dependencies again, since the Toolbar machine is now reachable from a published entry.
+24. **Textarea** is Ark `Field.Textarea` with Input's control styling: at least 3 `rows` (the default), first-line
+    padding matching a single-line control, `resize: vertical`, and optional `autoResize` (Ark's `autoresize`, which
+    measures from `height: auto`, so `rows` stays the minimum).
+25. **DateInput** is a native `date | time | datetime-local` input (Ark `Field.Input`, so Field wiring applies) inside
+    a control-styled row with a trailing calendar/clock Icon; the platform picker button is transparent and stretched
+    over the Icon so clicking it still opens the native picker (Chromium/WebKit; Firefox keeps its own button). The
+    focus ring and disabled dimming are drawn on the row from the input's state (`:has`). `data-testid` goes to the
+    row, the ref to the input.
+26. **Popover** is Ark Popover, portalled like Menu (explicit `size`, `level='popup'`, 2px gutter, mounted only while
+    open), padded by `--nx-gap-size`; Header/Title/Description/CloseTrigger mirror Dialog. `CloseTrigger asChild`
+    closes through the popover api rather than zag's close-trigger props, whose `aria-label="close"` would rename a
+    child such as "Done".
+27. **Combobox** is Ark Combobox over a flat option list (`ComboboxOption` = `SelectOption`): a control row holding
+    the input and a control-square caret trigger, and a portalled listbox reusing Select's popup and item rules.
+    Only typing narrows the list (`filter`, default case-insensitive label substring); a selection or clear resets
+    it, so reopening shows every option. `Content` lists the filtered options itself unless given children, with an
+    `empty` row.
+28. **Tag** is a pill `calc(var(--nx-control-size) - 2 * var(--nx-control-inset))` tall in the size's label text,
+    coloured by ui-theme's `--color-<hue>-surface`/`-fg` tokens with the current Tag's valence mapping (info cyan,
+    success emerald, warning amber, error rose).
+29. **ToggleIconButton** is Ark Toggle (`asChild`) over IconButton, so `aria-pressed` comes from the zag toggle
+    machine (decision 9) and the label Tooltip is IconButton's; pressed takes `--color-accent-bg`/`-fg`.
+30. **Select option icons.** `SelectOption.icon` leads the item and, once selected, the trigger's value (read from
+    the select context); the value text takes the free space so the caret stays at the end.
 
 ## Phase 3: react-ui-form port
 

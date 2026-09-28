@@ -1,0 +1,47 @@
+/*
+ * DateInput: a native date/time input inside a control-styled row with a trailing Icon. The platform's picker button is
+ * transparent and stretched over the Icon, so clicking the Icon still opens the native picker.
+ */
+
+@layer dx-components {
+  .nx-date-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+  }
+  .nx-date-input:has(> .nx-date-input-field:focus-visible) {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+  /* Read from the input, which a disabled `Field.Root` disables through context. */
+  .nx-date-input:has(> .nx-date-input-field:disabled) {
+    opacity: 0.5;
+  }
+  .nx-date-input > .nx-icon {
+    pointer-events: none;
+    color: var(--color-description);
+  }
+
+  .nx-date-input-field {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+  }
+  .nx-date-input-field::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: calc(var(--nx-control-icon) + 2 * var(--nx-gap-size));
+    height: auto;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}

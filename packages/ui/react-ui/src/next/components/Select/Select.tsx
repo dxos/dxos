@@ -4,7 +4,7 @@
 
 import { createListCollection } from '@ark-ui/react/collection';
 import { Portal } from '@ark-ui/react/portal';
-import { Select as SelectPrimitive } from '@ark-ui/react/select';
+import { Select as SelectPrimitive, useSelectContext } from '@ark-ui/react/select';
 import React, { forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -18,7 +18,13 @@ import { useToolbarItem } from '../Toolbar/index.ts';
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
 
-export type SelectOption = { value: string; label: string; disabled?: boolean };
+export type SelectOption = {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  /** Leading icon, shown in the item and, once selected, in the trigger. */
+  icon?: string;
+};
 
 //
 // Root
@@ -76,6 +82,7 @@ type SelectTriggerProps = ThemedClassName<Omit<SelectPrimitive.TriggerProps, 'ch
 const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
   ({ classNames, placeholder, ...props }, forwardedRef) => {
     const toolbarItem = useToolbarItem(props.disabled);
+    const [selected] = useSelectContext().selectedItems;
     return (
       <SelectPrimitive.Trigger
         {...props}
@@ -87,6 +94,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
         className={mx(recipes.selectTrigger(), classNames)}
         ref={forwardedRef}
       >
+        {selected?.icon && <Icon icon={selected.icon} />}
         <SelectPrimitive.ValueText placeholder={placeholder} />
         <SelectPrimitive.Indicator>
           <Icon icon='ph--caret-up-down--regular' />
@@ -138,6 +146,7 @@ type SelectItemProps = ThemedClassName<Omit<SelectPrimitive.ItemProps, 'item' | 
 
 const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, item, ...props }, forwardedRef) => (
   <SelectPrimitive.Item {...props} item={item} className={mx(recipes.selectItem(), classNames)} ref={forwardedRef}>
+    {item.icon && <Icon icon={item.icon} />}
     <SelectPrimitive.ItemText>{item.label}</SelectPrimitive.ItemText>
     <SelectPrimitive.ItemIndicator>
       <Icon icon='ph--check--regular' />

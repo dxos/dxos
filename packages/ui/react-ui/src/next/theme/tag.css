@@ -1,0 +1,118 @@
+/*
+ * Tag: a small pill one control inset shorter than a control, coloured by ui-theme's per-hue role tokens.
+ */
+
+@layer dx-components {
+  .nx-tag {
+    --nx-tag-bg: var(--color-neutral-surface);
+    --nx-tag-fg: var(--color-neutral-fg);
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    flex-shrink: 0;
+    max-width: 100%;
+    height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
+    padding-inline: var(--nx-gap-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    align-self: center;
+    background: var(--nx-tag-bg);
+    color: var(--nx-tag-fg);
+  }
+  .nx-tag .nx-icon {
+    width: calc(var(--nx-icon-size) * 0.75);
+    height: calc(var(--nx-icon-size) * 0.75);
+  }
+  .nx-tag[data-hue='red'] {
+    --nx-tag-bg: var(--color-red-surface);
+    --nx-tag-fg: var(--color-red-fg);
+  }
+  .nx-tag[data-hue='orange'] {
+    --nx-tag-bg: var(--color-orange-surface);
+    --nx-tag-fg: var(--color-orange-fg);
+  }
+  .nx-tag[data-hue='amber'] {
+    --nx-tag-bg: var(--color-amber-surface);
+    --nx-tag-fg: var(--color-amber-fg);
+  }
+  .nx-tag[data-hue='yellow'] {
+    --nx-tag-bg: var(--color-yellow-surface);
+    --nx-tag-fg: var(--color-yellow-fg);
+  }
+  .nx-tag[data-hue='lime'] {
+    --nx-tag-bg: var(--color-lime-surface);
+    --nx-tag-fg: var(--color-lime-fg);
+  }
+  .nx-tag[data-hue='green'] {
+    --nx-tag-bg: var(--color-green-surface);
+    --nx-tag-fg: var(--color-green-fg);
+  }
+  .nx-tag[data-hue='emerald'] {
+    --nx-tag-bg: var(--color-emerald-surface);
+    --nx-tag-fg: var(--color-emerald-fg);
+  }
+  .nx-tag[data-hue='teal'] {
+    --nx-tag-bg: var(--color-teal-surface);
+    --nx-tag-fg: var(--color-teal-fg);
+  }
+  .nx-tag[data-hue='cyan'] {
+    --nx-tag-bg: var(--color-cyan-surface);
+    --nx-tag-fg: var(--color-cyan-fg);
+  }
+  .nx-tag[data-hue='sky'] {
+    --nx-tag-bg: var(--color-sky-surface);
+    --nx-tag-fg: var(--color-sky-fg);
+  }
+  .nx-tag[data-hue='blue'] {
+    --nx-tag-bg: var(--color-blue-surface);
+    --nx-tag-fg: var(--color-blue-fg);
+  }
+  .nx-tag[data-hue='indigo'] {
+    --nx-tag-bg: var(--color-indigo-surface);
+    --nx-tag-fg: var(--color-indigo-fg);
+  }
+  .nx-tag[data-hue='violet'] {
+    --nx-tag-bg: var(--color-violet-surface);
+    --nx-tag-fg: var(--color-violet-fg);
+  }
+  .nx-tag[data-hue='purple'] {
+    --nx-tag-bg: var(--color-purple-surface);
+    --nx-tag-fg: var(--color-purple-fg);
+  }
+  .nx-tag[data-hue='fuchsia'] {
+    --nx-tag-bg: var(--color-fuchsia-surface);
+    --nx-tag-fg: var(--color-fuchsia-fg);
+  }
+  .nx-tag[data-hue='pink'] {
+    --nx-tag-bg: var(--color-pink-surface);
+    --nx-tag-fg: var(--color-pink-fg);
+  }
+  .nx-tag[data-hue='rose'] {
+    --nx-tag-bg: var(--color-rose-surface);
+    --nx-tag-fg: var(--color-rose-fg);
+  }
+  /* Valences reuse the hues the current `Tag` maps them to. */
+  .nx-tag[data-hue='info'] {
+    --nx-tag-bg: var(--color-cyan-surface);
+    --nx-tag-fg: var(--color-cyan-fg);
+  }
+  .nx-tag[data-hue='success'] {
+    --nx-tag-bg: var(--color-emerald-surface);
+    --nx-tag-fg: var(--color-emerald-fg);
+  }
+  .nx-tag[data-hue='warning'] {
+    --nx-tag-bg: var(--color-amber-surface);
+    --nx-tag-fg: var(--color-amber-fg);
+  }
+  .nx-tag[data-hue='error'] {
+    --nx-tag-bg: var(--color-rose-surface);
+    --nx-tag-fg: var(--color-rose-fg);
+  }
+}
