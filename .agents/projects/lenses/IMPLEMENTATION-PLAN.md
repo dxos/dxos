@@ -28,10 +28,13 @@ order; (3) fan-in marks absorbed children and folds late edits to them into the 
 switch); (4) array fan-out folds late array writes per element (edits into existing children, new
 id'd elements ensured, removals left to the orphan diagnostic).
 
-Known limits carried forward: array fan-out has no fold-forward for late old-shape array writes after the
-split; fan-in does not switch the child's type before tombstoning; the migration marker keeps only the
-latest step of a chain; two peers folding the same value independently leave equal-valued ops (reported as
-no conflict); `foldAt` adds one actor per fold.
+Limit fixes landed 2026-09-28: `564ed5ee` (scoped deterministic fold actor per peer/document/object/step;
+chained marker steps), `2e9cbef2` (fan-in type switch + fold of late child edits, collision policy bypassed
+only for keys taken from the child), `ca86f3b8` (array fan-out: atomic split, per-property marker, per-element
+fold, ref dedup, durable async `ensure`). Remaining limits: two peers creating the migration marker container
+for the first time can still race (both record the same migration); equal-valued folds from independent peers
+are reported as no conflict by design; the ref-dedup test builds the merged state on one peer rather than via
+two replicating peers.
 
 ## Where things live
 
