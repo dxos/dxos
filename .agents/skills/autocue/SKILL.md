@@ -1,5 +1,5 @@
 ---
-name: recording-demos
+name: autocue
 description: >-
   Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
   walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
@@ -10,7 +10,7 @@ description: >-
   regression test, write a Playwright spec instead.
 ---
 
-# Recording demos
+# Autocue
 
 The agent drives the real app one gesture at a time and the session is recorded. Three things make
 this different from a Playwright spec, and they are the reasons to reach for it:
@@ -48,7 +48,7 @@ loop at every step. You still drive, and the script is still the `.mdl` test or 
 user decides when each part runs and can change how it runs.
 
 ```bash
-node .agents/skills/recording-demos/scripts/driver.mjs --mode manual \
+node .agents/skills/autocue/scripts/driver.mjs --mode manual \
   --port 7333 --url http://localhost:4173 --out /tmp/demo
 ```
 
@@ -63,7 +63,7 @@ Run it in the background. `--mode manual` changes the driver in five ways:
 - **`stop` leaves the browser open.** It answers `ok` and the driver keeps serving. Closing the
   window ends the driver. Never close the browser yourself in this mode unless the user asks.
 - **The browser profile persists.** Every manual session opens the same Chromium profile,
-  `~/.local/state/dxos/recording-demos/profile` by default (`--profile <dir>` for another). The
+  `~/.local/state/dxos/autocue/profile` by default (`--profile <dir>` for another). The
   app's identity, its spaces, and any first-run UI already dismissed carry over, so setup done in
   one session is not redone on camera in the next. Chromium allows one process per profile. If the
   driver exits with `profile … is in use`, the last session's window is still open: close it, or
@@ -79,8 +79,9 @@ over HTTP costs a full agent turn, so a ten-step flow driven op by op leaves the
 between gestures. A script runs at the app's speed, and you stay the control panel: you choose what to
 run, edit the script when the user steers, and read the result.
 
-Check `flows/` first: a flow that has already run end to end is committed there, and running it in place
-beats rewriting it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry
+Check for a committed flow first: one that has already run end to end lives in an `autocue/` folder at the
+root of the package it exercises (`packages/apps/composer-app/autocue/`, or a plugin's own), and running it
+in place beats rewriting it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry
 per QA step. Each step
 gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
 and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
@@ -170,7 +171,8 @@ that again"), and for probing a failure before you fix the script.
    only when the user says so, since the retry happens on camera.
 5. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
    that closing it ends the driver.
-6. **Commit the flow once it has run end to end.** Save it as `flows/<name>.mjs` and commit it, so
+6. **Commit the flow once it has run end to end.** Save it as `autocue/<name>.mjs` in the package it
+   exercises — the plugin under test, or `composer-app` for a flow that spans plugins — and commit it, so
    the next session runs it instead of rediscovering every selector. Commit again whenever a later
    session fixes it.
 
@@ -259,7 +261,7 @@ Four things about storybook that cost a cycle each:
 ## 2. Start the driver
 
 ```bash
-node .agents/skills/recording-demos/scripts/driver.mjs \
+node .agents/skills/autocue/scripts/driver.mjs \
   --port 7333 --url http://localhost:4173 --out /tmp/demo &
 ```
 
@@ -370,7 +372,7 @@ the next gesture — provided nothing on the page animates on its own, which is 
 `VITE_DX_DISABLE_ANIMATIONS=true`. Measure before tuning — `--report` costs one decode and no encode:
 
 ```bash
-node .agents/skills/recording-demos/scripts/trim-static.mjs --in /tmp/demo/*.webm --report
+node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/*.webm --report
 ```
 
 ```json
@@ -390,7 +392,7 @@ content, decides the length — 135 pauses × 1.5s is ~3 minutes on its own. `at
 before you spend an encode on it.
 
 ```bash
-node .agents/skills/recording-demos/scripts/trim-static.mjs \
+node .agents/skills/autocue/scripts/trim-static.mjs \
   --in /tmp/demo/*.webm --out demo.webm --max-static 0.5 --caption-hold 2.5
 ```
 

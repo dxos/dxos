@@ -24,7 +24,7 @@
  * `--mode manual` is for a session a person records themselves: a headed window, no recorder, the
  * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
  * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
- * a persistent profile (`--profile`, default `~/.local/state/dxos/recording-demos/profile`).
+ * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`).
  *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
@@ -71,7 +71,7 @@ const parseArgs = () => {
     'mode': 'record',
     // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
     // so the user's recording starts in a prepared app instead of onboarding.
-    'profile': path.join(homedir(), '.local/state/dxos/recording-demos/profile'),
+    'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
     // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
     'theme': 'dark',
     // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
