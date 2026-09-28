@@ -14,7 +14,15 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, expectNoTooltip, expectTooltip, realHover, realUnhover, sizeRow } from '../../testing.ts';
+import {
+  byTestId,
+  controlSize,
+  expectNoTooltip,
+  expectTooltip,
+  realHover,
+  realUnhover,
+  sizeRow,
+} from '../../testing.ts';
 
 type PresetProps = { 'iconOnly': boolean; 'data-testid': string };
 
@@ -58,10 +66,7 @@ const MicPreset = (props: PresetProps) => {
   );
 };
 
-/**
- * One row per preset, icon-only then labelled (`iconOnly={false}`), and a last row holding a plain icon-only Button
- * and labelled Button whose geometry the presets must match.
- */
+/** One row per preset, icon-only then labelled (`iconOnly={false}`). */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     {PRESETS.map(({ id, render }) => (
@@ -70,10 +75,6 @@ const DefaultStory = ({ size }: SizeArgs) => (
         {render({ 'iconOnly': false, 'data-testid': `${id}-labelled-${size}` }, size)}
       </Next.Group>
     ))}
-    <Next.Group>
-      <Next.Button iconOnly icon='ph--plus--regular' label={`Reference ${size}`} data-testid={`reference-${size}`} />
-      <Next.Button icon='ph--plus--regular' label='Reference' data-testid={`reference-labelled-${size}`} />
-    </Next.Group>
   </>
 );
 
@@ -126,9 +127,8 @@ const rotation = (element: Element) => {
 };
 
 /**
- * Every preset is an icon-only button by default, named by its translated label and sized like a plain `Button
- * iconOnly`; `iconOnly={false}` shows the label instead, with no Tooltip, as tall as the icon-only form and a plain
- * labelled Button. Star and Bookmark are toggles that swap icon and label; Disclosure reports `aria-expanded` (not
+ * Every preset is an icon-only button by default, named by its translated label and a `controlSize` square at
+ * every size (decision 12); `iconOnly={false}` shows the label instead, with no Tooltip, as tall as the icon-only form. Star and Bookmark are toggles that swap icon and label; Disclosure reports `aria-expanded` (not
  * `aria-pressed`) and turns its one caret a quarter while expanded; Save is primary and Cancel is not; Clipboard
  * writes its value and confirms with a check and a "Copied" label.
  */
@@ -137,16 +137,14 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const row = sizeRow(canvasElement, size);
-      const reference = byTestId(row, `reference-${size}`).getBoundingClientRect();
-      const labelled = byTestId(row, `reference-labelled-${size}`).getBoundingClientRect();
-      await expect(labelled.height, `labelled reference ${size}`).toBeCloseTo(reference.height, 0);
+      const control = controlSize(size);
       for (const { id } of PRESETS) {
         const rect = byTestId(row, `${id}-${size}`).getBoundingClientRect();
-        await expect(rect.width, `${id} ${size}`).toBeCloseTo(reference.width, 0);
-        await expect(rect.height, `${id} ${size}`).toBeCloseTo(reference.height, 0);
+        await expect(rect.width, `${id} ${size}`).toBeCloseTo(control, 0);
+        await expect(rect.height, `${id} ${size}`).toBeCloseTo(control, 0);
         const text = byTestId(row, `${id}-labelled-${size}`).getBoundingClientRect();
-        await expect(text.height, `${id} labelled ${size}`).toBeCloseTo(reference.height, 0);
-        await expect(text.width, `${id} labelled ${size}`).toBeGreaterThan(reference.width);
+        await expect(text.height, `${id} labelled ${size}`).toBeCloseTo(control, 0);
+        await expect(text.width, `${id} labelled ${size}`).toBeGreaterThan(control);
       }
     }
 

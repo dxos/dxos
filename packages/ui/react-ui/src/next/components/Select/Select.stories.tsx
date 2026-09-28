@@ -61,7 +61,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
       <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
-        <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
+        <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (
             <Fragment key={item.value}>
@@ -72,7 +72,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         </Next.Select.Content>
       </Next.Select.Root>
       <Next.Select.Root items={ICON_OPTIONS} positioning={{ sameWidth: true }}>
-        <Next.Select.Trigger placeholder='View' aria-label={`View ${size}`} />
+        <Next.Select.Trigger placeholder='View' aria-label='View' />
         <Next.Select.Content size={size}>
           {ICON_OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
@@ -82,7 +82,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     </Next.Toolbar.Root>
     <Next.Toolbar.Root>
       <Next.Select.Root items={[...FRUIT, ...VEGETABLES]}>
-        <Next.Select.Trigger placeholder='Produce' aria-label={`Produce ${size}`} />
+        <Next.Select.Trigger placeholder='Produce' aria-label='Produce' />
         <Next.Select.Content size={size}>
           {[
             { label: 'Fruit', items: FRUIT },
@@ -104,7 +104,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         </Next.Select.Content>
       </Next.Select.Root>
       <Next.Select.Root items={OPTIONS} multiple>
-        <Next.Select.Trigger placeholder='Colors' aria-label={`Colors ${size}`} />
+        <Next.Select.Trigger placeholder='Colors' aria-label='Colors' />
         <Next.Select.Content size={size}>
           {OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
@@ -112,7 +112,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         </Next.Select.Content>
       </Next.Select.Root>
       <Next.Select.Root items={LONG}>
-        <Next.Select.Trigger placeholder='Long' aria-label={`Long ${size}`} />
+        <Next.Select.Trigger placeholder='Long' aria-label='Long' />
         <Next.Select.Content size={size}>
           {LONG.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
@@ -120,7 +120,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         </Next.Select.Content>
       </Next.Select.Root>
       <Next.Select.Root items={[]}>
-        <Next.Select.Trigger placeholder='Loading' aria-label={`Lookup ${size}`} loading />
+        <Next.Select.Trigger placeholder='Loading' aria-label='Lookup' loading />
         <Next.Select.Content size={size} />
       </Next.Select.Root>
     </Next.Toolbar.Root>
@@ -164,7 +164,7 @@ export const Test: Story = {
 
     const canvas = within(sizeRow(canvasElement, 'md'));
     const body = within(canvasElement.ownerDocument.body);
-    const trigger = canvas.getByRole('combobox', { name: 'Color md' });
+    const trigger = canvas.getByRole('combobox', { name: 'Color' });
     await userEvent.click(trigger);
     const listbox = await body.findByRole('listbox');
     await expect(listbox).toBe(body.getByTestId('listbox-md'));
@@ -188,12 +188,14 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
     await userEvent.click(trigger);
-    await body.findByRole('listbox');
+    // Escape reaches the popup only once zag has moved focus into it.
+    const reopened = await body.findByRole('listbox');
+    await waitFor(() => expect(reopened).toHaveFocus());
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
     await expect(trigger).toHaveTextContent('Green');
 
-    const view = canvas.getByRole('combobox', { name: 'View md' });
+    const view = canvas.getByRole('combobox', { name: 'View' });
     await expect(view.querySelectorAll('.nx-icon')).toHaveLength(1);
     await userEvent.click(view);
     await userEvent.click(await body.findByRole('option', { name: 'Grid' }));
@@ -207,7 +209,7 @@ export const Test: Story = {
     await expect(icons[0].getBoundingClientRect().width).toBeCloseTo(16, 0);
 
     // Groups, hued icons and custom item content.
-    const produce = canvas.getByRole('combobox', { name: 'Produce md' });
+    const produce = canvas.getByRole('combobox', { name: 'Produce' });
     await userEvent.click(produce);
     const produceList = await body.findByRole('listbox');
     await expect(within(produceList).getByRole('group', { name: 'Fruit' })).toBeInTheDocument();
@@ -225,7 +227,7 @@ export const Test: Story = {
     // Multiple: the popup stays open and the trigger lists the choices; the trigger widening under the open popup
     // must not loop the ScrollArea thumbs' ResizeObserver.
     const checkResizeLoop = watchResizeObserverLoop(canvasElement);
-    const colors = canvas.getByRole('combobox', { name: 'Colors md' });
+    const colors = canvas.getByRole('combobox', { name: 'Colors' });
     await userEvent.click(colors);
     const colorList = await body.findByRole('listbox');
     await expect(colorList).toHaveAttribute('aria-multiselectable', 'true');
@@ -245,7 +247,7 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
     // A long listbox scrolls in a thin ScrollArea, and the keyboard highlight stays in view.
-    await userEvent.click(canvas.getByRole('combobox', { name: 'Long md' }));
+    await userEvent.click(canvas.getByRole('combobox', { name: 'Long' }));
     const longList = await body.findByRole('listbox');
     await waitFor(() => expect(longList).toHaveFocus());
     await expect(popupFrame(longList)).toHaveAttribute('data-width', 'thin');
@@ -254,7 +256,7 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
     // Loading.
-    const lookup = canvas.getByRole('combobox', { name: 'Lookup md' });
+    const lookup = canvas.getByRole('combobox', { name: 'Lookup' });
     await expect(lookup).toHaveAttribute('aria-busy', 'true');
     const spinner = lookup.querySelector<SVGElement>('[data-spin]');
     await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');

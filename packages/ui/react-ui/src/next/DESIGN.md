@@ -444,7 +444,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     `--color-warning-text` and a landed copy's check `--color-success-text`; a recording Mic takes `hue='error'`.
     Clipboard's label swaps to "Copied" once a copy lands; Mic keeps a required `label`, there being no translation
     for it. The story shows one row per preset, icon-only then labelled; `SystemButton` `Test` covers names, geometry
-    against a plain `Button iconOnly` (the labelled form is as tall), the labelled text with no Tooltip, Save's
+    against `controlSize` at every size (icon-only square, labelled as tall), the labelled text with no Tooltip, Save's
     variant, the toggles, `aria-expanded` and the caret's computed rotation, and a stubbed clipboard write. Form and
     Dialog stories use labelled `Save`/`Cancel` in their actions.
 
