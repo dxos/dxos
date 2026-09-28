@@ -65,25 +65,60 @@ Run it in the background. `--mode manual` changes the driver in four ways:
 - **A local display is required.** The cloud sandbox has none, so this is for a session on the
   user's machine.
 
-The protocol:
+### Drive it from a flow script
 
-1. **Open and wait.** Start the driver and send one `goto`, then stop. Don't caption, click, or run a
-   setup step. Tell the user the window is up, list the steps you are about to perform (numbered,
-   from the script), and wait for them to say go. They are setting up their recorder.
-2. **Run only what they release.** "Go" runs the next step. "Run until step 4" runs through step 4
-   and then stops. "Run it all" runs to the end. After each stop, say which step you stopped on and
-   what comes next, then wait.
+In manual mode, write the QA flow as a script and run it, rather than issuing one op per turn. Each op
+over HTTP costs a full agent turn, so a ten-step flow driven op by op leaves the user watching dead air
+between gestures. A script runs at the app's speed, and you stay the control panel: you choose what to
+run, edit the script when the user steers, and read the result.
+
+Copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry per QA step. Each step
+gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
+and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
+wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
+
+```bash
+C '{"op":"steps","file":"/tmp/demo/flow.mjs"}'   # numbered step names; `next` is where `run` resumes
+C '{"op":"run","until":4}'                         # runs from `next` through step 4, then stops
+C '{"op":"run"}'                                   # carries on to the end
+C '{"op":"run","from":3,"until":3}'                # re-runs step 3 alone
+C '{"op":"abort"}'                                 # stops the run in flight, between steps
+```
+
+- **`run` re-imports the file every time.** Edit the script and run again; the browser and the
+  app's state stay as they are.
+- **`from`/`until` take a step number (1-based) or a step name.** With no `from`, `run` resumes where
+  the last one stopped. `pace` (default 800 ms in manual mode, `--pace` to change it) is the gap
+  between steps.
+- **Every step leaves a screenshot**, as `<out>/steps/NN-<name>.png`, whether it passed or failed.
+  The reply lists each step with `ok`, the error if it threw, and the screenshot path.
+- **On a failure, `run` stops and leaves `next` on the failed step.** Read that step's screenshot
+  before changing anything. It shows what the page actually held, which is usually a dialog in
+  the way, a collapsed sidebar, or a renamed control. Fix the script, then `run` again to retry
+  from that step.
+- **Background a long `run`** (`run_in_background`), so the user can interrupt you mid-flow and you
+  can send `abort`.
+
+Single ops are still the right tool for a one-off correction the user asks for on the spot ("click
+that again"), and for probing a failure before you fix the script.
+
+### The protocol
+
+1. **Open and wait.** Start the driver and send one `goto`, then stop. Don't caption, click, or run
+   a setup step. Write the flow script, send `steps`, and show the user the numbered list. Wait for
+   them to say go, since they are setting up their recorder.
+2. **Run only what they release.** "Go" runs the next step. "Run until step 4" is `run` with
+   `until: 4`. "Run it all" is `run` with no bounds. After each stop, say which step you stopped on
+   and what comes next, then wait.
 3. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
-   back and open it again" override the script for that run. Follow them and keep going from where
-   the user leaves you. A change they ask for is not a divergence to report.
-4. **Pace for a viewer.** A person is watching live, so leave a beat after each visible change
-   (`sleep` 600–1000 ms) rather than firing gestures back to back. `hud:false` on probes still
-   keeps the cursor off them.
-5. **Verify quietly.** Read the DOM with `eval`/`text` as usual, but don't narrate the checks. Speak
-   up only when a step failed or the screen doesn't match `expect:`, and then pause rather than
-   improvising a fix on camera.
-6. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
-   that closing it ends the driver.
+   back and open it again" become an edit to the script (or a `from`/`until`), then a `run`. A
+   change the user asks for is not a divergence to report.
+4. **Handle failures quietly.** Don't narrate passing checks. When a step fails, look at its
+   screenshot, say in a line what went wrong and what you'll change, then fix the script. Retry
+   only when the user says so, since the retry happens on camera.
+5. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
+   that closing it ends the driver. Offer to save the flow script next to its `.mdl` spec if it will
+   be run again.
 
 ## 1. Get the app running
 
@@ -169,7 +204,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `stop` (in manual mode `stop` leaves the browser open). `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.

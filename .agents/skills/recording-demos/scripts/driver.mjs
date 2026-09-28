@@ -31,6 +31,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { stripVTControlCharacters } from 'node:util';
 
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
@@ -69,6 +71,8 @@ const parseArgs = () => {
   const narrate = options.mode === 'manual' ? 'off' : 'on';
   options.pills ??= narrate;
   options.captions ??= narrate;
+  // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
+  options.pace ??= options.mode === 'manual' ? 800 : 0;
   return options;
 };
 
@@ -304,6 +308,40 @@ const cut = async () => {
 
 let booted = false;
 
+/**
+ * The flow script `run` last executed and the 0-based index of its next step, so a bare `run` resumes
+ * where the previous one stopped — "carry on" needs no bookkeeping from the caller.
+ */
+const flow = { file: undefined, next: 0, aborted: false };
+
+const slug = (text) =>
+  String(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48);
+
+/** A query string defeats the ESM module cache, so an edited script is picked up on the next `run`. */
+const loadFlow = async (file) => {
+  const module = await import(`${pathToFileURL(file).href}?v=${Date.now()}`);
+  if (!Array.isArray(module.steps)) {
+    throw new Error(`${file} does not export a \`steps\` array`);
+  }
+  return module.steps;
+};
+
+/** 1-based step numbers or step names, as a person would say them, to a 0-based index. */
+const stepIndex = (steps, ref, fallback) => {
+  if (ref === undefined) {
+    return fallback;
+  }
+  const index = typeof ref === 'number' ? ref - 1 : steps.findIndex((step) => step.name === ref);
+  if (index < 0 || index >= steps.length) {
+    throw new Error(`no step ${JSON.stringify(ref)} (steps are 1..${steps.length})`);
+  }
+  return index;
+};
+
 const handlers = {
   goto: async (command) => {
     await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
@@ -454,6 +492,95 @@ const handlers = {
       await page.waitForTimeout(command.hold);
     }
     return { at: (Date.now() - started) / 1000 };
+  },
+  /**
+   * Executes steps of a flow script (see `flow.example.mjs`) against the live page, screenshotting after
+   * each one so a failure can be diagnosed from what the page showed rather than guessed at. Stops at the
+   * first failure and leaves `next` on the failed step, so a fixed script is retried from there.
+   */
+  run: async (command) => {
+    if (!command.file && !flow.file) {
+      throw new Error('no flow script: pass "file"');
+    }
+    const file = path.resolve(command.file ?? flow.file);
+    const steps = await loadFlow(file);
+    if (file !== flow.file) {
+      flow.file = file;
+      flow.next = 0;
+    }
+    const from = stepIndex(steps, command.from, flow.next);
+    const until = stepIndex(steps, command.until, steps.length - 1);
+    if (from >= steps.length) {
+      return { steps: [], next: null, of: steps.length, done: true };
+    }
+    const shots = path.join(options.out, 'steps');
+    mkdirSync(shots, { recursive: true });
+    const screenshot = async (index) => {
+      if (command.screenshots === false) {
+        return undefined;
+      }
+      const shot = path.join(shots, `${String(index + 1).padStart(2, '0')}-${slug(steps[index].name)}.png`);
+      return page.screenshot({ path: shot }).then(
+        () => shot,
+        () => undefined,
+      );
+    };
+
+    // Steps call the same handlers as the HTTP ops, so the cursor and pills behave identically.
+    const demo = Object.fromEntries(
+      Object.entries(handlers)
+        .filter(([op]) => !['run', 'abort', 'steps', 'stop'].includes(op))
+        .map(([op, handler]) => [op, (args = {}) => handler({ op, ...args })]),
+    );
+    flow.aborted = false;
+    const results = [];
+    for (let index = from; index <= until; index++) {
+      if (flow.aborted) {
+        return { steps: results, aborted: true, next: index + 1, of: steps.length };
+      }
+      const step = steps[index];
+      try {
+        await step.run({ page, demo });
+        results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
+        flow.next = index + 1;
+      } catch (error) {
+        flow.next = index;
+        results.push({
+          step: index + 1,
+          name: step.name,
+          ok: false,
+          // Playwright colours its call log for a terminal; the escapes are noise in a JSON reply.
+          error: stripVTControlCharacters(error.message ?? String(error))
+            .split('\n')
+            .slice(0, 6)
+            .join('\n'),
+          screenshot: await screenshot(index),
+        });
+        return { steps: results, failed: index + 1, next: index + 1, of: steps.length };
+      }
+      if (index < until) {
+        await page.waitForTimeout(command.pace ?? options.pace);
+      }
+    }
+    return { steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
+  },
+  /** Takes effect between steps; the step in flight finishes first. */
+  abort: () => {
+    flow.aborted = true;
+    return {};
+  },
+  /** Loads a script without running it: its step names, and which one a bare `run` starts from. */
+  steps: async (command) => {
+    if (!command.file && !flow.file) {
+      throw new Error('no flow script: pass "file"');
+    }
+    const file = path.resolve(command.file ?? flow.file);
+    const steps = await loadFlow(file);
+    if (file !== flow.file) {
+      flow.file = file;
+      flow.next = 0;
+    }
+    return { steps: steps.map((step, index) => `${index + 1}. ${step.name}`), next: flow.next + 1 };
   },
   clearCaption: async () => {
     await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
