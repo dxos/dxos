@@ -218,7 +218,13 @@ export const steps = [
       await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
       await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
 
+      // The take opens on the space's Home screen.
       await demo.click({ selector: SPACE, hud: false });
+      await showSidebar({ demo, page }, 'spacePlugin.spaceHome');
+      await page
+        .locator('[data-testid="deck.plank"][data-attendable-id$="/home"]')
+        .first()
+        .waitFor({ timeout: 15_000 });
     },
   },
   {
