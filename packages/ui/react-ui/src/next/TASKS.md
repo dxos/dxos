@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: start Phase 1 (sizes to CSS). Uncommitted: none. Last: grid model decided (DESIGN.md decision 5)._
+_Resume: decide scroll API shape, then Phase 1 (sizes to CSS). Uncommitted: none. Last: Container/ScrollArea spike (all play tests green)._
 
 ## Phase 0: Design
 
@@ -10,6 +10,8 @@ Settle the constraints in [DESIGN.md](./DESIGN.md) before building.
 
 - [x] **Record scope, sizes, framework, levels, spacing and milestone decisions** — DESIGN.md decisions 1–4, 6, 7.
 - [x] **Decide the grid model** — configurable Container with inherited rails/columns (DESIGN.md decision 5).
+- [x] **Spike Container + ScrollArea** — `spike/Spike.stories.tsx`; 5 alignment play tests pass; findings in DESIGN.md.
+- [ ] **Decide scroll API shape** — internal `scroll` prop vs composed `ScrollArea` + `asChild` (spike finding 7).
 
 ## Phase 1: Model (story components)
 

@@ -1,4 +1,6 @@
-# Design Goals
+# UI Next
+
+## Design Goals
 
 - Best pracises for Ark, Tailwind
 - React/Solid
@@ -13,7 +15,7 @@
 - Respects ARIA roles (human/machine readable)
 - Testable
 
-# Decisions
+## Decisions
 
 1. **Scope.** A parallel namespace (`Next.*`) alongside the current primitives; plugins opt in per component and old
    primitives retire once unused. Only a subset of components is in scope, starting with those in the experimental
@@ -51,3 +53,25 @@
    Toolbar gets a zag roving-focus machine so it can claim `role=toolbar`; ARIA fixes (`aria-hidden` icons, labels);
    storybook play tests assert per-size alignment and roles. Container gains gutter/columns/scroll per decision 5,
    exercised by a nested-form story (rails, gutter Blocks, scrollbar in the end gutter). No plugin adoption yet.
+
+## Spike findings
+
+`spike/Spike.stories.tsx` (`playground/spike`) exercises decision 5 with play tests that measure alignment across a
+header, top-level rows, a nested form and a nested scroll pane — all pass (Internal, Composed, Native, Narrow, Sizes).
+
+1. **Subgrid survives scrolling.** A scroll frame and its viewport can both be subgrids, so rows inside a nested scroll
+   pane share the parent's rails and its content-sized (`auto`) label track.
+2. **Containment breaks subgrid.** `container-type` makes a grid independent, so `subgrid` silently degrades to a
+   standalone grid. Only template roots (and non-inheriting scroll frames) may be query containers.
+3. **Edge line names are invalid in `columns`.** `[content-start] [label-start]` is two adjacent bracket groups, which
+   invalidates the whole template; `columns` may carry interior names only (`auto [field-start] minmax(0,1fr)`).
+4. **Native scrollbars.** Reserving the bar's width out of the end track keeps the content edge aligned with
+   non-scrolling siblings, but rail-end Blocks in the scroll pane then overlap the bar; overlay thumbs overlap them too.
+5. **`asChild` onto a non-composable element** gets the dev `dx-slot-warning` wrapper, which breaks direct nesting and
+   the frame's `:has(> …)` subgrid detection — scroll composition must target a composable Container.
+6. **`layout` (`stack | row`) is needed.** A stack places each child across the content track; a row flows children
+   through the inner tracks, pinning the first non-rail child to `content-start` (`:nth-child(1 of :not([data-rail]))`).
+7. **Scroll API.** Both shapes work. Internal (`scroll` prop) must split one prop set across two elements —
+   `classNames` to the frame, `ref`/data attributes to the viewport — and `asChild` becomes ambiguous. Composed
+   (`ScrollArea.Root > ScrollArea.Viewport asChild > Container`) keeps one element per part, the frame detects an
+   inheriting viewport in CSS (`:has`) with no coupling, and ScrollArea stays usable for non-grid content.
