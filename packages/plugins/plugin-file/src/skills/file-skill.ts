@@ -53,8 +53,9 @@ const make = () =>
         just to write its bytes out. \`createUpload\` and \`createDownload\` are tools of the MCP host, not
         operations; a host without them (the in-app chat) has no direct transfer.
 
-        Images, video, PDFs, and plain text, CSV, Markdown and JSON are accepted. HTML is not.
-        Always pass the true media type of the content; do not infer it from a file extension.
+        Any file type is accepted; HTML and XML are stored as \`application/octet-stream\` so they
+        download rather than render. Always pass the true media type of the content; do not infer it
+        from a file extension.
       `,
     }),
     agentCanEnable: true,

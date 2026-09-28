@@ -12,7 +12,7 @@ import { File } from '@dxos/types';
 
 import { FileLimits, FileOperation } from '#types';
 
-import { UnsupportedUploadTypeError, UploadNotFoundError } from './operations/create-from-upload.ts';
+import { UploadNotFoundError } from './operations/create-from-upload.ts';
 
 /** Bytes a local host received on its own upload listener, keyed by the id it minted. */
 export type Upload = {
@@ -43,11 +43,8 @@ export const createFromUploadHandler = (source: Source) =>
         if (!staged) {
           return yield* Effect.fail(new UploadNotFoundError(uploadId));
         }
-        if (!FileLimits.isAcceptedMimeType(staged.type)) {
-          return yield* Effect.fail(new UnsupportedUploadTypeError(staged.type));
-        }
 
-        const blob = yield* Blob.fromBytes(staged.bytes, { type: staged.type });
+        const blob = yield* Blob.fromBytes(staged.bytes, { type: FileLimits.toStoredMimeType(staged.type) });
         const object = File.make({ name: name ?? staged.name, data: Ref.make(blob) });
         // The blob first: `SetParent` on `File.data` cascades deletion, so the child must exist
         // before the parent references it.

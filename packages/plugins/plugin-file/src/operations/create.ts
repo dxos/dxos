@@ -13,12 +13,6 @@ import { File } from '@dxos/types';
 
 import { FileCapabilities, FileLimits, FileOperation, Settings } from '#types';
 
-export class UnsupportedFileTypeError extends BaseError.extend('UnsupportedFileTypeError') {
-  constructor(public readonly type: string) {
-    super({ message: `Unsupported file type: ${type}` });
-  }
-}
-
 export class FileTooLargeError extends BaseError.extend('FileTooLargeError') {
   constructor(
     public readonly size: number,
@@ -68,10 +62,6 @@ export const resolveActiveStorage = Effect.gen(function* () {
 const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ file, db }) {
-      // Validate before hitting the backend so the contract is consistent regardless of backend.
-      if (!FileLimits.isAcceptedMimeType(file.type)) {
-        return yield* Effect.fail(new UnsupportedFileTypeError(file.type));
-      }
       const storage = yield* resolveActiveStorage;
       const bytes = new Uint8Array(
         yield* Effect.tryPromise({
@@ -83,7 +73,8 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
       // other backends scale beyond it.
       const object = yield* File.fromBytes(bytes, {
         name: file.name,
-        type: file.type,
+        // Browsers report `''` for extensions they do not recognize (e.g. `.ndjson.gz`).
+        type: FileLimits.toStoredMimeType(file.type),
         storage,
       }).pipe(
         Effect.provide(Database.layer(db)),
