@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { existsSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
+import { rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /**
  * An agent works the Composer Plugin project template's parent task and four subtasks to build the Space
@@ -43,6 +45,12 @@ const LEFTOVERS = [
   '../../../../out/composer/plugins/space-clock/',
 ];
 
+/**
+ * The id of the project this take created, so a replay can tell it from a project an earlier take left
+ * open in the deck. Outside the repo, and cleared when a take starts.
+ */
+const TAKE_PROJECT = join(tmpdir(), 'autocue-composer-plugin.project');
+
 /** A plugin card in the registry list, by its display name. */
 const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
 
@@ -76,6 +84,7 @@ export const steps = [
       for (const folder of LEFTOVERS) {
         await rm(new URL(folder, import.meta.url), { recursive: true, force: true });
       }
+      await rm(TAKE_PROJECT, { force: true });
     },
   },
   {
@@ -160,9 +169,14 @@ export const steps = [
   },
   {
     name: 'Create a project from the Composer Plugin template',
-    // Replay only (see step 1): the deck reloads with its planks, so an open project means this take
-    // already created one.
-    done: async ({ page }) => (await page.getByTestId('projectsPlugin.tab.tasks').count()) > 0,
+    // Replay only (see step 1): skipped when the project this take created is open in the deck again, not
+    // merely any project plank an earlier take left behind.
+    done: async ({ page }) => {
+      const id = existsSync(TAKE_PROJECT) ? readFileSync(TAKE_PROJECT, 'utf8').trim() : undefined;
+      return (
+        id !== undefined && (await page.locator(`[data-testid="deck.plank"][data-attendable-id$="/${id}"]`).count()) > 0
+      );
+    },
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
       await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.project"]', label: 'Project' });
@@ -174,6 +188,13 @@ export const steps = [
       await demo.click({ selector: `[role="option"][data-value="${TEMPLATE_ID}"]`, label: 'Composer Plugin' });
       await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Create' });
       await page.getByTestId('projectsPlugin.tab.tasks').first().waitFor({ state: 'visible', timeout: 30_000 });
+      const plank = await page
+        .locator('[data-testid="deck.plank"][data-attendable-id*="/org.dxos.type.project/"]')
+        .first()
+        .getAttribute('data-attendable-id');
+      if (plank) {
+        await writeFile(TAKE_PROJECT, plank.split('/').at(-1) ?? '');
+      }
     },
   },
   {
