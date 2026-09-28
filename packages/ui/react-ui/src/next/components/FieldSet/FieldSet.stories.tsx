@@ -137,9 +137,10 @@ export const Disabled: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeDisabled();
-    for (const name of ['Email digests', 'Mentions', 'Product updates', 'Email me a weekly digest']) {
-      await expect(canvas.getByRole('checkbox', { name })).toBeDisabled();
+    for (const name of ['Email digests', 'Mentions', 'Product updates']) {
+      await expect(canvas.getByRole('switch', { name })).toBeDisabled();
     }
+    await expect(canvas.getByRole('checkbox', { name: 'Email me a weekly digest' })).toBeDisabled();
     await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeEnabled();
   },
 };

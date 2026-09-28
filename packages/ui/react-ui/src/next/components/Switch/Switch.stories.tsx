@@ -55,14 +55,16 @@ export const Toggle: Story = {
       await expect(root?.getBoundingClientRect().height, size).toBeCloseTo(block, 0);
     }
 
-    // Ark exposes the switch as a native checkbox input, so its state is `checked` rather than `aria-checked`.
-    const input = canvas.getByRole('checkbox', { name: 'Notifications (sm)' });
+    // A native checkbox with `role=switch`: the platform maps `checked` to the switch's checked state.
+    const input = canvas.getByRole('switch', { name: 'Notifications (sm)', checked: false });
+    await expect(input).toHaveAttribute('type', 'checkbox');
     const control = canvas.getByTestId('size-sm').querySelector('[data-part="control"]');
     await expect(input).not.toBeChecked();
     await expect(control).toHaveAttribute('data-state', 'unchecked');
     const unchecked = control ? getComputedStyle(control).backgroundColor : '';
     await userEvent.click(canvas.getByText('Notifications (sm)'));
     await waitFor(() => expect(input).toBeChecked());
+    await expect(canvas.getByRole('switch', { name: 'Notifications (sm)', checked: true })).toBe(input);
     await expect(control).toHaveAttribute('data-state', 'checked');
     await expect(control ? getComputedStyle(control).backgroundColor : '').not.toBe(unchecked);
 
@@ -74,8 +76,15 @@ export const Toggle: Story = {
       return expect(track && box && box.right <= track.right + 0.5 && box.right >= track.right - 3).toBe(true);
     });
 
+    // Space toggles the focused switch back, per the switch keyboard contract.
+    input.focus();
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(input).not.toBeChecked());
+    await expect(control).toHaveAttribute('data-state', 'unchecked');
+
     // A disabled switch ignores clicks.
-    const disabled = canvas.getByRole('checkbox', { name: 'Disabled' });
+    const disabled = canvas.getByRole('switch', { name: 'Disabled' });
     await expect(disabled).toBeDisabled();
+    await expect(canvas.queryAllByRole('checkbox')).toHaveLength(0);
   },
 };

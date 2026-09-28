@@ -159,8 +159,8 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     one gutter. The Body keeps ScrollArea's `data-scope` (finding 10), and Select mounts its popup on open so a modal
     dialog's one-time `aria-hidden` sweep does not hide it.
 11. **Switch** is Ark Switch in a block-tall row like Checkbox, with an icon-tall track (`--nx-icon-size` high, 1.75×
-    wide, 2px thumb inset) filled with the accent when checked. Ark exposes it as a native checkbox input (no
-    `role=switch`, state via `checked` rather than `aria-checked`); decision 9 keeps us from adding the role ourselves.
+    wide, 2px thumb inset) filled with the accent when checked. Its hidden native checkbox takes `role=switch`
+    (follow-up 21).
 12. **FieldSet** is Ark Fieldset: a borderless `<fieldset>` stacking its Fields with `--nx-gap-size`, headed by a
     Legend that is an sm label row like `Field.Header`. Ark passes only `disabled` down to Fields, so `Field.Root`
     also defaults `invalid` from the enclosing set.
@@ -194,6 +194,10 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     `close` — landing after the new trigger's focus `open`. `Tooltip.Trigger` therefore prevents zag's blur handler
     and closes a task later, so the new tooltip claims the store first (and the old one closes through the store, as on
     hover). A catalog bump would not fix it.
+21. **Switch claims `role=switch`**, an exception to decision 9's "roles only from machine props": Ark's hidden input
+    is a native checkbox without the role, yet the zag switch machine does implement the switch contract (Space
+    toggles, checked state), so the role is earned. The native `checked` state supplies `aria-checked` to assistive
+    tech; no explicit attribute is set.
 
 ## Phase 3: react-ui-form port
 
