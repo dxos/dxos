@@ -9,7 +9,7 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../testing/index.ts';
-import { Next } from './components.tsx';
+import { Next } from './Next.tsx';
 
 const ROLES: Next.SelectOption[] = [
   { value: 'owner', label: 'Owner' },
@@ -116,10 +116,10 @@ export const Default: Story = {
     const trigger = canvas.getByRole('combobox', { name: 'Role' });
     await userEvent.click(trigger);
     const listbox = await within(canvasElement.ownerDocument.body).findByRole('listbox');
-    await waitFor(() => {
+    await waitFor(async () => {
       const gap = listbox.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom;
-      expect(gap).toBeGreaterThanOrEqual(0);
-      expect(gap).toBeLessThanOrEqual(3);
+      await expect(gap).toBeGreaterThanOrEqual(0);
+      await expect(gap).toBeLessThanOrEqual(3);
     });
     await userEvent.keyboard('{Escape}');
 

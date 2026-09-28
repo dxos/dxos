@@ -10,10 +10,10 @@ import React, { forwardRef, useMemo } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { Icon } from './primitives.tsx';
-import { recipes } from './recipes.ts';
-import { type Size } from './sizes.ts';
-import { useToolbarItem } from './Toolbar.tsx';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { Icon } from '../Icon/index.ts';
+import { useToolbarItem } from '../Toolbar/index.ts';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;

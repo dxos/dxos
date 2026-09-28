@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing/index.ts';
-import { Next } from '../components.tsx';
+import { Next } from '../Next.tsx';
 import { SIZES } from '../sizes.ts';
 
 const { Block, Container } = Next;

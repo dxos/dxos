@@ -2,21 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Checkbox as NextCheckbox, type CheckboxProps as NextCheckboxProps } from './Checkbox.tsx';
 import {
   Block as NextBlock,
   type BlockProps as NextBlockProps,
-  Container as NextContainer,
-  type ContainerProps as NextContainerProps,
-  type Gutter as NextGutter,
-  type Level as NextLevel,
-} from './Container.tsx';
-import { Field as NextField } from './Field.tsx';
-import {
   Button as NextButton,
   type ButtonProps as NextButtonProps,
+  Checkbox as NextCheckbox,
+  type CheckboxProps as NextCheckboxProps,
+  Container as NextContainer,
+  type ContainerProps as NextContainerProps,
+  Field as NextField,
   Group as NextGroup,
   type GroupProps as NextGroupProps,
+  type Gutter as NextGutter,
   Icon as NextIcon,
   IconButton as NextIconButton,
   type IconButtonProps as NextIconButtonProps,
@@ -25,11 +23,14 @@ import {
   type InputProps as NextInputProps,
   Label as NextLabel,
   type LabelProps as NextLabelProps,
+  type Level as NextLevel,
+  ScrollArea as NextScrollArea,
+  Select as NextSelect,
+  type SelectOption as NextSelectOption,
+  Toolbar as NextToolbar,
+  type ToolbarProps as NextToolbarProps,
   Typography as NextTypography,
-} from './primitives.tsx';
-import { ScrollArea as NextScrollArea } from './ScrollArea.tsx';
-import { Select as NextSelect, type SelectOption as NextSelectOption } from './Select.tsx';
-import { Toolbar as NextToolbar, type ToolbarProps as NextToolbarProps } from './Toolbar.tsx';
+} from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); stories load `theme/index.css` for their rules. */
 export namespace Next {

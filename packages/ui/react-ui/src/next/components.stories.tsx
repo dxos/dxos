@@ -9,7 +9,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../testing/index.ts';
-import { Next } from './components.tsx';
+import { Next } from './Next.tsx';
 import { type Size, SIZES } from './sizes.ts';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';

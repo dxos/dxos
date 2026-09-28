@@ -8,9 +8,9 @@ import React, { type CSSProperties, useEffect, useRef } from 'react';
 import { log } from '@dxos/log';
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { composable, composableProps, slottable } from '../util/index.ts';
-import { recipes } from './recipes.ts';
-import { type Size } from './sizes.ts';
+import { composableProps, slottable } from '../../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 
 export type Level = 'sunken' | 'chrome' | 'base' | 'raised' | 'overlay' | 'popup' | '+1';
 
@@ -82,24 +82,3 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
 );
 
 Container.displayName = 'Next.Container';
-
-//
-// Block
-//
-
-export type BlockProps = {
-  /** Places the block in a parent Container's start or end gutter. */
-  rail?: 'start' | 'end';
-};
-
-/** A block-sized square that centres its content (typically an Icon). */
-export const Block = composable<HTMLDivElement, BlockProps>(({ children, rail, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props, { classNames: recipes.block() });
-  return (
-    <div {...rest} data-scope='block' data-part='root' data-rail={rail} className={className} ref={forwardedRef}>
-      {children}
-    </div>
-  );
-});
-
-Block.displayName = 'Next.Block';

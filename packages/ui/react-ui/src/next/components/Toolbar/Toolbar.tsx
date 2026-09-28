@@ -6,10 +6,10 @@ import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
 import React, { createContext, useContext, useId } from 'react';
 
-import { composableProps, slottable } from '../util/index.ts';
-import * as toolbar from './machines/toolbar.ts';
-import { recipes } from './recipes.ts';
-import { type Size } from './sizes.ts';
+import { composableProps, slottable } from '../../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import * as toolbar from './toolbar-machine.ts';
 
 // Optional by design: a control outside a toolbar renders without roving props.
 const ToolbarContext = createContext<toolbar.ToolbarApi | undefined>(undefined);

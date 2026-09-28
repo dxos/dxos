@@ -33,7 +33,7 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 - [x] **Field** — Ark `Field`; flex stack in the content track; Label, HelperText, ErrorText (decision 13). — `Field.tsx`; `Next.Input` is Ark `Field.Input`.
 - [x] **Checkbox, Select, IconButton** — Ark Checkbox/Select; Select content at `level='popup'` in a portal; IconButton requires a label. — Select.Content takes its own `size` (finding 9).
 - [x] **Move CSS to `next/theme/`** — size, container, scroll-area, level, control; `@layer dx-components`; stories import `theme/index.css`; drop `SpikeStyles`. — spike illustrations moved to `spike/choices.css`.
-- [x] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`. — `machines/toolbar.ts`; ToolbarFocus play test.
+- [x] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`. — `components/Toolbar/toolbar-machine.ts`; ToolbarFocus play test.
 - [x] **ARIA fixes** — `aria-hidden` icons, labels. — Icon `label` → `role=img`; Roles play test.
 - [x] **Container rails** — `gutter` with named lines; `layout` stack/row; `Block rail`; `gutter='inherit'` subgrid nesting. — `Container.tsx`; spike stories now run on `Next.*`.
 - [x] **Container columns** — inner template inherited via subgrid; `auto` label track aligns across nesting. — spike Default/Sizes assertions.

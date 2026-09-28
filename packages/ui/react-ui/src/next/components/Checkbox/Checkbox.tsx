@@ -8,8 +8,8 @@ import React, { type ReactNode, forwardRef } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { Icon } from './primitives.tsx';
-import { recipes } from './recipes.ts';
+import { recipes } from '../../recipes.ts';
+import { Icon } from '../Icon/index.ts';
 
 export type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.RootProps, 'children'>> & {
   /** Visible label beside the box; without one pass `aria-label`. */

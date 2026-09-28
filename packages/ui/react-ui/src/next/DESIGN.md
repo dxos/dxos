@@ -132,7 +132,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 11. **Controls in stacks.** A stack row has no block of its own, so the enclosing Container (or `Field.Root`) pads a
     direct control child out to a block with `margin-block: var(--nx-control-inset)`; a `row` Container is at least
     one block tall and centres its items. Both are container rules, keeping decision 6.
-12. **Toolbar items join by hook.** The roving machine (`machines/toolbar.ts`) is framework-neutral; Button,
+12. **Toolbar items join by hook.** The roving machine (`components/Toolbar/toolbar-machine.ts`) is framework-neutral; Button,
     IconButton, Input and Select.Trigger join the nearest Toolbar through React context carrying the machine's api
     (behaviour, not size or level, so decision 3 holds). Arrow/Home/End keys stay with a focused text input.
 
@@ -150,3 +150,5 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    (orange by default), so a theme recolours it by setting one variable; the Select popup uses the same variables as
    an outline so item highlights cannot cover it.
 7. **Checkbox box is icon-sized** (`--nx-icon-size`, check mark at 75%), not control-sized; it stays centred in its block.
+8. **Layout.** One folder per component under `components/` (`components/<Name>/<Name>.tsx` + `index.ts`, barrel at
+   `components/index.ts`); `Next.tsx` assembles the namespace; `theme/`, `recipes.ts` and `sizes.ts` stay at the root.

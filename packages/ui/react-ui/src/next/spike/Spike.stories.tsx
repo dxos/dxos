@@ -11,7 +11,7 @@ import { expect } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing/index.ts';
-import { Next } from '../components.tsx';
+import { Next } from '../Next.tsx';
 import { type Size } from '../sizes.ts';
 
 const { Block, Container, ScrollArea } = Next;

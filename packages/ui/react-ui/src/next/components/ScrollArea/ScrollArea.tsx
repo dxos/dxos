@@ -7,11 +7,11 @@ import React, { useState } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 
-import { ScrollAreaThumbs } from '../components/ScrollArea/ScrollAreaThumbs.tsx';
-import { scrollbar } from '../components/ScrollArea/scrollbar.ts';
-import { composableProps, slottable } from '../util/index.ts';
-import { recipes } from './recipes.ts';
-import { type Size } from './sizes.ts';
+import { ScrollAreaThumbs } from '../../../components/ScrollArea/ScrollAreaThumbs.tsx';
+import { scrollbar } from '../../../components/ScrollArea/scrollbar.ts';
+import { composableProps, slottable } from '../../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 
 type ScrollAreaContextValue = {
   native: boolean;

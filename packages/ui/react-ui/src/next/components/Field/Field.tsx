@@ -8,7 +8,7 @@ import React, { forwardRef } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { recipes } from './recipes.ts';
+import { recipes } from '../../recipes.ts';
 
 //
 // Root
