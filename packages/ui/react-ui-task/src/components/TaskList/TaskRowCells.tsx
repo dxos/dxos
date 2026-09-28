@@ -124,7 +124,7 @@ TaskStatusControl.displayName = 'TaskList.StatusControl';
  */
 export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
   <SystemIconButton.Clipboard
-    classNames='tabular-nums'
+    classNames='font-mono'
     density='sm'
     variant='tag'
     // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
