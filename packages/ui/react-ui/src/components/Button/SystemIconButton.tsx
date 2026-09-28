@@ -214,7 +214,11 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
         hue={hue}
         iconClassNames={!hue && copied && 'text-green-500'}
         icon={copied ? 'ph--check--regular' : icon}
-        label={copied ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))}
+        // A visible label (a chip naming what it copies) stays put — swapping in "Copied" resized the
+        // chip; the check glyph confirms the copy. An icon-only button's label is its tooltip, so it swaps.
+        label={
+          copied && props.iconOnly ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))
+        }
         onClick={handleCopy}
         ref={forwardedRef}
       />

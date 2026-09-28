@@ -10,6 +10,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { raise } from '@dxos/debug';
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -47,6 +48,8 @@ const DefaultStory = ({
   virtualize,
   branches,
   features,
+  indentGuides,
+  openDepth = 0,
   onItemHover,
 }: {
   draggable?: boolean;
@@ -61,6 +64,10 @@ const DefaultStory = ({
   virtualize?: boolean;
   branches?: boolean;
   features?: boolean;
+  /** Draw a guide line down each open branch's children. */
+  indentGuides?: boolean;
+  /** Opens this many levels down the first branch at each depth, so a story shows nesting without a click. */
+  openDepth?: number;
   onItemHover?: (params: { item: TestItem }) => void;
 }) => {
   const rootTree = virtualize
@@ -77,14 +84,33 @@ const DefaultStory = ({
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
-  const getOrCreateStateAtom = useCallback((pathKey: string) => {
-    let atom = stateAtomsRef.current.get(pathKey);
-    if (!atom) {
-      atom = Atom.make({ open: false, current: false }).pipe(Atom.keepAlive);
-      stateAtomsRef.current.set(pathKey, atom);
+  // The first branch at each level, `openDepth` deep, keyed as the tree keys a row: its path from the tree id.
+  const initiallyOpen = useMemo(() => {
+    const keys = new Set<string>();
+    const path = [rootTree.id];
+    let item: TestItem | undefined = rootTree;
+    for (let depth = 0; depth < openDepth; depth++) {
+      item = item?.items?.find((child) => (child.items?.length ?? 0) > 0);
+      if (!item) {
+        break;
+      }
+      path.push(item.id);
+      keys.add(Path.create(...path));
     }
-    return atom;
-  }, []);
+    return keys;
+  }, [rootTree, openDepth]);
+
+  const getOrCreateStateAtom = useCallback(
+    (pathKey: string) => {
+      let atom = stateAtomsRef.current.get(pathKey);
+      if (!atom) {
+        atom = Atom.make({ open: initiallyOpen.has(pathKey), current: false }).pipe(Atom.keepAlive);
+        stateAtomsRef.current.set(pathKey, atom);
+      }
+      return atom;
+    },
+    [initiallyOpen],
+  );
 
   // Build a lookup map of all items by ID.
   const itemMap = useMemo(() => {
@@ -273,6 +299,7 @@ const DefaultStory = ({
       canSelect={handleCanSelect}
       virtualize={virtualize}
       dropAtEnd={features}
+      indentGuides={indentGuides}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
@@ -312,6 +339,11 @@ export const Draggable: Story = {
   args: {
     draggable: true,
   },
+};
+
+/** Guides down each open branch, under its own chevron; each child's chevron is centred under its parent's icon. */
+export const WithIndent: Story = {
+  args: { indentGuides: true, openDepth: 2 },
 };
 
 export const WithGroups: Story = {
@@ -424,6 +456,54 @@ export const Collapse: Story = {
     toggle.click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() => expect(height()).toBeGreaterThan(0));
+  },
+};
+
+/** The element under `root` matching `selector`, failing the play when it is missing. */
+const queryPart = (root: Element | null, selector: string): HTMLElement =>
+  root?.querySelector<HTMLElement>(selector) ?? raise(new Error(`Missing ${selector}`));
+
+const expectBlockAlignment = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  await canvas.findByRole('tree');
+  const centre = (rect: DOMRect) => rect.left + rect.width / 2;
+  await waitFor(() => expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(2));
+  const guides = [...canvasElement.querySelectorAll<HTMLElement>('[data-part="branch-indent-guide"]')];
+  for (const guide of guides) {
+    const content = guide.parentElement;
+    // Document order puts the branch's own toggle before any in its content.
+    const toggle = queryPart(content?.closest('[data-part="branch"]') ?? null, '[data-testid="treeItem.toggle"]');
+    const child = queryPart(content, '[data-testid="treeItem.toggle"]');
+    const toggleRect = toggle.getBoundingClientRect();
+    const childRect = child.getBoundingClientRect();
+    // The guide runs under the branch's own toggle, clear of its children's, which sit a block in.
+    await expect(Math.abs(centre(guide.getBoundingClientRect()) - centre(toggleRect))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(childRect.left - toggleRect.left - toggleRect.width)).toBeLessThanOrEqual(1);
+    // A top-level item in this fixture has no icon; where there is one, the child's toggle is under it.
+    const icon = toggle.parentElement?.querySelector('[data-testid="treeItem.heading"] svg');
+    if (icon) {
+      await expect(Math.abs(centre(childRect) - centre(icon.getBoundingClientRect()))).toBeLessThanOrEqual(1);
+    }
+  }
+};
+
+/** Block alignment, measured on the open rendering `WithIndent` shows. */
+export const TestIndentGuides: Story = {
+  args: { indentGuides: true, openDepth: 2 },
+  play: async ({ canvasElement }) => expectBlockAlignment(canvasElement),
+};
+
+/** Guides are opt-in: an open tree without the prop draws none. */
+export const TestNoIndentGuides: Story = {
+  args: { openDepth: 2 },
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByRole('tree');
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelectorAll('[data-part="branch-content"] [data-testid="treeItem.toggle"]').length,
+      ).toBeGreaterThan(0),
+    );
+    await expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(0);
   },
 };
 
@@ -635,7 +715,14 @@ export const TestWindowedTreeInFull: Story = {
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(async () => expect(focused()).toEqual(first.id), { timeout: 5_000 });
     await userEvent.keyboard('{ArrowLeft}');
-    await waitFor(async () => expect(row(lastChild.id)).toBeNull(), { timeout: 5_000 });
+    // The close commits once the children have concealed, and the window mounts what follows after it.
+    await waitFor(
+      async () => {
+        await expect(row(lastChild.id)).toBeNull();
+        await expect(row(second.id)).not.toBeNull();
+      },
+      { timeout: 5_000 },
+    );
 
     // An item under two open branches is two rows, and the tree stays windowed.
     await userEvent.click(toggle(second.id));

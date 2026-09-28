@@ -315,9 +315,9 @@ export const TaskTreeNode = ({
     <Tree<TaskNode>
       id={TASK_TREE_ROOT_ID}
       ariaLabel={t('task-list.label')}
-      model={model}
-      gridTemplateColumns={gridTemplateColumns}
       classNames={mx('w-full min-w-0', classNames)}
+      gridTemplateColumns={gridTemplateColumns}
+      model={model}
       draggable={!!onTaskMove}
       // A flat list is a tree of depth one: no branch will ever need disclosing, so the template
       // carries no toggle track and the first cell is the gutter or the status control. A group
@@ -334,6 +334,7 @@ export const TaskTreeNode = ({
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
       virtualize
+      indentGuides
       debug={debug}
       renderHeading={renderHeading}
       renderColumns={renderTrailing}

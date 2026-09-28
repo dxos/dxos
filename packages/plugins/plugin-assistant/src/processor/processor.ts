@@ -513,14 +513,14 @@ export class AiChatProcessor {
         return yield* Effect.die(new Error('Chat processor requires a chat.'));
       }
       const selected = this._options.model;
-      if (!chat.model && selected) {
+      if (!chat.session?.model && selected) {
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(selected);
+          chat.session = { ...chat.session, model: selected };
         });
       }
       // The model is the chat's, so the provider has to be the one that serves THAT model: the
       // configured provider can have moved on since the chat made its selection.
-      const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? selected;
+      const model = chat.session?.model ?? selected;
       return yield* AgentService.getSession(chat, {
         provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
         location: chat.remote ? 'edge' : 'local',
