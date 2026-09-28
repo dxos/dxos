@@ -222,9 +222,10 @@ You don't need to publish to test your plugin against Composer. Composer loads a
 The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
 the entry it names.
 
-To have the assistant build one for you, create a space from the **Composer Plugin** template (in the debug
-plugin's templates) in a Composer served locally by `vite preview`. It seeds a project whose tasks walk a chat
-through the example below, from writing the files to the load prompt; delegate the project to start it.
+To have the assistant build one for you, create a project from the **Composer Plugin** template (contributed
+by the Coding (Dev) plugin) in a Composer served locally by `vite preview`. Its parent task and four subtasks
+walk a chat through the example below, from writing the files to the load prompt; assign them to the agent to
+start it.
 
 > Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
 > app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and

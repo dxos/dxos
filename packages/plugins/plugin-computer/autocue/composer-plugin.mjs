@@ -5,10 +5,11 @@
 import { rm } from 'node:fs/promises';
 
 /**
- * An agent works the four tasks of the Composer Plugin space template to build the Space Clock plugin,
- * then the reader loads it, finds it in the registry, and opens its Clock page from the navtree group it adds.
+ * An agent works the Composer Plugin project template's parent task and four subtasks to build the Space
+ * Clock plugin, then the reader loads it, finds it in the registry, and opens its Clock page from the
+ * navtree group it adds. Everything happens in the first space in the rail (My Space on a fresh profile).
  *
- * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-4
+ * @mdl packages/plugins/plugin-computer/PLUGIN.mdl test QA-2
  * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview
  *
  * Built and served from `packages/apps/composer-app`. Loading a plugin by URL needs the bundle's import
@@ -35,11 +36,20 @@ const PLUGIN_NAME = 'Space Clock';
 /** A beat for the viewer to read the registry card, which is the one shot that proves the load. */
 const LINGER = 2_500;
 
-/** The last take's source and build, relative to this file (`composer-app/autocue/`). */
-const LEFTOVERS = ['../temp/plugins/space-clock/', '../../../../out/composer/plugins/space-clock/'];
+/** The last take's source and build, relative to this file (`plugin-computer/autocue/`). */
+const LEFTOVERS = [
+  '../../../apps/composer-app/temp/plugins/space-clock/',
+  '../../../../out/composer/plugins/space-clock/',
+];
 
 /** A plugin card in the registry list, by its display name. */
 const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
+
+/** The first space in the rail, where the take runs. */
+const SPACE = '[data-testid="spacePlugin.space"] >> nth=0';
+
+/** Contributed by plugin-computer's `src/templates/composer-plugin.ts`. */
+const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
 
 export const steps = [
   {
@@ -113,43 +123,34 @@ export const steps = [
       await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
       await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
 
-      await demo.click({ selector: '[data-testid="spacePlugin.space"]', hud: false });
+      await demo.click({ selector: SPACE, hud: false });
     },
   },
   {
-    name: 'Create a space from the Composer Plugin template',
-    done: async ({ page }) =>
-      (await page.locator('[data-testid="spacePlugin.space"]:has-text("Composer Plugin")').count()) > 0,
+    name: 'Create a project from the Composer Plugin template',
     run: async ({ demo, page }) => {
-      await demo.click({ selector: '[data-testid="spacePlugin.addSpace"]', label: 'Menu' });
-      await demo.click({ text: 'Create space', exact: true });
-      const dialog = page.getByTestId('create-space-dialog');
-      await dialog.waitFor({ state: 'visible', timeout: 10_000 });
-      await demo.click({
-        selector: '[data-testid="create-space-dialog"] [role="option"]:has-text("Composer Plugin")',
-        label: 'Composer Plugin',
+      await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
+      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.project"]', label: 'Project' });
+      await demo.type({
+        selector: '[data-testid="create-project-panel.template-input"]',
+        value: 'Composer',
+        label: 'Template',
       });
-      await demo.click({
-        selector: '[data-testid="create-space-dialog"] [data-testid="save-button"]',
-        label: 'Create',
-      });
-      await dialog.waitFor({ state: 'hidden', timeout: 30_000 });
+      await demo.click({ selector: `[role="option"][data-value="${TEMPLATE_ID}"]`, label: 'Composer Plugin' });
+      await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Create' });
+      await page.getByTestId('projectsPlugin.tab.tasks').first().waitFor({ state: 'visible', timeout: 30_000 });
     },
   },
   {
-    name: 'Open the project and its tasks',
+    name: "Open the project's tasks",
     run: async ({ demo, page }) => {
-      await demo.click({ selector: '[data-testid="spacePlugin.spaceHome"]', label: 'Home' });
-      await demo.click({
-        selector: '[role="button"]:has(use[href="#ph--stack--regular"]):has-text("Composer Plugin")',
-        label: 'Composer Plugin project',
-      });
-      await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"]', label: 'Tasks' });
-      await page.getByTestId('taskList.item').first().waitFor({ state: 'visible', timeout: 15_000 });
+      await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"] >> nth=0', label: 'Tasks' });
+      await page.getByTestId('taskList.item').nth(4).waitFor({ state: 'visible', timeout: 15_000 });
     },
   },
   {
-    name: 'Select all four tasks and assign them to the agent',
+    // Delegation sends only the ticked rows and the agent's checklist is flat, so tick the parent and every subtask.
+    name: 'Select the parent task and its subtasks and assign them to the agent',
     run: async ({ demo, page }) => {
       const count = await page.getByTestId('taskList.item.checkbox').count();
       for (let index = 0; index < count; index++) {
@@ -251,11 +252,7 @@ export const steps = [
   {
     name: 'Open the Clock page',
     run: async ({ demo, page }) => {
-      // An earlier take's space keeps the same name; the rail lists spaces oldest first, so take the newest.
-      await demo.click({
-        selector: '[data-testid="spacePlugin.space"]:has-text("Composer Plugin") >> nth=-1',
-        label: 'Composer Plugin',
-      });
+      await demo.click({ selector: SPACE, label: 'Space' });
       // The plugin adds a group to the space's navtree; the built-in groups must still be there beside it.
       const sidebar = page.getByTestId('deck.sidebar');
       await sidebar.getByText(PLUGIN_NAME, { exact: true }).first().waitFor({ state: 'visible', timeout: 15_000 });

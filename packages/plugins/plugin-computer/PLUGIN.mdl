@@ -8,6 +8,9 @@ Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash 
 multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
 that runs a shell script under a configured root. Nothing is mounted outside a vite server.
 
+It also contributes the **Composer Plugin** project template: a project whose agent uses these tools to
+build a TypeScript Composer plugin on this machine and offer it back to load (QA-2).
+
 ## Extensions
 
 | Term | URI                        |
@@ -96,4 +99,76 @@ test QA-1: Run a shell command and apply an edit
       do: Ask the assistant to delete the scratch file.
       invoke: org.dxos.operation.computer.runBash { script: "rm -f qa-computer-scratch.txt" }
       expect: the file no longer exists under the harness root
+```
+
+```mdl
+test QA-2: Build a plugin with an agent from the Composer Plugin project template
+  desc: |
+    The demo script for the Composer Plugin project template (`src/templates/composer-plugin.ts`): an agent
+    works one parent task and its four subtasks on this machine — read the guide, write a TypeScript plugin,
+    build it, offer it — and the reader loads the result. The plugin adds a "Space Clock" group to each
+    space's navtree with a live "Clock" page under it. Walked by the autocue flow
+    `packages/plugins/plugin-computer/autocue/composer-plugin.mjs`.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open (the default "My Space" is fine)
+    - Composer is a bundled build served by `vite preview` on :4173 against EDGE preview — loading by URL
+      needs the bundle's import map, and EDGE production rejects the AI requests
+    - plugin-projects and Coding (Dev) are enabled; the template is contributed by Coding (Dev), so the
+      create dialog offers it only when that plugin is on
+    - the Assistant's default remote model is DeepSeek V4 Pro
+    - no plugin named "Space Clock" is loaded, and `temp/plugins/space-clock` and
+      `out/composer/plugins/space-clock` do not exist, so the agent starts from an empty folder
+  steps:
+    - name: Create a project from the Composer Plugin template
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template and click Create.
+      capture: project
+      expect: a "Composer Plugin" project opens
+    - name: Open the project's tasks
+      do: Click the project's Tasks tab.
+      expect: |
+        one parent task, "Build the Space Clock plugin", with four subtasks under it, all to do — read the
+        guide, write the plugin, typecheck and build, offer it
+    - name: Select the parent task and its subtasks and assign them to the agent
+      do: Tick the parent's checkbox and each subtask's, then click "Assign selected tasks to agent".
+      expect: the project's pipeline chart appears and the five tasks are delegated to a chat
+      note: |
+        Delegation sends only the rows that are ticked — ticking the parent does not bring its subtasks —
+        and the agent's checklist is flat, so every row is ticked.
+    - name: Open the agent session
+      do: Open the plank's companion and pick its Assistant tab.
+      expect: the delegated chat is shown with its status line
+    - name: Ask the agent to start
+      do: Type "Start working on the tasks." into the companion's prompt and press Enter.
+      expect: the chat shows "Generating" and the agent starts on the first subtask
+      note: |
+        Showing the companion restarts the delegated agent, which drops its opening prompt, so the reader
+        nudges it. Known defect; remove this step once the companion no longer restarts the agent.
+    - name: Wait for the agent to offer the plugin
+      do: Watch the subtasks tick off.
+      expect: all five tasks are done and the chat shows a "Load plugin" prompt naming Space Clock
+      note: |
+        Takes up to twenty minutes. The model matters: with Composer's stock default (Claude Sonnet 5) the
+        delegated chat stayed silent, which is why `given` sets DeepSeek V4 Pro.
+    - name: Load the plugin
+      do: Click Load on the prompt.
+      expect: the Space Clock plugin loads without an error toast
+    - name: See the plugin in the registry
+      do: Open Plugins, choose Enabled, and filter for "Space Clock".
+      expect: the Space Clock card is listed with its toggle on
+    - name: Open the Clock page
+      do: Return to the space and click Clock under the SPACE CLOCK group.
+      expect: |
+        the navtree keeps its own groups (CONTENT, SYSTEM) and gains a SPACE CLOCK group holding Clock; the
+        page opens as an article showing a large clock that ticks every second
+      note: |
+        An earlier version of the guide taught a rail workspace, and the built plugin replaced the whole
+        navtree with its own; the guide now teaches a navtree group.
+  after:
+    - name: Delete the project
+      do: Right-click the "Composer Plugin" project in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
+      expect: the project and its tasks leave the navtree
 ```
