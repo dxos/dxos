@@ -41,4 +41,6 @@ export const recipes = {
   switch: () => 'nx-switch',
   switchControl: () => 'nx-switch-control',
   switchThumb: () => 'nx-switch-thumb',
+  fieldsetRoot: () => 'nx-fieldset',
+  fieldsetLegend: () => 'nx-fieldset-legend',
 } as const;

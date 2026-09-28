@@ -13,6 +13,7 @@ import {
   type ContainerProps as NextContainerProps,
   Dialog as NextDialog,
   Field as NextField,
+  FieldSet as NextFieldSet,
   Group as NextGroup,
   type GroupProps as NextGroupProps,
   type Gutter as NextGutter,
@@ -67,4 +68,5 @@ export namespace Next {
   export const Dialog = NextDialog;
   export const Switch = NextSwitch;
   export type SwitchProps = NextSwitchProps;
+  export const FieldSet = NextFieldSet;
 }

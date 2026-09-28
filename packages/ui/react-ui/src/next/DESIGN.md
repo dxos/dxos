@@ -161,3 +161,6 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 11. **Switch** is Ark Switch in a block-tall row like Checkbox, with an icon-tall track (`--nx-icon-size` high, 1.75×
     wide, 2px thumb inset) filled with the accent when checked. Ark exposes it as a native checkbox input (no
     `role=switch`, state via `checked` rather than `aria-checked`); decision 9 keeps us from adding the role ourselves.
+12. **FieldSet** is Ark Fieldset: a borderless `<fieldset>` stacking its Fields with `--nx-gap-size`, headed by a
+    Legend that is an sm label row like `Field.Header`. Ark passes only `disabled` down to Fields, so `Field.Root`
+    also defaults `invalid` from the enclosing set.

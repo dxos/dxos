@@ -8,6 +8,7 @@ export * from './Checkbox/index.ts';
 export * from './Container/index.ts';
 export * from './Dialog/index.ts';
 export * from './Field/index.ts';
+export * from './FieldSet/index.ts';
 export * from './Group/index.ts';
 export * from './Icon/index.ts';
 export * from './IconButton/index.ts';

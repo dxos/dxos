@@ -3,6 +3,7 @@
 //
 
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
+import { useFieldsetContext } from '@ark-ui/react/fieldset';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -18,9 +19,18 @@ import { type Size } from '../../sizes.ts';
 type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps>;
 
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
-const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(({ classNames, ...props }, forwardedRef) => (
-  <FieldPrimitive.Root {...props} className={mx(recipes.field(), classNames)} ref={forwardedRef} />
-));
+const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(({ classNames, invalid, ...props }, forwardedRef) => {
+  // Ark inherits only `disabled` from an enclosing FieldSet; an invalid set marks its fields invalid too.
+  const fieldset = useFieldsetContext();
+  return (
+    <FieldPrimitive.Root
+      {...props}
+      invalid={invalid ?? fieldset?.invalid}
+      className={mx(recipes.field(), classNames)}
+      ref={forwardedRef}
+    />
+  );
+});
 
 FieldRoot.displayName = 'Next.Field.Root';
 

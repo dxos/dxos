@@ -55,3 +55,4 @@ FieldSet, Card, Collapsible, Menu, Switch, Tooltip on the Phase 1 model.
 ### Tasks
 
 - [x] **Switch** — Ark Switch; icon-tall track, block-tall row (DESIGN.md follow-up 11). — `components/Switch/`; Toggle play test.
+- [x] **FieldSet** — Ark Fieldset; Legend as sm label row; `invalid` reaches child Fields (DESIGN.md follow-up 12). — `components/FieldSet/`; Layout, Disabled, Invalid play tests.
