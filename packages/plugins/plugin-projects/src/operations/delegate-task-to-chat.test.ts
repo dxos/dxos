@@ -2,15 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import { Model } from '@dxos/ai';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AiContext } from '@dxos/assistant';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -117,6 +123,45 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // The delegation set still comes along, and the shared project skill is bound once.
     expect(bound).toContain(Skill.registryURI('org.dxos.skill.planning'));
     expect(bound.filter((uri) => uri === Skill.registryURI('org.dxos.skill.project'))).toHaveLength(1);
+  });
+
+  test('keeps the delegated session when the companion binds the project to the chat', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: space.id }),
+    );
+    const taskSet = await project.taskSet?.tryLoad();
+    invariant(project.instructions && taskSet, 'Expected the scaffolded instructions and task set.');
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    // Spawned with the project's instructions, as the companion binding would set them.
+    expect(chat.instructions?.uri).toBe(project.instructions.uri);
+
+    // The provider `RunPromptInChat` resolved for the chat's model: asking with any other is itself a
+    // reconfiguration, which would tear down the delegated process before the companion gets to.
+    const model = chat.model && DXN.tryMake(chat.model.uri);
+    invariant(model, 'Expected the delegation to stamp a model on the chat.');
+    const provider = Model.byId(model)[0]?.provider;
+    const getSession = AgentService.getSession(chat, { provider, location: 'local' }).pipe(
+      Effect.provide(ServiceResolver.provide({ space: space.id }, AgentService.AgentService, Database.Service)),
+    );
+    const delegated = await harness.runPromise(getSession);
+
+    // What showing the Assistant companion does before its processor attaches to the session: a
+    // configuration change here terminated the delegated process mid-turn, discarding its prompt.
+    await harness.runPromise(
+      Operation.invoke(AssistantOperation.BindChatContext, { chat, subject: project }, { spaceId: space.id }),
+    );
+    const companion = await harness.runPromise(getSession);
+    expect(companion).toBe(delegated);
   });
 
   test('puts a whole checked set into one chat, in the order given', async ({ expect }) => {
