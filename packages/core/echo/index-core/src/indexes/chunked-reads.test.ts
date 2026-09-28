@@ -109,31 +109,31 @@ const seed = Effect.fnUntraced(function* () {
  * Runs a read under a bound-variable limit, refusing any statement over it as Durable Object SQLite
  * would, and counts the statements it issued, whether or not it failed.
  */
-const runWithLimit = <A, E, R>(read: Effect.Effect<A, E, R>, limit: number) =>
-  Effect.gen(function* () {
-    let statements = 0;
-    const exit = yield* read.pipe(
-      Effect.provideService(SqlBoundVariableLimit, limit),
-      Effect.provideService(Statement.CurrentTransformer, (statement) => {
-        statements++;
-        const [query, params] = statement.compile();
-        return params.length > limit
-          ? Effect.die(new Error(`statement binds ${params.length} variables, over ${limit}: ${query}`))
-          : Effect.succeed(statement);
-      }),
-      Effect.exit,
-    );
-    return { exit, statements };
-  });
+const runWithLimit = Effect.fnUntraced(function* <A, E, R>(read: Effect.Effect<A, E, R>, limit: number) {
+  let statements = 0;
+  const exit = yield* read.pipe(
+    Effect.provideService(SqlBoundVariableLimit, limit),
+    Effect.provideService(Statement.CurrentTransformer, (statement) => {
+      statements++;
+      const [query, params] = statement.compile();
+      return params.length > limit
+        ? Effect.die(new Error(`statement binds ${params.length} variables, over ${limit}: ${query}`))
+        : Effect.succeed(statement);
+    }),
+    Effect.exit,
+  );
+  return { exit, statements };
+});
 
 /** The read's rows split across statements and in one, and how many statements the split took. */
-const runBothWays = <T extends { readonly recordId: number }, E, R>(read: Effect.Effect<readonly T[], E, R>) =>
-  Effect.gen(function* () {
-    const unchunked = yield* runWithLimit(read, UNCHUNKED_LIMIT);
-    const chunked = yield* runWithLimit(read, CHUNKED_LIMIT);
-    expect(unchunked.statements).toBe(1);
-    return { unchunked: yield* unchunked.exit, chunked: yield* chunked.exit, statements: chunked.statements };
-  });
+const runBothWays = Effect.fnUntraced(function* <T extends { readonly recordId: number }, E, R>(
+  read: Effect.Effect<readonly T[], E, R>,
+) {
+  const unchunked = yield* runWithLimit(read, UNCHUNKED_LIMIT);
+  const chunked = yield* runWithLimit(read, CHUNKED_LIMIT);
+  expect(unchunked.statements).toBe(1);
+  return { unchunked: yield* unchunked.exit, chunked: yield* chunked.exit, statements: chunked.statements };
+});
 
 /** An unordered read promises its rows, not their order. */
 const byRecordId = <T extends { readonly recordId: number }>(rows: readonly T[]): T[] =>
