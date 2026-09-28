@@ -28,7 +28,8 @@
  *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
- * is the least time between two on-camera gestures.
+ * is the least time between two on-camera gestures. The app's `@dxos/log` output streams to `<out>/app.log`
+ * (`--log <file>`, or `off`) in the NDJSON shape `scripts/query-logs.mjs` reads.
  */
 
 import { chromium } from '@playwright/test';
@@ -40,6 +41,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
+import { startLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
 
@@ -76,6 +78,8 @@ const parseArgs = () => {
     'action-timeout': 5_000,
     // Minimum gap between consecutive gestures, the pause a person takes to find the next control.
     'cadence': 600,
+    // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
+    'log': undefined,
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -158,6 +162,10 @@ const context = manual
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = context.pages()[0] ?? (await context.newPage());
 page.setDefaultTimeout(options['action-timeout']);
+const logFile = options.log === 'off' ? undefined : (options.log ?? path.join(options.out, 'app.log'));
+if (logFile) {
+  await startLogTap({ context, page, file: logFile });
+}
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
   feed: options.pills !== 'off',
@@ -676,6 +684,11 @@ const handlers = {
       }
       const step = steps[index];
       try {
+        // The take starts where setup ends: a play button, then 3-2-1, so the person recording knows
+        // the moment everything before it stops being preparation.
+        if (index > 0 && steps[index - 1].setup && !step.setup && command.countdown !== false) {
+          await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
+        }
         await interruptible(step.run({ page, demo }));
         results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
         flow.next = index + 1;
@@ -698,6 +711,11 @@ const handlers = {
       }
     }
     return { replayed, steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
+  },
+  /** A play button and a 3-2-1 leader; `wait` (default in manual mode) holds until the button is clicked. */
+  countdown: async (command) => {
+    await overlay.countdown({ from: command.from ?? 3, wait: command.wait ?? manual });
+    return {};
   },
   /** Stops the step in flight at once and leaves `next` on it, so a bare `run` retries it. */
   abort: () => {
@@ -825,6 +843,6 @@ const server = createServer((request, response) => {
 server.listen(options.port, '127.0.0.1', () => {
   // Also written to the output directory so a caller can read it without scraping stdout.
   writeFileSync(path.join(options.out, 'token'), token);
-  console.log(`driver ready on http://127.0.0.1:${options.port} out=${options.out}`);
+  console.log(`driver ready on http://127.0.0.1:${options.port} out=${options.out} log=${logFile ?? 'off'}`);
   console.log(`token ${token}`);
 });

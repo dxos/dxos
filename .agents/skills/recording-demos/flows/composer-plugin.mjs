@@ -25,10 +25,13 @@ const TWENTY_MIN = 20 * 60_000;
 /** The Assistant's remote model; Composer's default (Claude Sonnet 5) left the delegated chat silent. */
 const MODEL = 'DeepSeek V4 Pro';
 
+const NUDGE = 'Start working on the tasks.';
+
 export const steps = [
   {
     // No `done`: every action here is idempotent, so a replay simply re-applies it.
     name: 'Prep (off camera): enable Coding (Dev), pick the model, dismiss notices',
+    setup: true,
     run: async ({ demo, page }) => {
       // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
       const notice = page.locator(
@@ -67,7 +70,19 @@ export const steps = [
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
 
       // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
-      await demo.press({ key: 'Meta+Comma', hud: false });
+      // The rail's settings button rather than ⌘, which the filter input swallows while it has focus.
+      const model = page.locator('role=combobox[name="Remote language model"]').first();
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
+        if (
+          await model.waitFor({ state: 'visible', timeout: 5_000 }).then(
+            () => true,
+            () => false,
+          )
+        ) {
+          break;
+        }
+      }
       await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
       await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
       await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
@@ -156,6 +171,17 @@ export const steps = [
         }
       }
       throw new Error('the Assistant companion did not open after assigning the tasks');
+    },
+  },
+  {
+    // Showing the companion restarts the delegated agent, which drops its opening prompt (a known bug),
+    // so the reader nudges it the way a person would.
+    name: 'Ask the agent to start',
+    run: async ({ demo, page }) => {
+      const prompt = '[data-testid="deck.companion"] [data-testid="assistant.prompt"] .cm-content';
+      await demo.type({ selector: prompt, value: NUDGE, label: 'Prompt' });
+      await demo.press({ key: 'Enter' });
+      await page.locator('[data-testid="deck.companion"]', { hasText: 'Generating' }).waitFor({ timeout: 60_000 });
     },
   },
   {

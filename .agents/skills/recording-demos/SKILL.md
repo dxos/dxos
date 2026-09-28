@@ -108,6 +108,23 @@ C '{"op":"abort"}'                                 # stops the run now, mid-step
 - **Background a long `run`** (`run_in_background`), so the user can interrupt you mid-flow and you
   can send `abort`.
 
+### Setup steps and the countdown
+
+Mark off-camera preparation with `setup: true` (enabling a plugin, picking a model). When `run` reaches the
+first step after the setup ones it plays a countdown in the page: a play button, then a 3-2-1 film leader.
+In manual mode the button waits for a click, so the user starts their recorder, clicks play, and the take
+begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays it without the click, and the
+`countdown` op plays one on demand.
+
+### Browser logs
+
+The driver streams the app's `@dxos/log` output from the page and its dedicated workers to
+`<out>/app.log`, in the NDJSON shape `scripts/query-logs.mjs` reads (`--log <file>` to move it, `--log
+off` to skip). A bundled app has no `vite-plugin-log` sink, so this is the only log a `vite preview`
+session leaves. HTTP responses with an error status are written alongside it under `f: "driver/http"`.
+When a step fails for a reason the screen does not explain, such as an agent that never answers, read
+this before guessing.
+
 ### Restarting from a step
 
 A flow is written to be picked up at any step, not only replayed from the top. A step that changes
@@ -296,16 +313,17 @@ are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 3456x21
 viewport). Without one it falls back to Playwright's `recordVideo` at 1x and says so at startup — that
 encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only smears the same bits wider.
 
-| flag               | default | effect                                                                                                                            |
-| ------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--scale`          | `2`     | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                                                  |
-| `--width`          | `1728`  | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look                        |
-| `--crf`            | `28`    | VP9 quality, lower is better and larger                                                                                           |
-| `--fps`            | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is                                                 |
-| `--quality`        | `92`    | JPEG quality of the screencast frames                                                                                             |
-| `--theme`          | `dark`  | emulated `prefers-color-scheme`; `light` for a light recording                                                                    |
-| `--action-timeout` | `5000`  | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
-| `--cadence`        | `600`   | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
+| flag               | default         | effect                                                                                                                            |
+| ------------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--scale`          | `2`             | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                                                  |
+| `--width`          | `1728`          | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look                        |
+| `--crf`            | `28`            | VP9 quality, lower is better and larger                                                                                           |
+| `--fps`            | `25`            | cap on frames kept during motion; still stretches cost one frame whatever this is                                                 |
+| `--quality`        | `92`            | JPEG quality of the screencast frames                                                                                             |
+| `--theme`          | `dark`          | emulated `prefers-color-scheme`; `light` for a light recording                                                                    |
+| `--action-timeout` | `5000`          | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
+| `--cadence`        | `600`           | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
+| `--log`            | `<out>/app.log` | NDJSON of the app's `@dxos/log` output (page and dedicated workers); `off` to skip                                                |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames

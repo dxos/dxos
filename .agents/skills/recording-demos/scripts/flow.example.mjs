@@ -21,6 +21,9 @@
  * a step that creates something is not repeated on a profile that already has it. Write one for every
  * step that changes app state; a step without one is always replayed.
  *
+ * `setup: true` marks off-camera preparation. `run` plays a countdown before the first step after the
+ * setup ones: a play button (held until clicked in manual mode), then 3-2-1, so the take starts on cue.
+ *
  * Keep the file free of imports: it runs from outside the workspace, where no package resolves.
  */
 
