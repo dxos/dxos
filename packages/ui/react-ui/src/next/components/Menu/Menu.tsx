@@ -4,7 +4,7 @@
 
 import { Menu as MenuPrimitive } from '@ark-ui/react/menu';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ReactNode, type RefObject, forwardRef } from 'react';
+import React, { type ReactNode, type RefObject, createContext, forwardRef, useContext } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -24,18 +24,25 @@ const POPUP_GUTTER = 2;
 
 type MenuRootProps = MenuPrimitive.RootProps;
 
+/** The enclosing menu's `onSelect`, so a nested menu reports its selections to the root by default. */
+const MenuSelectContext = createContext<MenuRootProps['onSelect']>(undefined);
+
 /**
  * Ark menu; content mounts on open and unmounts on close unless the caller opts out. With no Trigger (a virtual
  * trigger), open it under control and anchor it with `positioning.getAnchorRect` (Ark has no virtual-trigger part).
  */
-const MenuRoot = ({ lazyMount = true, unmountOnExit = true, positioning, ...props }: MenuRootProps) => (
-  <MenuPrimitive.Root
-    {...props}
-    lazyMount={lazyMount}
-    unmountOnExit={unmountOnExit}
-    // Ark's 8px default reads as detached from the trigger.
-    positioning={{ gutter: POPUP_GUTTER, ...positioning }}
-  />
+
+const MenuRoot = ({ lazyMount = true, unmountOnExit = true, positioning, onSelect, ...props }: MenuRootProps) => (
+  <MenuSelectContext.Provider value={onSelect}>
+    <MenuPrimitive.Root
+      {...props}
+      onSelect={onSelect}
+      lazyMount={lazyMount}
+      unmountOnExit={unmountOnExit}
+      // Ark's 8px default reads as detached from the trigger.
+      positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+    />
+  </MenuSelectContext.Provider>
 );
 
 MenuRoot.displayName = 'Next.Menu.Root';
@@ -232,10 +239,20 @@ MenuRadioItem.displayName = 'Next.Menu.RadioItem';
 
 type MenuSubProps = MenuRootProps;
 
-/** A nested menu: a Root inside a parent's Content, opened by its `SubTrigger` and placed beside it. */
-const MenuSub = ({ positioning, ...props }: MenuSubProps) => (
-  <MenuRoot {...props} positioning={{ placement: 'right-start', gutter: 0, ...positioning }} />
-);
+/**
+ * A nested menu: a Root inside a parent's Content, opened by its `SubTrigger` and placed beside it. Ark reports a
+ * nested item only to its own menu, so without an `onSelect` of its own a Sub forwards selections to its parent's.
+ */
+const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
+  const parentSelect = useContext(MenuSelectContext);
+  return (
+    <MenuRoot
+      {...props}
+      onSelect={onSelect ?? parentSelect}
+      positioning={{ placement: 'right-start', gutter: 0, ...positioning }}
+    />
+  );
+};
 
 MenuSub.displayName = 'Next.Menu.Sub';
 

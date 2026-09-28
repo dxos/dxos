@@ -10,14 +10,72 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { type Size } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectAnchoredBelow, expectArrow, expectScrollingPopup, popupFrame } from '../../testing.ts';
+
+/** A menu tree three levels deep, rendered recursively as nested `Menu.Sub`s. */
+type MenuNode = { value: string; label: string; icon?: string; children?: MenuNode[] };
+
+const HIERARCHY: MenuNode[] = [
+  {
+    value: 'new',
+    label: 'New',
+    icon: 'ph--plus--regular',
+    children: [
+      { value: 'new-document', label: 'Document', icon: 'ph--file-text--regular' },
+      { value: 'new-sheet', label: 'Sheet', icon: 'ph--table--regular' },
+      {
+        value: 'new-diagram',
+        label: 'Diagram',
+        icon: 'ph--flow-arrow--regular',
+        children: [
+          { value: 'new-flowchart', label: 'Flowchart' },
+          { value: 'new-sequence', label: 'Sequence' },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'export',
+    label: 'Export',
+    icon: 'ph--export--regular',
+    children: [
+      { value: 'export-pdf', label: 'PDF' },
+      { value: 'export-png', label: 'PNG' },
+      { value: 'export-markdown', label: 'Markdown' },
+    ],
+  },
+  { value: 'close', label: 'Close', icon: 'ph--x--regular' },
+];
+
+const MenuNodes = ({ nodes, size }: { nodes: MenuNode[]; size: Size }) => (
+  <>
+    {nodes.map(({ value, label, icon, children }) =>
+      children ? (
+        <Next.Menu.Sub key={value}>
+          <Next.Menu.SubTrigger icon={icon} data-testid={`sub-${value}`}>
+            {label}
+          </Next.Menu.SubTrigger>
+          <Next.Menu.Content size={size}>
+            <MenuNodes nodes={children} size={size} />
+          </Next.Menu.Content>
+        </Next.Menu.Sub>
+      ) : (
+        <Next.Menu.Item key={value} value={value} icon={icon}>
+          {label}
+        </Next.Menu.Item>
+      ),
+    )}
+  </>
+);
 
 /** Enough items to overflow the popup's 20rem cap at every size. */
 const LONG = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 
 /**
- * A menu of items, groups, a checkbox item, a radio group and a nested menu; a long menu that scrolls; a region with a
+ * A menu of items, groups, a checkbox item, a radio group and a nested menu; a three-level File hierarchy; a long menu
+ * that scrolls; a region with a
  * context menu; and a menu with no trigger, opened under control and anchored to a text span (a virtual trigger) with
  * an arrow.
  */
@@ -70,6 +128,14 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
               <Next.Menu.Item value='link'>Copy link</Next.Menu.Item>
             </Next.Menu.Content>
           </Next.Menu.Sub>
+        </Next.Menu.Content>
+      </Next.Menu.Root>
+      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Next.Menu.Trigger asChild>
+          <Next.Button data-testid={`file-${size}`}>File</Next.Button>
+        </Next.Menu.Trigger>
+        <Next.Menu.Content size={size}>
+          <MenuNodes nodes={HIERARCHY} size={size} />
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
@@ -157,6 +223,45 @@ export const Default: Story = {};
 export const Test: Story = {
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
+    // The hierarchy opens level by level from the keyboard, each submenu beside its trigger, and a third-level leaf
+    // reports to the root's `onSelect`.
+    const page = within(canvasElement.ownerDocument.body);
+    const beside = async (triggerName: string, itemName: string) => {
+      const triggerItem = page.getByRole('menuitem', { name: triggerName });
+      await waitFor(() => expect(page.getByRole('menuitem', { name: itemName })).toBeVisible());
+      const submenu = page.getByRole('menuitem', { name: itemName }).closest<HTMLElement>('[role="menu"]');
+      await expect(triggerItem).toHaveAttribute('aria-expanded', 'true');
+      await waitFor(() => {
+        const triggerRect = triggerItem.getBoundingClientRect();
+        const subRect = popupFrame(submenu ?? triggerItem).getBoundingClientRect();
+        const where = `submenu ${JSON.stringify(subRect)}, trigger ${JSON.stringify(triggerRect)}`;
+        return expect(
+          subRect.left >= triggerRect.right - 1 && Math.abs(subRect.top - triggerRect.top) <= 8,
+          where,
+        ).toBe(true);
+      });
+      return submenu;
+    };
+    byTestId(canvasElement, 'file-md').focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(page.getByRole('menuitem', { name: 'New' })).toBeVisible());
+    const fileMenu = page.getByRole('menuitem', { name: 'New' }).closest<HTMLElement>('[role="menu"]');
+    await waitFor(() => expect(fileMenu).toHaveFocus());
+    await userEvent.keyboard('{Home}');
+    await waitFor(() => expect(fileMenu && highlighted(fileMenu)).toBe('New'));
+    await userEvent.keyboard('{ArrowRight}');
+    const newMenu = await beside('New', 'Document');
+    await waitFor(() => expect(newMenu).toHaveFocus());
+    await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Document'));
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Diagram'));
+    await userEvent.keyboard('{ArrowRight}');
+    const diagramMenu = await beside('Diagram', 'Flowchart');
+    await waitFor(() => expect(diagramMenu && highlighted(diagramMenu)).toBe('Flowchart'));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(byTestId(canvasElement, 'selected-md')).toHaveTextContent('Selected: new-flowchart'));
+    await waitFor(() => expect(page.queryByRole('menu')).toBeNull());
+
     await open(canvasElement);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());

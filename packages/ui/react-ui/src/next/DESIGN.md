@@ -441,6 +441,16 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     required `label`, there being no translation for it. `SystemButton` `Test` covers names, geometry against a
     plain `Button iconOnly`, the toggles, `aria-expanded` and a stubbed clipboard write.
 
+52. **Nested menus report to the root's `onSelect`** (amends 44). zag gives every `Menu.Sub` its own machine, linked
+    to its parent only through `setParent`/`setChild` for focus, pointer routing and closing: `invokeOnSelect` calls
+    the `onSelect` of the machine that owns the item, so a leaf in a Sub never reached the root's handler. `Menu.Root`
+    now publishes its `onSelect` in a context and a Sub without one of its own passes its parent's to its Ark Root,
+    so one handler on the root sees selections at any depth; a Sub's own `onSelect` still overrides. zag also selects
+    the _highlighted_ value, and highlights on pointer move only while the interaction modality is `pointer`, so a
+    synthetic hover after keyboard use highlights nothing. Menu `Test` walks File ▸ New ▸ Diagram ▸ Flowchart from
+    the keyboard (Enter, ArrowRight, ArrowDown, Enter), asserts each Sub opens to the right of its trigger item, that
+    `Selected: new-flowchart` reaches the root and that every menu closes.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).
