@@ -55,7 +55,7 @@ CardPoster.displayName = 'Next.Card.Poster';
 
 type CardHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-/** A block row holding the Title and optional trailing Blocks or IconButtons. */
+/** A block row holding the Title and optional trailing Blocks or icon-only Buttons. */
 const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(({ classNames, ...props }, forwardedRef) => (
   <div
     {...props}

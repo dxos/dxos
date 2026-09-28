@@ -29,8 +29,8 @@ const SizeSection = ({ size }: { size: Size }) => (
       <Next.Block>
         <Next.Icon icon='ph--circle--regular' />
       </Next.Block>
-      <Next.IconButton icon='ph--plus--regular' label={`Add ${size}`} data-testid={`add-${size}`} />
-      <Next.IconButton icon='ph--minus--regular' label={`Remove ${size}`} data-testid={`remove-${size}`} />
+      <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
+      <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
       <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
       <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
       <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
@@ -216,8 +216,8 @@ const FocusRingsStory = () => (
       </Next.Collapsible.Root>
       <Next.Toolbar>
         <Next.Button>Button</Next.Button>
-        <Next.IconButton icon='ph--plus--regular' label='Add' showTooltip={false} />
-        <Next.ToggleIconButton icon='ph--text-b--regular' label='Bold' showTooltip={false} />
+        <Next.Button icon='ph--plus--regular' label='Add' iconOnly showTooltip={false} />
+        <Next.Toggle icon='ph--text-b--regular' label='Bold' iconOnly showTooltip={false} />
       </Next.Toolbar>
     </Next.Container>
   </div>

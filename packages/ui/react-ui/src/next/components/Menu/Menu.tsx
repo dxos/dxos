@@ -41,7 +41,7 @@ MenuRoot.displayName = 'Next.Menu.Root';
 
 type MenuTriggerProps = MenuPrimitive.TriggerProps;
 
-/** Use `asChild` to open the menu from a `Next.Button` or `Next.IconButton`. */
+/** Use `asChild` to open the menu from a `Next.Button`. */
 const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => (
   <MenuPrimitive.Trigger {...props} ref={forwardedRef} />
 ));

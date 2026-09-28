@@ -199,7 +199,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     is a native checkbox without the role, yet the zag switch machine does implement the switch contract (Space
     toggles, checked state), so the role is earned. The native `checked` state supplies `aria-checked` to assistive
     tech; no explicit attribute is set.
-22. **IconButton labels show in a Tooltip**, not a native `title` (which would double it); `aria-label` still names
+22. **Icon-only button labels show in a Tooltip** (IconButton until 36), not a native `title` (which would double it); `aria-label` still names
     the button and `showTooltip={false}` opts out (e.g. inside a caller's own `Tooltip.Trigger`). The button keeps an
     id owned by a Toolbar item or an `asChild` parent, so the Tooltip looks its trigger up by that id (`ids.trigger`);
     otherwise positioning would find no anchor, since the button's own `data-scope`/`data-part` win the merge.
@@ -228,7 +228,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 28. **Tag** is a pill `calc(var(--nx-control-size) - 2 * var(--nx-control-inset))` tall in the size's label text,
     coloured by ui-theme's `--color-<hue>-surface`/`-fg` tokens with the current Tag's valence mapping (info cyan,
     success emerald, warning amber, error rose).
-29. **ToggleIconButton** is Ark Toggle (`asChild`) over IconButton, so `aria-pressed` comes from the zag toggle
+29. ~~**ToggleIconButton**~~ (superseded by 36: now `Next.Toggle`) is Ark Toggle (`asChild`) over IconButton, so `aria-pressed` comes from the zag toggle
     machine (decision 9) and the label Tooltip is IconButton's; pressed takes `--color-accent-bg`/`-fg`.
 30. **Select option icons.** `SelectOption.icon` leads the item and, once selected, the trigger's value (read from
     the select context); the value text takes the free space so the caret stays at the end.
@@ -249,7 +249,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     stays suppressed until the pointer leaves; a focus that is not `:focus-visible` never opens. The follow-up 20
     blur deferral is unchanged. Covered by IconButton `ClickNoTooltip`.
 34. **Button variants and valences** follow the current Button (ui-theme `button.css`) on the same tokens, as
-    `data-variant`/`data-valence` rules in `theme/control.css`, for `Button`, `IconButton` and so `ToggleIconButton`:
+    `data-variant`/`data-valence` rules in `theme/control.css`, for `Button` and so `Toggle` (36):
 
     | Variant       | Rest                                          | Hover                        |
     | ------------- | --------------------------------------------- | ---------------------------- |
@@ -263,11 +263,21 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     `valence` is `neutral | info | success | warning | error` (ui-types `MessageValence`); without it the button
     adopts an enclosing surface's `--dx-valence-bg`/`-bg-hover` (a Banner), else neutral. Outline uses the separator
     rather than the current `--color-base-surface`, which vanishes on a base surface. The current `tag` variant is
-    left to `Next.Tag`. Pressed ToggleIconButtons keep the accent over any variant.
+    left to `Next.Tag`. Pressed Toggles keep the accent over any variant.
 
-35. **`IconButton iconOnly`** (default `true`), as the current IconButton: `iconOnly={false}` renders the icon then
+35. ~~**`IconButton iconOnly`** (default `true`)~~ (superseded by 36: `iconOnly` is opt-in on `Button`), as the current IconButton: `iconOnly={false}` renders the icon then
     the `label` as text, at control height with Button's padding and `--nx-gap-size` between them, not squared or
     inset; the text names it, so it has no `aria-label` and no Tooltip. `ToggleIconButton` passes it through.
+
+36. **One `Button`; `Toggle` replaces ToggleIconButton** (supersedes the separate IconButton of 19, 22, 29 and 35).
+    IconButton was a Button with an icon, and its `iconOnly={false}` form already was a Button with a leading icon,
+    so the two differed only in content. `Next.Button` now takes `icon?` (leading), `iconEnd?` (trailing), `label?`
+    (or `children`, which win) and `iconOnly?: true`, which requires `icon` and `label` and yields the square
+    block-cell button of 19 (`data-square`), named by `aria-label` and labelled by a Tooltip (22; `showTooltip={false}`
+    opts out). Variants and valences (34) apply to every form. The union type makes `label` required exactly when the
+    text is hidden. Icons are spaced from the label by `--nx-gap-size`. `Next.Toggle` is Ark Toggle over this Button
+    with the same icon/label/`iconOnly` API, so a text toggle ("Bold") needs no second component; `aria-pressed`
+    still comes from the zag toggle machine. All parts emit `data-scope='button'`.
 
 ## Phase 3: react-ui-form port
 
@@ -278,8 +288,8 @@ parallel-namespace approach; no compatibility shims).
 
 1. **Prerequisite:** export Next from `@dxos/react-ui` (a `next` subpath and its CSS).
 2. **Field coverage.** Direct Next equivalents: Text, Password, Number, Tuple, GeoPoint, Boolean (Switch), Select/
-   AsyncSelect, Autofill, InlineRef, nested groups (FieldSet + Collapsible + Tooltip), array add/remove (IconButton).
-   New components: `Textarea`, `DateInput`, `Popover` + `Combobox` (Ref/lookup), `Tag`, `ToggleIconButton`, optional
+   AsyncSelect, Autofill, InlineRef, nested groups (FieldSet + Collapsible + Tooltip), array add/remove (`Button iconOnly`).
+   New components: `Textarea`, `DateInput`, `Popover` + `Combobox` (Ref/lookup), `Tag`, `Toggle` (was `ToggleIconButton`), optional
    `Banner`; Select needs option icons. Restyle only: HuePicker, the markdown editor, OrderedList, `DxAnchor`.
 3. **Layout mapping.** `Form.Viewport` → `Next.Container gutter` + composed `Next.ScrollArea` (no Column helpers);
    `FormFieldRow` → `Field.Root` + `Field.Header` (error icon/Tooltip and array actions in the trailing slot);

@@ -28,8 +28,6 @@ import {
   type GroupProps as NextGroupProps,
   type Gutter as NextGutter,
   Icon as NextIcon,
-  IconButton as NextIconButton,
-  type IconButtonProps as NextIconButtonProps,
   type IconProps as NextIconProps,
   Image as NextImage,
   type ImageProps as NextImageProps,
@@ -50,8 +48,8 @@ import {
   type TagProps as NextTagProps,
   Textarea as NextTextarea,
   type TextareaProps as NextTextareaProps,
-  ToggleIconButton as NextToggleIconButton,
-  type ToggleIconButtonProps as NextToggleIconButtonProps,
+  Toggle as NextToggle,
+  type ToggleProps as NextToggleProps,
   Toolbar as NextToolbar,
   type ToolbarProps as NextToolbarProps,
   Tooltip as NextTooltip,
@@ -82,8 +80,6 @@ export namespace Next {
   export type ButtonProps = NextButtonProps;
   export type ButtonVariant = NextButtonVariant;
   export type ButtonValence = NextButtonValence;
-  export const IconButton = NextIconButton;
-  export type IconButtonProps = NextIconButtonProps;
   export const Field = NextField;
   export const Checkbox = NextCheckbox;
   export type CheckboxProps = NextCheckboxProps;
@@ -111,6 +107,6 @@ export namespace Next {
   export const Tag = NextTag;
   export type TagProps = NextTagProps;
   export type TagHue = NextTagHue;
-  export const ToggleIconButton = NextToggleIconButton;
-  export type ToggleIconButtonProps = NextToggleIconButtonProps;
+  export const Toggle = NextToggle;
+  export type ToggleProps = NextToggleProps;
 }

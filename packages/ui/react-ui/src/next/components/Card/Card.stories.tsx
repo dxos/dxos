@@ -45,7 +45,7 @@ const DefaultStory = ({ poster = POSTER }: StoryArgs) => (
         <Next.Card.Root data-testid='card'>
           <Next.Card.Header data-testid='header'>
             <Next.Card.Title>Roadmap</Next.Card.Title>
-            <Next.IconButton icon='ph--dots-three--regular' label='More actions' />
+            <Next.Button icon='ph--dots-three--regular' label='More actions' iconOnly />
           </Next.Card.Header>
           <Next.Card.Body data-testid='body'>
             <Next.Card.Description>What ships next quarter and why.</Next.Card.Description>
@@ -143,7 +143,7 @@ export const BrokenPoster: Story = {
   },
 };
 
-/** A trailing IconButton in `Card.Header` shows its label in a Tooltip. */
+/** A trailing icon-only Button in `Card.Header` shows its label in a Tooltip. */
 export const HeaderTooltip: Story = {
   play: async ({ canvasElement }) => {
     const more = within(canvasElement).getByRole('button', { name: 'More actions' });

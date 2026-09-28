@@ -43,7 +43,7 @@ type FieldHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   size?: Size;
 };
 
-/** The label row: a Label followed by optional trailing Icons or IconButtons, aligned to the control's edges. */
+/** The label row: a Label followed by optional trailing Icons or icon-only Buttons, aligned to the control's edges. */
 const FieldHeader = forwardRef<HTMLDivElement, FieldHeaderProps>(
   ({ classNames, size = 'sm', ...props }, forwardedRef) => (
     <div

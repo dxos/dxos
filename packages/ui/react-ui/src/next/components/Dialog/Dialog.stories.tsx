@@ -228,7 +228,7 @@ export const Sizes: Story = {
   },
 };
 
-/** The header's close IconButton shows its label in a Tooltip above the modal dialog, which stays open. */
+/** The header's close Button shows its label in a Tooltip above the modal dialog, which stays open. */
 export const CloseTooltip: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await open(canvasElement, 'md');

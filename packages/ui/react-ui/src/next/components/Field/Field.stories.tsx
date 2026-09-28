@@ -33,7 +33,7 @@ const DefaultStory = ({ invalid }: StoryArgs) => (
       <Next.Field.Root invalid={invalid} data-testid='website'>
         <Next.Field.Header>
           <Next.Field.Label>Website</Next.Field.Label>
-          <Next.IconButton icon='ph--x--regular' label='Clear website' />
+          <Next.Button icon='ph--x--regular' label='Clear website' iconOnly />
         </Next.Field.Header>
         <Next.Input defaultValue='not a url' />
         <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
@@ -91,7 +91,7 @@ export const Invalid: Story = {
   },
 };
 
-/** A trailing IconButton in `Field.Header` shows its label in a Tooltip. */
+/** A trailing icon-only Button in `Field.Header` shows its label in a Tooltip. */
 export const HeaderTooltip: Story = {
   play: async ({ canvasElement }) => {
     const clear = within(canvasElement).getByRole('button', { name: 'Clear website' });

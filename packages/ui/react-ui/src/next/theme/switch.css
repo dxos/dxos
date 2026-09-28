@@ -27,7 +27,7 @@
     flex-shrink: 0;
     width: calc(var(--nx-icon-size) * 1.75);
     height: var(--nx-icon-size);
-    /* Centred in a block-sized cell, so a switch takes the same space as an IconButton and labels align. */
+    /* Centred in a block-sized cell, so a switch takes the same space as an icon-only Button and labels align. */
     margin-inline: calc((var(--nx-block-size) - var(--nx-icon-size) * 1.75) / 2);
     padding: var(--nx-switch-inset);
     border-radius: 9999px;

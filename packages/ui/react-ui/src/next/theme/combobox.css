@@ -38,7 +38,7 @@
     color: inherit;
   }
 
-  /* A control-sized square, so the caret sits where an IconButton's icon would. */
+  /* A control-sized square, so the caret sits where an icon-only Button's icon would. */
   .nx-combobox-trigger {
     display: grid;
     place-items: center;

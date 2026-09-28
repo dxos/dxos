@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ButtonHTMLAttributes } from 'react';
+import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 import { type MessageValence } from '@dxos/ui-types';
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
+import { Icon } from '../Icon/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
+import { Tooltip } from '../Tooltip/index.ts';
 
 /** The current Button's variants; `primary` marks the one action a surface leads with (e.g. a form's Save). */
 export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'outline' | 'destructive' | 'valence';
@@ -21,31 +23,91 @@ export type ButtonVariantProps = {
   valence?: ButtonValence;
 };
 
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & ButtonVariantProps;
+/** Content is a label (or children) with optional leading/trailing icons, or a lone icon named by its label. */
+export type ButtonContentProps =
+  | {
+      /** Leading icon. */
+      icon?: string;
+      /** Trailing icon (e.g. a caret). */
+      iconEnd?: string;
+      /** Visible text; `children` take precedence. */
+      label?: string;
+      iconOnly?: false;
+      showTooltip?: never;
+      children?: ReactNode;
+    }
+  | {
+      icon: string;
+      /** Required: names the button (`aria-label`) and shows in a Tooltip. */
+      label: string;
+      /** A control-sized square inset in a block-sized cell (follow-up 19), showing only the icon. */
+      iconOnly: true;
+      /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
+      showTooltip?: boolean;
+      iconEnd?: never;
+      children?: never;
+    };
+
+export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> &
+  ButtonVariantProps &
+  ButtonContentProps;
 
 // `button` by default: the browser's `submit` would post an enclosing form on every click.
 export const Button = composable<HTMLButtonElement, ButtonProps>(
-  ({ children, type = 'button', variant = 'default', valence, onFocus, ...props }, forwardedRef) => {
-    const toolbarItem = useToolbarItem(props.disabled);
-    const { className, ...rest } = composableProps(props, { classNames: recipes.button() });
-    return (
+  (
+    {
+      type = 'button',
+      variant = 'default',
+      valence,
+      id,
+      onFocus,
+      icon,
+      iconEnd,
+      label,
+      iconOnly,
+      showTooltip = true,
+      children,
+      ...buttonProps
+    },
+    forwardedRef,
+  ) => {
+    const toolbarItem = useToolbarItem(buttonProps.disabled);
+    const { className, ...attributes } = composableProps(buttonProps, { classNames: recipes.button() });
+    const button = (
       <button
-        {...rest}
+        {...attributes}
         {...toolbarItem}
+        id={id}
         onFocus={(event) => {
           onFocus?.(event);
           toolbarItem?.onFocus();
         }}
         type={type}
-        data-variant={variant}
-        data-valence={variant === 'valence' ? valence : undefined}
+        aria-label={iconOnly ? label : undefined}
         data-scope='button'
         data-part='root'
+        data-square={iconOnly ? '' : undefined}
+        data-variant={variant}
+        data-valence={variant === 'valence' ? valence : undefined}
         className={className}
         ref={forwardedRef}
       >
-        {children}
+        {icon && <Icon icon={icon} />}
+        {!iconOnly && (children ?? label)}
+        {iconEnd && <Icon icon={iconEnd} />}
       </button>
+    );
+
+    if (!iconOnly || !showTooltip) {
+      return button;
+    }
+
+    return (
+      // An `asChild` parent (e.g. `Popover.Trigger`) may own the id, so the tooltip looks its trigger up by it.
+      <Tooltip.Root ids={id ? { trigger: id } : undefined}>
+        <Tooltip.Trigger asChild>{button}</Tooltip.Trigger>
+        <Tooltip.Content>{label}</Tooltip.Content>
+      </Tooltip.Root>
     );
   },
 );

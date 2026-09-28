@@ -107,7 +107,7 @@ export const Layout: Story = {
     const email = bounds(canvasElement, '[data-testid="email"]');
     const name = bounds(canvasElement, '[data-testid="name"]');
     await expect(email.top - name.bottom).toBeCloseTo(8, 0);
-    // Switches and the checkbox each take an IconButton's block-sized cell on the legend's edge, so labels align.
+    // Switches and the checkbox each take an icon-only Button's block-sized cell on the legend's edge, so labels align.
     const notifications = bounds(canvasElement, '[data-testid="notifications"] legend');
     const controls = canvasElement.querySelectorAll<HTMLElement>(
       '[data-testid="notifications"] :is([data-scope="switch"], [data-scope="checkbox"])[data-part="control"]',

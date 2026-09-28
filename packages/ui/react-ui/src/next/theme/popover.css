@@ -12,7 +12,7 @@
     padding: var(--nx-gap-size);
   }
 
-  /* A trailing CloseTrigger's inset cell ends at the panel's padding edge, like `Field.Header`'s trailing IconButton. */
+  /* A trailing CloseTrigger's inset cell ends at the panel's padding edge, like `Field.Header`'s trailing icon-only Button. */
   .nx-popover-header {
     display: flex;
     align-items: center;

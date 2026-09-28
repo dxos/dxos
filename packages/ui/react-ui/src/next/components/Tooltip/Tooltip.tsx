@@ -55,7 +55,7 @@ TooltipRoot.displayName = 'Next.Tooltip.Root';
 type TooltipTriggerProps = TooltipPrimitive.TriggerProps;
 
 /**
- * Use `asChild` to describe a `Next.Button` or `Next.IconButton`. Opens on hover after the Root's delay and on keyboard
+ * Use `asChild` to describe a `Next.Button`. Opens on hover after the Root's delay and on keyboard
  * focus only; the delay runs here because zag skips it while any tooltip is marked open, so a click would flash one
  * (DESIGN.md follow-up 33).
  */

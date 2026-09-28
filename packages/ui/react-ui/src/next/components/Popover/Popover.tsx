@@ -12,7 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { IconButton } from '../IconButton/index.ts';
+import { Button } from '../Button/index.ts';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -42,7 +42,7 @@ PopoverRoot.displayName = 'Next.Popover.Root';
 
 type PopoverTriggerProps = PopoverPrimitive.TriggerProps;
 
-/** Use `asChild` to open the popover from a `Next.Button` or `Next.IconButton`. */
+/** Use `asChild` to open the popover from a `Next.Button`. */
 const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>((props, forwardedRef) => (
   <PopoverPrimitive.Trigger {...props} ref={forwardedRef} />
 ));
@@ -179,7 +179,7 @@ const PopoverCloseTrigger = forwardRef<HTMLButtonElement, PopoverCloseTriggerPro
       </ark.button>
     ) : (
       <PopoverPrimitive.CloseTrigger {...props} onClick={onClick} asChild ref={forwardedRef}>
-        <IconButton icon={icon} label={label} />
+        <Button icon={icon} label={label} iconOnly />
       </PopoverPrimitive.CloseTrigger>
     );
   },

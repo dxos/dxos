@@ -26,8 +26,8 @@ const DefaultStory = () => (
         <Next.Block>
           <Next.Icon icon='ph--circle--regular' />
         </Next.Block>
-        <Next.IconButton icon='ph--plus--regular' label={`Add ${size}`} data-testid={`add-${size}`} />
-        <Next.IconButton icon='ph--minus--regular' label={`Remove ${size}`} data-testid={`remove-${size}`} />
+        <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
+        <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
         <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
         <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
         <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
@@ -112,7 +112,7 @@ export const Keyboard: Story = {
 
 /**
  * The visible space between any two adjacent items is three control insets: the toolbar's gap plus each item's
- * inline margin (an IconButton's inset cell, or the same margin on a Button, Input or Select trigger).
+ * inline margin (an icon-only Button's inset cell, or the same margin on a Button, Input or Select trigger).
  */
 export const Spacing: Story = {
   play: async ({ canvasElement }) => {

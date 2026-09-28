@@ -1,5 +1,5 @@
 /*
- * ToggleIconButton: an IconButton whose pressed state (`aria-pressed`, from the zag toggle machine) takes the accent.
+ * Toggle: a Button whose pressed state (`aria-pressed`, from the zag toggle machine) takes the accent.
  */
 
 @layer dx-components {

@@ -11,9 +11,9 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { Button } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
 import { Group } from '../Group/index.ts';
-import { IconButton } from '../IconButton/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
 
 //
@@ -141,7 +141,7 @@ const DialogCloseTrigger = forwardRef<HTMLButtonElement, DialogCloseTriggerProps
       </DialogPrimitive.CloseTrigger>
     ) : (
       <DialogPrimitive.CloseTrigger {...props} asChild ref={forwardedRef}>
-        <IconButton icon={icon} label={label} />
+        <Button icon={icon} label={label} iconOnly />
       </DialogPrimitive.CloseTrigger>
     ),
 );

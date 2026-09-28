@@ -19,15 +19,16 @@ const DefaultStory = () => {
     <div className='nx-scope flex flex-col w-[20rem] border border-separator' data-size='md'>
       {SIZES.map((size) => (
         <Next.Toolbar key={size} size={size}>
-          <Next.ToggleIconButton icon='ph--text-b--regular' label={`Bold ${size}`} data-testid={`bold-${size}`} />
-          <Next.ToggleIconButton icon='ph--text-italic--regular' label={`Italic ${size}`} defaultPressed />
-          <Next.ToggleIconButton icon='ph--text-underline--regular' label={`Underline ${size}`} disabled />
+          <Next.Toggle icon='ph--text-b--regular' label={`Bold ${size}`} iconOnly data-testid={`bold-${size}`} />
+          <Next.Toggle icon='ph--text-italic--regular' label={`Italic ${size}`} iconOnly defaultPressed />
+          <Next.Toggle icon='ph--text-underline--regular' label={`Underline ${size}`} iconOnly disabled />
         </Next.Toolbar>
       ))}
       <Next.Toolbar>
-        <Next.ToggleIconButton
+        <Next.Toggle
           icon='ph--arrows-in-line-horizontal--regular'
           label='Wrap lines'
+          iconOnly
           pressed={wrap}
           onPressedChange={setWrap}
         />
@@ -38,7 +39,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/toggle-icon-button',
+  title: 'ui/react-ui-core/next/components/toggle',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
@@ -82,7 +83,7 @@ export const Toggle: Story = {
   },
 };
 
-/** Like IconButton, the label shows in a Tooltip; the story ends with it open. */
+/** Like an icon-only Button, the label shows in a Tooltip; the story ends with it open. */
 export const LabelTooltip: Story = {
   play: async ({ canvasElement }) => {
     const bold = within(canvasElement).getByRole('button', { name: 'Bold md' });

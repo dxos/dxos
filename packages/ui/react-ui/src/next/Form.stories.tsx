@@ -32,7 +32,7 @@ const DefaultStory = () => (
       <Next.Field.Root data-testid='email'>
         <Next.Field.Header>
           <Next.Field.Label>Email</Next.Field.Label>
-          <Next.IconButton icon='ph--info--regular' label='About email' data-testid='email-info' />
+          <Next.Button icon='ph--info--regular' label='About email' iconOnly data-testid='email-info' />
         </Next.Field.Header>
         <Next.Input type='email' placeholder='ada@example.com' />
         <Next.Field.HelperText>We never share your address.</Next.Field.HelperText>
@@ -58,7 +58,7 @@ const DefaultStory = () => (
       <Next.Field.Root invalid data-testid='website'>
         <Next.Field.Header>
           <Next.Field.Label>Website</Next.Field.Label>
-          <Next.IconButton icon='ph--x--regular' label='Clear website' />
+          <Next.Button icon='ph--x--regular' label='Clear website' iconOnly />
         </Next.Field.Header>
         <Next.Input defaultValue='not a url' />
         <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
@@ -132,14 +132,14 @@ export const Layout: Story = {
     const boxMargin = boxElement ? parseFloat(getComputedStyle(boxElement).marginLeft) : Number.NaN;
     await expect((box?.left ?? Number.NaN) - boxMargin).toBeCloseTo(part(canvasElement, 'name', '.nx-input').left, 0);
 
-    // The label row is an sm block row; its trailing IconButton is inset in a block-sized cell ending at the control's edge.
+    // The label row is an sm block row; its trailing icon-only Button is inset in a block-sized cell ending at the control's edge.
     const header = canvasElement.querySelector('[data-testid="email"] [data-part="header"]')?.getBoundingClientRect();
     const info = canvas.getByRole('button', { name: 'About email' }).getBoundingClientRect();
     await expect(header?.height).toBeCloseTo(24, 0);
     await expect(info.height).toBeCloseTo(20, 0);
     await expect(info.right + 2).toBeCloseTo(part(canvasElement, 'email', '.nx-input').right, 0);
 
-    // A trailing Block (a static icon) takes the same box and cell as an IconButton, so both line up at the row's end.
+    // A trailing Block (a static icon) takes the same box and cell as an icon-only Button, so both line up at the row's end.
     const lock = canvas.getByTestId('role-lock').getBoundingClientRect();
     await expect(lock.width).toBeCloseTo(info.width, 0);
     await expect(lock.height).toBeCloseTo(info.height, 0);
