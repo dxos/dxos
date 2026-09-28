@@ -152,3 +152,5 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 7. **Checkbox box is icon-sized** (`--nx-icon-size`, check mark at 75%), not control-sized; it stays centred in its block.
 8. **Layout.** One folder per component under `components/` (`components/<Name>/<Name>.tsx` + `index.ts`, barrel at
    `components/index.ts`); `Next.tsx` assembles the namespace; `theme/`, `recipes.ts` and `sizes.ts` stay at the root.
+9. **`Field.Header` is the label row**: a `size='sm'` block row (by default) holding the Label and optional trailing
+   Icons/IconButtons, whose end aligns with the control's right edge. The label takes the row's own font.

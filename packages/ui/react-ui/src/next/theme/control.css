@@ -94,6 +94,19 @@
   .nx-field > .nx-control {
     margin-block: var(--nx-control-inset);
   }
+  /* The label row is a small block row (size sm by default), so trailing icons and icon buttons fit at its end. */
+  .nx-field-header {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+  .nx-field-header > .nx-label {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
   .nx-field-helper,
   .nx-field-error {
     font-size: var(--text-sm);

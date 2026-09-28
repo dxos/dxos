@@ -3,12 +3,13 @@
 //
 
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
-import React, { forwardRef } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 
 //
 // Root
@@ -22,6 +23,31 @@ const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(({ classNames, ...p
 ));
 
 FieldRoot.displayName = 'Next.Field.Root';
+
+//
+// Header
+//
+
+type FieldHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  /** The row's own size; `sm` by default so it reads as a caption row above an `md` control. */
+  size?: Size;
+};
+
+/** The label row: a Label followed by optional trailing Icons or IconButtons, aligned to the control's edges. */
+const FieldHeader = forwardRef<HTMLDivElement, FieldHeaderProps>(
+  ({ classNames, size = 'sm', ...props }, forwardedRef) => (
+    <div
+      {...props}
+      data-scope='field'
+      data-part='header'
+      data-size={size}
+      className={mx(recipes.fieldHeader(), classNames)}
+      ref={forwardedRef}
+    />
+  ),
+);
+
+FieldHeader.displayName = 'Next.Field.Header';
 
 //
 // Label
@@ -62,9 +88,10 @@ FieldErrorText.displayName = 'Next.Field.ErrorText';
 
 export const Field = {
   Root: FieldRoot,
+  Header: FieldHeader,
   Label: FieldLabel,
   HelperText: FieldHelperText,
   ErrorText: FieldErrorText,
 };
 
-export type { FieldErrorTextProps, FieldHelperTextProps, FieldLabelProps, FieldRootProps };
+export type { FieldErrorTextProps, FieldHeaderProps, FieldHelperTextProps, FieldLabelProps, FieldRootProps };

@@ -22,6 +22,7 @@ export const recipes = {
   input: () => `nx-control nx-input ${FOCUS_RING}`,
   button: () => `nx-control nx-button ${FOCUS_RING}`,
   field: () => 'nx-field',
+  fieldHeader: () => 'nx-field-header',
   fieldHelper: () => 'nx-field-helper',
   fieldError: () => 'nx-field-error',
   checkbox: () => 'nx-checkbox',

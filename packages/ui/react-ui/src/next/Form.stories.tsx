@@ -22,19 +22,27 @@ const DefaultStory = () => (
   <div className='nx-scope @container w-[30rem] border border-separator' data-size='md'>
     <Next.Container gutter='rail' level='base'>
       <Next.Field.Root data-testid='name'>
-        <Next.Field.Label>Name</Next.Field.Label>
+        <Next.Field.Header>
+          <Next.Field.Label>Name</Next.Field.Label>
+        </Next.Field.Header>
         <Next.Input placeholder='Ada Lovelace' />
       </Next.Field.Root>
 
       <Next.Field.Root data-testid='email'>
-        <Next.Field.Label>Email</Next.Field.Label>
+        <Next.Field.Header>
+          <Next.Field.Label>Email</Next.Field.Label>
+          <Next.IconButton icon='ph--info--regular' label='About email' data-testid='email-info' />
+        </Next.Field.Header>
         <Next.Input type='email' placeholder='ada@example.com' />
         <Next.Field.HelperText>We never share your address.</Next.Field.HelperText>
       </Next.Field.Root>
 
       <Next.Field.Root data-testid='role'>
         <Next.Select.Root items={ROLES} positioning={{ sameWidth: true }}>
-          <Next.Select.Label>Role</Next.Select.Label>
+          <Next.Field.Header>
+            <Next.Select.Label>Role</Next.Select.Label>
+            <Next.Icon icon='ph--lock-simple--regular' label='Restricted' />
+          </Next.Field.Header>
           <Next.Select.Trigger placeholder='Select a role' />
           <Next.Select.Content>
             {ROLES.map((item) => (
@@ -45,7 +53,10 @@ const DefaultStory = () => (
       </Next.Field.Root>
 
       <Next.Field.Root invalid data-testid='website'>
-        <Next.Field.Label>Website</Next.Field.Label>
+        <Next.Field.Header>
+          <Next.Field.Label>Website</Next.Field.Label>
+          <Next.IconButton icon='ph--x--regular' label='Clear website' />
+        </Next.Field.Header>
         <Next.Input defaultValue='not a url' />
         <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
       </Next.Field.Root>
@@ -88,7 +99,7 @@ export const Default: Story = {
     // Label above its control, sharing the field's left edge.
     for (const field of ['name', 'email', 'role', 'website']) {
       const label = part(canvasElement, field, 'label');
-      const control = part(canvasElement, field, '.nx-control');
+      const control = part(canvasElement, field, ':is(.nx-input, .nx-select-trigger)');
       await expect(label.bottom, field).toBeLessThanOrEqual(control.top + 0.5);
       await expect(label.left, field).toBeCloseTo(control.left, 0);
     }
@@ -111,7 +122,14 @@ export const Default: Story = {
 
     // The checkbox starts at the column's left edge, like every other control.
     const box = canvasElement.querySelector('[data-scope="checkbox"][data-part="control"]')?.getBoundingClientRect();
-    await expect(box?.left).toBeCloseTo(part(canvasElement, 'name', '.nx-control').left, 0);
+    await expect(box?.left).toBeCloseTo(part(canvasElement, 'name', '.nx-input').left, 0);
+
+    // The label row is an sm block row whose trailing IconButton ends at the control's right edge.
+    const header = canvasElement.querySelector('[data-testid="email"] [data-part="header"]')?.getBoundingClientRect();
+    const info = canvas.getByRole('button', { name: 'About email' }).getBoundingClientRect();
+    await expect(header?.height).toBeCloseTo(24, 0);
+    await expect(info.height).toBeCloseTo(20, 0);
+    await expect(info.right).toBeCloseTo(part(canvasElement, 'email', '.nx-input').right, 0);
 
     // Checking draws the mark inside the box.
     await userEvent.click(canvas.getByText('Subscribe to updates'));
