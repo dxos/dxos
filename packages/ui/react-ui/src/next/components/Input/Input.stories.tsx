@@ -12,32 +12,27 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, controlSize, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 
 /** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Input placeholder='Search' aria-label={`Search ${size}`} noAutoFill data-testid={`input-${size}`} />
-    <Next.Input placeholder='Disabled' aria-label={`Disabled ${size}`} disabled />
+    <Next.Input placeholder='Search' aria-label='Search' noAutoFill data-testid={`input-${size}`} />
+    <Next.Input placeholder='Disabled' aria-label='Disabled' disabled />
     <Next.Input
       start={<Next.Icon icon='ph--magnifying-glass--regular' />}
       placeholder='Find…'
-      aria-label={`Find ${size}`}
+      aria-label='Find'
       data-testid={`start-${size}`}
     />
-    <Next.Input end='.dxos.org' placeholder='workspace' aria-label={`Workspace ${size}`} data-testid={`end-${size}`} />
+    <Next.Input end='.dxos.org' placeholder='workspace' aria-label='Workspace' data-testid={`end-${size}`} />
     <Next.Input
-      end={<Next.Button icon='ph--x--regular' label={`Clear ${size}`} iconOnly variant='ghost' />}
+      end={<Next.Button icon='ph--x--regular' label='Clear' iconOnly variant='ghost' />}
       defaultValue='Query'
-      aria-label={`Query ${size}`}
+      aria-label='Query'
       data-testid={`button-end-${size}`}
     />
-    <Next.Input
-      variant='subdued'
-      placeholder='Subdued'
-      aria-label={`Subdued ${size}`}
-      data-testid={`subdued-${size}`}
-    />
+    <Next.Input variant='subdued' placeholder='Subdued' aria-label='Subdued' data-testid={`subdued-${size}`} />
   </>
 );
 
@@ -75,8 +70,8 @@ export const Test: Story = {
       await expect(parseFloat(style.marginBottom), `input-${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
     }
 
-    const canvas = within(canvasElement);
-    const input = canvas.getByRole('textbox', { name: 'Search md' });
+    const canvas = within(sizeRow(canvasElement, 'md'));
+    const input = canvas.getByRole('textbox', { name: 'Search' });
     await expect(input).toHaveAttribute('type', 'text');
     await userEvent.type(input, 'hello');
     await expect(input).toHaveValue('hello');
@@ -97,7 +92,7 @@ export const Test: Story = {
       await expect(clear.bottom, `clear-${size} bottom`).toBeLessThanOrEqual(row.bottom);
       await expect(row.right - clear.right, `clear-${size} end`).toBeCloseTo(GEOMETRY[size].inset, 0);
     }
-    const find = canvas.getByRole('textbox', { name: 'Find md' });
+    const find = canvas.getByRole('textbox', { name: 'Find' });
     const findRow = byTestId(canvasElement, 'start-md');
     await expect(find).not.toBe(findRow);
     await expect(findRow.querySelector('svg')?.getBoundingClientRect().right).toBeLessThan(
@@ -105,7 +100,7 @@ export const Test: Story = {
     );
     await expect(
       within(byTestId(canvasElement, 'end-md')).getByText('.dxos.org').getBoundingClientRect().left,
-    ).toBeGreaterThan(canvas.getByRole('textbox', { name: 'Workspace md' }).getBoundingClientRect().right - 1);
+    ).toBeGreaterThan(canvas.getByRole('textbox', { name: 'Workspace' }).getBoundingClientRect().right - 1);
     await userEvent.click(find);
     await userEvent.tab({ shift: true });
     await userEvent.tab();
@@ -115,7 +110,7 @@ export const Test: Story = {
     await expect(find).toHaveValue('abc');
     await expect(getComputedStyle(byTestId(canvasElement, 'subdued-md')).backgroundColor).toBe('rgba(0, 0, 0, 0)');
 
-    const disabled = canvas.getByRole('textbox', { name: 'Disabled md' });
+    const disabled = canvas.getByRole('textbox', { name: 'Disabled' });
     await expect(disabled).toBeDisabled();
     await userEvent.type(disabled, 'hello');
     await expect(disabled).toHaveValue('');
