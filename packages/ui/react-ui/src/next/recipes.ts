@@ -44,4 +44,9 @@ export const recipes = {
   fieldsetRoot: () => 'nx-fieldset',
   fieldsetLegend: () => 'nx-fieldset-legend',
   image: () => 'nx-image',
+  cardRoot: () => 'nx-card',
+  cardPoster: () => 'nx-card-poster',
+  cardHeader: () => 'nx-card-header',
+  cardTitle: () => 'nx-card-title',
+  cardDescription: () => 'nx-card-description',
 } as const;

@@ -7,6 +7,7 @@ import {
   type BlockProps as NextBlockProps,
   Button as NextButton,
   type ButtonProps as NextButtonProps,
+  Card as NextCard,
   Checkbox as NextCheckbox,
   type CheckboxProps as NextCheckboxProps,
   Container as NextContainer,
@@ -73,4 +74,5 @@ export namespace Next {
   export const FieldSet = NextFieldSet;
   export const Image = NextImage;
   export type ImageProps = NextImageProps;
+  export const Card = NextCard;
 }

@@ -1,0 +1,47 @@
+/*
+ * Card: a `gutter='md'` Container lifted one level above its host; Header, Body and Footer share its content edge and
+ * a Poster spans the gutters.
+ */
+
+@layer dx-components {
+  .nx-card {
+    box-sizing: border-box;
+    padding-block: var(--nx-gap-size);
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+  /* A leading poster is flush with the card's top edge. */
+  .nx-card:has(> .nx-card-poster:first-child) {
+    padding-block-start: 0;
+  }
+  /* Inside the border, so the inner radius is the card's less its border width. */
+  .nx-card > .nx-card-poster:first-child {
+    border-start-start-radius: calc(var(--radius-md, 0.375rem) - 1px);
+    border-start-end-radius: calc(var(--radius-md, 0.375rem) - 1px);
+  }
+
+  .nx-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+  .nx-card-header > .nx-block {
+    width: var(--nx-control-size);
+    height: var(--nx-control-size);
+  }
+
+  .nx-card-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    font-weight: 500;
+  }
+
+  .nx-card-description {
+    margin: 0;
+    color: var(--color-description);
+  }
+}

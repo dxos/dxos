@@ -4,6 +4,7 @@
 
 export * from './Block/index.ts';
 export * from './Button/index.ts';
+export * from './Card/index.ts';
 export * from './Checkbox/index.ts';
 export * from './Container/index.ts';
 export * from './Dialog/index.ts';

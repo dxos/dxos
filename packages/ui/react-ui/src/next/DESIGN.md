@@ -167,3 +167,6 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 13. **Image** is an `<img>` (required `alt`, lazy, async decode) in a frame with a fixed `aspectRatio` (16 / 9 by
     default) and `fit` (cover|contain), so layout does not shift while it loads; the frame shows the well until then
     and a broken-image Icon, named by `alt`, on error.
+14. **Card** is a `gutter='md'` Container at `level='+1'` (one rung above whatever hosts it) with a separator border
+    and `--radius-md`; Header, Body (an inheriting Container) and Footer (`Group justify='end'`) share its content
+    edge. `Card.Poster` is an Image placed `full` across the gutters, flush with the card's top corners.
