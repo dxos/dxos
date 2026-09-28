@@ -3,14 +3,18 @@
 //
 
 /**
- * The Composer Plugin space template (plugin-debug `samples/plugin`): an agent works the project's four
- * tasks to build the Space Clock plugin, then the reader loads it and opens its Clock page.
+ * An agent works the four tasks of the Composer Plugin space template to build the Space Clock plugin,
+ * then the reader loads it and opens its Clock page.
  *
- * Needs a bundled dev build served by `vite preview` on :4173 from `packages/apps/composer-app` — URL
- * loading needs the bundle's import map, and the Computer shell only mounts in a vite server:
+ * @mdl none — walks plugin-debug's Composer Plugin space template (`packages/plugins/plugin-debug/src/samples/plugin`)
+ * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview
  *
- *   DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true pnpm exec vite build --configLoader native
- *   DX_ENVIRONMENT=dev DX_PWA=false pnpm exec vite preview --configLoader native --port 4173 --strictPort
+ * Built and served from `packages/apps/composer-app`. Loading a plugin by URL needs the bundle's import
+ * map, and the Computer shell only mounts in a vite server; EDGE production rejects the AI requests:
+ *
+ *   export DX_EDGE_BASE_URL=https://preview.dxos.network/ DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true
+ *   pnpm exec vite build --configLoader native
+ *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
  * Remove `temp/plugins/space-clock` and `out/composer/plugins/space-clock` first, so the agent starts
  * from an empty folder. Step 1 is off-camera prep and persists in the profile.

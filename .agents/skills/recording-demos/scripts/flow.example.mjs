@@ -3,9 +3,14 @@
 //
 
 /**
+ * Start a chess game and play the opening.
+ *
+ * @mdl packages/plugins/plugin-chess/PLUGIN.mdl test QA-1
+ * @app composer-app via `moon run composer-app:serve` on :5173
+ *
  * A flow script for the driver's `run` op: one entry per QA step, executed in order against the live
- * page. Copy it next to the run's output (`/tmp/demo/flow.mjs`), not into the repo, and edit it freely:
- * every `run` re-imports the file, so a fix takes effect without restarting the browser.
+ * page. Copy it to `/tmp/demo/flow.mjs` while iterating: every `run` re-imports the file, so a fix takes
+ * effect without restarting the browser. Once it runs end to end, commit it as `flows/<name>.mjs`.
  *
  * Each step receives `demo`, whose methods take the same arguments as the HTTP ops (so the cursor and
  * overlay behave the same), and `page`, the raw Playwright page for anything the ops do not cover. A

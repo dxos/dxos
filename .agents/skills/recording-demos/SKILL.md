@@ -79,7 +79,9 @@ over HTTP costs a full agent turn, so a ten-step flow driven op by op leaves the
 between gestures. A script runs at the app's speed, and you stay the control panel: you choose what to
 run, edit the script when the user steers, and read the result.
 
-Flows that have been run end to end live in `flows/` (`composer-plugin.mjs`: the agent builds and loads the Space Clock plugin); run one in place or copy it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry per QA step. Each step
+Check `flows/` first: a flow that has already run end to end is committed there, and running it in place
+beats rewriting it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry
+per QA step. Each step
 gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
 and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
 wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
@@ -150,8 +152,30 @@ that again"), and for probing a failure before you fix the script.
    screenshot, say in a line what went wrong and what you'll change, then fix the script. Retry
    only when the user says so, since the retry happens on camera.
 5. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
-   that closing it ends the driver. Offer to save the flow script next to its `.mdl` spec if it will
-   be run again.
+   that closing it ends the driver.
+6. **Commit the flow once it has run end to end.** Save it as `flows/<name>.mjs` and commit it, so
+   the next session runs it instead of rediscovering every selector. Commit again whenever a later
+   session fixes it.
+
+### Flow metadata
+
+Every committed flow opens with a doc comment that says where it came from and what it needs, so a
+reader can tell whether it is still in step with its spec:
+
+```js
+/**
+ * Start a chess game and play the opening.
+ *
+ * @mdl packages/plugins/plugin-chess/PLUGIN.mdl test QA-1
+ * @app composer-app via `moon run composer-app:serve` on :5173
+ */
+```
+
+- **`@mdl`** names the `.mdl` file and the `test` (or `flow`) the steps were written from. A flow with
+  no spec behind it says `@mdl none` and names what it walks instead, such as a space template.
+- **`@app`** says how to serve the app the flow runs against, including any build flags and
+  environment it depends on.
+- Name each step after its `do:` text, so the flow and the spec can be read side by side.
 
 ## 1. Get the app running
 
