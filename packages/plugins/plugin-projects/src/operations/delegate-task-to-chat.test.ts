@@ -5,11 +5,14 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { Model } from '@dxos/ai';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AiContext } from '@dxos/assistant';
+import { ProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -150,18 +153,32 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     const model = chat.model && DXN.tryMake(chat.model.uri);
     invariant(model, 'Expected the delegation to stamp a model on the chat.');
     const provider = Model.byId(model)[0]?.provider;
-    const getSession = AgentService.getSession(chat, { provider, location: 'local' }).pipe(
-      Effect.provide(ServiceResolver.provide({ space: space.id }, AgentService.AgentService, Database.Service)),
+    const services = ServiceResolver.provide(
+      { space: space.id },
+      AgentService.AgentService,
+      Database.Service,
+      ProcessManager.Service,
     );
-    const delegated = await harness.runPromise(getSession);
+    const getSession = AgentService.getSession(chat, { provider, location: 'local' }).pipe(Effect.provide(services));
+    await harness.runPromise(getSession);
+    // Held rather than re-listed afterwards: the manager stops listing a process once it is terminated.
+    const delegated = await harness.runPromise(
+      Effect.flatMap(ProcessManager.Service, (manager) => manager.list({ key: AGENT_PROCESS_KEY })).pipe(
+        Effect.provide(services),
+      ),
+    );
+    expect(delegated.length).toBeGreaterThan(0);
 
     // What showing the Assistant companion does before its processor attaches to the session: a
     // configuration change here terminated the delegated process mid-turn, discarding its prompt.
     await harness.runPromise(
       Operation.invoke(AssistantOperation.BindChatContext, { chat, subject: project }, { spaceId: space.id }),
     );
-    const companion = await harness.runPromise(getSession);
-    expect(companion).toBe(delegated);
+    await harness.runPromise(getSession);
+
+    // Asserted on the terminate rather than on session identity: the delegated turn may end by
+    // itself (this harness has no model to answer it), which also replaces the session.
+    expect(delegated.map((agent) => agent.status.state)).not.toContain(Process.State.TERMINATED);
   });
 
   test('puts a whole checked set into one chat, in the order given', async ({ expect }) => {
