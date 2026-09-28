@@ -49,6 +49,7 @@ const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
         <Next.Switch label='Email digests' defaultChecked />
         <Next.Switch label='Mentions' />
         <Next.Switch label='Product updates' />
+        <Next.Checkbox label='Email me a weekly digest' />
       </Next.FieldSet.Root>
 
       <Next.Group justify='end'>
@@ -101,13 +102,17 @@ export const Layout: Story = {
     await expect(legend.left).toBeCloseTo(label.left, 0);
     await expect(bounds(canvasElement, '[data-testid="profile-lock"]').right).toBeCloseTo(input.right, 0);
 
-    // Fields are spaced by the gap token and the switches start on the same edge.
+    // Fields are spaced by the gap token; switches and the checkbox start on the legend's edge.
     const email = bounds(canvasElement, '[data-testid="email"]');
     const name = bounds(canvasElement, '[data-testid="name"]');
     await expect(email.top - name.bottom).toBeCloseTo(8, 0);
     for (const control of canvasElement.querySelectorAll('[data-scope="switch"][data-part="control"]')) {
       await expect(control.getBoundingClientRect().left).toBeCloseTo(input.left, 0);
     }
+    const box = bounds(canvasElement, '[data-testid="notifications"] [data-scope="checkbox"][data-part="control"]');
+    const notifications = bounds(canvasElement, '[data-testid="notifications"] legend');
+    await expect(box.left).toBeCloseTo(notifications.left, 0);
+    await expect(box.left).toBeCloseTo(legend.left, 0);
     await expect(canvas.queryByText('Complete your profile.')).toBeNull();
   },
 };
@@ -118,7 +123,7 @@ export const Disabled: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeDisabled();
-    for (const name of ['Email digests', 'Mentions', 'Product updates']) {
+    for (const name of ['Email digests', 'Mentions', 'Product updates', 'Email me a weekly digest']) {
       await expect(canvas.getByRole('checkbox', { name })).toBeDisabled();
     }
     await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeEnabled();
