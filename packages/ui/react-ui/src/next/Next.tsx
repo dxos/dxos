@@ -42,7 +42,7 @@ import {
   Typography as NextTypography,
 } from './components/index.ts';
 
-/** Parallel namespace for the next primitives (decision 1); stories load `theme/index.css` for their rules. */
+/** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
 export namespace Next {
   export const Container = NextContainer;
   export type ContainerProps = NextContainerProps;

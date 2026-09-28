@@ -201,6 +201,11 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     the button and `showTooltip={false}` opts out (e.g. inside a caller's own `Tooltip.Trigger`). The button keeps an
     id owned by a Toolbar item or an `asChild` parent, so the Tooltip looks its trigger up by that id (`ids.trigger`);
     otherwise positioning would find no anchor, since the button's own `data-scope`/`data-part` win the merge.
+23. **Published as `@dxos/react-ui/next`.** `src/next/index.ts` (the `Next` namespace plus `Size`/`SIZES`) is a
+    vite entry (`dist/lib/next.mjs`); the rules ship as source CSS, `import '@dxos/react-ui/next/theme.css'`
+    (`src/next/theme/index.css`, following ui-theme's `./tokens.css` `style`/`default` export), resolved by the
+    consumer's CSS pipeline. `sideEffects` became `["*.css"]` so bundlers keep that import. `@zag-js/core` and
+    `@zag-js/react` are runtime dependencies again, since the Toolbar machine is now reachable from a published entry.
 
 ## Phase 3: react-ui-form port
 
