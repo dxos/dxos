@@ -43,11 +43,12 @@ export const COUNTDOWN_STYLES = `
   .num { position: absolute; inset: 0; display: grid; place-items: center;
     font: 400 132px/1 'Bungee Hairline', ui-sans-serif, system-ui, sans-serif;
     color: #38bdf8; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
-  .num.pop { animation: countdown-pop 1000ms ease-out; }
+  /* Forwards holds the faded last frame: without it the final numeral snaps back while the curtain fades. */
+  .num.pop { animation: countdown-pop 1000ms ease-out forwards; }
   /* The count still runs; only its motion goes. */
   @media (prefers-reduced-motion: reduce) { .arc.unwind, .num.pop { animation: none; } }
   @keyframes countdown-pop { 0% { transform: scale(1.35); opacity: 0; } 15% { transform: scale(1); opacity: 1; }
-    85% { opacity: 1; } 100% { transform: scale(0.92); opacity: 0.2; } }
+    85% { opacity: 1; } 100% { transform: scale(0.92); opacity: 0; } }
 `;
 
 const RING = `<svg class="hoop" viewBox="0 0 100 100"><circle class="arc" cx="50" cy="50" r="48" pathLength="100"/></svg>`;
