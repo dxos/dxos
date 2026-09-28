@@ -1659,7 +1659,7 @@ pnpmfileChecksum: sha256-HfdXnQ57lkGOnGDIqwvpKXC8RFCIbD00oMkDJI7W7aQ=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.48':
-    hash: 90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc
+    hash: 38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50
     path: patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
   '@automerge/automerge-subduction@0.17.2':
     hash: ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7
@@ -2086,7 +2086,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../../packages/common/keys
@@ -2165,7 +2165,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@automerge/automerge-subduction':
         specifier: 0.17.2
         version: 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -5618,7 +5618,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5821,7 +5821,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@automerge/automerge-subduction':
         specifier: 0.17.2
         version: 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
@@ -5946,7 +5946,7 @@ importers:
     dependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -7373,7 +7373,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
         version: 2.6.0-subduction.48
@@ -18849,7 +18849,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -19091,7 +19091,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -19361,7 +19361,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+        version: 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -43946,13 +43946,13 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.48':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)
+      '@automerge/automerge-repo': 2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo@2.6.0-subduction.48(patch_hash=90df9b7d4bd11acb4a937e4f96f330b13a325a1ce9e46f504e44543d0e32b8dc)':
+  '@automerge/automerge-repo@2.6.0-subduction.48(patch_hash=38ee0a69e7d10321d1be5cf0b36d9360d2f7b891f98e8704465c43656df0ac50)':
     dependencies:
       '@automerge/automerge': 3.5.0
       '@automerge/automerge-subduction': 0.17.2(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)

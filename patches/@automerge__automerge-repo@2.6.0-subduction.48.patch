@@ -530,7 +530,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c
      /** Check whether a sedimentree is currently in heal-backoff. */
      isHealing(sedimentreeId: SedimentreeId): boolean;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..5ed8a63ce292c1d1822fe9d2db5cae0e052a5631 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..472e20b41c91c5839a726ea75da0027b43a245ec 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -823,41 +823,24 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..5ed8a63ce292c1d1822fe9d2db5cae0e
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -784,6 +897,14 @@ export class SubductionSource {
-         }
-         if (!blobsWithIds)
-             blobsWithIds = allBlobs.map(blob => ({ idHex: "", blob }));
-+        await this.#applyBlobs(entry, blobsWithIds);
-+        return true;
-+    }
-+    /**
-+     * Apply `blobsWithIds` to the handle in one `loadIncremental`, recording their ids as known and
-+     * running them through the blob interceptor first when one is set.
-+     */
-+    async #applyBlobs(entry, blobsWithIds) {
-         blobsWithIds.sort((a, b) => b.blob.byteLength - a.blob.byteLength);
-         // Record these IDs as known hashes since nothing in subduction's storage
-         // should be re-encrypted and re-saved.
-@@ -833,7 +954,29 @@ export class SubductionSource {
-         // by later ones. Schedule a compaction pass so the storage view
-         // converges with the now-applied minimal sedimentree.
+@@ -835,6 +948,29 @@ export class SubductionSource {
          this.#scheduleCompaction(entry);
--        return true;
-+    }
+         return true;
+     }
 +    /**
-+     * DXOS patch: open a document from its own commit store. Loading otherwise waits for a peer
-+     * round that settles `succeeded` with nothing pending, so a document whose history is on disk
-+     * stays unavailable offline, and behind its store whenever that round is interrupted.
++     * DXOS patch: open a document from its own commit store with upstream's loader. Loading otherwise
++     * waits for a peer round that settles `succeeded` with nothing pending, so a document whose
++     * history is on disk stays unavailable offline, and behind its store whenever that round is
++     * interrupted.
 +     */
 +    async #hydrateFromDisk(entry) {
 +        try {
-+            const blobsWithIds = await this.#idKeyedBlobs(entry);
-+            if (blobsWithIds.length > 0 && this.#entries.get(entry.sedimentreeId.toString()) === entry) {
-+                await this.#applyBlobs(entry, blobsWithIds);
-+                entry.hydratedFromDisk = true;
-+                if (Automerge.getHeads(entry.handle.fullDoc()).length > 0)
-+                    entry.query.sourcePending("subduction");
-+            }
++            const stored = entry.persistedCommitHashes.size + entry.persistedFragmentHashes.size;
++            if (stored === 0 || this.#entries.get(entry.sedimentreeId.toString()) !== entry)
++                return;
++            entry.hydratedFromDisk = await this.#loadBlobsIntoHandle(entry, await this.#subduction);
++            if (entry.hydratedFromDisk && Automerge.getHeads(entry.handle.fullDoc()).length > 0)
++                entry.query.sourcePending("subduction");
 +        }
 +        catch (e) {
 +            this.#log.debug(`hydrateFromDisk ${entry.sedimentreeId.toString().slice(0, 8)} failed: %O`, e);
@@ -866,10 +849,11 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..5ed8a63ce292c1d1822fe9d2db5cae0e
 +            entry.hydrating = false;
 +            this.#scheduleRecompute(entry);
 +        }
-     }
++    }
      async #loadBlobsAndTransition(entry) {
          try {
-@@ -1026,7 +1169,10 @@ export class SubductionSource {
+             const subduction = await this.#subduction;
+@@ -1026,7 +1162,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
