@@ -6,12 +6,13 @@ import { cbor } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
+import { Mutex, TimeoutError, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
 import {
   type EdgeConnection,
+  EdgeConnectionClosedError,
   EdgeConnectionService,
   type EdgeHttpClient,
   EdgeHttpClientService,
@@ -756,6 +757,12 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       log.verbose('sending...', { type: wire.type, frameCount, remoteId: this._remotePeerId });
     }
 
+    // Waiting for the socket only stalls queued writes: the reconnect replaces this connection and re-syncs.
+    if (this._edgeConnection.status.state !== EdgeStatus_ConnectionState.CONNECTED) {
+      log.warn('dropping message while edge is offline', { type: wire.type, frameCount, remoteId: this._remotePeerId });
+      return;
+    }
+
     const encoded = cbor.encode(wire);
     try {
       await this._edgeConnection.send(
@@ -770,7 +777,12 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         }),
       );
     } catch (err) {
-      log.error('failed to send message', { err });
+      // The socket dropped mid-send, which the same reconnect re-sync recovers.
+      if (err instanceof EdgeConnectionClosedError || err instanceof TimeoutError) {
+        log.warn('failed to send message: edge went offline', { type: wire.type, frameCount, err });
+      } else {
+        log.error('failed to send message', { err });
+      }
     }
   }
 }
