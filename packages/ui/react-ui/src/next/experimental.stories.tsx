@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import './theme/index.css';
+
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
@@ -11,31 +13,23 @@ import { SIZES } from './sizes.ts';
 
 const DefaultStory = () => {
   return (
-    <div className='flex flex-col divide-y divide-separator'>
-      <Next.Container size='lg' asChild>
-        <div className='grid grid-cols-[min-content_1fr] gap-1'>
-          <div>
-            <Next.Block>
-              <Next.Icon icon='ph--circle--regular' />
-            </Next.Block>
-          </div>
-          <Next.Typography>Lorem ipsum dolor sit amet</Next.Typography>
-        </div>
+    <div className='nx-scope flex flex-col divide-y divide-separator'>
+      <Next.Container size='lg' gutter='rail'>
+        <Next.Block rail='start'>
+          <Next.Icon icon='ph--circle--regular' />
+        </Next.Block>
+        <Next.Typography>Lorem ipsum dolor sit amet</Next.Typography>
       </Next.Container>
 
-      <Next.Container size='lg' asChild>
-        <div className='grid grid-cols-[min-content_1fr] gap-1'>
-          <div>
-            <Next.Block>
-              <Next.Icon icon='ph--circle--regular' />
-            </Next.Block>
-          </div>
-          <Next.Typography>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-            dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-            ea commodo consequat.
-          </Next.Typography>
-        </div>
+      <Next.Container size='lg' gutter='rail'>
+        <Next.Block rail='start'>
+          <Next.Icon icon='ph--circle--regular' />
+        </Next.Block>
+        <Next.Typography>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+          consequat.
+        </Next.Typography>
       </Next.Container>
 
       <div>

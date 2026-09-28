@@ -1,0 +1,81 @@
+/* Illustrations for the decision 12 and 13 choices; not part of the theme. */
+
+@layer dx-components {
+  [data-control='step'] :is([data-size='xs'], [data-size='xs'] *) {
+    --nx-control-size: 1rem;
+    --nx-control-icon: 0.75rem;
+  }
+  [data-control='step'] :is([data-size='sm'], [data-size='sm'] *) {
+    --nx-control-size: 1.25rem;
+    --nx-control-icon: 0.75rem;
+  }
+  [data-control='step'] :is([data-size='md'], [data-size='md'] *) {
+    --nx-control-size: 1.5rem;
+    --nx-control-icon: 1rem;
+  }
+  [data-control='step'] :is([data-size='lg'], [data-size='lg'] *) {
+    --nx-control-size: 2rem;
+    --nx-control-icon: 1.5rem;
+  }
+  [data-control='step'] :is([data-size='xl'], [data-size='xl'] *) {
+    --nx-control-size: 2.5rem;
+    --nx-control-icon: 2rem;
+  }
+
+  .nx-demo-control {
+    align-self: center;
+    height: var(--nx-control-size);
+    min-width: var(--nx-control-size);
+    display: inline-grid;
+    place-items: center;
+    padding-inline: var(--nx-gap-size);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+  .nx-demo-control > svg {
+    width: var(--nx-control-icon);
+    height: var(--nx-control-icon);
+  }
+  .nx-demo-control[data-square] {
+    padding-inline: 0;
+  }
+  [data-control='content'] .nx-demo-control {
+    --nx-control-icon: 1em;
+    height: auto;
+    min-width: 0;
+    padding-block: 0.125rem;
+  }
+  [data-control='content'] .nx-demo-control[data-square] {
+    padding: 0.25rem;
+  }
+  .nx-demo-group {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+  [data-debug] .nx-demo-group {
+    outline: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  }
+
+  .nx-grid > .nx-field-contents {
+    display: contents;
+  }
+  .nx-grid > .nx-field-row {
+    grid-column: full;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-items: center;
+  }
+  :is(.nx-field-contents, .nx-field-row) > [data-part='label'] {
+    grid-column: content-start / field-start;
+    padding-inline-end: var(--nx-gap-size);
+  }
+  :is(.nx-field-contents, .nx-field-row) > :not([data-part='label']) {
+    grid-column: field-start / content-end;
+  }
+  .nx-grid > .nx-field-stack {
+    display: flex;
+    flex-direction: column;
+  }
+}

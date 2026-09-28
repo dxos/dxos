@@ -2,112 +2,58 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ark } from '@ark-ui/react/factory';
-import React, { type ComponentPropsWithoutRef, type CSSProperties, type PropsWithChildren } from 'react';
+import { Checkbox as NextCheckbox, type CheckboxProps as NextCheckboxProps } from './Checkbox.tsx';
+import {
+  Block as NextBlock,
+  type BlockProps as NextBlockProps,
+  Container as NextContainer,
+  type ContainerProps as NextContainerProps,
+  type Gutter as NextGutter,
+  type Level as NextLevel,
+} from './Container.tsx';
+import { Field as NextField } from './Field.tsx';
+import {
+  Button as NextButton,
+  type ButtonProps as NextButtonProps,
+  Icon as NextIcon,
+  IconButton as NextIconButton,
+  type IconButtonProps as NextIconButtonProps,
+  type IconProps as NextIconProps,
+  Input as NextInput,
+  type InputProps as NextInputProps,
+  Label as NextLabel,
+  type LabelProps as NextLabelProps,
+  Typography as NextTypography,
+} from './primitives.tsx';
+import { ScrollArea as NextScrollArea } from './ScrollArea.tsx';
+import { Select as NextSelect, type SelectOption as NextSelectOption } from './Select.tsx';
+import { Toolbar as NextToolbar, type ToolbarProps as NextToolbarProps } from './Toolbar.tsx';
 
-import { mx } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
-
-import { useIconHref } from '../hooks/index.ts';
-import { composableProps, slottable } from '../util/index.ts';
-import { type Size, metrics } from './sizes.ts';
-
-const TEXT = 'text-[length:var(--nx-font-size,1rem)] leading-(--nx-line-height)';
-
+/** Parallel namespace for the next primitives (decision 1); stories load `theme/index.css` for their rules. */
 export namespace Next {
-  export type ContainerProps = SlottableProps<{ size?: Size }>;
-
-  /** Sets the size's metrics as CSS variables for everything inside; `asChild` puts them on its child instead. */
-  export const Container = slottable<HTMLDivElement, ContainerProps>(
-    ({ children, asChild, size = 'md', ...props }, forwardedRef) => {
-      const { blockSize, lineHeight, fontSize, iconSize, gapSize } = metrics[size];
-      // Defaults rather than overrides, so a caller's own `style` still wins.
-      const { className, ...rest } = composableProps(props, {
-        style: {
-          '--nx-block-size': blockSize,
-          '--nx-line-height': lineHeight,
-          '--nx-font-size': fontSize,
-          '--nx-icon-size': iconSize,
-          '--nx-gap-size': gapSize,
-        } as CSSProperties,
-      });
-      return (
-        <ark.div asChild={asChild} {...rest} className={className} ref={forwardedRef}>
-          {children}
-        </ark.div>
-      );
-    },
-  );
-
-  export const Toolbar = ({ children, size = 'md' }: PropsWithChildren<{ size?: Size }>) => {
-    return (
-      <Container size={size} asChild>
-        {/* `group` until it manages focus: `toolbar` promises arrow-key navigation it does not yet do. */}
-        <div role='group' className='shrink-0 w-full flex items-center overflow-x-auto scrollbar-none'>
-          {children}
-        </div>
-      </Container>
-    );
-  };
-
-  export const Block = ({ children }: PropsWithChildren) => {
-    return <div className='shrink-0 grid place-items-center w-(--nx-block-size) h-(--nx-block-size)'>{children}</div>;
-  };
-
-  export const Icon = ({ icon }: { icon: string }) => {
-    const href = useIconHref(icon);
-    return (
-      <svg className='w-(--nx-icon-size,1.5rem) h-(--nx-icon-size,1.5rem)'>
-        <use href={href} />
-      </svg>
-    );
-  };
-
-  export const Input = ({ className, type = 'text', ...props }: ComponentPropsWithoutRef<'input'>) => {
-    return (
-      <input
-        {...props}
-        type={type}
-        className={mx(
-          'w-full h-(--nx-block-size) px-(--nx-gap-size) py-0',
-          TEXT,
-          'bg-input-bg border-none dx-focus-ring-inset',
-          className,
-        )}
-      />
-    );
-  };
-
-  // `button` by default: the browser's `submit` would post an enclosing form on every click.
-  export const Button = ({ className, type = 'button', children, ...props }: ComponentPropsWithoutRef<'button'>) => {
-    return (
-      <button
-        {...props}
-        type={type}
-        className={mx(
-          'inline-flex items-center w-fit h-(--nx-block-size) px-(--nx-gap-size) py-0',
-          TEXT,
-          'bg-base-surface hover:bg-hover-surface border-none dx-focus-ring-inset',
-          className,
-        )}
-      >
-        {children}
-      </button>
-    );
-  };
-
-  /**
-   * Text whose first line is centred in a block, so it lines up with a Block, Input or Button beside it however many
-   * lines it wraps to. Renders a `<p>`; `asChild` puts the metrics on a heading or other text element instead.
-   */
-  export const Typography = slottable<HTMLParagraphElement>(({ children, asChild, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props, {
-      classNames: [TEXT, 'py-[calc((var(--nx-block-size)-var(--nx-line-height))/2)]'],
-    });
-    return (
-      <ark.p asChild={asChild} {...rest} className={className} ref={forwardedRef}>
-        {children}
-      </ark.p>
-    );
-  });
+  export const Container = NextContainer;
+  export type ContainerProps = NextContainerProps;
+  export type Gutter = NextGutter;
+  export type Level = NextLevel;
+  export const Block = NextBlock;
+  export type BlockProps = NextBlockProps;
+  export const ScrollArea = NextScrollArea;
+  export const Toolbar = NextToolbar;
+  export type ToolbarProps = NextToolbarProps;
+  export const Icon = NextIcon;
+  export type IconProps = NextIconProps;
+  export const Typography = NextTypography;
+  export const Label = NextLabel;
+  export type LabelProps = NextLabelProps;
+  export const Input = NextInput;
+  export type InputProps = NextInputProps;
+  export const Button = NextButton;
+  export type ButtonProps = NextButtonProps;
+  export const IconButton = NextIconButton;
+  export type IconButtonProps = NextIconButtonProps;
+  export const Field = NextField;
+  export const Checkbox = NextCheckbox;
+  export type CheckboxProps = NextCheckboxProps;
+  export const Select = NextSelect;
+  export type SelectOption = NextSelectOption;
 }

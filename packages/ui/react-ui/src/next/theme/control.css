@@ -1,0 +1,183 @@
+/*
+ * Leaf parts. The block is the row height; controls are `--nx-control-size` tall and centred in it (decision 12), so
+ * rails and first-line text centring are unchanged.
+ */
+
+@layer dx-components {
+  .nx-typography {
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    padding-block: calc((var(--nx-block-size) - var(--nx-line-height)) / 2);
+  }
+
+  .nx-icon {
+    flex-shrink: 0;
+    width: var(--nx-icon-size);
+    height: var(--nx-icon-size);
+  }
+
+  .nx-control {
+    box-sizing: border-box;
+    height: var(--nx-control-size);
+    align-self: center;
+    padding-block: 0;
+    padding-inline: var(--nx-gap-size);
+    border: none;
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+  .nx-control .nx-icon {
+    width: var(--nx-control-icon);
+    height: var(--nx-control-icon);
+  }
+
+  .nx-input {
+    width: 100%;
+    min-width: 0;
+    background: var(--color-input-bg);
+  }
+
+  .nx-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-control-inset);
+    width: fit-content;
+    min-width: var(--nx-control-size);
+    background: var(--color-input-bg);
+    cursor: pointer;
+  }
+  .nx-button:hover:not(:disabled) {
+    background: var(--color-input-bg-hover, var(--color-hover-surface));
+  }
+  .nx-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .nx-button[data-square] {
+    width: var(--nx-control-size);
+    padding-inline: 0;
+  }
+
+  .nx-label {
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+
+  /* Field (decision 13): a flex stack in the content track; the field pads its control out to a block. */
+  .nx-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .nx-field > .nx-control {
+    margin-block: var(--nx-control-inset);
+  }
+  .nx-field-helper,
+  .nx-field-error {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+  }
+  .nx-field-helper {
+    color: var(--color-description);
+  }
+  .nx-field-error {
+    color: var(--color-error-text);
+  }
+
+  .nx-checkbox {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    cursor: pointer;
+  }
+  .nx-checkbox-control {
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--nx-control-size);
+    height: var(--nx-control-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    background: var(--color-input-bg);
+  }
+  .nx-checkbox-control .nx-icon {
+    width: var(--nx-control-icon);
+    height: var(--nx-control-icon);
+  }
+  .nx-checkbox-control[data-state='checked'],
+  .nx-checkbox-control[data-state='indeterminate'] {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+
+  .nx-checkbox-control[data-focus-visible] {
+    outline: 2px solid var(--color-focus-ring-subtle, currentColor);
+    outline-offset: 1px;
+  }
+
+  /* The select root takes no box, so its label and trigger are laid out as the parent's children. */
+  .nx-select {
+    display: contents;
+  }
+  :is(.nx-field, .nx-grid[data-layout='stack']) > .nx-select > .nx-control {
+    margin-block: var(--nx-control-inset);
+  }
+
+  .nx-select-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-control-inset);
+    width: 100%;
+    min-width: 0;
+    background: var(--color-input-bg);
+    cursor: pointer;
+    text-align: start;
+  }
+
+  /* Portalled content leaves every sized scope, so it sets its own metrics and level. */
+  .nx-popup {
+    min-width: var(--reference-width, 8rem);
+    padding-block: var(--nx-control-inset);
+    border-radius: var(--radius-md, 0.375rem);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+  }
+  .nx-select-item {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    height: var(--nx-block-size);
+    padding-inline: var(--nx-gap-size);
+    cursor: pointer;
+  }
+  .nx-select-item[data-highlighted] {
+    background: var(--color-hover-surface);
+  }
+  .nx-select-item [data-part='item-text'] {
+    flex: 1;
+  }
+
+  .nx-toolbar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    width: 100%;
+    min-height: var(--nx-block-size);
+    overflow-x: auto;
+    scrollbar-width: none;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+  .nx-toolbar > .nx-input {
+    flex: 1;
+  }
+}

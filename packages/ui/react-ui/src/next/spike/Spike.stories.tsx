@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode } from 'react';
 import { expect } from 'storybook/test';
@@ -11,7 +13,8 @@ import { random } from '@dxos/random';
 import { withTheme } from '../../testing/index.ts';
 import { Next } from '../components.tsx';
 import { type Size } from '../sizes.ts';
-import { Block, Container, ScrollArea, SpikeStyles } from './Spike.tsx';
+
+const { Block, Container, ScrollArea } = Next;
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
@@ -106,25 +109,22 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ size, width, native, debug }: StoryArgs) => (
-  <>
-    <SpikeStyles />
-    <div
-      data-size={size}
-      data-debug={debug ? '' : undefined}
-      className='nx-scope @container flex flex-col h-[40rem] border border-separator bg-base-surface'
-      style={{ width }}
-    >
-      <Header testId='header'>Header</Header>
-      <ScrollArea.Root native={native} classNames='flex-1'>
-        <ScrollArea.Viewport asChild>
-          <Container gutter='rail' columns={LABEL_COLUMNS} data-testid='body'>
-            <Body />
-          </Container>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-      <Header testId='footer'>Footer</Header>
-    </div>
-  </>
+  <div
+    data-size={size}
+    data-debug={debug ? '' : undefined}
+    className='nx-scope @container flex flex-col h-[40rem] border border-separator bg-base-surface'
+    style={{ width }}
+  >
+    <Header testId='header'>Header</Header>
+    <ScrollArea.Root native={native} classNames='flex-1'>
+      <ScrollArea.Viewport asChild>
+        <Container gutter='rail' columns={LABEL_COLUMNS} data-testid='body'>
+          <Body />
+        </Container>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+    <Header testId='footer'>Footer</Header>
+  </div>
 );
 
 const meta = {
@@ -203,32 +203,29 @@ export const Sizes: Story = {
 
 /** Nested `+1` levels step up the ladder from their parent; a hover row in each derives its state from its own host. */
 const LevelsStory = ({ size }: StoryArgs) => (
-  <>
-    <SpikeStyles />
-    <div data-size={size} className='nx-scope flex flex-col gap-2 w-[40rem]'>
-      <div className='flex gap-2'>
-        {(['base', 'raised', 'overlay'] as const).map((level) => (
-          <div key={level} data-surface={level} data-testid={`swatch-${level}`} className='grow p-1 text-center'>
-            {level}
-          </div>
-        ))}
-      </div>
-      <Container gutter='rail' columns={LABEL_COLUMNS} level='base' data-testid='level-0'>
-        <h2 className='font-medium'>Base</h2>
-        <Field id='l0' label='Base' />
-        {/* Level is independent of rails: an inheriting container lifts its surface but keeps the parent's tracks. */}
-        <Container level='+1' data-testid='level-1'>
-          <Field id='l1' label='Raised' />
-          <div className='hover:bg-hover-surface' data-testid='level-1-hover'>
-            Hover row
-          </div>
-          <Container level='+1' data-testid='level-2'>
-            <Field id='l2' label='Overlay' />
-          </Container>
+  <div data-size={size} className='nx-scope flex flex-col gap-2 w-[40rem]'>
+    <div className='flex gap-2'>
+      {(['base', 'raised', 'overlay'] as const).map((level) => (
+        <div key={level} data-surface={level} data-testid={`swatch-${level}`} className='grow p-1 text-center'>
+          {level}
+        </div>
+      ))}
+    </div>
+    <Container gutter='rail' columns={LABEL_COLUMNS} level='base' data-testid='level-0'>
+      <h2 className='font-medium'>Base</h2>
+      <Field id='l0' label='Base' />
+      {/* Level is independent of rails: an inheriting container lifts its surface but keeps the parent's tracks. */}
+      <Container level='+1' data-testid='level-1'>
+        <Field id='l1' label='Raised' />
+        <div className='hover:bg-hover-surface' data-testid='level-1-hover'>
+          Hover row
+        </div>
+        <Container level='+1' data-testid='level-2'>
+          <Field id='l2' label='Overlay' />
         </Container>
       </Container>
-    </div>
-  </>
+    </Container>
+  </div>
 );
 
 const background = (root: HTMLElement, testId: string) => {

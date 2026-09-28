@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 1 — move size metrics to CSS. Uncommitted: none. Last: spike issues resolved (scrollbar options, pane container, levels)._
+_Resume: Phase 1 — controls (Field/Checkbox/Select/IconButton), Toolbar roving focus, components story + play tests, benchmark. Last: theme CSS in `next/theme/`, Container/ScrollArea productionized._
 
 ## Phase 0: Design
 
@@ -26,20 +26,20 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 
 - [x] **Namespace attributes and variables** — selectors scoped to `.nx-*`, variables `--nx-*` (provisional names; rename later).
 - [x] **Typography owns first-line centring** — `Next.Typography` pads to `--nx-block-size`; spike message row uses it.
-- [ ] **Move size metrics to CSS** — `[data-size=*]` rules in the theme; `sizes.ts` keeps only `Size`/`SIZES`.
-- [ ] **Add levels** — `level` prop emits `data-surface`; `--nx-level` rungs; style-query `+1`.
+- [x] **Move size metrics to CSS** — `[data-size=*]` rules in the theme; `sizes.ts` keeps only `Size`/`SIZES`. — `theme/size.css`; one icon scale (md = 1rem).
+- [x] **Add levels** — `level` prop emits `data-surface`; `--nx-level` rungs; style-query `+1`. — `theme/level.css`; spike Levels story passes on `Next.Container`.
 - [x] **Input/Button fill `--block-size`** — superseded by decision 12.
 - [ ] **Control sizing** — `--nx-control-inset`/`--nx-control-size`/`--nx-control-icon` per size; Input, Button, IconButton, Select trigger, Checkbox use them (decision 12).
 - [ ] **Field** — Ark `Field`; flex stack in the content track; Label, HelperText, ErrorText (decision 13).
 - [ ] **Checkbox, Select, IconButton** — Ark Checkbox/Select; Select content at `level='popup'` in a portal; IconButton requires a label.
-- [ ] **Move CSS to `next/theme/`** — size, container, scroll-area, level, control; `@layer dx-components`; stories import `theme/index.css`; drop `SpikeStyles`.
+- [x] **Move CSS to `next/theme/`** — size, container, scroll-area, level, control; `@layer dx-components`; stories import `theme/index.css`; drop `SpikeStyles`. — spike illustrations moved to `spike/choices.css`.
 - [ ] **Toolbar roving focus via zag** — own `@zag-js/core` machine; switch `role` to `toolbar`.
 - [ ] **ARIA fixes** — `aria-hidden` icons, labels.
-- [ ] **Container rails** — `gutter` with named lines; `layout` stack/row; `Block rail`; `gutter='inherit'` subgrid nesting.
-- [ ] **Container columns** — inner template inherited via subgrid; `auto` label track aligns across nesting.
-- [ ] **Next.ScrollArea** — composed frame/viewport; `:has` subgrid frame; `mode` overlay|reserve; `width` thin|regular; `native`.
-- [ ] **Responsive collapse** — pane and ScrollArea frame are query containers; rail→inset, rails hide, columns stack.
-- [ ] **Direct-nesting dev warning** — warn when a Container's parent is not a Container.
+- [x] **Container rails** — `gutter` with named lines; `layout` stack/row; `Block rail`; `gutter='inherit'` subgrid nesting. — `Container.tsx`; spike stories now run on `Next.*`.
+- [x] **Container columns** — inner template inherited via subgrid; `auto` label track aligns across nesting. — spike Default/Sizes assertions.
+- [x] **Next.ScrollArea** — composed frame/viewport; `:has` subgrid frame; `mode` overlay|reserve; `width` thin|regular; `native`. — `ScrollArea.tsx`; thin is a fixed 4px.
+- [x] **Responsive collapse** — pane and ScrollArea frame are query containers; rail→inset, rails hide, columns stack. — spike Narrow story.
+- [x] **Direct-nesting dev warning** — warn when a Container's parent is not a Container. — dev-only effect in `Container.tsx`.
 - [ ] **Nested-form story** — rails, gutter Blocks, scroll, sizes.
 - [ ] **Play tests** — per-size block-height alignment, rail alignment across nesting, and roles.
 - [ ] **`data-scope`/`data-part` on every part** — decision 10.

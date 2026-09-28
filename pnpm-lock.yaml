@@ -20964,6 +20964,12 @@ importers:
       '@internationalized/date':
         specifier: 'catalog:'
         version: 3.12.3
+      '@zag-js/core':
+        specifier: 'catalog:'
+        version: 1.43.3
+      '@zag-js/react':
+        specifier: 'catalog:'
+        version: 1.43.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0

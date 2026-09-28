@@ -22,7 +22,8 @@
    story: Container, Toolbar, Block, Icon, Input, Button, Typography.
 2. **Sizes.** CSS is the source of truth: theme rules keyed by `[data-size=xs|sm|md|lg|xl]` define `--block-size`,
    `--line-height`, `--font-size`, `--icon-size`, `--gap-size`. `Container` only sets `data-size`; TS exports just
-   the `Size` type and `SIZES` list.
+   the `Size` type and `SIZES` list. One icon scale serves rail Blocks and controls, with `md` at Tailwind's `size-4`:
+   `--nx-icon-size` xs 0.75rem, sm 0.875rem, md 1rem, lg 1.25rem, xl 1.5rem. The metrics live in `theme/size.css`.
    Namespacing (provisional, to be renamed): rules match only `.nx-*` elements and variables are `--nx-*`, since
    `data-size`, `data-layout`, `--gutter`, `--icon-size` and `--line-height` are already used by current primitives.
 3. **Framework neutrality.** Design for Solid, build React only, following Ark's layering: behavior in framework-neutral
@@ -50,8 +51,8 @@
      non-grid content. The caller picks the trade-off:
      - `mode='overlay'` (default): the thumb paints over the end gutter; `mode='reserve'` takes the thumb's width out
        of the end track, keeping the content edge aligned but shifting end-rail Blocks inward.
-     - `width='thin'` (default): `(--nx-block-size - --nx-icon-size) / 2` — 4px at every size — so an overlay thumb
-       sits in the rail Block's margin and never overlaps its icon; `width='regular'` (8px) overlaps it by 4px.
+     - `width='thin'` (default): a fixed 4px, which fits inside the rail Block's margin (`(block - icon) / 2`, at
+       least 4px) at every size, so an overlay thumb never overlaps its icon; `width='regular'` (8px) may overlap it.
      - `native` uses the platform scrollbar and implies `reserve`.
    - **Responsive.** The pane is the query container: whatever hosts a column of content (Panel/plank, Dialog) sets
      `container-type: inline-size`, so every template root in it — header, body, footer — collapses at the same pane
@@ -86,8 +87,8 @@
 
 12. **Control sizing.** Controls (Input, Button, IconButton, Select trigger, Checkbox box) are shorter than the block
     and centred in it: `--nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset))`, with a per-size
-    inset (provisional: xs 2px, sm 3px, md 4px, lg 5px, xl 6px) and a matching `--nx-control-icon` for icons inside
-    controls. The block stays the row height, so rails and Typography's first-line centring are unchanged.
+    inset (provisional: xs 2px, sm 3px, md 4px, lg 5px, xl 6px). `--nx-control-icon` equals `--nx-icon-size` (one
+    icon scale, decision 2), so an icon is the same size in a control as in a rail Block. The block stays the row height, so rails and Typography's first-line centring are unchanged.
     Illustrated in `spike/Choices.stories.tsx` (ControlSizing).
 13. **Field layout.** Field is a part, not a container (containers are Container, Form, Toolbar). `Field.Root` is a
     flex stack placed in the content track: Label above the control, HelperText/ErrorText below. Labels do not share a
