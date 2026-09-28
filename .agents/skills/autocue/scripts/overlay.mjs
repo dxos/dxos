@@ -27,7 +27,7 @@ const COUNTDOWN = new URL(
 
 /** `@dxos/brand`'s Composer mark as markup, drawn inside the ring; React-free, so it renders in Node. */
 const COMPOSER_LOGO = new URL(
-  '../../../../packages/ui/brand/src/components/experimental/composer-logo.ts',
+  '../../../../packages/ui/brand/src/components/experimental/composer-mark.ts',
   import.meta.url,
 );
 
