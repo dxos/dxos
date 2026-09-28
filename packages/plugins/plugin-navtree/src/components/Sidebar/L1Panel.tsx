@@ -20,7 +20,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Tree } from '@dxos/react-ui-list';
+import { TREE_BLOCK, Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
@@ -158,7 +158,7 @@ const L1PanelContent = ({
             rootId={item.id}
             path={path}
             draggable
-            gridTemplateColumns={`[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
+            gridTemplateColumns={`[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
             canDrop={navTreeContext.canDrop}
             getDropKind={navTreeContext.getDropKind}

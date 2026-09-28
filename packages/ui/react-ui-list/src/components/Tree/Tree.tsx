@@ -26,6 +26,7 @@ import {
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
+  type CSSProperties,
   type FC,
   type MouseEvent,
   type PointerEvent,
@@ -50,7 +51,7 @@ import {
 import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
-import { BLOCK_INDENT_STEP, COMPACT_INDENT_STEP, DROP_INDENTATION, indentTrack } from './helpers.ts';
+import { COMPACT_TREE_BLOCK, DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
 import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
@@ -310,8 +311,9 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   indentGuides?: boolean;
   /**
-   * Indent each level by a small fixed step. Off (the default), a level indents by the row's block
-   * size, so a child's toggle sits under its parent's icon; the guides and the drop line follow either.
+   * A narrow block (the icon plus a compact button's padding) rather than a whole control. Either way
+   * the toggle column, the icon cell and each level's indent share the block, so a child's toggle is
+   * centred under its parent's icon; the guides and the drop line follow it.
    */
   compact?: boolean;
   /**
@@ -355,7 +357,7 @@ export const Tree = <T extends { id: string } = any>({
   id,
   ariaLabel,
   classNames,
-  gridTemplateColumns = '[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]',
+  gridTemplateColumns = `[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content [tree-row-end]`,
   density = 'md',
   toggle = true,
   draggable = false,
@@ -721,7 +723,6 @@ export const Tree = <T extends { id: string } = any>({
     mountedRef.current ||= !resolving;
   }, [resolving]);
 
-  const indentStep = compact ? COMPACT_INDENT_STEP : BLOCK_INDENT_STEP;
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
       treeId,
@@ -745,8 +746,6 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       mountedRef,
       indentGuides,
-      indentStep,
-      compact,
       windowed,
       claimFocus,
     }),
@@ -771,8 +770,6 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       indentGuides,
-      indentStep,
-      compact,
       windowed,
       claimFocus,
     ],
@@ -818,7 +815,12 @@ export const Tree = <T extends { id: string } = any>({
           // template is applied per row, behind an indent track, rather than here — a subgrid would
           // share one set of tracks down the tree, and padding a subgrid only shrinks its first
           // track, so nested rows could not indent their leading cells.
-          style={windowed ? undefined : { gridTemplateColumns: TREE_TRACK }}
+          style={
+            {
+              '--dx-tree-block': compact ? COMPACT_TREE_BLOCK : 'var(--dx-control)',
+              ...(windowed ? {} : { gridTemplateColumns: TREE_TRACK }),
+            } as CSSProperties
+          }
           onPointerDownCapture={handlePointerDownCapture}
           onKeyDown={handleKeyDown}
         >
@@ -989,7 +991,7 @@ TreeNodeRow.displayName = 'Tree.NodeRow';
  * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef, indentGuides, indentStep, toggle } = useTreeRender();
+  const { mountedRef, indentGuides, toggle } = useTreeRender();
   // Only with children to span: the guide would otherwise defeat `empty:hidden` on a childless branch.
   const guide = indentGuides && (node.children?.length ?? 0) > 0;
 
@@ -1026,10 +1028,9 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
       {guide && (
         <TreeView.BranchIndentGuide
           className='absolute inset-y-0 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
-          // Under the branch's own toggle (or icon), clear of its children's toggles, which sit a step in.
-          style={{
-            insetInlineStart: `calc(${indentTrack(node.level, indentStep)} + ${toggle ? 'var(--dx-control) / 2' : '0.75rem'})`,
-          }}
+          // Under the branch's own toggle (or its icon, when there is no toggle), clear of its children's
+          // toggles, which sit a block in.
+          style={{ insetInlineStart: `calc(${indentTrack(node.level)} + ${TREE_BLOCK} / 2)` }}
         />
       )}
     </TreeView.BranchContent>
@@ -1097,7 +1098,6 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canSelect,
     selectionMode,
     claimFocus,
-    indentStep,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
@@ -1365,7 +1365,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           places it with `row-start-2`. */}
       <div
         className='indent relative grid grid-rows-[var(--dx-control)]'
-        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level, indentStep) }}
+        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level) }}
       >
         {toggle &&
           (branch ? (
@@ -1392,12 +1392,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && (
-          <TreeDropIndicator
-            instruction={instruction}
-            kind={dropKind === 'link' ? 'link' : 'move'}
-            gap={2}
-            indentStep={indentStep}
-          />
+          <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
         )}
         {debug && (
           <TreeDropDebug
@@ -1425,18 +1420,14 @@ const TreeNodeHeading = <T extends { id: string }>({
   props: TreeItemDataProps;
 }) => {
   const { t } = useTranslation();
-  const { renderIcon: RenderIcon, compact } = useTreeRender<T>();
+  const { renderIcon: RenderIcon } = useTreeRender<T>();
   const styles = props.iconHue ? getStyles(props.iconHue) : undefined;
   const text = toLocalizedString(props.label, t);
   return (
     <TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
       <div
         data-testid='treeItem.heading'
-        className={mx(
-          'flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none',
-          compact ? 'ps-0.5' : 'ps-0',
-          props.headingClassName,
-        )}
+        className={mx('flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none', props.headingClassName)}
       >
         {RenderIcon ? (
           <RenderIcon item={item} path={path} props={props} />
@@ -1445,8 +1436,8 @@ const TreeNodeHeading = <T extends { id: string }>({
             <Icon
               size={5}
               icon={props.icon}
-              // Off compact, centred in a control-wide block, the column a child row's toggle sits in.
-              classNames={['my-1', !compact && 'mx-[calc((var(--dx-control)-1.25rem)/2)]', styles?.text]}
+              // Centred in a block, the column a child row's toggle sits in.
+              classNames={['my-1 mx-[calc((var(--dx-tree-block)-1.25rem)/2)]', styles?.text]}
             />
           )
         )}

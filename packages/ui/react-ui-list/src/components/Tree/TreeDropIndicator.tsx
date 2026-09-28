@@ -5,7 +5,7 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
-import { COMPACT_INDENT_STEP } from './helpers.ts';
+import { TREE_BLOCK } from './helpers.ts';
 
 // Tree-item instruction indicator. Atlaskit's `react-drop-indicator` ships `box`/`list-item`
 // renderers but no `tree-item` one, so this stays a small Tailwind port (theme-aware via
@@ -59,17 +59,10 @@ export type TreeDropIndicatorProps = {
   instruction: Instruction;
   kind?: Exclude<DropKind, 'reject'>;
   gap?: number;
-  /** The tree's indent per level (a CSS length), so the line lands under the row it refers to. */
-  indentStep?: string;
 };
 
 /** Themed drop indicator for a tree-item pragmatic-dnd `Instruction` (sibling reorder / make-child). */
-export const TreeDropIndicator = ({
-  instruction,
-  kind = 'move',
-  gap = 0,
-  indentStep = COMPACT_INDENT_STEP,
-}: TreeDropIndicatorProps) => {
+export const TreeDropIndicator = ({ instruction, kind = 'move', gap = 0 }: TreeDropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';
   const desiredInstruction = isBlocked ? instruction.desired : instruction;
@@ -93,7 +86,7 @@ export const TreeDropIndicator = ({
           // The tree's own indent, not the instruction's: the hitbox reasons in a wider one so the
           // reparent bands are reachable, and using that here would push the line off the row.
           // `reparent` draws at the level it would land at, which is the whole point of the zone.
-          '--horizontal-indent': `calc(${indentLevel} * ${indentStep} + 4px)`,
+          '--horizontal-indent': `calc(${indentLevel} * ${TREE_BLOCK} + 4px)`,
         } as CSSProperties
       }
       className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation][kind]} ${instructionStyles[desiredInstruction.type]}`}
