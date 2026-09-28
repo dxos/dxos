@@ -30,4 +30,12 @@ export const recipes = {
   selectTrigger: () => `nx-control nx-select-trigger ${FOCUS_RING}`,
   popup: () => 'nx-popup',
   selectItem: () => 'nx-select-item',
+  dialogBackdrop: () => 'nx-dialog-backdrop',
+  dialogPositioner: () => 'nx-dialog-positioner',
+  dialogContent: () => 'nx-dialog',
+  dialogHeader: () => 'nx-dialog-header',
+  dialogTitle: () => 'nx-dialog-title',
+  dialogDescription: () => 'nx-dialog-description',
+  dialogBody: () => 'nx-dialog-body',
+  dialogFooter: () => 'nx-dialog-footer',
 } as const;

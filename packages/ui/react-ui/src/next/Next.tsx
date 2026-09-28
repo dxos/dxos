@@ -11,6 +11,7 @@ import {
   type CheckboxProps as NextCheckboxProps,
   Container as NextContainer,
   type ContainerProps as NextContainerProps,
+  Dialog as NextDialog,
   Field as NextField,
   Group as NextGroup,
   type GroupProps as NextGroupProps,
@@ -61,4 +62,5 @@ export namespace Next {
   export type CheckboxProps = NextCheckboxProps;
   export const Select = NextSelect;
   export type SelectOption = NextSelectOption;
+  export const Dialog = NextDialog;
 }

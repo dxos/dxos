@@ -30,11 +30,14 @@ type SelectRootProps = ThemedClassName<Omit<SelectPrimitive.RootProps<SelectOpti
 
 /** Ark select over a flat option list; the root takes no box so its trigger is laid out as the parent's child. */
 const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(
-  ({ classNames, items, positioning, children, ...props }, forwardedRef) => {
+  ({ classNames, items, positioning, lazyMount = true, unmountOnExit = true, children, ...props }, forwardedRef) => {
     const collection = useMemo(() => createListCollection<SelectOption>({ items }), [items]);
     return (
       <SelectPrimitive.Root
         {...props}
+        // Mounting the popup on open keeps it out of a modal Dialog's one-time `aria-hidden` sweep of its siblings.
+        lazyMount={lazyMount}
+        unmountOnExit={unmountOnExit}
         // Ark's 8px default reads as detached from the trigger.
         positioning={{ gutter: POPUP_GUTTER, ...positioning }}
         collection={collection}

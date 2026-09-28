@@ -154,3 +154,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    `components/index.ts`); `Next.tsx` assembles the namespace; `theme/`, `recipes.ts` and `sizes.ts` stay at the root.
 9. **`Field.Header` is the label row**: a `size='sm'` block row (by default) holding the Label and optional trailing
    Icons/IconButtons, whose end aligns with the control's right edge. The label takes the row's own font.
+10. **Dialog** is Ark Dialog: a portalled `level='raised'` surface over the scrim with an explicit `size` (finding 9);
+    Header, Body (`Container gutter='md'` as a composed `ScrollArea` viewport) and Footer (`Group justify='end'`) share
+    one gutter. The Body keeps ScrollArea's `data-scope` (finding 10), and Select mounts its popup on open so a modal
+    dialog's one-time `aria-hidden` sweep does not hide it.

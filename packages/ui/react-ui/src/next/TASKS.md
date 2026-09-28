@@ -46,3 +46,4 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 - [x] **Shared class recipes** — plain TS functions used by the bindings (decision 8). — `recipes.ts`.
 - [x] **Benchmark story** — 1,000 rows in a nested Container inside a ScrollArea (decision 11). — ~110ms mount+layout in headless Chromium.
 - [x] **Phase 1 review follow-ups** — `Next.Group` for form actions; explicit `Select.Content` size; toolbar gap `--nx-gap-size`; experimental story removed.
+- [x] **Dialog** — Ark Dialog at `level='raised'` with explicit `size`; Body = Container + ScrollArea, Footer = Group (DESIGN.md follow-up 10). — `components/Dialog/`; Default, LongContent, Sizes play tests.

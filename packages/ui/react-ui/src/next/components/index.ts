@@ -6,6 +6,7 @@ export * from './Block/index.ts';
 export * from './Button/index.ts';
 export * from './Checkbox/index.ts';
 export * from './Container/index.ts';
+export * from './Dialog/index.ts';
 export * from './Field/index.ts';
 export * from './Group/index.ts';
 export * from './Icon/index.ts';

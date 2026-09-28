@@ -19,7 +19,7 @@
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
 
-  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header)[data-size='xs'] {
+  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header, .nx-dialog)[data-size='xs'] {
     --nx-block-size: 1.25rem;
     --nx-line-height: var(--text-xs--line-height);
     --nx-font-size: var(--text-xs);
@@ -32,7 +32,7 @@
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
 
-  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header)[data-size='sm'] {
+  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header, .nx-dialog)[data-size='sm'] {
     --nx-block-size: 1.5rem;
     --nx-line-height: var(--text-sm--line-height);
     --nx-font-size: var(--text-sm);
@@ -45,7 +45,7 @@
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
 
-  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header)[data-size='md'] {
+  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header, .nx-dialog)[data-size='md'] {
     --nx-block-size: 2rem;
     --nx-line-height: var(--text-base--line-height);
     --nx-font-size: var(--text-base);
@@ -58,7 +58,7 @@
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
 
-  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header)[data-size='lg'] {
+  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header, .nx-dialog)[data-size='lg'] {
     --nx-block-size: 2.5rem;
     --nx-line-height: var(--text-lg--line-height);
     --nx-font-size: var(--text-lg);
@@ -71,7 +71,7 @@
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
   }
 
-  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header)[data-size='xl'] {
+  :is(.nx-scope, .nx-grid, .nx-scroll-root, .nx-toolbar, .nx-popup, .nx-field-header, .nx-dialog)[data-size='xl'] {
     --nx-block-size: 3rem;
     --nx-line-height: var(--text-xl--line-height);
     --nx-font-size: var(--text-xl);
