@@ -142,12 +142,6 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       do: Open the plank's companion, pick its Assistant tab, and show the chat's tasks.
       expect: the delegated chat is shown with its status line and its checklist of five tasks
       note: The checklist starts collapsed (it is the assistant's working state), so it is opened on purpose.
-    - name: Ask the agent to start
-      do: Type "Start working on the tasks." into the companion's prompt and press Enter.
-      expect: the chat shows "Generating" and the agent starts on the first subtask
-      note: |
-        Showing the companion restarts the delegated agent, which drops its opening prompt, so the reader
-        nudges it. Known defect; remove this step once the companion no longer restarts the agent.
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
       expect: all five tasks are done and the chat shows a "Load plugin" prompt naming Space Clock

@@ -31,8 +31,6 @@ const TWENTY_MIN = 20 * 60_000;
 /** The Assistant's remote model; Composer's default (Claude Sonnet 5) left the delegated chat silent. */
 const MODEL = 'DeepSeek V4 Pro';
 
-const NUDGE = 'Start working on the tasks.';
-
 /** The plugin the agent builds, as the template's tasks name it. */
 const PLUGIN_NAME = 'Space Clock';
 
@@ -288,17 +286,6 @@ export const steps = [
         }
       }
       throw new Error('the Assistant companion did not open after assigning the tasks');
-    },
-  },
-  {
-    // Showing the companion restarts the delegated agent, which drops its opening prompt (a known bug),
-    // so the reader nudges it the way a person would.
-    name: 'Ask the agent to start',
-    run: async ({ demo, page }) => {
-      const prompt = '[data-testid="deck.companion"] [data-testid="assistant.prompt"] .cm-content';
-      await demo.type({ selector: prompt, value: NUDGE, label: 'Prompt' });
-      await demo.press({ key: 'Enter' });
-      await page.locator('[data-testid="deck.companion"]', { hasText: 'Generating' }).waitFor({ timeout: 60_000 });
     },
   },
   {
