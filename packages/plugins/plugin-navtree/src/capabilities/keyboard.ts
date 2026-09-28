@@ -83,6 +83,18 @@ export default Capability.makeModule(
     initHotkeys();
     setHotkeyScope(GraphNode.RootId);
 
+    // Edits persist as they are made, so save has nothing to flush; the binding exists to keep the
+    // browser's "Save page" dialog from opening anywhere in the app.
+    const saveId = `${GraphNode.RootId}:save`;
+    hotkeyStore.register({
+      id: saveId,
+      hotkey: 'mod+s',
+      scopes: [GraphNode.RootId],
+      label: 'Save document',
+      action: () => {},
+      options: { enableOnFormTags: true, enableOnContentEditable: true },
+    });
+
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsubscribe();
@@ -92,6 +104,7 @@ export default Capability.makeModule(
           hotkeyStore.unregister(id);
         }
         registered = new Set();
+        hotkeyStore.unregister(saveId);
       }),
     );
     return [];
