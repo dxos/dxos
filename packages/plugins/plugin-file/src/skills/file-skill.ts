@@ -45,8 +45,9 @@ const make = () =>
         from disk to storage without passing through this conversation, so the cost is the same
         whether the file is 40KB or 90MB. Base64 is never the right choice for a video.
 
-        Images, video, PDFs, and plain text, CSV, Markdown and JSON are accepted. HTML is not.
-        Always pass the true media type of the content; do not infer it from a file extension.
+        Any file type is accepted; HTML and XML are stored as \`application/octet-stream\` so they
+        download rather than render. Always pass the true media type of the content; do not infer it
+        from a file extension.
       `,
     }),
     agentCanEnable: true,
