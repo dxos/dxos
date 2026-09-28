@@ -151,6 +151,14 @@
     line-height: var(--nx-line-height);
     box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
   }
+  /* An outline, not the shared inset ring: outlines paint after descendants, so item highlights cannot cover it. */
+  .nx-popup:focus {
+    outline: none;
+  }
+  .nx-popup:focus-visible {
+    outline: var(--dx-focus-line, 2px) solid var(--color-focus-ring-subtle);
+    outline-offset: calc(-1 * var(--dx-focus-line, 2px));
+  }
   .nx-select-item {
     display: flex;
     align-items: center;

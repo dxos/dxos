@@ -27,6 +27,6 @@ export const recipes = {
   checkbox: () => 'nx-checkbox',
   checkboxControl: () => 'nx-checkbox-control',
   selectTrigger: () => `nx-control nx-select-trigger ${FOCUS_RING}`,
-  popup: () => `nx-popup ${FOCUS_RING}`,
+  popup: () => 'nx-popup',
   selectItem: () => 'nx-select-item',
 } as const;
