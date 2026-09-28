@@ -60,3 +60,4 @@ FieldSet, Card, Collapsible, Menu, Switch, Tooltip on the Phase 1 model.
 - [x] **Card** — Container `level=+1 gutter=md`; Header/Title/Description/Body/Footer; `Card.Poster` Image (DESIGN.md follow-up 14). — `components/Card/`; Layout, Poster, BrokenPoster play tests.
 - [x] **Collapsible** — Ark Collapsible; caret trigger row; `--height` animation, reduced-motion aware (DESIGN.md follow-up 15). — `components/Collapsible/`; Toggle play test.
 - [x] **Menu** — Ark Menu; portalled popup with explicit `size`; Item icon/shortcut, Separator, ItemGroup + label (DESIGN.md follow-up 16). — `components/Menu/`; Open, Dismiss play tests.
+- [x] **Tooltip** — Ark Tooltip; portalled `sm` popup, 20rem cap, 300ms open delay (DESIGN.md follow-up 17). — `components/Tooltip/`; Open play test.

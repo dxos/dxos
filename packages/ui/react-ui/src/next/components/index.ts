@@ -22,4 +22,5 @@ export * from './ScrollArea/index.ts';
 export * from './Select/index.ts';
 export * from './Switch/index.ts';
 export * from './Toolbar/index.ts';
+export * from './Tooltip/index.ts';
 export * from './Typography/index.ts';

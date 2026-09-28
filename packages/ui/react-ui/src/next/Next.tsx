@@ -38,6 +38,7 @@ import {
   type SwitchProps as NextSwitchProps,
   Toolbar as NextToolbar,
   type ToolbarProps as NextToolbarProps,
+  Tooltip as NextTooltip,
   Typography as NextTypography,
 } from './components/index.ts';
 
@@ -79,4 +80,5 @@ export namespace Next {
   export const Card = NextCard;
   export const Collapsible = NextCollapsible;
   export const Menu = NextMenu;
+  export const Tooltip = NextTooltip;
 }

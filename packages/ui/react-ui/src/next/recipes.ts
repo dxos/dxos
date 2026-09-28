@@ -59,4 +59,5 @@ export const recipes = {
   menuShortcut: () => 'nx-menu-shortcut',
   menuSeparator: () => 'nx-menu-separator',
   menuGroupLabel: () => 'nx-menu-group-label',
+  tooltipContent: () => 'nx-tooltip',
 } as const;
