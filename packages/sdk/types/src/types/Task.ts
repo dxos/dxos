@@ -1038,9 +1038,11 @@ export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Databas
       seen.add(current.id);
       subtree.push(current);
       const listed = yield* Effect.forEach(current.subtasks ?? [], loadOrUndefined, { concurrency: 16 });
+      // The EDGE query service rejects `child-of` ("Query too complex"), and `.run` surfaces a
+      // rejected query as a defect, so only a defect catch lets the walk fall back to the lists.
       const edged = yield* Database.query(
         Query.select(Filter.and(Filter.type(Task), Filter.childOf(current, { transitive: false }))),
-      ).run.pipe(Effect.orElseSucceed((): Task[] => []));
+      ).run.pipe(Effect.catchDefect(() => Effect.succeed<Task[]>([])));
       queue.push(...dedupeById([...listed, ...edged]).filter((child) => parentTaskId(child) === current.id));
     }
     return subtree;
