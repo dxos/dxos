@@ -39,9 +39,9 @@ export type GlobeContextType = {
  * Imperative options accepted by GlobeController.flyTo.
  */
 export type FlyToOptions = {
-  /** Base duration in ms (scales with great-circle distance). */
+  /** Minimum duration in ms; a longer move takes its distance-based time instead. */
   duration?: number;
-  /** Milliseconds per radian of arc added to `duration` for longer moves (default 1500). */
+  /** Milliseconds per radian of arc: the flight takes the greater of this times the distance and `duration` (default 1500). */
   msPerRadian?: number;
   /** Optional pitch offset applied along the latitude axis of the target. */
   tilt?: number;

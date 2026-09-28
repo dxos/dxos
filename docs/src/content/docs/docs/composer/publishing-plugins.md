@@ -578,7 +578,19 @@ const ClockCard = ({
       cursor: 'pointer',
       ...(selected && { borderColor: 'rgb(14, 165, 233)' }),
     }}
+    // A focusable button so the keyboard can select a clock as the pointer does.
+    role='button'
+    tabIndex={0}
     onClick={onSelect}
+    onKeyDown={(event) => {
+      if (
+        event.target === event.currentTarget &&
+        (event.key === 'Enter' || event.key === ' ')
+      ) {
+        event.preventDefault();
+        onSelect();
+      }
+    }}
   >
     <div style={{ opacity: 0.7 }}>
       {now.toLocaleDateString(undefined, { timeZone, dateStyle: 'medium' })}
