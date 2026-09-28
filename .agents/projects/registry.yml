@@ -780,6 +780,16 @@ projects:
     design: packages/sdk/app-framework/docs/INTROSPECTION.md
     prs: []
     resume: 'PR #12850 OPEN, Check green (shard-3 red was flaky TestTaskDrainScripted — passes attempt 2 locally with and without this change; retriggered green). SHIPPED IN IT: disablePlugins (definition+handler+5 tests, live-verified — chess deactivates, ops vanish) AND Phase A snapshot: org.dxos.operation.debug.snapshot + composer.snapshot() sugar in plugin-debug (layout/attention/planks-with-actions/surfaces/plugin-counts, per-section degradation, headless-harness test green). Design at packages/sdk/app-framework/docs/INTROSPECTION.md (§3.2 surface registry + §3.3 data-node-id/data-action attrs are Phases B/C, unbuilt). FINDING for #12845: boot is visibility-gated — hidden tab suspends rAF, app sits on boot screen with manager fully active (startup+idle fired); a late rAF shim cannot rescue the already-pending callback. NEXT: live snapshot() evaluation per INTROSPECTION.md §4 acceptance test (needs a VISIBLE Browser pane), then land #12850.'
+  - name: react-ui-next
+    status: active
+    user: burdon
+    host: burdon-mbp-2141
+    created: 2026-09-28
+    summary: 'Next-generation react-ui primitives as a parallel `Next.*` namespace: sizes/levels as data-attribute CSS variables, zag-machine behavior (Solid-ready layering), components own padding and containers own gaps, grid/Column model for scrolling containers with gutters.'
+    tasks: packages/ui/react-ui/src/next/TASKS.md
+    design: packages/ui/react-ui/src/next/DESIGN.md
+    prs: []
+    resume: 'Design decisions 1-4, 6, 7 recorded in DESIGN.md; NEXT: grid/Column discussion (decision 5), then milestone 1.'
 ended:
   - name: task-planning-skill
     user: burdon
