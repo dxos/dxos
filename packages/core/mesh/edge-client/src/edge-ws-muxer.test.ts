@@ -135,6 +135,7 @@ describe('WebSocketMuxerTest', () => {
 
       await expect(muxer.send(unsegmentedMessage('small'))).rejects.toBeInstanceOf(WebSocketClosedError);
       await expect(muxer.send(textMessage(SEGMENTED_CONTENT))).rejects.toBeInstanceOf(WebSocketClosedError);
+      expect(() => muxer.sendSync(textMessage(SEGMENTED_CONTENT))).toThrow(WebSocketClosedError);
       expect(socket.frames).toHaveLength(0);
     });
   }
@@ -145,11 +146,25 @@ describe('WebSocketMuxerTest', () => {
     const content = 'A'.repeat(CLOUDFLARE_MESSAGE_MAX_BYTES);
 
     await expect(muxer.send(unsegmentedMessage(content))).rejects.toBeInstanceOf(MessageTooLargeError);
+    expect(() => muxer.sendSync(unsegmentedMessage(content))).toThrow(MessageTooLargeError);
     expect(socket.frames).toHaveLength(0);
 
     // With a service id the same content is segmented, which only the larger RPC limit bounds.
     await muxer.send(textMessage(content));
     expect(socket.frames.length).toBeGreaterThan(1);
+  });
+
+  test('sendSync writes every frame before it returns', ({ expect }) => {
+    const socket = new TestSocket();
+    const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+    const segmented = textMessage(SEGMENTED_CONTENT);
+    muxer.sendSync(segmented);
+    muxer.sendSync(unsegmentedMessage('small'));
+
+    expect(socket.frames).toHaveLength(segmentCount(segmented) + 1);
+    const receiver = new WebSocketMuxer(new TestSocket());
+    const received = socket.frames.map((frame) => receiver.receiveData(frame)).filter(isNonNullable);
+    expect(received.map(textOf)).toEqual([SEGMENTED_CONTENT, 'small']);
   });
 
   test('rejects the rest of a segmented message when the socket closes mid-sequence', async ({ expect }) => {
@@ -277,6 +292,17 @@ describe('WebSocketMuxerTest', () => {
       vi.advanceTimersToNextTimer();
       expect(socket.frames).toHaveLength(segmentCount(message));
       await sent;
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    test('sendSync ignores a full socket buffer and arms no timer', ({ expect }) => {
+      const socket = new TestSocket();
+      socket.bufferedAmount = SOCKET_BUFFER_FULL;
+      const muxer = new WebSocketMuxer(socket, { maxChunkLength: MAX_CHUNK_LENGTH });
+      const message = textMessage(SEGMENTED_CONTENT);
+      muxer.sendSync(message);
+
+      expect(socket.frames).toHaveLength(segmentCount(message));
       expect(vi.getTimerCount()).toBe(0);
     });
 

@@ -87,51 +87,26 @@ export class WebSocketMuxer {
    * once a message was cut off mid-sequence every later segmented message rejects with that error.
    */
   public async send(message: Message): Promise<void> {
-    if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
-      throw new WebSocketClosedError(this._ws.readyState);
-    }
-    const binary = buf.toBinary(MessageSchema, message);
-    const channelId = this._resolveChannel(message);
-    const maxByteLength = channelId == null ? CLOUDFLARE_MESSAGE_MAX_BYTES : CLOUDFLARE_RPC_MAX_BYTES;
-    if (binary.byteLength > maxByteLength) {
-      throw new MessageTooLargeError({
-        byteLength: binary.byteLength,
-        maxByteLength,
-        serviceId: message.serviceId,
-        payload: protocol.getPayloadType(message),
-      });
-    }
-
-    if (channelId == null || binary.length < this._maxChunkLength) {
-      this._ws.send(concatUint8Arrays(new Uint8Array([0]), binary));
+    const { frames, channelId } = this._encode(message);
+    if (channelId == null) {
+      this._ws.send(frames[0]);
       return;
     }
     if (this._segmentedSendError) {
       throw this._segmentedSendError;
     }
 
-    const chunkCount = Math.ceil(binary.length / this._maxChunkLength);
     log('muxer sending segmented message', {
-      byteLength: binary.byteLength,
-      chunkCount,
+      chunkCount: frames.length,
       channelId,
       serviceId: message.serviceId,
       payload: protocol.getPayloadType(message),
     });
 
     const terminatorSentTrigger = new Trigger();
-    const messageChunks: MessageChunk[] = [];
-    for (let i = 0; i < binary.length; i += this._maxChunkLength) {
-      const chunk = binary.slice(i, i + this._maxChunkLength);
-      const isLastChunk = i + this._maxChunkLength >= binary.length;
-      if (isLastChunk) {
-        const flags = new Uint8Array([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId]);
-        messageChunks.push({ payload: concatUint8Arrays(flags, chunk), trigger: terminatorSentTrigger });
-      } else {
-        const flags = new Uint8Array([FLAG_SEGMENT_SEQ, channelId]);
-        messageChunks.push({ payload: concatUint8Arrays(flags, chunk) });
-      }
-    }
+    const messageChunks: MessageChunk[] = frames.map((payload, index) =>
+      index === frames.length - 1 ? { payload, trigger: terminatorSentTrigger } : { payload },
+    );
 
     const queuedMessages = this._outMessageChunks.get(channelId);
     if (queuedMessages) {
@@ -144,11 +119,21 @@ export class WebSocketMuxer {
 
     await terminatorSentTrigger.wait();
     log.debug('muxer segmented message send enqueued', {
-      byteLength: binary.byteLength,
-      chunkCount,
+      chunkCount: frames.length,
       channelId,
       serviceId: message.serviceId,
     });
+  }
+
+  /**
+   * Writes every frame of the message before returning, with no queue, timer or back-pressure: for a socket that takes
+   * frames at once and throws once closed, such as workerd's. Throws where {@link send} rejects. Use it or `send` on a
+   * muxer, not both, since its segments would cut into a sequence `send` has queued.
+   */
+  public sendSync(message: Message): void {
+    for (const frame of this._encode(message).frames) {
+      this._ws.send(frame);
+    }
   }
 
   public receiveData(data: Uint8Array): Message | undefined {
@@ -234,6 +219,40 @@ export class WebSocketMuxer {
     this._inMessageAccumulatorBytes.clear();
     this._inMessageAccumulatedBytes = 0;
     this._outMessageChannelByService.clear();
+  }
+
+  /**
+   * Splits a message into its wire frames: one whole frame, or segments on its service's channel, which is returned
+   * only then. Throws on a closing or closed socket and past the Cloudflare limit.
+   */
+  private _encode(message: Message): { frames: Uint8Array[]; channelId?: number } {
+    if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
+      throw new WebSocketClosedError(this._ws.readyState);
+    }
+    const binary = buf.toBinary(MessageSchema, message);
+    const channelId = this._resolveChannel(message);
+    const maxByteLength = channelId == null ? CLOUDFLARE_MESSAGE_MAX_BYTES : CLOUDFLARE_RPC_MAX_BYTES;
+    if (binary.byteLength > maxByteLength) {
+      throw new MessageTooLargeError({
+        byteLength: binary.byteLength,
+        maxByteLength,
+        serviceId: message.serviceId,
+        payload: protocol.getPayloadType(message),
+      });
+    }
+    if (channelId == null || binary.byteLength < this._maxChunkLength) {
+      return { frames: [concatUint8Arrays(new Uint8Array([0]), binary)] };
+    }
+
+    const frames: Uint8Array[] = [];
+    for (let offset = 0; offset < binary.byteLength; offset += this._maxChunkLength) {
+      const isLastChunk = offset + this._maxChunkLength >= binary.byteLength;
+      const flags = isLastChunk ? FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED : FLAG_SEGMENT_SEQ;
+      frames.push(
+        concatUint8Arrays(new Uint8Array([flags, channelId]), binary.subarray(offset, offset + this._maxChunkLength)),
+      );
+    }
+    return { frames, channelId };
   }
 
   private _dropAccumulator(channelId: number): void {
