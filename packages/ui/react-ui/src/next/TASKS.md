@@ -81,3 +81,22 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 - [ ] **Settings layout** — design the two-column `variant='settings'` (Container `columns`) — needs a decision.
 - [ ] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`.
 - [ ] **Pilot plugin** — move one plugin (e.g. plugin-space settings) to `react-ui-form/next`.
+
+## Phase 4: react-ui-list and react-ui-form rewrite
+
+Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in the milestone order of
+[AUDIT.md](./AUDIT.md) §5; each lands with stories, play tests, a parity table and one pilot plugin.
+
+### Tasks
+
+- [ ] **1. Foundations** — pane host, popup size decision, Container child span, Group stretch, required marker, depth-5 benchmark, `+1` fallback.
+- [ ] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
+- [ ] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
+- [ ] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
+- [ ] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
+- [ ] **6. `react-ui-form/next` core** — parts, scalar renderers, `fieldMap`/`fieldProvider`/`createSelectField`; pilot plugin-thread `ChannelCreatePanel`.
+- [ ] **7. Settings layout** — needs a decision (AUDIT.md §3.2); pilot plugin-pwa, plugin-excalidraw, plugin-settings.
+- [ ] **8. Arrays and layout templates** — ArrayField, SelectOptionField, `Form.Layout`; pilot plugin-pipeline `PipelineProperties`.
+- [ ] **9. Ref and lookup fields** — RefField, InlineRefField, ComboboxField, ObjectPicker; pilot plugin-space.
+- [ ] **10. Higher-level form components** — ObjectProperties, ObjectForm, ViewEditor, FieldEditor, editor control frame; pilot plugin-map `MapViewEditor`.
+- [ ] **11. Tree next** — Ark tree-view spike, virtualization, DnD, MasterDetail; pilot plugin-navtree.

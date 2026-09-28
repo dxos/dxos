@@ -281,6 +281,8 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 
 ## Phase 3: react-ui-form port
 
+Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).
+
 `@dxos/react-ui-form` (~155 importing files; public extension points `fieldMap`, `FormFieldRenderer`, `fieldProvider`,
 `createSelectField`, `FormFieldRow`) is ported as a **parallel `react-ui-form/next`** with the same `Form.*` API and
 renderer contract, rendered with `Next.*`, so plugins and their custom renderers migrate one at a time (decision 1's
