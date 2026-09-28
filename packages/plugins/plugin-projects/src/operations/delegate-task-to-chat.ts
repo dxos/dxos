@@ -75,6 +75,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
           // Named after the task only when it is about exactly one: a chat holding three would be
           // claiming to be about whichever happened to be first.
           ...(tasks.length === 1 && { name: tasks[0].title }),
+          // Set now, as the project's subject-context binding would: the agent process is bound to the
+          // chat's instructions at spawn, so a companion backfilling them later reconfigures the
+          // session mid-turn and discards the opening prompt.
+          instructions: project?.instructions,
         });
 
         // The tasks join the chat's checklist in the order they were given, which is the order the
