@@ -310,7 +310,7 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   indentGuides?: boolean;
   /**
-   * Indent each level by a small fixed step (the default). Off, a level indents by the row's block
+   * Indent each level by a small fixed step. Off (the default), a level indents by the row's block
    * size, so a child's toggle sits under its parent's icon; the guides and the drop line follow either.
    */
   compact?: boolean;
@@ -373,7 +373,7 @@ export const Tree = <T extends { id: string } = any>({
   hideDragSource = false,
   virtualize = false,
   indentGuides = false,
-  compact = true,
+  compact = false,
   scrollerRef,
   canSelect,
   onOpenChange,
@@ -746,6 +746,7 @@ export const Tree = <T extends { id: string } = any>({
       mountedRef,
       indentGuides,
       indentStep,
+      compact,
       windowed,
       claimFocus,
     }),
@@ -771,6 +772,7 @@ export const Tree = <T extends { id: string } = any>({
       onItemHover,
       indentGuides,
       indentStep,
+      compact,
       windowed,
       claimFocus,
     ],
@@ -1023,8 +1025,8 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
       ))}
       {guide && (
         <TreeView.BranchIndentGuide
-          className='absolute inset-y-0 w-0 border-s border-subdued-separator pointer-events-none'
-          // Centred under the branch's own toggle (or icon), which sits at the start of its indent.
+          className='absolute inset-y-0 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
+          // Under the branch's own toggle (or icon), clear of its children's toggles, which sit a step in.
           style={{
             insetInlineStart: `calc(${indentTrack(node.level, indentStep)} + ${toggle ? 'var(--dx-control) / 2' : '0.75rem'})`,
           }}
@@ -1423,7 +1425,7 @@ const TreeNodeHeading = <T extends { id: string }>({
   props: TreeItemDataProps;
 }) => {
   const { t } = useTranslation();
-  const { renderIcon: RenderIcon } = useTreeRender<T>();
+  const { renderIcon: RenderIcon, compact } = useTreeRender<T>();
   const styles = props.iconHue ? getStyles(props.iconHue) : undefined;
   const text = toLocalizedString(props.label, t);
   return (
@@ -1431,14 +1433,22 @@ const TreeNodeHeading = <T extends { id: string }>({
       <div
         data-testid='treeItem.heading'
         className={mx(
-          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) select-none',
+          'flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none',
+          compact ? 'ps-0.5' : 'ps-0',
           props.headingClassName,
         )}
       >
         {RenderIcon ? (
           <RenderIcon item={item} path={path} props={props} />
         ) : (
-          props.icon && <Icon size={5} icon={props.icon} classNames={['my-1', styles?.text]} />
+          props.icon && (
+            <Icon
+              size={5}
+              icon={props.icon}
+              // Off compact, centred in a control-wide block, the column a child row's toggle sits in.
+              classNames={['my-1', !compact && 'mx-[calc((var(--dx-control)-1.25rem)/2)]', styles?.text]}
+            />
+          )
         )}
         <span className='min-w-0 truncate text-start' data-tooltip>
           {text}

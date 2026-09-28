@@ -128,6 +128,7 @@ export const ProcessTree = React.memo(
         <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
           <ScrollArea.Viewport>
             <Tree<ProcessNode>
+              compact
               id={ROOT_ID}
               model={model}
               virtualize

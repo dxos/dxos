@@ -158,6 +158,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   indentGuides: boolean;
   /** The length one nesting level indents its rows by (a CSS length). */
   indentStep: string;
+  /** A small fixed indent; off, a level steps by the row's block size and the icon takes a block of its own. */
+  compact: boolean;
   /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
   windowed: boolean;
   /** Takes DOM focus for the row a drop left the tree waiting to focus, once the row is in the document. */

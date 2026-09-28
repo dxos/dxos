@@ -456,21 +456,26 @@ const openTwoLevels = async (canvasElement: HTMLElement) => {
 
 /** Each open branch draws a guide down its children, centred under its own chevron at every depth. */
 export const IndentGuides: Story = {
-  // Block-size indent, so the guides' alignment is checked away from the compact default.
-  args: { indentGuides: true, compact: false },
+  // The default block-size indent.
+  args: { indentGuides: true },
   play: async ({ canvasElement }) => {
     const toggles = await openTwoLevels(canvasElement);
-    // Off compact, a level steps in by a whole control, so the child's toggle sits under the parent's icon.
-    const [outer, inner] = toggles.map((toggle) => toggle.getBoundingClientRect());
-    await expect(Math.abs(inner.left - outer.left - outer.width)).toBeLessThanOrEqual(1);
-    await waitFor(() => expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(2));
+    // Off compact, a level steps in by a whole control: a branch's guide runs under its own toggle,
+    // clear of its children's toggles, which sit under the branch's icon.
+    const centre = (rect: DOMRect) => rect.left + rect.width / 2;
     for (const toggle of toggles) {
-      const guide = queryPart(
-        toggle.closest('[data-part="branch"]'),
-        ':scope > [data-part="branch-content"] > [data-part="branch-indent-guide"]',
-      );
-      const { left, width } = toggle.getBoundingClientRect();
-      await expect(Math.abs(guide.getBoundingClientRect().left - (left + width / 2))).toBeLessThanOrEqual(1);
+      const branch = toggle.closest('[data-part="branch"]');
+      const guide = queryPart(branch, ':scope > [data-part="branch-content"] > [data-part="branch-indent-guide"]');
+      const child = queryPart(branch, ':scope > [data-part="branch-content"] [data-testid="treeItem.toggle"]');
+      const toggleRect = toggle.getBoundingClientRect();
+      const childRect = child.getBoundingClientRect();
+      await expect(Math.abs(centre(guide.getBoundingClientRect()) - centre(toggleRect))).toBeLessThanOrEqual(1);
+      await expect(childRect.left - toggleRect.left).toBeCloseTo(toggleRect.width, 0);
+      // A top-level item in this fixture has no icon; where there is one, the child's toggle is under it.
+      const icon = toggle.parentElement?.querySelector('[data-testid="treeItem.heading"] svg');
+      if (icon) {
+        await expect(Math.abs(centre(childRect) - centre(icon.getBoundingClientRect()))).toBeLessThanOrEqual(1);
+      }
     }
   },
 };
