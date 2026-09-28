@@ -10,7 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import { Database } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { SKILL_KEY as SANDBOX_SKILL_KEY } from '@dxos/plugin-sandbox/Sandbox';
+import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import { Text } from '@dxos/schema';
 import { Task, TaskSet } from '@dxos/types';
 
@@ -83,7 +83,7 @@ describe('Composer Plugin project template', () => {
 
     const instructions = await project.instructions?.load();
     expect(instructions?.skills.map((skill) => skill.uri.toString())).toEqual([
-      expect.stringContaining(SANDBOX_SKILL_KEY),
+      expect.stringContaining(Sandbox.SKILL_KEY),
     ]);
     const text = (await instructions?.text?.load())?.content ?? '';
     expect(text).toContain('ln -sfn /src/dxos/node_modules node_modules');

@@ -100,10 +100,12 @@ describe.skipIf(unavailable)('local sandbox server', { timeout: 60_000 }, () => 
       yield* remote.writeFile(SPACE_ID, 'sbx2', 'site/dist/index.mjs', new TextEncoder().encode('export default 1;'));
       yield* remote.writeFile(SPACE_ID, 'sbx2', 'site/secret.txt', new TextEncoder().encode('secret'));
       const publish = remote.publish;
+      expect(publish).toBeDefined();
       if (!publish) {
-        throw new Error('the HTTP backend must publish');
+        return;
       }
       const base = yield* publish(SPACE_ID, 'sbx2', 'site/dist');
+      expect(yield* publish(SPACE_ID, 'sbx2', 'site/dist')).toBe(base);
       expect(base).toMatch(new RegExp(`^${url}/files/[0-9a-f]{32}/$`));
 
       const module = yield* Effect.promise(() => fetch(`${base}index.mjs`));

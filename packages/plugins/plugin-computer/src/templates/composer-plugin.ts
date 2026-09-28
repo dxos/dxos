@@ -8,7 +8,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import { SKILL_KEY as SANDBOX_SKILL_KEY } from '@dxos/plugin-sandbox/Sandbox';
+import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import { Task, TaskSet } from '@dxos/types';
 import { isTauri } from '@dxos/util';
 
@@ -108,7 +108,7 @@ ${IDS}`,
 export const desktopVariant = (sourceRoot: string): Variant => {
   const plugin = `plugins/${FOLDER}`;
   return {
-    skill: SANDBOX_SKILL_KEY,
+    skill: Sandbox.SKILL_KEY,
     instructions: `${PARENT_INSTRUCTIONS}
 
 Use the Sandbox skill. Before the first subtask, create one sandbox named "${SANDBOX_NAME}" and run every command \

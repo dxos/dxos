@@ -34,6 +34,9 @@ export const FILES_PREFIX = '/files/';
 /** A directory `publish` exposed, keyed by the unguessable id in its URL. */
 type Published = { spaceId: string; sandboxId: string; path: string };
 
+/** Caps the directories one helper serves, so its registry cannot grow for as long as the app runs. */
+const MAX_PUBLISHED = 256;
+
 /**
  * Serves `backend` on the loopback interface as one `POST /<method>` per backend method with a JSON
  * body; file contents travel as base64 so binary files survive.
@@ -158,10 +161,22 @@ const publish = (
   published: Map<string, Published>,
   { spaceId, sandboxId, path }: Published,
 ): Effect.Effect<{ path: string }, SandboxService.SandboxError> =>
-  Effect.map(backend.listFiles(spaceId, sandboxId, path), () => {
+  Effect.flatMap(backend.listFiles(spaceId, sandboxId, path), () => {
+    // Republishing a directory answers its existing URL, so a rebuild loop does not add entries.
+    const existing = [...published].find(
+      ([, entry]) => entry.spaceId === spaceId && entry.sandboxId === sandboxId && entry.path === path,
+    );
+    if (existing) {
+      return Effect.succeed({ path: `${FILES_PREFIX}${existing[0]}/` });
+    }
+    if (published.size >= MAX_PUBLISHED) {
+      return Effect.fail(
+        new SandboxService.SandboxError({ message: `at most ${MAX_PUBLISHED} directories can be published` }),
+      );
+    }
     const key = randomBytes(16).toString('hex');
     published.set(key, { spaceId, sandboxId, path });
-    return { path: `${FILES_PREFIX}${key}/` };
+    return Effect.succeed({ path: `${FILES_PREFIX}${key}/` });
   });
 
 /** Content types a module loader insists on; anything else keeps the type the backend sniffed. */
