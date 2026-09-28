@@ -219,7 +219,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
     'report',
     {
       title: Args.String('title').pipe(Args.withDescription('Issue title.'), Args.variadic({ min: 1 })),
-      body: Flag.String('body').pipe(Flag.optional, Flag.withDescription('Issue body; defaults to empty.')),
+      body: Flag.String('body').pipe(Flag.optional, Flag.withDescription('Issue body; defaults to the title.')),
       type: Flag.String('type').pipe(Flag.optional, Flag.withDescription('bug | feature.')),
       severity: Flag.String('severity').pipe(
         Flag.optional,
@@ -233,10 +233,12 @@ const makeCommand = (options: DebugCliOptions = {}) => {
     },
     ({ title, body, type, severity, label, noLogs }) =>
       Effect.gen(function* () {
+        const heading = title.join(' ');
         const result = yield* invokeOperation('org.dxos.operation.support.submitIssue', {
           report: {
-            title: title.join(' '),
-            body: body._tag === 'Some' ? body.value : '',
+            title: heading,
+            // The report schema requires a description, so a bare `report <title>` repeats the title.
+            body: body._tag === 'Some' && body.value.trim() ? body.value : heading,
             ...(type._tag === 'Some' ? { type: type.value } : {}),
             ...(severity._tag === 'Some' ? { severity: severity.value } : {}),
             labels: [label._tag === 'Some' ? label.value : REPORT_LABEL],
