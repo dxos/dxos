@@ -40,6 +40,34 @@ const personMigration = Migration.define({
   transform: async (from) => ({ name: from.fullName }),
 });
 
+// A second `@2 -> @3` hop for the chained-migration variant below: peer A knows the whole chain, peer B
+// is stuck at `@1` and never even learns `@2` exists, let alone `@3`.
+const ChainPersonV3Shape = Schema.Struct({ displayName: Schema.String });
+
+class ChainPersonV1 extends Type.makeObject<ChainPersonV1>(
+  DXN.make('org.dxos.test.foldForward.e2e.chain.Person', '0.1.0'),
+)(PersonV1Shape) {}
+
+class ChainPersonV2 extends Type.makeObject<ChainPersonV2>(
+  DXN.make('org.dxos.test.foldForward.e2e.chain.Person', '0.2.0'),
+)(PersonV2Shape) {}
+
+class ChainPersonV3 extends Type.makeObject<ChainPersonV3>(
+  DXN.make('org.dxos.test.foldForward.e2e.chain.Person', '0.3.0'),
+)(ChainPersonV3Shape) {}
+
+const chainMigration12 = Migration.define({
+  from: ChainPersonV1,
+  to: ChainPersonV2,
+  transform: async (from) => ({ name: from.fullName }),
+});
+
+const chainMigration23 = Migration.define({
+  from: ChainPersonV2,
+  to: ChainPersonV3,
+  transform: async (from) => ({ displayName: from.name }),
+});
+
 /**
  * `createPartitionedPair` (`migration-bench/harness.ts`) registers the SAME types on both peers — not
  * suited here, where peer B must never register `PersonV2` at all (a genuinely old client, not merely
@@ -269,5 +297,78 @@ describe('fold-forward across a real partition, peer B a genuinely old client', 
     await db1.foldForward([personMigration]);
     await db2.foldForward([personMigration]);
     expect(writesSince(obj1, preThirdRoundHeads)).to.deep.eq([]);
+  });
+});
+
+describe('fold-forward chained migrations across a real partition, peer B stuck at @1', () => {
+  let builder: EchoTestBuilder;
+  let network: TestReplicationNetwork | undefined;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+    await network?.close();
+    network = undefined;
+  });
+
+  test('a late `@1` write from peer B folds all the way to `@3` on peer A after heal', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    // Peer A knows the whole chain; peer B never registers `@2` or `@3` — a genuinely old client, not
+    // merely one that has not yet replicated the type switches.
+    const pair = await createAsymmetricPartitionedPair(
+      builder,
+      [ChainPersonV1, ChainPersonV2, ChainPersonV3],
+      [ChainPersonV1],
+    );
+    network = pair.network;
+    const { peer1, peer2, partition, heal, syncAll } = pair;
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    const obj1 = db1.add(Obj.make(ChainPersonV1, { fullName: 'Ada Lovelace' }));
+    await db1.flush();
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    let found: ChainPersonV1 | undefined;
+    await expect
+      .poll(async () => {
+        [found] = await db2.query(Filter.id(obj1.id)).run();
+        return found;
+      })
+      .toBeDefined();
+    invariant(found, 'expected the replicated object to be queryable');
+    const obj2 = found;
+
+    await partition();
+
+    // Peer A runs BOTH migrations while partitioned — the object ends up `@3`-typed on peer A's side.
+    await db1.runMigrations([chainMigration12, chainMigration23]);
+    expect(Obj.getValue(obj1, ['displayName'])).to.eq('Ada Lovelace');
+
+    // Peer B, unaware `@2` or `@3` even exist, keeps writing the only shape it knows.
+    Obj.update(obj2, (obj2) => {
+      obj2.fullName = 'Augusta Ada King';
+    });
+    await db2.flush();
+
+    await heal();
+    await syncAll(db1, db2);
+    await expect.poll(() => Obj.getValue(obj1, ['fullName'])).toBe('Augusta Ada King');
+    // Not yet folded: the late write replicated onto the retired `@1` property, `displayName` untouched.
+    expect(Obj.getValue(obj1, ['displayName'])).to.eq('Ada Lovelace');
+
+    await db1.foldForward([chainMigration12, chainMigration23]);
+    expect(Obj.getValue(obj1, ['displayName'])).to.eq('Augusta Ada King');
+
+    // Idempotent: a second pass with nothing new writes nothing further.
+    const preSecondPassHeads = headsOf(obj1);
+    await db1.foldForward([chainMigration12, chainMigration23]);
+    expect(writesSince(obj1, preSecondPassHeads)).to.deep.eq([]);
   });
 });

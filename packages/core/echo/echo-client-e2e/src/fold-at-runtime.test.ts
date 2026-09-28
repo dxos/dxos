@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj } from '@dxos/echo';
@@ -76,7 +77,10 @@ describe('foldAt across a real partition/heal', () => {
 
     // Peer 1 folds a late `fullName` write at the recorded migration heads.
     const foldMessage = 'fold: fullName -> name';
-    getObjectCore(obj1).foldAt(postMigrationHeads, (data) => (data.name = 'late'), { message: foldMessage });
+    getObjectCore(obj1).foldAt(postMigrationHeads, (data) => (data.name = 'late'), {
+      message: foldMessage,
+      scope: obj1.id,
+    });
     await db1.flush();
 
     // Peer 2, independently and concurrently, makes a direct edit.
@@ -113,5 +117,75 @@ describe('foldAt across a real partition/heal', () => {
     expect(fold1.value).to.eq('late');
     expect(fold1.message).to.eq(foldMessage);
     expect(direct1.value).to.eq('direct');
+  });
+
+  test('two peers fold independently, under different derived actors, and converge with no merge error', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    const pair = await createPartitionedPair(builder, [PersonDoc]);
+    network = pair.network;
+    const { peer1, peer2, partition, heal, syncAll } = pair;
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    const obj1 = db1.add(Obj.make(PersonDoc, { fullName: 'original' }));
+    await db1.flush();
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    const obj2 = await queryPersonById(db2, obj1.id);
+
+    Obj.update(obj1, (obj1) => {
+      obj1.name = obj1.fullName;
+    });
+    await db1.flush();
+    const postMigrationHeads = headsOf(obj1);
+    await syncAll(db1, db2);
+    await expect.poll(() => obj2.name).toBe('original');
+
+    await partition();
+
+    // Both peers fold the SAME value at the SAME recorded heads -- genuinely independently, each under
+    // its own peer-derived fold actor, never a shared or random one.
+    const foldMessage = 'fold: fullName -> name';
+    getObjectCore(obj1).foldAt(postMigrationHeads, (data) => (data.name = 'late'), {
+      message: foldMessage,
+      scope: obj1.id,
+    });
+    await db1.flush();
+    getObjectCore(obj2).foldAt(postMigrationHeads, (data) => (data.name = 'late'), {
+      message: foldMessage,
+      scope: obj2.id,
+    });
+    await db2.flush();
+
+    await heal();
+    // Both sides already read `name` as `'late'` from their OWN fold alone (identical value), so that
+    // is not a signal replication actually completed both ways -- poll on the fold change COUNT
+    // instead, which only reaches 2 once each peer's document holds both changes.
+    const foldChangesOn = (obj: typeof obj1): number =>
+      A.getChangesMetaSince(getObjectCore(obj).getDoc(), []).filter((change) => change.message === foldMessage).length;
+    await expect
+      .poll(async () => {
+        await syncAll(db1, db2);
+        return [foldChangesOn(obj1), foldChangesOn(obj2)];
+      })
+      .toEqual([2, 2]);
+
+    expect(obj1.name).to.eq('late');
+    expect(obj2.name).to.eq('late');
+    // Same value from both sides -- Automerge merges cleanly with no error, and there is nothing to
+    // resolve even though the writes came from two distinct actors.
+    expect(Obj.getConflict(obj1, 'name')).toBeUndefined();
+    expect(Obj.getConflict(obj2, 'name')).toBeUndefined();
+
+    const foldActors = new Set(
+      A.getChangesMetaSince(getObjectCore(obj1).getDoc(), [])
+        .filter((change) => change.message === foldMessage)
+        .map((change) => change.actor),
+    );
+    // Two peers, two DIFFERENT derived fold actors -- never the same one, and never a fresh random one.
+    expect(foldActors.size).to.eq(2);
   });
 });

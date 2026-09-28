@@ -754,25 +754,25 @@ export const defineStampElementIds = <T extends Type.AnyObj>(
   };
 };
 
-const MigrationMarkerSchema = Schema.Struct({
+export const MigrationStepSchema = Schema.Struct({
   /** URI of the type the object was migrated from. */
   from: Schema.String,
   /** URI of the type the object was migrated to. */
   to: Schema.String,
   /**
-   * The object's automerge heads immediately before the migration's change. Post-migration heads
-   * are not stored: they are that change itself, locatable by its `message` (`migration: <from> -> <to>`).
+   * The object's automerge heads immediately before this step's change. Post-migration heads are not
+   * stored: they are that change itself, locatable by its `message` (`migration: <from> -> <to>`).
    */
   preHeads: Schema.Array(Schema.String),
   /**
-   * Source data keys the migration left in place because its output omits them: kept so fold-forward
+   * Source data keys this step left in place because its output omits them: kept so fold-forward
    * can read late writes to them, and never written by code on the target type.
    */
   retired: Schema.Array(Schema.String),
   /**
-   * Document heads immediately after the last fold-forward pass's writes for this object. `A.diff`
-   * from here (falling back to the migration's own post-heads, located via `preHeads`, before the
-   * first fold) names exactly the source writes no pass has folded yet — never a durable intent, so
+   * Document heads immediately after the last fold-forward pass's writes for this step. `A.diff`
+   * from here (falling back to the step's own post-heads, located via `preHeads`, before the first
+   * fold) names exactly the source writes no pass has folded yet — never a durable intent, so
    * a crash between the fold and this checkpoint just re-diffs a wider (harmless, value-compared)
    * range on the next pass.
    */
@@ -788,17 +788,44 @@ const MigrationMarkerSchema = Schema.Struct({
 });
 
 /**
+ * One step of a migration marker's chain: everything the runner recorded when an object crossed one
+ * `from -> to` boundary. Exported so the runner can encode a single new step without re-encoding the
+ * whole marker (`#applyObjectMigration` appends a step in place; see {@link getSteps}).
+ */
+export type MigrationStep = Schema.Schema.Type<typeof MigrationStepSchema>;
+
+/** The current, chained marker shape: every step the object has been migrated through, oldest first. */
+const MigrationMarkerStepsSchema = Schema.Struct({ steps: Schema.Array(MigrationStepSchema) });
+
+/**
+ * A marker written before chained migrations: exactly one step's fields at the top level, with no
+ * `steps` wrapper. Distinguished from {@link MigrationMarkerStepsSchema} by shape alone (neither has a
+ * tag), which is unambiguous since a `steps` array and a `from`/`to` pair never both validate the same
+ * object.
+ */
+const MigrationMarkerSchema = Schema.Union([MigrationMarkerStepsSchema, MigrationStepSchema]);
+
+/**
  * Value of {@link MigrationMarkerAnnotation}: recorded on an object by the runner immediately after
- * it applies an object migration's single change.
+ * it applies an object migration's single change. Read it through {@link getSteps}, never by shape,
+ * so a legacy single-step marker and a chained one are handled alike.
  */
 export type MigrationMarker = Schema.Schema.Type<typeof MigrationMarkerSchema>;
 
 /**
  * Per-object marker left in `EntityMeta.annotations` by the migration runner, so a later pass (the
  * fold-forward runner, a doctor diagnostic) can find a migrated object and replay any source-property
- * write that landed after `preHeads`.
+ * write that landed after a step's `preHeads`.
  */
 export const MigrationMarkerAnnotation = Annotation.make<MigrationMarker>({
   id: 'org.dxos.annotation.migrationMarker',
   schema: MigrationMarkerSchema,
 });
+
+/**
+ * Normalizes a decoded {@link MigrationMarker} to its steps, oldest first: a pre-chaining marker
+ * decodes as a bare {@link MigrationStep} (no `steps` field), which is exactly as valid a length-1
+ * chain as one written by the current runner.
+ */
+export const getSteps = (marker: MigrationMarker): readonly MigrationStep[] =>
+  'steps' in marker ? marker.steps : [marker];

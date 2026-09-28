@@ -183,6 +183,16 @@ test('chained migrations', async () => {
   expect(Type.getVersion(Obj.getType(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');
+
+  // Both hops are kept, oldest first: an object migrated `@1 -> @2 -> @3` carries both steps, not just
+  // the latest one, so a late `@1`-shaped write can still be folded all the way forward.
+  const marker = Option.getOrThrow(Annotation.get(objects[0], Migration.MigrationMarkerAnnotation));
+  const steps = Migration.getSteps(marker);
+  expect(steps).to.have.length(2);
+  expect(steps[0].from).to.eq(migrationV2.fromType.toString());
+  expect(steps[0].to).to.eq(migrationV2.toType.toString());
+  expect(steps[1].from).to.eq(migrationV3.fromType.toString());
+  expect(steps[1].to).to.eq(migrationV3.toType.toString());
 });
 
 test('applies the write set, the type switch, and the marker in exactly one automerge change, named for the migration', async () => {
@@ -268,10 +278,11 @@ test('retires a field the transform drops instead of deleting it, and marks the 
   expect(Obj.getTypeURI(note)?.toString()).to.eq(DXN.make('com.example.type.migrationNote', '0.2.0'));
 
   const marker = Option.getOrThrow(Annotation.get(note, Migration.MigrationMarkerAnnotation));
-  expect(marker.from).to.eq(noteMigration.fromType.toString());
-  expect(marker.to).to.eq(noteMigration.toType.toString());
-  expect(marker.preHeads).to.deep.eq(preHeads);
-  expect(marker.retired).to.deep.eq(['body']);
+  const [step] = Migration.getSteps(marker);
+  expect(step.from).to.eq(noteMigration.fromType.toString());
+  expect(step.to).to.eq(noteMigration.toType.toString());
+  expect(step.preHeads).to.deep.eq(preHeads);
+  expect(step.retired).to.deep.eq(['body']);
 });
 
 test('re-running a migration after it applied performs no further writes', async () => {

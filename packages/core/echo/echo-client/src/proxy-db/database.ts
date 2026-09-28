@@ -5,6 +5,7 @@
 import { next as A, type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
 import * as Equal from 'effect/Equal';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
@@ -12,6 +13,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, debounce, synchronized } fro
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
+  Annotation,
   type Blob,
   type Change,
   Database,
@@ -54,7 +56,7 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { setDeep } from '@dxos/util';
+import { getDeep, setDeep } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
@@ -900,9 +902,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Applies one object migration's write set in a single automerge change on the object's own
    * `ObjectCore`: data keys the transform's output actually changed (value-compare guarded — an
    * unchanged key emits no op, and a key the output omits is left untouched as a retired property),
-   * the meta patch (merged key by key, same guard), the type switch, and a
-   * {@link Migration.MigrationMarkerAnnotation} recording the pre-migration heads (post-migration
-   * heads are this very change, locatable by its `message`).
+   * the meta patch (merged key by key, same guard), the type switch, and a new
+   * {@link Migration.MigrationStep} appended to {@link Migration.MigrationMarkerAnnotation} (post-step
+   * heads are this very change, locatable by its `message`) — the object's PREVIOUS steps, if any,
+   * are kept: a `@1 -> @2 -> @3` object carries both, so fold-forward can still find a late `@1`-shaped
+   * write against step one after step two has run.
    *
    * Every `ObjectCore` helper (`setDecoded`, `setType`, ...) opens its own `change`, so nesting them
    * here would produce several changes; every write below instead goes straight onto the doc at
@@ -946,8 +950,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
     const fromType = migration.fromType.toString();
     const toType = migration.toType.toString();
-    const marker = core.encode(
-      Schema.encodeSync(Migration.MigrationMarkerAnnotation.schema)({
+    const newStep = core.encode(
+      Schema.encodeSync(Migration.MigrationStepSchema)({
         from: fromType,
         to: toType,
         preHeads: [...preHeads],
@@ -955,6 +959,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           .filter((key) => !Object.hasOwn(mappedOutput, key))
           .sort(),
       }),
+    );
+    // The number of steps already recorded (0 for a first-ever migration), read through the same
+    // legacy-aware normalization fold-forward uses — a pre-chaining marker's own fields count as step 0.
+    const existingStepCount = Annotation.get(object, Migration.MigrationMarkerAnnotation).pipe(
+      Option.map((marker) => Migration.getSteps(marker).length),
+      Option.getOrElse(() => 0),
     );
     const typeRef = EncodedReference.fromURI(migration.toType);
 
@@ -966,7 +976,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         for (const [key, value] of metaWrites) {
           setDeep(doc, [...mountPath, META_NAMESPACE, key], value);
         }
-        setDeep(doc, [...mountPath, META_NAMESPACE, 'annotations', Migration.MigrationMarkerAnnotation.key], marker);
+
+        const markerPath = [...mountPath, META_NAMESPACE, 'annotations', Migration.MigrationMarkerAnnotation.key];
+        const rawMarker = getDeep<{ steps?: unknown }>(doc, markerPath);
+        if (rawMarker === undefined) {
+          setDeep(doc, markerPath, { steps: [] });
+        } else if (!Array.isArray(rawMarker.steps)) {
+          // A legacy (pre-chaining) marker: its own fields become step 0, so nothing it recorded is lost.
+          setDeep(doc, markerPath, { steps: [rawMarker] });
+        }
+        // Written by index, never as a whole-marker replace: a concurrent peer's own step, appended at
+        // a DIFFERENT index of the same array, must survive alongside this one (Automerge keeps both
+        // list insertions at the same position rather than dropping one, unlike a whole-value overwrite).
+        setDeep(doc, [...markerPath, 'steps', existingStepCount], newStep);
         setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
       },
       { message: `migration: ${fromType} -> ${toType}` },

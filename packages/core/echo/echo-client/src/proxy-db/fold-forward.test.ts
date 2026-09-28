@@ -38,6 +38,47 @@ const contactMigration = Migration.define({
   transform: async (from) => ({ name: from.fullName }),
 });
 
+class ContactV3 extends Type.makeObject<ContactV3>(DXN.make('org.dxos.test.foldForward.Contact', '0.3.0'))(
+  Schema.Struct({ displayName: Schema.String }),
+) {}
+
+/** Second hop of the `@1 -> @2 -> @3` chain exercised by the "chained migrations" describe block below. */
+const contactMigration23 = Migration.define({
+  from: ContactV2,
+  to: ContactV3,
+  transform: async (from) => ({ displayName: from.name }),
+});
+
+// A second chain, for the "per-step actor scoping" describe block: unlike `ContactV1/V2/V3` above,
+// `name` is a property BOTH steps carry through untouched (never retired by either), so a direct edit
+// to it is never dominated by an ordinary late write to a retired property -- only by which fold actor
+// a later step's fold happens to share.
+class ScopeV1 extends Type.makeObject<ScopeV1>(DXN.make('org.dxos.test.foldForward.scope.Contact', '0.1.0'))(
+  Schema.Struct({ fullName: Schema.String }),
+) {}
+
+class ScopeV2 extends Type.makeObject<ScopeV2>(DXN.make('org.dxos.test.foldForward.scope.Contact', '0.2.0'))(
+  Schema.Struct({ name: Schema.String, note: Schema.optional(Schema.String) }),
+) {}
+
+class ScopeV3 extends Type.makeObject<ScopeV3>(DXN.make('org.dxos.test.foldForward.scope.Contact', '0.3.0'))(
+  Schema.Struct({ name: Schema.String, label: Schema.optional(Schema.String) }),
+) {}
+
+/** Step 0: renames `fullName` to `name`; never mentions `note`, so recomputing it never touches `label`. */
+const scopeMigration12 = Migration.define({
+  from: ScopeV1,
+  to: ScopeV2,
+  transform: async (from) => ({ name: from.fullName }),
+});
+
+/** Step 1: carries `name` through unchanged (echoes it back, so its own write never touches it) and renames `note` to `label`. */
+const scopeMigration23 = Migration.define({
+  from: ScopeV2,
+  to: ScopeV3,
+  transform: async (from) => ({ name: from.name, label: from.note }),
+});
+
 class NoteV1 extends Type.makeObject<NoteV1>(DXN.make('org.dxos.test.foldForward.Note', '0.1.0'))(
   Schema.Struct({ body: Schema.optional(Schema.String) }),
 ) {}
@@ -351,12 +392,15 @@ describe('fold-forward: safety', () => {
     getObjectCore(contact).setDecoded(['data', 'fullName'], 'Katherine Coleman Johnson');
     await db.flush();
 
-    // Corrupt the marker's `preHeads` to a hash the document has never seen — the ancestry check
+    // Corrupt step 0's `preHeads` to a hash the document has never seen — the ancestry check
     // (M0-REPORT.md design item 1: "never fold on foreign heads") must skip it, not throw or diff
     // against "everything is new".
     const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
+    const [step] = Migration.getSteps(marker);
     Obj.update(contact, (contact) => {
-      Annotation.set(contact, Migration.MigrationMarkerAnnotation, { ...marker, preHeads: ['0'.repeat(64)] });
+      Annotation.set(contact, Migration.MigrationMarkerAnnotation, {
+        steps: [{ ...step, preHeads: ['0'.repeat(64)] }],
+      });
     });
     await db.flush();
 
@@ -370,4 +414,171 @@ describe('fold-forward: safety', () => {
     expect(Obj.getValue(contact, ['name'])).to.eq('Katherine Johnson');
     expect(untouched.name).to.eq('Direct');
   });
+});
+
+describe('fold-forward: chained migrations', () => {
+  test('a late @1-shaped write folds all the way to @3 in one call, and a second call is a no-op', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2, ContactV3]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([contactMigration, contactMigration23]);
+    expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada Lovelace');
+
+    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
+    expect(Migration.getSteps(marker)).to.have.length(2);
+
+    // A late `@1`-shaped write from an old client that never saw either migration, straight on the raw core.
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');
+    await db.flush();
+    expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada Lovelace'); // not yet folded.
+
+    await db.foldForward([contactMigration, contactMigration23]);
+    expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada Lovelace-Byron');
+
+    // Idempotent: the checkpoints on both steps advanced, so a second pass writes nothing further.
+    const core = getObjectCore(contact);
+    const historyLength = A.getHistory(core.getDoc()).length;
+    await db.foldForward([contactMigration, contactMigration23]);
+    expect(A.getHistory(core.getDoc())).to.have.length(historyLength);
+    expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada Lovelace-Byron');
+  });
+
+  test('an old single-step marker, written directly in its pre-chaining shape, is still folded', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Grace Hopper' }));
+    await db.flush();
+    await db.runMigrations([contactMigration]);
+
+    // Downgrade the marker to its pre-chaining (flat, no `steps` wrapper) shape -- simulating an object
+    // migrated before chained migrations existed.
+    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
+    const [step] = Migration.getSteps(marker);
+    Obj.update(contact, (contact) => {
+      Annotation.set(contact, Migration.MigrationMarkerAnnotation, step);
+    });
+    await db.flush();
+
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Grace Brewster Murray Hopper');
+    await db.flush();
+    expect(Obj.getValue(contact, ['name'])).to.eq('Grace Hopper'); // not yet folded.
+
+    await db.foldForward([contactMigration]);
+    expect(Obj.getValue(contact, ['name'])).to.eq('Grace Brewster Murray Hopper');
+  });
+});
+
+describe('fold-forward: per-step actor scoping', () => {
+  test(
+    "a step-0 fold does not inherit a step-1 fold's ancestry: a direct edit made between the two " +
+      'migrations survives as a real conflict, not silently overwritten',
+    async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([ScopeV1, ScopeV2, ScopeV3]);
+
+      const contact = db.add(Obj.make(ScopeV1, { fullName: 'A0' }));
+      await db.flush();
+      await db.runMigrations([scopeMigration12]);
+      expect(Obj.getValue(contact, ['name'])).to.eq('A0');
+
+      // A direct edit to `name` -- a property BOTH migrations carry through untouched (neither step
+      // ever retires it) -- made strictly between the two migrations.
+      Obj.update(contact, (contact) => {
+        Obj.setValue(contact, ['name'], 'direct');
+      });
+      await db.flush();
+
+      // Seed `note` before migrating on, so step 1 has something to carry into `label`.
+      getObjectCore(contact).setDecoded(['data', 'note'], 'note-seed');
+      await db.flush();
+
+      await db.runMigrations([scopeMigration23]);
+      expect(Obj.getValue(contact, ['name'])).to.eq('direct'); // step 1 never touches it.
+      expect(Obj.getValue(contact, ['label'])).to.eq('note-seed');
+
+      // A late write to step 1's retired property (`note`) triggers a step-1 (marker index 1) fold --
+      // it writes only `label`, never `name`.
+      getObjectCore(contact).setDecoded(['data', 'note'], 'note-late');
+      await db.flush();
+      await db.foldForward([scopeMigration12, scopeMigration23]);
+      expect(Obj.getValue(contact, ['label'])).to.eq('note-late');
+      expect(Obj.getValue(contact, ['name'])).to.eq('direct'); // untouched by the step-1 fold.
+
+      // A late write to step 0's retired property (`fullName`) then triggers a step-0 (marker index 0)
+      // fold, writing `name` -- the SAME property the direct edit above landed on.
+      getObjectCore(contact).setDecoded(['data', 'fullName'], 'late-fullname');
+      await db.flush();
+      await db.foldForward([scopeMigration12, scopeMigration23]);
+
+      // With a fold actor shared across steps, this fold's fork point would have inherited the step-1
+      // fold's ancestry above -- which already includes the direct edit -- and silently dominated it.
+      // Scoped per (object, step), it stays concurrent: the direct edit survives as a real conflict.
+      const conflict = Obj.getConflict(contact, 'name');
+      invariant(conflict, 'expected the direct edit and the step-0 fold to remain a real conflict on `name`');
+      expect(conflict.presented).to.eq('direct');
+      expect(conflict.alternatives).to.have.length(2);
+      const direct = conflict.alternatives.find((alternative) => !alternative.fold);
+      const fold = conflict.alternatives.find((alternative) => alternative.fold);
+      invariant(direct, 'expected the direct edit among the alternatives');
+      invariant(fold, 'expected the step-0 fold among the alternatives');
+      expect(direct.value).to.eq('direct');
+      expect(fold.value).to.eq('late-fullname');
+    },
+  );
+
+  test(
+    "two objects sharing one document: object A's step-0 fold does not inherit object B's step-1 " + "fold's ancestry",
+    async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([ScopeV1, ScopeV2, ScopeV3]);
+
+      // `placeIn: 'root-doc'` is a public `Database.AddOptions` (default is `'linked-doc'`, one document
+      // PER object): apps use it for small objects that should load eagerly with the space, and it is
+      // exactly how two objects end up inlined into ONE shared document (`DatabaseDirectory.objects`,
+      // `echo-protocol/src/document-structure.ts`) in practice, not merely hypothetically.
+      const a = db.add(Obj.make(ScopeV1, { fullName: 'A0' }), { placeIn: 'root-doc' });
+      const b = db.add(Obj.make(ScopeV1, { fullName: 'B0' }), { placeIn: 'root-doc' });
+      await db.flush();
+
+      invariant(
+        getObjectCore(a).docHandle && getObjectCore(a).docHandle === getObjectCore(b).docHandle,
+        'expected A and B to share one document',
+      );
+
+      await db.runMigrations([scopeMigration12]); // migrates both A and B.
+
+      // A direct edit to A's `name` -- a property neither step retires.
+      Obj.update(a, (a) => {
+        Obj.setValue(a, ['name'], 'direct-a');
+      });
+      await db.flush();
+
+      getObjectCore(a).setDecoded(['data', 'note'], 'note-seed-a');
+      getObjectCore(b).setDecoded(['data', 'note'], 'note-seed-b');
+      await db.flush();
+      await db.runMigrations([scopeMigration23]); // migrates both A and B.
+
+      // A late write to B's `note` triggers a step-1 fold on B -- a DIFFERENT object, sharing A's document.
+      getObjectCore(b).setDecoded(['data', 'note'], 'note-late-b');
+      await db.flush();
+      await db.foldForward([scopeMigration12, scopeMigration23]);
+      expect(Obj.getValue(b, ['label'])).to.eq('note-late-b');
+
+      // A late write to A's `fullName` then triggers a step-0 fold on A.
+      getObjectCore(a).setDecoded(['data', 'fullName'], 'late-fullname-a');
+      await db.flush();
+      await db.foldForward([scopeMigration12, scopeMigration23]);
+
+      // With a fold actor shared across the whole DOCUMENT, A's fold's fork point would have inherited
+      // B's fold's ancestry -- unrelated to A -- and silently dominated A's own direct edit. Scoped per
+      // (object, step), A's fold never sees B's history at all.
+      const conflict = Obj.getConflict(a, 'name');
+      invariant(conflict, "expected A's direct edit to remain a real conflict, not overwritten by B's fold");
+      expect(conflict.presented).to.eq('direct-a');
+      expect(conflict.alternatives).to.have.length(2);
+    },
+  );
 });

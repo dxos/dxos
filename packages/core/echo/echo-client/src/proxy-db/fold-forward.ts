@@ -16,6 +16,7 @@ import { Annotation, type Database, Filter, Lens, Migration, Obj } from '@dxos/e
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { setDeep } from '@dxos/util';
 
 import { META_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
@@ -25,10 +26,13 @@ import { createObjectMigrationContext } from './migration-context.ts';
 //
 // Fold-forward as a standing rule (Phase C2/C3, `.agents/projects/lenses/IMPLEMENTATION-PLAN.md`
 // Phase C; `.agents/projects/lenses/M0-REPORT.md` design items 1, 6, 9). A migrated object is
-// "behind" when a retired property was written to after the migration — derivable from the document
-// at any time via the migration marker (`Migration.MigrationMarkerAnnotation`), so no separate
-// durable intent is kept: the marker's own `foldedAt`/`textFrontier` checkpoints are enough to make a
-// re-run cheap and a crash between writes harmless (every fold is value-compare guarded).
+// "behind" when a retired property was written to after its step's migration — derivable from the
+// document at any time via the migration marker (`Migration.MigrationMarkerAnnotation`), so no
+// separate durable intent is kept: each step's own `foldedAt`/`textFrontier` checkpoint is enough to
+// make a re-run cheap and a crash between writes harmless (every fold is value-compare guarded). A
+// marker holds a CHAIN of steps (`Migration.getSteps`), one per `from -> to` boundary the object has
+// crossed, so a late write in the object's ORIGINAL shape still folds all the way to its current type
+// even after several migrations — see {@link foldObject}.
 //
 
 /** The message `#applyObjectMigration` stamps on a migration's own change. */
@@ -47,16 +51,16 @@ const sameHeadSet = (a: readonly string[], b: readonly string[]): boolean => {
 };
 
 /**
- * Locates the automerge change that applied `marker`'s migration to this document: the one whose
- * `message` names the migration and whose `deps` are exactly the marker's `preHeads` — the runner
+ * Locates the automerge change that applied `step`'s migration to this document: the one whose
+ * `message` names the migration and whose `deps` are exactly the step's `preHeads` — the runner
  * reads `preHeads` and authors that change synchronously right after, so no other change can share
  * both. Its own hash is therefore the object's post-migration frontier (heads are deliberately not a
  * stored field on the marker — see {@link Migration.MigrationMarkerAnnotation}'s own doc comment).
  */
-const findPostMigrationHeads = (doc: AutomergeDoc<unknown>, marker: Migration.MigrationMarker): Heads | undefined => {
-  const message = migrationMessage(marker.from, marker.to);
+const findPostMigrationHeads = (doc: AutomergeDoc<unknown>, step: Migration.MigrationStep): Heads | undefined => {
+  const message = migrationMessage(step.from, step.to);
   const change = A.getChangesMetaSince(doc, []).find(
-    (candidate) => candidate.message === message && sameHeadSet(candidate.deps, marker.preHeads),
+    (candidate) => candidate.message === message && sameHeadSet(candidate.deps, step.preHeads),
   );
   return change && [change.hash];
 };
@@ -227,49 +231,48 @@ const recomputeMigrationOutput = async (
 };
 
 /**
- * Folds one migrated object forward if a retired property changed since the marker's last checkpoint.
- * Never throws: a bad object is logged and left for the next pass rather than aborting the batch.
+ * Folds one migration STEP forward if a retired property changed since that step's own checkpoint.
+ * Never throws: a bad step is logged and left for the next pass rather than aborting the object's
+ * other steps or the batch.
+ *
+ * Reads `getObjectCore(object).getDoc()` fresh on every call (never a doc reference the caller already
+ * held) — this is what makes chained steps compose: step `k`'s fold writes directly onto the document,
+ * so by the time step `k + 1` (which folds the retired properties STEP `k` itself may have just written)
+ * runs, its own `A.diff`/snapshot reads see step `k`'s fold as part of history, exactly as if an old
+ * client had written it.
  */
-const foldObject = async (
+const foldStep = async (
   db: Database.Database,
   migration: Migration.ObjectMigration,
+  step: Migration.MigrationStep,
+  stepIndex: number,
   object: Obj.Unknown,
 ): Promise<void> => {
-  const markerOption = Annotation.get(object, Migration.MigrationMarkerAnnotation);
-  if (Option.isNone(markerOption)) {
-    return;
-  }
-  const marker = markerOption.value;
-  if (marker.from !== migration.fromType.toString() || marker.to !== migration.toType.toString()) {
-    // A marker from a DIFFERENT migration into the same `toType` — not this migration's to fold.
-    return;
-  }
-
   const core = getObjectCore(object);
   const doc = core.getDoc();
   const mountPath = core.mountPath;
 
-  if (!A.hasHeads(doc, [...marker.preHeads])) {
+  if (!A.hasHeads(doc, [...step.preHeads])) {
     // A foreign frontier (e.g. an epoch re-root) — never fold on foreign heads (M0-REPORT.md design
     // item 8): `A.diff` against them would silently report "everything is new".
-    log.warn('foldForward: skipping object with foreign migration heads', { object: object.id });
+    log.warn('foldForward: skipping step with foreign migration heads', { object: object.id, stepIndex });
     return;
   }
 
-  const postMigrationHeads = findPostMigrationHeads(doc, marker);
+  const postMigrationHeads = findPostMigrationHeads(doc, step);
   if (!postMigrationHeads) {
-    log.warn('foldForward: could not locate the migration change for object', { object: object.id });
+    log.warn('foldForward: could not locate the migration change for step', { object: object.id, stepIndex });
     return;
   }
 
-  const base: Heads = marker.foldedAt ? [...marker.foldedAt] : postMigrationHeads;
+  const base: Heads = step.foldedAt ? [...step.foldedAt] : postMigrationHeads;
   if (!A.hasHeads(doc, base)) {
-    log.warn('foldForward: skipping object with a foreign fold checkpoint', { object: object.id });
+    log.warn('foldForward: skipping step with a foreign fold checkpoint', { object: object.id, stepIndex });
     return;
   }
 
   const currentHeads = A.getHeads(doc);
-  const retired = new Set(marker.retired);
+  const retired = new Set(step.retired);
   const lateWrites = lateRetiredWrites(doc, mountPath, base, currentHeads, retired);
 
   // `Lens.coverage` throws for a coded lens, but `Migration.fromLens` already calls it at definition
@@ -288,7 +291,7 @@ const foldObject = async (
   // character-wise instead of a whole-value fold (M0-REPORT.md design item 9); everything else —
   // including a whole-value overwrite of a text property from a non-collaborative old client, or an
   // opaque `define` migration — folds through the generic recompute-and-compare pass below.
-  const textFrontier: Record<string, readonly string[]> = { ...marker.textFrontier };
+  const textFrontier: Record<string, readonly string[]> = { ...step.textFrontier };
   const textTargets = new Set<string>();
   for (const [retiredKey, patches] of lateWrites) {
     const targetProperty = identityRenameTarget(migration.lens, retiredKey);
@@ -333,7 +336,7 @@ const foldObject = async (
 
   // An overlay write is never part of `snapshot` (it lives in meta, not data), so it is folded from
   // the object's CURRENT overlay value directly, whole-value, into the SAME `dataWrites` batch —
-  // one `foldAt` change per object regardless of how many of its properties fell behind.
+  // one `foldAt` change per step regardless of how many of its properties fell behind.
   if (migration.lens) {
     for (const property of overlayLateWrites) {
       if (dataWrites.has(property)) {
@@ -358,20 +361,73 @@ const foldObject = async (
           data[key] = value;
         }
       },
-      { message: foldMessage(marker.from, marker.to) },
+      // Scoped to this object AND this step: a shared actor across steps (or objects) could otherwise
+      // fork from a LATER step's fold, which itself already carries a direct edit made between the two
+      // steps, and so wrongly inherit that edit as an ancestor instead of staying concurrent with it.
+      { message: foldMessage(step.from, step.to), scope: `${object.id}:${stepIndex}` },
     );
   }
 
   // Ordinary (non-fold) write: this is the runner's own bookkeeping, never user data, so the live
   // actor and current heads are exactly right — a crash before this lands just re-diffs a wider,
-  // value-compared (harmless) range on the next pass.
-  Obj.update(object, (object) => {
-    Annotation.set(object, Migration.MigrationMarkerAnnotation, {
-      ...marker,
-      foldedAt: [...A.getHeads(core.getDoc())],
-      textFrontier,
-    });
+  // value-compared (harmless) range on the next pass. Written directly at `steps[stepIndex]`, never
+  // as a whole-marker (or whole-step) replace, so a sibling step's own checkpoint — or one a
+  // concurrent peer is writing to a DIFFERENT step of the same marker — is never disturbed.
+  const stepPath = [
+    ...mountPath,
+    META_NAMESPACE,
+    'annotations',
+    Migration.MigrationMarkerAnnotation.key,
+    'steps',
+    stepIndex,
+  ];
+  const foldedAt = core.encode([...A.getHeads(core.getDoc())]);
+  const encodedTextFrontier = core.encode(textFrontier);
+  core.change((doc) => {
+    setDeep(doc, [...stepPath, 'foldedAt'], foldedAt);
+    setDeep(doc, [...stepPath, 'textFrontier'], encodedTextFrontier);
   });
+};
+
+/**
+ * Folds every step of one migrated object's marker forward, in order (oldest first): step `k`'s own
+ * migration is found by matching its recorded `from`/`to` against `migrations` (the full list passed
+ * to {@link foldForwardMigrations}, not just the one whose query matched this object), so an object
+ * that has already advanced past an intermediate type is still folded from its FIRST unfolded step.
+ * A step whose migration is not among `migrations` is skipped (logged), never treated as a reason to
+ * skip the steps after it. Never throws: a bad object is logged and left for the next pass.
+ */
+const foldObject = async (
+  db: Database.Database,
+  migrations: readonly Migration.Migration[],
+  object: Obj.Unknown,
+): Promise<void> => {
+  const markerOption = Annotation.get(object, Migration.MigrationMarkerAnnotation);
+  if (Option.isNone(markerOption)) {
+    return;
+  }
+
+  const steps = Migration.getSteps(markerOption.value);
+  for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+    const step = steps[stepIndex];
+    const migration = migrations.find(
+      (candidate): candidate is Migration.ObjectMigration =>
+        Migration.isObjectMigration(candidate) &&
+        candidate.fromType.toString() === step.from &&
+        candidate.toType.toString() === step.to,
+    );
+    if (!migration) {
+      log.verbose('foldForward: no migration passed in for a recorded step, skipping it', {
+        object: object.id,
+        stepIndex,
+        from: step.from,
+        to: step.to,
+      });
+      continue;
+    }
+
+    await foldStep(db, migration, step, stepIndex, object);
+  }
 };
 
 /** Options for {@link foldForwardMigrations}. */
@@ -381,14 +437,19 @@ export type FoldForwardOptions = {
 };
 
 /**
- * Scans objects of each object migration's `toType` carrying that migration's marker, and folds any
- * that fell behind — see {@link foldObject}. Rename migrations carry no marker and are skipped.
+ * Scans objects of each object migration's `toType`, and folds every one that carries a migration
+ * marker and fell behind — see {@link foldObject}. An object is visited at most once per call even
+ * though several migrations' `toType` queries could in principle name it (its current type matches
+ * exactly one of them in practice); {@link foldObject} then walks its WHOLE step chain, not just the
+ * step belonging to the migration whose query found it. Rename migrations carry no marker and are
+ * skipped.
  */
 export const foldForwardMigrations = async (
   db: Database.Database,
   migrations: Migration.Migration[],
   options: FoldForwardOptions = {},
 ): Promise<void> => {
+  const processed = new Set<string>();
   for (const migration of migrations) {
     if (!Migration.isObjectMigration(migration)) {
       continue;
@@ -399,8 +460,12 @@ export const foldForwardMigrations = async (
       if (options.objectIds && !options.objectIds.has(object.id)) {
         continue;
       }
+      if (processed.has(object.id)) {
+        continue;
+      }
+      processed.add(object.id);
       try {
-        await foldObject(db, migration, object);
+        await foldObject(db, migrations, object);
       } catch (err) {
         log.warn('foldForward: failed to fold an object forward', { object: object.id, err });
       }
