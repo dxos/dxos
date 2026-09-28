@@ -76,3 +76,10 @@ export const WithoutSweep: Story = {
     sweep: false,
   },
 };
+
+export const Loop: Story = {
+  args: {
+    wait: false,
+    variant: 'loop',
+  },
+};

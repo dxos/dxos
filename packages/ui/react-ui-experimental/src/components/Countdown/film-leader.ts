@@ -6,6 +6,8 @@
 // records, where no module resolution exists. `Countdown` wraps it for React.
 
 export type FilmLeaderOptions = {
+  /** `leader` is the film leader (sweep, mark); `loop` is a single ring that unwinds clockwise each count. */
+  variant?: 'leader' | 'loop';
   /** First number of the count. */
   from?: number;
   /** Hold on a play button until it is clicked, so the person recording can start their recorder first. */
@@ -29,6 +31,10 @@ export const DXOS_LOGO = `<svg viewBox="0 0 256 256" fill="currentColor">
 </svg>`;
 
 const SECOND = 1_000;
+
+/** The numeral's face. Loaded into the document: an `@font-face` inside a shadow root is ignored. */
+const COUNTER_FONT = 'Bungee Hairline';
+const COUNTER_FONT_CSS = 'https://fonts.googleapis.com/css2?family=Bungee+Hairline&display=block';
 
 export const FILM_LEADER_STYLES = `
   .curtain { position: fixed; inset: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center;
@@ -60,15 +66,41 @@ export const FILM_LEADER_STYLES = `
   .logo svg { width: 100%; height: 100%; }
   .logo { transition: transform 600ms cubic-bezier(.6,0,.3,1); }
   .num { position: absolute; inset: 0; display: grid; place-items: center;
-    font: 800 132px/1 ui-sans-serif, system-ui, sans-serif;
+    font: 400 132px/1 'Bungee Hairline', ui-sans-serif, system-ui, sans-serif;
     /* Tailwind sky-400: the leader is injected where no theme tokens reach. */
     color: #38bdf8; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
   .num.pop { animation: film-leader-pop 1000ms ease-out; }
+  /* The loop: one closed ring whose start runs clockwise from 12 o'clock until it is gone, once per count. */
+  .loop { position: relative; width: 240px; height: 240px; }
+  .loop svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .loop .arc { fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 3; stroke-linecap: round;
+    stroke-dasharray: 100 100; }
+  .loop .arc.unwind { animation: film-leader-unwind 1000ms linear forwards; }
+  @keyframes film-leader-unwind { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }
   @keyframes film-leader-pop { 0% { transform: scale(1.35); opacity: 0; } 15% { transform: scale(1); opacity: 1; }
     85% { opacity: 1; } 100% { transform: scale(0.92); opacity: 0.2; } }
 `;
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Adds the counter font's stylesheet to the document once and waits for the digits, but never long: offline
+ * or blocked, the count falls back to the system face rather than stalling the take.
+ */
+const loadCounterFont = async () => {
+  if (!document.querySelector(`link[href="${COUNTER_FONT_CSS}"]`)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = COUNTER_FONT_CSS;
+    const loaded = new Promise((resolve) => {
+      link.onload = resolve;
+      link.onerror = resolve;
+    });
+    document.head.append(link);
+    await Promise.race([loaded, sleep(1_500)]);
+  }
+  await Promise.race([document.fonts.load(`132px "${COUNTER_FONT}"`, '0123456789').catch(() => []), sleep(1_500)]);
+};
 
 /**
  * The sweep animates a custom property, which only interpolates once registered; an `@property` rule
@@ -88,9 +120,18 @@ const registerSweep = () => {
  */
 export const playFilmLeader = async (
   root: HTMLElement | ShadowRoot,
-  { from = 3, wait = true, sweep = true, reticle = false, logo = DXOS_LOGO }: FilmLeaderOptions = {},
+  {
+    variant = 'leader',
+    from = 3,
+    wait = true,
+    sweep = true,
+    reticle = false,
+    logo = DXOS_LOGO,
+  }: FilmLeaderOptions = {},
 ): Promise<void> => {
   registerSweep();
+  // Started now, so it loads while the play button waits for the click.
+  const font = loadCounterFont();
   const style = document.createElement('style');
   style.textContent = FILM_LEADER_STYLES;
   const curtain = document.createElement('div');
@@ -106,20 +147,30 @@ export const playFilmLeader = async (
     } else {
       await sleep(1_200);
     }
+    await font;
     play?.classList.add('go');
     await sleep(220);
-    curtain.innerHTML = `
+    curtain.innerHTML =
+      variant === 'loop'
+        ? `<div class="loop"><svg viewBox="0 0 100 100"><circle class="arc" cx="50" cy="50" r="48" pathLength="100"/></svg><div class="num"></div></div>`
+        : `
       <div class="leader">${sweep ? '<div class="sweep"></div>' : ''}${
         reticle ? '<div class="cross h"></div><div class="cross v"></div><div class="ring"></div>' : ''
       }${logo ? `<div class="logo">${logo}</div>` : ''}<div class="num"></div></div>`;
     const num = curtain.querySelector<HTMLElement>('.num');
     const mark = curtain.querySelector<HTMLElement>('.logo');
+    const arc = curtain.querySelector<SVGElement>('.arc');
     for (let count = from; count > 0 && num; count--) {
       num.textContent = String(count);
       num.classList.remove('pop');
       // Reading layout restarts the animation for the next numeral.
       void num.offsetWidth;
       num.classList.add('pop');
+      if (arc) {
+        arc.classList.remove('unwind');
+        void arc.getBoundingClientRect();
+        arc.classList.add('unwind');
+      }
       // A half turn per count, accumulated so the mark keeps turning the same way.
       if (mark) {
         mark.style.transform = `rotate(${(from - count + 1) * 180}deg)`;
