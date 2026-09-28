@@ -6,7 +6,7 @@ import './theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useLayoutEffect, useRef } from 'react';
-import { expect } from 'storybook/test';
+import { expect, userEvent } from 'storybook/test';
 
 import { log } from '@dxos/log';
 
@@ -159,5 +159,107 @@ export const Benchmark: Story = {
     const root = canvasElement.querySelector('[data-render-ms]');
     // eslint-disable-next-line no-console
     log.info('benchmark', { rows: ROWS.length, ms: root?.getAttribute('data-render-ms') });
+  },
+};
+
+/** A recognisable ring colour, so the audit can tell Next's ring from the browser's or Tailwind's. */
+const AUDIT_RING = 'rgb(255, 0, 255)';
+
+/** Tailwind forms' focus blue and the browser's default focus outline must never show on a Next part. */
+const FOREIGN_RING = 'rgb(37, 99, 235)';
+
+/** Every focusable Next control, themed with the audit ring colour. */
+const FocusRingsStory = () => (
+  <div className='nx-scope' data-size='md' style={{ ['--nx-focus-ring-color' as string]: AUDIT_RING }}>
+    <Next.Container gutter='rail' level='base'>
+      <Next.Field.Root>
+        <Next.Field.Label>Input</Next.Field.Label>
+        <Next.Input />
+      </Next.Field.Root>
+      <Next.Field.Root>
+        <Next.Field.Label>Textarea</Next.Field.Label>
+        <Next.Textarea />
+      </Next.Field.Root>
+      <Next.Field.Root>
+        <Next.Field.Label>Date</Next.Field.Label>
+        <Next.DateInput defaultValue='2026-09-29' />
+      </Next.Field.Root>
+      <Next.Field.Root>
+        <Next.Field.Label>Time</Next.Field.Label>
+        <Next.DateInput type='time' defaultValue='09:30' />
+      </Next.Field.Root>
+      <Next.Field.Root>
+        <Next.Select.Root items={OPTIONS}>
+          <Next.Select.Label>Select</Next.Select.Label>
+          <Next.Select.Trigger placeholder='Pick one' />
+          <Next.Select.Content size='md'>
+            {OPTIONS.map((item) => (
+              <Next.Select.Item key={item.value} item={item} />
+            ))}
+          </Next.Select.Content>
+        </Next.Select.Root>
+      </Next.Field.Root>
+      <Next.Field.Root>
+        <Next.Combobox.Root items={OPTIONS}>
+          <Next.Combobox.Label>Combobox</Next.Combobox.Label>
+          <Next.Combobox.Input placeholder='Search' />
+          <Next.Combobox.Content size='md' />
+        </Next.Combobox.Root>
+      </Next.Field.Root>
+      <Next.Checkbox label='Checkbox' />
+      <Next.Switch label='Switch' />
+      <Next.Collapsible.Root>
+        <Next.Collapsible.Trigger>Collapsible</Next.Collapsible.Trigger>
+        <Next.Collapsible.Content>
+          <Next.Typography>Hidden content.</Next.Typography>
+        </Next.Collapsible.Content>
+      </Next.Collapsible.Root>
+      <Next.Toolbar>
+        <Next.Button>Button</Next.Button>
+        <Next.IconButton icon='ph--plus--regular' label='Add' showTooltip={false} />
+        <Next.ToggleIconButton icon='ph--text-b--regular' label='Bold' showTooltip={false} />
+      </Next.Toolbar>
+    </Next.Container>
+  </div>
+);
+
+/** Colours a focused part and its immediate relatives paint for focus. */
+const focusPaint = (element: Element) =>
+  [element, element.parentElement, ...(element.parentElement?.children ?? [])]
+    .filter((node): node is Element => node instanceof Element)
+    .map((node) => {
+      const style = getComputedStyle(node);
+      return {
+        shadow: style.boxShadow,
+        outline: style.outlineStyle === 'none' ? '' : `${style.outlineStyle} ${style.outlineColor}`,
+        border: parseFloat(style.borderTopWidth) > 0 ? style.borderTopColor : '',
+      };
+    });
+
+/** Tabs through every control: each shows Next's ring and nothing else. */
+export const FocusRings: Story = {
+  render: FocusRingsStory,
+  play: async ({ canvasElement }) => {
+    const seen = new Set<Element>();
+    for (let step = 0; step < 40; step++) {
+      await userEvent.tab();
+      const active = canvasElement.ownerDocument.activeElement;
+      if (!active || !canvasElement.contains(active) || seen.has(active)) {
+        break;
+      }
+      seen.add(active);
+      const paint = focusPaint(active);
+      const name = `${active.tagName.toLowerCase()}.${active.getAttribute('class') ?? ''}`;
+      for (const { shadow, outline, border } of paint) {
+        await expect(shadow, name).not.toContain(FOREIGN_RING);
+        await expect(outline, name).not.toContain('auto');
+        await expect(outline, name).not.toContain(FOREIGN_RING);
+        await expect(border, name).not.toContain(FOREIGN_RING);
+      }
+      const ringed = paint.some(({ shadow, outline }) => shadow.includes(AUDIT_RING) || outline.includes(AUDIT_RING));
+      await expect(ringed, `${name} shows the Next ring`).toBe(true);
+    }
+    // A Toolbar is one tab stop (roving focus), so its three buttons count once.
+    await expect(seen.size).toBeGreaterThanOrEqual(10);
   },
 };

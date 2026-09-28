@@ -15,6 +15,18 @@
   .nx-focus-ring:focus-visible {
     box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
   }
+  /*
+   * Tailwind's forms plugin paints a blue ring and border on every focused field from the base layer; a Next field
+   * either draws its own ring (`.nx-focus-ring`) or delegates it to its wrapper (DateInput, Combobox), so neither
+   * may show the plugin's.
+   */
+  :is(input, textarea, select)[class*='nx-']:focus {
+    border-color: transparent;
+    outline: none;
+  }
+  :is(input, textarea, select)[class*='nx-']:focus:not(.nx-focus-ring:focus-visible) {
+    box-shadow: none;
+  }
 
   .nx-typography {
     font-size: var(--nx-font-size);
