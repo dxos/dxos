@@ -8,7 +8,7 @@ import { Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { Task } from '@dxos/types';
 
-import { filterTasks, matchesTask } from './task-filter.ts';
+import { filterTasks } from './task-filter.ts';
 
 const tagUrgent = Tag.make({ label: 'urgent' });
 const tagLater = Tag.make({ label: 'later' });
@@ -46,44 +46,28 @@ const build = (input: string) => {
   return filter;
 };
 
-describe('matchesTask', () => {
-  test('free text reads the title', ({ expect }) => {
-    const task = makeTask({ title: 'Ship the tasks section' });
-    expect(matchesTask(build('tasks'), task)).to.be.true;
-    expect(matchesTask(build('mailbox'), task)).to.be.false;
-  });
-
-  test('free text reads the description', ({ expect }) => {
-    const task = makeTask({ title: 'Ship it', description: 'Blocked on the migration.' });
-    expect(matchesTask(build('migration'), task)).to.be.true;
-  });
-
-  test('free text ignores case', ({ expect }) => {
-    expect(matchesTask(build('SHIP'), makeTask({ title: 'Ship it' }))).to.be.true;
-  });
-
-  test('a tag term matches the task tags', ({ expect }) => {
-    const tagged = makeTask({ title: 'Ship it' }, [tagUrgent]);
-    const untagged = makeTask({ title: 'Ship it' });
-    expect(matchesTask(build('#urgent'), tagged)).to.be.true;
-    expect(matchesTask(build('#urgent'), untagged)).to.be.false;
-    expect(matchesTask(build('#later'), tagged)).to.be.false;
-  });
-
-  test('a property term matches a status', ({ expect }) => {
-    const started = makeTask({ title: 'Ship it', status: 'started' });
-    expect(matchesTask(build('status:started'), started)).to.be.true;
-    expect(matchesTask(build('status:done'), started)).to.be.false;
-  });
-
-  test('terms compose', ({ expect }) => {
-    const task = makeTask({ title: 'Ship the tasks section', status: 'started' }, [tagUrgent]);
-    expect(matchesTask(build('#urgent tasks'), task)).to.be.true;
-    expect(matchesTask(build('#later tasks'), task)).to.be.false;
-  });
-});
-
 describe('filterTasks', () => {
+  // The evaluator itself is tested in `@dxos/echo-query`; these pin what a task exposes to it.
+  test('free text reads the title and the description, and nothing else', ({ expect }) => {
+    const titled = makeTask({ title: 'Ship the tasks section' });
+    const described = makeTask({ title: 'Ship it', description: 'Blocked on the migration.' });
+    const assigned = makeTask({ title: 'Ship it', assignee: { name: 'Riley' } });
+    const titles = (input: string) =>
+      filterTasks([titled, described, assigned], { filter: build(input) }).map(({ title }) => title);
+    expect(titles('tasks')).to.deep.eq(['Ship the tasks section']);
+    expect(titles('MIGRATION')).to.deep.eq(['Ship it']);
+    expect(titles('riley')).to.deep.eq([]);
+  });
+
+  test('tag and property terms reach the task', ({ expect }) => {
+    const urgent = makeTask({ title: 'Urgent', status: 'started' }, [tagUrgent]);
+    const later = makeTask({ title: 'Later', status: 'done' }, [tagLater]);
+    const titles = (input: string) => filterTasks([urgent, later], { filter: build(input) }).map(({ title }) => title);
+    expect(titles('#urgent')).to.deep.eq(['Urgent']);
+    expect(titles('status:done')).to.deep.eq(['Later']);
+    expect(titles('assignee:riley')).to.deep.eq([]);
+  });
+
   test('no terms keeps everything', ({ expect }) => {
     const tasks = [makeTask({ title: 'One' }), makeTask({ title: 'Two' })];
     expect(filterTasks(tasks)).to.deep.eq(tasks);

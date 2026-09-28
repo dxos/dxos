@@ -42,6 +42,13 @@ import { isUnauthorizedFunctionError } from './utils.ts';
 export type IndexingResult = {
   updated: number;
   done: boolean;
+  /**
+   * Every change the sources held when the pass read them is now indexed. Unlike `done`, it holds for
+   * a pass that indexed something, so writes arriving faster than passes complete can still settle a
+   * caller waiting for the writes it made — `done` needs an empty batch, which such a stream never
+   * leaves.
+   */
+  drained: boolean;
   spaces: ReadonlySet<SpaceId>;
   queues: ReadonlySet<EntityId>;
   documents: ReadonlySet<string>;
@@ -52,6 +59,7 @@ export type IndexingResult = {
 type MutableIndexingResult = {
   updated: number;
   done: boolean;
+  drained: boolean;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -62,6 +70,7 @@ type MutableIndexingResult = {
 const makeEmptyIndexingResult = (): MutableIndexingResult => ({
   updated: 0,
   done: true,
+  drained: true,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -258,7 +267,7 @@ export class IndexEngine {
       const result = makeEmptyIndexingResult();
       const cursors = yield* this.#tracker.queryCursorsBySource({ sourceName: this.#indexedObjectSource.sourceName });
 
-      const { updated, done, objects } = yield* this.#update(ctx, this.#ftsIndex, this.#indexedObjectSource, {
+      const { updated, done, drained, objects } = yield* this.#update(ctx, this.#ftsIndex, this.#indexedObjectSource, {
         indexName: INDEX_NAMES.fts,
         spaceId: null,
         limit: opts?.limit,
@@ -266,6 +275,7 @@ export class IndexEngine {
       });
       result.updated += updated;
       result.done = result.done && done;
+      result.drained = result.drained && drained;
       accumulateIndexingResult(result, objects);
 
       return result as IndexingResult;
@@ -421,6 +431,7 @@ export class IndexEngine {
       const {
         updated: updatedSnapshotIndex,
         done: doneSnapshotIndex,
+        drained: drainedSnapshotIndex,
         objects: snapshotObjects,
       } = yield* this.#update(ctx, this.#objectSnapshotIndex, dataSource, {
         indexName: INDEX_NAMES.objectSnapshot,
@@ -430,11 +441,13 @@ export class IndexEngine {
       });
       result.updated += updatedSnapshotIndex;
       result.done = result.done && doneSnapshotIndex;
+      result.drained = result.drained && drainedSnapshotIndex;
       accumulateIndexingResult(result, snapshotObjects);
 
       const {
         updated: updatedReverseRefIndex,
         done: doneReverseRefIndex,
+        drained: drainedReverseRefIndex,
         objects: reverseRefObjects,
       } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
         indexName: INDEX_NAMES.reverseRef,
@@ -444,6 +457,7 @@ export class IndexEngine {
       });
       result.updated += updatedReverseRefIndex;
       result.done = result.done && doneReverseRefIndex;
+      result.drained = result.drained && drainedReverseRefIndex;
       accumulateIndexingResult(result, reverseRefObjects);
 
       const activity = yield* this.#updateActivity(ctx, dataSource, {
@@ -453,6 +467,7 @@ export class IndexEngine {
       });
       result.updated += activity.updated;
       result.done = result.done && activity.done;
+      result.drained = result.drained && activity.drained;
       for (const { spaceId, documentId } of activity.documents) {
         result.spaces.add(spaceId);
         result.documents.add(documentId);
@@ -482,7 +497,10 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
-  ): Effect.Effect<{ updated: number; done: boolean; objects: readonly IndexerObject[] }, SqlError.SqlError> {
+  ): Effect.Effect<
+    { updated: number; done: boolean; drained: boolean; objects: readonly IndexerObject[] },
+    SqlError.SqlError
+  > {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
 
@@ -490,12 +508,18 @@ export class IndexEngine {
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
       // TransactionConnection context. If those reads ran inside withTransaction, they would
       // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
-      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, opts.cursors, {
+      const {
+        objects,
+        cursors: updatedCursors,
+        more,
+      } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
       });
 
+      // An empty batch counts as drained even when the source says it stopped at the limit: the
+      // entries it skipped (a document that will not load) do not advance, so waiting would spin.
       if (objects.length === 0) {
-        return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
+        return { updated: 0, done: true, drained: true, objects: [] as readonly IndexerObject[] };
       }
 
       // Convergence keys in this batch, deduplicated — recorded as durable merge intents inside the
@@ -538,7 +562,7 @@ export class IndexEngine {
               cursor: _.cursor,
             })),
           );
-          return { updated: objects.length, done: false, objects };
+          return { updated: objects.length, done: false, drained: more === false, objects };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
@@ -549,20 +573,29 @@ export class IndexEngine {
     source: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
   ): Effect.Effect<
-    { updated: number; done: boolean; documents: readonly { spaceId: SpaceId; documentId: string }[] },
+    {
+      updated: number;
+      done: boolean;
+      drained: boolean;
+      documents: readonly { spaceId: SpaceId; documentId: string }[];
+    },
     SqlError.SqlError
   > {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
 
-      const { cursors: updatedCursors, activity = [] } = yield* source.getChangedObjects(ctx, opts.cursors, {
+      const {
+        cursors: updatedCursors,
+        activity = [],
+        more,
+      } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
         activity: true,
         objects: false,
       });
 
       if (updatedCursors.length === 0) {
-        return { updated: 0, done: true, documents: [] };
+        return { updated: 0, done: true, drained: true, documents: [] };
       }
 
       return yield* sql.withTransaction(
@@ -578,11 +611,8 @@ export class IndexEngine {
             })),
           );
           const updated = activity.reduce((sum, entry) => sum + entry.changes.length, 0);
-          return {
-            updated,
-            done: !anyCursorMoved(source.sourceName, opts.cursors, updatedCursors),
-            documents: activity,
-          };
+          const done = !anyCursorMoved(source.sourceName, opts.cursors, updatedCursors);
+          return { updated, done, drained: done || more === false, documents: activity };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));

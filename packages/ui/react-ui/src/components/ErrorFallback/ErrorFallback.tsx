@@ -10,7 +10,7 @@ import { safeStringify } from '@dxos/util';
 import { translationKey } from '#translations';
 
 import { useTranslation } from '../../providers/index.ts';
-import { IconButton } from '../Button/index.ts';
+import { SystemIconButton } from '../Button/index.ts';
 import { ErrorStack } from './ErrorStack.tsx';
 
 export type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> & { title?: string; data?: any }>;
@@ -29,24 +29,13 @@ export const ErrorFallback = ({ children, error, title, data }: ErrorFallbackPro
       <p>{message}</p>
 
       {isDev && error instanceof Error && (
-        <Section
-          title='Stack'
-          onClick={() => {
-            const text = error instanceof Error ? (error.stack ?? error.message) : String(error);
-            void navigator.clipboard.writeText(text);
-          }}
-        >
+        <Section title='Stack' onCopy={() => (error instanceof Error ? (error.stack ?? error.message) : String(error))}>
           <ErrorStack error={error} />
         </Section>
       )}
 
       {data && (
-        <Section
-          title='Data'
-          onClick={() => {
-            void navigator.clipboard.writeText(JSON.stringify(data, undefined, 2));
-          }}
-        >
+        <Section title='Data' onCopy={() => JSON.stringify(data, undefined, 2)}>
           <pre className='overflow-x-auto text-xs'>{safeStringify(data, undefined, 2)}</pre>
         </Section>
       )}
@@ -56,18 +45,12 @@ export const ErrorFallback = ({ children, error, title, data }: ErrorFallbackPro
   );
 };
 
-const Section = ({ children, title, onClick }: PropsWithChildren<{ title?: string; onClick?: () => void }>) => {
+const Section = ({ children, title, onCopy }: PropsWithChildren<{ title?: string; onCopy?: () => string }>) => {
   return (
     <div className='flex flex-col gap-1'>
-      {onClick && (
+      {onCopy && (
         <div>
-          <IconButton
-            classNames='text-xs uppercase'
-            label={title ?? 'Copy'}
-            icon='ph--clipboard-text--regular'
-            size={5}
-            onClick={onClick}
-          />
+          <SystemIconButton.Clipboard classNames='text-xs uppercase' label={title ?? 'Copy'} size={5} onCopy={onCopy} />
         </div>
       )}
       {children}

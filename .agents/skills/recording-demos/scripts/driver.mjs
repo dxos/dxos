@@ -20,14 +20,28 @@
  * With a full ffmpeg on the path the page renders at `--scale` device pixels (2 by default) and is
  * encoded to VP9 by `recorder.mjs`; without one it falls back to Playwright's `recordVideo`, whose
  * fixed 1 Mbit VP8 cannot carry more than 1x. `--overlay off` drops the on-screen action feed; `--feed bottom-left` (or any corner) moves it.
+ *
+ * `--mode manual` is for a session a person records themselves: a headed window, no recorder, the
+ * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
+ * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
+ * a persistent profile (`--profile`, default `~/.local/state/dxos/recording-demos/profile`).
+ *
+ * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
+ * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
+ * is the least time between two on-camera gestures. The app's `@dxos/log` output streams to `<out>/app.log`
+ * (`--log <file>`, or `off`) in the NDJSON shape `scripts/query-logs.mjs` reads.
  */
 
 import { chromium } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { homedir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { stripVTControlCharacters } from 'node:util';
 
+import { startLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
 
@@ -54,16 +68,35 @@ const parseArgs = () => {
     'ready-timeout': 180_000,
     'settle': 5_000,
     'feed': 'top-right',
+    'mode': 'record',
+    // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
+    // so the user's recording starts in a prepared app instead of onboarding.
+    'profile': path.join(homedir(), '.local/state/dxos/recording-demos/profile'),
+    // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
+    'theme': 'dark',
+    // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
+    'action-timeout': 5_000,
+    // Minimum gap between consecutive gestures, the pause a person takes to find the next control.
+    'cadence': 600,
+    // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
+    'log': undefined,
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
     options[key] = /^[\d.]+$/.test(value) ? Number(value) : value;
   }
+  // A person recording their own screen wants the product on camera, not the agent's narration of it.
+  const narrate = options.mode === 'manual' ? 'off' : 'on';
+  options.pills ??= narrate;
+  options.captions ??= narrate;
+  // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
+  options.pace ??= options.mode === 'manual' ? 800 : 0;
   return options;
 };
 
 const options = parseArgs();
+const manual = options.mode === 'manual';
 mkdirSync(options.out, { recursive: true });
 
 /**
@@ -80,15 +113,19 @@ const token = randomUUID();
 const sandbox = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
 
 const viewport = { width: options.width, height: options.height };
-const hires = hasFullFfmpeg();
-if (!hires) {
+const hires = !manual && hasFullFfmpeg();
+if (!manual && !hires) {
   console.warn('no ffmpeg with libvpx-vp9 on PATH (or FFMPEG_PATH): recording at 1x through Playwright');
 }
 const scale = hires ? options.scale : 1;
 
-const browser = await chromium.launch({
+const launchOptions = {
+  headless: !manual,
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
+    // The page follows the window, so a person can resize it for their capture without a fixed viewport
+    // leaving dead space or scrollbars.
+    ...(manual ? [`--window-size=${options.width},${options.height}`] : []),
     ...(sandbox
       ? [
           '--no-sandbox',
@@ -101,15 +138,45 @@ const browser = await chromium.launch({
     // the "2x" video was 1x frames upscaled; forcing the scale browser-wide makes the frames real 2x.
     ...(scale !== 1 ? [`--force-device-scale-factor=${scale}`] : []),
   ],
+};
+
+// A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
+const browser = manual ? undefined : await chromium.launch(launchOptions);
+const context = manual
+  ? await chromium
+      .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
+      .catch((error) => {
+        // Chromium locks a profile to one process; the usual cause is the previous session's window.
+        if (/already in use/.test(error.message)) {
+          console.error(`profile ${options.profile} is in use: close the open demo window, or pass --profile`);
+          process.exit(1);
+        }
+        throw error;
+      })
+  : await browser.newContext({
+      viewport,
+      deviceScaleFactor: scale,
+      colorScheme: options.theme,
+      recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+    });
+// A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
+const page = context.pages()[0] ?? (await context.newPage());
+page.setDefaultTimeout(options['action-timeout']);
+const logFile = options.log === 'off' ? undefined : (options.log ?? path.join(options.out, 'app.log'));
+if (logFile) {
+  await startLogTap({ context, page, file: logFile });
+}
+const overlay = createOverlay(page, {
+  enabled: options.overlay !== 'off',
+  feed: options.pills !== 'off',
+  position: options.feed,
 });
 
-const context = await browser.newContext({
-  viewport,
-  deviceScaleFactor: scale,
-  recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-});
-const page = await context.newPage();
-const overlay = createOverlay(page, { enabled: options.overlay !== 'off', position: options.feed });
+if (manual) {
+  // The window is the person's now; closing it is how they end the session.
+  page.on('close', () => context.close().finally(() => process.exit(0)));
+  context.on('close', () => process.exit(0));
+}
 
 const recorder = hires
   ? await startRecorder(page, {
@@ -222,12 +289,35 @@ const describe = async (target, command) => {
   return summarize(name || command.text || command.selector, 60);
 };
 
+let lastGesture = 0;
+
+/**
+ * Holds a gesture until `--cadence` has passed since the previous one, so back-to-back clicks read as a
+ * person's rather than a script's; a gesture after a long wait goes at once. Off-camera gestures skip it.
+ */
+const cadence = async (command) => {
+  if (command.hud === false) {
+    return;
+  }
+  const wait = (command.cadence ?? options.cadence) - (Date.now() - lastGesture);
+  if (wait > 0) {
+    await page.waitForTimeout(wait);
+  }
+};
+
+const gestured = () => {
+  lastGesture = Date.now();
+};
+
 /**
  * Cursor and ripple go up first, then a beat, then the click: the viewer's eye has to reach the target
  * before its effect replaces it.
  */
 const pointAt = async (target, command, kind) => {
-  const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
+  if (command.hud === false) {
+    return;
+  }
+  const box = await target.boundingBox({ timeout: command.timeout ?? options['action-timeout'] }).catch(() => null);
   // No box means no element yet; probing it for a name would wait out the default timeout first.
   const label = box
     ? await describe(target, command)
@@ -236,7 +326,7 @@ const pointAt = async (target, command, kind) => {
     await overlay.click({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
   }
   await overlay.event({ kind, label, detail: command.value === undefined ? undefined : summarize(command.value) });
-  if (box && command.hud !== false) {
+  if (box) {
     await page.waitForTimeout(command.beat ?? 250);
   }
 };
@@ -254,7 +344,10 @@ const center = async (selector) => {
  * Drops everything recorded so far. Captions already issued are dropped too, since their times would
  * point into footage that no longer exists.
  */
-const NO_CUT = { cut: false, reason: 'the 1x Playwright fallback cannot drop recorded frames' };
+const NO_CUT = {
+  cut: false,
+  reason: manual ? 'manual mode records nothing' : 'the 1x Playwright fallback cannot drop recorded frames',
+};
 
 const cut = async () => {
   if (!recorder) {
@@ -273,12 +366,62 @@ const cut = async () => {
 
 let booted = false;
 
+/**
+ * The flow script `run` last executed and the 0-based index of its next step, so a bare `run` resumes
+ * where the previous one stopped — "carry on" needs no bookkeeping from the caller.
+ */
+const flow = { file: undefined, next: 0, aborted: false, interrupt: undefined };
+
+class Aborted extends Error {}
+
+/**
+ * Races a step against `abort`, so a step blocked on a long wait (an agent run can take many minutes)
+ * stops now rather than when its wait expires; the abandoned wait times out on its own later.
+ */
+const interruptible = (promise) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      flow.interrupt = () => reject(new Aborted('aborted'));
+    }),
+  ]).finally(() => {
+    flow.interrupt = undefined;
+  });
+
+const slug = (text) =>
+  String(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48);
+
+/** A query string defeats the ESM module cache, so an edited script is picked up on the next `run`. */
+const loadFlow = async (file) => {
+  const module = await import(`${pathToFileURL(file).href}?v=${Date.now()}`);
+  if (!Array.isArray(module.steps)) {
+    throw new Error(`${file} does not export a \`steps\` array`);
+  }
+  return module.steps;
+};
+
+/** 1-based step numbers or step names, as a person would say them, to a 0-based index. */
+const stepIndex = (steps, ref, fallback) => {
+  if (ref === undefined) {
+    return fallback;
+  }
+  const index = typeof ref === 'number' ? ref - 1 : steps.findIndex((step) => step.name === ref);
+  if (index < 0 || index >= steps.length) {
+    throw new Error(`no step ${JSON.stringify(ref)} (steps are 1..${steps.length})`);
+  }
+  return index;
+};
+
 const handlers = {
   goto: async (command) => {
     await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
     const result = { url: page.url() };
     // Only the first navigation boots the app; a later `goto` is part of the demo.
-    if (!booted && options.boot !== 'keep') {
+    if (!booted && options.boot !== 'keep' && !manual) {
       booted = true;
       if (!recorder) {
         // Waiting minutes for a ready screen buys nothing when the footage cannot be dropped anyway.
@@ -305,28 +448,36 @@ const handlers = {
   cut: () => cut(),
   click: async (command) => {
     const target = locator(command).first();
+    await cadence(command);
     await pointAt(target, command, 'click');
-    await target.click({ timeout: command.timeout ?? 15_000, button: command.button ?? 'left' });
+    await target.click({ timeout: command.timeout ?? options['action-timeout'], button: command.button ?? 'left' });
+    gestured();
     return {};
   },
   fill: async (command) => {
     const target = locator(command).first();
+    await cadence(command);
     await pointAt(target, command, 'type');
-    await target.fill(command.value, { timeout: command.timeout ?? 15_000 });
+    await target.fill(command.value, { timeout: command.timeout ?? options['action-timeout'] });
+    gestured();
     return {};
   },
   type: async (command) => {
     const target = locator(command).first();
+    await cadence(command);
     await pointAt(target, command, 'type');
     await target.pressSequentially(command.value, { delay: command.delay ?? 60 });
+    gestured();
     return {};
   },
   /** The entry goes up first so the chord and the key's effect share frames. */
   press: async (command) => {
+    await cadence(command);
     if (command.hud !== false) {
       await overlay.event({ kind: 'key', label: keyLabel(command.key), keys: true });
     }
     await page.keyboard.press(command.key);
+    gestured();
     return {};
   },
   keys: async (command) => {
@@ -335,11 +486,16 @@ const handlers = {
   },
   hover: async (command) => {
     const target = locator(command).first();
-    const box = await target.boundingBox({ timeout: command.timeout ?? 15_000 }).catch(() => null);
+    await cadence(command);
+    const box =
+      command.hud === false
+        ? null
+        : await target.boundingBox({ timeout: command.timeout ?? options['action-timeout'] }).catch(() => null);
     if (box) {
       await overlay.moveCursor({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
     }
-    await target.hover({ timeout: command.timeout ?? 15_000 });
+    await target.hover({ timeout: command.timeout ?? options['action-timeout'] });
+    gestured();
     return {};
   },
   /**
@@ -350,24 +506,33 @@ const handlers = {
   drag: async (command) => {
     const from = command.fromXY ?? (await center(command.from));
     const to = command.toXY ?? (await center(command.to));
-    await overlay.click(from);
-    await overlay.event({
-      kind: 'drag',
-      label: command.label ?? `${command.from ?? 'point'} \u2192 ${command.to ?? 'point'}`,
-    });
+    const visible = command.hud !== false;
+    await cadence(command);
+    if (visible) {
+      await overlay.click(from);
+      await overlay.event({
+        kind: 'drag',
+        label: command.label ?? `${command.from ?? 'point'} \u2192 ${command.to ?? 'point'}`,
+      });
+    }
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     const steps = command.steps ?? 20;
     for (let step = 1; step <= steps; step++) {
       await page.mouse.move(from.x + ((to.x - from.x) * step) / steps, from.y + ((to.y - from.y) * step) / steps);
-      await overlay.moveCursor({
-        x: from.x + ((to.x - from.x) * step) / steps,
-        y: from.y + ((to.y - from.y) * step) / steps,
-      });
+      if (visible) {
+        await overlay.moveCursor({
+          x: from.x + ((to.x - from.x) * step) / steps,
+          y: from.y + ((to.y - from.y) * step) / steps,
+        });
+      }
       await page.waitForTimeout(command.stepDelay ?? 16);
     }
     await page.mouse.up();
-    await overlay.click(to);
+    gestured();
+    if (visible) {
+      await overlay.click(to);
+    }
     return { from, to };
   },
   waitFor: async (command) => {
@@ -415,12 +580,164 @@ const handlers = {
     return { value };
   },
   caption: async (command) => {
-    await showCaption(command.value, command.subtitle);
+    if (options.captions !== 'off') {
+      await showCaption(command.value, command.subtitle);
+    }
     timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
     if (command.hold) {
       await page.waitForTimeout(command.hold);
     }
     return { at: (Date.now() - started) / 1000 };
+  },
+  /**
+   * Executes steps of a flow script (see `flow.example.mjs`) against the live page, screenshotting after
+   * each one so a failure can be diagnosed from what the page showed rather than guessed at. Stops at the
+   * first failure and leaves `next` on the failed step, so a fixed script is retried from there.
+   *
+   * `restart: true` reloads the app and `replay: true` (implied by `restart`) first brings it to the
+   * state `from` expects by running every earlier step off camera — skipping any whose `done` check
+   * already holds — so a flow can be picked up at any step after a reload, a crash or a new session.
+   */
+  run: async (command) => {
+    if (!command.file && !flow.file) {
+      throw new Error('no flow script: pass "file"');
+    }
+    const file = path.resolve(command.file ?? flow.file);
+    const steps = await loadFlow(file);
+    if (file !== flow.file) {
+      flow.file = file;
+      flow.next = 0;
+    }
+    const from = stepIndex(steps, command.from, flow.next);
+    const until = stepIndex(steps, command.until, steps.length - 1);
+    if (from >= steps.length) {
+      return { steps: [], next: null, of: steps.length, done: true };
+    }
+    const shots = path.join(options.out, 'steps');
+    mkdirSync(shots, { recursive: true });
+    const screenshot = async (index) => {
+      const shot = path.join(shots, `${String(index + 1).padStart(2, '0')}-${slug(steps[index].name)}.png`);
+      return page.screenshot({ path: shot }).then(
+        () => shot,
+        () => undefined,
+      );
+    };
+
+    const failure = (error) =>
+      // Playwright colours its call log for a terminal; the escapes are noise in a JSON reply.
+      stripVTControlCharacters(error.message ?? String(error))
+        .split('\n')
+        .slice(0, 6)
+        .join('\n');
+
+    // Steps call the same handlers as the HTTP ops, so the cursor and pills behave identically. The
+    // quiet variant is for replay: no cursor, no pills, no captions, since none of it is the demo.
+    const makeDemo = (quiet) =>
+      Object.fromEntries(
+        Object.entries(handlers)
+          .filter(([op]) => !['run', 'abort', 'steps', 'stop'].includes(op))
+          .map(([op, handler]) => [
+            op,
+            quiet && op === 'caption'
+              ? async () => ({})
+              : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
+          ]),
+      );
+    const demo = makeDemo(false);
+    flow.aborted = false;
+
+    const replayed = [];
+    if (command.restart || command.replay) {
+      if (command.restart) {
+        await page.goto(command.url ?? options.url, { waitUntil: 'domcontentloaded' });
+        await page.locator(options.ready).first().waitFor({ state: 'visible', timeout: options['ready-timeout'] });
+        await page.waitForTimeout(options.settle);
+      }
+      const quiet = makeDemo(true);
+      for (let index = 0; index < from; index++) {
+        const step = steps[index];
+        try {
+          if (step.done && (await step.done({ page, demo: quiet }))) {
+            replayed.push({ step: index + 1, name: step.name, skipped: true });
+            continue;
+          }
+          await step.run({ page, demo: quiet });
+          replayed.push({ step: index + 1, name: step.name, ok: true });
+        } catch (error) {
+          flow.next = index;
+          replayed.push({
+            step: index + 1,
+            name: step.name,
+            ok: false,
+            error: failure(error),
+            screenshot: await screenshot(index),
+          });
+          return { replayed, steps: [], failed: index + 1, next: index + 1, of: steps.length };
+        }
+      }
+    }
+
+    const results = [];
+    for (let index = from; index <= until; index++) {
+      if (flow.aborted) {
+        return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
+      }
+      const step = steps[index];
+      try {
+        // The take starts where setup ends: a play button, then 3-2-1, so the person recording knows
+        // the moment everything before it stops being preparation.
+        if (index > 0 && steps[index - 1].setup && !step.setup && command.countdown !== false) {
+          await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
+        }
+        await interruptible(step.run({ page, demo }));
+        results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
+        flow.next = index + 1;
+      } catch (error) {
+        flow.next = index;
+        if (error instanceof Aborted) {
+          return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
+        }
+        results.push({
+          step: index + 1,
+          name: step.name,
+          ok: false,
+          error: failure(error),
+          screenshot: await screenshot(index),
+        });
+        return { replayed, steps: results, failed: index + 1, next: index + 1, of: steps.length };
+      }
+      if (index < until) {
+        await page.waitForTimeout(command.pace ?? options.pace);
+      }
+    }
+    return { replayed, steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
+  },
+  /** A play button and a 3-2-1 leader; `wait` (default in manual mode) holds until the button is clicked. */
+  countdown: async (command) => {
+    await overlay.countdown({ from: command.from ?? 3, wait: command.wait ?? manual });
+    return {};
+  },
+  /** Stops the step in flight at once and leaves `next` on it, so a bare `run` retries it. */
+  abort: () => {
+    flow.aborted = true;
+    flow.interrupt?.();
+    return {};
+  },
+  /** Loads a script without running it: its step names, and which one a bare `run` starts from. */
+  steps: async (command) => {
+    if (!command.file && !flow.file) {
+      throw new Error('no flow script: pass "file"');
+    }
+    const file = path.resolve(command.file ?? flow.file);
+    const steps = await loadFlow(file);
+    if (file !== flow.file) {
+      flow.file = file;
+      flow.next = 0;
+    }
+    return {
+      steps: steps.map((step, index) => `${index + 1}. ${step.name}`),
+      next: flow.next < steps.length ? flow.next + 1 : null,
+    };
   },
   clearCaption: async () => {
     await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
@@ -437,6 +754,9 @@ const handlers = {
     return { file };
   },
   stop: async () => {
+    if (manual) {
+      return { browser: 'left open; closing the window ends the driver' };
+    }
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
     const recorded = await recorder?.stop();
@@ -502,7 +822,7 @@ const server = createServer((request, response) => {
       // Shutdown runs from the write callback: exiting as soon as `end` returns can cut the response
       // off before it flushes, and that response carries the video path.
       response.end(JSON.stringify({ ok: true, ...result }), () => {
-        if (command.op === 'stop') {
+        if (command.op === 'stop' && !manual) {
           // Exit from inside `close`, and drop keep-alive sockets so it can actually complete: dropping
           // the exit entirely leaves the process alive on an idle client socket, and exiting before the
           // write callback truncates the response that carries the video path.
@@ -523,6 +843,6 @@ const server = createServer((request, response) => {
 server.listen(options.port, '127.0.0.1', () => {
   // Also written to the output directory so a caller can read it without scraping stdout.
   writeFileSync(path.join(options.out, 'token'), token);
-  console.log(`driver ready on http://127.0.0.1:${options.port} out=${options.out}`);
+  console.log(`driver ready on http://127.0.0.1:${options.port} out=${options.out} log=${logFile ?? 'off'}`);
   console.log(`token ${token}`);
 });

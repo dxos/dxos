@@ -13,7 +13,7 @@ import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -63,7 +63,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const { t } = useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
-  const { tab, pipeline: showPipeline } = useViewState(ProjectView.aspect, subject.id);
+  const { tab, pipeline: showPipeline, axis = 'time' } = useViewState(ProjectView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = useOperationInvoker();
@@ -108,6 +108,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
+  const setAxis = useCallback((axis: ProjectView.Axis) => updateView((prev) => ({ ...prev, axis })), [updateView]);
   const togglePipeline = useCallback(
     () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
     [updateView],
@@ -153,6 +154,15 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // A session lane on the chart is the way into its chat. The project's own path helper, not the
   // navigation resolver: the resolver answers with the assistant's Chats section, which lists only
   // unparented chats, so that path names a node the deck cannot render.
+  // The same navigation the task ledger's rows use, under the same context, so a lane picked in the
+  // chart selects its row and opens the task where a row click would.
+  const openTask = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+    level: 'task',
+    companion: isNotMobile ? 'task' : undefined,
+  });
+
   const handleSelectChat = useCallback(
     (chat: Chat.Chat) => {
       if (!db) {
@@ -321,7 +331,15 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
                 {showPipeline && space && (
-                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                  <ProjectPipeline
+                    space={space}
+                    project={subject}
+                    tasks={tasks}
+                    axis={axis}
+                    onAxisChange={setAxis}
+                    onSelectTask={openTask}
+                    onSelectChat={handleSelectChat}
+                  />
                 )}
               </Splitter.Panel>
             </Splitter.Root>
@@ -453,6 +471,7 @@ const useToolbarActions = ({
     }
 
     Chat.linkCompanion({ chat, subject: project });
+    Chat.seedSession(chat, project.session);
     await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
     await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
   }, [invokePromise, project, spaceId]);

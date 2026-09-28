@@ -323,6 +323,140 @@ export const StatusFilter: Story = {
 };
 
 /**
+ * The status menu and the query text are two views over one value: picking a status in the menu
+ * rewrites the text, and editing the text re-checks the menu. The value is persisted per device,
+ * under the set's id, through the `local` view-state backend.
+ */
+export const SharedFilterState: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+
+    const editor = () => canvasElement.querySelector<HTMLElement>('[role="toolbar"] .cm-content');
+    const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.status"]');
+    const item = (status: string) =>
+      document.querySelector<HTMLElement>(`[data-testid="tasks.filter.status.${status}"]`);
+    const stored = () => globalThis.localStorage.getItem(`dxos:view-state:tasks-task-set-view:${context.taskSet.id}`);
+
+    // Menu → text: hiding a status writes it into the query.
+    await clickElement(trigger());
+    await waitFor(() => expect(item('done')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(item('done'));
+    await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(editor()).toHaveTextContent('NOT status:done'), { timeout: 10_000 });
+    await expect(stored()).toContain('NOT status:done');
+    await userEvent.keyboard('{Escape}');
+
+    // Text → menu: replacing the query with a single status re-checks the menu to match.
+    await clickElement(editor());
+    await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
+    await waitFor(() => expect(stored()).toContain('"query":""'), { timeout: 10_000 });
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await clickElement(trigger());
+    await waitFor(() => expect(item('done')).toHaveAttribute('aria-checked', 'true'), { timeout: 10_000 });
+    await userEvent.keyboard('{Escape}');
+    await clickElement(editor());
+    await userEvent.keyboard('status:started');
+    await waitFor(() => expect(canvas.queryByText('Design label')).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+
+    await clickElement(trigger());
+    await waitFor(() => expect(item('started')).toHaveAttribute('aria-checked', 'true'), { timeout: 10_000 });
+    await expect(item('todo')).toHaveAttribute('aria-checked', 'false');
+    await expect(item('done')).toHaveAttribute('aria-checked', 'false');
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+/**
+ * Grouping puts the rows under collapsible headers with counts, and a sort reorders the rows within
+ * each group. Both choices persist per device beside the filter, and dragging is off while either is
+ * set, since a drop writes the set's own order.
+ */
+export const SortAndGroup: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+
+    const option = (testId: string) => document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+    const headers = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.group.header"]')).map((header) =>
+        header.textContent?.trim(),
+      );
+    // Visible rows only: a collapsed branch hides its rows rather than unmounting them.
+    const titles = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.title"]'))
+        .filter((title) => title.checkVisibility())
+        .map((title) => title.textContent);
+    const stored = () =>
+      JSON.parse(globalThis.localStorage.getItem(`dxos:view-state:tasks-task-set-view:${context.taskSet.id}`) ?? '{}');
+
+    // Group by status: one header per non-empty status, in the status table's order, with its count.
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.group"]'));
+    await waitFor(() => expect(option('tasks.group.status')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.group.status'));
+    await waitFor(() => expect(headers()).toEqual(['Todo2', 'Started2', 'Done1', 'Cancelled1']), { timeout: 10_000 });
+    await expect(stored().group).toEqual('status');
+
+    // A header collapses like a branch.
+    const doneGroup = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.group"]')).find((row) =>
+        row.textContent?.includes('Done'),
+      ) ?? null;
+    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]') ?? null);
+    await waitFor(() => expect(titles()).not.toContain('Source green coffee'), { timeout: 10_000 });
+    await expect(headers()).toContain('Done1');
+
+    // Order by title, descending: rows reorder within their group.
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.sort"]'));
+    await waitFor(() => expect(option('tasks.sort.title')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.sort.title'));
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.sort"]'));
+    await waitFor(() => expect(option('tasks.sort.desc')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.sort.desc'));
+    await waitFor(
+      () =>
+        expect(titles()).toEqual([
+          'Schedule cuppings',
+          'Design label',
+          'Finalize roast curve',
+          'Draft launch email',
+          'Print run v1',
+        ]),
+      { timeout: 10_000 },
+    );
+    await expect(stored().sort).toEqual({ field: 'title', direction: 'desc' });
+
+    // Ungrouped, the sort still holds across the whole list.
+    await clickElement(canvasElement.querySelector<HTMLElement>('[data-testid="tasks.group"]'));
+    await waitFor(() => expect(option('tasks.group.none')).toBeTruthy(), { timeout: 10_000 });
+    await clickElement(option('tasks.group.none'));
+    await waitFor(() => expect(headers()).toEqual([]), { timeout: 10_000 });
+    await waitFor(
+      () =>
+        expect(titles()).toEqual([
+          'Source green coffee',
+          'Schedule cuppings',
+          'Print run v1',
+          'Finalize roast curve',
+          'Draft launch email',
+          'Design label',
+        ]),
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
  * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
  *
@@ -364,8 +498,7 @@ export const Checkboxes: Story = {
 
 /**
  * The set resolves into one flat list and stays live afterwards — each mutation below is the one
- * that would go stale if the view were cached. Milestones are seeded but deliberately not rendered
- * yet (see TASKS.md).
+ * that would go stale if the view were cached. Milestones are seeded but, ungrouped, not rendered.
  */
 export const Behavior: Story = {
   play: async ({ canvasElement }) => {
@@ -554,7 +687,8 @@ export const CreateWithAttachment: Story = {
 
 /**
  * The filter is kept per device and per set: a hidden status and a typed query both survive the
- * article unmounting and mounting again, as they do navigating away and back.
+ * article unmounting and mounting again, as they do navigating away and back. The status choice is
+ * part of the query text, so both come back as one string.
  */
 export const FilterPersists: Story = {
   render: RemountStory,
@@ -579,13 +713,16 @@ export const FilterPersists: Story = {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
 
+    // The status menu wrote its term into the text; type after it rather than wherever the click landed.
     await userEvent.click(editor()!);
-    await userEvent.keyboard('roast');
+    await userEvent.keyboard('{End} roast');
     await waitFor(() => expect(canvas.queryByText('Draft launch email')).toBeNull(), { timeout: 10_000 });
 
     await userEvent.click(canvas.getByTestId('story.remount'));
     await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await waitFor(() => expect(editor()?.textContent?.trim()).toEqual('roast'), { timeout: 10_000 });
+    await waitFor(() => expect(editor()?.textContent?.trim().replace(/\s+/g, ' ')).toEqual('NOT status:done roast'), {
+      timeout: 10_000,
+    });
     await expect(canvas.queryByText('Draft launch email')).toBeNull();
     await expect(canvas.queryByText('Source green coffee')).toBeNull();
     await expect(trigger()).toHaveAttribute('data-filtered', 'true');
@@ -657,3 +794,10 @@ const flushRender = (): Promise<void> =>
     const tick = () => (remaining-- > 0 ? requestAnimationFrame(tick) : resolve());
     tick();
   });
+
+const clickElement = async (element: HTMLElement | null): Promise<void> => {
+  if (!element) {
+    throw new Error('The element to click is not rendered.');
+  }
+  await userEvent.click(element);
+};

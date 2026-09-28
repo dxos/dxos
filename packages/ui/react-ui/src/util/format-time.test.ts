@@ -11,6 +11,13 @@ const daysBefore = (days: number): string => new Date(now.getTime() - days * 24 
 const minutesBefore = (minutes: number): string => new Date(now.getTime() - minutes * 60_000).toISOString();
 
 describe('formatCompact', () => {
+  test('takes a Unix timestamp in milliseconds as well as a string or a Date', ({ expect }) => {
+    const instant = now.getTime() - 5 * 60_000;
+    expect(formatCompact(instant, { now })).to.eq('5m');
+    expect(formatCompact(new Date(instant), { now })).to.eq('5m');
+    expect(formatCompact(Number.NaN, { now })).to.eq('');
+  });
+
   test('the first minute is not a count', ({ expect }) => {
     expect(formatCompact(minutesBefore(0), { now })).to.eq('now');
     expect(formatCompact(minutesBefore(0.5), { now })).to.eq('now');

@@ -1021,10 +1021,10 @@ export const TestAgentSpinner: Story = {
 };
 
 /**
- * A long artifact tag cannot squeeze the title: the chips run on their own line under it, and the
- * title keeps the row's width.
+ * A row shows no artifact other than a pull request: a task whose only artifact is a document holds
+ * no chips line, and its title keeps the row's width.
  */
-export const TestLongArtifactTag: Story = {
+export const TestArtifactsHiddenInRow: Story = {
   args: {
     showGroupLabels: false,
     seed: () => [
@@ -1046,11 +1046,8 @@ export const TestLongArtifactTag: Story = {
       { timeout: 10_000 },
     );
     const title = row.querySelector<HTMLElement>('span.truncate')!;
-    const chips = row.querySelector<HTMLElement>('[data-testid="taskList.item.chips"]')!;
     await waitFor(async () => {
-      await expect(chips.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-        title.getBoundingClientRect().bottom - 0.5,
-      );
+      await expect(row.querySelector('[data-testid="taskList.item.chips"] > *')).toBeNull();
       await expect(title.getBoundingClientRect().width).toBeGreaterThan(row.getBoundingClientRect().width / 2);
     });
   },
@@ -1058,8 +1055,8 @@ export const TestLongArtifactTag: Story = {
 
 /**
  * Tasks whose artifacts are a GitHub pull request, an image and a video (each a `File` owning a
- * `Blob`), beside a task blocked on a question in its history. Clicking a tag opens a preview of the
- * artifact it names.
+ * `Blob`), beside a task blocked on a question in its history. The row shows only the pull request,
+ * whose pill opens its preview.
  */
 export const WithArtifacts: Story = {
   render: ArtifactsStory,
@@ -1137,7 +1134,7 @@ export const WithTags: Story = {
   },
 };
 
-/** Each artifact kind opens its own preview: the pull request's summary, the image, the video. */
+/** A pull request, the one artifact a row shows, opens its summary from the row. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -1147,9 +1144,11 @@ export const TestArtifactPreviews: Story = {
   },
   play: async ({ canvasElement }) => {
     const findTag = (label: string) =>
-      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.chips"] *')].find(
-        (element) => element.textContent === label,
-      );
+      [
+        ...canvasElement.querySelectorAll<HTMLElement>(
+          '[data-testid="taskList.item.chips"] *, [data-testid="taskList.item.artifacts"] *',
+        ),
+      ].find((element) => element.textContent === label);
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
 
     const open = async (label: string, testId: string) => {
@@ -1173,9 +1172,26 @@ export const TestArtifactPreviews: Story = {
     };
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.
+    // The pull request sits on the title line, not the chips line under it.
+    const pill = await waitFor(
+      () => {
+        const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.artifacts"] button');
+        const row = pill?.closest<HTMLElement>('[data-testid="taskList.item"]');
+        if (!pill || !row) {
+          throw new Error('Pull request pill not on a row.');
+        }
+        return { pill, row };
+      },
+      { timeout: 10_000 },
+    );
+    const { row } = pill;
+    const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+    await expect(
+      Math.abs(centre(pill.pill.getBoundingClientRect()) - centre(titleCell(row).getBoundingClientRect())),
+    ).toBeLessThan(4);
+
     await open('#12752', 'artifact-preview.pullRequest');
-    await open('label-v2.png', 'artifact-preview.image');
-    await open('roast-timelapse.webm', 'artifact-preview.video');
+    await expect(findTag('label-v2.png')).toBeUndefined();
   },
 };
 
@@ -1199,7 +1215,7 @@ export const TestCheckboxSelection: Story = {
 
     await waitFor(async () => expect(boxes().length).toBeGreaterThan(1));
     // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
-    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
+    await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
     const before = statuses();
     await userEvent.click(boxes()[0]);
@@ -1777,7 +1793,7 @@ export const TestOrdinalsAreLinear: Story = {
   play: async ({ canvasElement }) => {
     const ordinals = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
-        (row) => row.querySelector('.tabular-nums')?.textContent ?? '',
+        (row) => row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
       );
 
     await waitFor(async () => expect(ordinals().length).toBeGreaterThan(1));
@@ -1818,7 +1834,7 @@ export const TestHierarchy: Story = {
           // A leaf IS the `treeitem`, but a branch's `treeitem` is a wrapper around the focusable
           // row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
-          ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
+          ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
     const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;

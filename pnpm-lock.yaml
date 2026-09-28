@@ -84,6 +84,9 @@ catalogs:
     '@bufbuild/protoc-gen-es':
       specifier: 2.11.0
       version: 2.11.0
+    '@carderne/sandbox-runtime':
+      specifier: ^0.0.72
+      version: 0.0.72
     '@ch-ui/icons':
       specifier: ^1.0.1
       version: 1.0.1
@@ -1751,6 +1754,9 @@ importers:
       '@dxos/vite-plugin-log':
         specifier: workspace:*
         version: link:tools/vite-plugin-log
+      '@dxos/vite-plugin-module-url':
+        specifier: workspace:*
+        version: link:tools/vite-plugin-module-url
       '@effect/language-service':
         specifier: 'catalog:'
         version: 0.86.4
@@ -2205,6 +2211,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
@@ -2235,6 +2244,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2722,6 +2734,9 @@ importers:
       '@dxos/vite-plugin-log':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-log
+      '@dxos/vite-plugin-module-url':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-module-url
       '@dxos/vite-plugin-shutdown':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-shutdown
@@ -5213,6 +5228,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
@@ -8766,9 +8784,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/storybook-testing':
+        specifier: workspace:*
+        version: link:../../stories/storybook-testing
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -8781,6 +8805,9 @@ importers:
       react-dom:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
+      storybook:
+        specifier: 'catalog:'
+        version: 10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7)
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -10812,6 +10839,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../core/echo/blob
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -11215,6 +11245,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -11749,6 +11782,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
@@ -12000,9 +12036,6 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -15022,6 +15055,9 @@ importers:
 
   packages/plugins/plugin-sandbox:
     dependencies:
+      '@carderne/sandbox-runtime':
+        specifier: 'catalog:'
+        version: 0.0.72
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -15040,6 +15076,12 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -15055,6 +15097,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@tauri-apps/plugin-shell':
+        specifier: 'catalog:'
+        version: 2.3.5
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117
@@ -15065,9 +15110,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -16824,6 +16866,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -19828,6 +19873,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@dxos/vite-plugin-module-url':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-module-url
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
@@ -20544,9 +20592,15 @@ importers:
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../../plugins/plugin-crm
+      '@dxos/plugin-github':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-github
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-preview
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
@@ -23419,9 +23473,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-card':
-        specifier: workspace:*
-        version: link:../react-ui-card
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
@@ -24344,6 +24395,9 @@ importers:
       '@dxos/vite-plugin-log':
         specifier: workspace:*
         version: link:../vite-plugin-log
+      '@dxos/vite-plugin-module-url':
+        specifier: workspace:*
+        version: link:../vite-plugin-module-url
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -24517,6 +24571,12 @@ importers:
       rolldown:
         specifier: 'catalog:'
         version: 1.2.4
+    devDependencies:
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  tools/vite-plugin-module-url:
     devDependencies:
       vite:
         specifier: '>=8.2.1'
@@ -25680,6 +25740,11 @@ packages:
   '@capsizecss/unpack@4.0.0':
     resolution: {integrity: sha512-VERIM64vtTP1C4mxQ5thVT9fK0apjPFobqybMtA1UdUujWka24ERHbRHFGmpbbhp73MhV+KSsHQH9C6uOTdEQA==}
     engines: {node: '>=18'}
+
+  '@carderne/sandbox-runtime@0.0.72':
+    resolution: {integrity: sha512-7GI5hDQ7vUHdkVsHHZ76kbVTzy2Wt0twcQhUDVpGG5mgn5vENpWXImU8kKFf+YifDHn7nSoltCqa1RAqZZbVtw==}
+    engines: {node: '>=20.11.0'}
+    hasBin: true
 
   '@cbor-extract/cbor-extract-darwin-arm64@2.2.0':
     resolution: {integrity: sha512-P7swiOAdF7aSi0H+tHtHtr6zrpF3aAq/W9FXx5HektRvLTM2O89xCyXF3pk7pLc7QpaY7AoaE8UowVf9QBdh3w==}
@@ -29367,6 +29432,9 @@ packages:
 
   '@polka/url@1.0.0-next.24':
     resolution: {integrity: sha512-2LuNTFBIO0m7kKIQvvPHN6UE63VjpmL9rnEEaOOaiSPbZK+zUOYIzBAWcED+3XYzhYsd/0mD57VdxAEqqV52CQ==}
+
+  '@pondwader/socks5-server@1.0.10':
+    resolution: {integrity: sha512-bQY06wzzR8D2+vVCUoBsr5QS2U6UgPUQRmErNwtsuI6vLcyRKkafjkr3KxbtGFf9aBBIV2mcvlsKD1UYaIV+sg==}
 
   '@poppinss/colors@4.1.5':
     resolution: {integrity: sha512-FvdDqtcRCtz6hThExcFOgW0cWX+xwSMWcRuQe5ZEb2m7cVQOAVZOIMt+/v9RxGiD9/OY16qJBXK4CVKWAPalBw==}
@@ -44918,6 +44986,13 @@ snapshots:
     dependencies:
       fontkitten: 1.0.2
 
+  '@carderne/sandbox-runtime@0.0.72':
+    dependencies:
+      '@pondwader/socks5-server': 1.0.10
+      commander: 12.1.0
+      node-forge: 1.4.0
+      zod: 3.25.76
+
   '@cbor-extract/cbor-extract-darwin-arm64@2.2.0':
     optional: true
 
@@ -50556,6 +50631,8 @@ snapshots:
       config-chain: 1.1.13
 
   '@polka/url@1.0.0-next.24': {}
+
+  '@pondwader/socks5-server@1.0.10': {}
 
   '@poppinss/colors@4.1.5':
     dependencies:

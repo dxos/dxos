@@ -4,8 +4,9 @@ description: >-
   Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
   walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
-  screenshots of the UI, or execute a flow whose steps have no operation behind them. For a
-  pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
+  screenshots of the UI, or execute a flow whose steps have no operation behind them. Also covers
+  manual mode, where the user records their own screen while the agent drives a visible browser
+  step by step on their cue. For a pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
   regression test, write a Playwright spec instead.
 ---
 
@@ -39,6 +40,159 @@ with the same `screenshot` op, so this is a choice about what to send, not a dif
 
 When in doubt, record the session anyway (it costs nothing extra while you are driving) and send only
 the stills if the video adds nothing.
+
+## Manual mode: the user records
+
+The user asks for this; never pick it yourself. The user is recording their own screen and is in the
+loop at every step. You still drive, and the script is still the `.mdl` test or walkthrough, but the
+user decides when each part runs and can change how it runs.
+
+```bash
+node .agents/skills/recording-demos/scripts/driver.mjs --mode manual \
+  --port 7333 --url http://localhost:4173 --out /tmp/demo
+```
+
+Run it in the background. `--mode manual` changes the driver in five ways:
+
+- **Headed window, no recorder.** The browser opens in the foreground at `--width`×`--height`, and
+  the page follows the window, so the user can resize it for their capture. Nothing is encoded, the
+  boot is not cut, and §4, §4b and §5 do not apply.
+- **Cursor, but no pills and no banners.** The virtual cursor and click ripple still show what is
+  being clicked. The action feed and the `caption` banner are suppressed, so they don't compete with
+  the product. `--pills on` or `--captions on` brings either back when the user asks.
+- **`stop` leaves the browser open.** It answers `ok` and the driver keeps serving. Closing the
+  window ends the driver. Never close the browser yourself in this mode unless the user asks.
+- **The browser profile persists.** Every manual session opens the same Chromium profile,
+  `~/.local/state/dxos/recording-demos/profile` by default (`--profile <dir>` for another). The
+  app's identity, its spaces, and any first-run UI already dismissed carry over, so setup done in
+  one session is not redone on camera in the next. Chromium allows one process per profile. If the
+  driver exits with `profile … is in use`, the last session's window is still open: close it, or
+  keep using it if its driver is still serving. A clean slate means a new `--profile` directory.
+  Never delete the default one without asking, since it holds the user's prepared state.
+- **A local display is required.** The cloud sandbox has none, so this is for a session on the
+  user's machine.
+
+### Drive it from a flow script
+
+In manual mode, write the QA flow as a script and run it, rather than issuing one op per turn. Each op
+over HTTP costs a full agent turn, so a ten-step flow driven op by op leaves the user watching dead air
+between gestures. A script runs at the app's speed, and you stay the control panel: you choose what to
+run, edit the script when the user steers, and read the result.
+
+Check `flows/` first: a flow that has already run end to end is committed there, and running it in place
+beats rewriting it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry
+per QA step. Each step
+gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
+and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
+wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
+
+```bash
+C '{"op":"steps","file":"/tmp/demo/flow.mjs"}'   # numbered step names; `next` is where `run` resumes
+C '{"op":"run","until":4}'                         # runs from `next` through step 4, then stops
+C '{"op":"run"}'                                   # carries on to the end
+C '{"op":"run","from":3,"until":3}'                # re-runs step 3 alone
+C '{"op":"abort"}'                                 # stops the run now, mid-step; `next` stays on that step
+```
+
+- **`run` re-imports the file every time.** Edit the script and run again; the browser and the
+  app's state stay as they are.
+- **`from`/`until` take a step number (1-based) or a step name.** With no `from`, `run` resumes where
+  the last one stopped. `pace` (default 800 ms in manual mode, `--pace` to change it) is the gap
+  between steps.
+- **Every step leaves a screenshot**, as `<out>/steps/NN-<name>.png`, whether it passed or failed.
+  The reply lists each step with `ok`, the error if it threw, and the screenshot path.
+- **On a failure, `run` stops and leaves `next` on the failed step.** Read that step's screenshot
+  before changing anything. It shows what the page actually held, which is usually a dialog in
+  the way, a collapsed sidebar, or a renamed control. Fix the script, then `run` again to retry
+  from that step.
+- **Background a long `run`** (`run_in_background`), so the user can interrupt you mid-flow and you
+  can send `abort`.
+
+### Setup steps and the countdown
+
+Mark off-camera preparation with `setup: true` (enabling a plugin, picking a model). When `run` reaches the
+first step after the setup ones it plays a countdown in the page: a play button, then a 3-2-1 film leader.
+In manual mode the button waits for a click, so the user starts their recorder, clicks play, and the take
+begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays it without the click, and the
+`countdown` op plays one on demand.
+
+### Browser logs
+
+The driver streams the app's `@dxos/log` output from the page and its dedicated workers to
+`<out>/app.log`, in the NDJSON shape `scripts/query-logs.mjs` reads (`--log <file>` to move it, `--log
+off` to skip). A bundled app has no `vite-plugin-log` sink, so this is the only log a `vite preview`
+session leaves. HTTP responses with an error status are written alongside it under `f: "driver/http"`.
+When a step fails for a reason the screen does not explain, such as an agent that never answers, read
+this before guessing.
+
+### Restarting from a step
+
+A flow is written to be picked up at any step, not only replayed from the top. A step that changes
+app state carries a `done` check next to its `run`. `done` is a quick, read-only test that answers
+whether the step's outcome already holds, such as whether the project exists or the plugin is on.
+
+```bash
+C '{"op":"run","from":4,"restart":true}'        # reload the app, bring it to step 4 off camera, run 4 on
+C '{"op":"run","from":4,"until":4,"replay":true}' # same without the reload, for a page already loaded
+```
+
+- **`restart: true` reloads the app,** waits for it to be ready (`--ready`/`--settle`, as for the
+  boot), then replays. Use it after the page is wedged, after a driver restart, or when a later
+  step needs a clean UI to start from.
+- **`replay: true` only replays.** It runs every step before `from` off camera: no cursor, no pills,
+  no captions, no pacing. A step whose `done` answers true is skipped, so work already in the
+  profile is not redone. The reply lists `replayed` steps as `ok` or `skipped`, and a replay step
+  that throws stops the run with its screenshot, like any other failure.
+- **Write `done` for every step that creates or changes something.** A step without one is always
+  replayed, which is fine for navigation but duplicates a create. Keep `done` read-only and fast:
+  `page.evaluate` against app state, or a locator `count()`, never a gesture.
+- **The persistent profile is why this matters.** State outlives the session, so the next session
+  usually starts partway through a flow. Restarting from the step the user names is what gets them
+  back on camera quickly.
+
+Single ops are still the right tool for a one-off correction the user asks for on the spot ("click
+that again"), and for probing a failure before you fix the script.
+
+### The protocol
+
+1. **Open and wait.** Start the driver and send one `goto`, then stop. Don't caption, click, or run
+   a setup step. Write the flow script, send `steps`, and show the user the numbered list. Wait for
+   them to say go, since they are setting up their recorder.
+2. **Run only what they release.** "Go" runs the next step. "Run until step 4" is `run` with
+   `until: 4`. "Run it all" is `run` with no bounds. After each stop, say which step you stopped on
+   and what comes next, then wait.
+3. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
+   back and open it again" become an edit to the script (or a `from`/`until`), then a `run`. "Start
+   again from step 4" is `run` with `from: 4` and `restart: true`. A change the user asks for is not
+   a divergence to report.
+4. **Handle failures quietly.** Don't narrate passing checks. When a step fails, look at its
+   screenshot, say in a line what went wrong and what you'll change, then fix the script. Retry
+   only when the user says so, since the retry happens on camera.
+5. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
+   that closing it ends the driver.
+6. **Commit the flow once it has run end to end.** Save it as `flows/<name>.mjs` and commit it, so
+   the next session runs it instead of rediscovering every selector. Commit again whenever a later
+   session fixes it.
+
+### Flow metadata
+
+Every committed flow opens with a doc comment that says where it came from and what it needs, so a
+reader can tell whether it is still in step with its spec:
+
+```js
+/**
+ * Start a chess game and play the opening.
+ *
+ * @mdl packages/plugins/plugin-chess/PLUGIN.mdl test QA-1
+ * @app composer-app via `moon run composer-app:serve` on :5173
+ */
+```
+
+- **`@mdl`** names the `.mdl` file and the `test` (or `flow`) the steps were written from. A flow with
+  no spec behind it says `@mdl none` and names what it walks instead, such as a space template.
+- **`@app`** says how to serve the app the flow runs against, including any build flags and
+  environment it depends on.
+- Name each step after its `do:` text, so the flow and the spec can be read side by side.
 
 ## 1. Get the app running
 
@@ -124,7 +278,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `stop`. `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
@@ -159,13 +313,17 @@ are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 3456x21
 viewport). Without one it falls back to Playwright's `recordVideo` at 1x and says so at startup — that
 encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only smears the same bits wider.
 
-| flag        | default | effect                                                                                                     |
-| ----------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `--scale`   | `2`     | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                           |
-| `--width`   | `1728`  | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look |
-| `--crf`     | `28`    | VP9 quality, lower is better and larger                                                                    |
-| `--fps`     | `25`    | cap on frames kept during motion; still stretches cost one frame whatever this is                          |
-| `--quality` | `92`    | JPEG quality of the screencast frames                                                                      |
+| flag               | default         | effect                                                                                                                            |
+| ------------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--scale`          | `2`             | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                                                  |
+| `--width`          | `1728`          | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look                        |
+| `--crf`            | `28`            | VP9 quality, lower is better and larger                                                                                           |
+| `--fps`            | `25`            | cap on frames kept during motion; still stretches cost one frame whatever this is                                                 |
+| `--quality`        | `92`            | JPEG quality of the screencast frames                                                                                             |
+| `--theme`          | `dark`          | emulated `prefers-color-scheme`; `light` for a light recording                                                                    |
+| `--action-timeout` | `5000`          | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
+| `--cadence`        | `600`           | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
+| `--log`            | `<out>/app.log` | NDJSON of the app's `@dxos/log` output (page and dedicated workers); `off` to skip                                                |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames

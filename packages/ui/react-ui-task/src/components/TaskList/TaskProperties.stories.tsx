@@ -13,7 +13,7 @@ import { type Actor, RemoteSession, Task } from '@dxos/types';
 import { translations } from '#translations';
 
 import { TaskList } from './TaskList.tsx';
-import { TaskProperties } from './TaskProperties.tsx';
+import { type TaskMember, TaskProperties } from './TaskProperties.tsx';
 
 const SESSION_TITLE = 'Show agent assignees by session name';
 
@@ -34,7 +34,7 @@ const makeAgent = (): Actor.Actor => {
  * A task's properties beside the list row it came from, so the pill and the property row can be read
  * against each other — they name the same assignee and must agree.
  */
-const DefaultStory = ({ seed }: { seed: () => Task.Task }) => {
+const DefaultStory = ({ seed, members }: { seed: () => Task.Task; members?: TaskMember[] }) => {
   const [task] = useState(seed);
   const [, setVersion] = useState(0);
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
@@ -53,7 +53,7 @@ const DefaultStory = ({ seed }: { seed: () => Task.Task }) => {
           </TaskList.Viewport>
         </TaskList.Root>
       </div>
-      <TaskProperties task={task} onTaskUpdate={handleUpdate} />
+      <TaskProperties task={task} members={members} onTaskUpdate={handleUpdate} />
     </div>
   );
 };
@@ -103,5 +103,33 @@ export const TestAgentAssignee: Story = {
     await waitFor(() => expect(agentItem()).toBeTruthy(), { timeout: 10_000 });
     await expect(agentItem()).toHaveAttribute('aria-checked', 'true');
     await expect(agentItem()).toHaveTextContent(SESSION_TITLE);
+  },
+};
+
+/** The space's members, the owner among them, are offered by identity and assign the task by DID. */
+export const TestMemberAssignee: Story = {
+  args: {
+    seed: () => Task.make({ title: 'Roast the first batch', status: 'todo' }),
+    members: [
+      { did: 'did:halo:owner', name: 'Rich' },
+      { did: 'did:halo:member', name: 'Priya' },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const property = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.property.assignee"]');
+    await waitFor(() => expect(property()).toBeTruthy(), { timeout: 10_000 });
+    const trigger = property();
+    if (!trigger) {
+      throw new Error('The assignee property did not render.');
+    }
+    await userEvent.click(trigger);
+    const items = () => [...document.querySelectorAll<HTMLElement>('[data-testid="taskList.assignee.member"]')];
+    await waitFor(() => expect(items().map((item) => item.textContent)).toEqual(['Rich', 'Priya']), {
+      timeout: 10_000,
+    });
+
+    const [, priya] = items();
+    await userEvent.click(priya);
+    await waitFor(() => expect(property()).toHaveTextContent('Priya'));
   },
 };

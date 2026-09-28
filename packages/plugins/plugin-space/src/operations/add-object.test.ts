@@ -191,6 +191,35 @@ describe('SpaceOperation.AddObject', () => {
     ),
   );
 
+  // A model describing a type closes it with `additionalProperties: false` and no `id`; every draft
+  // then failed with `Unknown property: id`, which it can do nothing about but add a second type.
+  it.effect(
+    'creates an object of a described type that is closed and declares no id',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        yield* Operation.invoke(SpaceOperation.AddType, {
+          typename: 'com.example.type.closed',
+          name: 'Closed',
+          jsonSchema: {
+            $schema: 'http://json-schema.org/draft-07/schema#',
+            type: 'object',
+            title: 'Closed',
+            properties: { month: { type: 'string' } },
+            required: ['month'],
+            additionalProperties: false,
+          },
+        });
+
+        const { object } = yield* Operation.invoke(SpaceOperation.AddObject, {
+          object: { '@type': 'com.example.type.closed', 'month': 'April' },
+        });
+        expect(object).toMatchObject({ month: 'April' });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   it.effect(
     'a draft violating its schema fails with the validation message, not a defect',
     Effect.fnUntraced(

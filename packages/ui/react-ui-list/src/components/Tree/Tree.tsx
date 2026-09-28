@@ -50,8 +50,15 @@ import {
 import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
-import { DROP_INDENTATION, indentTrack } from './helpers.ts';
-import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
+import { DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
+import {
+  type RowUnit,
+  flattenRowUnits,
+  isDescendantPath,
+  nominalExtents,
+  rowUnitId,
+  useScroller,
+} from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -64,6 +71,7 @@ import {
   type TreeNodeEntry,
   type TreeRenderContextValue,
   TreeRenderProvider,
+  type WindowDisclosure,
   useTreeRender,
 } from './TreeContext.ts';
 import { TreeDropDebug } from './TreeDropDebug.tsx';
@@ -86,6 +94,13 @@ const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false
  */
 const TREE_TRACK = '[tree-row-start] minmax(0, 1fr) [tree-row-end]';
 const TREE_GRID = 'grid gap-0.5';
+
+/** The theme's disclosure duration, which the windowed rows' animation runs for; 0 where animation is off. */
+const disclosureDuration = (): number => {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--duration-tree-disclosure').trim();
+  const duration = Number.parseFloat(value);
+  return Number.isNaN(duration) ? 0 : value.endsWith('ms') ? duration : duration * 1000;
+};
 
 type TreeWalkState<T extends { id: string }> = {
   root: TreeNodeEntry<T>;
@@ -285,16 +300,30 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   dropAtEnd?: boolean;
   /**
+   * Take the dragged row out of the list for the duration of the drag, rather than leaving it in
+   * place faded. Off by default: a faded row keeps the list's geometry, so the rows under the
+   * pointer do not shift as the drag starts.
+   */
+  hideDragSource?: boolean;
+  /**
    * Mount only the rows in view, windowed with `@dxos/react-ui-virtual`.
    *
    * The same mechanism the trace timeline and the message feed use: the placement owns the
    * measured extents and the scrollbar, and the tree renders the mounted range into a translated
    * parent. Off by default — a list short enough to render whole gains nothing.
    *
-   * An open branch's children are mounted as rows of the window after their parent, so windowed
-   * disclosure is immediate rather than animated.
+   * An open branch's children are mounted as rows of the window after their parent, so those rows
+   * animate the disclosure themselves; a close is committed once they have concealed.
    */
   virtualize?: boolean;
+  /**
+   * Draw a vertical guide line down the left of each open branch's children, centred under the
+   * branch's disclosure toggle (or its icon when `toggle` is off), as Ark's indent guides do.
+   *
+   * Windowed, a branch's children are rows of the window rather than content of the branch, so no
+   * element spans them; each row draws a segment per ancestor instead, and the segments join up.
+   */
+  indentGuides?: boolean;
   /**
    * The element that scrolls the tree, when the consumer owns one.
    *
@@ -336,7 +365,7 @@ export const Tree = <T extends { id: string } = any>({
   id,
   ariaLabel,
   classNames,
-  gridTemplateColumns = '[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]',
+  gridTemplateColumns = `[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content [tree-row-end]`,
   density = 'md',
   toggle = true,
   draggable = false,
@@ -351,7 +380,9 @@ export const Tree = <T extends { id: string } = any>({
   debug = false,
   dropBelowExpanded = false,
   dropAtEnd = false,
+  hideDragSource = false,
   virtualize = false,
+  indentGuides = false,
   scrollerRef,
   canSelect,
   onOpenChange,
@@ -395,8 +426,32 @@ export const Tree = <T extends { id: string } = any>({
     return Date.now() - at < MODIFIER_WINDOW ? { option, shift, meta } : NO_MODIFIERS;
   }, []);
 
+  // Windowed, a branch's children are rows of the window rather than its content, so they have no
+  // container to animate: the rows animate themselves, and a close is committed only once they have.
+  const windowedRef = useRef(false);
+  const [disclosure, setDisclosure] = useState<WindowDisclosure>();
+  const disclosureTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(disclosureTimerRef.current), []);
+
   const setOpen = useCallback(
-    (node: TreeNodeEntry<T>, open: boolean) => onOpenChange?.({ item: node.item, path: node.path, open }),
+    (node: TreeNodeEntry<T>, open: boolean) => {
+      const commit = () => onOpenChange?.({ item: node.item, path: node.path, open });
+      clearTimeout(disclosureTimerRef.current);
+      if (!windowedRef.current) {
+        return commit();
+      }
+
+      setDisclosure({ path: node.path, open });
+      if (open) {
+        commit();
+      }
+      disclosureTimerRef.current = setTimeout(() => {
+        if (!open) {
+          commit();
+        }
+        setDisclosure(undefined);
+      }, disclosureDuration());
+    },
     [onOpenChange],
   );
 
@@ -693,6 +748,7 @@ export const Tree = <T extends { id: string } = any>({
   );
   const scroller = useScroller(treeRef, scrollerRef, !!units);
   const windowed = !!units && !!scroller;
+  windowedRef.current = windowed;
   // The first commit that renders rows, which a tree still finding its scroller has not had.
   const resolving = !!units && scroller === undefined;
   useEffect(() => {
@@ -712,6 +768,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       getDropKind,
       leavesAcceptChildren,
+      hideDragSource,
       debug,
       dropBelowExpanded,
       onOpenChange,
@@ -720,7 +777,9 @@ export const Tree = <T extends { id: string } = any>({
       canSelect,
       selectionMode,
       mountedRef,
+      indentGuides,
       windowed,
+      disclosure,
       claimFocus,
     }),
     [
@@ -735,6 +794,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       getDropKind,
       leavesAcceptChildren,
+      hideDragSource,
       debug,
       dropBelowExpanded,
       onSelectNode,
@@ -742,7 +802,9 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       onOpenChange,
       onItemHover,
+      indentGuides,
       windowed,
+      disclosure,
       claimFocus,
     ],
   );
@@ -825,6 +887,7 @@ const TreeWindow = ({
   endData: TreeData;
   revealRef: RefObject<((value: string) => boolean) | null>;
 }) => {
+  const { disclosure } = useTreeRender();
   const scrollerRef = useRef<HTMLElement | null>(scroller);
   scrollerRef.current = scroller;
   const model = useListModel(units, rowUnitId);
@@ -866,8 +929,20 @@ const TreeWindow = ({
     }
 
     const id = rowUnitId(unit);
+    const moving = disclosure && unit.kind === 'row' && isDescendantPath(unit.node.path, disclosure.path);
     mounted.push(
-      <div key={id} role='none' className='col-[tree-row] grid grid-cols-subgrid' {...windowRowProps(index, id)}>
+      <div
+        key={id}
+        role='none'
+        className={mx(
+          'col-[tree-row] grid grid-cols-subgrid',
+          // An opening row fades rather than grows: the window measures a row once per commit, so one
+          // mounted at zero height would be placed at zero until something else re-rendered it.
+          // A concealing row may shrink, since it leaves the window when the close commits.
+          moving && (disclosure.open ? 'animate-fade-in' : '[interpolate-size:allow-keywords] animate-tree-conceal'),
+        )}
+        {...windowRowProps(index, id)}
+      >
         {unit.kind === 'header' ? (
           <TreeSectionHeader label={unit.label} />
         ) : unit.kind === 'end' ? (
@@ -958,7 +1033,9 @@ TreeNodeRow.displayName = 'Tree.NodeRow';
  * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef } = useTreeRender();
+  const { mountedRef, indentGuides, toggle } = useTreeRender();
+  // Only with children to span: the guide would otherwise defeat `empty:hidden` on a childless branch.
+  const guide = indentGuides && (node.children?.length ?? 0) > 0;
 
   const handleRef = useCallback(
     (element: HTMLDivElement | null) => {
@@ -980,6 +1057,8 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
         // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
         // the rows inside an expanded branch.
         'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden empty:hidden',
+        // The containing block the guide spans; an absolute grid child takes no track or gap.
+        guide && 'relative',
         '[interpolate-size:allow-keywords]',
         'data-[animate]:data-[state=open]:animate-tree-disclose',
         'data-[animate]:data-[state=closed]:animate-tree-conceal',
@@ -988,6 +1067,14 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
       {node.children?.map((child) => (
         <TreeNodeRow key={child.value} node={child} />
       ))}
+      {guide && (
+        <TreeView.BranchIndentGuide
+          className='absolute inset-y-0 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
+          // Under the branch's own toggle (or its icon, when there is no toggle), clear of its children's
+          // toggles, which sit a block in.
+          style={{ insetInlineStart: `calc(${indentTrack(node.level)} + ${TREE_BLOCK} / 2)` }}
+        />
+      )}
     </TreeView.BranchContent>
   );
 };
@@ -1044,6 +1131,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canDrop,
     getDropKind,
     leavesAcceptChildren,
+    hideDragSource,
     debug,
     dropBelowExpanded,
     onOpenChange,
@@ -1052,6 +1140,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canSelect,
     selectionMode,
     claimFocus,
+    windowed,
+    indentGuides,
+    disclosure,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
@@ -1091,14 +1182,27 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     }
 
     const element = rowRef.current;
-    const makeDraggable = () =>
-      draggable({
-        element,
-        getInitialData: () => data,
-        getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
-        onDragStart: () => setDragState('dragging'),
-        onDrop: () => setDragState('idle'),
-      });
+    // Declares the drag a move: pragmatic-drag-and-drop sets `dropEffect` only over a drop target and
+    // never `effectAllowed`, so over a gap or the source row itself the browser falls back to its copy
+    // cursor, which flickers as the pointer crosses rows.
+    const handleNativeDragStart = (event: DragEvent) => {
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+      }
+    };
+    const makeDraggable = () => {
+      element.addEventListener('dragstart', handleNativeDragStart);
+      return combine(
+        () => element.removeEventListener('dragstart', handleNativeDragStart),
+        draggable({
+          element,
+          getInitialData: () => data,
+          getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
+          onDragStart: () => setDragState('dragging'),
+          onDrop: () => setDragState('idle'),
+        }),
+      );
+    };
 
     if (!isItemDroppable) {
       return isItemDraggable ? makeDraggable() : undefined;
@@ -1251,6 +1355,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       // The live drop instruction, so a test can read which zone the pointer is in rather than
       // inferring it from the indicator's classes (make-child and reparent render identically).
       data-instruction={instruction?.type}
+      // The source of a drag in progress, which stays in the list (faded) unless `hideDragSource`.
+      data-dragging={dragState === 'dragging' || undefined}
       data-testid={props.testId}
       // A leaf's row is its `treeitem`; a branch's `treeitem` is its wrapper, which carries these instead.
       aria-posinset={branch ? undefined : indexPath.at(-1)! + 1}
@@ -1259,10 +1365,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         'col-[tree-row] outline-none select-none',
         selectable ? 'cursor-pointer' : isItemDraggable && 'cursor-grab',
         isItemDraggable && 'active:cursor-grabbing',
-        // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
-        // copy left behind in place reads as a second row rather than as the one being moved. A
-        // branch's children go with it, since the drag start collapses it.
-        dragState === 'dragging' && 'hidden',
+        // The source row fades in place, or leaves the list when the consumer asks. A branch's
+        // children go with it either way, since the drag start collapses it.
+        dragState === 'dragging' && (hideDragSource ? 'hidden' : 'opacity-50'),
         // Selection keys off zag's `data-selected`: for branches, `aria-selected` lands on the
         // Branch wrapper (display:contents) while the visible row is the control. No focus-within
         // background — after a chevron click focus rests inside the row, and a persistent fill
@@ -1314,7 +1419,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
                   open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
               <TreeItemToggle
                 isBranch
-                open={open}
+                // A windowed branch stays open in the model while its rows conceal; the chevron turns with them.
+                open={open && !(disclosure && !disclosure.open && disclosure.path.join('/') === path.join('/'))}
                 density={density}
                 // Nothing to disclose: a branch the model knows to be childless keeps its chevron for
                 // row geometry but offers no toggle.
@@ -1331,6 +1437,18 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           <TreeNodeHeading item={item} path={path} props={props} />
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
+        {windowed &&
+          indentGuides &&
+          Array.from({ length: level - 1 }, (_, index) => (
+            <div
+              key={index}
+              role='none'
+              data-part='row-indent-guide'
+              // Down past the row into the gap below it, so one ancestor's segments read as a single line.
+              className='absolute top-0 -bottom-0.5 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
+              style={{ insetInlineStart: `calc(${indentTrack(index + 1)} + ${TREE_BLOCK} / 2)` }}
+            />
+          ))}
         {instruction && (
           <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
         )}
@@ -1367,15 +1485,19 @@ const TreeNodeHeading = <T extends { id: string }>({
     <TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
       <div
         data-testid='treeItem.heading'
-        className={mx(
-          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) select-none',
-          props.headingClassName,
-        )}
+        className={mx('flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none', props.headingClassName)}
       >
         {RenderIcon ? (
           <RenderIcon item={item} path={path} props={props} />
         ) : (
-          props.icon && <Icon size={5} icon={props.icon} classNames={['my-1', styles?.text]} />
+          props.icon && (
+            <Icon
+              size={5}
+              icon={props.icon}
+              // Centred in a block, the column a child row's toggle sits in.
+              classNames={['my-1 mx-0.5', styles?.text]}
+            />
+          )
         )}
         <span className='min-w-0 truncate text-start' data-tooltip>
           {text}
@@ -1393,7 +1515,7 @@ const TreeNodeHeading = <T extends { id: string }>({
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
       </Tag>
     );
@@ -1401,7 +1523,7 @@ const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 
 
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
       </Tag>
     );

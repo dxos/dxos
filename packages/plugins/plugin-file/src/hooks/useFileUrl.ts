@@ -10,7 +10,12 @@ import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type File } from '@dxos/types';
 
-export type FileUrl = { url: string; type: string; size?: number };
+export type FileUrl = {
+  url: string;
+  /** MIME type of the file. */
+  type: string;
+  size?: number;
+};
 
 /**
  * A URL the file's bytes can be rendered from — the blob's own when the store serves one, else an
@@ -31,7 +36,7 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
     let cancelled = false;
     let createdBlobUrl: string | undefined;
 
-    const program = Effect.gen(function* () {
+    const load = Effect.gen(function* () {
       const blob = yield* Database.load(file.data);
       const type = blob.type ?? 'application/octet-stream';
       const size = blob.size;
@@ -39,6 +44,7 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
       if (Option.isSome(urlOption)) {
         return { url: urlOption.value, type, size };
       }
+
       const bytes = yield* Blob.read(blob);
       // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
       // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
@@ -52,7 +58,7 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
       Effect.catch(() => Effect.succeed(undefined)),
     );
 
-    void EffectEx.runPromise(program).then((result) => {
+    void EffectEx.runPromise(load).then((result) => {
       if (cancelled) {
         if (createdBlobUrl) {
           URL.revokeObjectURL(createdBlobUrl);

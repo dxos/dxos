@@ -101,8 +101,9 @@ export default Capability.makeModule(
                   data: settings,
                   properties: {
                     label: meta.profile.name ?? meta.profile.key,
-                    // The plugin's own hue is dropped so the settings list reads as one uniform group.
+                    // In the plugin's own hue, so its settings read as the same plugin as it does elsewhere.
                     icon: meta.profile.icon?.key ?? 'ph--circle--regular',
+                    iconHue: meta.profile.icon?.hue,
                     testId: `settings.${meta.profile.key}`,
                   },
                 }),

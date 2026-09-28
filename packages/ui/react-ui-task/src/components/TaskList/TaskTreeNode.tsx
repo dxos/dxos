@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -26,9 +26,11 @@ import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.ts
 import { TaskCheckbox, TaskMnemonic, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
 import {
   TASK_TREE_ROOT_ID,
+  type TaskGroup,
+  type TaskGroupHeader,
   type TaskNode,
-  buildTaskForest,
   buildTaskPaths,
+  buildTaskTree,
   createTaskTreeModel,
 } from './tree-model.ts';
 
@@ -54,6 +56,8 @@ export type TaskTreeNodeProps = {
   debug?: boolean;
   /** Render status headers with their tasks flat beneath, instead of the hierarchy. */
   groupByStatus?: readonly Task.Status[];
+  /** Host-defined groups, rendered as collapsible headers with counts (see {@link TaskGroup}). */
+  groups?: readonly TaskGroup[];
   /** Nest sub-tasks under their parent; off renders one row per task. */
   hierarchical?: boolean;
   tasks: readonly Task.Task[];
@@ -83,6 +87,7 @@ export type TaskTreeNodeProps = {
 export const TaskTreeNode = ({
   debug,
   groupByStatus,
+  groups,
   hierarchical,
   tasks,
   collapsed,
@@ -111,10 +116,21 @@ export const TaskTreeNode = ({
   const collapsedRef = useRef(collapsed);
   collapsedRef.current = collapsed;
   const model = useMemo(
-    () => createTaskTreeModel(tasks, { collapsed: collapsedRef.current, groupByStatus, translationKey, hierarchical }),
-    [tasks, groupByStatus, translationKey, hierarchical],
+    () =>
+      createTaskTreeModel(tasks, {
+        collapsed: collapsedRef.current,
+        groups,
+        groupByStatus,
+        translationKey,
+        hierarchical,
+      }),
+    [tasks, groups, groupByStatus, translationKey, hierarchical],
   );
-  const paths = useMemo(() => buildTaskPaths(buildTaskForest(tasks)), [tasks]);
+  // From the forest the model renders, so a grouped task's path runs through its group's header.
+  const paths = useMemo(
+    () => buildTaskPaths(buildTaskTree(tasks, { groups, groupByStatus, hierarchical })),
+    [tasks, groups, groupByStatus, hierarchical],
+  );
 
   // Selection is owned by `TaskList.Root`, so it is driven into the model rather than held there —
   // otherwise selecting a task elsewhere (or clearing it from the edit pane) leaves the tree's own
@@ -299,13 +315,14 @@ export const TaskTreeNode = ({
     <Tree<TaskNode>
       id={TASK_TREE_ROOT_ID}
       ariaLabel={t('task-list.label')}
-      model={model}
-      gridTemplateColumns={gridTemplateColumns}
       classNames={mx('w-full min-w-0', classNames)}
+      gridTemplateColumns={gridTemplateColumns}
+      model={model}
       draggable={!!onTaskMove}
       // A flat list is a tree of depth one: no branch will ever need disclosing, so the template
-      // carries no toggle track and the first cell is the gutter or the status control.
-      toggle={!!hierarchical}
+      // carries no toggle track and the first cell is the gutter or the status control. A group
+      // header is a branch, so a grouped list discloses even when its rows are flat.
+      toggle={!!hierarchical || !!groups}
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren
@@ -317,6 +334,7 @@ export const TaskTreeNode = ({
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
       virtualize
+      indentGuides
       debug={debug}
       renderHeading={renderHeading}
       renderColumns={renderTrailing}
@@ -327,22 +345,7 @@ export const TaskTreeNode = ({
   );
 };
 
-/**
- * The gutter cell, status control and title — the row's leading content, beside the tree's own
- * toggle. The gutter holds either the checkbox or the ordinal, never both: they occupy one cell, and
- * a number beside a box reads as two ways to act on the row.
- */
-const TaskTreeHeading = ({
-  node,
-  showGutter,
-  ordinals,
-  checked,
-  translationKey,
-  showDescription,
-  descriptionComponents,
-  onTaskCheck,
-  onTaskUpdate,
-}: {
+type TaskTreeHeadingProps = {
   node: TaskNode;
   showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
@@ -352,7 +355,32 @@ const TaskTreeHeading = ({
   descriptionComponents?: TaskDescriptionProps['components'];
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-}) => {
+};
+
+/** A row's leading content: a group's header, or a task's own cells. */
+const TaskTreeHeading = ({ node, ...props }: TaskTreeHeadingProps) =>
+  node.group ? (
+    <TaskGroupHeading group={node.group} showGutter={props.showGutter} translationKey={props.translationKey} />
+  ) : (
+    <TaskRowHeading node={node} {...props} />
+  );
+
+/**
+ * The gutter cell, status control and title — the row's leading content, beside the tree's own
+ * toggle. The gutter holds either the checkbox or the ordinal, never both: they occupy one cell, and
+ * a number beside a box reads as two ways to act on the row.
+ */
+const TaskRowHeading = ({
+  node,
+  showGutter,
+  ordinals,
+  checked,
+  translationKey,
+  showDescription,
+  descriptionComponents,
+  onTaskCheck,
+  onTaskUpdate,
+}: TaskTreeHeadingProps) => {
   const { t } = useTranslation(translationKey);
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
@@ -402,15 +430,46 @@ const TaskTreeHeading = ({
       </div>
       {/* Under the title and the chips line (row 2, which collapses when the task has no chips): it
           has to clear the ordinal and the status control, or it reads as belonging to the row above,
-          and it must stop short of the trailing controls so it does not run beneath the estimate,
-          priority and menu. What the task says, and nothing the log recorded — an exchange replayed
+          and it spans the artifacts column (a PR chip is only row 1) but stops short of the trailing
+          controls so it does not run beneath the assignee, estimate, priority and menu. What the task says, and nothing the log recorded — an exchange replayed
           here grew the row by a line per question and pushed the next task off the screen; the
           detail pane a click opens has the room for it. */}
       {description && (
-        <div className='col-[title] row-start-3 flex min-w-0 flex-col gap-2 pb-1'>
+        <div className='col-[title/assignee] row-start-3 flex min-w-0 flex-col gap-2 pb-1'>
           <TaskDescription content={description} components={descriptionComponents} />
         </div>
       )}
     </>
+  );
+};
+
+/**
+ * A group's header: its icon, label and how many tasks it holds, spanning the row up to the trailing
+ * controls. The count is of the group's tasks, sub-tasks included, so it matches what expanding shows.
+ */
+const TaskGroupHeading = ({
+  group,
+  showGutter,
+  translationKey,
+}: {
+  group: TaskGroupHeader;
+  showGutter: boolean;
+  translationKey: string;
+}) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <div
+      className={mx(
+        'flex min-w-0 items-center gap-2 self-center',
+        showGutter ? 'col-[gutter/chips-end]' : 'col-[status/chips-end]',
+      )}
+      data-testid='taskList.group.header'
+    >
+      {group.icon && <Icon icon={group.icon} size={4} classNames={group.iconClassNames} />}
+      <span className='truncate font-medium'>{toLocalizedString(group.label, t)}</span>
+      <span className='text-sm text-description' data-testid='taskList.group.count'>
+        {group.count}
+      </span>
+    </div>
   );
 };
