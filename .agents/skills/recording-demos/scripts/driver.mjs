@@ -529,9 +529,6 @@ const handlers = {
     const shots = path.join(options.out, 'steps');
     mkdirSync(shots, { recursive: true });
     const screenshot = async (index) => {
-      if (command.screenshots === false) {
-        return undefined;
-      }
       const shot = path.join(shots, `${String(index + 1).padStart(2, '0')}-${slug(steps[index].name)}.png`);
       return page.screenshot({ path: shot }).then(
         () => shot,
@@ -593,7 +590,10 @@ const handlers = {
       flow.file = file;
       flow.next = 0;
     }
-    return { steps: steps.map((step, index) => `${index + 1}. ${step.name}`), next: flow.next + 1 };
+    return {
+      steps: steps.map((step, index) => `${index + 1}. ${step.name}`),
+      next: flow.next < steps.length ? flow.next + 1 : null,
+    };
   },
   clearCaption: async () => {
     await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
