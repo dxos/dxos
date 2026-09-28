@@ -93,6 +93,7 @@ with Phase 4 milestone 5).
 - [x] **Separator** — `Next.Separator`; `Toolbar.Separator` (Toolbar becomes `Toolbar.Root`), `Menu.Separator`, `Select.Separator` (DESIGN.md follow-up 38).
 - [x] **Text and layout** — Typography `truncate`/`tone`, Label `srOnly`, Group `fill`, Container `gap`, ScrollArea `orientation`/`autoHide`/`snap`/`scrollbars`; section label and Block `compact`/`square` deliberate (DESIGN.md follow-up 39).
 - [x] **Button and Toggle** — Button `hue`/`caretDown`/`compact`/`tooltipSide`; Toggle `activeIcon`; `Next.ToggleGroup`, `Toolbar.ToggleGroup` (DESIGN.md follow-up 40).
+- [x] **Fields** — Field `validationValence`, `Field.Label srOnly`; Input `start`/`end`, `noAutoFill`, `variant='subdued'` (DESIGN.md follow-up 41).
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
 

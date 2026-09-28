@@ -26,6 +26,7 @@ import {
   Dialog as NextDialog,
   Field as NextField,
   FieldSet as NextFieldSet,
+  type FieldValence as NextFieldValence,
   Group as NextGroup,
   type GroupProps as NextGroupProps,
   type Gutter as NextGutter,
@@ -90,6 +91,7 @@ export namespace Next {
   export type ButtonValence = NextButtonValence;
   export type ButtonHue = NextButtonHue;
   export const Field = NextField;
+  export type FieldValence = NextFieldValence;
   export const Checkbox = NextCheckbox;
   export type CheckboxProps = NextCheckboxProps;
   export const Select = NextSelect;

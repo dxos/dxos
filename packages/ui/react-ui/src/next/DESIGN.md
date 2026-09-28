@@ -320,6 +320,16 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     roving off and drops the root's tab stop, so its items join the toolbar's roving set through Button's
     `useToolbarItem` and the toolbar's arrow handler moves over them.
 
+41. **Field and Input parity.** `Field.Root validationValence` (ui-types `MessageValence`) is a `data-valence` on the
+    field, resolved in CSS without context: the control (and a Select or Combobox trigger, whose roots take no box)
+    takes a 1px inset line and its focus ring in `--color-<valence>-border`, the HelperText `--color-<valence>-text`,
+    and `error` also sets `invalid` (unless given) so Ark's ErrorText shows and the control reports `aria-invalid`; a
+    non-error message is therefore HelperText, not ErrorText. `Field.Label srOnly` matches `Label srOnly`. `Input start`
+    and `end` render a control row like DateInput's (adornments in `--color-description`, a bare input, the ring as an
+    outline from the input's `:focus-visible`), with `data-testid` on the row and the ref on the input; a trailing
+    icon-only Button shrinks by one inset on each side so it fits the control height and ends one inset from the row's
+    edge. `noAutoFill` sets `data-1p-ignore`; `variant='subdued'` drops the well.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

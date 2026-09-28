@@ -72,6 +72,54 @@
     min-width: 0;
     background: var(--color-input-surface);
   }
+  .nx-input[data-variant='subdued'] {
+    background: transparent;
+  }
+
+  /*
+   * An adorned Input is a control row (like DateInput's): the adornments and a bare input, with the ring drawn on the
+   * row as an outline (wrapper rings, Phase 3 follow-up 6) from the input's focus.
+   */
+  .nx-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+  }
+  .nx-input-row:has(> .nx-input-field:focus-visible) {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+  .nx-input-row:has(> .nx-input-field:disabled) {
+    opacity: 0.5;
+  }
+  .nx-input-field {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+  }
+  /* A trailing icon-only Button ends flush with the row, its inset cell standing in for the row's padding. */
+  .nx-input-adornment {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--nx-control-inset);
+    color: var(--color-description);
+  }
+  .nx-input-row:has(> .nx-input-adornment:last-child > .nx-button[data-square]:last-child) {
+    padding-inline-end: 0;
+  }
+  .nx-input-adornment > .nx-button[data-square] {
+    margin: 0;
+    height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
+    width: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
+    margin-inline: var(--nx-control-inset);
+  }
 
   .nx-button {
     display: inline-flex;
@@ -236,6 +284,42 @@
   }
   .nx-field-error {
     color: var(--color-error-text);
+  }
+
+  /*
+   * Validation valence (the current Field's): the control takes the valence's border as a 1px inset line and its
+   * focus ring, and the HelperText its text colour; `error` also makes the field invalid (ErrorText).
+   */
+  .nx-field[data-valence='success'] {
+    --nx-valence-border: var(--color-success-border);
+    --nx-valence-text: var(--color-success-text);
+  }
+  .nx-field[data-valence='info'] {
+    --nx-valence-border: var(--color-info-border);
+    --nx-valence-text: var(--color-info-text);
+  }
+  .nx-field[data-valence='warning'] {
+    --nx-valence-border: var(--color-warning-border);
+    --nx-valence-text: var(--color-warning-text);
+  }
+  .nx-field[data-valence='error'] {
+    --nx-valence-border: var(--color-error-border);
+    --nx-valence-text: var(--color-error-text);
+  }
+  .nx-field[data-valence] {
+    --nx-focus-ring-color: var(--nx-valence-border);
+  }
+  /* Select and Combobox roots take no box, so their controls are the field's grandchildren. */
+  .nx-field[data-valence] > .nx-control,
+  .nx-field[data-valence] > :is(.nx-select, .nx-combobox) > .nx-control {
+    box-shadow: inset 0 0 0 1px var(--nx-valence-border);
+  }
+  .nx-field[data-valence] > .nx-control:focus-visible,
+  .nx-field[data-valence] > :is(.nx-select, .nx-combobox) > .nx-control:focus-visible {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-valence-border);
+  }
+  .nx-field[data-valence] > .nx-field-helper {
+    color: var(--nx-valence-text);
   }
 
   .nx-checkbox {
