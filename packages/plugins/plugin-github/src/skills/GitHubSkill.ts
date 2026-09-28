@@ -31,6 +31,7 @@ export const make = (): Skill.Skill =>
       'Import GitHub pull requests into a space by URL or owner/repo#number, read their state and CI ' +
       'status, and generate walkthroughs. Use when a task, message or the user names a pull request.',
     agentCanEnable: true,
+    mcpPrompt: true,
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
