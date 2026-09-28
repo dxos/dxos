@@ -118,7 +118,17 @@ export class DxAnchor extends LitElement {
     this.#dispatchActivate();
   }
 
-  #handleClick = (): void => {
+  #handleClick = (event: MouseEvent | KeyboardEvent): void => {
+    // Cmd/Ctrl-click skips the preview and goes straight to the target.
+    if (event.metaKey || event.ctrlKey) {
+      event.preventDefault();
+      this.#reset();
+      this.dispatchEvent(
+        new DxAnchorActivate({ eid: this.eid, label: this.textContent ?? '', trigger: this, navigate: true }),
+      );
+      return;
+    }
+
     // A click pins the popover open: dismissal reverts to outside-interaction/Escape.
     this.#reset();
     this.#dispatchActivate();
@@ -128,7 +138,7 @@ export class DxAnchor extends LitElement {
     // role=button on a non-button element gets no native key activation.
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      this.#handleClick();
+      this.#handleClick(event);
     }
   };
 
