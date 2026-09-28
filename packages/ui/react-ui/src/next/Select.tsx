@@ -15,6 +15,9 @@ import { recipes } from './recipes.ts';
 import { type Size } from './sizes.ts';
 import { useToolbarItem } from './Toolbar.tsx';
 
+/** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
+const POPUP_GUTTER = 2;
+
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 
 //
@@ -27,11 +30,13 @@ type SelectRootProps = ThemedClassName<Omit<SelectPrimitive.RootProps<SelectOpti
 
 /** Ark select over a flat option list; the root takes no box so its trigger is laid out as the parent's child. */
 const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(
-  ({ classNames, items, children, ...props }, forwardedRef) => {
+  ({ classNames, items, positioning, children, ...props }, forwardedRef) => {
     const collection = useMemo(() => createListCollection<SelectOption>({ items }), [items]);
     return (
       <SelectPrimitive.Root
         {...props}
+        // Ark's 8px default reads as detached from the trigger.
+        positioning={{ gutter: POPUP_GUTTER, ...positioning }}
         collection={collection}
         className={mx('nx-select', classNames)}
         ref={forwardedRef}

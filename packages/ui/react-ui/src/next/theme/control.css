@@ -61,8 +61,8 @@
   }
 
   .nx-label {
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
   }
 
   /* Field (decision 13): a flex stack in the content track; the field pads its control out to a block. */
@@ -89,7 +89,8 @@
   .nx-checkbox {
     display: inline-flex;
     align-items: center;
-    align-self: center;
+    /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
+    align-self: start;
     gap: var(--nx-gap-size);
     min-height: var(--nx-block-size);
     font-size: var(--nx-font-size);

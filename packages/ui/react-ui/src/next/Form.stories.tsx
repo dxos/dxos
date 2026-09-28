@@ -6,7 +6,7 @@ import './theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../testing/index.ts';
 import { Next } from './components.tsx';
@@ -98,6 +98,26 @@ export const Default: Story = {
     await expect(canvas.getByRole('combobox', { name: 'Role' })).toBeInTheDocument();
     await expect(canvas.getByRole('checkbox', { name: 'Subscribe to updates' })).not.toBeChecked();
     await expect(canvas.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'submit');
+    // The checkbox starts at the column's left edge, like every other control.
+    const box = canvasElement.querySelector('[data-scope="checkbox"][data-part="control"]')?.getBoundingClientRect();
+    await expect(box?.left).toBeCloseTo(part(canvasElement, 'name', '.nx-control').left, 0);
+
+    // Labels read one text step below the controls.
+    const labelFont = parseFloat(getComputedStyle(canvas.getByText('Name')).fontSize);
+    const inputFont = parseFloat(getComputedStyle(canvas.getByRole('textbox', { name: 'Name' })).fontSize);
+    await expect(labelFont).toBeLessThan(inputFont);
+
+    // The popup sits close under its trigger.
+    const trigger = canvas.getByRole('combobox', { name: 'Role' });
+    await userEvent.click(trigger);
+    const listbox = await within(canvasElement.ownerDocument.body).findByRole('listbox');
+    await waitFor(() => {
+      const gap = listbox.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom;
+      expect(gap).toBeGreaterThanOrEqual(0);
+      expect(gap).toBeLessThanOrEqual(3);
+    });
+    await userEvent.keyboard('{Escape}');
+
     // Form actions claim no toolbar keyboard contract.
     await expect(canvas.queryByRole('toolbar')).toBeNull();
   },
