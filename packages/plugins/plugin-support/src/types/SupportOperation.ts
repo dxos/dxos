@@ -27,10 +27,14 @@ export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Lo
 });
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
+/** Rejects whitespace-only text, which `isNonEmpty` alone lets through as an empty report. */
+const isNotBlank = Schema.makeFilter((value: string) => value.trim().length > 0 || 'Must not be blank.');
+
 /** Form payload for the FeedbackPanel submit action. */
 export const SupportRequest = Schema.Struct({
   title: Schema.String.pipe(
     Schema.check(Schema.isNonEmpty()),
+    Schema.check(isNotBlank),
     Schema.check(Schema.isMaxLength(256)),
     Schema.annotate({
       title: 'Title',
@@ -39,6 +43,7 @@ export const SupportRequest = Schema.Struct({
   ),
   body: Format.Text.pipe(
     Schema.check(Schema.isNonEmpty()),
+    Schema.check(isNotBlank),
     Schema.check(Schema.isMaxLength(16_384)),
     Schema.annotate({
       title: 'Description',

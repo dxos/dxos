@@ -5,6 +5,7 @@
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Args from 'effect/unstable/cli/Argument';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Flag from 'effect/unstable/cli/Flag';
@@ -42,6 +43,44 @@ const normalizeKey = (key: unknown): string => String(key).replace(/^dxn:/, '');
  * so both sources land in one triage view.
  */
 const REPORT_LABEL = 'Composer Feedback Form';
+
+type ReportOptions = {
+  title: string;
+  body?: string;
+  type?: string;
+  severity?: string;
+  label?: string;
+  includeLogs: boolean;
+};
+
+/**
+ * Builds the `support.submitIssue` payload, refusing a blank title or body here so the console
+ * says which flag is missing instead of relaying the operation's schema error.
+ */
+const makeReportInput = Effect.fn(function* ({ title, body, type, severity, label, includeLogs }: ReportOptions) {
+  const trimmedTitle = title.trim();
+  if (trimmedTitle.length === 0) {
+    return yield* Effect.fail(new DebugOperationError({ message: 'Issue title must not be empty.' }));
+  }
+  const trimmedBody = body?.trim() ?? '';
+  if (trimmedBody.length === 0) {
+    return yield* Effect.fail(
+      new DebugOperationError({
+        message: 'Issue body must not be empty: describe the problem with --body "<description>".',
+      }),
+    );
+  }
+  return {
+    report: {
+      title: trimmedTitle,
+      body: trimmedBody,
+      ...(type !== undefined ? { type } : {}),
+      ...(severity !== undefined ? { severity } : {}),
+      labels: [label ?? REPORT_LABEL],
+      includeLogs,
+    },
+  };
+});
 
 const findDefinition = Effect.fn(function* (key: string) {
   const capabilities = (yield* Plugin.Service).capabilities;
@@ -219,7 +258,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
     'report',
     {
       title: Args.String('title').pipe(Args.withDescription('Issue title.'), Args.variadic({ min: 1 })),
-      body: Flag.String('body').pipe(Flag.optional, Flag.withDescription('Issue body; defaults to empty.')),
+      body: Flag.String('body').pipe(Flag.optional, Flag.withDescription('Issue body (required).')),
       type: Flag.String('type').pipe(Flag.optional, Flag.withDescription('bug | feature.')),
       severity: Flag.String('severity').pipe(
         Flag.optional,
@@ -233,16 +272,15 @@ const makeCommand = (options: DebugCliOptions = {}) => {
     },
     ({ title, body, type, severity, label, noLogs }) =>
       Effect.gen(function* () {
-        const result = yield* invokeOperation('org.dxos.operation.support.submitIssue', {
-          report: {
-            title: title.join(' '),
-            body: body._tag === 'Some' ? body.value : '',
-            ...(type._tag === 'Some' ? { type: type.value } : {}),
-            ...(severity._tag === 'Some' ? { severity: severity.value } : {}),
-            labels: [label._tag === 'Some' ? label.value : REPORT_LABEL],
-            includeLogs: !noLogs,
-          },
+        const input = yield* makeReportInput({
+          title: title.join(' '),
+          body: Option.getOrUndefined(body),
+          type: Option.getOrUndefined(type),
+          severity: Option.getOrUndefined(severity),
+          label: Option.getOrUndefined(label),
+          includeLogs: !noLogs,
         });
+        const result = yield* invokeOperation('org.dxos.operation.support.submitIssue', input);
         const issue = result as { issueIdentifier?: string; issueUrl?: string } | undefined;
         yield* print(issue?.issueUrl ? `${issue.issueIdentifier} ${issue.issueUrl}` : result);
       }),
