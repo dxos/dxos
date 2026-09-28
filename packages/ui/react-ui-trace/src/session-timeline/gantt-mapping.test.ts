@@ -44,6 +44,36 @@ describe('sessionTimelineToGantt', () => {
     expect(markers?.map(({ laneId }) => laneId)).toEqual(['session:a']);
   });
 
+  test('a lane breaks around each gap, so a question and its answer are separate runs', ({ expect }) => {
+    const timeline: SessionTimeline = {
+      lanes: [
+        { id: 'session:a', kind: 'session', label: 'Chat', status: 'running', start: 1 },
+        {
+          id: 'task:1',
+          kind: 'task',
+          label: 'Cup',
+          status: 'done',
+          start: 2,
+          end: 9,
+          gaps: [{ start: 4, end: 6 }],
+          parentId: 'session:a',
+        },
+        { id: 'task:2', kind: 'task', label: 'Open', status: 'running', start: 2, parentId: 'session:a' },
+      ],
+      markers: [],
+      range: { start: 1, end: 9 },
+    };
+
+    const { lanes } = sessionTimelineToGantt(timeline);
+    expect(lanes.map(({ segments }) => segments)).toEqual([
+      [
+        { start: 2, end: 4 },
+        { start: 6, end: 9 },
+      ],
+      [{ start: 2 }],
+    ]);
+  });
+
   test('an answered question waits until its answer; an open one has no wait yet', ({ expect }) => {
     const task = Task.make({ title: 'Cup', status: 'blocked' });
     const asked = Task.ask(task, { text: 'Which lot?' });

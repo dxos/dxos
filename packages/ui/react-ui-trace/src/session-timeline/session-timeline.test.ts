@@ -962,6 +962,49 @@ describe('buildSessionTimeline', () => {
     }, Effect.provide(TestTraceService.layer)),
   );
 
+  test('records the stretch a task was put down between two runs as a gap', ({ expect }) => {
+    const task = Task.make({ title: 'Cup the samples', status: 'done' });
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [],
+      tasks: [task],
+      taskStatusChanges: new Map([
+        [
+          task.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_000, status: 'blocked', previousStatus: 'started' },
+            { timestamp: 5_000, status: 'started', previousStatus: 'blocked' },
+            { timestamp: 6_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    expect(timeline.lanes).toMatchObject([{ start: 1_000, end: 6_000, gaps: [{ start: 2_000, end: 5_000 }] }]);
+  });
+
+  test('a task still blocked has no gap: its lane ends where it was put down', ({ expect }) => {
+    const task = Task.make({ title: 'Cup the samples', status: 'blocked' });
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [],
+      tasks: [task],
+      taskStatusChanges: new Map([
+        [
+          task.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_000, status: 'blocked', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    expect(timeline.lanes[0]).toMatchObject({ start: 1_000, end: 2_000 });
+    expect(timeline.lanes[0].gaps).toBeUndefined();
+  });
+
   test('draws a task no session works as a lane of its own, from its edit history', ({ expect }) => {
     const done = Task.make({ title: 'Done elsewhere', status: 'done' });
     const running = Task.make({ title: 'Running elsewhere', status: 'started', dependsOn: [Ref.make(done)] });

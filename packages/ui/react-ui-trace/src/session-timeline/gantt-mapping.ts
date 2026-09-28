@@ -13,6 +13,7 @@ import {
   type GanttLane,
   type GanttMarker,
   type GanttMeta,
+  type GanttSegment,
 } from '../components/Gantt/index.ts';
 import { type Lane, type SessionTimeline, type TokenUsage } from './types.ts';
 
@@ -37,11 +38,25 @@ const laneMeta = (lane: Lane): GanttMeta[] => [
 ];
 
 /**
- * A process lane's stretch, as one segment. The builder records a single interval per lane; when it
- * learns to emit the stretches it already computes internally, only this line changes.
+ * A lane's stretch as segments: one run, split around each gap where its task was put down, so a
+ * question and its answer are separate runs with the wait between them left open.
  */
-const segmentsOf = (lane: Lane): GanttLane['segments'] =>
-  lane.start === undefined ? undefined : [{ start: lane.start, ...(lane.end === undefined ? {} : { end: lane.end }) }];
+const segmentsOf = (lane: Lane): GanttLane['segments'] => {
+  if (lane.start === undefined) {
+    return undefined;
+  }
+  const segments: GanttSegment[] = [];
+  let start = lane.start;
+  for (const gap of [...(lane.gaps ?? [])].sort((left, right) => left.start - right.start)) {
+    if (gap.start <= start || (lane.end !== undefined && gap.end >= lane.end)) {
+      continue;
+    }
+    segments.push({ start, end: gap.start });
+    start = gap.end;
+  }
+  segments.push({ start, ...(lane.end === undefined ? {} : { end: lane.end }) });
+  return segments;
+};
 
 const isHistoryEntry = Schema.is(Task.HistoryEntry);
 
