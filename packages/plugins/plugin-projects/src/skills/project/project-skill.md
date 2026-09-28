@@ -132,7 +132,7 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   file a sub-task under its parent, which then lists it in its own `subtasks`. Reorder or re-parent
   a task with `tasks-move`; move it, with its sub-tasks, to another project with `tasks-move-to-set`
   (the target project's `taskSet`). Never edit a task set's `tasks` array by hand.
-  Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
+  Task `status` is `backlog`|`todo`|`started`|`review`|`blocked`|`done`|`failed`|`cancelled`|`duplicate`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
 - **Assignee** — a task's `assignee` is an actor, not a label. For a person, name them
@@ -271,7 +271,7 @@ spaceId }`. Report the new project id.
   several — never guess silently.
 - **`/project hydrate`** — checkpoint before stopping or handing off:
   1. Reconcile task statuses: `tasks-update { status }` every task whose real state has
-     moved; leave a short `description` note on anything left `in-progress` (what's blocked,
+     moved; leave a short `description` note on anything left `started` (what's blocked,
      what's next).
   2. Refresh the resume pointer: `tasks-update-outline` the `Resume:` line to the single next action.
   3. Reconcile the milestone sequence: `tasks-create-milestone` anything newly scoped, `space-update-object`
@@ -280,7 +280,7 @@ spaceId }`. Report the new project id.
      it. Patch the project's `status` with `space-update-object` if the work-stream's state changed.
   4. Push durable _why_ (decisions, findings) into the design document, not the outline — the
      outline is scratch, the document is the record.
-  5. Confirm the checkpoint in one short block (done / in-progress / next).
+  5. Confirm the checkpoint in one short block (done / in review / started / next).
 - **`/project end`** — close out a work-stream: run the hydrate checkpoint first, then
   `space-update-object { object: {"/": "echo:///<id>"}, properties: { status: 'ended' }, spaceId }`. Ended projects stay
   queryable; nothing is deleted.
@@ -290,7 +290,7 @@ spaceId }`. Report the new project id.
   2. `projects-get { project: {"/": "echo:///<id>"}, spaceId }`, then `tasks-list-milestone` and
      `tasks-list { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }`; read the outline's
      `Resume:` line.
-  3. Report a concise state: done / in-progress / **next action**. Continue with the next
+  3. Report a concise state: done / in review / started / **next action**. Continue with the next
      action, or wait for direction if the user gave any.
 
   A project records no branch or worktree, deliberately: each session runs in a fresh
@@ -326,12 +326,20 @@ spaceId }`. Report the new project id.
    statuses stale, and never batch-update everything at the end.
 3. **When parking a task** — leave a one-line note in its `description` (what's blocked, what's
    next) so it's resumable.
-4. **Before claiming done** — reconcile the ledger against reality: every `done` task is
-   actually complete, and no completed work is still `todo`.
-5. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
+4. **When you finish a task, move it to `review` if there is something for someone to review,
+   otherwise to `done`.** Something to review means an output a person has to check before the
+   work counts: an open pull request, a draft document, a design awaiting sign-off, screenshots of a
+   visual change. Attach it to the task (`tasks-add-artifact`) before setting `review`, so the
+   reviewer finds it on the task. Work with nothing to check (a question answered, data filed,
+   a merged change) goes straight to `done`. Move a `review` task to `done` once the review is
+   through, e.g. its PR merged.
+5. **Before claiming done** — reconcile the ledger against reality: every `done` task is
+   actually complete, every `review` task has its reviewable output attached, and no completed
+   work is still `todo` or `started`.
+6. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
    (`/project track`). `spawn` is the one sanctioned use of a chip, and it only ever acts on a
    task already recorded in the ledger.
-6. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
+7. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
    never a lone sub-task; the PR covers every sub-task, and is attached to the root
    (`tasks-add-artifact` redirects it there). Claiming or starting any task claims its whole tree.
 
@@ -347,6 +355,7 @@ spaceId }`. Report the new project id.
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.    |
 | Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.    |
 | Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.        |
+| Marking a task `done` while its PR is still open                   | Set `review` with the PR attached; `done` once it has merged.                                 |
 | Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.      |
 | Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.                |
 | Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.         |
