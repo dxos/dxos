@@ -10,6 +10,7 @@ import {
   Card as NextCard,
   Checkbox as NextCheckbox,
   type CheckboxProps as NextCheckboxProps,
+  Collapsible as NextCollapsible,
   Container as NextContainer,
   type ContainerProps as NextContainerProps,
   Dialog as NextDialog,
@@ -75,4 +76,5 @@ export namespace Next {
   export const Image = NextImage;
   export type ImageProps = NextImageProps;
   export const Card = NextCard;
+  export const Collapsible = NextCollapsible;
 }

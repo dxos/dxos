@@ -49,4 +49,8 @@ export const recipes = {
   cardHeader: () => 'nx-card-header',
   cardTitle: () => 'nx-card-title',
   cardDescription: () => 'nx-card-description',
+  collapsible: () => 'nx-collapsible',
+  collapsibleTrigger: () => `nx-collapsible-trigger ${FOCUS_RING}`,
+  collapsibleIndicator: () => 'nx-collapsible-indicator',
+  collapsibleContent: () => 'nx-collapsible-content',
 } as const;

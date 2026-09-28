@@ -170,3 +170,6 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 14. **Card** is a `gutter='md'` Container at `level='+1'` (one rung above whatever hosts it) with a separator border
     and `--radius-md`; Header, Body (an inheriting Container) and Footer (`Group justify='end'`) share its content
     edge. `Card.Poster` is an Image placed `full` across the gutters, flush with the card's top corners.
+15. **Collapsible** is Ark Collapsible: a block-row Trigger (caret Indicator rotating 90° when open, then the label)
+    over Content whose height animates from Ark's measured `--height`; both motions are off under
+    `prefers-reduced-motion`. `aria-expanded` stays true until the closing animation ends.
