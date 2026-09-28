@@ -12,14 +12,15 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
+import { sizeRow } from '../../testing.ts';
 
 /** Icon size (and so track height) per size, in px. */
 const ICON: Record<Size, number> = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Switch label={`Notifications (${size})`} defaultChecked={size === 'md'} />
-    <Next.Switch label={`Disabled (${size})`} disabled />
+    <Next.Switch label='Notifications' defaultChecked={size === 'md'} />
+    <Next.Switch label='Disabled' disabled />
   </>
 );
 
@@ -54,15 +55,16 @@ export const Test: Story = {
     }
 
     // A native checkbox with `role=switch`: the platform maps `checked` to the switch's checked state.
-    const input = canvas.getByRole('switch', { name: 'Notifications (sm)', checked: false });
+    const sm = within(sizeRow(canvasElement, 'sm'));
+    const input = sm.getByRole('switch', { name: 'Notifications', checked: false });
     await expect(input).toHaveAttribute('type', 'checkbox');
-    const control = canvas.getByTestId('size-sm').querySelector('[data-part="control"]');
+    const control = sizeRow(canvasElement, 'sm').querySelector('[data-part="control"]');
     await expect(input).not.toBeChecked();
     await expect(control).toHaveAttribute('data-state', 'unchecked');
     const unchecked = control ? getComputedStyle(control).backgroundColor : '';
-    await userEvent.click(canvas.getByText('Notifications (sm)'));
+    await userEvent.click(sm.getByText('Notifications'));
     await waitFor(() => expect(input).toBeChecked());
-    await expect(canvas.getByRole('switch', { name: 'Notifications (sm)', checked: true })).toBe(input);
+    await expect(sm.getByRole('switch', { name: 'Notifications', checked: true })).toBe(input);
     await expect(control).toHaveAttribute('data-state', 'checked');
     await expect(control ? getComputedStyle(control).backgroundColor : '').not.toBe(unchecked);
 
@@ -81,7 +83,7 @@ export const Test: Story = {
     await expect(control).toHaveAttribute('data-state', 'unchecked');
 
     // A disabled switch ignores clicks.
-    const disabled = canvas.getByRole('switch', { name: 'Disabled (md)' });
+    const disabled = within(sizeRow(canvasElement, 'md')).getByRole('switch', { name: 'Disabled' });
     await expect(disabled).toBeDisabled();
     await expect(canvas.queryAllByRole('checkbox')).toHaveLength(0);
   },

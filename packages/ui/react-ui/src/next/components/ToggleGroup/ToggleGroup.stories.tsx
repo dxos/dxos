@@ -25,23 +25,18 @@ const DefaultStory = ({ size }: SizeArgs) => {
           type='single'
           value={align}
           onValueChange={setAlign}
-          aria-label={`Alignment ${size}`}
+          aria-label='Alignment'
           data-testid={`align-${size}`}
         >
-          <Next.ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label={`Left ${size}`} iconOnly />
-          <Next.ToggleGroup.Item
-            value='center'
-            icon='ph--text-align-center--regular'
-            label={`Centre ${size}`}
-            iconOnly
-          />
-          <Next.ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label={`Right ${size}`} iconOnly />
+          <Next.ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
+          <Next.ToggleGroup.Item value='center' icon='ph--text-align-center--regular' label='Centre' iconOnly />
+          <Next.ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label='Right' iconOnly />
         </Next.ToggleGroup.Root>
         <Next.ToggleGroup.Root
           type='multiple'
           value={marks}
           onValueChange={setMarks}
-          aria-label={`Marks ${size}`}
+          aria-label='Marks'
           data-testid={`marks-${size}`}
         >
           <Next.ToggleGroup.Item value='bold'>Bold</Next.ToggleGroup.Item>
@@ -92,9 +87,9 @@ export const Test: Story = {
     await expectScoped(canvasElement);
 
     const canvas = within(sizeRow(canvasElement, 'md'));
-    const alignment = canvas.getByRole('radiogroup', { name: 'Alignment md' });
-    const left = within(alignment).getByRole('radio', { name: 'Left md' });
-    const centre = within(alignment).getByRole('radio', { name: 'Centre md' });
+    const alignment = canvas.getByRole('radiogroup', { name: 'Alignment' });
+    const left = within(alignment).getByRole('radio', { name: 'Left' });
+    const centre = within(alignment).getByRole('radio', { name: 'Centre' });
     await expect(left).toHaveAttribute('aria-checked', 'true');
     await expect(centre).toHaveAttribute('aria-checked', 'false');
     const unchecked = getComputedStyle(centre).backgroundColor;
@@ -105,12 +100,12 @@ export const Test: Story = {
     await expect(left).toHaveAttribute('aria-checked', 'false');
     await expect(byTestId(canvasElement, 'state-md')).toHaveTextContent('center / bold');
     await userEvent.keyboard('{ArrowRight}');
-    const right = within(alignment).getByRole('radio', { name: 'Right md' });
+    const right = within(alignment).getByRole('radio', { name: 'Right' });
     await waitFor(() => expect(right).toHaveFocus());
     await userEvent.keyboard(' ');
     await waitFor(() => expect(right).toHaveAttribute('aria-checked', 'true'));
 
-    const marks = canvas.getByRole('group', { name: 'Marks md' });
+    const marks = canvas.getByRole('group', { name: 'Marks' });
     const bold = within(marks).getByRole('button', { name: 'Bold' });
     const italic = within(marks).getByRole('button', { name: 'Italic' });
     await expect(bold).toHaveAttribute('aria-pressed', 'true');

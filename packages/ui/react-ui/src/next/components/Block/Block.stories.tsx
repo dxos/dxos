@@ -19,7 +19,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Next.Block rail='start' data-testid={`start-${size}`}>
       <Next.Icon icon='ph--circle--regular' />
     </Next.Block>
-    <Next.Typography>Block {size}</Next.Typography>
+    <Next.Typography>Block</Next.Typography>
     <Next.Block rail='end' data-testid={`end-${size}`}>
       <Next.Icon icon='ph--dots-three--regular' />
     </Next.Block>

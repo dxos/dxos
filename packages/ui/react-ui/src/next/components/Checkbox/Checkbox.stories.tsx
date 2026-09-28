@@ -16,10 +16,10 @@ import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testin
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Checkbox label={`Subscribe ${size}`} defaultChecked data-testid={`checkbox-${size}`} />
-    <Next.Checkbox label={`Some selected ${size}`} checked='indeterminate' />
-    <Next.Checkbox aria-label={`Unlabelled ${size}`} />
-    <Next.Checkbox label={`Disabled ${size}`} disabled />
+    <Next.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
+    <Next.Checkbox label='Some selected' checked='indeterminate' />
+    <Next.Checkbox aria-label='Unlabelled' />
+    <Next.Checkbox label='Disabled' disabled />
   </>
 );
 
@@ -64,7 +64,7 @@ export const Test: Story = {
     }
 
     const canvas = within(sizeRow(canvasElement, 'md'));
-    const checkbox = canvas.getByRole('checkbox', { name: 'Subscribe md' });
+    const checkbox = canvas.getByRole('checkbox', { name: 'Subscribe' });
     const control = byTestId(canvasElement, 'checkbox-md').querySelector('[data-part="control"]');
     await expect(checkbox).toBeChecked();
     await expect(control).toHaveAttribute('data-state', 'checked');
@@ -72,11 +72,11 @@ export const Test: Story = {
     await waitFor(() => expect(checkbox).not.toBeChecked());
     await expect(control).toHaveAttribute('data-state', 'unchecked');
 
-    await expect(canvas.getByRole('checkbox', { name: 'Unlabelled md' })).not.toBeChecked();
-    await expect(canvas.getByRole('checkbox', { name: 'Disabled md' })).toBeDisabled();
+    await expect(canvas.getByRole('checkbox', { name: 'Unlabelled' })).not.toBeChecked();
+    await expect(canvas.getByRole('checkbox', { name: 'Disabled' })).toBeDisabled();
     await expect(
       canvas
-        .getByText('Some selected md')
+        .getByText('Some selected')
         .closest('[data-scope="checkbox"][data-part="root"]')
         ?.querySelector('[data-part="control"]'),
     ).toHaveAttribute('data-state', 'indeterminate');

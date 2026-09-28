@@ -29,38 +29,38 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Block>
         <Next.Icon icon='ph--circle--regular' />
       </Next.Block>
-      <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
-      <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
+      <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Next.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
       <Next.Toolbar.Separator data-testid={`separator-${size}`} />
       <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
-      <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
+      <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
       <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
-        <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
+        <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Next.Select.Content size={size}>
           {OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
           ))}
         </Next.Select.Content>
       </Next.Select.Root>
-      <Next.Toolbar.ToggleGroup type='single' defaultValue='list' aria-label={`View ${size}`}>
+      <Next.Toolbar.ToggleGroup type='single' defaultValue='list' aria-label='View'>
         <Next.Toolbar.ToggleGroupItem
           value='list'
           icon='ph--list--regular'
-          label={`List ${size}`}
+          label='List'
           iconOnly
           data-testid={`list-${size}`}
         />
         <Next.Toolbar.ToggleGroupItem
           value='grid'
           icon='ph--squares-four--regular'
-          label={`Grid ${size}`}
+          label='Grid'
           iconOnly
           data-testid={`grid-${size}`}
         />
       </Next.Toolbar.ToggleGroup>
     </Next.Toolbar.Root>
     <Next.Toolbar.Root loop={false} data-testid={`document-${size}`}>
-      <Next.Toolbar.DragHandle label={`Drag ${size}`} data-testid={`drag-${size}`} />
+      <Next.Toolbar.DragHandle label='Drag' data-testid={`drag-${size}`} />
       <Next.Toolbar.Text data-testid={`text-${size}`}>
         A document title long enough to be truncated by the toolbar at every size
       </Next.Toolbar.Text>
@@ -70,9 +70,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Button data-testid={`share-${size}`}>Share</Next.Button>
     </Next.Toolbar.Root>
     <Next.Toolbar.Root disabled data-testid={`disabled-${size}`}>
-      <Next.Button icon='ph--plus--regular' label={`Add disabled ${size}`} iconOnly />
+      <Next.Button icon='ph--plus--regular' label='Add disabled' iconOnly />
       <Next.Button>Save</Next.Button>
-      <Next.Input aria-label={`Disabled search ${size}`} />
+      <Next.Input aria-label='Disabled search' />
       <Next.Toolbar.Link href='https://dxos.org'>Docs</Next.Toolbar.Link>
     </Next.Toolbar.Root>
   </>
@@ -180,7 +180,7 @@ export const Test: Story = {
     await expect(grid).toHaveFocus();
 
     // A toolbar ToggleGroup's items are toolbar items: one tab stop in all, and the group itself takes none.
-    const view = within(sizeRow(canvasElement, 'md')).getByRole('radiogroup', { name: 'View md' });
+    const view = within(sizeRow(canvasElement, 'md')).getByRole('radiogroup', { name: 'View' });
     await expect(view.tabIndex).toBe(-1);
     await expect(byTestId(canvasElement, 'list-md').tabIndex).toBe(-1);
     await userEvent.keyboard(' ');
@@ -189,7 +189,7 @@ export const Test: Story = {
 
     // Drag handle, text, link and loop={false}.
     const drag = byTestId(canvasElement, 'drag-md');
-    await expect(drag).toHaveAttribute('aria-label', 'Drag md');
+    await expect(drag).toHaveAttribute('aria-label', 'Drag');
     await expect(drag).toHaveAttribute('data-variant', 'ghost');
     await expect(drag.tabIndex).toBe(-1);
     await expect(drag).not.toHaveAttribute('data-toolbar-item');

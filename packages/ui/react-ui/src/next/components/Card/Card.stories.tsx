@@ -77,9 +77,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 
       <Next.Card.Root data-testid={`rows-card-${size}`}>
         <Next.Card.Header>
-          <Next.Card.DragHandle label={`Drag ${size}`} data-testid={`drag-${size}`} />
+          <Next.Card.DragHandle label='Drag' data-testid={`drag-${size}`} />
           <Next.Card.Title>Project</Next.Card.Title>
-          <Next.Card.Menu label={`Project actions ${size}`} size={size}>
+          <Next.Card.Menu label='Project actions' size={size}>
             <Next.Menu.Item value='archive'>Archive</Next.Menu.Item>
           </Next.Card.Menu>
         </Next.Card.Header>
@@ -93,7 +93,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </Next.Card.Row>
           <Next.Card.Row
             icon='ph--user--regular'
-            trailing={<Next.Card.Action icon='ph--x--regular' label={`Remove ${size}`} />}
+            trailing={<Next.Card.Action icon='ph--x--regular' label='Remove' />}
             data-testid={`long-row-${size}`}
           >
             Charles Babbage, Lucasian Professor of Mathematics at Cambridge
@@ -119,7 +119,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Next.Card.Title>Opened {opened}</Next.Card.Title>
           <Next.Card.Action
             icon='ph--star--regular'
-            label={`Star ${size}`}
+            label='Star'
             onClick={() => setStarred((count) => count + 1)}
             data-testid={`star-${size}`}
           />
@@ -232,7 +232,7 @@ export const Test: Story = {
     await expect(link).toHaveAttribute('href', 'https://dxos.org');
     await expect(link).toHaveAttribute('target', '_blank');
     await expect(canvas.getByTestId('drag-md').tabIndex).toBe(-1);
-    await userEvent.click(canvas.getByRole('button', { name: 'Project actions md' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Project actions' }));
     const body = within(canvasElement.ownerDocument.body);
     const menu = await body.findByRole('menu');
     await userEvent.click(within(menu).getByRole('menuitem', { name: 'Archive' }));

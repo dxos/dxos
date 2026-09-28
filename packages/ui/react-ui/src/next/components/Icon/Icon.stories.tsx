@@ -12,16 +12,16 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, expectDecorativeIconsHidden, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, expectDecorativeIconsHidden, expectScoped, sizeRow } from '../../testing.ts';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <Next.Container gutter='rail' layout='row'>
     <Next.Block rail='start' data-testid={`rail-${size}`}>
       <Next.Icon icon='ph--user--regular' />
     </Next.Block>
-    <Next.Typography>Icon {size}</Next.Typography>
+    <Next.Typography>Icon</Next.Typography>
     <Next.Block rail='end'>
-      <Next.Icon icon='ph--x--regular' label={`Clear ${size}`} />
+      <Next.Icon icon='ph--x--regular' label='Clear' />
     </Next.Block>
   </Next.Container>
 );
@@ -55,7 +55,7 @@ export const Test: Story = {
     }
 
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('img', { name: 'Clear md' })).toBeInTheDocument();
+    await expect(within(sizeRow(canvasElement, 'md')).getByRole('img', { name: 'Clear' })).toBeInTheDocument();
     await expect(canvas.getAllByRole('img')).toHaveLength(SIZES.length);
     await expectDecorativeIconsHidden(canvasElement);
     await expectScoped(canvasElement);

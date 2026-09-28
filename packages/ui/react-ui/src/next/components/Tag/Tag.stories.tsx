@@ -27,7 +27,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Next.Container layout='row' data-testid={`row-${size}`}>
       <Next.Group>
         <Next.Tag hue='blue' data-testid={`tag-${size}`}>
-          Release {size}
+          Release
         </Next.Tag>
         <Next.Tag hue='amber'>Draft</Next.Tag>
       </Next.Group>

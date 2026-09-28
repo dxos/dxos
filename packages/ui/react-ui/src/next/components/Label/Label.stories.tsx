@@ -12,7 +12,7 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, expectScoped } from '../../testing.ts';
+import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
@@ -21,19 +21,19 @@ const DefaultStory = ({ size }: SizeArgs) => (
   <Next.Container gutter='none' columns={LABEL_COLUMNS}>
     <Next.Container layout='row'>
       <Next.Label htmlFor={`name-${size}`} classNames='pe-(--nx-gap-size)' data-testid={`label-${size}`}>
-        Name {size}
+        Name
       </Next.Label>
       <Next.Input id={`name-${size}`} data-testid={`input-${size}`} />
     </Next.Container>
     <Next.Container layout='row'>
       <Next.Label htmlFor={`display-${size}`} classNames='pe-(--nx-gap-size)'>
-        Display name {size}
+        Display name
       </Next.Label>
       <Next.Input id={`display-${size}`} data-testid={`display-${size}`} />
     </Next.Container>
     <Next.Container>
       <Next.Label htmlFor={`search-${size}`} srOnly data-testid={`hidden-label-${size}`}>
-        Search {size}
+        Search
       </Next.Label>
       <Next.Input id={`search-${size}`} placeholder='Search' data-testid={`search-${size}`} />
     </Next.Container>
@@ -63,9 +63,11 @@ export const Default: Story = {};
 export const Test: Story = {
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(sizeRow(canvasElement, 'md'));
     for (const size of SIZES) {
-      await expect(canvas.getByLabelText(`Name ${size}`)).toBe(byTestId(canvasElement, `input-${size}`));
+      await expect(within(sizeRow(canvasElement, size)).getByLabelText('Name')).toBe(
+        byTestId(canvasElement, `input-${size}`),
+      );
       const labelFont = parseFloat(getComputedStyle(byTestId(canvasElement, `label-${size}`)).fontSize);
       const inputFont = parseFloat(getComputedStyle(byTestId(canvasElement, `input-${size}`)).fontSize);
       await expect(labelFont, size).toBeLessThanOrEqual(inputFont);
@@ -77,7 +79,7 @@ export const Test: Story = {
     const md = parseFloat(getComputedStyle(byTestId(canvasElement, 'label-md')).fontSize);
     await expect(md).toBeLessThan(parseFloat(getComputedStyle(byTestId(canvasElement, 'input-md')).fontSize));
 
-    await expect(canvas.getByLabelText('Search md')).toBe(byTestId(canvasElement, 'search-md'));
+    await expect(canvas.getByLabelText('Search')).toBe(byTestId(canvasElement, 'search-md'));
     const hidden = byTestId(canvasElement, 'hidden-label-md').getBoundingClientRect();
     await expect(hidden.width).toBeLessThanOrEqual(1);
     await expect(byTestId(canvasElement, 'search-md').getBoundingClientRect().left).toBeCloseTo(
@@ -85,7 +87,7 @@ export const Test: Story = {
       0,
     );
 
-    await userEvent.click(canvas.getByText('Name md'));
+    await userEvent.click(canvas.getByText('Name'));
     await expect(byTestId(canvasElement, 'input-md')).toHaveFocus();
     await expectScoped(canvasElement);
   },

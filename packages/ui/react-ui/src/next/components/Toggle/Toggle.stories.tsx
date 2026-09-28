@@ -19,13 +19,13 @@ const DefaultStory = ({ size }: SizeArgs) => {
   const [wrap, setWrap] = useState(false);
   return (
     <Next.Toolbar.Root>
-      <Next.Toggle icon='ph--text-b--regular' label={`Bold ${size}`} iconOnly data-testid={`bold-${size}`} />
-      <Next.Toggle icon='ph--text-italic--regular' label={`Italic ${size}`} iconOnly defaultPressed />
-      <Next.Toggle icon='ph--text-underline--regular' label={`Underline ${size}`} iconOnly disabled />
-      <Next.Toggle icon='ph--eye--regular' label={`Preview ${size}`} data-testid={`preview-${size}`} />
+      <Next.Toggle icon='ph--text-b--regular' label='Bold' iconOnly data-testid={`bold-${size}`} />
+      <Next.Toggle icon='ph--text-italic--regular' label='Italic' iconOnly defaultPressed />
+      <Next.Toggle icon='ph--text-underline--regular' label='Underline' iconOnly disabled />
+      <Next.Toggle icon='ph--eye--regular' label='Preview' data-testid={`preview-${size}`} />
       <Next.Toggle
         icon='ph--arrows-in-line-horizontal--regular'
-        label={`Wrap lines ${size}`}
+        label='Wrap lines'
         iconOnly
         pressed={wrap}
         onPressedChange={setWrap}
@@ -33,7 +33,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
       <Next.Toggle
         icon='ph--star--regular'
         activeIcon='ph--star--fill'
-        label={`Pin ${size}`}
+        label='Pin'
         iconOnly
         data-testid={`pin-${size}`}
       />
@@ -72,9 +72,9 @@ export const Test: Story = {
       await expect(rect.width, size).toBeCloseTo(controlSize(size), 0);
     }
 
-    const bold = canvas.getByRole('button', { name: 'Bold md' });
+    const bold = canvas.getByRole('button', { name: 'Bold' });
     await expect(bold).toHaveAttribute('aria-pressed', 'false');
-    await expect(canvas.getByRole('button', { name: 'Italic md' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(canvas.getByRole('button', { name: 'Italic' })).toHaveAttribute('aria-pressed', 'true');
     const unpressed = getComputedStyle(bold).backgroundColor;
     await userEvent.click(bold);
     await waitFor(() => expect(bold).toHaveAttribute('aria-pressed', 'true'));
@@ -88,26 +88,26 @@ export const Test: Story = {
     await userEvent.tab();
     await userEvent.tab({ shift: true });
     await expect(bold).toHaveFocus();
-    await expectTooltip(bold, 'Bold md');
+    await expectTooltip(bold, 'Bold');
     bold.blur();
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
     await realHover(bold);
-    await expectTooltip(bold, 'Bold md');
+    await expectTooltip(bold, 'Bold');
     await realUnhover(bold);
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 
     // Controlled: the caller's state follows the toggle.
-    await userEvent.click(canvas.getByRole('button', { name: 'Wrap lines md' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Wrap lines' }));
     await waitFor(() => expect(canvas.getByTestId('wrap-state-md')).toHaveTextContent('Wrapping'));
-    await expect(canvas.getByRole('button', { name: 'Wrap lines md' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(canvas.getByRole('button', { name: 'Wrap lines' })).toHaveAttribute('aria-pressed', 'true');
 
-    const underline = canvas.getByRole('button', { name: 'Underline md' });
+    const underline = canvas.getByRole('button', { name: 'Underline' });
     await expect(underline).toBeDisabled();
     await expect(underline).not.toHaveAttribute('title');
     await expectScoped(canvasElement);
 
     const preview = byTestId(canvasElement, 'preview-md');
-    await expect(canvas.getByRole('button', { name: 'Preview md' })).toBe(preview);
+    await expect(canvas.getByRole('button', { name: 'Preview' })).toBe(preview);
     await expect(preview).not.toHaveAttribute('aria-label');
     await userEvent.click(preview);
     await waitFor(() => expect(preview).toHaveAttribute('aria-pressed', 'true'));
@@ -122,8 +122,8 @@ export const Test: Story = {
     await userEvent.click(pin);
     await waitFor(() => expect(href()).toContain('ph--star--regular'));
 
-    const italic = canvas.getByRole('button', { name: 'Italic md' });
+    const italic = canvas.getByRole('button', { name: 'Italic' });
     await userEvent.hover(italic);
-    await expectTooltip(italic, 'Italic md');
+    await expectTooltip(italic, 'Italic');
   },
 };

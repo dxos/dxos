@@ -48,7 +48,7 @@ const AsyncCombobox = ({ size = 'md' }: SizeArgs) => {
   return (
     <Next.Field.Root>
       <Next.Combobox.Root items={items} defaultValue={[OPTIONS[1].value]}>
-        <Next.Combobox.Label>Lead {size}</Next.Combobox.Label>
+        <Next.Combobox.Label>Lead</Next.Combobox.Label>
         <Next.Combobox.Input />
         <Next.Combobox.Content size={size} />
       </Next.Combobox.Root>
@@ -61,15 +61,15 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Next.Field.Root>
       <Next.Combobox.Root items={OPTIONS}>
-        <Next.Combobox.Label>Owner {size}</Next.Combobox.Label>
+        <Next.Combobox.Label>Owner</Next.Combobox.Label>
         <Next.Combobox.Input placeholder='Search people' data-testid={`combobox-${size}`} />
         <Next.Combobox.Content size={size} data-testid={`listbox-${size}`} />
       </Next.Combobox.Root>
     </Next.Field.Root>
-    <Next.Input aria-label={`Note ${size}`} data-testid={`input-${size}`} />
+    <Next.Input aria-label='Note' data-testid={`input-${size}`} />
     <Next.Field.Root>
       <Next.Combobox.Root items={OPTIONS} filter={startsWith}>
-        <Next.Combobox.Label>Reviewer {size}</Next.Combobox.Label>
+        <Next.Combobox.Label>Reviewer</Next.Combobox.Label>
         <Next.Combobox.Input placeholder='Starts with' />
         <Next.Combobox.Content size={size} />
       </Next.Combobox.Root>
@@ -77,7 +77,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     <AsyncCombobox size={size} />
     <Next.Field.Root>
       <Next.Combobox.Root items={LONG}>
-        <Next.Combobox.Label>Assignee {size}</Next.Combobox.Label>
+        <Next.Combobox.Label>Assignee</Next.Combobox.Label>
         <Next.Combobox.Input placeholder='Many people' data-testid={`long-${size}`} />
         <Next.Combobox.Content size={size} />
       </Next.Combobox.Root>
@@ -127,16 +127,16 @@ export const Test: Story = {
 
     const body = within(canvasElement.ownerDocument.body);
     const md = within(sizeRow(canvasElement, 'md'));
-    await waitFor(() => expect(md.getByRole('combobox', { name: 'Lead md' })).toHaveValue(OPTIONS[1].label));
+    await waitFor(() => expect(md.getByRole('combobox', { name: 'Lead' })).toHaveValue(OPTIONS[1].label));
 
-    const first = within(sizeRow(canvasElement, 'xs')).getByRole('combobox', { name: 'Owner xs' });
+    const first = within(sizeRow(canvasElement, 'xs')).getByRole('combobox', { name: 'Owner' });
     await userEvent.click(first);
     await userEvent.type(first, 'ali');
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(first).toHaveValue('Alice Green'));
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
-    const reviewer = md.getByRole('combobox', { name: 'Reviewer md' });
+    const reviewer = md.getByRole('combobox', { name: 'Reviewer' });
     await userEvent.type(reviewer, 'c');
     const prefixed = await body.findByRole('listbox');
     await waitFor(() => expect(within(prefixed).getAllByRole('option')).toHaveLength(1));
@@ -145,7 +145,7 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
     // A long listbox scrolls in a thin ScrollArea, and the keyboard highlight stays in view.
-    const assignee = md.getByRole('combobox', { name: 'Assignee md' });
+    const assignee = md.getByRole('combobox', { name: 'Assignee' });
     await userEvent.click(within(byTestId(canvasElement, 'long-md')).getByRole('button'));
     const longList = await body.findByRole('listbox');
     await waitFor(() => expect(assignee).toHaveFocus());
@@ -154,7 +154,7 @@ export const Test: Story = {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
-    const input = md.getByRole('combobox', { name: 'Owner md' });
+    const input = md.getByRole('combobox', { name: 'Owner' });
 
     await userEvent.click(within(byTestId(canvasElement, 'combobox-md')).getByRole('button'));
     const listbox = await body.findByRole('listbox');

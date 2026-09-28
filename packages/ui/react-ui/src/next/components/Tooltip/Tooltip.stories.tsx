@@ -35,7 +35,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
         </Next.Tooltip.Trigger>
         <Next.Tooltip.Content>{LONG}</Next.Tooltip.Content>
       </Next.Tooltip.Root>
-      <Next.Input aria-label={`Note ${size}`} data-testid={`note-${size}`} />
+      <Next.Input aria-label='Note' data-testid={`note-${size}`} />
     </Next.Group>
     <Next.Group>
       <Next.Tooltip.Trigger asChild content='Opens on the right' side='right'>

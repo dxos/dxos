@@ -30,12 +30,12 @@ const SizeSection = ({ size }: { size: Size }) => (
       <Next.Block>
         <Next.Icon icon='ph--circle--regular' />
       </Next.Block>
-      <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
-      <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
+      <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Next.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
       <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
-      <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
+      <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
       <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
-        <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
+        <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
@@ -53,16 +53,16 @@ const SizeSection = ({ size }: { size: Size }) => (
       </Next.Label>
       <Next.Input id={`name-${size}`} data-testid={`row-input-${size}`} />
       <Next.Block rail='end'>
-        <Next.Icon icon='ph--x--regular' label={`Clear ${size}`} />
+        <Next.Icon icon='ph--x--regular' label='Clear' />
       </Next.Block>
     </Next.Container>
 
     <Next.Container>
-      <Next.Checkbox label={`Subscribe ${size}`} defaultChecked data-testid={`checkbox-${size}`} />
+      <Next.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
     </Next.Container>
 
     <Next.Field.Root data-testid={`field-${size}`}>
-      <Next.Field.Label>Email {size}</Next.Field.Label>
+      <Next.Field.Label>Email</Next.Field.Label>
       <Next.Input data-testid={`field-input-${size}`} />
       <Next.Field.HelperText>We never share it.</Next.Field.HelperText>
     </Next.Field.Root>
