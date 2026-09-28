@@ -107,16 +107,18 @@ const createConnectionDelayHandler = (params: TestEdgeWsServerProps | undefined)
 const createResponseSender = (connection: () => WebSocketMuxer) => {
   return (request: Message, responsePayload: Uint8Array) => {
     const recipient = request.source!;
-    void connection().send(
-      buf.create(MessageSchema, {
-        source: {
-          identityDid: recipient.identityDid,
-          peerKey: recipient.peerKey,
-        },
-        serviceId: request.serviceId!,
-        payload: { value: responsePayload },
-      }),
-    );
+    connection()
+      .send(
+        buf.create(MessageSchema, {
+          source: {
+            identityDid: recipient.identityDid,
+            peerKey: recipient.peerKey,
+          },
+          serviceId: request.serviceId,
+          payload: { value: responsePayload },
+        }),
+      )
+      .catch((err) => log.catch(err));
   };
 };
 
