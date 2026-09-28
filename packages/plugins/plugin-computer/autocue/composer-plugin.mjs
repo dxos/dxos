@@ -66,8 +66,9 @@ const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
 
 export const steps = [
   {
-    // Destructive, so replay-guarded: once the agent has written its source this take is under way, and a
-    // replay from a later step must not delete that work.
+    // Destructive, so replay-guarded. The driver consults `done` only when replaying the steps before a
+    // `from`; a take started from step 1 always runs this, so it always starts from empty folders. Once the
+    // agent has written its source the take is under way, and a replay must not delete that work.
     name: 'Prep (off camera): clear the last take',
     setup: true,
     done: () => existsSync(new URL(LEFTOVERS[0], import.meta.url)),
@@ -159,7 +160,8 @@ export const steps = [
   },
   {
     name: 'Create a project from the Composer Plugin template',
-    // A replay reloads the deck with its planks, so an open project means this take already created one.
+    // Replay only (see step 1): the deck reloads with its planks, so an open project means this take
+    // already created one.
     done: async ({ page }) => (await page.getByTestId('projectsPlugin.tab.tasks').count()) > 0,
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
