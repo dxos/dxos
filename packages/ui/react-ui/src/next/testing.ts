@@ -109,6 +109,12 @@ export const realHover = async (element: HTMLElement) => {
   await userEvent.hover(element);
 };
 
+/** Moves the real pointer off `element` (to the page's top-left corner), so `pointerleave` and `:hover` follow. */
+export const realUnhover = async (element: HTMLElement) => {
+  const { userEvent } = await import('@vitest/browser/context');
+  await userEvent.unhover(element);
+};
+
 /** Every themed part carries Ark's scope/part attributes (decision 10). */
 export const expectScoped = async (root: HTMLElement) => {
   for (const part of root.querySelectorAll('[class*="nx-"]:not(.nx-scope)')) {

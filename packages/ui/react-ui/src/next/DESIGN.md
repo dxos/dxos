@@ -394,6 +394,15 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     scope), and it reads pixels in JS, which decision 11 keeps to the scroll thumbs. Until a decision, a `contain`
     frame shows the well around the image.
 
+48. **A press suppresses the Tooltip only until the next focus or hover** (amends 33). The trigger kept its
+    click suppression until `pointerleave`, so a missed leave (the pointer never left in the browser's eyes, or a
+    synthetic click) left it suppressed for good: after clicking a Toggle and toggling it with Space, neither
+    keyboard focus nor a later hover showed its label. `pointerenter` now clears the press (an enter is a fresh hover,
+    so a press before it is stale), as do `keydown` (keyboard use) and `blur` (a later focus is judged on its own).
+    Toggle `Test` reproduces it: click, Space, Tab away and back, then hover with the real pointer. zag ignores
+    `setOpen(true)` while a tooltip is `closing`, so an `openDelay` shorter than zag's 150ms `closeDelay` could still
+    swallow a quick re-hover; the 300ms default cannot.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

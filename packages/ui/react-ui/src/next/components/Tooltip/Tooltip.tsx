@@ -93,7 +93,17 @@ TooltipTrigger.displayName = 'Next.Tooltip.Trigger';
 
 const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.TriggerProps>(
   (
-    { onBlur, onFocus, onPointerMove, onPointerOver, onPointerEnter, onPointerLeave, onPointerDown, ...props },
+    {
+      onBlur,
+      onFocus,
+      onKeyDown,
+      onPointerMove,
+      onPointerOver,
+      onPointerEnter,
+      onPointerLeave,
+      onPointerDown,
+      ...props
+    },
     forwardedRef,
   ) => {
     const tooltip = useTooltipContext();
@@ -123,7 +133,9 @@ const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.Trigge
         }}
         onPointerEnter={(event) => {
           onPointerEnter?.(event);
-          if (event.defaultPrevented || event.pointerType === 'touch' || pressed.current) {
+          // An enter is a fresh hover: a press can only be stale here (its leave was never seen).
+          pressed.current = false;
+          if (event.defaultPrevented || event.pointerType === 'touch') {
             return;
           }
           cancel();
@@ -144,6 +156,11 @@ const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.Trigge
           cancel();
           tooltip.setOpen(false);
         }}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          // Keyboard use ends the press, so the next keyboard focus shows the label again.
+          pressed.current = false;
+        }}
         onFocus={(event) => {
           onFocus?.(event);
           if (pressed.current || !event.currentTarget.matches(':focus-visible')) {
@@ -152,6 +169,8 @@ const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.Trigge
         }}
         onBlur={(event) => {
           onBlur?.(event);
+          // The press that focused the trigger is over once focus leaves; a later focus is judged on its own.
+          pressed.current = false;
           if (event.defaultPrevented) {
             return;
           }

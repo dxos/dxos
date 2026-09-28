@@ -12,7 +12,7 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
+import { byTestId, controlSize, expectScoped, expectTooltip, realHover, realUnhover, sizeRow } from '../../testing.ts';
 
 /** Icon-only toggles (one pressed, one disabled), a labelled toggle, a controlled one, and one with an `activeIcon`. */
 const DefaultStory = ({ size }: SizeArgs) => {
@@ -78,6 +78,20 @@ export const Test: Story = {
     await expect(getComputedStyle(bold).backgroundColor).not.toBe(unpressed);
     await userEvent.keyboard(' ');
     await waitFor(() => expect(bold).toHaveAttribute('aria-pressed', 'false'));
+
+    // A press suppresses the label only until the next focus or hover (DESIGN.md follow-up 48): after the click and the
+    // Space toggle above, keyboard focus shows it, and so does a fresh hover.
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.tab();
+    await userEvent.tab({ shift: true });
+    await expect(bold).toHaveFocus();
+    await expectTooltip(bold, 'Bold md');
+    bold.blur();
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+    await realHover(bold);
+    await expectTooltip(bold, 'Bold md');
+    await realUnhover(bold);
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 
     // Controlled: the caller's state follows the toggle.
     await userEvent.click(canvas.getByRole('button', { name: 'Wrap lines md' }));
