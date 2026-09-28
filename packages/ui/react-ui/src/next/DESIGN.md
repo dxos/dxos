@@ -62,7 +62,7 @@
 ## Spike findings
 
 `spike/Spike.stories.tsx` (`playground/spike`) exercises decision 5 with play tests that measure alignment across a
-header, top-level rows, a nested form and a nested scroll pane — all pass (Internal, Composed, Native, Narrow, Sizes).
+header, top-level rows, a nested form and a nested scroll pane — all pass (Default, Native, Narrow, Sizes). The internal-scroll variant was removed once decision 5 settled on the composed API.
 
 1. **Subgrid survives scrolling.** A scroll frame and its viewport can both be subgrids, so rows inside a nested scroll
    pane share the parent's rails and its content-sized (`auto`) label track.

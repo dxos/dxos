@@ -88,16 +88,10 @@ export type ContainerProps = {
   layout?: 'stack' | 'row';
   /** Placement of the container itself within a parent Container. */
   place?: 'content' | 'full';
-  /** Option A: the Container composes the ScrollArea itself. */
-  scroll?: boolean;
-  native?: boolean;
 };
 
 export const Container = slottable<HTMLDivElement, ContainerProps>(
-  (
-    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, scroll, native, ...props },
-    forwardedRef,
-  ) => {
+  ({ children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, ...props }, forwardedRef) => {
     const localRef = useRef<HTMLDivElement>(null);
     const ref = useComposedRefs(forwardedRef, localRef);
     const { className, style, ...rest } = composableProps(props);
@@ -109,20 +103,6 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
         log.warn('inheriting Container is not a direct child of a Container', { parent: parent.className });
       }
     }, [gutter]);
-
-    if (scroll) {
-      // Recurse so the viewport's `asChild` target is itself composable; styling lands on the frame, which
-      // is what the parent lays out.
-      return (
-        <ScrollArea.Root native={native} size={size} data-place={place} classNames={className}>
-          <ScrollArea.Viewport asChild>
-            <Container {...rest} gutter={gutter} columns={columns} layout={layout} style={style} ref={ref}>
-              {children}
-            </Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      );
-    }
 
     return (
       <ark.div

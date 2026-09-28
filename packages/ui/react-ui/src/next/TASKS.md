@@ -19,6 +19,8 @@ Rebuild Container, Toolbar, Block, Icon, Input, Button, Typography on the agreed
 
 ### Tasks
 
+- [ ] **Namespace attributes and variables** — `data-size`, `data-layout`, `data-place`, `data-level`, `--gutter`, `--icon-size`, `--line-height` already exist in react-ui/plugins; next CSS must not match or shadow them.
+- [ ] **Typography owns first-line centring** — pad text beside a rail to `--block-size` (spike message row).
 - [ ] **Move size metrics to CSS** — `[data-size=*]` rules in the theme; `sizes.ts` keeps only `Size`/`SIZES`.
 - [ ] **Add levels** — `[data-level=*]` rules for surface/border/shadow; nested step-up.
 - [ ] **Input/Button fill `--block-size`** — resolve the padding TODOs; align with `Block` per size.

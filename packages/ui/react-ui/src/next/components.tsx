@@ -70,7 +70,7 @@ export namespace Next {
         className={mx(
           'w-full px-(--gap-size) py-0',
           'text-[length:var(--font-size,1rem)] leading-(--line-height)',
-          'bg-base-surface border-none dx-focus-ring-inset',
+          'bg-input-bg border-none dx-focus-ring-inset',
           className,
         )}
       />

@@ -65,7 +65,7 @@ const Message = ({ testId, children }: { testId: string; children: ReactNode }) 
   </Container>
 );
 
-/** Content shared by both API shapes: sections, rows, a full-bleed band, a nested form and a nested scroll. */
+/** Scroll body content: sections, rows, a full-bleed band, a nested form and a nested scroll. */
 const Body = () => (
   <>
     <Container>
@@ -75,17 +75,26 @@ const Body = () => (
     <Field id='a' label='Name' testId='row-a' />
     <Field id='b' label='Email' />
     <Message testId='message'>{MESSAGE}</Message>
-    <div data-place='full' className='h-4 bg-accent-surface' data-testid='full-bleed' />
+    <div data-place='full' className='h-4 bg-accent-bg' data-testid='full-bleed' />
     <Container data-testid='nested'>
       <h2 className='font-medium'>Nested form</h2>
       <Field id='c' label='A much longer label' testId='row-nested' />
       <Field id='d' label='City' />
     </Container>
-    <Container scroll data-testid='inner-scroll' classNames='h-40 border-y border-separator'>
-      {Array.from({ length: 8 }, (_, index) => (
-        <Field key={index} id={`s${index}`} label={`Item ${index}`} testId={index === 0 ? 'row-inner' : undefined} />
-      ))}
-    </Container>
+    <ScrollArea.Root classNames='h-40 border-y border-separator'>
+      <ScrollArea.Viewport asChild>
+        <Container data-testid='inner-scroll'>
+          {Array.from({ length: 8 }, (_, index) => (
+            <Field
+              key={index}
+              id={`s${index}`}
+              label={`Item ${index}`}
+              testId={index === 0 ? 'row-inner' : undefined}
+            />
+          ))}
+        </Container>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
     {PARAGRAPHS.map((paragraph, index) => (
       <p key={index}>{paragraph}</p>
     ))}
@@ -96,12 +105,10 @@ type StoryArgs = {
   size: Size;
   width: string;
   native: boolean;
-  /** `internal`: Container composes ScrollArea (`scroll` prop); `composed`: caller wraps via `asChild`. */
-  api: 'internal' | 'composed';
   debug: boolean;
 };
 
-const DefaultStory = ({ size, width, native, api, debug }: StoryArgs) => (
+const DefaultStory = ({ size, width, native, debug }: StoryArgs) => (
   <>
     <SpikeStyles />
     <div
@@ -111,19 +118,13 @@ const DefaultStory = ({ size, width, native, api, debug }: StoryArgs) => (
       style={{ width }}
     >
       <Header testId='header'>Header</Header>
-      {api === 'internal' ? (
-        <Container gutter='rail' columns={LABEL_COLUMNS} scroll native={native} classNames='flex-1' data-testid='body'>
-          <Body />
-        </Container>
-      ) : (
-        <ScrollArea.Root native={native} classNames='flex-1'>
-          <ScrollArea.Viewport asChild>
-            <Container gutter='rail' columns={LABEL_COLUMNS} data-testid='body'>
-              <Body />
-            </Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      )}
+      <ScrollArea.Root native={native} classNames='flex-1'>
+        <ScrollArea.Viewport asChild>
+          <Container gutter='rail' columns={LABEL_COLUMNS} data-testid='body'>
+            <Body />
+          </Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
       <Header testId='footer'>Footer</Header>
     </div>
   </>
@@ -134,7 +135,7 @@ const meta = {
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
-  args: { size: 'md', width: '40rem', native: false, api: 'internal', debug: false },
+  args: { size: 'md', width: '40rem', native: false, debug: false },
 } satisfies Meta<StoryArgs>;
 
 export default meta;
@@ -178,12 +179,7 @@ const assertAligned = async (root: HTMLElement, { railEnd = true } = {}) => {
   await expect(body && body.scrollHeight > body.clientHeight).toBe(true);
 };
 
-export const Internal: Story = {
-  play: ({ canvasElement }) => assertAligned(canvasElement),
-};
-
-export const Composed: Story = {
-  args: { api: 'composed' },
+export const Default: Story = {
   play: ({ canvasElement }) => assertAligned(canvasElement),
 };
 
