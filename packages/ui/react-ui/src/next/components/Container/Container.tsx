@@ -19,6 +19,9 @@ export type CSSVariables = Record<`--${string}`, string>;
 
 export type Gutter = 'rail' | 'inset' | 'sm' | 'md' | 'lg' | 'none' | 'inherit';
 
+/** Space between the container's rows; the current `ColumnGap` steps (0.25, 0.5, 0.75rem). */
+export type ContainerGap = 'none' | 'sm' | 'md' | 'lg';
+
 //
 // Container
 //
@@ -35,12 +38,14 @@ export type ContainerProps = {
   place?: 'content' | 'full';
   /** A rung of ui-theme's surface ladder, or `+1` for one rung above the enclosing level. */
   level?: Level;
+  /** Row gap only: columns are shared through subgrid, so a column gap would shift the parent's tracks. */
+  gap?: ContainerGap;
 };
 
 /** Grid part (decision 5): every prop is a `data-*` attribute resolved by `theme/container.css`. */
 export const Container = slottable<HTMLDivElement, ContainerProps>(
   (
-    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, ...props },
+    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, gap, ...props },
     forwardedRef,
   ) => {
     const localRef = useRef<HTMLDivElement>(null);
@@ -70,6 +75,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
         data-layout={layout}
         data-place={place}
         data-surface={level}
+        data-gap={gap}
         data-columns={columns ? '' : undefined}
         style={{ ...columnsStyle, ...style }}
         className={className}

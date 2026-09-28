@@ -1,0 +1,66 @@
+/*
+ * Combobox: a control-sized row holding a text input and a trailing caret trigger; its listbox reuses Select's popup
+ * and item rules.
+ */
+
+@layer dx-components {
+  /* The root takes no box, so its label and control are laid out as the parent's children. */
+  .nx-combobox {
+    display: contents;
+  }
+  :is(.nx-field, .nx-grid[data-layout='stack']) > .nx-combobox > .nx-control {
+    margin-block: var(--nx-control-inset);
+  }
+
+  .nx-combobox-control {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    padding-inline-end: 0;
+    background: var(--color-input-surface);
+  }
+  /* An outline, not an inset shadow: it paints above the trigger's own fill instead of under it. */
+  .nx-combobox-control:has(> .nx-combobox-input:focus-visible) {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+
+  .nx-combobox-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+  }
+
+  /* A control-sized square, so the caret sits where an icon-only Button's icon would. */
+  .nx-combobox-trigger {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--nx-control-size);
+    height: 100%;
+    padding: 0;
+    border: none;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .nx-combobox-trigger:hover:not(:disabled) {
+    background: var(--color-hover-surface);
+  }
+
+  .nx-combobox-empty {
+    display: flex;
+    align-items: center;
+    height: var(--nx-block-size);
+    padding-inline: var(--nx-gap-size);
+    color: var(--color-description);
+  }
+}
