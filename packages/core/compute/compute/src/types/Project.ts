@@ -70,7 +70,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
   }).pipe(
     Schema.annotate({ title: 'Project' }),
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'sky' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
     ArchivableAnnotation.set(true),
     // Only the project skill: filing created objects into `artifacts` is what a project-scoped
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
