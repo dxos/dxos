@@ -4,19 +4,17 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as FiberMap from 'effect/FiberMap';
 import * as Queue from 'effect/Queue';
-import type * as Scope from 'effect/Scope';
+import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import { type EventAttributes, type RemoteEvents, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { ObservabilityOperation } from '#types';
-
-import { type MappedEvent } from './invocation-listener.ts';
+import type * as Observability from '../Observability.ts';
+import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
 
 /** The product event a user creating an object stands for. */
 export const OBJECT_CREATED_EVENT = 'space.object.add';
@@ -36,7 +34,7 @@ type TraceEvent = { name: string; attributes: EventAttributes };
  */
 export const listen = (
   events: RemoteEvents,
-  send: (event: MappedEvent) => Effect.Effect<void, unknown>,
+  capture: ObservabilityExtension.Events['captureEvent'],
   draftWindow: Duration.Input = DRAFT_WINDOW,
 ): Effect.Effect<void, never, Scope.Scope> =>
   Effect.gen(function* () {
@@ -73,7 +71,7 @@ export const listen = (
             pending,
             objectId,
             Effect.sleep(draftWindow).pipe(
-              Effect.andThen(send({ name: OBJECT_CREATED_EVENT, properties: { spaceId, objectId, typename } })),
+              Effect.andThen(Effect.try(() => capture(OBJECT_CREATED_EVENT, { spaceId, objectId, typename }))),
               Effect.catch((error) => Effect.sync(() => log.catch(error))),
             ),
           );
@@ -84,13 +82,15 @@ export const listen = (
   });
 
 /**
- * Sends {@link OBJECT_CREATED_EVENT} for every object a user creates, however it was created: from a
- * dialog, an agent tool call, or a raw `db.add` in a view.
+ * Sends {@link OBJECT_CREATED_EVENT} for every object a user creates in this realm, however it was
+ * created: from a dialog, an agent tool call, or a raw `db.add` in a view.
  */
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const invoker = yield* Capabilities.OperationInvoker;
-    yield* listen(TRACE_PROCESSOR.remoteEvents, (event) => invoker.invoke(ObservabilityOperation.SendEvent, event));
-    return [];
-  }),
-);
+export const provider: Observability.DataProvider = Effect.fn(function* (observability) {
+  const scope = yield* Scope.make();
+  yield* listen(TRACE_PROCESSOR.remoteEvents, (event, attributes) =>
+    observability.events.captureEvent(event, attributes),
+  ).pipe(Scope.provide(scope));
+  return () => {
+    Effect.runFork(Scope.close(scope, Exit.void));
+  };
+});

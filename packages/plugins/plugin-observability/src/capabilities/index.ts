@@ -42,16 +42,6 @@ export const InvocationListener = Capability.lazyModule(
   },
   () => import('./invocation-listener.ts'),
 );
-export const ObjectEvents = Capability.lazyModule(
-  'ObjectEvents',
-  {
-    requires: [Capabilities.OperationInvoker],
-    provides: [],
-    // ECHO does not replay its trace events, so this only has to be listening before the first user action.
-    activatesOn: ActivationEvents.Idle,
-  },
-  () => import('./object-events.ts'),
-);
 export const PrivacyNotice = Capability.lazyModule(
   'PrivacyNotice',
   {

@@ -10,10 +10,11 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { type EventAttributes, RemoteEvents } from '@dxos/tracing';
 
-import { type MappedEvent } from './invocation-listener.ts';
 import { OBJECT_CREATED_EVENT, listen } from './object-events.ts';
 
 const DRAFT_WINDOW = Duration.millis(10);
+
+type Captured = { name: string; properties?: Record<string, unknown> };
 
 const added = (objectId: string, attributes: EventAttributes = {}): EventAttributes => ({
   spaceId: 'space-1',
@@ -24,7 +25,7 @@ const added = (objectId: string, attributes: EventAttributes = {}): EventAttribu
   ...attributes,
 });
 
-const reported = (objectId: string): MappedEvent => ({
+const reported = (objectId: string): Captured => ({
   name: OBJECT_CREATED_EVENT,
   properties: { spaceId: 'space-1', objectId, typename: 'com.example.type.person' },
 });
@@ -32,8 +33,8 @@ const reported = (objectId: string): MappedEvent => ({
 /** Runs the listener over a private event channel; `next` waits for the next event it sends. */
 const setup = Effect.gen(function* () {
   const events = new RemoteEvents();
-  const sent = yield* Queue.unbounded<MappedEvent>();
-  yield* listen(events, (event) => Queue.offer(sent, event).pipe(Effect.asVoid), DRAFT_WINDOW);
+  const sent = yield* Queue.unbounded<Captured>();
+  yield* listen(events, (name, properties) => Queue.offerUnsafe(sent, { name, properties }), DRAFT_WINDOW);
   return { events, next: Queue.take(sent), pending: Queue.size(sent) };
 });
 
@@ -71,8 +72,8 @@ describe('object events', () => {
     EffectEx.runPromise(
       Effect.gen(function* () {
         const events = new RemoteEvents();
-        const sent: MappedEvent[] = [];
-        yield* listen(events, (event) => Effect.sync(() => sent.push(event)), DRAFT_WINDOW).pipe(Effect.scoped);
+        const sent: Captured[] = [];
+        yield* listen(events, (name, properties) => sent.push({ name, properties }), DRAFT_WINDOW).pipe(Effect.scoped);
 
         events.emit('echo.object.add', added('late'));
         yield* Effect.sleep(Duration.times(DRAFT_WINDOW, 3));

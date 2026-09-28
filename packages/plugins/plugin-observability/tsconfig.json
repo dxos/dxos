@@ -31,9 +31,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/tracing"
-    },
-    {
       "path": "../../common/util"
     },
     {

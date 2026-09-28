@@ -162,7 +162,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
