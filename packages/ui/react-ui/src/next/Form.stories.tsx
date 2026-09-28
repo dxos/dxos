@@ -54,10 +54,10 @@ const DefaultStory = () => (
         <Next.Checkbox label='Subscribe to updates' />
       </Next.Field.Root>
 
-      <Next.Toolbar data-testid='actions'>
+      <Next.Group justify='end' data-testid='actions'>
         <Next.Button>Cancel</Next.Button>
         <Next.Button type='submit'>Save</Next.Button>
-      </Next.Toolbar>
+      </Next.Group>
     </Next.Container>
   </div>
 );
@@ -98,5 +98,7 @@ export const Default: Story = {
     await expect(canvas.getByRole('combobox', { name: 'Role' })).toBeInTheDocument();
     await expect(canvas.getByRole('checkbox', { name: 'Subscribe to updates' })).not.toBeChecked();
     await expect(canvas.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'submit');
+    // Form actions claim no toolbar keyboard contract.
+    await expect(canvas.queryByRole('toolbar')).toBeNull();
   },
 };

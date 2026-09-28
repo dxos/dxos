@@ -165,11 +165,25 @@
     flex: 1;
   }
 
+  .nx-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+  .nx-group[data-justify='end'] {
+    justify-content: flex-end;
+  }
+  .nx-group[data-justify='between'] {
+    justify-content: space-between;
+  }
+
   .nx-toolbar {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: var(--nx-control-inset);
+    gap: var(--nx-gap-size);
     width: 100%;
     min-height: var(--nx-block-size);
     overflow-x: auto;

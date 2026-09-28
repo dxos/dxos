@@ -18,8 +18,8 @@
 ## Decisions
 
 1. **Scope.** A parallel namespace (`Next.*`) alongside the current primitives; plugins opt in per component and old
-   primitives retire once unused. Only a subset of components is in scope, starting with those in the experimental
-   story: Container, Toolbar, Block, Icon, Input, Button, Typography.
+   primitives retire once unused. Only a subset of components is in scope, starting with those in the original
+   experimental story (since replaced by `components.stories.tsx`): Container, Toolbar, Block, Icon, Input, Button, Typography.
 2. **Sizes.** CSS is the source of truth: theme rules keyed by `[data-size=xs|sm|md|lg|xl]` define `--block-size`,
    `--line-height`, `--font-size`, `--icon-size`, `--gap-size`. `Container` only sets `data-size`; TS exports just
    the `Size` type and `SIZES` list. One icon scale serves rail Blocks and controls, with `md` at Tailwind's `size-4`:
@@ -122,8 +122,8 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
    re-derive every host aspect (hover, separators, placeholder, scrollbar). Each zone publishes `--nx-level` (its
    rung), and `level='+1'` resolves against the parent's rung with a style query
    (`@container style(--nx-level: 2) { … }`), since every element is a style container. Level is independent of
-   rails: an inheriting (subgrid) container can lift its surface and keep the parent's tracks. Style queries need a
-   Firefox support check before production.
+   rails: an inheriting (subgrid) container can lift its surface and keep the parent's tracks. Style queries on custom
+   properties are Baseline: Chrome 111, Safari 18, Firefox 151 (May 2026).
 9. **Portals leave the sized scope.** Portalled content (Select's listbox) inherits neither `data-size` nor level, so
    `Select.Content` takes its own `size` and sets `data-surface='popup'`; unsized, it falls back to the `:root`
    defaults (md). Deriving the trigger's size would need JS measurement or context, both ruled out by decision 3.
@@ -135,3 +135,12 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 12. **Toolbar items join by hook.** The roving machine (`machines/toolbar.ts`) is framework-neutral; Button,
     IconButton, Input and Select.Trigger join the nearest Toolbar through React context carrying the machine's api
     (behaviour, not size or level, so decision 3 holds). Arrow/Home/End keys stay with a focused text input.
+
+## Follow-ups (Phase 1 review)
+
+1. **Form actions use `Next.Group`**, a plain flex run with no role (`justify` start|end|between). Toolbar is reserved
+   for a real keyboard contract; a row Container needs a track per child.
+2. **`Select.Content` keeps an explicit `size`.** Portalled content leaves the sized scope, and inferring the trigger's
+   size would need React context or DOM measurement, both ruled out by decisions 3 and 11.
+3. **Toolbar gap is `--nx-gap-size`**, the same spacing token as Group and Container gaps.
+4. **`experimental.stories.tsx` removed**; `components.stories.tsx` covers it.

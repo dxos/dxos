@@ -17,6 +17,7 @@ export const recipes = {
   icon: () => 'nx-icon',
   typography: () => 'nx-typography',
   toolbar: () => 'nx-toolbar',
+  group: () => 'nx-group',
   label: () => 'nx-label',
   input: () => `nx-control nx-input ${FOCUS_RING}`,
   button: () => `nx-control nx-button ${FOCUS_RING}`,

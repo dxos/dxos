@@ -16,7 +16,7 @@ Settle the constraints in [DESIGN.md](./DESIGN.md) before building.
 - [x] **Rail-end vs scrollbar** — ScrollArea `mode` (overlay|reserve) and `width` (thin = rail margin|regular) (decision 5).
 - [x] **Self-query limit** — the pane is the query container (decision 5).
 - [x] **Spike levels** — `data-surface` zones + style-query `+1` step-up; Levels story passes (spike finding 8).
-- [ ] **Check style-query support in Firefox** — `+1` levels depend on `@container style()`.
+- [x] **Check style-query support in Firefox** — Baseline since Firefox 151 (May 2026).
 
 ## Phase 1: Model (story components)
 
@@ -45,3 +45,4 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 - [x] **`data-scope`/`data-part` on every part** — decision 10. — asserted in Roles; `asChild` caveat is finding 10.
 - [x] **Shared class recipes** — plain TS functions used by the bindings (decision 8). — `recipes.ts`.
 - [x] **Benchmark story** — 1,000 rows in a nested Container inside a ScrollArea (decision 11). — ~110ms mount+layout in headless Chromium.
+- [x] **Phase 1 review follow-ups** — `Next.Group` for form actions; explicit `Select.Content` size; toolbar gap `--nx-gap-size`; experimental story removed.

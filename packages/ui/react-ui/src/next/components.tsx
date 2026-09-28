@@ -15,6 +15,8 @@ import { Field as NextField } from './Field.tsx';
 import {
   Button as NextButton,
   type ButtonProps as NextButtonProps,
+  Group as NextGroup,
+  type GroupProps as NextGroupProps,
   Icon as NextIcon,
   IconButton as NextIconButton,
   type IconButtonProps as NextIconButtonProps,
@@ -43,6 +45,8 @@ export namespace Next {
   export const Icon = NextIcon;
   export type IconProps = NextIconProps;
   export const Typography = NextTypography;
+  export const Group = NextGroup;
+  export type GroupProps = NextGroupProps;
   export const Label = NextLabel;
   export type LabelProps = NextLabelProps;
   export const Input = NextInput;
