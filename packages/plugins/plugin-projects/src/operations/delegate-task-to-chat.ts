@@ -87,6 +87,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // chat under the project rather than the space root.
         if (project) {
           Chat.linkCompanion({ chat, subject: project });
+          Chat.seedSession(chat, project.session);
         }
 
         // Added here rather than through `SpaceOperation.AddObject`: this is a database write, and

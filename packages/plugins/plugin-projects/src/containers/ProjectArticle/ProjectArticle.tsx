@@ -471,6 +471,7 @@ const useToolbarActions = ({
     }
 
     Chat.linkCompanion({ chat, subject: project });
+    Chat.seedSession(chat, project.session);
     await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
     await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
   }, [invokePromise, project, spaceId]);
