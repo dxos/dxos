@@ -13,7 +13,7 @@ import { Task, TaskSet } from '@dxos/types';
 import { SKILL_KEY } from '../skills/computer-skill.ts';
 
 /** Where the run writes the plugin, under the Composer app's gitignored `temp/`. */
-export const FOLDER = 'space-clock';
+export const FOLDER = 'world-clock';
 
 /** The built manifest, as `vite preview` serves the Composer app's `out/composer`. */
 export const MANIFEST_URL = `http://localhost:4173/plugins/${FOLDER}/manifest.json`;
@@ -36,7 +36,7 @@ and the plugin then loads with nothing to show.`;
 type TaskSeed = Pick<Task.Task, 'title' | 'description' | 'estimate'>;
 
 const PARENT: TaskSeed = {
-  title: 'Build the Space Clock plugin',
+  title: 'Build the World Clock plugin',
   description: 'From an empty folder to a plugin loaded into this app: the four subtasks, in order.',
   estimate: 'm',
 };
@@ -47,12 +47,12 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   {
     title: 'Read the plugin guide',
     description:
-      'Read the "Example: a plugin with its own navtree group" section of `../../../docs/src/content/docs/docs/composer/publishing-plugins.md`. Every file the plugin needs is in it; the rules list under it is where a first build goes wrong.',
+      'Read the "Example: a plugin with its own navtree group" and "Example: data, a form and another plugin\'s surface" sections of `../../../docs/src/content/docs/docs/composer/publishing-plugins.md`. Every file the plugin needs is in them; the rules list between them is where a first build goes wrong.',
     estimate: 'xs',
   },
   {
     title: 'Write the plugin in TypeScript',
-    description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`temp/plugins/${FOLDER}/\`: a "Space Clock" group in each space's navtree with a "Clock" page under it whose article shows a large live clock that ticks every second. Add to the navtree, never replace it: no workspace, no rail tab. Tag it \`labs\` in \`dx.config.ts\`, as the guide does, so it lists under Labs. Set the build \`outDir\` to \`'../../../out/composer/plugins/${FOLDER}'\` so the build lands where \`vite preview\` serves it.`,
+    description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`temp/plugins/${FOLDER}/\`: a "World Clock" group in each space's navtree with a "Clocks" page under it. Define a \`Clock\` ECHO type holding an array of timezones, one per space, created on first view with the reader's own timezone. The article shows a world map from plugin-map's \`World\` surface with the \`equirectangular\` projection, and beneath it a single row of clock cards, each showing the date, the time (ticking every second) and the timezone, then an empty card with a large plus button that opens a react-ui-form with a timezone select. Keep it simple: do not shade daylight or place the clocks on the map. Give each clock card \`data-testid="worldClock.clock"\`, the empty card \`data-testid="worldClock.new"\` and its plus button \`data-testid="worldClock.add"\`. Depend on \`org.dxos.plugin.map\` and tag it \`labs\` in \`dx.config.ts\`, as the guide does. Add to the navtree, never replace it: no workspace, no rail tab. Set the build \`outDir\` to \`'../../../out/composer/plugins/${FOLDER}'\` so the build lands where \`vite preview\` serves it.`,
     estimate: 's',
   },
   {
@@ -62,7 +62,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   },
   {
     title: 'Offer the plugin to load',
-    description: `Emit a \`plugin-url-prompt\` surface carrying \`${MANIFEST_URL}\` and the name "Space Clock". Do not load it yourself: loading runs new code in this app, so it is the reader's click.`,
+    description: `Emit a \`plugin-url-prompt\` surface carrying \`${MANIFEST_URL}\` and the name "World Clock". Do not load it yourself: loading runs new code in this app, so it is the reader's click.`,
     estimate: 'xs',
   },
 ];
@@ -95,7 +95,7 @@ export const composerPlugin: ProjectCapabilities.Template = {
       const project = scaffoldProject({
         name: name ?? 'Composer Plugin',
         description:
-          'A TypeScript plugin that adds a live clock page under its own group in the navtree of every space, built on this machine and loaded into the running app.',
+          'A TypeScript plugin that adds a world clock page, a map with a row of clocks, under its own group in the navtree of every space, built on this machine and loaded into the running app.',
         text: INSTRUCTIONS,
         skills: [Ref.fromURI(Skill.registryURI(SKILL_KEY))],
       });

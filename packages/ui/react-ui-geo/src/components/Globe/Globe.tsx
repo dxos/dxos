@@ -7,6 +7,7 @@ import {
   selection as d3Selection,
   easeLinear,
   easeSinOut,
+  geoEquirectangular,
   geoMercator,
   geoOrthographic,
   geoPath,
@@ -108,13 +109,24 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
   },
 };
 
-export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
+export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator' | 'equirectangular';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
   'orthographic': geoOrthographic,
   'mercator': geoMercator,
   'transverse-mercator': geoTransverseMercator,
+  // The flat plate-carrée map (longitude and latitude straight to x and y), as a world-clock backdrop.
+  'equirectangular': geoEquirectangular,
 };
+
+/**
+ * The scale at zoom 1: a globe's radius fills the shorter side, while the flat plate-carrée world
+ * (2π wide, π tall at scale 1) fits whole inside the canvas.
+ */
+const baseScale = (type: GlobeCanvasProps['projection'], size: { width: number; height: number }): number =>
+  type === 'equirectangular'
+    ? Math.min(size.width / (2 * Math.PI), size.height / Math.PI)
+    : Math.min(size.width, size.height) / 2;
 
 const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): GeoProjection => {
   if (typeof type === 'string') {
@@ -365,7 +377,7 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
       timer(() => {
         // https://d3js.org/d3-geo/projection
         projection
-          .scale((Math.min(size.width, size.height) / 2) * zoom)
+          .scale(baseScale(projectionProp, size) * zoom)
           .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
           .rotate(rotation ?? [0, 0, 0]);
 

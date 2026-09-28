@@ -8,9 +8,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 /**
- * An agent works the Composer Plugin project template's parent task and four subtasks to build the Space
- * Clock plugin, then the reader loads it, finds it in the registry, and opens its Clock page from the
- * navtree group it adds. Everything happens in the first space in the rail (My Space on a fresh profile).
+ * An agent works the Composer Plugin project template's parent task and four subtasks to build the World
+ * Clock plugin, then the reader loads it, finds it in the registry, opens its Clocks page from the navtree
+ * group it adds, and adds two timezones. Everything happens in the first space in the rail (My Space on a fresh profile).
  *
  * @mdl packages/plugins/plugin-computer/PLUGIN.mdl test QA-2
  * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview
@@ -22,7 +22,7 @@ import { join } from 'node:path';
  *   moon run composer-app:bundle
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
- * Steps 1 and 2 are off-camera prep and persist in the profile. They also clear the last take: the Space Clock
+ * Steps 1 and 2 are off-camera prep and persist in the profile. They also clear the last take: the World Clock
  * plugin is uninstalled and its source and build folders are deleted, so the agent starts from nothing.
  */
 
@@ -32,15 +32,15 @@ const TWENTY_MIN = 20 * 60_000;
 const MODEL = 'DeepSeek V4 Pro';
 
 /** The plugin the agent builds, as the template's tasks name it. */
-const PLUGIN_NAME = 'Space Clock';
+const PLUGIN_NAME = 'World Clock';
 
 /** A beat for the viewer to read the registry card, which is the one shot that proves the load. */
 const LINGER = 2_500;
 
 /** The last take's source and build, relative to this file (`plugin-computer/autocue/`). */
 const LEFTOVERS = [
-  '../../../apps/composer-app/temp/plugins/space-clock/',
-  '../../../../out/composer/plugins/space-clock/',
+  '../../../apps/composer-app/temp/plugins/world-clock/',
+  '../../../../out/composer/plugins/world-clock/',
 ];
 
 /**
@@ -79,6 +79,9 @@ const showSidebar = async ({ demo, page }, testId, label) => {
   }
   await demo.click({ selector: `[data-testid="${testId}"]`, ...(label ? { label } : { hud: false }) });
 };
+
+/** Timezones added on camera, beside the local one the page starts with. */
+const TIMEZONES = ['Asia/Tokyo', 'Europe/London'];
 
 /** Contributed by plugin-computer's `src/templates/composer-plugin.ts`. */
 const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
@@ -379,7 +382,7 @@ export const steps = [
     },
   },
   {
-    name: 'Open the Clock page',
+    name: 'Open the Clocks page',
     run: async ({ demo, page }) => {
       await demo.click({ selector: SPACE, label: 'Space' });
       // The plugin adds a group to the space's navtree; the built-in groups must still be there beside it.
@@ -387,8 +390,25 @@ export const steps = [
       await sidebar.getByText(PLUGIN_NAME, { exact: true }).first().waitFor({ state: 'visible', timeout: 15_000 });
       await sidebar.getByTestId('spacePlugin.collectionsSection').waitFor({ state: 'visible', timeout: 5_000 });
       await page.waitForTimeout(LINGER / 2);
-      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text="Clock"', label: 'Clock' });
-      await page.locator('[data-testid="deck.plank"]', { hasText: 'Clock' }).first().waitFor({ state: 'visible' });
+      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text="Clocks"', label: 'Clocks' });
+      await page.getByTestId('worldClock.clock').first().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.waitForTimeout(3_000);
+    },
+  },
+  {
+    name: 'Add two timezones',
+    run: async ({ demo, page }) => {
+      for (const [index, timezone] of TIMEZONES.entries()) {
+        await demo.click({ selector: '[data-testid="worldClock.add"]', label: 'Add clock' });
+        await demo.click({ selector: '[data-testid="worldClock.new"] >> role=combobox', label: 'Timezone' });
+        await demo.click({ selector: `role=option[name="${timezone}"]`, label: timezone });
+        await demo.click({ selector: '[data-testid="worldClock.new"] [data-testid="save-button"]', label: 'Save' });
+        await page
+          .getByTestId('worldClock.clock')
+          .nth(index + 1)
+          .waitFor({ state: 'visible', timeout: 10_000 });
+        await page.waitForTimeout(LINGER / 2);
+      }
       await page.waitForTimeout(3_000);
     },
   },

@@ -43,7 +43,7 @@ describe('Composer Plugin project template', () => {
     }
     expect(taskSet.tasks).toHaveLength(1);
     const parent = await taskSet.tasks[0].load();
-    expect(parent.title).toBe('Build the Space Clock plugin');
+    expect(parent.title).toBe('Build the World Clock plugin');
 
     const subtasks = await Promise.all((parent.subtasks ?? []).map((ref) => ref.load()));
     expect(subtasks.map((task) => task.title)).toEqual([

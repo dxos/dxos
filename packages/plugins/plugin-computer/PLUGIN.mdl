@@ -106,8 +106,9 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
   desc: |
     The demo script for the Composer Plugin project template (`src/templates/composer-plugin.ts`): an agent
     works one parent task and its four subtasks on this machine — read the guide, write a TypeScript plugin,
-    build it, offer it — and the reader loads the result. The plugin adds a "Space Clock" group to each
-    space's navtree with a live "Clock" page under it. Walked by the autocue flow
+    build it, offer it — and the reader loads the result. The plugin adds a "World Clock" group to each
+    space's navtree with a "Clocks" page under it: a world map from plugin-map above a row of live clocks,
+    kept in a `Clock` ECHO object. Walked by the autocue flow
     `packages/plugins/plugin-computer/autocue/composer-plugin.mjs`.
   actors: both
   status: unverified
@@ -119,8 +120,8 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
     - plugin-projects and Coding (Dev) are enabled; the template is contributed by Coding (Dev), so the
       create dialog offers it only when that plugin is on
     - the Assistant's default remote model is DeepSeek V4 Pro
-    - no plugin named "Space Clock" is loaded, no "Composer Plugin" project is left from an earlier run, and
-      `temp/plugins/space-clock` and `out/composer/plugins/space-clock` do not exist, so the agent starts from
+    - no plugin named "World Clock" is loaded, no "Composer Plugin" project is left from an earlier run, and
+      `temp/plugins/world-clock` and `out/composer/plugins/world-clock` do not exist, so the agent starts from
       an empty folder (the autocue flow's first setup step restores all of this)
   steps:
     - name: Create a project from the Composer Plugin template
@@ -130,12 +131,12 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
     - name: Open the project's tasks
       do: Click the project's Tasks tab.
       expect: |
-        one parent task, "Build the Space Clock plugin", with four subtasks under it, all to do — read the
+        one parent task, "Build the World Clock plugin", with four subtasks under it, all to do — read the
         guide, write the plugin, typecheck and build, offer it
     - name: Select the parent task and assign it to the agent
       do: Tick the parent task's checkbox, then click "Assign selected tasks to agent".
       expect: |
-        the project's pipeline chart appears and a chat named "Build the Space Clock plugin" holds the parent
+        the project's pipeline chart appears and a chat named "Build the World Clock plugin" holds the parent
         and its four subtasks
       note: Delegating a parent hands over its whole subtree (DelegateTaskToChat collects it), parent first.
     - name: Open the agent session
@@ -156,39 +157,44 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       expect: the delegated chat is back, still working
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
-      expect: all five tasks are done and the chat shows a "Load plugin" prompt naming Space Clock
+      expect: all five tasks are done and the chat shows a "Load plugin" prompt naming World Clock
       note: |
         Takes up to twenty minutes. The model matters: with Composer's stock default (Claude Sonnet 5) the
         delegated chat stayed silent, which is why `given` sets DeepSeek V4 Pro.
     - name: Load the plugin
       do: Click Load on the prompt.
-      expect: Space Clock loads without an error toast, but stays off — the prompt only loads it
+      expect: World Clock loads without an error toast, but stays off — the prompt only loads it
     - name: Enable the plugin in the registry
-      do: Close the companion and the context sidebar, open Plugins, wait a beat, then open Labs and turn Space Clock on.
+      do: Close the companion and the context sidebar, open Plugins, wait a beat, then open Labs and turn World Clock on.
       expect: |
-        the Space Clock card is listed under Labs (its `dx.config.ts` tags it `labs`) with its toggle off,
-        and turning the toggle on activates it
+        the World Clock card is listed under Labs (its `dx.config.ts` tags it `labs`) with its toggle off,
+        and turning the toggle on activates it (and plugin-map with it, which it depends on)
       note: |
         Enabling is deliberately a second step: the reader sees what the plugin is before it runs, which is
         why the prompt's LoadPlugin call passes `enable: false`.
-    - name: Open the Clock page
-      do: Return to the space and click Clock under the SPACE CLOCK group.
+    - name: Open the Clocks page
+      do: Return to the space and click Clocks under the WORLD CLOCK group.
       expect: |
-        the navtree keeps its own groups (CONTENT, SYSTEM) and gains a SPACE CLOCK group holding Clock; the
-        page opens as an article showing a large clock that ticks every second
+        the navtree keeps its own groups (CONTENT, SYSTEM) and gains a WORLD CLOCK group holding Clocks; the
+        page opens as an article with an equirectangular world map above one clock card for the local
+        timezone (date, ticking time, timezone) and an empty card with a large plus button
       note: |
         An earlier version of the guide taught a rail workspace, and the built plugin replaced the whole
         navtree with its own; the guide now teaches a navtree group.
+    - name: Add two timezones
+      do: Click the plus, pick a timezone from the select and save; do it again with a second timezone.
+      expect: the row shows three clock cards, each ticking in its own timezone, and the plus card after them
+      note: The timezones live on the space's `Clock` object, so they survive a reload.
   after:
     - name: Delete the project
       do: Right-click the "Clock Plugin" project in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
       expect: the project and its tasks leave the navtree
-    - name: Uninstall Space Clock
-      do: Open Plugins, then Labs, open the Space Clock card's detail page and click Uninstall.
-      expect: Space Clock leaves the registry and its SPACE CLOCK group leaves the navtree
+    - name: Uninstall World Clock
+      do: Open Plugins, then Labs, open the World Clock card's detail page and click Uninstall.
+      expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
     - name: Remove the build folders
-      do: Delete `temp/plugins/space-clock` and `out/composer/plugins/space-clock` under the Composer app.
+      do: Delete `temp/plugins/world-clock` and `out/composer/plugins/world-clock` under the Composer app.
       expect: both folders are gone, restoring the `given` for the next run
       note: The autocue flow's first setup step does this and the uninstall before each take.
 ```

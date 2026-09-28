@@ -12,11 +12,11 @@ import { Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { Position } from '@dxos/util';
 
-import { MapSurface, MapViewEditor } from '#containers';
+import { MapSurface, MapViewEditor, WorldMap } from '#containers';
 import { Map } from '#types';
 
 import { LocationAnnotationId } from '../types/MapCapabilities.ts';
-import { MapInline } from '../types/MapRole.ts';
+import { MapInline, World } from '../types/MapRole.ts';
 import { LocationField } from './LocationField.tsx';
 
 export default Capability.makeModule(() =>
@@ -38,6 +38,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.subject(MapInline, Obj.isObject),
         component: MapSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'surface.worldMap',
+        filter: Surface.makeFilter(World),
+        component: WorldMap,
+        props: ({ data: { projection } }) => ({ projection }),
       }),
       // Companion surface for any object that has markers (gated by app-graph-builder, which only
       // emits the `map` companion node when a MarkerProvider matches the primary object).

@@ -413,6 +413,120 @@ Things to know:
 - The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
   same URL.
 
+### Example: data, a form and another plugin's surface
+
+The same plugin grows three things: an ECHO type stored in the space, a form that edits it, and a map drawn by
+another plugin. Only the differences from the example above are shown.
+
+Depend on the plugin whose surface you render; enabling yours then enables it too:
+
+```ts
+// dx.config.ts
+export default Config2.make({
+  plugin: {
+    key: 'org.example.plugin.worldClock',
+    name: 'World Clock',
+    icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'sky' },
+    tags: ['labs'],
+    dependsOn: ['org.dxos.plugin.map'],
+  },
+});
+```
+
+Define the type and register it, so the space can store it:
+
+```tsx
+import * as Schema from 'effect/Schema';
+
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
+
+export class Clock extends Type.makeObject<Clock>(DXN.make('org.example.type.worldClock', '0.1.0'))(
+  Schema.Struct({ timezones: Schema.optional(Schema.Array(Schema.String)) }),
+) {}
+
+// In the pipe, before the other modules:
+Plugin.addModule(AppCapability.schema([Clock])),
+```
+
+A page that needs the space carries it in the node's `data`, and the surface narrows on it:
+
+```tsx
+type Page = { type: typeof PAGE; space: { db: Database.Database } };
+const isPage = (data: unknown): data is Page =>
+  typeof data === 'object' && data !== null && 'type' in data && data.type === PAGE;
+
+// The page node:
+AppGraphNode.make({ id: PAGE, type: `${meta.profile.key}.page`, data: { type: PAGE, space }, properties: { ... } });
+
+// The surface:
+Surface.create({
+  id: 'worldClockArticle',
+  filter: AppSurface.subject(AppSurface.Article, isPage),
+  component: WorldClockArticle,
+  props: ({ data: { subject } }) => ({ db: subject.space.db }),
+});
+```
+
+Query the type, create the object on first view, and change it with `Obj.update`:
+
+```tsx
+const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
+  const [clock] = useQuery(db, Filter.type(Clock));
+  useEffect(() => {
+    if (db && !clock) {
+      db.add(
+        Obj.make(Clock, {
+          timezones: [Intl.DateTimeFormat().resolvedOptions().timeZone],
+        }),
+      );
+    }
+  }, [db, clock]);
+  const add = (timezone: string) =>
+    clock &&
+    Obj.update(clock, (clock) => {
+      clock.timezones = [...(clock.timezones ?? []), timezone];
+    });
+  // ...
+};
+```
+
+A form is a schema; a `Schema.Literals` field renders as a select:
+
+```tsx
+import { Form } from '@dxos/react-ui-form';
+
+const schema = Schema.Struct({
+  timezone: Schema.Literals(Intl.supportedValuesOf('timeZone')).annotate({
+    title: 'Timezone',
+  }),
+});
+
+<Form.Root schema={schema} onSave={({ timezone }) => add(timezone)}>
+  <Form.Content>
+    <Form.Fields />
+    <Form.Actions />
+  </Form.Content>
+</Form.Root>;
+```
+
+Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws a
+plain world map, and `projection` picks the projection (`equirectangular`, `mercator`, `transverse-mercator` or
+`orthographic`):
+
+```tsx
+import * as MapRole from '@dxos/plugin-map/MapRole';
+
+<Surface.Surface
+  type={MapRole.World}
+  data={{ projection: 'equirectangular' }}
+  limit={1}
+/>;
+```
+
+Give the surface a sized container: the map fills its parent, so a parent with no height draws nothing.
+
 ## Command reference
 
 | Command                         | Purpose                                                                                    |
