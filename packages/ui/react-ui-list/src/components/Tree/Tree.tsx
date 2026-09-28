@@ -86,6 +86,12 @@ const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false
  * parent inside it, and a row's `col-[tree-row]` has to resolve against whichever one holds it.
  */
 const TREE_TRACK = '[tree-row-start] minmax(0, 1fr) [tree-row-end]';
+
+/** Sets the block every row sizes its toggle, icon and indent from; a windowed tree's grid lives on its mounted parent. */
+const treeStyle = (compact: boolean, windowed: boolean): CSSProperties & { '--dx-tree-block': string } => ({
+  '--dx-tree-block': compact ? COMPACT_TREE_BLOCK : 'var(--dx-control)',
+  ...(windowed ? {} : { gridTemplateColumns: TREE_TRACK }),
+});
 const TREE_GRID = 'grid gap-0.5';
 
 type TreeWalkState<T extends { id: string }> = {
@@ -815,12 +821,7 @@ export const Tree = <T extends { id: string } = any>({
           // template is applied per row, behind an indent track, rather than here — a subgrid would
           // share one set of tracks down the tree, and padding a subgrid only shrinks its first
           // track, so nested rows could not indent their leading cells.
-          style={
-            {
-              '--dx-tree-block': compact ? COMPACT_TREE_BLOCK : 'var(--dx-control)',
-              ...(windowed ? {} : { gridTemplateColumns: TREE_TRACK }),
-            } as CSSProperties
-          }
+          style={treeStyle(compact, windowed)}
           onPointerDownCapture={handlePointerDownCapture}
           onKeyDown={handleKeyDown}
         >
