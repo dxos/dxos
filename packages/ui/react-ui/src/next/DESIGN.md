@@ -339,6 +339,16 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     icon (still under reduced motion) and sets `aria-busy`, for an async lookup. Values stay strings: Ark collections
     key by string, so SelectField keeps the map back to number literals (AUDIT 2.14).
 
+43. **Toolbar parity.** `Toolbar.Root loop` (on by default) and `disabled` are machine props: a disabled toolbar
+    marks the root `aria-disabled` and its item props add `disabled`, so every Button, Input, Select trigger and
+    ToggleGroup item is disabled and none is a tab stop (a Link gets `aria-disabled` and ignores clicks, since `<a>`
+    has no `disabled`). `Toolbar.Text` is non-item text that takes the free space and truncates. `Toolbar.Link` is a
+    roving item, control-tall with a control's margin and padding so its ring matches a Button's, opening in a new
+    tab like the current `Link`. `Toolbar.DragHandle` is a ghost icon-only Button with the six-dot grip, rendered
+    outside the toolbar's context so it never joins the roving focus (a drag is a pointer gesture, AUDIT 2.6), with
+    no Tooltip and a required `label` (AUDIT 2.10). The `useMenuActions` action-graph binding (`ActionIconButton`,
+    `Toolbar.Menu`) waits for Phase 4, where react-ui-menu moves onto Next Menu.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

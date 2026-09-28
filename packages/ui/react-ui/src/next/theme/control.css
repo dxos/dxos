@@ -503,4 +503,37 @@
   .nx-toolbar > .nx-select > .nx-select-trigger {
     width: fit-content;
   }
+  /* Text takes the free space and truncates, padded like a control so it lines up with a neighbouring Button's label. */
+  .nx-toolbar-text {
+    flex: 1;
+    min-width: 0;
+    padding-inline: var(--nx-gap-size);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* A link is control-tall with a control's inline margin and padding, so its ring matches a Button's. */
+  .nx-toolbar-link {
+    display: inline-flex;
+    align-items: center;
+    height: var(--nx-control-size);
+    margin-inline: var(--nx-control-inset);
+    padding-inline: var(--nx-gap-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    color: var(--color-accent-text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .nx-toolbar-link:hover {
+    color: var(--color-accent-text-hover, var(--color-accent-text));
+    text-decoration: underline;
+  }
+  .nx-toolbar-link[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: default;
+    text-decoration: none;
+  }
+  .nx-button[data-drag-handle] {
+    cursor: grab;
+  }
 }

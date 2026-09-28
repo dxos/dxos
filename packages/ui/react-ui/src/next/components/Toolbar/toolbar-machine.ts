@@ -16,6 +16,8 @@ export type ToolbarProps = {
   orientation?: Orientation;
   /** Wrap from the last item to the first and back. */
   loop?: boolean;
+  /** Disables every item, so the toolbar has no tab stop. */
+  disabled?: boolean;
 };
 
 type Direction = 'next' | 'prev' | 'first' | 'last';
@@ -118,10 +120,13 @@ const isTextEntry = (target: EventTarget | null) =>
 export type ToolbarApi = {
   focusedValue: string | null;
   orientation: Orientation;
+  disabled: boolean;
   getRootProps: () => {
     'id': string;
     'role': 'toolbar';
     'aria-orientation': Orientation;
+    'aria-disabled'?: true;
+    'data-disabled'?: '';
     'data-scope': 'toolbar';
     'data-part': 'root';
     'data-orientation': Orientation;
@@ -129,6 +134,8 @@ export type ToolbarApi = {
   };
   /** No `id`: items are found by `data-toolbar-item`, so a composing machine (Select, Tooltip) keeps its own ids. */
   getItemProps: (options: { value: string; disabled?: boolean }) => {
+    /** Present only while the whole toolbar is disabled, so it never re-enables an item disabled on its own. */
+    'disabled'?: true;
     'tabIndex': number;
     'data-toolbar-item': string;
     'data-value': string;
@@ -140,6 +147,7 @@ export const connect = (service: ToolbarService): ToolbarApi => {
   const { context, prop, scope, send } = service;
   const focusedValue = context.get('focusedValue');
   const orientation = prop('orientation') ?? 'horizontal';
+  const rootDisabled = !!prop('disabled');
   const keys: Record<string, Direction> =
     orientation === 'horizontal'
       ? { ArrowRight: 'next', ArrowLeft: 'prev', Home: 'first', End: 'last' }
@@ -148,10 +156,12 @@ export const connect = (service: ToolbarService): ToolbarApi => {
   return {
     focusedValue,
     orientation,
+    disabled: rootDisabled,
     getRootProps: () => ({
       'id': getRootId(scope),
       'role': 'toolbar',
       'aria-orientation': orientation,
+      ...(rootDisabled && { 'aria-disabled': true as const, 'data-disabled': '' as const }),
       'data-scope': 'toolbar',
       'data-part': 'root',
       'data-orientation': orientation,
@@ -165,8 +175,9 @@ export const connect = (service: ToolbarService): ToolbarApi => {
       },
     }),
     getItemProps: ({ value, disabled }) => ({
+      ...(rootDisabled && { disabled: true as const }),
       // Until an item is known every item stays tabbable, so the toolbar is never unreachable.
-      'tabIndex': disabled ? -1 : focusedValue === null || focusedValue === value ? 0 : -1,
+      'tabIndex': disabled || rootDisabled ? -1 : focusedValue === null || focusedValue === value ? 0 : -1,
       'data-toolbar-item': getRootId(scope),
       'data-value': value,
       'onFocus': () => send({ type: 'ITEM.FOCUS', value }),

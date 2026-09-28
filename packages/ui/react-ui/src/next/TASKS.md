@@ -95,6 +95,8 @@ with Phase 4 milestone 5).
 - [x] **Button and Toggle** — Button `hue`/`caretDown`/`compact`/`tooltipSide`; Toggle `activeIcon`; `Next.ToggleGroup`, `Toolbar.ToggleGroup` (DESIGN.md follow-up 40).
 - [x] **Fields** — Field `validationValence`, `Field.Label srOnly`; Input `start`/`end`, `noAutoFill`, `variant='subdued'` (DESIGN.md follow-up 41).
 - [x] **Select** — `ItemGroup`/`ItemGroupLabel`, `Separator`, `iconHue`, Item children, `multiple`, Trigger `loading`; number values stay strings (DESIGN.md follow-up 42).
+- [x] **Toolbar** — `Text`, `Link`, `DragHandle`, `loop`, `disabled` (DESIGN.md follow-up 43).
+- [ ] **Toolbar action binding** — `useMenuActions` (`ActionIconButton`, `Toolbar.Menu`) on Next Menu; Phase 4 with react-ui-menu.
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
 
