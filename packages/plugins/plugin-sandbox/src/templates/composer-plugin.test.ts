@@ -77,7 +77,7 @@ describe('Composer Plugin (Sandbox) project template', () => {
   test('packages and guide are pinned to the host commit', async ({ expect }) => {
     const { subtasks } = await scaffold('042fcd3');
     expect(subtasks[0].description).toContain('https://pkg.pr.new/dxos/dxos/@dxos/app-framework@042fcd3');
-    expect(subtasks[0].description).not.toContain('@main');
+    expect(subtasks[0].description).not.toContain('@dxos/app-framework@main');
     expect(subtasks[1].description).toContain('https://raw.githubusercontent.com/dxos/dxos/042fcd3/');
   });
 });

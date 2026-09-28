@@ -92,9 +92,16 @@ export const ExposePort = Operation.make({
   },
   input: Schema.Struct({
     sandbox: SandboxRef,
-    port: Schema.Union([Schema.Number, Schema.NumberFromString]).annotate({
-      description: 'Port a process in the sandbox listens on: 1024-65535, except 3000.',
-    }),
+    port: Schema.Union([Schema.Number, Schema.NumberFromString])
+      .check(
+        Schema.isInt(),
+        Schema.isBetween({ minimum: 1024, maximum: 65535 }),
+        // The container's own control plane answers on 3000; the service refuses to expose it.
+        Schema.makeFilter((port: number) => port !== 3000, { message: 'Port 3000 is reserved.' }),
+      )
+      .annotate({
+        description: 'Port a process in the sandbox listens on: 1024-65535, except 3000.',
+      }),
   }),
   output: Schema.Struct({
     url: Schema.String.annotate({
