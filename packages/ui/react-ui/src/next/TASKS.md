@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 2 in progress (FieldSet, Card, Collapsible, Menu, Switch, Tooltip). Uncommitted: none._
+_Resume: Phase 2 complete (FieldSet, Card + Image poster, Collapsible, Menu, Switch, Tooltip); next is landing the PR. Uncommitted: none._
 
 ## Phase 0: Design
 
