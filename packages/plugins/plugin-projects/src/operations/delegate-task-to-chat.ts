@@ -133,9 +133,22 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
+        // The project's companion shows the delegated chat, so opening the Assistant beside the ledger
+        // lands on the session holding the tasks rather than on a fresh, empty one. Best-effort like the
+        // opening turn below: the delegation is durable either way.
+        if (project) {
+          const selected = yield* Operation.invoke(AssistantOperation.SetCurrentChat, {
+            companionTo: project,
+            chat,
+          }).pipe(Effect.exit);
+          if (Exit.isFailure(selected)) {
+            log.warn('delegated chat was not made the companion chat', { cause: Cause.pretty(selected.cause) });
+          }
+        }
+
         // The reader stays where they delegated from — the project's ledger, whose pipeline chart
-        // shows the session as it starts — so the operation does not navigate; the chart's session
-        // lane is the way into the chat.
+        // shows the session as it starts — so the operation does not navigate (it only selects the
+        // companion's chat); the chart's session lane is the way into the chat as a plank.
         //
         // Best-effort and deliberately not fatal: the delegation itself is already durable — the
         // chat exists, carries the task, and is filed under the project — so a host with no agent
