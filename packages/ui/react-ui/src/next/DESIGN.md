@@ -31,7 +31,8 @@
 5. **Grid.** One configurable `Container` replaces `Column`; rails, inner tracks, size and level are inherited, so
    nested components (forms, rows, sections) line up with their parent's gutters without placement helpers.
    - **Props.** `size`, `level`, `gutter` (`rail | inset | sm | md | lg | none | inherit`), `columns` (inner
-     template), `scroll` (`none | vertical | horizontal | both`); all rendered as `data-*` attributes resolved by CSS.
+     template, interior line names only), `layout` (`stack | row`); all rendered as `data-*` attributes resolved by
+     CSS. `stack` places each child across the content track; `row` flows children through the inner tracks.
    - **Named lines.** A gutter Container lays out
      `[full-start] var(--gutter) [content-start] <columns> [content-end] var(--gutter) [full-end]`; children default
      to `content`, opt out with `full`; `Block rail='start|end'` places into the gutter at any depth.
@@ -41,18 +42,22 @@
      Container inheriting gutter and columns uses real `subgrid`, so even content-sized (`auto`) tracks align across
      levels; a Container setting its own gutter/columns starts a fresh template. Only fixed tracks align across
      separate subtrees (e.g. sibling scroll panes).
-   - **Scrolling.** `scroll` makes the Container its own viewport; its gutter tracks are the padding, so the scrollbar
-     sits in the end gutter (`scrollbar-gutter: stable` for native scrollbars). No separate ScrollArea gutter math.
-   - **Responsive.** Template-root Containers set `container-type: inline-size`; below a threshold, `rail` collapses
-     to `inset` and `columns` stack to one track; subgrid descendants follow. Keyed to pane width, not viewport.
+   - **Scrolling.** Composed, not a Container prop: `ScrollArea.Root > ScrollArea.Viewport asChild > Container`.
+     The frame hosts the overlay thumbs and becomes a subgrid when its viewport inherits (detected with `:has`); the
+     viewport's gutter tracks are the padding, so the scrollbar sits in the end gutter. A native bar's width is
+     reserved out of the end track. ScrollArea stays usable for non-grid content.
+   - **Responsive.** Template roots (and non-inheriting scroll frames) set `container-type: inline-size`; below a
+     threshold, `rail` collapses to `inset` and `columns` stack to one track; subgrid descendants follow. Keyed to
+     pane width, not viewport. Inheriting containers must never be query containers: containment disables subgrid.
    - **Mapping.** `Column.Root` → gutter Container; `Column.Row`/`Section` → `gutter='inherit'` Container;
      `Column.Block` → `Block rail`; `Column.Center` → default placement.
 6. **Spacing ownership.** Components own their inline padding; containers own the gaps between children; no component
    sets its own outer margin. `className` passes through as an escape hatch, but needing it is a design smell.
 7. **First milestone.** Rebuild the story components on decisions 2–4 and 6 (Input/Button fill `--block-size`);
    Toolbar gets a zag roving-focus machine so it can claim `role=toolbar`; ARIA fixes (`aria-hidden` icons, labels);
-   storybook play tests assert per-size alignment and roles. Container gains gutter/columns/scroll per decision 5,
-   exercised by a nested-form story (rails, gutter Blocks, scrollbar in the end gutter). No plugin adoption yet.
+   storybook play tests assert per-size alignment and roles. Container gains gutter/columns/layout and a composed
+   ScrollArea per decision 5, exercised by a nested-form story (rails, gutter Blocks, scrollbar in the end gutter).
+   No plugin adoption yet.
 
 ## Spike findings
 
@@ -71,7 +76,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Int
    the frame's `:has(> …)` subgrid detection — scroll composition must target a composable Container.
 6. **`layout` (`stack | row`) is needed.** A stack places each child across the content track; a row flows children
    through the inner tracks, pinning the first non-rail child to `content-start` (`:nth-child(1 of :not([data-rail]))`).
-7. **Scroll API.** Both shapes work. Internal (`scroll` prop) must split one prop set across two elements —
+7. **Scroll API (decided: composed).** Both shapes work. Internal (`scroll` prop) must split one prop set across two elements —
    `classNames` to the frame, `ref`/data attributes to the viewport — and `asChild` becomes ambiguous. Composed
    (`ScrollArea.Root > ScrollArea.Viewport asChild > Container`) keeps one element per part, the frame detects an
    inheriting viewport in CSS (`:has`) with no coupling, and ScrollArea stays usable for non-grid content.

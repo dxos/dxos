@@ -6,6 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode } from 'react';
 import { expect } from 'storybook/test';
 
+import { random } from '@dxos/random';
+
 import { withTheme } from '../../testing/index.ts';
 import { Next } from '../components.tsx';
 import { type Size } from '../sizes.ts';
@@ -13,8 +15,11 @@ import { Block, Container, ScrollArea, SpikeStyles } from './Spike.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
-const LOREM =
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+random.seed(123);
+
+const LOREM = random.lorem.paragraph();
+const PARAGRAPHS = Array.from({ length: 12 }, () => random.lorem.paragraph());
+const MESSAGE = random.lorem.paragraphs(2);
 
 const Icon = ({ icon = 'ph--circle--regular' }: { icon?: string }) => <Next.Icon icon={icon} />;
 
@@ -47,6 +52,19 @@ const Header = ({ testId, children }: { testId: string; children: ReactNode }) =
   </Container>
 );
 
+/** A stack row: the icon sits in the start rail beside the first line while the text wraps in the content track. */
+const Message = ({ testId, children }: { testId: string; children: ReactNode }) => (
+  <Container data-testid={testId}>
+    <Block rail='start' data-testid={`${testId}-rail-start`}>
+      <Icon icon='ph--chat-circle--regular' />
+    </Block>
+    {/* Pads the line box up to the block so the first line centres on the icon. */}
+    <p className='py-[calc((var(--block-size)-var(--line-height))/2)]' data-testid={`${testId}-text`}>
+      {children}
+    </p>
+  </Container>
+);
+
 /** Content shared by both API shapes: sections, rows, a full-bleed band, a nested form and a nested scroll. */
 const Body = () => (
   <>
@@ -56,6 +74,7 @@ const Body = () => (
     </Container>
     <Field id='a' label='Name' testId='row-a' />
     <Field id='b' label='Email' />
+    <Message testId='message'>{MESSAGE}</Message>
     <div data-place='full' className='h-4 bg-accent-surface' data-testid='full-bleed' />
     <Container data-testid='nested'>
       <h2 className='font-medium'>Nested form</h2>
@@ -67,8 +86,8 @@ const Body = () => (
         <Field key={index} id={`s${index}`} label={`Item ${index}`} testId={index === 0 ? 'row-inner' : undefined} />
       ))}
     </Container>
-    {Array.from({ length: 12 }, (_, index) => (
-      <p key={index}>{LOREM}</p>
+    {PARAGRAPHS.map((paragraph, index) => (
+      <p key={index}>{paragraph}</p>
     ))}
   </>
 );
@@ -111,7 +130,7 @@ const DefaultStory = ({ size, width, native, api, debug }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/playground/spike',
+  title: 'ui/react-ui-core/next/spike',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
@@ -145,6 +164,16 @@ const assertAligned = async (root: HTMLElement, { railEnd = true } = {}) => {
   // The scrollbar lives in the end gutter, so the content track ends where the header's does.
   await expect(rect(root, 'paragraph').right).toBeCloseTo(rect(root, 'header-content').right, 0);
   await expect(rect(root, 'full-bleed').left).toBeCloseTo(rect(root, 'header').left, 0);
+  // Wrapped text keeps to the content track, with the icon in the rail beside its first line.
+  const text = rect(root, 'message-text');
+  await expect(rect(root, 'message-rail-start').left).toBeCloseTo(header.left, 0);
+  await expect(text.left).toBeCloseTo(rect(root, 'header-content').left, 0);
+  await expect(text.right).toBeCloseTo(rect(root, 'header-content').right, 0);
+  await expect(text.height).toBeGreaterThan(rect(root, 'message-rail-start').height * 2);
+  const icon = rect(root, 'message-rail-start');
+  const textStyle = getComputedStyle(root.querySelector('[data-testid="message-text"]') ?? root);
+  const firstLine = text.top + parseFloat(textStyle.paddingTop) + parseFloat(textStyle.lineHeight) / 2;
+  await expect(icon.top + icon.height / 2).toBeCloseTo(firstLine, 0);
   const body = root.querySelector<HTMLElement>('[data-testid="body"]');
   await expect(body && body.scrollHeight > body.clientHeight).toBe(true);
 };

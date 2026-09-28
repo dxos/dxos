@@ -57,7 +57,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/playground/experimental',
+  title: 'ui/react-ui-core/next/experimental',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
   parameters: {
