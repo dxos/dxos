@@ -19,6 +19,7 @@ import { buf, bufInit, fromPublicKey } from '@dxos/protocols/buf';
 import {
   Invitation,
   Invitation_AuthMethod,
+  Invitation_Kind,
   Invitation_State,
   Invitation_Type,
   InvitationSchema,
@@ -29,6 +30,7 @@ import {
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common.ts';
 
@@ -126,7 +128,7 @@ export class InvitationsProxy implements Invitations {
               ?.filter((invitation) => this._matchesInvitationContext(invitation))
               .filter((invitation) => !this._invitations.has(invitation.invitationId))
               .forEach((invitation) => {
-                type === QueryInvitationsResponse_Type.CREATED ? this.share(invitation) : this.join(invitation);
+                type === QueryInvitationsResponse_Type.CREATED ? this.#share(invitation) : this.#join(invitation);
               });
             if (existing) {
               type === QueryInvitationsResponse_Type.CREATED
@@ -220,12 +222,29 @@ export class InvitationsProxy implements Invitations {
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
   share(options?: Partial<Invitation>): CancellableInvitation {
-    const invitation: Invitation = { ...this.getInvitationOptions(), ...options };
+    const { observable, created } = this.#share({ ...this.getInvitationOptions(), ...options });
+    if (created) {
+      emitInvitationEvent('client.invitation.create', observable.get());
+      onEverySuccess(observable, (invitation) => emitInvitationEvent('client.invitation.admit', invitation));
+    }
+    return observable;
+  }
+
+  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation {
+    const { observable, created } = this.#join(invitation, deviceProfile);
+    if (created) {
+      onEverySuccess(observable, (joined) => emitInvitationEvent('client.invitation.accept', joined));
+    }
+    return observable;
+  }
+
+  /** Tracks an invitation this peer hosts; `created` is false when it was already tracked. */
+  #share(invitation: Invitation): { observable: CancellableInvitation; created: boolean } {
     this._invitations.add(invitation.invitationId);
 
     const existing = this._created.get().find((created) => created.get().invitationId === invitation.invitationId);
     if (existing) {
-      return existing;
+      return { observable: existing, created: false };
     }
 
     const observable = new CancellableInvitation({
@@ -239,10 +258,14 @@ export class InvitationsProxy implements Invitations {
     });
     this._createdUpdate.emit([...this._created.get(), observable]);
 
-    return observable;
+    return { observable, created: true };
   }
 
-  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation {
+  /** Tracks an invitation this peer accepts; `created` is false when it was already tracked. */
+  #join(
+    invitation: Invitation | string,
+    deviceProfile?: DeviceProfileDocument,
+  ): { observable: AuthenticatingInvitation; created: boolean } {
     if (typeof invitation === 'string') {
       invitation = InvitationEncoder.decode(invitation);
     }
@@ -252,7 +275,7 @@ export class InvitationsProxy implements Invitations {
     const id = invitation.invitationId;
     const existing = this._accepted.get().find((accepted) => accepted.get().invitationId === id);
     if (existing) {
-      return existing;
+      return { observable: existing, created: false };
     }
 
     const observable = new AuthenticatingInvitation({
@@ -279,7 +302,7 @@ export class InvitationsProxy implements Invitations {
     });
     this._acceptedUpdate.emit([...this._accepted.get(), observable]);
 
-    return observable;
+    return { observable, created: true };
   }
 
   private _matchesInvitationContext(invitation: Invitation): boolean {
@@ -291,6 +314,53 @@ export class InvitationsProxy implements Invitations {
     }, true);
   }
 }
+
+const TERMINAL_STATES = new Set([
+  Invitation_State.CANCELLED,
+  Invitation_State.TIMEOUT,
+  Invitation_State.ERROR,
+  Invitation_State.EXPIRED,
+]);
+
+/**
+ * Calls `onSuccess` each time the invitation enters SUCCESS: once for a single-use invitation, once per admitted
+ * guest for a multi-use one. Stops watching when the invitation can no longer succeed again.
+ */
+const onEverySuccess = (observable: CancellableInvitation, onSuccess: (invitation: Invitation) => void) => {
+  let previous = observable.get().state;
+  // The observable replays its current value inside `subscribe`, before `subscription` is assigned.
+  let done = false;
+  let subscription: { unsubscribe: () => void } | undefined = undefined;
+  subscription = observable.subscribe(
+    (invitation) => {
+      if (invitation.state === Invitation_State.SUCCESS && previous !== Invitation_State.SUCCESS) {
+        onSuccess(invitation);
+      }
+      previous = invitation.state;
+      if (
+        TERMINAL_STATES.has(invitation.state) ||
+        (invitation.state === Invitation_State.SUCCESS && !invitation.multiUse)
+      ) {
+        done = true;
+        subscription?.unsubscribe();
+      }
+    },
+    () => subscription?.unsubscribe(),
+    () => subscription?.unsubscribe(),
+  );
+  if (done) {
+    subscription.unsubscribe();
+  }
+};
+
+/** Reports an invitation on the vendor-neutral `trace.events` channel. */
+const emitInvitationEvent = (name: string, invitation: Invitation): void =>
+  trace.events.emit(name, {
+    kind: invitation.kind === Invitation_Kind.DEVICE ? 'device' : 'space',
+    spaceId: invitation.spaceId,
+    authMethod: Invitation_AuthMethod[invitation.authMethod]?.toLowerCase(),
+    multiUse: invitation.multiUse ?? false,
+  });
 
 /** The key bytes behind a context value, for the key types an invitation can carry. */
 const keyBytes = (value: unknown): Uint8Array | undefined => {

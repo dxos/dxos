@@ -17,6 +17,13 @@ import type { SpaceProperties } from './types/index.ts';
  * Public database API.
  */
 // TODO(wittjosiah): Rename Database (not product name).
+export type CreateSpaceOptions = {
+  tags?: string[];
+  membershipPolicy?: MembershipPolicy;
+  /** Who the space is attributed to in `client.space.create`; a space the app makes for itself is `system`. */
+  origin?: Database.Origin;
+};
+
 export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Returns the list of spaces.
@@ -39,7 +46,7 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
    */
   create(
     props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceFeed'>,
-    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+    options?: CreateSpaceOptions,
   ): Promise<Space>;
 
   /**

@@ -15984,9 +15984,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-observability':
-        specifier: workspace:*
-        version: link:../plugin-observability
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
