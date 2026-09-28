@@ -42,7 +42,7 @@ const fanOutMigration = Migration.define({
   from: FanOutParentV1,
   to: FanOutParentV2,
   transform: async (from, context) => {
-    const address = context.ensure(FanOutChildDoc, `${FAN_OUT_MIGRATION_ID}:${from.id}:address`, {
+    const address = await context.ensure(FanOutChildDoc, `${FAN_OUT_MIGRATION_ID}:${from.id}:address`, {
       street: from.employerAddress,
     });
     return { employerAddress: from.employerAddress, address };

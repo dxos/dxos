@@ -3,16 +3,18 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { getDeep } from '@dxos/util';
+import { getDeep, setDeep } from '@dxos/util';
 
+import { META_NAMESPACE, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { isRecord } from './encoded-value.ts';
-import { assignPatch, ensureByConvergenceKey } from './migration-context.ts';
+import { computeGuardedDataWrites, isRecord } from './encoded-value.ts';
+import { type ConvergenceKeyCache, ensureByConvergenceKey } from './migration-context.ts';
 
 //
 // Array fan-out + id-stamping runners (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md` Phase D;
@@ -55,6 +57,9 @@ export const runArrayFanOutMigration = async (
 ): Promise<ReadonlyArray<{ objectId: string; elementIndex: number }>> => {
   const objects: Obj.Unknown[] = await db.query(Filter.type(migration.from)).run();
   const skipped: { objectId: string; elementIndex: number }[] = [];
+  // Shared across every `ensureByConvergenceKey` call in this pass (all against `migration.child`), so
+  // N elements across every matched parent cost one durable query, not N — see `ConvergenceKeyCache`.
+  const childCache: ConvergenceKeyCache = new Map();
 
   for (const object of objects) {
     if (Obj.getTypeURI(object)?.toString() !== migration.fromType.toString()) {
@@ -102,7 +107,7 @@ export const runArrayFanOutMigration = async (
         elementIdValue,
       );
       const childData: Record<string, unknown> = Object.fromEntries(Object.entries(migration.toChild(elementRecord)));
-      const child = ensureByConvergenceKey(db, migration.child, convergenceKey, childData);
+      const child = await ensureByConvergenceKey(db, migration.child, convergenceKey, childData, childCache);
       refs.push(Ref.make(child));
     }
 
@@ -120,26 +125,52 @@ export const runArrayFanOutMigration = async (
 };
 
 /**
- * The one committing step for a fully-resolved array fan-out: writes the collected refs onto
- * `toProperty` and switches `object` to `migration.to`. Leaves `property` (the source array)
- * untouched — kept in place as a retired property, never folded forward: array fan-out relies on the
- * merge engine's convergence-key collapse for late writes, not the single-object fold-forward standing
- * rule (see {@link Migration.ArrayFanOutMigration}'s own doc comment). Two separate automerge changes,
- * not one — a crash between them leaves the refs written but the type still `from`; the next run finds
- * the object by `from` again, recomputes the (now-unchanged, guard-skipped) refs, and completes the
- * type switch, so the window is real but self-healing, per M0-REPORT.md design item 7.
+ * The one committing step for a fully-resolved array fan-out: in a SINGLE automerge change, writes the
+ * collected refs onto `toProperty`, switches `object` to `migration.to`, and records this property's
+ * own {@link Migration.ArrayFanOutMarker} — naming this very change (by `message` + `preHeads`) so a
+ * fold-forward pass can find it later — under its OWN key of {@link Migration.ArrayFanOutMarkerAnnotation}
+ * (never a whole-annotation replace), so splitting a second array property on the same parent never
+ * disturbs the first property's marker. One change, not two: a crash can never leave the refs written
+ * without the marker a fold-forward pass needs, or the type switched without the refs. Leaves
+ * `property` (the source array) untouched — kept in place as a retired property; a late write to it
+ * after this split is not lost, but folded forward by {@link foldArrayFanOutMigration} in
+ * `fold-forward.ts` (M0-REPORT.md design item 5's residual, closed by the "Limit fixes" item 4).
  */
 const applyArrayFanOut = (
   object: Obj.Unknown,
   migration: Migration.ArrayFanOutMigration,
   refs: Ref.Ref<Obj.Unknown>[],
 ): void => {
-  assignPatch(
-    object,
-    { [migration.toProperty]: refs },
-    `migration: array-fan-out ${migration.fromType.toString()} -> ${migration.toType.toString()}`,
+  const core = getObjectCore(object);
+  const mountPath = core.mountPath;
+  const preHeads = A.getHeads(core.getDoc());
+  const message = `migration: array-fan-out ${migration.fromType.toString()} -> ${migration.toType.toString()}`;
+
+  const dataWrites = computeGuardedDataWrites(core, { [migration.toProperty]: refs });
+  const typeRef = EncodedReference.fromURI(migration.toType);
+  const marker = core.encode(
+    Schema.encodeSync(Migration.ArrayFanOutMarkerSchema)({
+      migration: message,
+      preHeads: [...preHeads],
+      property: migration.property,
+      elementId: migration.elementId,
+    }),
   );
-  getObjectCore(object).setType(EncodedReference.fromURI(migration.toType));
+
+  core.change(
+    (doc) => {
+      for (const [key, value] of dataWrites) {
+        setDeep(doc, [...mountPath, DATA_NAMESPACE, key], value);
+      }
+      setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
+      setDeep(
+        doc,
+        [...mountPath, META_NAMESPACE, 'annotations', Migration.ArrayFanOutMarkerAnnotation.key, migration.property],
+        marker,
+      );
+    },
+    { message },
+  );
 };
 
 /**

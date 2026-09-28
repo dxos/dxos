@@ -12,17 +12,23 @@ import {
 } from '@automerge/automerge';
 import * as Option from 'effect/Option';
 
-import { Annotation, type Database, Filter, Lens, Migration, Obj, Query } from '@dxos/echo';
+import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
-import { META_NAMESPACE } from '../core-db/index.ts';
+import { META_NAMESPACE, type ObjectCore } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { computeGuardedDataWrites, encodedValuesEqual, isRecord } from './encoded-value.ts';
 import { resolvePatch } from './fan-in.ts';
-import { createObjectMigrationContext } from './migration-context.ts';
+import {
+  type ConvergenceKeyCache,
+  createObjectMigrationContext,
+  ensureByConvergenceKey,
+  findByConvergenceKey,
+} from './migration-context.ts';
 
 //
 // Fold-forward as a standing rule (Phase C2/C3, `.agents/projects/lenses/IMPLEMENTATION-PLAN.md`
@@ -622,6 +628,371 @@ const foldFanInMigration = async (
   }
 };
 
+//
+// Array fan-out fold-forward (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md` "Limit fixes" item 4;
+// M0-REPORT.md design item 5's residual): an old client can keep writing the kept source array after
+// the split — editing an element's fields, adding a new id'd element, adding an element with no id at
+// all, or removing one — and none of it reached the fanned-out children until now. The marker lives on
+// the PARENT (unlike fan-in's per-child marker), since the source array — not any one child — is what
+// a late write lands on.
+//
+
+/** The message an array fan-out fold-forward write onto a CHILD is stamped with; mirrors {@link foldMessage}. */
+const arrayFanOutFoldMessage = (fromType: string, toType: string): string =>
+  `fold: array-fan-out ${fromType} -> ${toType}`;
+
+/**
+ * Locates the automerge change that split `parent`: the one whose `message` equals the marker's own
+ * `migration` field and whose `deps` are exactly `marker.preHeads` — {@link applyArrayFanOut} (in
+ * `array-fan-out.ts`) authors that change synchronously right after reading `preHeads`, so no other
+ * change on the parent's document can share both. Mirrors {@link findFanInAbsorbHeads}.
+ */
+const findArrayFanOutSplitHeads = (
+  doc: AutomergeDoc<unknown>,
+  marker: Migration.ArrayFanOutMarker,
+): Heads | undefined => {
+  const change = A.getChangesMetaSince(doc, []).find(
+    (candidate) => candidate.message === marker.migration && sameHeadSet(candidate.deps, marker.preHeads),
+  );
+  return change && [change.hash];
+};
+
+/**
+ * Whether the source array property changed between `base` and `current` — the fold-detection
+ * primitive for array fan-out, scoped to one property the same way {@link lateRetiredWrites} scopes to
+ * a retired key, but reporting presence only: every element of the CURRENT array is re-derived from
+ * scratch once any change is found, rather than replayed patch-by-patch.
+ */
+const hasLateArrayWrites = (
+  doc: AutomergeDoc<unknown>,
+  mountPath: readonly (string | number)[],
+  property: string,
+  base: Heads,
+  current: Heads,
+): boolean => {
+  const propertyPath = [...mountPath, DATA_NAMESPACE, property];
+  return A.diff(doc, base, current).some(
+    (patch) =>
+      patch.action !== 'conflict' &&
+      patch.path.length >= propertyPath.length &&
+      propertyPath.every((segment, index) => patch.path[index] === segment),
+  );
+};
+
+/**
+ * An `ObjectCore`'s own creation heads: the frontier right after the earliest change whose diff
+ * touches its `mountPath` — the change that created its entry. Reimplemented here rather than
+ * imported from `deriveCreationHeads` (`@dxos/echo-host`'s `convergence-key-merge.ts`, which
+ * `echo-client` could import without a cycle): that version is keyed to a HOST-side
+ * `DatabaseDirectory`'s fixed `objects.<id>` layout, while an `ObjectCore` addresses its object through
+ * an arbitrary `mountPath` (`[]` for a single-object document in tests, `['objects', id]` in
+ * production) — this is the same mountPath-agnostic frontier-accumulation idiom `getObjectChanges`
+ * (`echo-handler/edit-history.ts`) already uses for exactly this kind of walk.
+ */
+const deriveChildCreationHeads = (core: ObjectCore): Heads | undefined => {
+  const doc = core.getDoc();
+  const mountPath = core.mountPath;
+  let frontier: Heads = [];
+  for (const meta of A.getChangesMetaSince(doc, [])) {
+    const previous = frontier;
+    frontier = [...previous.filter((hash) => !meta.deps.includes(hash)), meta.hash].sort();
+    const patches = A.diff(doc, previous, frontier);
+    if (
+      patches.some(
+        (patch) =>
+          patch.path.length >= mountPath.length && mountPath.every((segment, index) => patch.path[index] === segment),
+      )
+    ) {
+      return frontier;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Appends a ref to `child` onto `parent`'s `toProperty`, at the next index — never a whole-array
+ * replace, so a sibling child ref another peer already wrote (or is concurrently writing) is never
+ * clobbered. Idempotent within one peer's own view: a ref already present for `child` is not
+ * duplicated, though two peers folding the very same late-added element independently can each still
+ * append their own copy before either replicates to the other — {@link dedupeArrayFanOutRefs} is what
+ * collapses that down to one entry once both peers see each other.
+ */
+const appendArrayFanOutRef = (parent: Obj.Unknown, toProperty: string, child: Obj.Unknown): void => {
+  Obj.update(parent, (parent) => {
+    let refs: unknown = Obj.getValue(parent, [toProperty]);
+    if (!Array.isArray(refs)) {
+      Obj.setValue(parent, [toProperty], []);
+      refs = Obj.getValue(parent, [toProperty]);
+    }
+    if (Array.isArray(refs) && !refs.some(Ref.hasEntityId(child.id))) {
+      refs.push(Ref.make(child));
+    }
+  });
+};
+
+/**
+ * The live end of a `mergedInto` redirect chain starting at `id`: an id whose entity has no further
+ * redirect, or that could not be loaded at all (foreign, deleted-and-gone). Durable and
+ * `deleted: 'include'`-scoped — like {@link foldFanInMigration}'s own query — since the loser of a merge
+ * is always tombstoned; a plain default-scoped query would never see it and so could never find its
+ * `mergedInto` field. Cycle-guarded the same way `ObjectCore`'s own private redirect walk is: a repeated
+ * id (corrupt data) stops the walk at the last id seen rather than looping forever.
+ */
+const resolveArrayFanOutRefTarget = async (db: Database.Database, id: string): Promise<string> => {
+  let current = id;
+  const seen = new Set<string>([current]);
+  for (;;) {
+    const [candidate] = await db.query(Query.select(Filter.id(current)).options({ deleted: 'include' })).run();
+    const next = candidate ? getObjectCore(candidate).getMergedInto() : undefined;
+    if (next === undefined || seen.has(next)) {
+      return current;
+    }
+    current = next;
+    seen.add(current);
+  }
+};
+
+/**
+ * Deletes any LATER entry of `toProperty` whose target resolves — directly, or through a `mergedInto`
+ * redirect chain (see {@link resolveArrayFanOutRefTarget}) — to the same live child as an earlier entry.
+ * Never a whole-array replace: one `splice` per duplicate index, from the highest index down so
+ * removing one never shifts another still-pending index out from under it. A duplicate arises when two
+ * peers independently fold-append a ref for the same late-added element before either replicates the
+ * other's write ({@link appendArrayFanOutRef}), or when two elements' children are later merged by the
+ * convergence-key merger. `findOrphanedChildren` is a different diagnostic (a child whose element id the
+ * parent's array no longer shows) and does not cover this case.
+ */
+const dedupeArrayFanOutRefs = async (db: Database.Database, parent: Obj.Unknown, toProperty: string): Promise<void> => {
+  const refs: unknown = Obj.getValue(parent, [toProperty]);
+  if (!Array.isArray(refs) || refs.length < 2) {
+    return;
+  }
+
+  const resolvedIds: (string | undefined)[] = [];
+  for (const ref of refs) {
+    if (!Ref.isRef(ref)) {
+      resolvedIds.push(undefined);
+      continue;
+    }
+    const uri = EID.tryParse(ref.uri);
+    const id = uri && EID.isLocal(uri) ? EID.getEntityId(uri) : undefined;
+    resolvedIds.push(id === undefined ? undefined : await resolveArrayFanOutRefTarget(db, id));
+  }
+
+  const seen = new Set<string>();
+  const duplicateIndexes: number[] = [];
+  for (let index = 0; index < resolvedIds.length; index++) {
+    const id = resolvedIds[index];
+    if (id === undefined) {
+      continue;
+    }
+    if (seen.has(id)) {
+      duplicateIndexes.push(index);
+    } else {
+      seen.add(id);
+    }
+  }
+  if (duplicateIndexes.length === 0) {
+    return;
+  }
+
+  Obj.update(parent, (parent) => {
+    const refs: unknown = Obj.getValue(parent, [toProperty]);
+    if (!Array.isArray(refs)) {
+      return;
+    }
+    for (const index of [...duplicateIndexes].sort((left, right) => right - left)) {
+      refs.splice(index, 1);
+    }
+  });
+};
+
+/**
+ * Folds one element of the CURRENT source array forward: an element whose child already exists gets
+ * `toChild(element)` recomputed and the difference folded into that CHILD, at the child's OWN creation
+ * heads, so a direct edit to the child made since fold concurrently rather than being overwritten — the
+ * array-fan-out counterpart of {@link foldFanInChild}. An element whose child does not exist yet (added
+ * by an old client after the split, but already carrying a stable id) has one created now
+ * ({@link ensureByConvergenceKey}) and its ref appended. Never throws: a missing child core or foreign
+ * creation heads is logged and left for the next pass.
+ *
+ * `childCache` folds every element's lookup into one durable query per parent-fold ({@link
+ * findByConvergenceKey}/{@link ensureByConvergenceKey} share it against `migration.child`), never
+ * `runSync`'s local working set, which reflects only objects THIS session itself created or already
+ * loaded — too little for a child another peer's earlier pass created, or one this session created in
+ * an earlier, separate `runMigrations` call.
+ */
+const foldArrayFanOutElement = async (
+  db: Database.Database,
+  migration: Migration.ArrayFanOutMigration,
+  parent: Obj.Unknown,
+  elementId: string,
+  element: Record<string, unknown>,
+  childCache: ConvergenceKeyCache,
+): Promise<void> => {
+  const convergenceKey = Migration.makeArrayFanOutConvergenceKey(
+    migration.fromType.toString(),
+    parent.id,
+    migration.childRole ?? migration.property,
+    elementId,
+  );
+  const recomputed: Record<string, unknown> = Object.fromEntries(Object.entries(migration.toChild(element)));
+  const existingChild = await findByConvergenceKey(db, migration.child, convergenceKey, childCache);
+
+  if (!existingChild) {
+    // Added late by an old client that already knew how to stamp an id, but never learned `toType` —
+    // its write never reaches a child until a fold-forward pass creates one.
+    const child = await ensureByConvergenceKey(db, migration.child, convergenceKey, recomputed, childCache);
+    appendArrayFanOutRef(parent, migration.toProperty, child);
+    return;
+  }
+
+  const childCore = getObjectCore(existingChild);
+  const creationHeads = deriveChildCreationHeads(childCore);
+  if (!creationHeads) {
+    log.warn('foldForward: could not derive creation heads for an array fan-out child', { child: existingChild.id });
+    return;
+  }
+
+  const dataWrites = computeGuardedDataWrites(childCore, recomputed);
+  if (dataWrites.size === 0) {
+    return;
+  }
+  childCore.foldAt(
+    creationHeads,
+    (data) => {
+      for (const [key, value] of dataWrites) {
+        data[key] = value;
+      }
+    },
+    {
+      message: arrayFanOutFoldMessage(migration.fromType.toString(), migration.toType.toString()),
+      scope: `array-fan-out:${parent.id}:${elementId}`,
+    },
+  );
+};
+
+/**
+ * Folds one split parent's source array forward if it changed since the split (or the last fold) —
+ * see the module doc comment for each element case. An element with no id yet is left alone (logged):
+ * the next id-stamping pass covers it (see `runStampElementIdsMigration`'s own doc comment on covering
+ * already-split parents), and the fold-forward pass after that picks it up once it has one. A removed
+ * element is simply absent from the current array and so never visited here — its child is neither
+ * deleted nor folded, left exactly as {@link findOrphanedChildren} expects to find (and report) it.
+ * `marker` is THIS migration's own property's marker, already picked out of the parent's per-property
+ * map by the caller — see {@link Migration.getArrayFanOutMarkers}.
+ */
+const foldArrayFanOutParent = async (
+  db: Database.Database,
+  migration: Migration.ArrayFanOutMigration,
+  parent: Obj.Unknown,
+  marker: Migration.ArrayFanOutMarker,
+): Promise<void> => {
+  const core = getObjectCore(parent);
+  const doc = core.getDoc();
+  const mountPath = core.mountPath;
+
+  if (!A.hasHeads(doc, [...marker.preHeads])) {
+    log.warn('foldForward: skipping array fan-out parent with foreign split heads', { parent: parent.id });
+    return;
+  }
+
+  const splitHeads = findArrayFanOutSplitHeads(doc, marker);
+  if (!splitHeads) {
+    log.warn('foldForward: could not locate the split change for an array fan-out parent', { parent: parent.id });
+    return;
+  }
+
+  const base: Heads = marker.foldedAt ? [...marker.foldedAt] : splitHeads;
+  if (!A.hasHeads(doc, base)) {
+    log.warn('foldForward: skipping array fan-out parent with a foreign fold checkpoint', { parent: parent.id });
+    return;
+  }
+
+  const currentHeads = A.getHeads(doc);
+  if (hasLateArrayWrites(doc, mountPath, marker.property, base, currentHeads)) {
+    const items: unknown = Obj.getValue(parent, [marker.property]);
+    if (Array.isArray(items)) {
+      // Shared across every element of THIS pass — one durable query per parent-fold, not one per
+      // element (see `foldArrayFanOutElement`'s own doc comment on `childCache`).
+      const childCache: ConvergenceKeyCache = new Map();
+      for (const item of items) {
+        if (!isRecord(item)) {
+          continue;
+        }
+        const elementIdValue = item[marker.elementId];
+        if (typeof elementIdValue !== 'string') {
+          log.info('foldForward: array fan-out element has no stable id yet, leaving it for the stamping migration', {
+            parent: parent.id,
+          });
+          continue;
+        }
+        await foldArrayFanOutElement(db, migration, parent, elementIdValue, item, childCache);
+      }
+    }
+
+    // Ordinary (non-fold) write, advanced in place under THIS property's own key — never a
+    // whole-annotation (or whole-marker) replace, so a sibling property's marker (or a concurrent
+    // peer's identical checkpoint) is never disturbed.
+    const markerPath = [
+      ...mountPath,
+      META_NAMESPACE,
+      'annotations',
+      Migration.ArrayFanOutMarkerAnnotation.key,
+      marker.property,
+    ];
+    const foldedAt = core.encode([...A.getHeads(core.getDoc())]);
+    core.change((doc) => {
+      setDeep(doc, [...markerPath, 'foldedAt'], foldedAt);
+    });
+  }
+
+  // Independent of whether the source array itself changed this pass: a duplicate ref can arrive via
+  // replication alone (a peer's own append, or a merge collapsing two children) with no corresponding
+  // write to `property` on THIS peer.
+  await dedupeArrayFanOutRefs(db, parent, migration.toProperty);
+};
+
+/**
+ * Folds every split parent of one {@link Migration.ArrayFanOutMigration} forward — see
+ * {@link foldArrayFanOutParent}. Queried by `toType`, like an ordinary object migration: a split parent
+ * keeps its identity (never tombstoned), just a new type. Tracks visited parents in a set local to THIS
+ * migration (not the caller's shared `processed`): two different `ArrayFanOutMigration`s can share a
+ * `toType` while fanning out two DIFFERENT properties of the same parent, each under its own marker key
+ * (see {@link Migration.getArrayFanOutMarkers}), and each must still get its own fold pass over that
+ * parent.
+ */
+const foldArrayFanOutMigration = async (
+  db: Database.Database,
+  migration: Migration.ArrayFanOutMigration,
+  options: FoldForwardOptions,
+): Promise<void> => {
+  const visited = new Set<string>();
+  const parents: Obj.Unknown[] = await db.query(Filter.type(migration.toType)).run();
+  for (const parent of parents) {
+    if (options.objectIds && !options.objectIds.has(parent.id)) {
+      continue;
+    }
+    if (visited.has(parent.id)) {
+      continue;
+    }
+    visited.add(parent.id);
+    const markerMapOption = Annotation.get(parent, Migration.ArrayFanOutMarkerAnnotation);
+    if (Option.isNone(markerMapOption)) {
+      continue; // Not yet split -- `runArrayFanOutMigration` handles a still-live `from` parent, not this pass.
+    }
+    const marker = Migration.getArrayFanOutMarkers(markerMapOption.value)[migration.property];
+    if (!marker) {
+      continue; // A marker exists for a DIFFERENT property of this parent, not this migration's.
+    }
+    try {
+      await foldArrayFanOutParent(db, migration, parent, marker);
+    } catch (err) {
+      log.warn('foldForward: failed to fold an array fan-out parent forward', { parent: parent.id, err });
+    }
+  }
+};
+
 /** Options for {@link foldForwardMigrations}. */
 export type FoldForwardOptions = {
   /** Restricts the pass to these objects, so an update-triggered pass skips unchanged history. */
@@ -635,7 +1006,9 @@ export type FoldForwardOptions = {
  * exactly one of them in practice); {@link foldObject} then walks its WHOLE step chain, not just the
  * step belonging to the migration whose query found it. Rename migrations carry no marker and are
  * skipped. A {@link Migration.FanInMigration} is folded via {@link foldFanInMigration} instead — its
- * children live under a different type (`fromType`, not `toType`) and are tombstoned, not renamed.
+ * children live under a different type (`fromType`, not `toType`) and are tombstoned, not renamed. A
+ * {@link Migration.ArrayFanOutMigration} is folded via {@link foldArrayFanOutMigration}: its marker
+ * lives on the split PARENT (a `toType` object, like an ordinary object migration), not on any child.
  */
 export const foldForwardMigrations = async (
   db: Database.Database,
@@ -662,6 +1035,8 @@ export const foldForwardMigrations = async (
       }
     } else if (Migration.isFanInMigration(migration)) {
       await foldFanInMigration(db, migration, processed, options);
+    } else if (Migration.isArrayFanOutMigration(migration)) {
+      await foldArrayFanOutMigration(db, migration, options);
     }
   }
 };

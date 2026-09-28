@@ -151,7 +151,7 @@ describe('migration runner: ensure is idempotent across a crash between ensure a
       to: CrashSourceV2,
       transform: async (from, context) => {
         attempts += 1;
-        context.ensure(CrashChildDoc, `crash-resume:${from.id}:child`, { note: 'child note' });
+        await context.ensure(CrashChildDoc, `crash-resume:${from.id}:child`, { note: 'child note' });
         if (attempts === 1) {
           throw new Error('simulated crash: after ensure, before the source change lands');
         }
@@ -186,5 +186,45 @@ describe('migration runner: ensure is idempotent across a crash between ensure a
     // not even re-invoke `transform`.
     await db.runMigrations([crashOnceMigration]);
     expect(attempts).toBe(2);
+  });
+
+  test('ensure durably finds a child created before a peer reload, in a wholly separate runMigrations call', async () => {
+    builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [CrashSourceV1, CrashSourceV2, CrashChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const source = db.add(Obj.make(CrashSourceV1, { name: 'Ada' }));
+    await db.flush();
+
+    // Throws on every attempt, so the source never switches type and a later call re-executes
+    // `transform` from scratch — the retry this time crosses a peer reload (a wholly separate
+    // `EchoDatabase`/query-cache instance) rather than happening in the same session, unlike the
+    // same-session crash-resume test above.
+    const alwaysCrashMigration = Migration.define({
+      from: CrashSourceV1,
+      to: CrashSourceV2,
+      transform: async (from, context) => {
+        await context.ensure(CrashChildDoc, `reload-resume:${from.id}:child`, { note: 'child note' });
+        throw new Error('simulated crash: after ensure, before the source change lands');
+      },
+    });
+
+    await expect(db.runMigrations([alwaysCrashMigration])).rejects.toThrow(/simulated crash/);
+    const childrenBeforeReload = await db.query(Filter.type(CrashChildDoc)).run();
+    expect(childrenBeforeReload).toHaveLength(1);
+    // The reload below simulates a real crash: only what is durably flushed survives it.
+    await db.flush();
+
+    await peer.reload();
+    const db2 = await peer.openLastDatabase();
+
+    // `ensure`'s durable find must see the child an earlier, now-gone session created rather than
+    // minting a duplicate — a `runSync`-backed find could not, since nothing in THIS session's local
+    // working set ever created it.
+    await expect(db2.runMigrations([alwaysCrashMigration])).rejects.toThrow(/simulated crash/);
+
+    const childrenAfterReload = await db2.query(Filter.type(CrashChildDoc)).run();
+    expect(childrenAfterReload).toHaveLength(1);
+    expect(childrenAfterReload[0].id).toBe(childrenBeforeReload[0].id);
   });
 });

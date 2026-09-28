@@ -95,18 +95,22 @@ export type ObjectMigrationContext = {
   db: Database.Database;
 
   /**
-   * Finds the object of `type` whose `meta.convergenceKey` equals `convergenceKey` (checked over the
-   * local working set — there is no `Filter` for a convergence key), or creates one with a random id
-   * and that key. Idempotent by construction: a re-run of the same `transform` finds the object it (or
-   * a duplicate independently minted by another peer, once collapsed by the merge engine's
-   * creation-heads replay) already created. Callers must namespace `convergenceKey` by the migration,
-   * e.g. `` `${migrationId}:${sourceId}:${role}` ``, so two unrelated fan-outs never collide.
+   * Finds the object of `type` whose `meta.convergenceKey` equals `convergenceKey` — a durable query
+   * (there is no `Filter` for a convergence key, so every candidate of `type` is read and matched),
+   * never the local working set alone: a working-set-only check cannot see a child an EARLIER, separate
+   * `runMigrations`/`foldForward` call created once this session's in-memory query cache has moved on
+   * (confirmed empirically — the gap this async signature closes), nor one created before a crash or
+   * reload. Creates one with a random id and that key when none is found. Idempotent by construction: a
+   * re-run of the same `transform` finds the object it (or a duplicate independently minted by another
+   * peer, once collapsed by the merge engine's creation-heads replay) already created. Callers must
+   * namespace `convergenceKey` by the migration, e.g. `` `${migrationId}:${sourceId}:${role}` ``, so two
+   * unrelated fan-outs never collide.
    */
   ensure<To extends Type.AnyObj>(
     type: To,
     convergenceKey: string,
     data: EnsureData<To>,
-  ): Ref.Ref<Type.InstanceType<To>>;
+  ): Promise<Ref.Ref<Type.InstanceType<To>>>;
 
   /**
    * Applies a value-compare-guarded patch to `target` — another object, not the one the enclosing
@@ -649,6 +653,89 @@ export const defineArrayFanOut = <From extends Type.AnyObj, To extends Type.AnyO
     childRole: options.childRole,
   };
 };
+
+/**
+ * One property's array-fan-out record, recorded on the PARENT by the array-fan-out runner
+ * (`runArrayFanOutMigration` in `@dxos/echo-client`) in the SAME change as that property's `toProperty`
+ * refs and the type switch, mirroring {@link FanInMarkerSchema}'s combination of state into one write.
+ * `migration` doubles as that change's own `message`, so a fold-forward pass locates it by message +
+ * `deps`, the same way {@link MigrationMarkerAnnotation}'s steps and {@link FanInMarkerSchema} locate
+ * their own change; `preHeads` is the parent's frontier immediately before that change.
+ */
+export const ArrayFanOutMarkerSchema = Schema.Struct({
+  /** `` `array-fan-out: <fromType> -> <toType>` `` — also the split change's own `message`. */
+  migration: Schema.String,
+  /** The parent's own automerge heads immediately before the split change. */
+  preHeads: Schema.Array(Schema.String),
+  /** Name of the source array property this marker covers. */
+  property: Schema.String,
+  /** Name of the stable per-element id field on the array's element schema. */
+  elementId: Schema.String,
+  /**
+   * Parent heads through which a fold-forward pass has already folded late array writes. Absent
+   * until the first late write folds; advanced in place (never a whole-annotation replace) so a
+   * concurrent write to a sibling field of this same marker is never disturbed.
+   */
+  foldedAt: Schema.optional(Schema.Array(Schema.String)),
+});
+
+/**
+ * A split parent's array-fan-out record for one property — see {@link ArrayFanOutMarkerSchema}.
+ */
+export type ArrayFanOutMarker = Schema.Schema.Type<typeof ArrayFanOutMarkerSchema>;
+
+/** Current marker shape: every fanned-out property's own marker, keyed by property name. */
+const ArrayFanOutMarkerMapSchema = Schema.Record(Schema.String, ArrayFanOutMarkerSchema);
+
+/**
+ * A marker written before per-property keying: one property's marker fields directly at the top level,
+ * with no property-keyed wrapper. Distinguished from {@link ArrayFanOutMarkerMapSchema} by shape alone
+ * (neither has a tag) — the same technique {@link MigrationMarkerSchema} uses for its own chained-vs-bare
+ * shapes — which is unambiguous here too: a legacy marker's own fields (`migration`, a string; `preHeads`,
+ * a string array; ...) never validate as a `Record<string, ArrayFanOutMarker>`, whose values must
+ * themselves be whole marker structs.
+ */
+const ArrayFanOutMarkerValueSchema = Schema.Union([ArrayFanOutMarkerMapSchema, ArrayFanOutMarkerSchema]);
+
+/**
+ * Value of {@link ArrayFanOutMarkerAnnotation}. Read it through {@link getArrayFanOutMarkers}, never by
+ * shape, so a legacy single-property marker and a property-keyed one are handled alike.
+ */
+export type ArrayFanOutMarkerValue = Schema.Schema.Type<typeof ArrayFanOutMarkerValueSchema>;
+
+/**
+ * Per-parent marker map left in `EntityMeta.annotations` by the array-fan-out runner, so a fold-forward
+ * pass can find a split parent and replay any write to a source array that landed after its split
+ * (M0-REPORT.md design item 5's residual: late writes to the kept source array after the split). Keyed
+ * by property name so a parent that fans out more than one array property keeps one marker per property
+ * — the runner writes only ITS OWN property's key (never the whole map), so splitting a second property
+ * never disturbs the first's marker.
+ */
+export const ArrayFanOutMarkerAnnotation = Annotation.make<ArrayFanOutMarkerValue>({
+  id: 'org.dxos.annotation.arrayFanOutMarker',
+  schema: ArrayFanOutMarkerValueSchema,
+});
+
+/**
+ * Type-guards a decoded {@link ArrayFanOutMarkerValue} to the pre-keying bare-marker shape. A plain
+ * `'migration' in value` check does not narrow here — Effect's `Schema.Record` branch has an index
+ * signature, which structurally admits a `migration` key too, so `value.property` would still read as
+ * `ArrayFanOutMarker | string` afterwards; a real type predicate (never a cast to a branded type) is
+ * what TypeScript actually narrows on. Widening to a plain shape to read one optional field is the same
+ * idiom {@link isMigration} already uses for its own tag check.
+ */
+const isBareArrayFanOutMarker = (value: ArrayFanOutMarkerValue): value is ArrayFanOutMarker => {
+  const candidate = value as { migration?: unknown };
+  return typeof candidate.migration === 'string';
+};
+
+/**
+ * Normalizes a decoded {@link ArrayFanOutMarkerValue} to its per-property map: a pre-keying marker
+ * decodes as a bare {@link ArrayFanOutMarker} (no property-keyed wrapper), which is exactly as valid a
+ * length-1 map as one written by the current runner.
+ */
+export const getArrayFanOutMarkers = (value: ArrayFanOutMarkerValue): Readonly<Record<string, ArrayFanOutMarker>> =>
+  isBareArrayFanOutMarker(value) ? { [value.property]: value } : value;
 
 /**
  * The convergence key {@link defineArrayFanOut}'s runner mints for one element's child, and the
