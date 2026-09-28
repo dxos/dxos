@@ -718,9 +718,8 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-          {/* The same surface and border as the prompt below, so the two read as one shell. Sized to
-              its rows up to five tasks plus the edit strip; only a longer list scrolls. */}
-          <ChatTaskList classNames='shrink-0 max-h-[calc(6*2rem+1px)] dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
+          {/* The same surface and border as the prompt below, so the two read as one shell. */}
+          <ChatTaskList classNames='shrink-0 dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
@@ -744,6 +743,9 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 //
 
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
+
+/** Rows the chat's checklist shows before it scrolls. */
+const CHAT_TASK_ROWS = 4;
 
 const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
@@ -831,7 +833,8 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
       getTaskActions={getTaskActions}
     >
       <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
-        <TaskList.Viewport>
+        {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
+        <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />
         </TaskList.Viewport>
         {/* What the agent is blocked on, under the list it asked about: the list itself carries no

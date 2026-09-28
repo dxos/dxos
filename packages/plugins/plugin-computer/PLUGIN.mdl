@@ -8,6 +8,9 @@ Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash 
 multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
 that runs a shell script under a configured root. Nothing is mounted outside a vite server.
 
+It also contributes the **Composer Plugin** project template: a project whose agent uses these tools to
+build a TypeScript Composer plugin on this machine and offer it back to load (QA-2).
+
 ## Extensions
 
 | Term | URI                        |
@@ -96,4 +99,107 @@ test QA-1: Run a shell command and apply an edit
       do: Ask the assistant to delete the scratch file.
       invoke: org.dxos.operation.computer.runBash { script: "rm -f qa-computer-scratch.txt" }
       expect: the file no longer exists under the harness root
+```
+
+```mdl
+test QA-2: Build a plugin with an agent from the Composer Plugin project template
+  desc: |
+    The demo script for the Composer Plugin project template (`src/templates/composer-plugin.ts`): an agent
+    works one parent task and its four subtasks on this machine — read the guide, write a TypeScript plugin,
+    build it, offer it — and the reader loads the result. The plugin adds a "World Clock" group to each
+    space's navtree with a "Clocks" page under it: a world map from plugin-map above a row of live clocks,
+    kept in a `Clock` ECHO object. Walked by the autocue flow
+    `packages/plugins/plugin-computer/autocue/composer-plugin.mjs`.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open (the default "My Space" is fine)
+    - Composer is a bundled build served by `vite preview` on :4173 against EDGE preview — loading by URL
+      needs the bundle's import map, and EDGE production rejects the AI requests
+    - plugin-projects and Coding (Dev) are enabled; the template is contributed by Coding (Dev), so the
+      create dialog offers it only when that plugin is on
+    - the Assistant's default remote model is DeepSeek V4 Pro
+    - no plugin named "World Clock" is loaded, no "Composer Plugin" project is left from an earlier run, and
+      `temp/plugins/world-clock` and `out/composer/plugins/world-clock` do not exist, so the agent starts from
+      an empty folder (the autocue flow's first setup step restores all of this)
+  steps:
+    - name: Create a project from the Composer Plugin template
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "World Clock" and click Create, then open the project's folder in the navtree.
+      capture: project
+      expect: a "World Clock" project opens, and its navtree folder shows what it holds
+    - name: Open the project's tasks
+      do: Click the project's Tasks tab.
+      expect: |
+        one parent task, "Build the World Clock plugin", with four subtasks under it, all to do — read the
+        guide, write the plugin, typecheck and build, offer it
+    - name: Select the parent task and assign it to the agent
+      do: Tick the parent task's checkbox, then click "Assign selected tasks to agent".
+      expect: |
+        the project's pipeline chart appears and a chat named "Build the World Clock plugin" holds the parent
+        and its four subtasks
+      note: Delegating a parent hands over its whole subtree (DelegateTaskToChat collects it), parent first.
+    - name: Open the agent session
+      do: Open the plank's companion and pick its Assistant tab.
+      expect: the companion shows the delegated chat, already working from its opening turn
+    - name: Show the chat's tasks, then hide them
+      do: Click the prompt's tasks toggle, leave the checklist open for a few seconds, then close it.
+      expect: the checklist lists the parent task and its four subtasks
+      note: The checklist starts collapsed (it is the assistant's working state), so it is opened on purpose.
+    - name: Open the Trace panel
+      do: Click Trace in the right rail.
+      expect: the Trace panel opens pinned to its latest entries, which follow the agent's work
+    - name: Select each task in turn
+      do: Click each of the first four task rows in the project, a second apart.
+      expect: the companion follows the selection, showing each task's detail
+    - name: Return to the chat
+      do: Pick the companion's Assistant tab.
+      expect: the delegated chat is back, still working
+    - name: Wait for the agent to offer the plugin
+      do: Watch the subtasks tick off.
+      expect: all five tasks are done and the chat shows a "Load plugin" prompt naming World Clock
+      note: |
+        Takes up to twenty minutes. The model matters: with Composer's stock default (Claude Sonnet 5) the
+        delegated chat stayed silent, which is why `given` sets DeepSeek V4 Pro.
+    - name: Load the plugin
+      do: Click Load on the prompt.
+      expect: World Clock loads without an error toast, but stays off — the prompt only loads it
+    - name: Enable the plugin in the registry
+      do: Close the companion and the context sidebar, open Plugins, wait a beat, then open Labs and turn World Clock on.
+      expect: |
+        the World Clock card is listed under Labs (its `dx.config.ts` tags it `labs`) with its toggle off,
+        and turning the toggle on activates it (and plugin-map with it, which it depends on)
+      note: |
+        Enabling is deliberately a second step: the reader sees what the plugin is before it runs, which is
+        why the prompt's LoadPlugin call passes `enable: false`.
+    - name: Open the Clocks page
+      do: Return to the space and click Clocks under the WORLD CLOCK group.
+      expect: |
+        the navtree keeps its own groups (CONTENT, SYSTEM) and gains a WORLD CLOCK group holding Clocks; the
+        page opens as an article with an equirectangular world map above one clock card for the local
+        timezone (date, ticking time, timezone) and an empty card of the same size with a large plus button
+      note: |
+        An earlier version of the guide taught a rail workspace, and the built plugin replaced the whole
+        navtree with its own; the guide now teaches a navtree group.
+    - name: Add two timezones
+      do: Click the plus, pick a timezone from the select and save; do it again with a second timezone.
+      expect: the row shows three clock cards sorted west to east, each ticking in its own timezone, with a pin on the map, and the plus card after them
+      note: The timezones live on the space's `Clock` object, so they survive a reload.
+    - name: Select the clocks on the map, then on the globe
+      do: Click each clock in turn, then switch the map to the globe and click each clock again.
+      expect: |
+        the selected clock's card is outlined and its pin is highlighted; on the globe the earth turns about
+        its axis to the selected clock's meridian
+  after:
+    - name: Delete the project
+      do: Right-click the "World Clock" project in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
+      expect: the project and its tasks leave the navtree
+    - name: Uninstall World Clock
+      do: Open Plugins, then Labs, open the World Clock card's detail page and click Uninstall.
+      expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
+    - name: Remove the build folders
+      do: Delete `temp/plugins/world-clock` and `out/composer/plugins/world-clock` under the Composer app.
+      expect: both folders are gone, restoring the `given` for the next run
+      note: The autocue flow's first setup step does this and the uninstall before each take.
 ```

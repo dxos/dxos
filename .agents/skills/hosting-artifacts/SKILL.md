@@ -7,7 +7,7 @@ description: >-
   commit-and-delete, a bundle to hand to a teammate — and use it INSTEAD of committing a binary to make
   it visible in a PR. Works in the cloud sandbox: it needs only `R2_ACCESS_KEY_ID` /
   `R2_SECRET_ACCESS_KEY`, no wrangler and no dependencies. For producing the recording in the first
-  place, see `recording-demos`.
+  place, see `autocue`.
 ---
 
 # Hosting artifacts
@@ -18,7 +18,7 @@ a bucket that serves it over plain HTTPS, and link that URL.
 
 Reach for it when:
 
-- a demo video needs to be watchable from the PR ([[recording-demos]] produces the file; this ships it);
+- a demo video needs to be watchable from the PR ([[autocue]] produces the file; this ships it);
 - a still or contact sheet would otherwise be committed and deleted to get a `raw.githubusercontent.com`
   URL — that trick still works and is fine, but this is simpler and leaves no commit;
 - a log bundle or profile needs to go to a teammate or a Linear ticket.
@@ -166,7 +166,7 @@ deserves to know what they are clicking; a bare URL tells them nothing.
 
 The image embed works from any absolute HTTPS URL and needs nothing special. So when the thing being
 shown is a _state_ rather than a _sequence_, publish a still or a contact sheet and embed it — it renders
-inline for everyone with no click at all. That is the reason [[recording-demos]] tells you to prefer a
+inline for everyone with no click at all. That is the reason [[autocue]] tells you to prefer a
 still in the first place, and it is the closest thing to an inline demo you can actually automate.
 
 ### There is no inline player, and it is not worth chasing

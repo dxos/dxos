@@ -76,7 +76,7 @@ const AccordionRoot = <T extends AccordionItemRecord>({
         value={value}
         defaultValue={defaultValue}
         onValueChange={onValueChange && ((details) => onValueChange(details.value))}
-        className={tx('accordion.root', { rounded }, classNames)}
+        className={tx('accordion.root', { border, rounded }, classNames)}
       >
         {children?.({ items: items ?? [] })}
       </AccordionPrimitive.Root>

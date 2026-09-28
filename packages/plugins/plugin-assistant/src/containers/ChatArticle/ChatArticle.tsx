@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Flex, Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
@@ -130,18 +130,19 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 {/** Floating info. */}
                 {!mobile && (
                   <div
-                    className='absolute bottom-0 left-0 right-0 dx-document grid grid-cols-[1fr_auto] gap-2 px-3 pb-2'
+                    className='absolute bottom-0 left-0 right-0 dx-document grid grid-cols-[minmax(0,1fr)_auto] gap-2 px-3 pb-2'
                     data-testid='assistant.chat-status'
                   >
                     <div className='col-span-2'>
                       <ChatComponent.Queue classNames='flex justify-end' />
                     </div>
-                    <div className='flex items-center'>
+                    {/* `min-w-0` so the activity line truncates in its column instead of widening it. */}
+                    <Flex align='center' classNames='min-w-0'>
                       <ChatComponent.Activity />
-                    </div>
-                    <div className='flex justify-end'>
+                    </Flex>
+                    <Flex justify='end'>
                       <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
-                    </div>
+                    </Flex>
                   </div>
                 )}
               </div>

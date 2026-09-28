@@ -156,6 +156,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   mountedRef: MutableRefObject<boolean>;
   /** Draw a vertical guide down the left of each open branch's children, under the branch's toggle. */
   indentGuides: boolean;
+  /** Width of one level's indent: a block, or half of one in a `compact` tree. */
+  indentStep: string;
   /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
   windowed: boolean;
   /**

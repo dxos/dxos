@@ -50,7 +50,7 @@ import {
 import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
-import { DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
+import { COMPACT_INDENT, DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
 import {
   type RowUnit,
   flattenRowUnits,
@@ -324,6 +324,8 @@ export type TreeProps<T extends { id: string } = any> = {
    * element spans them; each row draws a segment per ancestor instead, and the segments join up.
    */
   indentGuides?: boolean;
+  /** Indent each level by half the usual step, for a dense tree such as the navtree. */
+  compact?: boolean;
   /**
    * The element that scrolls the tree, when the consumer owns one.
    *
@@ -383,6 +385,7 @@ export const Tree = <T extends { id: string } = any>({
   hideDragSource = false,
   virtualize = false,
   indentGuides = false,
+  compact = false,
   scrollerRef,
   canSelect,
   onOpenChange,
@@ -778,6 +781,7 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       mountedRef,
       indentGuides,
+      indentStep: compact ? COMPACT_INDENT : TREE_BLOCK,
       windowed,
       disclosure,
       claimFocus,
@@ -803,6 +807,7 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       indentGuides,
+      compact,
       windowed,
       disclosure,
       claimFocus,
@@ -1033,7 +1038,7 @@ TreeNodeRow.displayName = 'Tree.NodeRow';
  * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef, indentGuides, toggle } = useTreeRender();
+  const { mountedRef, indentGuides, indentStep, toggle } = useTreeRender();
   // Only with children to span: the guide would otherwise defeat `empty:hidden` on a childless branch.
   const guide = indentGuides && (node.children?.length ?? 0) > 0;
 
@@ -1072,7 +1077,7 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
           className='absolute inset-y-0 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
           // Under the branch's own toggle (or its icon, when there is no toggle), clear of its children's
           // toggles, which sit a block in.
-          style={{ insetInlineStart: `calc(${indentTrack(node.level)} + ${TREE_BLOCK} / 2)` }}
+          style={{ insetInlineStart: `calc(${indentTrack(node.level, indentStep)} + ${TREE_BLOCK} / 2)` }}
         />
       )}
     </TreeView.BranchContent>
@@ -1142,6 +1147,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     claimFocus,
     windowed,
     indentGuides,
+    indentStep,
     disclosure,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -1410,7 +1416,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           places it with `row-start-2`. */}
       <div
         className='indent relative grid grid-rows-[var(--dx-control)]'
-        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level) }}
+        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level, indentStep) }}
       >
         {toggle &&
           (branch ? (
@@ -1446,7 +1452,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
               data-part='row-indent-guide'
               // Down past the row into the gap below it, so one ancestor's segments read as a single line.
               className='absolute top-0 -bottom-0.5 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
-              style={{ insetInlineStart: `calc(${indentTrack(index + 1)} + ${TREE_BLOCK} / 2)` }}
+              style={{ insetInlineStart: `calc(${indentTrack(index + 1, indentStep)} + ${TREE_BLOCK} / 2)` }}
             />
           ))}
         {instruction && (

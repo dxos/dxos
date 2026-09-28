@@ -425,7 +425,14 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
   // The app's import map is built from its direct dependencies, and plugins loaded by URL import
   // these bare; nothing in the app imports them, but without the declaration they have no entry.
-  'packages/apps/composer-app': ['@dxos/app-graph', '@dxos/graph'],
+  'packages/apps/composer-app': [
+    '@dxos/app-graph',
+    '@dxos/echo',
+    '@dxos/echo-react',
+    '@dxos/graph',
+    '@dxos/react-ui-attention',
+    '@dxos/react-ui-geo',
+  ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.

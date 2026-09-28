@@ -11,10 +11,12 @@ import { LoadPlugin } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof LoadPlugin> = LoadPlugin.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ url }) {
+    Effect.fnUntraced(function* ({ url, enable = true }) {
       const manager = yield* Plugin.Service;
       const plugin = yield* manager.add(url.trim());
-      yield* manager.enable(plugin.meta.profile.key);
+      if (enable) {
+        yield* manager.enable(plugin.meta.profile.key);
+      }
       return { id: plugin.meta.profile.key, name: plugin.meta.profile.name };
     }),
   ),

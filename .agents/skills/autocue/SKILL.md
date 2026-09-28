@@ -1,16 +1,22 @@
 ---
-name: recording-demos
+name: autocue
 description: >-
   Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
   walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
   screenshots of the UI, or execute a flow whose steps have no operation behind them. Also covers
   manual mode, where the user records their own screen while the agent drives a visible browser
-  step by step on their cue. For a pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
+  step by step on their cue. "Cue <demo>" (e.g. "cue the projects demo") means run a committed flow
+  this way. For a pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
   regression test, write a Playwright spec instead.
 ---
 
-# Recording demos
+# Autocue
+
+**"Cue" is the verb.** "Cue the projects demo" means: find the committed flow whose name or doc comment
+matches, serve the app its `@app` line names, and list its steps. Cueing never opens the browser or runs.
+"Go" then does all the off-camera prep and replies `ready` once the start ring is up; clicking it
+runs the take to the end (see "The protocol").
 
 The agent drives the real app one gesture at a time and the session is recorded. Three things make
 this different from a Playwright spec, and they are the reasons to reach for it:
@@ -48,7 +54,7 @@ loop at every step. You still drive, and the script is still the `.mdl` test or 
 user decides when each part runs and can change how it runs.
 
 ```bash
-node .agents/skills/recording-demos/scripts/driver.mjs --mode manual \
+node .agents/skills/autocue/scripts/driver.mjs --mode manual \
   --port 7333 --url http://localhost:4173 --out /tmp/demo
 ```
 
@@ -57,13 +63,18 @@ Run it in the background. `--mode manual` changes the driver in five ways:
 - **Headed window, no recorder.** The browser opens in the foreground at `--width`×`--height`, and
   the page follows the window, so the user can resize it for their capture. Nothing is encoded, the
   boot is not cut, and §4, §4b and §5 do not apply.
+- **The cursor points before it clicks.** Every visible gesture moves the cursor to its target and rests
+  there for a second before the ripple and the click, so the person watching sees what is about to be
+  chosen. `--dwell <ms>` sets it (default 1000 in manual mode, 0 when recording); a command's own `dwell`
+  overrides it. Rely on it rather than adding a `sleep` before each click in a flow; `hud: false` gestures
+  (off-camera prep) skip it.
 - **Cursor, but no pills and no banners.** The virtual cursor and click ripple still show what is
   being clicked. The action feed and the `caption` banner are suppressed, so they don't compete with
   the product. `--pills on` or `--captions on` brings either back when the user asks.
 - **`stop` leaves the browser open.** It answers `ok` and the driver keeps serving. Closing the
   window ends the driver. Never close the browser yourself in this mode unless the user asks.
 - **The browser profile persists.** Every manual session opens the same Chromium profile,
-  `~/.local/state/dxos/recording-demos/profile` by default (`--profile <dir>` for another). The
+  `~/.local/state/dxos/autocue/profile` by default (`--profile <dir>` for another). The
   app's identity, its spaces, and any first-run UI already dismissed carry over, so setup done in
   one session is not redone on camera in the next. Chromium allows one process per profile. If the
   driver exits with `profile … is in use`, the last session's window is still open: close it, or
@@ -79,12 +90,23 @@ over HTTP costs a full agent turn, so a ten-step flow driven op by op leaves the
 between gestures. A script runs at the app's speed, and you stay the control panel: you choose what to
 run, edit the script when the user steers, and read the result.
 
-Check `flows/` first: a flow that has already run end to end is committed there, and running it in place
-beats rewriting it. Otherwise copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry
-per QA step. Each step
-gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
-and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
-wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
+Check for a committed flow first: one that has already run end to end lives in an `autocue/` folder at the
+root of the package it exercises (`packages/apps/composer-app/autocue/`, or a plugin's own), and running it
+in place beats rewriting it.
+
+**Otherwise the `.mdl` test comes first, and the script second.** A flow binds a spec; it is not one. The
+test carries the intent a reviewer checks — `given`, each step's `do:`/`expect:`, and every product fact the
+run surfaces as a `note:` (a known defect it works around, a model that stayed silent). The script carries
+only mechanics: selectors, retries, waits, pacing, `setup`. Writing the test from the script instead loses
+nothing that matters but duplicates it, and the copy drifts unreviewed. So:
+
+1. Find the test the demo walks, in the `PLUGIN.mdl` of the plugin under test. If there is none, draft a
+   `test QA-n` there (the `composer-qa` format) before writing a line of script, and show it to the user
+   with the step list.
+2. Copy `scripts/flow.example.mjs` to `/tmp/demo/flow.mjs` and write one entry per test step. Each step
+   gets `demo`, whose methods take the same arguments as the HTTP ops (so the cursor behaves the same),
+   and `page`, the raw Playwright page. Give each step the `do:` text as its `name`, and end it with a
+   wait on what `expect:` says should appear, so a step that did nothing fails instead of passing.
 
 ```bash
 C '{"op":"steps","file":"/tmp/demo/flow.mjs"}'   # numbered step names; `next` is where `run` resumes
@@ -106,15 +128,20 @@ C '{"op":"abort"}'                                 # stops the run now, mid-step
   the way, a collapsed sidebar, or a renamed control. Fix the script, then `run` again to retry
   from that step.
 - **Background a long `run`** (`run_in_background`), so the user can interrupt you mid-flow and you
-  can send `abort`.
+  can send `abort`. Give its request no client timeout (no `curl --max-time`): a timed-out request loses
+  the reply, though the run carries on. `status` answers where it is at any time — `state` is `setup`,
+  `cued` (play button up), `running`, `done`, `failed` or `aborted`, with the step number and, once it
+  ends, the same `result` the `run` reply carries.
 
 ### Setup steps and the countdown
 
 Mark off-camera preparation with `setup: true` (enabling a plugin, picking a model). When `run` reaches the
-first step after the setup ones it plays a countdown in the page: a play button, then a 3-2-1 film leader.
-In manual mode the button waits for a click, so the user starts their recorder, clicks play, and the take
-begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays it without the click, and the
-`countdown` op plays one on demand.
+first step after the setup ones it plays a countdown in the page: a closed ring with a play triangle, then a
+3-2-1 inside the ring as it unwinds. In manual mode the ring waits for a click, so the user starts their
+recorder, clicks it, and the take begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays
+it without the click, and the `countdown` op plays one on demand. It is react-ui-experimental's `Countdown`
+(story `ui/react-ui-experimental/Countdown`): its DOM half, `play-countdown.ts`, has no imports, and the overlay
+transpiles and injects that same file rather than keeping a copy, so change the look there.
 
 ### Browser logs
 
@@ -155,22 +182,32 @@ that again"), and for probing a failure before you fix the script.
 
 ### The protocol
 
-1. **Open and wait.** Start the driver and send one `goto`, then stop. Don't caption, click, or run
-   a setup step. Write the flow script, send `steps`, and show the user the numbered list. Wait for
-   them to say go, since they are setting up their recorder.
-2. **Run only what they release.** "Go" runs the next step. "Run until step 4" is `run` with
-   `until: 4`. "Run it all" is `run` with no bounds. After each stop, say which step you stopped on
-   and what comes next, then wait.
-3. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
-   back and open it again" become an edit to the script (or a `from`/`until`), then a `run`. "Start
-   again from step 4" is `run` with `from: 4` and `restart: true`. A change the user asks for is not
-   a divergence to report.
-4. **Handle failures quietly.** Don't narrate passing checks. When a step fails, look at its
+The user's part is two words and one click: "go", then the play button. Everything else is yours.
+
+1. **Cue: stage and wait.** On "cue <demo>" (or when the user asks for a manual recording), find the
+   committed flow — or, for a new demo, the `.mdl` test and then the script — and serve the app its
+   `@app` line names. List the steps by importing the script with `node` (the driver's `steps` op
+   needs a driver, and the browser opens only on "go"). Show the numbered list and wait. Nothing runs yet.
+2. **"Go": do all the prep, then reply `ready`.** Start the driver (the browser opens) and `goto`
+   if it is not up, then send `run` with no bounds, backgrounded and with no client timeout — it holds
+   until the take ends. Poll `status` until `state` is `cued`: every `setup` step has run off camera
+   and the play button is up, waiting. Then reply with exactly `ready` and nothing else. If a setup
+   step fails instead (`state: failed`), say in one line what failed and fix it; there is no take yet.
+3. **Play runs to the end.** The user starts their recorder and clicks play; the flow runs through
+   its last step unattended, with no more "go"s. Don't poll on a short interval while it runs — the
+   backgrounded `run` returns when the take ends. Then report each step as passed or failed, in a line
+   or two.
+4. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
+   back and open it again" become an edit to the script (or a `from`/`until`), then another cue.
+   "Start again from step 4" is `run` with `from: 4` and `restart: true`. "Run until 4" still works
+   for a user who asks to stop partway. A change the user asks for is not a divergence to report.
+5. **Handle failures quietly.** Don't narrate passing checks. When a step fails, look at its
    screenshot, say in a line what went wrong and what you'll change, then fix the script. Retry
    only when the user says so, since the retry happens on camera.
-5. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
+6. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
    that closing it ends the driver.
-6. **Commit the flow once it has run end to end.** Save it as `flows/<name>.mjs` and commit it, so
+7. **Commit the flow once it has run end to end.** Save it as `autocue/<name>.mjs` in the package it
+   exercises — the plugin under test, or `composer-app` for a flow that spans plugins — and commit it, so
    the next session runs it instead of rediscovering every selector. Commit again whenever a later
    session fixes it.
 
@@ -188,8 +225,8 @@ reader can tell whether it is still in step with its spec:
  */
 ```
 
-- **`@mdl`** names the `.mdl` file and the `test` (or `flow`) the steps were written from. A flow with
-  no spec behind it says `@mdl none` and names what it walks instead, such as a space template.
+- **`@mdl`** names the `.mdl` file and the `test` (or `flow`) the steps were written from. It is
+  required: a flow with no test behind it is a spec nobody reviews, so write the test first.
 - **`@app`** says how to serve the app the flow runs against, including any build flags and
   environment it depends on.
 - Name each step after its `do:` text, so the flow and the spec can be read side by side.
@@ -259,7 +296,7 @@ Four things about storybook that cost a cycle each:
 ## 2. Start the driver
 
 ```bash
-node .agents/skills/recording-demos/scripts/driver.mjs \
+node .agents/skills/autocue/scripts/driver.mjs \
   --port 7333 --url http://localhost:4173 --out /tmp/demo &
 ```
 
@@ -278,7 +315,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
@@ -370,7 +407,7 @@ the next gesture — provided nothing on the page animates on its own, which is 
 `VITE_DX_DISABLE_ANIMATIONS=true`. Measure before tuning — `--report` costs one decode and no encode:
 
 ```bash
-node .agents/skills/recording-demos/scripts/trim-static.mjs --in /tmp/demo/*.webm --report
+node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/*.webm --report
 ```
 
 ```json
@@ -390,7 +427,7 @@ content, decides the length — 135 pauses × 1.5s is ~3 minutes on its own. `at
 before you spend an encode on it.
 
 ```bash
-node .agents/skills/recording-demos/scripts/trim-static.mjs \
+node .agents/skills/autocue/scripts/trim-static.mjs \
   --in /tmp/demo/*.webm --out demo.webm --max-static 0.5 --caption-hold 2.5
 ```
 
@@ -567,6 +604,9 @@ These cost a cycle each; none is guessable from the source.
   Clicking `spacePlugin.space` toggles it. Reopen it before blaming the selector.
 - **Clicking the account avatar navigates away.** `clientPlugin.account` opens the profile pane, and
   `Back to Space` in the sidebar does not return; click `spacePlugin.space` instead.
+- **A narrow window collapses the navtree.** Its items are in the DOM but never "visible and stable";
+  click the visible `button:visible:has-text("Open sidebar")` first. A flow can't assume the window
+  size — the user resizes it for their capture.
 - **The privacy toast has no testid.** `li[role="status"]:has-text("Privacy Notice") button:has-text("Close")`.
 
 ## Where the spec and the app disagreed

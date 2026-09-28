@@ -10,7 +10,8 @@
  *
  * A flow script for the driver's `run` op: one entry per QA step, executed in order against the live
  * page. Copy it to `/tmp/demo/flow.mjs` while iterating: every `run` re-imports the file, so a fix takes
- * effect without restarting the browser. Once it runs end to end, commit it as `flows/<name>.mjs`.
+ * effect without restarting the browser. Once it runs end to end, commit it as `autocue/<name>.mjs` in the
+ * package it exercises.
  *
  * Each step receives `demo`, whose methods take the same arguments as the HTTP ops (so the cursor and
  * overlay behave the same), and `page`, the raw Playwright page for anything the ops do not cover. A

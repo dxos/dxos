@@ -222,19 +222,20 @@ You don't need to publish to test your plugin against Composer. Composer loads a
 The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
 the entry it names.
 
-To have the assistant build one for you, create a space from the **Composer Plugin** template (in the debug
-plugin's templates) in a Composer served locally by `vite preview`. It seeds a project whose tasks walk a chat
-through the example below, from writing the files to the load prompt; delegate the project to start it.
+To have the assistant build one for you, create a project from the **Composer Plugin** template (contributed
+by the Coding (Dev) plugin) in a Composer served locally by `vite preview`. Its parent task and four subtasks
+walk a chat through the example below, from writing the files to the load prompt; assign them to the agent to
+start it.
 
 > Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
 > app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and
 > `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
 > imports fail there.
 
-### Example: a plugin with its own sidebar page
+### Example: a plugin with its own navtree group
 
-A small plugin in TypeScript that adds a workspace to the left rail with one page, opened as an article. It
-builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
+A small plugin in TypeScript that adds a group to every space's navtree, with one page under it, opened as an
+article. It builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
 
 Four files:
 
@@ -247,6 +248,7 @@ export default Config2.make({
     key: 'org.example.plugin.hello', // must match the key the plugin declares; last segment camelCase
     name: 'Hello',
     icon: { key: 'ph--hand-waving--regular', hue: 'amber' },
+    tags: ['labs'], // lists it under Labs in the Plugins registry
   },
 });
 ```
@@ -295,13 +297,15 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import config from '../dx.config.ts';
 
 const meta = Plugin.getMetaFromConfig(config);
-const WORKSPACE = 'helloWorkspace';
+const GROUP = 'helloGroup';
+const GROUP_TYPE = `${meta.profile.key}.group`;
 const PAGE = 'helloPage';
 
 const HelloArticle = () => (
@@ -315,47 +319,46 @@ export default Plugin.define(meta).pipe(
     provides: [AppCapabilities.AppGraphBuilder],
     activate: () =>
       Effect.gen(function* () {
-        // A workspace: a tab in the left rail.
-        const workspace = yield* AppGraphBuilder.createExtension({
-          id: 'helloWorkspace',
-          match: GraphNodeMatcher.whenRoot,
-          connector: () =>
+        // A group: an uppercase heading in each space's navtree, between CONTENT and SYSTEM.
+        const group = yield* AppGraphBuilder.createExtension({
+          id: 'helloGroup',
+          match: AppNodeMatcher.whenSpace,
+          connector: (space) =>
             Effect.succeed([
-              AppGraphNode.make({
-                id: WORKSPACE,
-                type: `${meta.profile.key}.workspace`,
-                data: null,
-                properties: {
-                  label: 'Hello',
-                  icon: 'ph--hand-waving--regular',
-                  disposition: 'workspace',
-                },
+              AppNode.makeGroup({
+                id: GROUP,
+                type: GROUP_TYPE,
+                label: 'Hello',
+                space,
+                position: 400,
               }),
             ]),
         });
-        // A page in that workspace. The URL binding is what lets the deck open it.
+        // A page in that group. The URL binding is what lets the deck open it.
         const page = yield* AppGraphBuilder.createExtension({
           id: 'helloPage',
-          match: GraphNodeMatcher.whenId(`root/${WORKSPACE}`),
-          url: {
-            key: PAGE,
-            kind: 'singleton',
-            path: [],
-            workspace: (id) => id === WORKSPACE,
-          },
-          connector: () =>
+          match: AppNodeMatcher.whenNavTreeGroup(GROUP_TYPE),
+          url: { key: PAGE, kind: 'singleton', path: [GROUP] },
+          connector: (space) =>
             Effect.succeed([
               AppGraphNode.make({
                 id: PAGE,
                 type: `${meta.profile.key}.page`,
                 data: PAGE,
-                properties: { label: 'Hello', icon: 'ph--article--regular' },
+                properties: {
+                  label: 'Hello',
+                  icon: 'ph--article--regular',
+                  selectable: true,
+                  draggable: false,
+                  droppable: false,
+                  space,
+                },
               }),
             ]),
         });
         return [
           Capability.contribute(AppCapabilities.AppGraphBuilder, [
-            ...workspace,
+            ...group,
             ...page,
           ]),
         ];
@@ -389,9 +392,9 @@ tsc -p tsconfig.json   # vite does not typecheck
 vite build             # writes dist/manifest.json and dist/index.mjs
 ```
 
-Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads, a
-new tab appears in the left rail; selecting it opens the page. The version in the manifest comes from a
-`package.json` next to `dx.config.ts`, or `0.0.0` without one.
+Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads,
+each space's navtree shows a HELLO group with a Hello page under it; selecting the page opens it. The version
+in the manifest comes from a `package.json` next to `dx.config.ts`, or `0.0.0` without one.
 
 Things to know:
 
@@ -402,10 +405,346 @@ Things to know:
   graph extension ids, node ids and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it
   is imported; a hyphenated extension or surface id is dropped without an error.
 - `AppGraphBuilder.createExtension` returns an `Effect`: `yield*` it and contribute the extensions it yields.
+- A group is a heading, not a page: it has no URL binding and shows only once something is under it. Its
+  `position` orders it among the built-in groups (content 200, system 900).
+- A `singleton` page's node id must equal its URL `key`, and `path` names the group it sits under.
 - Every module lists the capabilities its `activate` returns in `provides`.
 - A plugin that fails to activate is disabled; fix it and re-enable it from the Plugins list (or reload).
 - The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
   same URL.
+
+### Example: data, a form and another plugin's surface
+
+The same plugin grows an ECHO type stored in the space, a form that edits it, and a map drawn by another plugin
+that follows what the reader selects. The rest of the plugin (navtree group, page, surface) is as above.
+
+Depend on the plugin whose surface you render; enabling yours then enables it too:
+
+```ts
+// dx.config.ts
+export default Config2.make({
+  plugin: {
+    key: 'org.example.plugin.worldClock',
+    name: 'World Clock',
+    icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'sky' },
+    tags: ['labs'],
+    dependsOn: ['org.dxos.plugin.map'],
+  },
+});
+```
+
+Register the type in the pipe, before the other modules, so the space can store it:
+
+```tsx
+Plugin.addModule(AppCapability.schema([Clock])),
+```
+
+A page that needs the space carries it in the node's `data`, and the surface narrows on it:
+
+```tsx
+AppGraphNode.make({ id: PAGE, type: `${meta.profile.key}.page`, data: { type: PAGE, space }, properties: { ... } });
+
+Surface.create({
+  id: 'worldClockArticle',
+  filter: AppSurface.subject(AppSurface.Article, isPage),
+  component: WorldClockArticle,
+  props: ({ data: { subject } }) => ({ db: subject.space.db }),
+});
+```
+
+Things to know:
+
+- `useQuery` re-renders when the set of objects changes, not when a field of one changes; subscribe to the fields
+  you render with `useObject`, or an update is saved but never shown.
+- Create the object on the first change, not in an effect on first view: the query is empty until it has loaded,
+  so an effect that creates when it finds nothing creates a duplicate on every visit.
+- A form is a schema; a `Schema.Literals` field renders as a select.
+- Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws
+  the world with `markers` on it, flat (`view: 'map'`) or as a globe the reader can toggle to. Give it the object
+  as `subject`: the marker whose id is selected under that object's URI is highlighted, and the globe turns to it.
+- Select with `LayoutOperation.Select` (context id: the object's URI), and read the selection with
+  `useSelection`, so the map and your own view agree on what is selected.
+- `timezones` from `@dxos/react-ui-geo/data` gives each IANA zone its principal city's position.
+- Give the map a sized box: it fills its parent, so a parent with no height draws nothing.
+
+The imports and the article, put together. Every card has one fixed size, so opening the form moves nothing; the
+map fills the page above the row of clocks, which scrolls sideways in a thin scroll area:
+
+```tsx
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import React, { useEffect, useState } from 'react';
+
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
+import { IconButton, ScrollArea } from '@dxos/react-ui';
+import { useSelection } from '@dxos/react-ui-attention';
+import { Form } from '@dxos/react-ui-form';
+import { timezones } from '@dxos/react-ui-geo/data';
+import * as MapRole from '@dxos/plugin-map/MapRole';
+
+// The type: one Clock per space, holding its clocks, each a timezone and where it is on the map.
+const Location = Schema.Struct({ lat: Schema.Number, lng: Schema.Number });
+const ClockEntry = Schema.Struct({
+  timezone: Schema.String,
+  location: Schema.optional(Location),
+});
+type ClockEntry = Schema.Schema.Type<typeof ClockEntry>;
+
+export class Clock extends Type.makeObject<Clock>(
+  DXN.make('org.example.type.worldClock', '0.2.0'),
+)(Schema.Struct({ clocks: Schema.optional(Schema.Array(ClockEntry)) })) {}
+
+type Page = { type: typeof PAGE; space: { db: Database.Database } };
+const isPage = (data: unknown): data is Page =>
+  typeof data === 'object' &&
+  data !== null &&
+  'type' in data &&
+  data.type === PAGE;
+
+// A timezone's position is its principal city, from the tz database; a zone it does not list has no pin.
+const makeEntry = (timezone: string): ClockEntry => ({
+  timezone,
+  location: timezones[timezone],
+});
+
+const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const useNow = () => {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+};
+
+// Every card has one fixed size, so the empty card lines up with the clocks and opening its form moves nothing.
+const CARD: React.CSSProperties = {
+  boxSizing: 'border-box',
+  position: 'relative',
+  flex: 'none',
+  width: 240,
+  height: 176,
+  padding: 16,
+  borderRadius: 8,
+  border: '1px solid color-mix(in srgb, currentColor 25%, transparent)',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+};
+
+// 24-hour and zero-padded, so every clock is the same width.
+const TIME: Intl.DateTimeFormatOptions = {
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+};
+
+type ClockCardProps = {
+  timeZone: string;
+  now: Date;
+  selected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+};
+
+const ClockCard = ({
+  timeZone,
+  now,
+  selected,
+  onSelect,
+  onDelete,
+}: ClockCardProps) => (
+  <div
+    data-testid='worldClock.clock'
+    aria-selected={selected}
+    style={{
+      ...CARD,
+      cursor: 'pointer',
+      ...(selected && { borderColor: 'rgb(14, 165, 233)' }),
+    }}
+    // A focusable button so the keyboard can select a clock as the pointer does.
+    role='button'
+    tabIndex={0}
+    onClick={onSelect}
+    onKeyDown={(event) => {
+      if (
+        event.target === event.currentTarget &&
+        (event.key === 'Enter' || event.key === ' ')
+      ) {
+        event.preventDefault();
+        onSelect();
+      }
+    }}
+  >
+    <div style={{ opacity: 0.7 }}>
+      {now.toLocaleDateString(undefined, { timeZone, dateStyle: 'medium' })}
+    </div>
+    <div style={{ fontSize: '2rem', fontVariantNumeric: 'tabular-nums' }}>
+      {now.toLocaleTimeString(undefined, { timeZone, ...TIME })}
+    </div>
+    <div style={{ opacity: 0.7 }}>{timeZone}</div>
+    {/* Last, so it paints above the text it overlaps. */}
+    <div style={{ position: 'absolute', top: 4, right: 4 }}>
+      <IconButton
+        data-testid='worldClock.delete'
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label='Delete clock'
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete();
+        }}
+      />
+    </div>
+  </div>
+);
+
+// The choices are the zones with a known position, so every clock added gets a pin.
+const TimezoneForm = Schema.Struct({
+  timezone: Schema.Literals(Object.keys(timezones)).annotate({
+    title: 'Timezone',
+  }),
+});
+
+const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
+  const [adding, setAdding] = useState(false);
+  return (
+    <div
+      data-testid='worldClock.new'
+      style={{
+        ...CARD,
+        borderStyle: 'dashed',
+        alignItems: adding ? 'stretch' : 'center',
+      }}
+    >
+      {adding ? (
+        <Form.Root
+          schema={TimezoneForm}
+          onSave={({ timezone }) => {
+            onAdd(timezone);
+            setAdding(false);
+          }}
+          onCancel={() => setAdding(false)}
+        >
+          <Form.Content>
+            <Form.Fields />
+            <Form.Actions />
+          </Form.Content>
+        </Form.Root>
+      ) : (
+        <IconButton
+          data-testid='worldClock.add'
+          variant='ghost'
+          icon='ph--plus--regular'
+          iconOnly
+          size={8}
+          label='Add clock'
+          onClick={() => setAdding(true)}
+        />
+      )}
+    </div>
+  );
+};
+
+const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
+  const now = useNow();
+  const { invokePromise } = useOperationInvoker();
+  const [clock] = useQuery(db, Filter.type(Clock));
+  // `useQuery` re-renders when the set of objects changes; `useObject` is what re-renders on a field change.
+  const [stored] = useObject(clock, 'clocks');
+  const clocks = stored ?? [makeEntry(localZone())];
+  // The selection lives in the view state under the clock's URI, where the map surface reads it.
+  const contextId = clock ? Obj.getURI(clock) : undefined;
+  const selected = useSelection(contextId, 'single');
+  const select = (timezone: string) =>
+    contextId &&
+    void invokePromise(LayoutOperation.Select, {
+      contextId,
+      subject: { mode: 'single', id: timezone },
+    });
+
+  // Created on the first change rather than on first view: the query is empty until it has loaded.
+  const save = (next: ClockEntry[]) => {
+    if (clock) {
+      Obj.update(clock, (clock) => {
+        clock.clocks = next;
+      });
+    } else {
+      db?.add(Obj.make(Clock, { clocks: next }));
+    }
+  };
+  const add = (timezone: string) =>
+    !clocks.some((entry) => entry.timezone === timezone) &&
+    save([...clocks, makeEntry(timezone)]);
+  const remove = (timezone: string) =>
+    save(clocks.filter((entry) => entry.timezone !== timezone));
+
+  // West to east, so the row reads left to right like the map; a clock with no position goes last.
+  const sorted = [...clocks].sort(
+    (left, right) =>
+      (left.location?.lng ?? Number.POSITIVE_INFINITY) -
+      (right.location?.lng ?? Number.POSITIVE_INFINITY),
+  );
+
+  const markers = clocks.flatMap(({ timezone, location }) =>
+    location ? [{ id: timezone, title: timezone, location }] : [],
+  );
+
+  return (
+    // The map fills the page above the row of clocks, which scrolls sideways when it outgrows the width.
+    // A grid rather than a flex column: the scroll area expands to fill whatever cell it is in.
+    <div
+      style={{
+        height: '100%',
+        display: 'grid',
+        gridTemplateRows: 'minmax(0, 1fr) min-content',
+      }}
+    >
+      <div style={{ minHeight: 0 }}>
+        <Surface.Surface
+          type={MapRole.World}
+          data={{ markers, subject: clock, view: 'map' }}
+          limit={1}
+        />
+      </div>
+      <ScrollArea.Root orientation='horizontal' thin>
+        <ScrollArea.Viewport>
+          <div style={{ display: 'flex', gap: 16, padding: 16 }}>
+            {sorted.map(({ timezone }) => (
+              <ClockCard
+                key={timezone}
+                timeZone={timezone}
+                now={now}
+                selected={timezone === selected}
+                onSelect={() => select(timezone)}
+                onDelete={() => remove(timezone)}
+              />
+            ))}
+            <AddClock onAdd={add} />
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </div>
+  );
+};
+```
 
 ## Command reference
 
