@@ -1,0 +1,156 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { DatePicker as DatePickerPrimitive, useDatePickerContext } from '@ark-ui/react/date-picker';
+import { Portal } from '@ark-ui/react/portal';
+import React, { type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { mx } from '@dxos/ui-theme';
+
+import { translationKey } from '#translations';
+
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { Button } from '../Button/index.ts';
+
+/** Months and years are laid out four to a row, as the current Calendar's pickers. */
+const GRID_COLUMNS = 4;
+
+/** Previous, view (month/year/decade caption) and next, over each view's table. */
+const ViewControl = () => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <DatePickerPrimitive.ViewControl className={recipes.dateCalendarHeader()}>
+      <DatePickerPrimitive.PrevTrigger asChild>
+        <Button
+          icon='ph--caret-left--regular'
+          label={t('calendar.nav.previous.label')}
+          iconOnly
+          variant='ghost'
+          showTooltip={false}
+        />
+      </DatePickerPrimitive.PrevTrigger>
+      <DatePickerPrimitive.ViewTrigger asChild>
+        <Button variant='ghost' classNames={recipes.dateCalendarTitle()}>
+          <DatePickerPrimitive.RangeText />
+        </Button>
+      </DatePickerPrimitive.ViewTrigger>
+      <DatePickerPrimitive.NextTrigger asChild>
+        <Button
+          icon='ph--caret-right--regular'
+          label={t('calendar.nav.next.label')}
+          iconOnly
+          variant='ghost'
+          showTooltip={false}
+        />
+      </DatePickerPrimitive.NextTrigger>
+    </DatePickerPrimitive.ViewControl>
+  );
+};
+
+const DayView = () => {
+  const picker = useDatePickerContext();
+  return (
+    <DatePickerPrimitive.View view='day' className={recipes.dateCalendarView()}>
+      <ViewControl />
+      <DatePickerPrimitive.Table className={recipes.dateCalendarTable()}>
+        <DatePickerPrimitive.TableHead>
+          <DatePickerPrimitive.TableRow>
+            {picker.weekDays.map((weekDay, index) => (
+              <DatePickerPrimitive.TableHeader key={index} abbr={weekDay.long}>
+                {weekDay.narrow}
+              </DatePickerPrimitive.TableHeader>
+            ))}
+          </DatePickerPrimitive.TableRow>
+        </DatePickerPrimitive.TableHead>
+        <DatePickerPrimitive.TableBody>
+          {picker.weeks.map((week, index) => (
+            <DatePickerPrimitive.TableRow key={index}>
+              {week.map((day) => (
+                <DatePickerPrimitive.TableCell key={day.toString()} value={day}>
+                  <DatePickerPrimitive.TableCellTrigger className={recipes.dateCalendarCell()}>
+                    {day.day}
+                  </DatePickerPrimitive.TableCellTrigger>
+                </DatePickerPrimitive.TableCell>
+              ))}
+            </DatePickerPrimitive.TableRow>
+          ))}
+        </DatePickerPrimitive.TableBody>
+      </DatePickerPrimitive.Table>
+    </DatePickerPrimitive.View>
+  );
+};
+
+const MonthView = () => {
+  const picker = useDatePickerContext();
+  return (
+    <DatePickerPrimitive.View view='month' className={recipes.dateCalendarView()}>
+      <ViewControl />
+      <DatePickerPrimitive.Table columns={GRID_COLUMNS} className={recipes.dateCalendarTable()}>
+        <DatePickerPrimitive.TableBody>
+          {picker.getMonthsGrid({ columns: GRID_COLUMNS, format: 'short' }).map((months, index) => (
+            <DatePickerPrimitive.TableRow key={index}>
+              {months.map((month) => (
+                <DatePickerPrimitive.TableCell key={month.value} value={month.value}>
+                  <DatePickerPrimitive.TableCellTrigger className={recipes.dateCalendarCell()}>
+                    {month.label}
+                  </DatePickerPrimitive.TableCellTrigger>
+                </DatePickerPrimitive.TableCell>
+              ))}
+            </DatePickerPrimitive.TableRow>
+          ))}
+        </DatePickerPrimitive.TableBody>
+      </DatePickerPrimitive.Table>
+    </DatePickerPrimitive.View>
+  );
+};
+
+const YearView = () => {
+  const picker = useDatePickerContext();
+  return (
+    <DatePickerPrimitive.View view='year' className={recipes.dateCalendarView()}>
+      <ViewControl />
+      <DatePickerPrimitive.Table columns={GRID_COLUMNS} className={recipes.dateCalendarTable()}>
+        <DatePickerPrimitive.TableBody>
+          {picker.getYearsGrid({ columns: GRID_COLUMNS }).map((years, index) => (
+            <DatePickerPrimitive.TableRow key={index}>
+              {years.map((year) => (
+                <DatePickerPrimitive.TableCell key={year.value} value={year.value} disabled={year.disabled}>
+                  <DatePickerPrimitive.TableCellTrigger className={recipes.dateCalendarCell()}>
+                    {year.label}
+                  </DatePickerPrimitive.TableCellTrigger>
+                </DatePickerPrimitive.TableCell>
+              ))}
+            </DatePickerPrimitive.TableRow>
+          ))}
+        </DatePickerPrimitive.TableBody>
+      </DatePickerPrimitive.Table>
+    </DatePickerPrimitive.View>
+  );
+};
+
+export type DateCalendarProps = {
+  size: Size;
+  container?: RefObject<HTMLElement | null>;
+  testId?: string;
+};
+
+/** The portalled calendar at `level='popup'`: zag's day, month and year views, switched by the caption. */
+export const DateCalendar = ({ size, container, testId }: DateCalendarProps) => (
+  <Portal container={container}>
+    <DatePickerPrimitive.Positioner>
+      <DatePickerPrimitive.Content
+        data-surface='popup'
+        data-size={size}
+        data-testid={testId}
+        className={mx(recipes.popup(), recipes.dateCalendar())}
+      >
+        <DayView />
+        <MonthView />
+        <YearView />
+      </DatePickerPrimitive.Content>
+    </DatePickerPrimitive.Positioner>
+  </Portal>
+);
