@@ -22,7 +22,7 @@ const HOST_ID = '__demo_overlay__';
  * `window.__demoOverlay` with `event`, `resolve`, `click` and `moveCursor`. Self-contained because
  * `page.evaluate` serializes this function alone — nothing at module scope reaches the page.
  */
-const install = ({ hostId, feedMs, position }) => {
+const install = ({ hostId, feedMs, position, feed: showFeed }) => {
   const mount = () => {
     const host = document.createElement('div');
     host.id = hostId;
@@ -125,6 +125,9 @@ const install = ({ hostId, feedMs, position }) => {
       },
       /** Returns an id so a pending entry (an operation in flight) can be resolved with its outcome. */
       event: (spec) => {
+        if (!showFeed) {
+          return;
+        }
         const entry = render(spec);
         // A pending entry fades only once resolved, so a slow operation still shows how it ended.
         if (spec.id) {
@@ -134,6 +137,9 @@ const install = ({ hostId, feedMs, position }) => {
         }
       },
       resolve: (id, ok, note) => {
+        if (!showFeed) {
+          return;
+        }
         const spec = pending.get(id);
         pending.delete(id);
         // Evicted by newer entries while in flight: re-render it so the outcome is not lost.
@@ -206,10 +212,13 @@ const install = ({ hostId, feedMs, position }) => {
 
 /**
  * @param {import('@playwright/test').Page} page
- * @param {{ enabled: boolean, feedMs?: number, position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' }} options
+ * `feed: false` keeps the cursor and ripple but paints no feed entries — for a session a person records
+ * themselves, where the pills would narrate the agent rather than the product.
+ *
+ * @param {{ enabled: boolean, feed?: boolean, feedMs?: number, position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' }} options
  */
-export const createOverlay = (page, { enabled, feedMs = 3_500, position = 'top-right' }) => {
-  const ensure = () => page.evaluate(install, { hostId: HOST_ID, feedMs, position });
+export const createOverlay = (page, { enabled, feed = true, feedMs = 3_500, position = 'top-right' }) => {
+  const ensure = () => page.evaluate(install, { hostId: HOST_ID, feedMs, position, feed });
 
   /** Overlay failures never fail a gesture: a page mid-navigation has no document to paint into. */
   const safely = async (fn) => {

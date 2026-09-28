@@ -4,8 +4,9 @@ description: >-
   Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
   walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
-  screenshots of the UI, or execute a flow whose steps have no operation behind them. For a
-  pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
+  screenshots of the UI, or execute a flow whose steps have no operation behind them. Also covers
+  manual mode, where the user records their own screen while the agent drives a visible browser
+  step by step on their cue. For a pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
   regression test, write a Playwright spec instead.
 ---
 
@@ -39,6 +40,50 @@ with the same `screenshot` op, so this is a choice about what to send, not a dif
 
 When in doubt, record the session anyway (it costs nothing extra while you are driving) and send only
 the stills if the video adds nothing.
+
+## Manual mode: the user records
+
+The user asks for this; never pick it yourself. The user is recording their own screen and is in the
+loop at every step. You still drive, and the script is still the `.mdl` test or walkthrough, but the
+user decides when each part runs and can change how it runs.
+
+```bash
+node .agents/skills/recording-demos/scripts/driver.mjs --mode manual \
+  --port 7333 --url http://localhost:4173 --out /tmp/demo
+```
+
+Run it in the background. `--mode manual` changes the driver in four ways:
+
+- **Headed window, no recorder.** The browser opens in the foreground at `--width`×`--height`, and
+  the page follows the window, so the user can resize it for their capture. Nothing is encoded, the
+  boot is not cut, and §4, §4b and §5 do not apply.
+- **Cursor, but no pills and no banners.** The virtual cursor and click ripple still show what is
+  being clicked. The action feed and the `caption` banner are suppressed, so they don't compete with
+  the product. `--pills on` or `--captions on` brings either back when the user asks.
+- **`stop` leaves the browser open.** It answers `ok` and the driver keeps serving. Closing the
+  window ends the driver. Never close the browser yourself in this mode unless the user asks.
+- **A local display is required.** The cloud sandbox has none, so this is for a session on the
+  user's machine.
+
+The protocol:
+
+1. **Open and wait.** Start the driver and send one `goto`, then stop. Don't caption, click, or run a
+   setup step. Tell the user the window is up, list the steps you are about to perform (numbered,
+   from the script), and wait for them to say go. They are setting up their recorder.
+2. **Run only what they release.** "Go" runs the next step. "Run until step 4" runs through step 4
+   and then stops. "Run it all" runs to the end. After each stop, say which step you stopped on and
+   what comes next, then wait.
+3. **Take steering as it comes.** "Do step 3 with a longer title", "skip the settings part", or "go
+   back and open it again" override the script for that run. Follow them and keep going from where
+   the user leaves you. A change they ask for is not a divergence to report.
+4. **Pace for a viewer.** A person is watching live, so leave a beat after each visible change
+   (`sleep` 600–1000 ms) rather than firing gestures back to back. `hud:false` on probes still
+   keeps the cursor off them.
+5. **Verify quietly.** Read the DOM with `eval`/`text` as usual, but don't narrate the checks. Speak
+   up only when a step failed or the screen doesn't match `expect:`, and then pause rather than
+   improvising a fix on camera.
+6. **Finish with the window open.** Send `stop`, and tell the user the browser is still open and
+   that closing it ends the driver.
 
 ## 1. Get the app running
 
@@ -124,7 +169,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `stop`. `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `sleep` `screenshot` `stop` (in manual mode `stop` leaves the browser open). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.

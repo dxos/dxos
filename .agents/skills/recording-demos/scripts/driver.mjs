@@ -20,6 +20,10 @@
  * With a full ffmpeg on the path the page renders at `--scale` device pixels (2 by default) and is
  * encoded to VP9 by `recorder.mjs`; without one it falls back to Playwright's `recordVideo`, whose
  * fixed 1 Mbit VP8 cannot carry more than 1x. `--overlay off` drops the on-screen action feed; `--feed bottom-left` (or any corner) moves it.
+ *
+ * `--mode manual` is for a session a person records themselves: a headed window, no recorder, the
+ * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
+ * and `stop` leaves the browser open. The driver exits when that window is closed.
  */
 
 import { chromium } from '@playwright/test';
@@ -54,16 +58,22 @@ const parseArgs = () => {
     'ready-timeout': 180_000,
     'settle': 5_000,
     'feed': 'top-right',
+    'mode': 'record',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
     options[key] = /^[\d.]+$/.test(value) ? Number(value) : value;
   }
+  // A person recording their own screen wants the product on camera, not the agent's narration of it.
+  const narrate = options.mode === 'manual' ? 'off' : 'on';
+  options.pills ??= narrate;
+  options.captions ??= narrate;
   return options;
 };
 
 const options = parseArgs();
+const manual = options.mode === 'manual';
 mkdirSync(options.out, { recursive: true });
 
 /**
@@ -80,15 +90,19 @@ const token = randomUUID();
 const sandbox = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
 
 const viewport = { width: options.width, height: options.height };
-const hires = hasFullFfmpeg();
-if (!hires) {
+const hires = !manual && hasFullFfmpeg();
+if (!manual && !hires) {
   console.warn('no ffmpeg with libvpx-vp9 on PATH (or FFMPEG_PATH): recording at 1x through Playwright');
 }
 const scale = hires ? options.scale : 1;
 
 const browser = await chromium.launch({
+  headless: !manual,
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
+    // The page follows the window, so a person can resize it for their capture without a fixed viewport
+    // leaving dead space or scrollbars.
+    ...(manual ? [`--window-size=${options.width},${options.height}`] : []),
     ...(sandbox
       ? [
           '--no-sandbox',
@@ -103,13 +117,27 @@ const browser = await chromium.launch({
   ],
 });
 
-const context = await browser.newContext({
-  viewport,
-  deviceScaleFactor: scale,
-  recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-});
+const context = await browser.newContext(
+  manual
+    ? { viewport: null }
+    : {
+        viewport,
+        deviceScaleFactor: scale,
+        recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+      },
+);
 const page = await context.newPage();
-const overlay = createOverlay(page, { enabled: options.overlay !== 'off', position: options.feed });
+const overlay = createOverlay(page, {
+  enabled: options.overlay !== 'off',
+  feed: options.pills !== 'off',
+  position: options.feed,
+});
+
+if (manual) {
+  // The window is the person's now; closing it is how they end the session.
+  page.on('close', () => browser.close().finally(() => process.exit(0)));
+  browser.on('disconnected', () => process.exit(0));
+}
 
 const recorder = hires
   ? await startRecorder(page, {
@@ -254,7 +282,10 @@ const center = async (selector) => {
  * Drops everything recorded so far. Captions already issued are dropped too, since their times would
  * point into footage that no longer exists.
  */
-const NO_CUT = { cut: false, reason: 'the 1x Playwright fallback cannot drop recorded frames' };
+const NO_CUT = {
+  cut: false,
+  reason: manual ? 'manual mode records nothing' : 'the 1x Playwright fallback cannot drop recorded frames',
+};
 
 const cut = async () => {
   if (!recorder) {
@@ -278,7 +309,7 @@ const handlers = {
     await page.goto(command.url ?? options.url, { waitUntil: command.waitUntil ?? 'domcontentloaded' });
     const result = { url: page.url() };
     // Only the first navigation boots the app; a later `goto` is part of the demo.
-    if (!booted && options.boot !== 'keep') {
+    if (!booted && options.boot !== 'keep' && !manual) {
       booted = true;
       if (!recorder) {
         // Waiting minutes for a ready screen buys nothing when the footage cannot be dropped anyway.
@@ -415,7 +446,9 @@ const handlers = {
     return { value };
   },
   caption: async (command) => {
-    await showCaption(command.value, command.subtitle);
+    if (options.captions !== 'off') {
+      await showCaption(command.value, command.subtitle);
+    }
     timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
     if (command.hold) {
       await page.waitForTimeout(command.hold);
@@ -437,6 +470,9 @@ const handlers = {
     return { file };
   },
   stop: async () => {
+    if (manual) {
+      return { browser: 'left open; closing the window ends the driver' };
+    }
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
     const recorded = await recorder?.stop();
@@ -502,7 +538,7 @@ const server = createServer((request, response) => {
       // Shutdown runs from the write callback: exiting as soon as `end` returns can cut the response
       // off before it flushes, and that response carries the video path.
       response.end(JSON.stringify({ ok: true, ...result }), () => {
-        if (command.op === 'stop') {
+        if (command.op === 'stop' && !manual) {
           // Exit from inside `close`, and drop keep-alive sockets so it can actually complete: dropping
           // the exit entirely leaves the process alive on an idle client socket, and exiting before the
           // write callback truncates the response that carries the video path.
