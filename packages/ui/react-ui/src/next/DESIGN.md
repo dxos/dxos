@@ -500,3 +500,18 @@ parallel-namespace approach; no compatibility shims).
    descendants, inset shadows below. The FocusRings audit fails when an inset-shadow ring host has a filled child.
 7. **Combobox Enter picks the first match.** `inputBehavior` defaults to `autohighlight`, so typing highlights the
    first matching option and Enter selects it.
+
+## Phase 4 decisions (react-ui-list/next foundations)
+
+1. **`Next.Panel` hosts a plank.** A new parallel component (`Root`, `Toolbar`, `Content`, `Statusbar`); Root sets
+   `data-size`/level and is the pane's query container (decision 5); Content is a composed ScrollArea around a gutter
+   Container. The current `Panel` stays untouched; plugins switch when they adopt Next.
+2. **Popups inherit the trigger's size.** On open, a popup's Content copies `data-size` from its trigger's nearest sized
+   ancestor (one DOM lookup per open, no context); an explicit `size` prop still wins. Supersedes follow-up 2.
+3. **Settings layout deferred** to the react-ui-form port (AUDIT §3.2 recommends two-track subgrid rows via Container
+   `columns`); the react-ui part is only letting `Field.Root` join a parent's columns as a subgrid row.
+4. **Tree deferred** to the last milestone; decide after Listbox and drag-and-drop, with an Ark `tree-view` spike
+   against `TreeModel` (lazy atom children, virtualization, drop-on-row).
+5. **Drag and drop stays on pragmatic-drag-and-drop** (vanilla core, Solid-compatible; reuses `useReorder` and plugins'
+   `onMove`/drop policies). Next adds a `DragHandle` part (ghost icon-only Button, grip icon), `--nx-*` drop
+   indicators, a size-scaled drag preview, and keyboard move-up/down on the handle.
