@@ -56,6 +56,18 @@ const VariantsStory = () => (
         />
       ))}
     </Next.Toolbar>
+    <Next.Toolbar>
+      {VARIANTS.map(({ name, variant, valence }) => (
+        <Next.IconButton
+          key={name}
+          icon='ph--star--regular'
+          label={name}
+          iconOnly={false}
+          variant={variant}
+          valence={valence}
+        />
+      ))}
+    </Next.Toolbar>
     <div className='flex items-center'>
       {SIZES.map((size) => (
         <div key={size} className='nx-scope flex' data-size={size}>
@@ -78,6 +90,12 @@ const DefaultStory = ({ variants }: StoryArgs) =>
             <Next.IconButton icon='ph--plus--regular' label={`Add ${size}`} data-testid={`add-${size}`} />
             <Next.IconButton icon='ph--minus--regular' label={`Remove ${size}`} data-testid={`remove-${size}`} />
             <Next.IconButton icon='ph--trash--regular' label={`Delete ${size}`} disabled />
+            <Next.IconButton
+              icon='ph--share--regular'
+              label={`Share ${size}`}
+              iconOnly={false}
+              data-testid={`share-${size}`}
+            />
           </Next.Toolbar>
           <Next.Container size={size} gutter='rail' layout='row'>
             <Next.Block rail='start' data-testid={`rail-${size}`}>
@@ -217,5 +235,38 @@ export const Variants: Story = {
       await realHover(button);
       await expect(getComputedStyle(button).backgroundColor, `${name} hover`).not.toBe(rest);
     }
+  },
+};
+
+/**
+ * `iconOnly={false}` shows the label after the icon, spaced by the gap and padded like a Button, at the icon-only
+ * button's height; the text names it, so it has no `aria-label` and no Tooltip.
+ */
+export const Labelled: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of SIZES) {
+      const share = byTestId(canvasElement, `share-${size}`);
+      await expect(share).toHaveTextContent(`Share ${size}`);
+      await expect(share).toBeVisible();
+      await expect(share).not.toHaveAttribute('aria-label');
+      await expect(canvas.getByRole('button', { name: `Share ${size}` })).toBe(share);
+      const rect = share.getBoundingClientRect();
+      await expect(rect.height, size).toBeCloseTo(
+        byTestId(canvasElement, `add-${size}`).getBoundingClientRect().height,
+        0,
+      );
+      await expect(rect.width, size).toBeGreaterThan(rect.height);
+      const style = getComputedStyle(share);
+      const icon = share.querySelector('svg')?.getBoundingClientRect();
+      const gap = parseFloat(style.columnGap);
+      await expect(gap, `${size} gap`).toBeCloseTo(parseFloat(style.paddingLeft), 0);
+      await expect(icon?.left, `${size} icon`).toBeCloseTo(rect.left + parseFloat(style.paddingLeft), 0);
+    }
+
+    const share = byTestId(canvasElement, 'share-md');
+    const watch = expectNoTooltip(canvasElement);
+    await realHover(share);
+    await watch;
   },
 };

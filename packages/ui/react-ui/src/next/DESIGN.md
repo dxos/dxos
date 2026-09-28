@@ -263,6 +263,10 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     rather than the current `--color-base-surface`, which vanishes on a base surface. The current `tag` variant is
     left to `Next.Tag`. Pressed ToggleIconButtons keep the accent over any variant.
 
+35. **`IconButton iconOnly`** (default `true`), as the current IconButton: `iconOnly={false}` renders the icon then
+    the `label` as text, at control height with Button's padding and `--nx-gap-size` between them, not squared or
+    inset; the text names it, so it has no `aria-label` and no Tooltip. `ToggleIconButton` passes it through.
+
 ## Phase 3: react-ui-form port
 
 `@dxos/react-ui-form` (~155 importing files; public extension points `fieldMap`, `FormFieldRenderer`, `fieldProvider`,

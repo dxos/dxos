@@ -14,15 +14,28 @@ import { Tooltip } from '../Tooltip/index.ts';
 export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> &
   ButtonVariantProps & {
     icon: string;
-    /** Required: an icon-only button has no other accessible name; also shown in a Tooltip. */
+    /** Required: names an icon-only button (shown in a Tooltip), or follows the icon as visible text. */
     label: string;
+    /** `false` shows the label after the icon, as a Button, with no Tooltip. */
+    iconOnly?: boolean;
     /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
     showTooltip?: boolean;
   };
 
 export const IconButton = composable<HTMLButtonElement, IconButtonProps>(
   (
-    { icon, label, showTooltip = true, type = 'button', variant = 'default', valence, id, onFocus, ...props },
+    {
+      icon,
+      label,
+      iconOnly = true,
+      showTooltip = true,
+      type = 'button',
+      variant = 'default',
+      valence,
+      id,
+      onFocus,
+      ...props
+    },
     forwardedRef,
   ) => {
     const toolbarItem = useToolbarItem(props.disabled);
@@ -37,20 +50,21 @@ export const IconButton = composable<HTMLButtonElement, IconButtonProps>(
           toolbarItem?.onFocus();
         }}
         type={type}
-        aria-label={label}
+        aria-label={iconOnly ? label : undefined}
         data-scope='icon-button'
         data-part='root'
-        data-square=''
+        data-square={iconOnly ? '' : undefined}
         data-variant={variant}
         data-valence={variant === 'valence' ? valence : undefined}
         className={className}
         ref={forwardedRef}
       >
         <Icon icon={icon} />
+        {!iconOnly && label}
       </button>
     );
 
-    if (!showTooltip) {
+    if (!iconOnly || !showTooltip) {
       return button;
     }
 

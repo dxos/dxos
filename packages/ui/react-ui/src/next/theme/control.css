@@ -136,6 +136,10 @@
     opacity: 0.5;
     cursor: default;
   }
+  /* A labelled icon button spaces its icon from the text like a row's items. */
+  .nx-button[data-scope='icon-button']:not([data-square]) {
+    gap: var(--nx-gap-size);
+  }
   /* Inset on every side, so an icon button occupies a block-sized cell and its icon lines up with a rail Block's. */
   .nx-button[data-square] {
     width: var(--nx-control-size);

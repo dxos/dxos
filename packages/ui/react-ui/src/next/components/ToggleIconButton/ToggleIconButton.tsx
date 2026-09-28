@@ -14,7 +14,7 @@ export type ToggleIconButtonProps = IconButtonProps & {
   onPressedChange?: (pressed: boolean) => void;
 };
 
-/** An IconButton with a pressed state from the zag toggle machine (`aria-pressed`); its label shows in a Tooltip. */
+/** An IconButton with a pressed state from the zag toggle machine (`aria-pressed`); `iconOnly` works as on IconButton. */
 export const ToggleIconButton = composable<HTMLButtonElement, ToggleIconButtonProps>(
   ({ pressed, defaultPressed, onPressedChange, disabled, ...props }, forwardedRef) => (
     <Toggle.Root
