@@ -94,6 +94,7 @@ with Phase 4 milestone 5).
 - [x] **Text and layout** — Typography `truncate`/`tone`, Label `srOnly`, Group `fill`, Container `gap`, ScrollArea `orientation`/`autoHide`/`snap`/`scrollbars`; section label and Block `compact`/`square` deliberate (DESIGN.md follow-up 39).
 - [x] **Button and Toggle** — Button `hue`/`caretDown`/`compact`/`tooltipSide`; Toggle `activeIcon`; `Next.ToggleGroup`, `Toolbar.ToggleGroup` (DESIGN.md follow-up 40).
 - [x] **Fields** — Field `validationValence`, `Field.Label srOnly`; Input `start`/`end`, `noAutoFill`, `variant='subdued'` (DESIGN.md follow-up 41).
+- [x] **Select** — `ItemGroup`/`ItemGroupLabel`, `Separator`, `iconHue`, Item children, `multiple`, Trigger `loading`; number values stay strings (DESIGN.md follow-up 42).
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
 

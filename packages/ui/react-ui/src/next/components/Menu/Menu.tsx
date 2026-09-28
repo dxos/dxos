@@ -145,7 +145,7 @@ type MenuItemGroupLabelProps = ThemedClassName<MenuPrimitive.ItemGroupLabelProps
 /** A small caption naming the group that follows. */
 const MenuItemGroupLabel = forwardRef<HTMLDivElement, MenuItemGroupLabelProps>(
   ({ classNames, ...props }, forwardedRef) => (
-    <MenuPrimitive.ItemGroupLabel {...props} className={mx(recipes.menuGroupLabel(), classNames)} ref={forwardedRef} />
+    <MenuPrimitive.ItemGroupLabel {...props} className={mx(recipes.popupGroupLabel(), classNames)} ref={forwardedRef} />
   ),
 );
 

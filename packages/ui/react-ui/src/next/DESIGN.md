@@ -330,6 +330,15 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     icon-only Button shrinks by one inset on each side so it fits the control height and ends one inset from the row's
     edge. `noAutoFill` sets `data-1p-ignore`; `variant='subdued'` drops the well.
 
+42. **Select parity.** `Select.ItemGroup`/`ItemGroupLabel` are Ark's parts, the label sharing Menu's caption rule
+    (`.nx-popup-group-label`). `SelectOption.iconHue` colours the option's icon in the item and trigger with a Tag
+    hue's foreground (`Icon hue`, the current SelectField's `iconHue`). An Item's `children` replace its icon and label
+    for custom content; the trigger still shows the option's `label`, which is also its typeahead text. `multiple` is
+    Ark's, with `closeOnSelect` defaulting to off so the popup stays open while choosing; the trigger then lists the
+    labels and shows an icon only for a single choice. `Select.Trigger loading` replaces the caret with a spinning
+    icon (still under reduced motion) and sets `aria-busy`, for an async lookup. Values stay strings: Ark collections
+    key by string, so SelectField keeps the map back to number literals (AUDIT 2.14).
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).

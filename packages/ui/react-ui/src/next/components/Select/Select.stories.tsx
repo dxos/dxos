@@ -27,29 +27,80 @@ const ICON_OPTIONS: Next.SelectOption[] = [
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
-/** A plain select and one whose options have leading icons; `Select.Content` takes the row's size (finding 9). */
+const FRUIT: Next.SelectOption[] = [
+  { value: 'apple', label: 'Apple', icon: 'ph--circle--fill', iconHue: 'red' },
+  { value: 'pear', label: 'Pear', icon: 'ph--circle--fill', iconHue: 'lime' },
+];
+
+const VEGETABLES: Next.SelectOption[] = [
+  { value: 'kale', label: 'Kale', icon: 'ph--circle--fill', iconHue: 'emerald' },
+  { value: 'leek', label: 'Leek' },
+];
+
+/**
+ * A plain select, one whose options have leading icons, then a grouped select with hued icons and custom item content,
+ * a `multiple` select and a loading one; `Select.Content` takes the row's size (finding 9).
+ */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-    <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
-      <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
-      <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
-        {OPTIONS.map((item) => (
-          <Fragment key={item.value}>
-            {item.disabled && <Next.Select.Separator />}
-            <Next.Select.Item item={item} />
-          </Fragment>
-        ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
-    <Next.Select.Root items={ICON_OPTIONS} positioning={{ sameWidth: true }}>
-      <Next.Select.Trigger placeholder='View' aria-label={`View ${size}`} />
-      <Next.Select.Content size={size}>
-        {ICON_OPTIONS.map((item) => (
-          <Next.Select.Item key={item.value} item={item} />
-        ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
-  </Next.Toolbar.Root>
+  <>
+    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
+      <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
+        <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
+        <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
+          {OPTIONS.map((item) => (
+            <Fragment key={item.value}>
+              {item.disabled && <Next.Select.Separator />}
+              <Next.Select.Item item={item} />
+            </Fragment>
+          ))}
+        </Next.Select.Content>
+      </Next.Select.Root>
+      <Next.Select.Root items={ICON_OPTIONS} positioning={{ sameWidth: true }}>
+        <Next.Select.Trigger placeholder='View' aria-label={`View ${size}`} />
+        <Next.Select.Content size={size}>
+          {ICON_OPTIONS.map((item) => (
+            <Next.Select.Item key={item.value} item={item} />
+          ))}
+        </Next.Select.Content>
+      </Next.Select.Root>
+    </Next.Toolbar.Root>
+    <Next.Toolbar.Root>
+      <Next.Select.Root items={[...FRUIT, ...VEGETABLES]}>
+        <Next.Select.Trigger placeholder='Produce' aria-label={`Produce ${size}`} />
+        <Next.Select.Content size={size}>
+          {[
+            { label: 'Fruit', items: FRUIT },
+            { label: 'Vegetables', items: VEGETABLES },
+          ].map(({ label, items }) => (
+            <Next.Select.ItemGroup key={label}>
+              <Next.Select.ItemGroupLabel>{label}</Next.Select.ItemGroupLabel>
+              {items.map((item) =>
+                item.value === 'leek' ? (
+                  <Next.Select.Item key={item.value} item={item}>
+                    <Next.Tag hue='amber'>Leek</Next.Tag>
+                  </Next.Select.Item>
+                ) : (
+                  <Next.Select.Item key={item.value} item={item} />
+                ),
+              )}
+            </Next.Select.ItemGroup>
+          ))}
+        </Next.Select.Content>
+      </Next.Select.Root>
+      <Next.Select.Root items={OPTIONS} multiple>
+        <Next.Select.Trigger placeholder='Colors' aria-label={`Colors ${size}`} />
+        <Next.Select.Content size={size}>
+          {OPTIONS.map((item) => (
+            <Next.Select.Item key={item.value} item={item} />
+          ))}
+        </Next.Select.Content>
+      </Next.Select.Root>
+      <Next.Select.Root items={[]}>
+        <Next.Select.Trigger placeholder='Loading' aria-label={`Lookup ${size}`} loading />
+        <Next.Select.Content size={size} />
+      </Next.Select.Root>
+    </Next.Toolbar.Root>
+  </>
 );
 
 const meta = {
@@ -68,7 +119,9 @@ export const Default: Story = {};
 /**
  * Triggers are control-tall and centred in their block at every size (decision 12). Clicking the trigger opens a
  * portalled listbox at `level='popup'`; choosing an option closes it and shows the choice, and Escape closes it without
- * choosing; a decorative Separator spans the popup between options. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
+ * choosing; a decorative Separator spans the popup between options. Grouped options sit in labelled `group`s, a
+ * `hue` colours an option's icon, and an Item's children replace its icon and label. A `multiple` select stays open
+ * while choosing and lists every choice; a `loading` trigger is busy and spins in place of its caret. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
  */
 export const Test: Story = {
@@ -121,6 +174,41 @@ export const Test: Story = {
       within(view).getByText('Grid').getBoundingClientRect().left,
     );
     await expect(icons[0].getBoundingClientRect().width).toBeCloseTo(16, 0);
+
+    // Groups, hued icons and custom item content.
+    const produce = canvas.getByRole('combobox', { name: 'Produce md' });
+    await userEvent.click(produce);
+    const produceList = await body.findByRole('listbox');
+    await expect(within(produceList).getByRole('group', { name: 'Fruit' })).toBeInTheDocument();
+    const vegetables = within(produceList).getByRole('group', { name: 'Vegetables' });
+    await expect(within(vegetables).getAllByRole('option')).toHaveLength(2);
+    const apple = within(produceList).getByRole('option', { name: 'Apple' }).querySelector('svg');
+    const pear = within(produceList).getByRole('option', { name: 'Pear' }).querySelector('svg');
+    await expect(apple && getComputedStyle(apple).color).not.toBe(pear && getComputedStyle(pear).color);
+    const leek = within(vegetables).getByRole('option', { name: 'Leek' });
+    await expect(leek.querySelector('[data-scope="tag"]')).not.toBeNull();
+    await userEvent.click(leek);
+    await waitFor(() => expect(produce).toHaveTextContent('Leek'));
+    await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
+
+    // Multiple: the popup stays open and the trigger lists the choices.
+    const colors = canvas.getByRole('combobox', { name: 'Colors md' });
+    await userEvent.click(colors);
+    const colorList = await body.findByRole('listbox');
+    await expect(colorList).toHaveAttribute('aria-multiselectable', 'true');
+    await userEvent.click(within(colorList).getByRole('option', { name: 'Red' }));
+    await userEvent.click(within(colorList).getByRole('option', { name: 'Blue' }));
+    await expect(body.getByRole('listbox')).toBe(colorList);
+    await waitFor(() => expect(colors).toHaveTextContent('Red, Blue'));
+    await expect(within(colorList).getByRole('option', { name: 'Red' })).toHaveAttribute('aria-selected', 'true');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
+
+    // Loading.
+    const lookup = canvas.getByRole('combobox', { name: 'Lookup md' });
+    await expect(lookup).toHaveAttribute('aria-busy', 'true');
+    const spinner = lookup.querySelector<SVGElement>('[data-spin]');
+    await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');
 
     await userEvent.click(view);
     const views = await body.findByRole('listbox');

@@ -36,14 +36,4 @@
     line-height: var(--nx-label-line-height);
     color: var(--color-description);
   }
-
-  .nx-menu-group-label {
-    display: flex;
-    align-items: center;
-    min-height: var(--nx-control-size);
-    padding-inline: var(--nx-gap-size);
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
-    color: var(--color-description);
-  }
 }
