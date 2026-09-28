@@ -85,7 +85,7 @@
     A benchmark story (e.g. 1,000 rows in a nested Container inside a ScrollArea) tracks render and layout cost, since
     deep subgrids and `:has` are the design's unmeasured risks.
 
-12. **Control sizing.** Controls (Input, Button, IconButton, Select trigger, Checkbox box) are shorter than the block
+12. **Control sizing.** Controls (Input, Button, IconButton, Select trigger) are shorter than the block
     and centred in it: `--nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset))`, with a per-size
     inset (provisional: xs 1px, sm 2px, md 2px, lg 3px, xl 3px; controls 18/20/28/34/42px). `--nx-control-icon` equals `--nx-icon-size` (one
     icon scale, decision 2), so an icon is the same size in a control as in a rail Block. The block stays the row height, so rails and Typography's first-line centring are unchanged.
@@ -149,3 +149,4 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 6. **Focus ring is Next's own**: `.nx-focus-ring` draws `--nx-focus-ring-width` (2px) in `--nx-focus-ring-color`
    (orange by default), so a theme recolours it by setting one variable; the Select popup uses the same variables as
    an outline so item highlights cannot cover it.
+7. **Checkbox box is icon-sized** (`--nx-icon-size`, check mark at 75%), not control-sized; it stays centred in its block.

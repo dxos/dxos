@@ -149,7 +149,7 @@ export const Default: Story = {
 
       const checkbox = byTestId(canvasElement, `checkbox-${size}`);
       const box = checkbox.querySelector('[data-part="control"]')?.getBoundingClientRect();
-      await expect(box?.height).toBeCloseTo(control, 0);
+      await expect(box?.height).toBeCloseTo(icon, 0);
       await expect(box && centreY(box)).toBeCloseTo(centreY(checkbox.getBoundingClientRect()), 0);
 
       // In a Field stack the field pads its control out to a block.

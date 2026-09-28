@@ -110,19 +110,20 @@
     line-height: var(--nx-line-height);
     cursor: pointer;
   }
+  /* The box is icon-sized, so it reads like the icons beside it rather than like a text control. */
   .nx-checkbox-control {
     box-sizing: border-box;
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: var(--nx-control-size);
-    height: var(--nx-control-size);
+    width: var(--nx-icon-size);
+    height: var(--nx-icon-size);
     border-radius: var(--radius-sm, 0.25rem);
     background: var(--color-input-surface);
   }
   .nx-checkbox-control .nx-icon {
-    width: var(--nx-control-icon);
-    height: var(--nx-control-icon);
+    width: 75%;
+    height: 75%;
   }
   .nx-checkbox-control[data-state='checked'],
   .nx-checkbox-control[data-state='indeterminate'] {
