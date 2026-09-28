@@ -415,9 +415,8 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     wrapper restates Ark's `data-scope`/`data-part`, which the viewport slot would replace (finding 10). Popover
     already scrolls through `Popover.Body`. `Toolbar.Root` is the viewport of a thin ScrollArea along its orientation
     whose bar shows on hover. `expectScrollingPopup` (`testing.ts`) asserts overflow, no native bar and a highlight
-    kept in view in the Menu, Select and Combobox `Test`s; `popupFrame` finds the surface. The thumbs'
-    ResizeObserver reports a benign "ResizeObserver loop" when a popup resizes with its reference in the same frame
-    (the Select `multiple` case); vitest does not fail on it.
+    kept in view in the Menu, Select and Combobox `Test`s; `popupFrame` finds the surface. The "ResizeObserver
+    loop" this caused when a popup widened with its trigger is fixed in 53.
 
 50. **Tooltip uses the inverted surface** (amends 17 and 32), as the current Tooltip (`Tooltip.theme.ts`): ui-theme's
     `--color-inverse-surface` fill and `--color-inverse-fg` text, dark on a light theme and light on a dark one. The
@@ -450,6 +449,18 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     synthetic hover after keyboard use highlights nothing. Menu `Test` walks File ▸ New ▸ Diagram ▸ Flowchart from
     the keyboard (Enter, ArrowRight, ArrowDown, Enter), asserts each Sub opens to the right of its trigger item, that
     `Selected: new-flowchart` reaches the root and that every menu closes.
+
+53. **Popups reposition outside ResizeObserver callbacks** (amends 49). The Select `multiple` case (the popup stays
+    open while its trigger widens) logged "ResizeObserver loop completed with undelivered notifications". floating-ui's
+    `autoUpdate` observes the trigger; its callback repositions, and zag's size middleware sets `--reference-width`
+    (the `.nx-popup` `min-width`) in a microtask before that delivery ends. The popup's ScrollArea viewport, which the
+    overlay thumbs observe, is portalled near the body and so shallower than the trigger: the browser skips a
+    shallower observation that changes mid-delivery and reports the loop. The thumbs were the victim, not the cause,
+    so `ScrollAreaThumbs` is unchanged. `popupPositioning` (`PopupScroll.tsx`, used by Select, Combobox, Menu and
+    Popover Roots) sets zag's `updatePosition` hook: the first placement of each open runs at once (deferring it left
+    the popup unfocused, so Escape missed it) and later ones run in the next animation frame, which is the same frame
+    for a scroll-driven update and one frame later for a resize. Select `Test` fails on any loop error
+    (`watchResizeObserverLoop` in `testing.ts`) and checks the popup still widens with its trigger.
 
 ## Phase 3: react-ui-form port
 

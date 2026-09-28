@@ -14,7 +14,7 @@ import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon } from '../Icon/index.ts';
-import { PopupScroll } from '../ScrollArea/PopupScroll.tsx';
+import { PopupScroll, popupPositioning } from '../ScrollArea/PopupScroll.tsx';
 import { type SelectOption } from '../Select/index.ts';
 
 /** Gap between control and popup, in px (positioning takes a number, not a CSS variable). */
@@ -71,7 +71,7 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
         // Mounting the popup on open keeps it out of a modal Dialog's one-time `aria-hidden` sweep of its siblings.
         lazyMount={lazyMount}
         unmountOnExit={unmountOnExit}
-        positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+        positioning={popupPositioning(POPUP_GUTTER, positioning)}
         // Typing highlights the first match, so Enter picks it without an arrow key first.
         inputBehavior={inputBehavior}
         collection={collection}

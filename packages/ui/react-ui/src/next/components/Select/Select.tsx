@@ -14,7 +14,7 @@ import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon, type IconHue } from '../Icon/index.ts';
-import { PopupScroll } from '../ScrollArea/PopupScroll.tsx';
+import { PopupScroll, popupPositioning } from '../ScrollArea/PopupScroll.tsx';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 
@@ -68,7 +68,7 @@ const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(
         lazyMount={lazyMount}
         unmountOnExit={unmountOnExit}
         // Ark's 8px default reads as detached from the trigger.
-        positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+        positioning={popupPositioning(POPUP_GUTTER, positioning)}
         collection={collection}
         className={mx('nx-select', classNames)}
         ref={forwardedRef}

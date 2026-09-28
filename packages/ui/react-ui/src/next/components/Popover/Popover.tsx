@@ -24,6 +24,7 @@ import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { popupPositioning } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -57,7 +58,7 @@ const PopoverRoot = ({ lazyMount = true, unmountOnExit = true, positioning, ...p
     lazyMount={lazyMount}
     unmountOnExit={unmountOnExit}
     // Ark's 8px default reads as detached from the trigger.
-    positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+    positioning={popupPositioning(POPUP_GUTTER, positioning)}
   />
 );
 

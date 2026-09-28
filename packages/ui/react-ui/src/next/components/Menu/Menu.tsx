@@ -13,7 +13,7 @@ import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon } from '../Icon/index.ts';
-import { PopupScroll } from '../ScrollArea/PopupScroll.tsx';
+import { PopupScroll, popupPositioning } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -40,7 +40,7 @@ const MenuRoot = ({ lazyMount = true, unmountOnExit = true, positioning, onSelec
       lazyMount={lazyMount}
       unmountOnExit={unmountOnExit}
       // Ark's 8px default reads as detached from the trigger.
-      positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+      positioning={popupPositioning(POPUP_GUTTER, positioning)}
     />
   </MenuSelectContext.Provider>
 );

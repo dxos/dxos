@@ -145,6 +145,27 @@ export const realUnhover = async (element: HTMLElement) => {
   await pointer.unhover(element);
 };
 
+/**
+ * Records "ResizeObserver loop" errors from now until the returned check runs, which fails if any arrived; the browser
+ * reports them as window `error` events, which the runner logs without failing the test.
+ */
+export const watchResizeObserverLoop = (root: HTMLElement) => {
+  const view = root.ownerDocument.defaultView ?? window;
+  const messages: string[] = [];
+  const listener = (event: ErrorEvent) => {
+    if (event.message.includes('ResizeObserver loop')) {
+      messages.push(event.message);
+    }
+  };
+  view.addEventListener('error', listener);
+  return async () => {
+    // A loop is reported at the end of the frame that caused it.
+    await new Promise((resolve) => view.requestAnimationFrame(() => view.requestAnimationFrame(resolve)));
+    view.removeEventListener('error', listener);
+    await expect(messages, 'ResizeObserver loop errors').toEqual([]);
+  };
+};
+
 /** Every themed part carries Ark's scope/part attributes (decision 10). */
 export const expectScoped = async (root: HTMLElement) => {
   for (const part of root.querySelectorAll('[class*="nx-"]:not(.nx-scope)')) {

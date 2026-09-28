@@ -21,6 +21,7 @@ import {
   expectScrollingPopup,
   popupFrame,
   sizeRow,
+  watchResizeObserverLoop,
 } from '../../testing.ts';
 
 const OPTIONS: Next.SelectOption[] = [
@@ -221,7 +222,9 @@ export const Test: Story = {
     await waitFor(() => expect(produce).toHaveTextContent('Leek'));
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
-    // Multiple: the popup stays open and the trigger lists the choices.
+    // Multiple: the popup stays open and the trigger lists the choices; the trigger widening under the open popup
+    // must not loop the ScrollArea thumbs' ResizeObserver.
+    const checkResizeLoop = watchResizeObserverLoop(canvasElement);
     const colors = canvas.getByRole('combobox', { name: 'Colors md' });
     await userEvent.click(colors);
     const colorList = await body.findByRole('listbox');
@@ -230,7 +233,14 @@ export const Test: Story = {
     await userEvent.click(within(colorList).getByRole('option', { name: 'Blue' }));
     await expect(body.getByRole('listbox')).toBe(colorList);
     await waitFor(() => expect(colors).toHaveTextContent('Red, Blue'));
+    // The deferred reposition still lets the popup follow its widened trigger.
+    await waitFor(() =>
+      expect(popupFrame(colorList).getBoundingClientRect().width).toBeGreaterThanOrEqual(
+        Math.round(colors.getBoundingClientRect().width) - 1,
+      ),
+    );
     await expect(within(colorList).getByRole('option', { name: 'Red' })).toHaveAttribute('aria-selected', 'true');
+    await checkResizeLoop();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
