@@ -59,6 +59,20 @@ describe('sessionTimelineToGantt', () => {
           parentId: 'session:a',
         },
         { id: 'task:2', kind: 'task', label: 'Open', status: 'running', start: 2, parentId: 'session:a' },
+        // Gaps reaching past either end are clipped to the lane, not dropped.
+        {
+          id: 'task:3',
+          kind: 'task',
+          label: 'Edges',
+          status: 'done',
+          start: 2,
+          end: 9,
+          gaps: [
+            { start: 2, end: 3 },
+            { start: 8, end: 12 },
+          ],
+          parentId: 'session:a',
+        },
       ],
       markers: [],
       range: { start: 1, end: 9 },
@@ -71,6 +85,7 @@ describe('sessionTimelineToGantt', () => {
         { start: 6, end: 9 },
       ],
       [{ start: 2 }],
+      [{ start: 3, end: 8 }],
     ]);
   });
 

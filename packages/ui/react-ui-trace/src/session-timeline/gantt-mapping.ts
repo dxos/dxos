@@ -48,13 +48,22 @@ const segmentsOf = (lane: Lane): GanttLane['segments'] => {
   const segments: GanttSegment[] = [];
   let start = lane.start;
   for (const gap of [...(lane.gaps ?? [])].sort((left, right) => left.start - right.start)) {
-    if (gap.start <= start || (lane.end !== undefined && gap.end >= lane.end)) {
+    // Clipped to the lane: a folded session lane keeps its own span while taking its task's gaps.
+    const gapStart = Math.max(gap.start, start);
+    const gapEnd = lane.end === undefined ? gap.end : Math.min(gap.end, lane.end);
+    if (gapEnd <= gapStart) {
       continue;
     }
-    segments.push({ start, end: gap.start });
-    start = gap.end;
+    if (gapStart > start) {
+      segments.push({ start, end: gapStart });
+    }
+    start = gapEnd;
   }
-  segments.push({ start, ...(lane.end === undefined ? {} : { end: lane.end }) });
+  if (lane.end === undefined) {
+    segments.push({ start });
+  } else if (lane.end > start) {
+    segments.push({ start, end: lane.end });
+  }
   return segments;
 };
 

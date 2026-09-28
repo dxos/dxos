@@ -44,7 +44,8 @@ export const Default: Story = {
     await expect(
       await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 30_000 }),
     ).toBeInTheDocument();
-    // The overlays are on by default: navigation, actions and the palette each render a toolbar.
+    // The overlays are on by default: navigation, actions and debug each render a toolbar, beside the palette.
     await waitFor(() => expect(canvasElement.querySelectorAll('[role="toolbar"]').length).toBeGreaterThanOrEqual(3));
+    await expect(await within(canvasElement).findByTestId('palette')).toBeInTheDocument();
   },
 };
