@@ -7,6 +7,7 @@ import {
   selection as d3Selection,
   easeLinear,
   easeSinOut,
+  geoEquirectangular,
   geoMercator,
   geoOrthographic,
   geoPath,
@@ -108,12 +109,29 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
   },
 };
 
-export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
+export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator' | 'equirectangular';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
   'orthographic': geoOrthographic,
   'mercator': geoMercator,
   'transverse-mercator': geoTransverseMercator,
+  // The flat plate-carrée map (longitude and latitude straight to x and y), as a world-clock backdrop.
+  'equirectangular': geoEquirectangular,
+};
+
+const SPHERE = { type: 'Sphere' } as const;
+
+/**
+ * The scale at zoom 1. With a `fit`, the sphere's projected bounds are measured at unit scale and
+ * scaled to fit inside (`contain`) or fill (`cover`) the canvas, whatever the projection's shape.
+ */
+const baseScale = (projection: GeoProjection, size: { width: number; height: number }, fit?: GlobeFit): number => {
+  if (!fit) {
+    return Math.min(size.width, size.height) / 2;
+  }
+  const [[x0, y0], [x1, y1]] = geoPath(projection.scale(1).translate([0, 0]).rotate([0, 0, 0])).bounds(SPHERE);
+  const ratios = [size.width / (x1 - x0), size.height / (y1 - y0)];
+  return fit === 'cover' ? Math.max(...ratios) : Math.min(...ratios);
 };
 
 const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): GeoProjection => {
@@ -224,8 +242,13 @@ GlobeViewport.displayName = 'Globe.Viewport';
 // Canvas
 //
 
+/** How the whole sphere sits in the canvas at zoom 1, as `object-fit` places an image. */
+export type GlobeFit = 'contain' | 'cover';
+
 type GlobeCanvasProps = {
   projection?: ProjectionType | GeoProjection;
+  /** Unset keeps each projection's own scale: a globe's radius fills the shorter side. */
+  fit?: GlobeFit;
   topology?: Topology;
   features?: Features;
   styles?: StyleSet;
@@ -237,7 +260,7 @@ type GlobeCanvasProps = {
  * the live instance.
  * https://github.com/topojson/world-atlas
  */
-const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
+const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
   const { themeMode } = useThemeContext();
   const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
   const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
@@ -365,7 +388,7 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
       timer(() => {
         // https://d3js.org/d3-geo/projection
         projection
-          .scale((Math.min(size.width, size.height) / 2) * zoom)
+          .scale(baseScale(projection, size, fit) * zoom)
           .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
           .rotate(rotation ?? [0, 0, 0]);
 
@@ -380,7 +403,7 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
         renderLayers(generator, layers, zoom, styles, viewCenter);
       });
     }
-  }, [generator, size, zoom, translation, rotation, layers, projectionProp]);
+  }, [generator, size, zoom, translation, rotation, layers, projectionProp, fit]);
 
   if (!size.width || !size.height) {
     return null;

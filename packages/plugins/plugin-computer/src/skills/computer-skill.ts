@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { ComputerOperation } from '#types';
 
-const SKILL_KEY = 'org.dxos.skill.computer';
+export const SKILL_KEY = 'org.dxos.skill.computer';
 
 const operations = [ComputerOperation.Bash, ComputerOperation.Edits];
 

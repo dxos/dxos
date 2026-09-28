@@ -739,6 +739,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
+export const WithoutDescription: Story = {
+  args: {
+    showDescription: false,
+  },
+};
+
 /** A list long enough to scroll, group and number into double digits. */
 export const ManyTasks: Story = {
   args: {

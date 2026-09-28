@@ -38,6 +38,9 @@ const DELEGATION_SKILL_KEYS = [
   'org.dxos.skill.sandbox',
 ];
 
+/** Statuses a subtask keeps when its parent is delegated. */
+const FINISHED: ReadonlySet<string> = new Set(['done', 'review', 'cancelled', 'duplicate']);
+
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
     Operation.withHandler(
@@ -48,9 +51,21 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const requested = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
         const { db } = yield* Database.Service;
 
+        // A parent brings its subtasks: handing over the heading of a piece of work hands over the work,
+        // parent first, then its subtree in order. Deduped, so ticking a parent and a child does not
+        // list the child twice.
+        const subtrees = yield* Effect.forEach(requested, (task) => Task.collectSubtree(task));
+
+        // A subtask that is already finished stays finished: it comes along only when it was asked for
+        // by name, so delegating a parent never reopens work that is done.
+        const asked = new Set(requested.map((task) => task.id));
+        const descendants = Task.dedupeById(subtrees.flat()).filter(
+          (task) => asked.has(task.id) || !FINISHED.has(task.status ?? 'todo'),
+        );
+
         // Idempotent over re-invocation: a task the agent already holds is skipped rather than
         // handed to a second session, and a list of nothing else stops here the way an empty one does.
-        const tasks = requested.filter((task) => !Task.isAgentWorking(task));
+        const tasks = descendants.filter((task) => !Task.isAgentWorking(task));
         invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
@@ -72,9 +87,9 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const [project] = projects.values();
 
         const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-          // Named after the task only when it is about exactly one: a chat holding three would be
-          // claiming to be about whichever happened to be first.
-          ...(tasks.length === 1 && { name: tasks[0].title }),
+          // Named after the task only when it was handed exactly one (with its subtasks): a chat holding
+          // three would be claiming to be about whichever happened to be first.
+          ...(requested.length === 1 && { name: requested[0].title }),
         });
 
         // The tasks join the chat's checklist in the order they were given, which is the order the
@@ -118,9 +133,22 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
+        // The project's companion shows the delegated chat, so opening the Assistant beside the ledger
+        // lands on the session holding the tasks rather than on a fresh, empty one. Best-effort like the
+        // opening turn below: the delegation is durable either way.
+        if (project) {
+          const selected = yield* Operation.invoke(AssistantOperation.SetCurrentChat, {
+            companionTo: project,
+            chat,
+          }).pipe(Effect.exit);
+          if (Exit.isFailure(selected)) {
+            log.warn('delegated chat was not made the companion chat', { cause: Cause.pretty(selected.cause) });
+          }
+        }
+
         // The reader stays where they delegated from — the project's ledger, whose pipeline chart
-        // shows the session as it starts — so the operation does not navigate; the chart's session
-        // lane is the way into the chat.
+        // shows the session as it starts — so the operation does not navigate (it only selects the
+        // companion's chat); the chart's session lane is the way into the chat as a plank.
         //
         // Best-effort and deliberately not fatal: the delegation itself is already durable — the
         // chat exists, carries the task, and is filed under the project — so a host with no agent

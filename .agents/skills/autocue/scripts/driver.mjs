@@ -24,7 +24,7 @@
  * `--mode manual` is for a session a person records themselves: a headed window, no recorder, the
  * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
  * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
- * a persistent profile (`--profile`, default `~/.local/state/dxos/recording-demos/profile`).
+ * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`).
  *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
@@ -71,7 +71,7 @@ const parseArgs = () => {
     'mode': 'record',
     // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
     // so the user's recording starts in a prepared app instead of onboarding.
-    'profile': path.join(homedir(), '.local/state/dxos/recording-demos/profile'),
+    'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
     // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
     'theme': 'dark',
     // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
@@ -92,6 +92,9 @@ const parseArgs = () => {
   options.captions ??= narrate;
   // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
   options.pace ??= options.mode === 'manual' ? 800 : 0;
+  // Milliseconds the cursor rests on a target before the click: a live viewer has to see what is about to be
+  // chosen. A recording is trimmed, so it needs none.
+  options.dwell ??= options.mode === 'manual' ? 1_000 : 0;
   return options;
 };
 
@@ -310,8 +313,8 @@ const gestured = () => {
 };
 
 /**
- * Cursor and ripple go up first, then a beat, then the click: the viewer's eye has to reach the target
- * before its effect replaces it.
+ * The cursor moves to the target and rests there (`dwell`), then the ripple, then a beat, then the click: the
+ * viewer's eye has to reach the target, and see which one it is, before its effect replaces it.
  */
 const pointAt = async (target, command, kind) => {
   if (command.hud === false) {
@@ -323,7 +326,13 @@ const pointAt = async (target, command, kind) => {
     ? await describe(target, command)
     : summarize(command.label || command.text || command.selector, 60);
   if (box) {
-    await overlay.click({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const dwell = command.dwell ?? options.dwell;
+    if (dwell > 0) {
+      await overlay.moveCursor(point);
+      await page.waitForTimeout(dwell);
+    }
+    await overlay.click(point);
   }
   await overlay.event({ kind, label, detail: command.value === undefined ? undefined : summarize(command.value) });
   if (box) {
@@ -370,7 +379,19 @@ let booted = false;
  * The flow script `run` last executed and the 0-based index of its next step, so a bare `run` resumes
  * where the previous one stopped — "carry on" needs no bookkeeping from the caller.
  */
-const flow = { file: undefined, next: 0, aborted: false, interrupt: undefined };
+/**
+ * `state` is what `status` reports while a backgrounded `run` is in flight: `setup` (off-camera steps),
+ * `cued` (the play button is up and waiting), `running`, then `done`, `failed` or `aborted` with `result`.
+ */
+const flow = {
+  file: undefined,
+  next: 0,
+  aborted: false,
+  interrupt: undefined,
+  state: 'idle',
+  step: undefined,
+  result: undefined,
+};
 
 class Aborted extends Error {}
 
@@ -414,6 +435,126 @@ const stepIndex = (steps, ref, fallback) => {
     throw new Error(`no step ${JSON.stringify(ref)} (steps are 1..${steps.length})`);
   }
   return index;
+};
+
+/** The body of the `run` op; `run` wraps it to keep `flow.state` current for `status`. */
+const runFlow = async (command) => {
+  if (!command.file && !flow.file) {
+    throw new Error('no flow script: pass "file"');
+  }
+  const file = path.resolve(command.file ?? flow.file);
+  const steps = await loadFlow(file);
+  if (file !== flow.file) {
+    flow.file = file;
+    flow.next = 0;
+  }
+  const from = stepIndex(steps, command.from, flow.next);
+  const until = stepIndex(steps, command.until, steps.length - 1);
+  if (from >= steps.length) {
+    return { steps: [], next: null, of: steps.length, done: true };
+  }
+  const shots = path.join(options.out, 'steps');
+  mkdirSync(shots, { recursive: true });
+  const screenshot = async (index) => {
+    const shot = path.join(shots, `${String(index + 1).padStart(2, '0')}-${slug(steps[index].name)}.png`);
+    return page.screenshot({ path: shot }).then(
+      () => shot,
+      () => undefined,
+    );
+  };
+
+  const failure = (error) =>
+    // Playwright colours its call log for a terminal; the escapes are noise in a JSON reply.
+    stripVTControlCharacters(error.message ?? String(error))
+      .split('\n')
+      .slice(0, 6)
+      .join('\n');
+
+  // Steps call the same handlers as the HTTP ops, so the cursor and pills behave identically. The
+  // quiet variant is for replay: no cursor, no pills, no captions, since none of it is the demo.
+  const makeDemo = (quiet) =>
+    Object.fromEntries(
+      Object.entries(handlers)
+        .filter(([op]) => !['run', 'abort', 'steps', 'status', 'stop'].includes(op))
+        .map(([op, handler]) => [
+          op,
+          quiet && op === 'caption'
+            ? async () => ({})
+            : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
+        ]),
+    );
+  const demo = makeDemo(false);
+  flow.aborted = false;
+
+  const replayed = [];
+  if (command.restart || command.replay) {
+    if (command.restart) {
+      await page.goto(command.url ?? options.url, { waitUntil: 'domcontentloaded' });
+      await page.locator(options.ready).first().waitFor({ state: 'visible', timeout: options['ready-timeout'] });
+      await page.waitForTimeout(options.settle);
+    }
+    const quiet = makeDemo(true);
+    for (let index = 0; index < from; index++) {
+      const step = steps[index];
+      try {
+        if (step.done && (await step.done({ page, demo: quiet }))) {
+          replayed.push({ step: index + 1, name: step.name, skipped: true });
+          continue;
+        }
+        await step.run({ page, demo: quiet });
+        replayed.push({ step: index + 1, name: step.name, ok: true });
+      } catch (error) {
+        flow.next = index;
+        replayed.push({
+          step: index + 1,
+          name: step.name,
+          ok: false,
+          error: failure(error),
+          screenshot: await screenshot(index),
+        });
+        return { replayed, steps: [], failed: index + 1, next: index + 1, of: steps.length };
+      }
+    }
+  }
+
+  const results = [];
+  for (let index = from; index <= until; index++) {
+    if (flow.aborted) {
+      return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
+    }
+    const step = steps[index];
+    flow.step = index + 1;
+    flow.state = step.setup ? 'setup' : 'running';
+    try {
+      // The take starts where setup ends: a play button, then 3-2-1, so the person recording knows
+      // the moment everything before it stops being preparation.
+      if (index > 0 && steps[index - 1].setup && !step.setup && command.countdown !== false) {
+        flow.state = 'cued';
+        await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
+        flow.state = 'running';
+      }
+      await interruptible(step.run({ page, demo }));
+      results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
+      flow.next = index + 1;
+    } catch (error) {
+      flow.next = index;
+      if (error instanceof Aborted) {
+        return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
+      }
+      results.push({
+        step: index + 1,
+        name: step.name,
+        ok: false,
+        error: failure(error),
+        screenshot: await screenshot(index),
+      });
+      return { replayed, steps: results, failed: index + 1, next: index + 1, of: steps.length };
+    }
+    if (index < until) {
+      await page.waitForTimeout(command.pace ?? options.pace);
+    }
+  }
+  return { replayed, steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
 };
 
 const handlers = {
@@ -599,120 +740,27 @@ const handlers = {
    * already holds — so a flow can be picked up at any step after a reload, a crash or a new session.
    */
   run: async (command) => {
-    if (!command.file && !flow.file) {
-      throw new Error('no flow script: pass "file"');
+    flow.state = 'running';
+    flow.result = undefined;
+    try {
+      const result = await runFlow(command);
+      flow.state = result.failed ? 'failed' : result.aborted ? 'aborted' : 'done';
+      flow.result = result;
+      return result;
+    } catch (error) {
+      flow.state = 'failed';
+      flow.result = { error: String(error?.message ?? error) };
+      throw error;
     }
-    const file = path.resolve(command.file ?? flow.file);
-    const steps = await loadFlow(file);
-    if (file !== flow.file) {
-      flow.file = file;
-      flow.next = 0;
-    }
-    const from = stepIndex(steps, command.from, flow.next);
-    const until = stepIndex(steps, command.until, steps.length - 1);
-    if (from >= steps.length) {
-      return { steps: [], next: null, of: steps.length, done: true };
-    }
-    const shots = path.join(options.out, 'steps');
-    mkdirSync(shots, { recursive: true });
-    const screenshot = async (index) => {
-      const shot = path.join(shots, `${String(index + 1).padStart(2, '0')}-${slug(steps[index].name)}.png`);
-      return page.screenshot({ path: shot }).then(
-        () => shot,
-        () => undefined,
-      );
-    };
-
-    const failure = (error) =>
-      // Playwright colours its call log for a terminal; the escapes are noise in a JSON reply.
-      stripVTControlCharacters(error.message ?? String(error))
-        .split('\n')
-        .slice(0, 6)
-        .join('\n');
-
-    // Steps call the same handlers as the HTTP ops, so the cursor and pills behave identically. The
-    // quiet variant is for replay: no cursor, no pills, no captions, since none of it is the demo.
-    const makeDemo = (quiet) =>
-      Object.fromEntries(
-        Object.entries(handlers)
-          .filter(([op]) => !['run', 'abort', 'steps', 'stop'].includes(op))
-          .map(([op, handler]) => [
-            op,
-            quiet && op === 'caption'
-              ? async () => ({})
-              : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
-          ]),
-      );
-    const demo = makeDemo(false);
-    flow.aborted = false;
-
-    const replayed = [];
-    if (command.restart || command.replay) {
-      if (command.restart) {
-        await page.goto(command.url ?? options.url, { waitUntil: 'domcontentloaded' });
-        await page.locator(options.ready).first().waitFor({ state: 'visible', timeout: options['ready-timeout'] });
-        await page.waitForTimeout(options.settle);
-      }
-      const quiet = makeDemo(true);
-      for (let index = 0; index < from; index++) {
-        const step = steps[index];
-        try {
-          if (step.done && (await step.done({ page, demo: quiet }))) {
-            replayed.push({ step: index + 1, name: step.name, skipped: true });
-            continue;
-          }
-          await step.run({ page, demo: quiet });
-          replayed.push({ step: index + 1, name: step.name, ok: true });
-        } catch (error) {
-          flow.next = index;
-          replayed.push({
-            step: index + 1,
-            name: step.name,
-            ok: false,
-            error: failure(error),
-            screenshot: await screenshot(index),
-          });
-          return { replayed, steps: [], failed: index + 1, next: index + 1, of: steps.length };
-        }
-      }
-    }
-
-    const results = [];
-    for (let index = from; index <= until; index++) {
-      if (flow.aborted) {
-        return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
-      }
-      const step = steps[index];
-      try {
-        // The take starts where setup ends: a play button, then 3-2-1, so the person recording knows
-        // the moment everything before it stops being preparation.
-        if (index > 0 && steps[index - 1].setup && !step.setup && command.countdown !== false) {
-          await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
-        }
-        await interruptible(step.run({ page, demo }));
-        results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
-        flow.next = index + 1;
-      } catch (error) {
-        flow.next = index;
-        if (error instanceof Aborted) {
-          return { replayed, steps: results, aborted: true, next: index + 1, of: steps.length };
-        }
-        results.push({
-          step: index + 1,
-          name: step.name,
-          ok: false,
-          error: failure(error),
-          screenshot: await screenshot(index),
-        });
-        return { replayed, steps: results, failed: index + 1, next: index + 1, of: steps.length };
-      }
-      if (index < until) {
-        await page.waitForTimeout(command.pace ?? options.pace);
-      }
-    }
-    return { replayed, steps: results, next: flow.next < steps.length ? flow.next + 1 : null, of: steps.length };
   },
-  /** A play button and a 3-2-1 leader; `wait` (default in manual mode) holds until the button is clicked. */
+  /** Where a backgrounded `run` is: poll it rather than holding the `run` request open. */
+  status: () => ({
+    state: flow.state,
+    step: flow.step,
+    next: flow.next + 1,
+    ...(flow.result ? { result: flow.result } : {}),
+  }),
+  /** A start ring, then a 3-2-1 as it unwinds; `wait` (default in manual mode) holds until the button is clicked. */
   countdown: async (command) => {
     await overlay.countdown({ from: command.from ?? 3, wait: command.wait ?? manual });
     return {};

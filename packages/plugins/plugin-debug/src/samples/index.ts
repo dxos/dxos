@@ -4,7 +4,6 @@
 
 export * as IncidentSpace from './incident/IncidentSpace.ts';
 export * as PipelineSpace from './crm/PipelineSpace.ts';
-export * as PluginSpace from './plugin/PluginSpace.ts';
 export * as ReviewSpace from './review/ReviewSpace.ts';
 export * as StockfishSpace from './stockfish/StockfishSpace.ts';
 export * as TidepoolSpace from './tidepool/TidepoolSpace.ts';

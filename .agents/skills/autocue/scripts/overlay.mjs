@@ -15,7 +15,30 @@
  * checks and the app's own hit testing see straight through.
  */
 
+import { readFileSync } from 'node:fs';
+
 const HOST_ID = '__demo_overlay__';
+
+/** react-ui-experimental's countdown, the DOM half of its `Countdown` component, shared rather than copied. */
+const COUNTDOWN = new URL(
+  '../../../../packages/ui/react-ui-experimental/src/components/Countdown/play-countdown.ts',
+  import.meta.url,
+);
+
+/** Transpiled once, on first use: esbuild is the repo's own, and the module has no imports to resolve. */
+let countdownCode;
+const loadCountdown = async () => {
+  if (!countdownCode) {
+    const { transform } = await import('esbuild');
+    const { code } = await transform(readFileSync(COUNTDOWN, 'utf8'), {
+      loader: 'ts',
+      format: 'iife',
+      globalName: '__countdown',
+    });
+    countdownCode = code;
+  }
+  return countdownCode;
+};
 
 /**
  * Installed with `page.evaluate`, re-installed after every navigation, idempotent. Exposes
@@ -54,35 +77,6 @@ const install = ({ hostId, feedMs, position, feed: showFeed }) => {
         .ripple { position: fixed; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
           border: 3px solid #0ea5e9; background: rgba(14,165,233,0.25); animation: ripple 650ms ease-out forwards; }
         @keyframes ripple { from { transform: scale(0.3); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
-        .curtain { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
-          justify-content: center; gap: 18px; background: rgba(8,8,10,0.62); backdrop-filter: blur(3px);
-          transition: opacity 350ms ease; font: 500 14px/18px ui-sans-serif, system-ui, sans-serif; color: #fff; }
-        .curtain.out { opacity: 0; }
-        .play { pointer-events: auto; cursor: pointer; width: 132px; height: 132px; border: none; border-radius: 50%;
-          background: rgba(255,255,255,0.92); box-shadow: 0 10px 40px rgba(0,0,0,.45);
-          display: grid; place-items: center; transition: transform 220ms cubic-bezier(.3,.7,.4,1), opacity 220ms ease; }
-        .play:hover { transform: scale(1.06); }
-        .play.go { transform: scale(0.6); opacity: 0; }
-        .play svg { width: 54px; height: 54px; margin-left: 8px; }
-        .hint { opacity: 0.75; letter-spacing: 0.3px; }
-        /* A film leader: a sweep that fills the ring once per count, crosshairs, and the numeral. */
-        .leader { position: relative; width: 240px; height: 240px; border-radius: 50%; overflow: hidden;
-          border: 6px solid rgba(255,255,255,0.9); box-shadow: 0 0 0 10px rgba(255,255,255,0.12);
-          background: rgba(20,20,24,0.85); }
-        .sweep { position: absolute; inset: 0; border-radius: 50%;
-          background: conic-gradient(rgba(255,255,255,0.28) var(--p), transparent 0);
-          animation: sweep 1000ms linear infinite; }
-        @property --p { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-        @keyframes sweep { from { --p: 0deg; } to { --p: 360deg; } }
-        .cross { position: absolute; background: rgba(255,255,255,0.45); }
-        .cross.h { left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; }
-        .cross.v { top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; }
-        .ring { position: absolute; inset: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.45); }
-        .num { position: absolute; inset: 0; display: grid; place-items: center;
-          font: 800 132px/1 ui-sans-serif, system-ui, sans-serif; color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.6); }
-        .num.pop { animation: pop 1000ms ease-out; }
-        @keyframes pop { 0% { transform: scale(1.35); opacity: 0; } 15% { transform: scale(1); opacity: 1; }
-          85% { opacity: 1; } 100% { transform: scale(0.92); opacity: 0.2; } }
       </style>
       <div class="feed"></div>
       <svg class="cursor" viewBox="0 0 24 24" style="display:none"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -138,45 +132,9 @@ const install = ({ hostId, feedMs, position, feed: showFeed }) => {
       setTimeout(() => entry.remove(), feedMs + 450);
     };
 
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-    /**
-     * A play button, then a 3-2-1 film leader, so a person recording sees exactly when the take starts.
-     * With `wait` the button holds until clicked, which lets them start their recorder first.
-     */
-    const countdown = async ({ from = 3, wait = true } = {}) => {
-      const curtain = document.createElement('div');
-      curtain.className = 'curtain';
-      curtain.innerHTML = `
-        <button class="play" aria-label="Start"><svg viewBox="0 0 24 24"><path d="M5 3.5v17l15-8.5z" fill="#111"/></svg></button>
-        <div class="hint">${wait ? 'Click to start' : 'Starting'}</div>`;
-      root.appendChild(curtain);
-      const play = curtain.querySelector('.play');
-      if (wait) {
-        await new Promise((resolve) => play.addEventListener('click', resolve, { once: true }));
-      } else {
-        await sleep(1200);
-      }
-      play.classList.add('go');
-      await sleep(220);
-      curtain.innerHTML = `
-        <div class="leader"><div class="sweep"></div><div class="cross h"></div><div class="cross v"></div>
-          <div class="ring"></div><div class="num"></div></div>`;
-      const num = curtain.querySelector('.num');
-      for (let count = from; count > 0; count--) {
-        num.textContent = String(count);
-        num.classList.remove('pop');
-        void num.offsetWidth;
-        num.classList.add('pop');
-        await sleep(1000);
-      }
-      curtain.classList.add('out');
-      await sleep(350);
-      curtain.remove();
-    };
-
     window.__demoOverlay = {
-      countdown,
+      // react-ui-experimental's `Countdown`, injected as `window.__countdown` (see below).
+      countdown: (options) => window.__countdown.playCountdown(root, options),
       moveCursor,
       // `composer.invoke` is assigned by an effect after `composer` exists, so a caller about to invoke
       // re-wraps in its own page task rather than trusting the last install.
@@ -305,6 +263,16 @@ export const createOverlay = (page, { enabled, feed = true, feedMs = 3_500, posi
       safely(() => page.evaluate(([id, ok, note]) => window.__demoOverlay.resolve(id, ok, note), [id, ok, note])),
     click: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.click(x, y), point)),
     moveCursor: (point) => safely(() => page.evaluate(({ x, y }) => window.__demoOverlay.moveCursor(x, y), point)),
-    countdown: (options) => safely(() => page.evaluate((args) => window.__demoOverlay.countdown(args), options)),
+    // Loaded inside `safely`: a failed transpile must not fail the take, and a disabled overlay skips it.
+    countdown: (options) =>
+      safely(async () => {
+        const code = await loadCountdown();
+        // An IIFE assigning `var __countdown`, run as a script through the protocol rather than `eval`,
+        // so an app's content security policy cannot refuse it.
+        if (!(await page.evaluate(() => Boolean(window.__countdown)))) {
+          await page.evaluate(code);
+        }
+        await page.evaluate((args) => window.__demoOverlay.countdown(args), options);
+      }),
   };
 };
