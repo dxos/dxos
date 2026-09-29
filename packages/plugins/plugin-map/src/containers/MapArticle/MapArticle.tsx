@@ -30,9 +30,23 @@ const interpolate = (value: number, from: [number, number], to: [number, number]
   return to[0] + t * (to[1] - to[0]);
 };
 
-// Clamp map zoom-out to 4.
-const mapToGlobeZoom = (zoom: number) => interpolate(Math.max(4, zoom), ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
-const globeToMapZoom = (zoom: number) => Math.floor(interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map));
+// Below the anchors a world-view map becomes the whole globe: map zoom 2 (the world fitted) is globe
+// zoom 1 (the whole sphere), so zooming out on the map never turns into a close-up on the globe.
+const WORLD_ANCHORS: { map: [number, number]; globe: [number, number] } = {
+  map: [2, ZOOM_ANCHORS.map[0]],
+  globe: [1, ZOOM_ANCHORS.globe[0]],
+};
+
+const mapToGlobeZoom = (zoom: number) =>
+  zoom < ZOOM_ANCHORS.map[0]
+    ? interpolate(Math.max(WORLD_ANCHORS.map[0], zoom), WORLD_ANCHORS.map, WORLD_ANCHORS.globe)
+    : interpolate(zoom, ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
+const globeToMapZoom = (zoom: number) =>
+  Math.floor(
+    zoom < ZOOM_ANCHORS.globe[0]
+      ? interpolate(zoom, WORLD_ANCHORS.globe, WORLD_ANCHORS.map)
+      : interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map),
+  );
 
 export type MapControlType = 'globe' | 'map';
 

@@ -7,7 +7,7 @@
  * from it, enable Maps and Canvas, draw a diagram, fill a table with the assistant while editing a sheet,
  * and plot the table's rows on a map that turns into a globe.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-1
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-11
  * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview
  *
  * Built and served from `packages/apps/composer-app`; the assistant needs EDGE preview:
@@ -63,6 +63,35 @@ const DIAGRAM = {
     ['Plugin', 'Object'],
   ],
 };
+
+/** The table the assistant fills, and the location column the map plots. */
+const TABLE = 'Cloudflare data centers';
+const LOCATION = { property: 'location', label: 'Location', format: 'Geopoint' };
+
+/** What the assistant is asked; the coordinate order is the Geopoint format's, which the map reads. */
+const PROMPT =
+  'Add 10 rows to this table for major Cloudflare data centers around the world: the city as the Title, ' +
+  'the country as the Description, and the Location as [longitude, latitude].';
+const ROWS = 10;
+
+/** Rows of the table on screen: one row-header cell per row in the grid plane. */
+const TABLE_ROWS = '[data-testid="deck.plank"] .dx-grid [data-dx-grid-plane="grid"] [aria-colindex="0"]';
+
+/** The map of the table's rows. */
+const MAP = 'Data center map';
+
+/** A header row and five rows typed into the sheet. */
+const SHEET = [
+  ['Region', 'Requests (M)'],
+  ['North America', '120'],
+  ['Europe', '95'],
+  ['Asia', '88'],
+  ['South America', '32'],
+  ['Africa', '14'],
+];
+
+/** A sheet or table cell, by zero-based column and row. */
+const CELL = (col, row) => `.dx-grid [data-dx-grid-plane="grid"] [aria-colindex="${col}"][aria-rowindex="${row}"]`;
 
 /** Press, move in steps a viewer can follow, release. */
 const drag = async (page, from, to) => {
@@ -197,10 +226,20 @@ export const steps = [
       const add = page.locator('[data-testid="deck.plank"] [data-testid="comments.comment.add"]').first();
       await add.waitFor({ state: 'visible' });
       await page.waitForFunction((element) => !element.disabled, await add.elementHandle(), { timeout: 10_000 });
-      await demo.click({ selector: '[data-testid="deck.plank"] [data-testid="comments.comment.add"] >> nth=0', label: 'Comment' });
-      const input = page.locator('[data-testid=thread][aria-current="location"] [data-testid="thread.reply"] [role="textbox"]');
+      await demo.click({
+        selector: '[data-testid="deck.plank"] [data-testid="comments.comment.add"] >> nth=0',
+        label: 'Comment',
+      });
+      const input = page.locator(
+        '[data-testid=thread][aria-current="location"] [data-testid="thread.reply"] [role="textbox"]',
+      );
       await input.first().waitFor({ state: 'visible', timeout: 10_000 });
-      await demo.type({ selector: '[data-testid=thread][aria-current="location"] [data-testid="thread.reply"] [role="textbox"] >> nth=0', value: COMMENT, label: 'Comment' });
+      await demo.type({
+        selector:
+          '[data-testid=thread][aria-current="location"] [data-testid="thread.reply"] [role="textbox"] >> nth=0',
+        value: COMMENT,
+        label: 'Comment',
+      });
       await demo.press({ key: 'Enter' });
       await page.getByTestId('cm-comment').first().waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(BEAT);
@@ -224,7 +263,10 @@ export const steps = [
       await page.waitForTimeout(BEAT / 2);
       await demo.click({ selector: 'li:has-text("Add object") >> nth=0', label: 'Add object' });
       // A document has no form, so picking the type creates it, named after what was typed.
-      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.document"]', label: 'Document' });
+      await demo.click({
+        selector: '[data-testid="create-object-form.type.org.dxos.type.document"]',
+        label: 'Document',
+      });
       await page.locator(`${EDITOR} :text("${DOCUMENT}")`).first().waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(BEAT);
     },
@@ -266,11 +308,9 @@ export const steps = [
         if (!(await page.locator(toggle).isChecked())) {
           await demo.click({ selector: toggle, label: `Enable ${name}` });
         }
-        await page.waitForFunction(
-          (id) => composer.plugins().some((plugin) => plugin.id === id && plugin.active),
-          id,
-          { timeout: 30_000 },
-        );
+        await page.waitForFunction((id) => composer.plugins().some((plugin) => plugin.id === id && plugin.active), id, {
+          timeout: 30_000,
+        });
         await page.waitForTimeout(BEAT);
       }
       await demo.fill({ selector: filter, value: '', hud: false });
@@ -320,6 +360,123 @@ export const steps = [
       await demo.click({ selector: '[data-testid="palette-V"]', label: 'Select' });
       await page.keyboard.press('Escape');
       await page.waitForTimeout(BEAT);
+    },
+  },
+  {
+    name: 'Create a table with a location column',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
+      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.table"]', label: 'Table' });
+      await demo.type({ selector: '[role="dialog"] input[placeholder="Name"]', value: TABLE, label: 'Name' });
+      // No type picked: the table gets a new type of its own.
+      await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Create' });
+      const add = '[data-testid="table-new-column-button"]';
+      await page.locator(add).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.waitForTimeout(BEAT);
+
+      await demo.click({ selector: `${add} >> nth=0`, label: 'New column' });
+      await demo.fill({
+        selector: 'input[placeholder="Property name"], input[value^="prop_"] >> nth=0',
+        value: LOCATION.property,
+        hud: false,
+      });
+      await demo.type({ selector: 'input[placeholder="Property label"]', value: LOCATION.label, label: 'Label' });
+      await demo.click({ selector: 'role=combobox >> text=Format', label: 'Format' });
+      await demo.click({ selector: `role=option[name="${LOCATION.format}"]`, label: LOCATION.format });
+      await demo.click({ selector: 'button:has-text("Save") >> nth=-1', label: 'Save' });
+      await page
+        .locator('.dx-grid [data-dx-grid-plane="frozenRowsStart"]', { hasText: LOCATION.label })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForTimeout(BEAT);
+    },
+  },
+  {
+    name: 'Ask the assistant to fill the table',
+    run: async ({ demo, page }) => {
+      await demo.click({
+        selector: '[data-testid="deck.plank"] [data-testid="plankHeading.companion"] >> nth=0',
+        label: 'Companion',
+      });
+      const tab = '[data-testid="deck.companion"] >> role=tab[name="Assistant"]';
+      await page.locator(tab).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await demo.click({ selector: tab, label: 'Assistant' });
+      const prompt = '[data-testid="deck.companion"] [data-testid="assistant.prompt"] .cm-content';
+      await page.locator(prompt).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await demo.click({ selector: `${prompt} >> nth=0`, hud: false });
+      await typeSlowly(page, PROMPT, 15);
+      await page.waitForTimeout(BEAT / 2);
+      await page.keyboard.press('Enter');
+      // Started: the chat shows it is working before the take moves on.
+      await page
+        .locator('[data-testid="deck.companion"] [data-testid="assistant.chat-status"]')
+        .first()
+        .waitFor({ state: 'visible', timeout: 30_000 });
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Create a sheet and enter five rows',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
+      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.sheet"]', label: 'Sheet' });
+      await page.locator(CELL(0, 0)).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.waitForTimeout(BEAT);
+      for (const [row, values] of SHEET.entries()) {
+        await demo.click({ selector: `${CELL(0, row)} >> nth=0`, hud: false });
+        for (const [col, value] of values.entries()) {
+          await typeSlowly(page, value, 30);
+          // The grid ignores a commit that follows the typing too closely.
+          await page.waitForTimeout(500);
+          await page.keyboard.press(col < values.length - 1 ? 'Tab' : 'Enter');
+          await page.waitForTimeout(200);
+        }
+      }
+      await page.waitForTimeout(BEAT);
+    },
+  },
+
+  {
+    name: 'Return to the table and wait for the assistant',
+    run: async ({ demo, page }) => {
+      // The table sits under its type in the Database section; the type's own row has the same name.
+      await demo.click({
+        selector: `[data-testid="deck.sidebar"] [data-testid="treeItem.heading"] span:text-is("${TABLE}") >> nth=1`,
+        label: TABLE,
+      });
+      await page.waitForFunction(
+        ({ selector, count }) => document.querySelectorAll(selector).length >= count,
+        { selector: TABLE_ROWS, count: ROWS },
+        { timeout: 5 * 60_000 },
+      );
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: "Map the table's rows",
+    run: async ({ demo, page }) => {
+      const close = page.locator('button:has-text("Close companion")').first();
+      if (await close.isVisible().catch(() => false)) {
+        await demo.click({ selector: 'button:has-text("Close companion") >> nth=0', label: 'Close companion' });
+      }
+      await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
+      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.map"]', label: 'Map' });
+      await demo.type({ selector: '[role="dialog"] input[placeholder="Name"]', value: MAP, label: 'Name' });
+      await demo.click({ selector: '[role="dialog"] [role="combobox"] >> nth=0', label: 'Pin type' });
+      await demo.click({ selector: `role=option[name="${TABLE}"]`, label: TABLE });
+      await demo.click({ selector: '[role="dialog"] [role="combobox"] >> nth=1', label: 'Location property' });
+      await demo.click({ selector: `role=option[name="${LOCATION.property}"]`, label: LOCATION.label });
+      await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Create' });
+      await page.locator('.leaflet-marker-icon').first().waitFor({ state: 'visible', timeout: 20_000 });
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Toggle from the map to the globe',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: '[data-testid="deck.plank"] button:has-text("Toggle") >> nth=0', label: 'Globe' });
+      await page.locator('[data-testid="deck.plank"] canvas').first().waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForTimeout(BEAT * 3);
     },
   },
 ];
