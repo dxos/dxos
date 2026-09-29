@@ -15,7 +15,7 @@ import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { assertState, invariant } from '@dxos/invariant';
-import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
+import { DXN, EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
 import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -233,6 +233,30 @@ const exportFeedData = async (
       }
     } catch (err) {
       log.warn('failed to export feed data', { feedObjectId: obj.id, error: err });
+    }
+  }
+
+  // An object's events live in a feed keyed by the object's own id, with no Feed object to find it
+  // by, so the feed-store is asked which of the exported objects own one.
+  const exported = new Set(feeds.map((feed) => feed.feedObjectId));
+  const objectIds = new Set(objects.map((obj) => obj.id));
+  const storedFeeds = await echoHost.getAllFeedsForSpace(spaceId);
+  for (const { feedId, feedNamespace } of storedFeeds) {
+    if (
+      feedNamespace !== FeedProtocol.WellKnownNamespaces.data ||
+      exported.has(feedId) ||
+      !objectIds.has(feedId) ||
+      !EntityId.isValid(feedId)
+    ) {
+      continue;
+    }
+    try {
+      const messages = await collectFeedMessages(echoHost, spaceId, feedId, 'data');
+      if (messages.length > 0) {
+        feeds.push({ feedObjectId: feedId, namespace: 'data', messages });
+      }
+    } catch (err) {
+      log.warn('failed to export object events', { objectId: feedId, error: err });
     }
   }
 
