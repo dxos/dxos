@@ -71,8 +71,29 @@ Sixteen reported violations, sampled at random from the first run and read again
   show the problem. Location is the weaker half: segments run up to 40 lines and the model picks
   among labels, not code.
 
-## Not yet done
+## Checked against subagents
 
-The key ran out of credits (`402 billing_error`) after these runs. Once credits are added, the
-next steps are a re-run of `dataset/calibrate.ts` with context fetched for the context-dependent
-rules, and a comparison of the uncertain band against a subagent review of the same groups.
+A second, smaller run over `ea4093cc~3..ea4093cc` (three merges: MCP servers in chat, Composer
+login over MCP, a deck fix) gave 984 rule-file verdicts for $0.15: 16 reported, 223 uncertain, 745
+dismissed. Eight Sonnet subagents then judged, blind to the checker's answer, every reported and
+uncertain pair and 80 dismissed pairs drawn at random (the harness's own files left out, 303
+pairs, about 1.7M subagent tokens).
+
+| Checker said                 | Pairs | Subagent found a violation |
+| ---------------------------- | ----- | -------------------------- |
+| Reported (≥ 0.8)             | 16    | 12 (75%)                   |
+| Uncertain, 0.65-0.8          | 22    | 6 (27%)                    |
+| Uncertain, 0.5-0.65          | 43    | 8 (19%)                    |
+| Uncertain, below 0.5         | 142   | 4 (3%)                     |
+| Dismissed (random 80 of 745) | 80    | 1 (1%)                     |
+
+Three in four reported verdicts hold up, and the dismissed side misses little: one of 80, or about
+nine across all 745 against about 30 found. The uncertain band below 0.5 is nearly as clean as the
+dismissed side, so raising the floor to 0.5 would route 65 pairs instead of 207 and keep 14 of 18
+real findings. The mined-hunk calibration disagrees (at 0.4 it keeps 42% of positives against 79%
+at 0.15), because a mined example is exactly the subtle case a reviewer had to point out; the
+floor stays at 0.15 until a second trial settles it.
+
+What the subagents confirmed is the kind of finding the rules were written for: `as any` on MCP
+tool arguments, a per-chat lock map that is never evicted, error classes that skip `BaseError`,
+hand-wrapped `Effect.gen` beside `Effect.fn` in the same file.

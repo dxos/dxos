@@ -136,6 +136,7 @@ rule no-hand-rolled-lists: Any collection of rows is a `@dxos/react-ui-list` pri
     - packages/plugins/**/*.tsx
     - packages/ui/**/*.tsx
   grep: \.map\(|react-ui-stack|ListItem
+  context: imports
   severity: warn
 ```
 
@@ -279,6 +280,7 @@ rule structural-regions-use-design-system-components: Dialog and card headers co
     - packages/ui/**/*.tsx
   unit: file
   system-one: on
+  context: imports
   severity: warn
 ```
 

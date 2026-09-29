@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { composeEventHandlers } from '@dxos/react-hooks';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { downloadBlob } from '@dxos/util';
 
@@ -174,11 +175,13 @@ CloseIconButton.displayName = 'SystemIconButton.Close';
 //
 
 /** Copy a fixed `value`, or text produced on click by `onCopy` when it is costly or changes. */
-type ClipboardIconButtonProps = StaticPresetProps &
-  ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
+type ClipboardIconButtonProps = StaticPresetProps & {
+  /** The glyph shown until a copy lands, for a chip naming what it copies; the clipboard otherwise. */
+  icon?: string;
+} & ({ value: string; onCopy?: never } | { onCopy: () => string; value?: never });
 
 const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
-  ({ label, value, onCopy, classNames, ...props }, forwardedRef) => {
+  ({ label, value, onCopy, icon = 'ph--clipboard--regular', hue, classNames, onClick, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [copied, setCopied] = useState(false);
 
@@ -209,10 +212,15 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
       <IconButton
         {...props}
         classNames={classNames}
-        iconClassNames={copied && 'text-green-500'}
-        icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'}
-        label={copied ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))}
-        onClick={handleCopy}
+        hue={hue}
+        iconClassNames={!hue && copied && 'text-green-500'}
+        icon={copied ? 'ph--check--regular' : icon}
+        // A visible label (a chip naming what it copies) stays put — swapping in "Copied" resized the
+        // chip; the check glyph confirms the copy. An icon-only button's label is its tooltip, so it swaps.
+        label={
+          copied && props.iconOnly ? t('system-button.copied.label') : (label ?? t('system-button.clipboard.label'))
+        }
+        onClick={composeEventHandlers(onClick, handleCopy)}
         ref={forwardedRef}
       />
     );

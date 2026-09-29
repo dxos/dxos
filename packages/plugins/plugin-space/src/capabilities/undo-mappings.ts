@@ -54,6 +54,15 @@ export default Capability.makeModule(
               : ['objects-deleted.label', { ns: meta.profile.key }];
           },
         }),
+        UndoMapping.make({
+          operation: SpaceOperation.SetArchived,
+          inverse: SpaceOperation.SetArchived,
+          deriveContext: (input, output) => ({ objects: output.objects, archived: !input.archived }),
+          message: (input) => [
+            input.archived ? 'objects-archived.label' : 'objects-unarchived.label',
+            { ns: meta.profile.key },
+          ],
+        }),
       ]),
       Capability.contribute(SpaceOperationConfig, { createInvitationUrl, createJoinUrl }),
     ];

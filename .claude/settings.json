@@ -1,6 +1,19 @@
 {
   "permissions": {
-    "allow": ["mcp__Trunk__search-test", "mcp__Trunk__investigate-ci-failure", "mcp__Trunk__detect-frameworks"]
+    "allow": [
+      "mcp__Trunk__search-test",
+      "mcp__Trunk__investigate-ci-failure",
+      "mcp__Trunk__detect-frameworks",
+      "mcp__claude_ai_PostHog",
+      "mcp__claude_ai_Signoz__signoz_aggregate_*",
+      "mcp__claude_ai_Signoz__signoz_check_*",
+      "mcp__claude_ai_Signoz__signoz_execute_builder_query",
+      "mcp__claude_ai_Signoz__signoz_fetch_doc",
+      "mcp__claude_ai_Signoz__signoz_get_*",
+      "mcp__claude_ai_Signoz__signoz_list_*",
+      "mcp__claude_ai_Signoz__signoz_query_*",
+      "mcp__claude_ai_Signoz__signoz_search_*"
+    ]
   },
   "hooks": {
     "PreToolUse": [

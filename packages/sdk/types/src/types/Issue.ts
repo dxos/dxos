@@ -53,6 +53,7 @@ export class Issue extends Type.makeObject<Issue>(DXN.make('org.dxos.type.issue'
     Schema.annotate({ title: 'Issue', description: "An issue in a repository's tracker." }),
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

@@ -149,7 +149,7 @@ export const PluginItem = ({
         // bespoke card grid stretches both columns to full height and controls its own padding.
         // `dx-card-surface` (raised) reads as a card against the panel's base surface; `dx-modal-surface`
         // (overlay, one step higher, meant for dialogs/sheets) was too close in tone to show contrast.
-        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 dx-card-surface rounded-md overflow-hidden',
+        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 dx-card-surface rounded-md shadow-md overflow-hidden',
       )}
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
@@ -176,7 +176,7 @@ export const PluginItem = ({
           <p className='text-description line-clamp-4 min-w-0'>{description}</p>
         </div>
 
-        <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
+        <div className='flex gap-1 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag: string) => (
             <Tag key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}

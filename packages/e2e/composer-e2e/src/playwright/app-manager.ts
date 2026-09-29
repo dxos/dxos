@@ -609,13 +609,22 @@ export class AppManager {
 
   /**
    * Drags `active` onto `over` and releases only once `over` reports `instruction` as its drop zone.
-   * The dragged row leaves the list when the drag starts, so rows below it move up: the target is
-   * measured after that, not before.
+   * The target is measured once the drag has started, so a tree that removes its source row (and
+   * moves the rows below it up) is measured where it ends up.
    */
   async dragTo(
     active: Locator,
     over: Locator,
-    { instruction, offset = { x: 0, y: 0 } }: { instruction: string; offset?: { x: number; y: number } },
+    {
+      instruction,
+      offset = { x: 0, y: 0 },
+      holdUntil,
+    }: {
+      instruction: string;
+      offset?: { x: number; y: number };
+      /** Keeps the pointer in the zone until this holds, then drops. */
+      holdUntil?: () => Promise<boolean>;
+    },
   ): Promise<void> {
     const start = await active.boundingBox();
     const initial = await over.boundingBox();
@@ -629,7 +638,7 @@ export class AppManager {
     // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
     // it leaves the pointer over the row that slides into the dragged row's place.
     await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
-    await expect(active).toBeHidden();
+    await expect(active).toHaveAttribute('data-dragging', 'true');
 
     const box = await over.boundingBox();
     if (!box) {
@@ -645,10 +654,22 @@ export class AppManager {
       .poll(async () => {
         nudge = 1 - nudge;
         await this.page.mouse.move(x, y + nudge);
-        return over.getAttribute('data-instruction');
+        const zone = await over.getAttribute('data-instruction');
+        if (zone !== instruction) {
+          return zone;
+        }
+        return !holdUntil || (await holdUntil()) ? zone : `${zone} (holding)`;
       })
       .toBe(instruction);
     await this.page.mouse.up();
+  }
+
+  /** Drops `active` inside `collection`, holding over it until the tree opens it. */
+  async dragInto(active: Locator, collection: Locator): Promise<void> {
+    await this.dragTo(active, collection, {
+      instruction: 'make-child',
+      holdUntil: async () => (await collection.getAttribute('data-state')) === 'open',
+    });
   }
 
   //

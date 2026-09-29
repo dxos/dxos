@@ -48,6 +48,7 @@ export * from './Tag/index.ts';
 export * from './TextCrawl/index.ts';
 export * from './Toast/index.ts';
 export * from './Toc/index.ts';
+export * from './Timestamp/index.ts';
 export * from './Toolbar/index.ts';
 export * from './Tour/index.ts';
 export * from './Tooltip/index.ts';

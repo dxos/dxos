@@ -599,6 +599,37 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('indexes meta annotations as JSON and stores null when there are none', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const annotated = EntityId.random();
+      const plain = EntityId.random();
+      const makeItem = (id: EntityId, meta: unknown): IndexerObject => ({
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: `doc-${id}`,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: JSON.parse(JSON.stringify({ id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false, '@meta': meta })),
+      });
+
+      yield* index.update([
+        makeItem(annotated, { keys: [], annotations: { 'org.example.annotation.status': 'done' } }),
+        makeItem(plain, { keys: [], annotations: {} }),
+      ]);
+
+      const rows = yield* index.queryAll({ spaceIds: [spaceId] });
+      const annotations = (id: EntityId) => rows.find((row) => row.objectId === id)?.annotations;
+      expect(JSON.parse(annotations(annotated) ?? 'null')).toEqual({ 'org.example.annotation.status': 'done' });
+      expect(annotations(plain)).toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('cursors under retired index names are purged so pre-convergenceKey data re-indexes', () =>
     Effect.gen(function* () {
       // A build before `convergenceKey` tracked its progress under the retired names (`fts5`,

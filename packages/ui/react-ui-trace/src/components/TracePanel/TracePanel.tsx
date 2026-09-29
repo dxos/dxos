@@ -160,8 +160,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                           <span className='text-sm text-description'>{t('trace.label')}</span>
                         </Accordion.ItemHeader>
                         <Accordion.ItemBody classNames='dx-grow grid grid-rows-[minmax(0,1fr)]'>
-                          {/* Opens at the top; the pin arms itself once the reader scrolls to the tail. */}
-                          <ScrollContainer.Root>
+                          {/* Opens at the tail and follows new entries while pinned; scrolling up unpins. */}
+                          <ScrollContainer.Root pin>
                             <ScrollContainer.Content thin>
                               <ScrollContainer.Fade classNames='h-8' />
                               <ScrollContainer.Viewport ref={setTraceViewport}>

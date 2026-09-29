@@ -20,6 +20,7 @@ export class Graph extends Type.makeObject<Graph>(DXN.make('org.dxos.type.graph'
     LabelAnnotation.set(['name']),
     ViewAnnotation.set(['view']),
     Annotation.IconAnnotation.set({ icon: 'ph--graph--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

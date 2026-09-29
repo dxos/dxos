@@ -20,6 +20,8 @@ import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullab
 import * as GraphEdge from './GraphEdge.ts';
 import * as GraphModel from './GraphModel.ts';
 import * as GraphNode from './GraphNode.ts';
+import { ConnectorTracker } from './internal/ConnectorTracker.ts';
+import { modelStore } from './internal/ModelStore.ts';
 import * as Retention from './Retention.ts';
 
 // Separates the components of the compound keys this module builds (a node id from a relation key, a
@@ -65,8 +67,9 @@ export type FrameBudget = {
 };
 
 /**
- * Produces the nodes to attach to `node`, reactively — the atom is re-read whenever anything it depends
- * on changes, and the resulting difference is applied to the graph.
+ * Produces the nodes to attach to `node`, reactively — once anything the atom depends on changes it is
+ * re-read on the builder's next flush, and the resulting difference is applied to the graph. Nothing
+ * subscribes to it, so an input cuts off a change only if something mounts it or it is non-lazy.
  */
 export type Connector<Node extends NodeLike, Arg extends NodeArgLike> = (
   node: Atom.Atom<Option.Option<Node>>,
@@ -106,8 +109,9 @@ export type Edge = { source: string; target: string; relation: string };
  * The graph operations the expansion engine needs. Implemented by whatever store the builder drives —
  * the engine owns expansion and ordering, the store owns representation and reactivity.
  *
- * {@link Store.node} must cut off at the node's own value: connectors read it, so a view that notifies
- * on writes to unrelated nodes puts the builder in a flush-invalidate-flush loop.
+ * {@link Store.node} must cut off at the node's own value even with nothing subscribed to it (mount it, or
+ * make it non-lazy): connectors read it unsubscribed, so a view that passes on writes to unrelated nodes
+ * puts the builder in a flush-invalidate-flush loop.
  */
 export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unknown> {
   /** The graph being built; surfaced unchanged as {@link GraphBuilder.graph}. */
@@ -128,7 +132,7 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    *
    * Deliberately the store's own mechanism rather than `Atom.batch`: an atom batch defers
    * invalidation to a rebuild pass that runs only when the outermost batch closes, and a flush
-   * re-enters the registry as connectors resubscribe, which leaves nodes gathered as stale and
+   * re-enters the registry as connectors are read, which leaves nodes gathered as stale and
    * then discarded — their dependents keep a stale value and are never notified.
    */
   batch?(fn: () => void): void;
@@ -217,9 +221,14 @@ export type TypeId = typeof TypeId;
 //
 
 /**
- * Composes the construction of a graph out of independently registered extensions: each expansion of a
- * node's relation subscribes to every connector declared for it, and the difference between successive
- * reads is flushed into the store as node and edge changes.
+ * Composes the construction of a graph out of independently registered extensions.
+ *
+ * The first read of a node's relation expands it: the builder tracks one connector key for it, whose
+ * atom reads every extension declared for that relation. Nothing subscribes to that atom, so a change to
+ * its inputs only marks the key dirty (see {@link ConnectorTracker}). A flush later reads each dirty key
+ * once, compares the output with what the key last wrote ({@link GraphBuilder._flushed}), and writes the
+ * difference into the store as node and edge changes. A burst of changes costs one read per connector,
+ * not one per change; a burst inside `Atom.batch` also recomputes each connector once as the batch closes.
  *
  * Subclass to layer a vocabulary on top (see `@dxos/app-graph`'s `AppGraphBuilder`); the generic engine
  * is unaware of what the nodes mean.
@@ -244,19 +253,19 @@ export class GraphBuilder<
   }
 
   /**
-   * Expansion subscriptions, keyed by the node they belong to and then by relation key. Nested
-   * rather than flat: removal cancels a node's subscriptions, and a flat map makes that a scan of
-   * every subscription in the graph per removed node.
+   * Expanded connector keys, by the node they belong to. Nested rather than flat: removal untracks a
+   * node's expansions, and a flat set makes that a scan of every expansion in the graph per removed node.
    */
-  readonly _subscriptions = new Map<string, Map<string, CleanupFn>>();
-  /** Connector updates pending flush, keyed by connector key. */
-  readonly _dirtyConnectors = new Map<string, { nodes: Arg[]; previous: string[] }>();
-  /** Last-flushed node IDs per connector key, used for edge removal on update. */
-  readonly _connectorPrevious = new Map<string, string[]>();
-  /** All inline-descendant IDs per connector key, used to remove stale inline nodes on update. */
-  readonly _connectorPreviousInlineIds = new Map<string, string[]>();
-  /** Last-flushed node args per connector key, used for change detection. */
-  readonly _connectorPreviousArgs = new Map<string, Arg[]>();
+  readonly _expansions = new Map<string, Set<string>>();
+  /** The expanded connectors; a dirty one is read only when flushed. */
+  readonly _tracker: ConnectorTracker<ConnectorEntry<Arg>[]>;
+  /** What each connector key last wrote into the store; a key without an entry has never flushed. */
+  readonly _flushed = new Map<string, Flushed<Arg>>();
+  /**
+   * By node, what each relation torn down by {@link release} wrote and still holds in the store; its next
+   * expansion diffs against it, or the outputs that stayed would never be removed.
+   */
+  readonly _detached = new Map<string, Map<string, Detached>>();
   /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
   /** Whether a flush of updates to connectors already in the store is queued. */
@@ -291,6 +300,11 @@ export class GraphBuilder<
     this._inline = inline ?? defaultInline;
     this._decorateNode = decorateNode ?? ((node) => node);
     this._unchanged = unchanged ?? (() => false);
+    this._tracker = new ConnectorTracker({
+      registry: this._registry,
+      read: (get, key) => this._readConnectors(get, key),
+      onDirty: (key) => this._scheduleDirtyFlush(this._flushed.has(key)),
+    });
     this._store = store(
       {
         onExpand: (id, relation) => this._onExpand(id, relation),
@@ -326,27 +340,28 @@ export class GraphBuilder<
   }
 
   /** Apply a set of node changes for a single connector key. */
-  _applyConnectorUpdate(key: string, nodes: Arg[], previous: string[]): void {
+  _applyConnectorUpdate(key: string, nodes: Arg[]): void {
     const { id, relation } = relationFromConnectorKey(key);
+    const previous = this._flushed.get(key) ?? this._detached.get(id)?.get(key);
     const ids = nodes.map((node) => node.id);
+    const inline = nodes.flatMap((node) => this._allInline(node).map((child) => child.id));
+
     // Set membership throughout: a connector returning n nodes makes every `includes` here a scan
     // over n, and this runs on each of its updates.
     const current = new Set(ids);
-    const removed = previous.filter((previousId) => !current.has(previousId));
-    this._connectorPrevious.set(key, ids);
-    this._connectorPreviousArgs.set(key, nodes);
-
-    const currentInlineIds = nodes.flatMap((node) => this._allInline(node).map((child) => child.id));
-    const currentInline = new Set(currentInlineIds);
-    const previousInlineIds = this._connectorPreviousInlineIds.get(key) ?? [];
-    const staleInlineIds = previousInlineIds.filter((previousId) => !currentInline.has(previousId));
-    this._connectorPreviousInlineIds.set(key, currentInlineIds);
+    const removed = (previous?.ids ?? []).filter((previousId) => !current.has(previousId));
+    const currentInline = new Set(inline);
+    const staleInlineIds = (previous?.inline ?? []).filter((previousId) => !currentInline.has(previousId));
 
     this._store.removeNodes(staleInlineIds, true);
     this._store.removeEdges(
       removed.map((target) => ({ source: id, target, relation })),
       true,
     );
+    // Removing the last edges of a node its parent already dropped removes the node, which forgets the key.
+    if (!this._tracker.tracks(key)) {
+      return;
+    }
     this._store.addNodes(nodes);
     this._store.addEdges(nodes.map((node) => ({ source: id, target: node.id, relation })));
     if (ids.length > 0) {
@@ -354,6 +369,13 @@ export class GraphBuilder<
         .sort((a, b) => Position.compare({ position: a.properties?.position }, { position: b.properties?.position }))
         .map((node) => node.id);
       this._store.sortEdges(id, relation, sortedIds);
+    }
+    // Last, so a store write that throws leaves the previous state to diff against.
+    this._flushed.set(key, { ids, args: nodes, inline });
+    const detached = this._detached.get(id);
+    detached?.delete(key);
+    if (detached?.size === 0) {
+      this._detached.delete(id);
     }
   }
 
@@ -368,8 +390,8 @@ export class GraphBuilder<
         this._updateScheduled = true;
         this._updatePromise = Promise.resolve().then(() => {
           this._updateScheduled = false;
-          this._flushDirtyConnectors((key) => this._connectorPrevious.has(key), this._frameBudget());
-          if (this._dirtyConnectors.size > 0) {
+          this._flushDirtyConnectors((key) => this._flushed.has(key), this._frameBudget());
+          if (this._tracker.dirty.size > 0) {
             this._scheduleDirtyFlush(false);
           }
         });
@@ -385,27 +407,72 @@ export class GraphBuilder<
     }
   }
 
+  /**
+   * Reads each selected dirty connector, then applies whatever changed, until none is left: applying one
+   * key's output can dirty another, such as a key whose node it rewrote. The budget covers the reads,
+   * which are most of the cost: a key the budget does not reach stays dirty and unread.
+   */
   _flushDirtyConnectors(select: (key: string) => boolean = () => true, budget?: FrameBudget): void {
     while (!budget || budget.hasTime()) {
-      const entries = [...this._dirtyConnectors.entries()].filter(([key]) => select(key));
-      if (entries.length === 0) {
-        return;
+      const keys = [...this._tracker.dirty].filter(select);
+      if (keys.length === 0) {
+        break;
       }
 
-      const apply = () => {
-        for (const [key, { nodes, previous }] of entries) {
-          if (budget && !budget.hasTime()) {
-            return;
-          }
-          this._dirtyConnectors.delete(key);
-          const start = budget ? performance.now() : 0;
-          this._applyConnectorUpdate(key, nodes, previous);
-          budget?.spend(performance.now() - start);
+      // Read outside the store batch: a batch serves node reads from before its writes.
+      const updates: { key: string; nodes: Arg[] }[] = [];
+      for (const key of keys) {
+        if (budget && !budget.hasTime()) {
+          break;
         }
-      };
+        spend(budget, () => {
+          // A read that throws skips the key: diffing an empty output would remove its nodes.
+          const nodes = contain({ key }, () => this._pull(key));
+          if (nodes) {
+            updates.push({ key, nodes });
+          }
+        });
+      }
+
+      const apply = () =>
+        updates.forEach(({ key, nodes }) => {
+          // An earlier update in this batch may have removed the key's node.
+          if (this._tracker.tracks(key)) {
+            contain({ key }, () => this._applyConnectorUpdate(key, nodes));
+          }
+        });
       // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
-      this._store.batch ? this._store.batch(apply) : apply();
+      spend(budget, () => (this._store.batch ? this._store.batch(apply) : apply()));
     }
+  }
+
+  /** Reads a connector and returns its output if it differs from what was last flushed; `peek` leaves it dirty. */
+  _pull(key: string, peek = false): Arg[] | undefined {
+    const entries = peek ? this._tracker.peek(key) : this._tracker.read(key);
+    const { id, relation } = relationFromConnectorKey(key);
+    const extensions = this.getExtensions();
+    // Produced nodes (and their inline descendants) pass through the decorator, which is where a
+    // layer attaches whatever its extensions' metadata implies — URL segments, for instance.
+    const nodes = entries.flatMap(
+      (entry) =>
+        contain({ key, extension: entry.extensionId }, () => [
+          this._decorateNode(this._qualify(id, entry.node), extensions[entry.extensionId]),
+        ]) ?? [],
+    );
+
+    const previous = this._flushed.get(key);
+    const ids = nodes.map((node) => node.id);
+    if (
+      previous &&
+      ids.length === previous.ids.length &&
+      ids.every((nodeId, index) => nodeId === previous.ids[index]) &&
+      this._unchanged(previous.args, nodes)
+    ) {
+      return undefined;
+    }
+
+    log('update', { id, relation, ids });
+    return nodes;
   }
 
   _collectOnOwnTask(): void {
@@ -443,13 +510,8 @@ export class GraphBuilder<
   }
 
   *_connectorStates(): Iterable<Retention.ConnectorState> {
-    for (const [key, outputs] of this._connectorPrevious) {
-      yield {
-        key,
-        source: relationFromConnectorKey(key).id,
-        outputs,
-        inline: this._connectorPreviousInlineIds.get(key) ?? [],
-      };
+    for (const [key, { ids, inline }] of this._flushed) {
+      yield { key, source: relationFromConnectorKey(key).id, outputs: ids, inline };
     }
   }
 
@@ -471,39 +533,38 @@ export class GraphBuilder<
     return Promise.resolve();
   }
 
-  /** A connector-produced node, tagged with the id of the extension that produced it. */
-  readonly _connectors = Atom.family<string, Atom.Atom<{ extensionId: string; node: Arg }[]>>((key) => {
-    return Atom.make((get) => {
-      const { id, relation } = relationFromConnectorKey(key);
-      const node = this._store.node(id);
-      if (Option.isNone(get(node))) {
-        return [];
-      }
+  /** Every node the connectors declared for `key`'s relation produce, tagged with its extension. */
+  _readConnectors(get: Atom.AtomContext, key: string): ConnectorEntry<Arg>[] {
+    const { id, relation } = relationFromConnectorKey(key);
+    const node = this._store.node(id);
+    if (Option.isNone(get(node))) {
+      return [];
+    }
 
-      // Tracked, so registering an extension after the relation was expanded re-runs the connectors.
-      const extensions = Function.pipe(
-        get(this._extensions),
-        Record.values,
-        Array.sortBy(Position.compare),
-        Array.filter(
-          (extension): extension is Extension<Node, Arg, Rel, Meta> & { connector: Connector<Node, Arg> } =>
-            this._relationKey(extension.relation) === relation && extension.connector != null,
-        ),
-      );
+    // Tracked, so registering an extension after the relation was expanded re-runs the connectors.
+    const extensions = Function.pipe(
+      get(this._extensions),
+      Record.values,
+      Array.sortBy(Position.compare),
+      Array.filter(
+        (extension): extension is Extension<Node, Arg, Rel, Meta> & { connector: Connector<Node, Arg> } =>
+          this._relationKey(extension.relation) === relation && extension.connector != null,
+      ),
+    );
 
-      const entries: { extensionId: string; node: Arg }[] = [];
-      for (const extension of extensions) {
-        for (const node of get(extension.connector(this._store.node(id)))) {
-          entries.push({ extensionId: extension.id, node });
-        }
-      }
-
-      return entries;
-    }).pipe(withLabel(`graph-builder:connectors:${key}`));
-  });
+    // Caught per extension: a read that throws leaves the tracked atom unbuilt, and it is never
+    // invalidated again. The registry records a dependency only once a read returns, so the throwing
+    // extension's own inputs cannot re-run it; the node, the extensions or a sibling's input can.
+    return extensions.flatMap(
+      (extension) =>
+        contain({ key, extension: extension.id }, () =>
+          get(extension.connector(node)).map((arg) => ({ extensionId: extension.id, node: arg })),
+        ) ?? [],
+    );
+  }
 
   /**
-   * A relation of a node was read for the first time; subscribe every connector declared for it.
+   * A relation of a node was read for the first time; track every connector declared for it.
    * Override to expand additional relations alongside the requested one.
    */
   _onExpand(id: string, relation: string): void {
@@ -513,51 +574,38 @@ export class GraphBuilder<
 
   _expandRelation(id: string, relation: string): void {
     const key = primaryKey(id, relation);
-    const cancel = this._registry.subscribe(
-      this._connectors(key),
-      (entries) => {
-        const extensions = this.getExtensions();
-        // Produced nodes (and their inline descendants) pass through the decorator, which is where a
-        // layer attaches whatever its extensions' metadata implies — URL segments, for instance.
-        const nodes = entries.map((entry) =>
-          this._decorateNode(this._qualify(id, entry.node), extensions[entry.extensionId]),
-        );
-
-        const previous = this._connectorPrevious.get(key) ?? [];
-        const ids = nodes.map((node) => node.id);
-        if (ids.length === previous.length && ids.every((nodeId, index) => nodeId === previous[index])) {
-          const previousArgs = this._connectorPreviousArgs.get(key);
-          if (previousArgs && this._unchanged(previousArgs, nodes)) {
-            return;
-          }
-        }
-
-        log('update', { id, relation, ids });
-        this._dirtyConnectors.set(key, { nodes, previous });
-        this._scheduleDirtyFlush(this._connectorPrevious.has(key));
-      },
-      { immediate: true },
-    );
-
-    const forNode = this._subscriptions.get(id) ?? new Map<string, CleanupFn>();
-    forNode.set(key, cancel);
-    this._subscriptions.set(id, forNode);
+    if (this._tracker.tracks(key) || !this._tracker.track(key)) {
+      return;
+    }
+    const forNode = this._expansions.get(id) ?? new Set<string>();
+    forNode.add(key);
+    this._expansions.set(id, forNode);
   }
 
   /**
-   * A relation is being torn down by {@link release}: drop its expansion subscription so the next
+   * A relation is being torn down by {@link release}: drop its expansion so the next
    * read expands it again. Override to unwind whatever expansion bookkeeping the layer keeps.
    */
   _onReleaseRelation({ id, relation }: { id: string; relation: string }): void {
-    const forNode = this._subscriptions.get(id);
-    const cancel = forNode?.get(primaryKey(id, relation));
-    if (cancel) {
-      cancel();
-      forNode!.delete(primaryKey(id, relation));
-      if (forNode!.size === 0) {
-        this._subscriptions.delete(id);
-      }
+    this._forget(primaryKey(id, relation));
+  }
+
+  /** Keeps what `key` wrote that survives `released`, for its next expansion to diff against. */
+  _detach(key: string, released: ReadonlySet<string>): void {
+    const { id } = relationFromConnectorKey(key);
+    const flushed = this._flushed.get(key);
+    if (!flushed || released.has(id)) {
+      return;
     }
+    const kept = (nodeId: string) => !released.has(nodeId);
+    const ids = flushed.ids.filter(kept);
+    const inline = flushed.inline.filter(kept);
+    if (ids.length === 0 && inline.length === 0) {
+      return;
+    }
+    const forNode = this._detached.get(id) ?? new Map<string, Detached>();
+    forNode.set(key, { ids, inline });
+    this._detached.set(id, forNode);
   }
 
   _onRemoveNode(id: string): void {
@@ -566,12 +614,22 @@ export class GraphBuilder<
 
   _onRemoveNodes(ids: readonly string[]): void {
     for (const id of ids) {
-      const forNode = this._subscriptions.get(id);
-      if (forNode) {
-        this._subscriptions.delete(id);
-        forNode.forEach((cleanup) => cleanup());
-      }
+      // The store detached the node's edges, so what its connectors last wrote is gone too.
+      [...(this._expansions.get(id) ?? [])].forEach((key) => this._forget(key));
+      this._detached.delete(id);
     }
+  }
+
+  /** Drops the expansion, the tracking and the flushed state of `key`; reading its relation re-expands it. */
+  _forget(key: string): void {
+    const { id } = relationFromConnectorKey(key);
+    const forNode = this._expansions.get(id);
+    forNode?.delete(key);
+    if (forNode?.size === 0) {
+      this._expansions.delete(id);
+    }
+    this._tracker.untrack(key);
+    this._flushed.delete(key);
   }
 }
 
@@ -617,9 +675,6 @@ export type ModelProps<Meta = unknown> = Pick<
  * {@link ModelGraphBuilder.children} reads them back in that order.
  */
 export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, ModelNodeArg, string, Meta, Model> {
-  /** Relations already expanded, so a repeated read does not re-subscribe the same connectors. */
-  readonly #expanded = new Set<string>();
-
   /** Memoized {@link ModelGraphBuilder.children} views, so subscribers of a relation share one atom. */
   readonly #children = Atom.family<string, Atom.Atom<ModelNode[]>>((key) => {
     const [id, relation] = primaryParts(key);
@@ -655,112 +710,12 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
    */
   children(id: string, relation = 'child'): Atom.Atom<ModelNode[]> {
     const key = primaryKey(id, relation);
-    if (!this.#expanded.has(key)) {
-      this.#expanded.add(key);
+    if (!this._tracker.tracks(key)) {
       this._onExpand(id, relation);
     }
-
     return this.#children(key);
   }
-
-  override _onReleaseRelation(target: { id: string; relation: string }): void {
-    super._onReleaseRelation(target);
-    // Forget the expansion mark too, or the next read hits the #expanded guard and never re-subscribes.
-    this.#expanded.delete(primaryKey(target.id, target.relation));
-  }
-
-  override _onRemoveNodes(ids: readonly string[]): void {
-    super._onRemoveNodes(ids);
-    // A node that returns must expand again, so drop its expansion marks along with its subscriptions.
-    const removed = new Set(ids);
-    for (const key of this.#expanded) {
-      if (removed.has(primaryParts(key)[0])) {
-        this.#expanded.delete(key);
-      }
-    }
-  }
 }
-
-/** Adapt a {@link GraphModel} to the store port. */
-const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNodeArg, Model> => {
-  const nodes = Atom.family<string, Atom.Atom<Option.Option<ModelNode>>>((id) =>
-    Atom.make((get) => {
-      const node = get(model.nodeAtom(id));
-      return node ? Option.some(node) : Option.none();
-    }),
-  );
-
-  const addEdge = (edge: Edge): void => {
-    const id = GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation });
-    if (!model.findEdge(id)) {
-      model.addEdge({ id, type: edge.relation, source: edge.source, target: edge.target, data: { order: 0 } });
-    }
-  };
-
-  const addNode = (node: ModelNodeArg): void => {
-    const { nodes: children, ...rest } = node;
-    model.setNode(rest);
-    children?.forEach((child) => {
-      addNode(child);
-      // Without this edge an inline descendant is materialized but unreachable through children().
-      addEdge({ source: node.id, target: child.id, relation: 'child' });
-    });
-  };
-
-  return {
-    graph: model,
-    node: (id) => nodes(id),
-    addNodes: (args) => model.batch(() => args.forEach(addNode)),
-    removeNodes: (ids, edges) =>
-      model.batch(() => {
-        model.removeNodes([...ids], { detachEdges: edges });
-        ids.forEach((id) => hooks.onRemoveNode(id));
-      }),
-    addEdges: (edges) => model.batch(() => edges.forEach(addEdge)),
-    removeEdges: (edges, removeOrphans) =>
-      model.batch(() => {
-        const present = edges.filter(
-          (edge) =>
-            model.findEdge(
-              GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation }),
-            ) !== undefined,
-        );
-        model.removeEdges(
-          present.map((edge) =>
-            GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation }),
-          ),
-        );
-        if (removeOrphans) {
-          // Mirrors the app store: a node a connector stopped producing leaves with its last edge.
-          const orphans = [...new Set(present.flatMap(({ source, target }) => [source, target]))].filter(
-            (id) => id !== GraphNode.RootId && model.findNode(id) !== undefined && !model.hasEdges(id),
-          );
-          if (orphans.length > 0) {
-            model.removeNodes(orphans);
-            orphans.forEach((id) => hooks.onRemoveNode(id));
-          }
-        }
-      }),
-    sortEdges: (id, relation, order) =>
-      model.batch(() => {
-        for (const edge of model.outgoing(id, relation)) {
-          const index = order.indexOf(edge.target);
-          if (index >= 0) {
-            // The edge object is the one the model holds, so the write needs a touch to be observed.
-            edge.data.order = index;
-          }
-        }
-        model.touch();
-      }),
-    setNode: (id, node) =>
-      Option.match(node, { onNone: () => model.removeNode(id), onSome: (value) => model.setNode(value) }),
-    constructNode: ({ nodes: _, ...node }) => Option.some(node),
-    batch: (fn) => model.batch(fn),
-    release: (ids) => model.release(ids),
-    outgoing: (id) =>
-      model.outgoing(id).map((edge) => ({ source: edge.source, target: edge.target, relation: edge.type ?? 'child' })),
-  };
-};
 
 /**
  * Creates a new GraphBuilder.
@@ -807,8 +762,11 @@ export const flush = async (builder: Any): Promise<void> => {
 };
 
 /**
- * Unloads the nodes and everything the builder remembers about them: expansion subscriptions and the
- * per-connector diff state. The nodes leave the store outright rather than being tombstoned, so reading a released relation again re-expands it from its connectors.
+ * Unloads the nodes and everything the builder remembers about them: tracked expansions and the
+ * per-connector diff state. The nodes leave the store outright rather than being tombstoned. A relation
+ * that loses any of its outputs is torn down too, and its next read re-expands it from its connectors,
+ * diffing against the outputs that stayed. Dirty relations on the released nodes' ancestors are read, so
+ * one whose next output would bring a released node back is torn down as well.
  *
  * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
  * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.
@@ -818,26 +776,32 @@ export const release = (builder: Any, ids: readonly string[]): void => {
   const released = new Set(ids);
   for (const state of [...builder._connectorStates()]) {
     if (Retention.tornDown(released, state)) {
-      builder._connectorPrevious.delete(state.key);
-      builder._connectorPreviousArgs.delete(state.key);
-      builder._connectorPreviousInlineIds.delete(state.key);
-      builder._dirtyConnectors.delete(state.key);
+      builder._detach(state.key, released);
       builder._onReleaseRelation(relationFromConnectorKey(state.key));
     }
   }
-
-  // A connector expanded but never flushed has no diff state yet — its first emission is still
-  // sitting in the dirty queue, and left there the flush would re-materialize the released nodes.
-  for (const [key, { nodes }] of [...builder._dirtyConnectors]) {
-    if (
-      released.has(relationFromConnectorKey(key).id) ||
-      nodes.some((node: NodeArgLike) => [node, ...builder._allInline(node)].some(({ id }) => released.has(id)))
-    ) {
-      builder._dirtyConnectors.delete(key);
-      builder._onReleaseRelation(relationFromConnectorKey(key));
+  // A dirty relation's next output is unknown until read, so one on an ancestor of a released node is read
+  // now and torn down if that output would bring a released node back; the flush still applies the rest.
+  const ancestors = new Set(
+    ids.flatMap((id) => {
+      const segments = id.split(GraphNode.PathSeparator);
+      return segments.slice(1).map((_, index) => segments.slice(0, index + 1).join(GraphNode.PathSeparator));
+    }),
+  );
+  for (const key of [...builder._tracker.dirty]) {
+    const relation = relationFromConnectorKey(key);
+    // A released node's own relations are forgotten below, so reading them would be wasted.
+    if (!ancestors.has(relation.id) || released.has(relation.id)) {
+      continue;
+    }
+    const nodes = contain({ key }, () => builder._pull(key, true));
+    if (nodes?.some((node) => [node, ...builder._allInline(node)].some(({ id }) => released.has(id)))) {
+      builder._detach(key, released);
+      builder._onReleaseRelation(relation);
     }
   }
 
+  // Forgets the released nodes' own expansions, flushed or not.
   builder._onRemoveNodes(ids);
   builder._store.release(ids);
 };
@@ -863,11 +827,13 @@ export const setRetention = <B extends Any>(
 };
 
 /**
- * Release every expansion subscription the builder holds.
+ * Cancel every expansion the builder holds.
  */
 export const destroy = (builder: Any): void => {
-  builder._subscriptions.forEach((forNode) => forNode.forEach((unsubscribe) => unsubscribe()));
-  builder._subscriptions.clear();
+  builder._expansions.clear();
+  builder._flushed.clear();
+  builder._detached.clear();
+  builder._tracker.dispose();
   builder._store.dispose?.();
 };
 
@@ -959,6 +925,35 @@ type ArgOf<B> = B extends GraphBuilder<any, infer Arg, any, any, any> ? Arg : ne
 type RelationOf<B> = B extends GraphBuilder<any, any, infer Rel, any, any> ? Rel : never;
 type MetaOf<B> = B extends GraphBuilder<any, any, any, infer Meta, any> ? Meta : never;
 type ExtensionOf<B> = Extension<NodeOf<B>, ArgOf<B>, RelationOf<B>, MetaOf<B>>;
+
+/** What a connector key last wrote: its node ids and args, and every inline descendant's id. */
+type Flushed<Arg> = { ids: string[]; args: Arg[]; inline: string[] };
+
+/** The ids a torn-down relation wrote that its release left in the store. */
+type Detached = { ids: string[]; inline: string[] };
+
+/** A node a connector produced, with the extension that produced it. */
+type ConnectorEntry<Arg> = { extensionId: string; node: Arg };
+
+/** Runs `fn`, logging a throw rather than letting one connector abort the rest of a flush. */
+const contain = <T>(context: Record<string, string>, fn: () => T): T | undefined => {
+  try {
+    return fn();
+  } catch (err) {
+    log.catch(err, context);
+    return undefined;
+  }
+};
+
+/** Runs `fn`, charging its time to the budget if there is one. */
+const spend = (budget: FrameBudget | undefined, fn: () => void): void => {
+  const start = performance.now();
+  try {
+    fn();
+  } finally {
+    budget?.spend(performance.now() - start);
+  }
+};
 
 const relationFromConnectorKey = (key: string): { id: string; relation: string } => {
   const [id, relation] = primaryParts(key);

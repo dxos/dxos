@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Cause from 'effect/Cause';
 import type * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 
@@ -60,5 +61,15 @@ export interface DelegationStrategy {
     chat: Chat.Chat,
     id: string,
     exit: Exit.Exit<unknown>,
+  ) => Effect.Effect<void, never, StrategyServices>;
+
+  /**
+   * Called when the conversation's own turn fails (e.g. the model request errors), not when it is
+   * interrupted. Nothing after the turn runs — no reconcile — so this is the only chance to record
+   * that the work the conversation held has stopped.
+   */
+  readonly onTurnFailed?: (
+    chat: Chat.Chat,
+    cause: Cause.Cause<unknown>,
   ) => Effect.Effect<void, never, StrategyServices>;
 }

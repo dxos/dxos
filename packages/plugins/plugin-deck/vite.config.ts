@@ -20,6 +20,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     DeckRole: 'src/types/DeckRole.ts',
     DeckSchema: 'src/types/DeckSchema.ts',
+    DeckSeed: 'src/seed/DeckSeed.ts',
     DeckCapabilities: 'src/types/DeckCapabilities.ts',
     DeckOperation: 'src/types/DeckOperation.ts',
     Settings: 'src/types/Settings.ts',

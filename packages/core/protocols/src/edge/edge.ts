@@ -741,8 +741,29 @@ export const DEFAULT_INVITATIONS_PER_ACCOUNT = 5;
 /** Crockford base32 alphabet (no I, L, O, U). Case-insensitive on the wire. */
 export const INVITATION_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
+/**
+ * A vanity code is an admin-chosen prefix, a dash, and random characters from
+ * {@link INVITATION_CODE_ALPHABET}: `SF-MEETUP-7K2Q`. Hub-service matches codes ignoring case and
+ * dashes, so `sfmeetup7k2q` redeems it too.
+ */
+export const VANITY_PREFIX_MIN_LENGTH = 4;
+export const VANITY_PREFIX_MAX_LENGTH = 20;
+export const VANITY_SUFFIX_LENGTH = 4;
+export const VANITY_CODE_MAX_LENGTH = VANITY_PREFIX_MAX_LENGTH + 1 + VANITY_SUFFIX_LENGTH;
+/** 4-20 characters, at least 4 of them letters or digits, with single dashes between them. */
+export const VANITY_PREFIX_PATTERN = new RegExp(
+  `^(?=.{${VANITY_PREFIX_MIN_LENGTH},${VANITY_PREFIX_MAX_LENGTH}}$)(?=(?:-?[A-Za-z0-9]){${VANITY_PREFIX_MIN_LENGTH}})[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`,
+);
+
+export const MAX_CODES_PER_REQUEST = 1000;
+export const MAX_REDEMPTIONS_PER_CODE = 100;
+
+/**
+ * A code as a user types it: generated or vanity, any case, optionally hyphenated. Hub-service
+ * normalizes before lookup. Every issued code has at least {@link INVITATION_CODE_LENGTH} characters.
+ */
 export const InvitationCodeSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`))),
+  Schema.check(Schema.isPattern(new RegExp(`^[A-Za-z0-9-]{${INVITATION_CODE_LENGTH},${2 * VANITY_CODE_MAX_LENGTH}}$`))),
 );
 
 export const CheckEmailExistsRequestSchema = Schema.Struct({
@@ -920,9 +941,31 @@ export const AdminGrantInvitationsRequestSchema = Schema.Struct({
 export type AdminGrantInvitationsRequest = Schema.Schema.Type<typeof AdminGrantInvitationsRequestSchema>;
 
 export const AdminCreateInvitationCodesRequestSchema = Schema.Struct({
-  count: Schema.Number,
+  count: Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: MAX_CODES_PER_REQUEST })),
   note: Schema.optional(Schema.String),
-});
+  /** Plan the redeemer inherits, overriding the default user plan. Single-use codes only. */
+  planName: Schema.optional(Schema.String),
+  /** How many accounts may sign up with each code (default 1), e.g. for an event code. */
+  maxRedemptions: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: MAX_REDEMPTIONS_PER_CODE })),
+  ),
+  /**
+   * Vanity prefix (requires `count: 1`). The code is the uppercased prefix, a dash, and
+   * {@link VANITY_SUFFIX_LENGTH} random characters, so `sf-meetup` yields e.g. `SF-MEETUP-7K2Q`.
+   */
+  prefix: Schema.optional(Schema.String.check(Schema.isPattern(VANITY_PREFIX_PATTERN))),
+}).check(
+  Schema.makeFilter((request) => {
+    const issues: Schema.FilterIssue[] = [];
+    if (request.prefix !== undefined && request.count !== 1) {
+      issues.push({ path: ['count'], issue: 'A vanity code is created one at a time; count must be 1.' });
+    }
+    if (request.planName && (request.maxRedemptions ?? 1) > 1) {
+      issues.push({ path: ['planName'], issue: 'A code that carries a plan must be single-use.' });
+    }
+    return issues;
+  }),
+);
 export type AdminCreateInvitationCodesRequest = Schema.Schema.Type<typeof AdminCreateInvitationCodesRequestSchema>;
 export type AdminCreateInvitationCodesResponse = { codes: string[] };
 
@@ -933,11 +976,16 @@ export type AdminListInvitationCodesResponse = {
     createdAt: string;
     note?: string;
     issuedByIdentityDid?: string;
+    /** Set for single-use codes only; see `redemptionCount` for the rest. */
     redeemedByIdentityDid?: string;
-    /** ISO timestamp. */
+    /** ISO timestamp of the most recent redemption. */
     redeemedAt?: string;
     /** ISO timestamp. Set when revoked. */
     revokedAt?: string;
+    /** Absent from hubs that predate code capacity; treat as 1. */
+    maxRedemptions?: number;
+    /** Absent from hubs that predate code capacity. */
+    redemptionCount?: number;
   }>;
 };
 

@@ -24,7 +24,7 @@ does.
 
 ## Route 2 — the real extension (what to use for a video)
 
-Only this route proves the wire. Follow the `recording-demos` skill to capture it.
+Only this route proves the wire. Follow the `autocue` skill to capture it.
 
 1. Build and load the extension:
    ```bash

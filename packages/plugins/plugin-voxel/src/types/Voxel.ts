@@ -39,6 +39,7 @@ export class World extends Type.makeObject<World>(DXN.make('org.dxos.type.voxel'
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'neutral' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

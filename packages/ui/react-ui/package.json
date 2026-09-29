@@ -10,7 +10,9 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "imports": {
     "#translations": {
@@ -24,6 +26,15 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./next": {
+      "source": "./src/next/index.ts",
+      "types": "./dist/types/src/next/index.d.ts",
+      "import": "./dist/lib/next.mjs"
+    },
+    "./next/theme.css": {
+      "style": "./src/next/theme/index.css",
+      "default": "./src/next/theme/index.css"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -55,6 +66,8 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@internationalized/date": "catalog:",
+    "@zag-js/core": "catalog:",
+    "@zag-js/react": "catalog:",
     "date-fns": "catalog:",
     "dompurify": "catalog:",
     "error-stack-parser": "catalog:",
@@ -74,6 +87,8 @@
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@zag-js/core": "catalog:",
+    "@zag-js/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

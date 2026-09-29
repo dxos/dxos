@@ -8,7 +8,7 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 
-const { text, toolCall, promptIncludes, scriptedLanguageModelLayer, __testing } = ScriptedLanguageModel;
+const { text, reasoning, toolCall, promptIncludes, layer, __testing } = ScriptedLanguageModel;
 
 describe('ScriptedLanguageModel', () => {
   describe('encoders', () => {
@@ -23,6 +23,24 @@ describe('ScriptedLanguageModel', () => {
       ]);
       expect(parts.find((part) => part.type === 'text-delta')).toMatchObject({ delta: 'Hello' });
       expect(parts.find((part) => part.type === 'finish')).toMatchObject({ reason: 'stop' });
+    });
+
+    test('encodes reasoning as provider-native reasoning parts', ({ expect }) => {
+      const streamed = __testing.encodeStreamTurn([reasoning('Thinking'), text('Done')], 0, 'stop');
+      expect(streamed.map((part) => part.type)).toEqual([
+        'response-metadata',
+        'reasoning-start',
+        'reasoning-delta',
+        'reasoning-end',
+        'text-start',
+        'text-delta',
+        'text-end',
+        'finish',
+      ]);
+      expect(__testing.encodeTurn([reasoning('Thinking')], 0, 'stop')).toContainEqual({
+        type: 'reasoning',
+        text: 'Thinking',
+      });
     });
 
     test('encodes a tool call turn with JSON-serialized input and deterministic id', ({ expect }) => {
@@ -93,13 +111,24 @@ describe('ScriptedLanguageModel', () => {
         const exit = yield* LanguageModel.generateText({ prompt: 'ignored' }).pipe(Effect.exit);
         expect(exit._tag).toEqual('Failure');
       },
-      Effect.provide(scriptedLanguageModelLayer([{ parts: [text('one')] }, { parts: [text('two')] }])),
+      Effect.provide(layer([{ parts: [text('one')] }, { parts: [text('two')] }])),
+    ),
+  );
+
+  it.effect(
+    'computes each turn from the request with a generator script',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        expect((yield* LanguageModel.generateText({ prompt: 'alpha' })).text).toEqual('0:alpha');
+        expect((yield* LanguageModel.generateText({ prompt: 'beta' })).text).toEqual('1:beta');
+      },
+      Effect.provide(layer((request, index) => ({ parts: [text(`${index}:${request.text}`)] }))),
     ),
   );
 
   describe('routed scripts', () => {
     const routedLayer = () =>
-      scriptedLanguageModelLayer([
+      layer([
         {
           name: 'supervisor',
           match: promptIncludes('You are the supervisor'),

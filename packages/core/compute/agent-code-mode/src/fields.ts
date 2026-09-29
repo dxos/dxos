@@ -25,6 +25,25 @@ export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
   }));
 
 /**
+ * An operation's input as the model is told about it, in the same labels as the types section, e.g.
+ * `{ project: Ref<org.dxos.type.project> }`.
+ *
+ * Derived from the operation's own schema rather than the tool-calling projection, because that
+ * projection rewrites refs to URI strings — a shape `Operation.invoke` rejects.
+ */
+export const describeInput = (schema: Schema.Top): string => {
+  const ast = schema.ast;
+  // The three spellings of "takes no input", as `createStructFieldsFromSchema` reads them.
+  if (ast._tag === 'Void' || ast._tag === 'Null' || ast._tag === 'Unknown') {
+    return 'none';
+  }
+  if (SchemaAST.isObjects(ast) && ast.propertySignatures.length === 0 && ast.indexSignatures.length === 0) {
+    return '{}';
+  }
+  return labelOf(ast, 0);
+};
+
+/**
  * A short, TypeScript-like label for a schema node.
  *
  * A reference is checked first: it is a declaration whose encoded side is a struct, so read
@@ -68,7 +87,15 @@ export const labelOf = (ast: SchemaAST.AST, depth: number): string => {
     return label.includes(' | ') ? `(${label})[]` : `${label}[]`;
   }
   if (SchemaAST.isObjects(ast)) {
-    return 'object';
+    // A record or open struct (`Obj.Unknown`) has no closed field list to state.
+    if (ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
+      return 'object';
+    }
+    const fields = ast.propertySignatures.map(
+      (property) =>
+        `${String(property.name)}${SchemaAST.isOptional(property.type) ? '?' : ''}: ${labelOf(property.type, depth + 1)}`,
+    );
+    return `{ ${fields.join(', ')} }`;
   }
   if (SchemaAST.isSuspend(ast)) {
     return labelOf(ast.thunk(), depth + 1);

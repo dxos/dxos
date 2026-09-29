@@ -19,6 +19,11 @@ import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
 export const PARAM_LOG_LEVEL = 'log';
+/**
+ * `?model=scripted` swaps every language model the assistant resolves for the offline script in
+ * `util/scripted-model.ts`, so the perf flow drives a whole agent loop without a provider.
+ */
+export const PARAM_MODEL = 'model';
 
 export const setSafeModeUrl = (on: boolean) => {
   const url = new URL(window.location.href);

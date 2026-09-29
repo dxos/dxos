@@ -195,6 +195,7 @@ export class Instrument extends Type.makeObject<Instrument>(DXN.make('org.dxos.t
   }).pipe(
     LabelAnnotation.set(['symbol', 'name']),
     Annotation.IconAnnotation.set({ icon: 'ph--chart-line-up--regular', hue: 'blue' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -283,5 +284,6 @@ export class Lot extends Type.makeObject<Lot>(DXN.make('org.dxos.type.ibkr.Lot',
   }).pipe(
     LabelAnnotation.set(['symbol', 'quantity']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}

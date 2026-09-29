@@ -39,9 +39,10 @@ export type Comparability = {
    *
    * The profiler runs in both modes — measured at +2.6% on the whole flow, below the run-to-run
    * noise — so that worker CPU is trended rather than diagnose-only. The screencast is what makes
-   * `diagnose` timings incomparable: it costs +45%. Allocation sampling runs only on request.
+   * `diagnose` timings incomparable: it costs +45%. Allocation sampling and video recording run
+   * only on request; the video encoder shares the cores the stages are measured on.
    */
-  instruments: `profiler${'' | '+screencast'}${'' | '+allocations'}`;
+  instruments: `profiler${'' | '+screencast'}${'' | '+allocations'}${'' | '+video'}`;
   /**
    * Stages after which a memory snapshot was taken, if any.
    *

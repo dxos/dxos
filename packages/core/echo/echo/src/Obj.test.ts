@@ -7,6 +7,7 @@ import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 
+import type * as Change from './Change.ts';
 import * as Entity from './Entity.ts';
 import { getProxyTarget } from './internal/common/proxy/proxy-utils.ts';
 import { EventId } from './internal/common/proxy/symbols.ts';
@@ -845,6 +846,37 @@ describe('Obj', () => {
       expect(child.name).toBe('John');
       expect(Obj.getParent(child)).toBe(parent);
     });
+  });
+});
+
+describe('Obj.getChanges', () => {
+  test('requires an object bound to a database', ({ expect }) => {
+    const task = Obj.make(TestSchema.Task, { title: 'draft' });
+    expect(() => Obj.getChanges(task)).toThrow('not bound to a database');
+    expect(() => Obj.getChanges(task, { property: 'title' })).toThrow('not bound to a database');
+  });
+
+  test('types before/after as the object snapshot, or as the selected property', () => {
+    // Type-level only: never invoked, since the object has no database.
+    const _types = (task: TestSchema.Task) => {
+      const [change] = Obj.getChanges(task);
+      expectTypeOf(change.before).toEqualTypeOf<Obj.Snapshot<TestSchema.Task> | undefined>();
+      expectTypeOf(change.after).toEqualTypeOf<Obj.Snapshot<TestSchema.Task> | undefined>();
+      expectTypeOf(change.heads).toEqualTypeOf<readonly string[]>();
+      expectTypeOf(change).toEqualTypeOf<Change.ValueChange<Obj.Snapshot<TestSchema.Task>>>();
+
+      const [titleChange] = Obj.getChanges(task, { property: 'title' });
+      expectTypeOf(titleChange.after).toEqualTypeOf<string | undefined>();
+      expectTypeOf(titleChange).toEqualTypeOf<Change.Change<string | undefined>>();
+
+      // @ts-expect-error not a property of Task.
+      Obj.getChanges(task, { property: 'status' });
+    };
+
+    // With no type argument, `Change.Change` stays the `Filter.changes` query row.
+    expectTypeOf<Change.Change>().toHaveProperty('ops');
+    expectTypeOf<Change.Change>().not.toHaveProperty('before');
+    expectTypeOf<Change.Change<number>>().toHaveProperty('before').toEqualTypeOf<number | undefined>();
   });
 });
 

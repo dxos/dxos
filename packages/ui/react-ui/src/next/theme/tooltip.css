@@ -1,0 +1,21 @@
+/*
+ * Tooltip: short portalled text on the popup level; `.nx-popup` supplies size, level and radius.
+ */
+
+@layer dx-components {
+  .nx-tooltip {
+    min-width: 0;
+    max-width: 20rem;
+    padding: var(--nx-gap-size);
+    overflow-wrap: break-word;
+  }
+
+  /* One truncating line; its tooltip opens only while the text is cut off. */
+  .nx-text-tooltip {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

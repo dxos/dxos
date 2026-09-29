@@ -6,25 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
-import { Button, Field, Icon, useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import { Button, Field, Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import {
-  type ThemeExtensionsOptions,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  diffBlocks,
-  walkthroughSidebar,
-  walkthroughTheme,
-} from '@dxos/ui-editor';
 
+import { WalkthroughView } from '../components/WalkthroughView/index.ts';
 // Imported directly rather than through the barrel: that also exports the generation logic, which
 // pulls ECHO into a bundle that only needs the pure parsing.
 import { fillWalkthrough } from '../walkthrough/fill.ts';
@@ -32,10 +22,6 @@ import { SYSTEM_PROMPT, buildPrompt } from '../walkthrough/prompt.ts';
 import { fetchPullRequest, parsePullRequestUrl } from './github.ts';
 
 const MODEL = 'com.anthropic.model.claude-sonnet-5.default';
-
-const slots: ThemeExtensionsOptions['slots'] = {
-  content: { className: 'dx-container-type-inline-size w-full mx-auto! max-w-[min(72rem,100%-3rem)] py-3!' },
-};
 
 type Phase = 'idle' | 'fetching' | 'generating' | 'filling' | 'done';
 
@@ -53,25 +39,10 @@ type Result = {
  * needs network but no credentials.
  */
 const DefaultStory = ({ url: initialUrl }: { url: string }) => {
-  const { themeMode } = useThemeContext();
   const [url, setUrl] = useState(initialUrl);
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string>();
   const [result, setResult] = useState<Result>();
-
-  const extensions = useMemo(
-    () => [
-      createThemeExtensions({ themeMode, slots }),
-      createBasicExtensions({ lineWrapping: true, readOnly: true }),
-      createMarkdownExtensions(),
-      decorateMarkdown(),
-      walkthroughTheme(),
-      diffBlocks({}),
-      walkthroughSidebar({}),
-    ],
-    [themeMode],
-  );
-  const { parentRef } = useTextEditor({ initialValue: result?.body ?? '', extensions }, [extensions, result]);
 
   const handleGenerate = useCallback(async () => {
     const ref = parsePullRequestUrl(url);
@@ -148,7 +119,7 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
       {error ? (
         <div className='p-4 text-sm text-error-text'>{error}</div>
       ) : (
-        <div ref={parentRef} className='dx-fill overflow-auto' />
+        <WalkthroughView value={result?.body ?? ''} sidebar='full' />
       )}
     </div>
   );

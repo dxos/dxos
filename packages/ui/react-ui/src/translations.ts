@@ -10,6 +10,8 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'empty.label': 'No items',
+
         'toolbar-menu.label': 'Action menu',
         'toolbar-drag-handle.label': 'Drag to rearrange',
         'toolbar-close.label': 'Close',

@@ -17,6 +17,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
     ProjectCapabilities: 'src/types/ProjectCapabilities.ts',
     ProjectMailboxOperation: 'src/types/ProjectMailboxOperation.ts',

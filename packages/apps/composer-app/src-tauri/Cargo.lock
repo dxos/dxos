@@ -95,6 +95,7 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "glib",
  "http",
  "http-body-util",
  "hyper",
@@ -126,6 +127,7 @@ dependencies = [
  "tauri-plugin-web-auth",
  "tokio",
  "url",
+ "webkit2gtk",
  "xattr",
 ]
 

@@ -11,6 +11,7 @@ import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
+import * as JsonSchema from './JsonSchema.ts';
 import * as Obj from './Obj.ts';
 import * as Ref from './Ref.ts';
 import * as Type from './Type.ts';
@@ -689,6 +690,25 @@ describe('Annotation', () => {
         // @ts-expect-error intentional type violation to exercise runtime validation
         expect(() => Annotation.set(obj, OrderAnnotation, { typeA: [1] })).toThrow();
       });
+    });
+  });
+
+  describe('UserType', () => {
+    test('reads back the tags it was set with', ({ expect }) => {
+      const plain = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set());
+      const tagged = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set({ tags: ['a', 'b'] }));
+      const untyped = Schema.Struct({ name: Schema.String });
+
+      expect(Annotation.UserType.get(plain).pipe(Option.getOrUndefined)).toEqual({});
+      expect(Annotation.UserType.get(tagged).pipe(Option.getOrUndefined)).toEqual({ tags: ['a', 'b'] });
+      expect(Option.isNone(Annotation.UserType.get(untyped))).toBe(true);
+    });
+
+    test('survives persisting the schema', ({ expect }) => {
+      const schema = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set({ tags: ['a'] }));
+      const restored = JsonSchema.toEffectSchema(JsonSchema.toJsonSchema(schema));
+
+      expect(Annotation.UserType.get(restored).pipe(Option.getOrUndefined)).toEqual({ tags: ['a'] });
     });
   });
 

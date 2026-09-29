@@ -4,6 +4,8 @@
 
 import { type Topology } from 'topojson-specification';
 
+export { timezones } from '../data/timezones.ts';
+
 /**
  * World-atlas Natural Earth resolutions. Higher numbers = lower detail.
  * - `110m` (~110 KB): default; suitable for low-zoom globes.

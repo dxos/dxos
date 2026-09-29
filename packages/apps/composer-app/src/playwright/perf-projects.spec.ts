@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Locator, type Page, expect, test } from '@playwright/test';
+import { type BrowserContext, type Locator, type Page, type Request, expect, test } from '@playwright/test';
 import path from 'node:path';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -73,6 +73,32 @@ const documentPath = (spaceId: string, documentId: string): string =>
  * exposes a `textbox` role, which is what makes this unique.
  */
 const documentEditor = (page: Page): Locator => page.getByTestId('composer.markdownRoot').getByRole('textbox');
+
+/** The companion variant `plugin-assistant` registers its chat under (`ASSISTANT_COMPANION_VARIANT`). */
+const ASSISTANT_COMPANION = 'assistant-chat';
+
+/** The editable prompt inside the companion chat, as opposed to the one the space home renders. */
+const assistantPrompt = (page: Page): Locator =>
+  page.getByTestId('deck.companion').getByTestId('assistant.prompt').locator('.cm-content');
+
+/**
+ * The closing line of the scripted conversation (`src/util/scripted-model.ts`), which the model
+ * emits only after its twentieth database query has returned.
+ */
+const ASSISTANT_DONE = /ran 20 database queries/;
+
+/**
+ * Floor on the `assistant-turns` wait: twenty-one model turns at ~4 s each measured locally (250 ms of
+ * which is the script's own delay), well past the 60 s `measure` budget sized for a single render.
+ */
+const ASSISTANT_TIMEOUT = 300_000;
+
+/**
+ * Records the page as `video/*.webm` in the run's artifact directory (`DX_PERF_VIDEO=1`), for a
+ * reviewer who wants to watch the flow rather than read its rows. Off by default: the encoder runs
+ * on the same cores the stages are measured on.
+ */
+const VIDEO = process.env.DX_PERF_VIDEO === '1';
 
 /**
  * Idle allowed after ready before the first measured stage.
@@ -167,8 +193,9 @@ const FIXTURE_MS_PER_TASK = 700;
 /** Boot, settle and the stages, generously — `diagnose` stages run an order slower. */
 const STAGE_BUDGET_MS = 600_000;
 
+// The assistant wait on top of the stage allowance, which earlier stages may already have spent.
 const testBudget = (scale: Scale): number =>
-  scale.tasks * FIXTURE_MS_PER_TASK + REPLICATION_TIMEOUT_MS + STAGE_BUDGET_MS;
+  scale.tasks * FIXTURE_MS_PER_TASK + REPLICATION_TIMEOUT_MS + STAGE_BUDGET_MS + ASSISTANT_TIMEOUT;
 
 const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
   await page.getByTestId('treeView.userAccount').waitFor({ timeout });
@@ -206,8 +233,12 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
   const instrumented = await launchInstrumentedBrowser();
   const { browser, browserCdp, debugPort } = instrumented;
 
+  // Outside the `try`, so a failed run still closes it: Playwright writes the video only on close.
+  let context: BrowserContext | undefined;
   try {
-    const context = await browser.newContext();
+    context = await browser.newContext(
+      VIDEO ? { recordVideo: { dir: path.join(artifactDir, 'video'), size: { width: 1280, height: 720 } } } : {},
+    );
     const page = await context.newPage();
     const network = trackNetwork(page);
 
@@ -216,7 +247,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       pluginSet: process.env.DX_PLUGIN_SET ?? 'default',
       profileState: 'first-run',
       settleMs: SETTLE_MS,
-      instruments: `${mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler'}${ALLOC_SAMPLE ? '+allocations' : ''}`,
+      instruments: `${mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler'}${ALLOC_SAMPLE ? '+allocations' : ''}${VIDEO ? '+video' : ''}`,
       ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
     };
     const snapshotDir = path.join(artifactDir, 'snapshots');
@@ -251,7 +282,9 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir });
 
     await runner.stage('boot', async () => {
-      await page.goto(`${BASE_URL}/?profiler=1`, { timeout: 120_000 });
+      // `model=scripted` so the assistant stages run a fixed agent loop offline: a live model's
+      // latency and variable tool use would be most of what those stages measured.
+      await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
       await waitForReady(page);
     });
 
@@ -447,6 +480,46 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
     });
 
+    // The assistant stages: a project accumulates a conversation as well as tasks and documents,
+    // and an agent turn is a third engine — streaming render, tool dispatch and database queries
+    // interleaved — so it is measured on the same journey rather than in isolation.
+    //
+    // Context-wide, so a call from a worker counts too: a request to EDGE's `/ai/generate/` route
+    // means a live model answered, and a stage timed against a provider's latency is not this one.
+    const liveModelCalls: string[] = [];
+    const onRequest = (request: Request) => {
+      if (new URL(request.url()).pathname.includes('/ai/generate/')) {
+        liveModelCalls.push(request.url());
+      }
+    };
+    page.context().on('request', onRequest);
+
+    await runner.stage('open-assistant', async () => {
+      await invokeInPage(page, 'org.dxos.operation.appToolkit.updateCompanion', {
+        subject: `${projectPath(fixture.spaceId, fixture.projectIds[0])}/~${ASSISTANT_COMPANION}`,
+      });
+      await assistantPrompt(page).waitFor({ timeout: budget });
+    });
+
+    await runner.stage('assistant-turns', async () => {
+      const prompt = assistantPrompt(page);
+      await prompt.click({ timeout: budget });
+      await prompt.fill('Survey this project.');
+      await expect(prompt).toHaveText('Survey this project.');
+      await prompt.press('Enter');
+      await page
+        .getByTestId('deck.companion')
+        .getByTestId('assistant.thread')
+        .getByText(ASSISTANT_DONE)
+        .waitFor({ timeout: Math.max(budget, ASSISTANT_TIMEOUT) });
+      if (liveModelCalls.length > 0) {
+        throw new Error(`assistant reached a live model: ${liveModelCalls.slice(0, 3).join(', ')}`);
+      }
+    });
+
+    page.context().off('request', onRequest);
+    log.info('assistant stages', { liveModelCalls: liveModelCalls.length });
+
     const rows = runner.rows;
     const name = `${FLOW}-${mode}`;
     const capturedAt = new Date().toISOString();
@@ -500,9 +573,8 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // The only assertion: a stage that could not complete is a broken flow, not a slow one.
     const failed = rows.filter((row) => !row.ok);
     expect(failed.map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
-
-    await context.close();
   } finally {
+    await context?.close().catch((error) => log.warn('context did not close', { error }));
     await instrumented.close();
   }
 };

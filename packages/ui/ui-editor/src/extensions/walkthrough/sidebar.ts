@@ -140,7 +140,8 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
       constructor(view: EditorView) {
         this.#view = view;
         this.#rail = document.createElement('div');
-        this.#rail.className = 'cm-walkthrough-sidebar';
+        // `dx-scrollbar-thin` gives the rail the app's scrollbar; a bare overflow box draws the browser's.
+        this.#rail.className = 'cm-walkthrough-sidebar dx-scrollbar-thin';
         this.#rail.dataset.variant = options.variant ?? 'full';
         view.dom.appendChild(this.#rail);
         view.scrollDOM.addEventListener('scroll', this.#onScroll, { passive: true });

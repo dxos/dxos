@@ -11,9 +11,9 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { ReactNode, useRef } from 'react';
 
-import { Flex, useThemeContext } from '@dxos/react-ui';
+import { Banner, Flex, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { type SequencedLogEntry } from '../useSystem.ts';
@@ -144,7 +144,7 @@ export const OperationLog = ({ entries }: OperationLogProps) => (
             </Listbox.ItemLabel>
           </Listbox.Item>
         ))}
-        {entries.length === 0 && <Empty label='No operations dispatched.' />}
+        {entries.length === 0 && <Banner.Empty label='No operations dispatched.' />}
       </Listbox.Content>
     </Listbox.Viewport>
   </Listbox.Root>

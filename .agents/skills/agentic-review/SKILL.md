@@ -9,7 +9,9 @@ description: >-
   the repo's `.mdl` rules, or check a diff for known anti-patterns. For the
   built-in bug/quality passes use `/code-review` instead.
   A cheaper first pass with TypeSafe System One (`scripts/system-one.ts`)
-  judges most groups and routes only uncertain ones to subagents.
+  judges most groups and routes only uncertain ones to subagents. In PR mode,
+  `scripts/fast.ts` reviews with System One (Jev) alone and the advisory
+  `Agentic Review` CI job checks the committed result.
 ---
 
 # Agentic Review
@@ -35,6 +37,8 @@ nothing beyond `node:*` and `bun:*`, and can also be run by hand. Tests:
   scripts/finalize.ts     # merge fragments → REVIEW.md + RESOLUTION.md
   scripts/unresolved.ts   # re-print unresolved issues across all runs
   scripts/system-one.ts   # cheap first pass with TypeSafe System One; routes the rest onward
+  scripts/fast.ts         # PR mode: prepare --fast → System One → finalize, no subagents
+  scripts/check-pr.ts     # CI: a finalized review exists, issues addressed, drift ≤ 20%
   lib/system-one/          # budget, source segmentation, context fetchers, questions, checker
   lib/                     # mdl, frontmatter, git, discovery, diagnostics, resolution, store
   rules/                   # seed rules (repo-wide non-negotiables)
@@ -206,6 +210,35 @@ bun .agents/skills/agentic-review/scripts/unresolved.ts --path='**/foo.ts' --rul
 
 `--path` is a substring match, or a glob when it contains `*`/`?`. `--rule` is an
 exact rule id. Legacy finalized runs without `RESOLUTION.md` are skipped.
+
+## PR mode (fast review + CI)
+
+Every PR is expected to carry a review of its own change. The author or agent runs it; CI
+only checks the committed store, so CI needs no API key and spends nothing.
+
+```sh
+bun .agents/skills/agentic-review/scripts/fast.ts            # needs TYPESAFE_API_KEY (`op`, see 1password skill)
+bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
+```
+
+`fast.ts` is prepare `--fast` → `system-one.ts` → finalize, with no subagents. What System One
+is unsure of, and `system-one: off` rules, are listed in `SYSTEM-ONE.md` and left unreviewed;
+run the full workflow above when a change deserves them. Then fix or dismiss each issue, set
+its `RESOLUTION.md` row to `resolved` or `ignored`, and commit the store with the fixes.
+
+- **Changed files ignore merges.** `--pr-only` / `--fast` review only files a non-merge commit
+  on HEAD's first-parent line touched and that still differ from the base, so a merge from
+  main — and the conflict resolution inside it — brings nothing into the review. A prior
+  review is a starting point only if it was made on this branch (not already on main).
+- **CI (`.depot/workflows/agentic-review.yml`, advisory — never a required check).**
+  `check-pr.ts` fails when the PR's diff adds no finalized review store, when any issue in
+  those stores is still `unresolved`, or when drift exceeds 20%:
+  `LOC(non-merge first-parent commits since the newest review) / LOC(diff merge-base..HEAD)`,
+  both without lockfiles, `linguist-generated` paths, binaries and `.agents/reviews/`. A PR
+  that changes only such files passes without a review. Its failure message tells the agent
+  to run `fast.ts`; reproduce locally with `node .agents/skills/agentic-review/scripts/check-pr.ts`.
+- **Cost.** Jev bills input tokens only, $0.042 per million — about 2,800 tokens and
+  $0.0001–0.00016 per file × rule pair in the trials (`TRIAL.md`), so a typical PR costs cents.
 
 ## Authoring a rule
 

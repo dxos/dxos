@@ -311,6 +311,27 @@ export const GetPullRequestStatus = Operation.make({
 });
 
 /**
+ * Read a pull request's whole change as a unified diff, with the head commit it was taken at so a
+ * line comment on it anchors to the lines the reader saw.
+ */
+export const GetPullRequestDiff = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.getPullRequestDiff'),
+    name: 'Get Pull Request Diff',
+    description: "Read a pull request's changed files as a unified diff.",
+    icon: 'ph--git-diff--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+  }),
+  output: Schema.Struct({
+    commit: Schema.String.pipe(Schema.optional),
+    diff: Schema.String,
+  }),
+  types: [PullRequest.PullRequest],
+});
+
+/**
  * Progress key for {@link GenerateWalkthrough}, derived from the pull request rather than passed, so
  * the UI can watch a run it did not start. The absolute URI form is required: a hydration-dependent
  * one would not match the key the producer mints.

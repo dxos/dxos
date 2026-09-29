@@ -9,6 +9,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { corePlugins } from '@dxos/plugin-testing';
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';
@@ -17,17 +18,17 @@ import { translations } from '#translations';
 import { PullRequestOverview, type PullRequestOverviewProps } from '../components/PullRequestOverview/index.ts';
 import { FixtureLinkSourcePlugin, PULL_REQUEST_13348_BODY, PULL_REQUEST_13348_RUNS } from '../testing/index.ts';
 
-const DefaultStory = (props: PullRequestOverviewProps) => (
-  <div className='dx-fill overflow-auto px-4'>
-    <PullRequestOverview {...props} />
-  </div>
-);
-
 const meta = {
   title: 'plugins/plugin-github/stories/PullRequestOverview',
   component: PullRequestOverview,
-  render: DefaultStory,
   decorators: [
+    (Story) => (
+      <Panel.Root>
+        <Panel.Content>
+          <Story />
+        </Panel.Content>
+      </Panel.Root>
+    ),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
@@ -44,9 +45,12 @@ type Story = StoryObj<typeof meta>;
 
 const REAL_PULL_REQUEST: PullRequestOverviewProps = {
   body: PULL_REQUEST_13348_BODY,
-  url: 'https://github.com/dxos/dxos/pull/13348',
-  baseBranch: 'main',
-  headBranch: 'dm/wonderful-thompson-njcels',
+  details: {
+    reference: 'dxos/dxos#13348',
+    state: 'open',
+    checks: 'CI passing 22/22',
+    branches: 'dm/wonderful-thompson-njcels → main',
+  },
   runs: PULL_REQUEST_13348_RUNS,
 };
 
@@ -55,12 +59,16 @@ export const Default: Story = {
   args: { ...REAL_PULL_REQUEST },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const body = await canvas.findByTestId('pull-request.body');
+    // The first story boots the plugin manager and the masonry reveals its tiles only once measured,
+    // so both waits are longer than the default second.
+    const body = await canvas.findByTestId('pull-request.body', {}, { timeout: 10_000 });
     await expect(body).not.toHaveTextContent('Generated with');
     await expect(body).not.toHaveTextContent('Composer preview');
     await expect(canvas.getAllByTestId('pull-request.artifact.pill')).toHaveLength(3);
-    await expect(canvas.getByTestId('pull-request.related.preview')).toHaveTextContent('pr-13348-composer-dev');
-    await expect(canvas.getByTestId('pull-request.related.claude')).toHaveTextContent(
+    await expect(await canvas.findByTestId('pull-request.related.preview', {}, { timeout: 10_000 })).toHaveTextContent(
+      'pr-13348-composer-dev',
+    );
+    await expect(await canvas.findByTestId('pull-request.related.claude')).toHaveTextContent(
       'session_016GM9fXXzbrr6JGNeeQBCmj',
     );
     await expect(canvas.getAllByTestId('pull-request.check')).toHaveLength(PULL_REQUEST_13348_RUNS.length);
@@ -101,5 +109,5 @@ export const ArtifactPreview: Story = {
 
 /** No description, no footers, checks still loading. */
 export const Empty: Story = {
-  args: { url: 'https://github.com/dxos/dxos/pull/1' },
+  args: { details: { reference: 'dxos/dxos#1' } },
 };

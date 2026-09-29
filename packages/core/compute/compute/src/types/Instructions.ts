@@ -52,7 +52,6 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 

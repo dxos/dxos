@@ -75,6 +75,8 @@ export type TreeNodeEntry<T extends { id: string } = any> = {
   children?: TreeNodeEntry<T>[];
   /** Index path within the collection (groups spliced), assigned after the walk. */
   indexPath: number[];
+  /** Number of siblings in the collection (groups spliced), for `aria-setsize`. */
+  setsize: number;
 };
 
 /**
@@ -137,14 +139,14 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /** Whether a childless row can be dropped onto to adopt the dragged item. */
   leavesAcceptChildren?: boolean;
+  /** Remove the dragged row from the list instead of fading it. */
+  hideDragSource?: boolean;
   /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
   debug?: boolean;
   /** Offer an open branch a reorder-below zone meaning "after this row and its subtree". */
   dropBelowExpanded?: boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
-  /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
-  focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
   selectNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
@@ -152,7 +154,23 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;
+  /** Draw a vertical guide down the left of each open branch's children, under the branch's toggle. */
+  indentGuides: boolean;
+  /** Width of one level's indent: a block, or half of one in a `compact` tree. */
+  indentStep: string;
+  /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
+  windowed: boolean;
+  /**
+   * A windowed branch mid-disclosure: its descendant rows animate in (`open`) or out, and a closing
+   * branch stays open in the model until they have, so its rows have something to animate.
+   */
+  disclosure?: WindowDisclosure;
+  /** Takes DOM focus for the row a drop left the tree waiting to focus, once the row is in the document. */
+  claimFocus: (value: string, row: HTMLElement) => void;
 };
+
+/** A windowed branch's disclosure in flight; see {@link TreeRenderContextValue.disclosure}. */
+export type WindowDisclosure = { path: readonly string[]; open: boolean };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
 

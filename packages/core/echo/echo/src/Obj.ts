@@ -18,6 +18,7 @@ import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { assumeType, deepMapValues } from '@dxos/util';
 
+import type * as Change from './Change.ts';
 import type * as Database from './Database.ts';
 import * as Entity from './Entity.ts';
 import * as Error from './Error.ts';
@@ -611,6 +612,42 @@ export const getVersion = <T extends Unknown>(obj: T, heads: readonly string[]):
   invariant(db, 'object is not bound to a database');
   return db.getVersion(obj, heads);
 };
+
+/**
+ * Options for {@link getChanges}.
+ */
+export type GetChangesOptions<K extends string = string> = {
+  /** Narrow the history to the changes that touched this property; `before`/`after` then hold its value. */
+  property?: K;
+};
+
+/**
+ * The object's edit history, oldest first: one {@link Change.Change} per document change that
+ * touched the object, carrying its snapshot before and after. Given `property`, only the changes that
+ * touched that property, carrying its value. Pass an entry's `heads` to {@link getVersion} to read the
+ * whole object as that change left it.
+ *
+ * Changes belong to the object's Automerge document, so `time`, `actor` and `ops` describe the whole
+ * change, which may also have written other objects in the same document. Edits to the content of a
+ * referenced object (e.g. a `Ref<Text>`) are that object's history, not this one's.
+ *
+ * @example
+ * ```ts
+ * for (const { time, before, after } of Obj.getChanges(task, { property: 'status' })) {
+ *   console.log(new Date(time), before, '→', after);
+ * }
+ * ```
+ */
+export function getChanges<T extends Unknown>(obj: T): Change.Change<Snapshot<T>>[];
+export function getChanges<T extends Unknown, K extends Exclude<keyof Snapshot<T> & string, 'id'>>(
+  obj: T,
+  opts: GetChangesOptions<K> & { property: K },
+): Change.Change<Snapshot<T>[K]>[];
+export function getChanges<T extends Unknown>(obj: T, opts?: GetChangesOptions): Change.ValueChange<unknown>[] {
+  const db = getDatabase(obj);
+  invariant(db, 'object is not bound to a database');
+  return db.getChanges(obj, opts);
+}
 
 //
 // Meta

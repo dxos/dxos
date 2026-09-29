@@ -54,6 +54,7 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'annotations',
   'convergenceKey',
   'createdAt',
   'deleted',

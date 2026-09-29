@@ -98,7 +98,6 @@ export class Cursor extends Type.makeObject<Cursor>(DXN.make('org.dxos.type.curs
     spec: Spec,
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--map-pin--regular', hue: 'amber' }),
-    Annotation.HiddenAnnotation.set(true),
     Schema.annotate({ description: 'Durable progress cursor for a source-driven pipeline.' }),
   ),
 ) {}

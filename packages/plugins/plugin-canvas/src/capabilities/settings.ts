@@ -16,7 +16,8 @@ export default Capability.makeModule(() =>
     const settingsAtom = createKvsStore({
       key: meta.profile.key,
       schema: Settings.Settings,
-      defaultValue: () => ({}),
+      // The overlays are how a new user finds the engine's tools, so they start shown.
+      defaultValue: () => ({ showToolbar: true, showPalette: true }),
     });
 
     return [
