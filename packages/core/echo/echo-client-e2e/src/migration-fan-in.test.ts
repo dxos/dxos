@@ -29,9 +29,23 @@ class FanInChildDoc extends Type.makeObject<FanInChildDoc>(DXN.make('org.dxos.te
   Schema.Struct({ street: Schema.optional(Schema.String), parent: Schema.optional(Ref.Ref(FanInParentDoc)) }),
 ) {}
 
-const absorbStreet = (parent: Obj.Unknown, child: FanInChildDoc): Record<string, unknown> => ({
+const absorbStreet = (child: { readonly street?: string }): Record<string, unknown> => ({
   employerName: child.street,
 });
+
+class FanInPairParentDoc extends Type.makeObject<FanInPairParentDoc>(
+  DXN.make('org.dxos.test.migration.fanin.PairParent', '0.1.0'),
+)(Schema.Struct({ employerName: Schema.optional(Schema.String), city: Schema.optional(Schema.String) })) {}
+
+class FanInPairChildDoc extends Type.makeObject<FanInPairChildDoc>(
+  DXN.make('org.dxos.test.migration.fanin.PairChild', '0.1.0'),
+)(
+  Schema.Struct({
+    street: Schema.optional(Schema.String),
+    city: Schema.optional(Schema.String),
+    parent: Schema.optional(Ref.Ref(FanInPairParentDoc)),
+  }),
+) {}
 
 class FanInOtherChildDoc extends Type.makeObject<FanInOtherChildDoc>(
   DXN.make('org.dxos.test.migration.fanin.OtherChild', '0.1.0'),
@@ -46,6 +60,7 @@ describe('migration fan-in: definition-time checks', () => {
   test('is a definition error to omit "collision"', () => {
     expect(() =>
       Migration.defineFanIn({
+        id: 'org.dxos.test.fanin.street',
         from: FanInChildDoc,
         parentOf: (child) => child.parent,
         absorb: absorbStreet,
@@ -57,6 +72,7 @@ describe('migration fan-in: definition-time checks', () => {
   test('is a definition error to omit "removal"', () => {
     expect(() =>
       Migration.defineFanIn({
+        id: 'org.dxos.test.fanin.street',
         from: FanInChildDoc,
         parentOf: (child) => child.parent,
         absorb: absorbStreet,
@@ -80,6 +96,7 @@ describe('migration fan-in: absorption, collision, and the late-child path', () 
     await db.flush();
 
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       parentOf: (child) => child.parent,
       absorb: absorbStreet,
@@ -118,6 +135,7 @@ describe('migration fan-in: absorption, collision, and the late-child path', () 
 
     // Order-independent so the test does not depend on which child the runner absorbs first.
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       parentOf: (child) => child.parent,
       absorb: absorbStreet,
@@ -141,6 +159,7 @@ describe('migration fan-in: absorption, collision, and the late-child path', () 
     await db.flush();
 
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       parentOf: (child) => child.parent,
       absorb: absorbStreet,
@@ -183,6 +202,7 @@ describe('migration fan-in: type switch on absorption', () => {
     await db.flush();
 
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       to: FanInChildTombstoneDoc,
       parentOf: (child) => child.parent,
@@ -215,6 +235,7 @@ describe('migration fan-in: type switch on absorption', () => {
     await db.flush();
 
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       to: FanInChildTombstoneDoc,
       parentOf: (child) => child.parent,
@@ -246,6 +267,7 @@ describe('migration fan-in: type switch on absorption', () => {
     await db.flush();
 
     const streetFanIn = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       to: FanInChildTombstoneDoc,
       parentOf: (child) => child.parent,
@@ -254,10 +276,11 @@ describe('migration fan-in: type switch on absorption', () => {
       removal: 'tombstone',
     });
     const cityFanIn = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.city',
       from: FanInOtherChildDoc,
       to: FanInChildTombstoneDoc,
       parentOf: (child) => child.parent,
-      absorb: (_parent, child) => ({ employerName: child.city }),
+      absorb: (child) => ({ employerName: child.city }),
       collision: 'child-wins',
       removal: 'tombstone',
     });
@@ -267,6 +290,113 @@ describe('migration fan-in: type switch on absorption', () => {
     getObjectCore(other).setDecoded(['data', 'city'], 'Lyon');
     await db.flush();
     await db.foldForward([streetFanIn, cityFanIn]);
+
+    expect(parent.employerName).toBe('Lyon');
+  });
+
+  test('a late write to one child key leaves a direct edit to another absorbed key alone', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [FanInPairParentDoc, FanInPairChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(FanInPairParentDoc, {}));
+    const child = db.add(Obj.make(FanInPairChildDoc, { street: '1 Main St', city: 'Paris' }));
+    Obj.update(child, (child) => {
+      child.parent = Ref.make(parent);
+    });
+    await db.flush();
+
+    const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.pair',
+      from: FanInPairChildDoc,
+      parentOf: (child) => child.parent,
+      absorb: (child) => ({ employerName: child.street, city: child.city }),
+      collision: 'child-wins',
+      removal: 'tombstone',
+    });
+    await db.runMigrations([migration]);
+
+    Obj.update(parent, (parent) => {
+      parent.city = 'Lyon';
+    });
+    getObjectCore(child).setDecoded(['data', 'street'], '2 Side St');
+    await db.flush();
+    await db.foldForward([migration]);
+
+    expect(parent.employerName).toBe('2 Side St');
+    expect(parent.city).toBe('Lyon');
+    expect(Obj.getConflict(parent, 'city')).toBeUndefined();
+  });
+
+  test('a child write that lands while the runner absorbs it is folded forward', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [FanInParentDoc, FanInChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(FanInParentDoc, {}));
+    const child = db.add(Obj.make(FanInChildDoc, { street: '1 Main St' }));
+    Obj.update(child, (child) => {
+      child.parent = Ref.make(parent);
+    });
+    await db.flush();
+
+    // Stands in for a replicated old-client write arriving after the runner read the child.
+    let duringAbsorb: (() => void) | undefined = () => {
+      duringAbsorb = undefined;
+      getObjectCore(child).setDecoded(['data', 'street'], '2 Late St');
+    };
+    const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
+      from: FanInChildDoc,
+      parentOf: (child) => child.parent,
+      absorb: (child) => {
+        duringAbsorb?.();
+        return absorbStreet(child);
+      },
+      collision: 'child-wins',
+      removal: 'tombstone',
+    });
+    await db.runMigrations([migration]);
+    await db.foldForward([migration]);
+
+    expect(parent.employerName).toBe('2 Late St');
+  });
+
+  test('two fan-ins from the same type fold only the children they absorbed', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [FanInParentDoc, FanInOtherChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(FanInParentDoc, {}));
+    const other = db.add(Obj.make(FanInOtherChildDoc, { city: 'Paris' }));
+    Obj.update(other, (other) => {
+      other.parent = Ref.make(parent);
+    });
+    await db.flush();
+
+    // Absorbs nothing itself, since it resolves no parent, but queries the same type.
+    const unrelatedFanIn = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.unrelated',
+      from: FanInOtherChildDoc,
+      parentOf: () => undefined,
+      absorb: (child) => ({ employerName: `unrelated ${child.city}` }),
+      collision: 'child-wins',
+      removal: 'tombstone',
+    });
+    const cityFanIn = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.city',
+      from: FanInOtherChildDoc,
+      parentOf: (child) => child.parent,
+      absorb: (child) => ({ employerName: child.city }),
+      collision: 'child-wins',
+      removal: 'tombstone',
+    });
+    await db.runMigrations([unrelatedFanIn, cityFanIn]);
+    expect(parent.employerName).toBe('Paris');
+
+    getObjectCore(other).setDecoded(['data', 'city'], 'Lyon');
+    await db.flush();
+    await db.foldForward([unrelatedFanIn, cityFanIn]);
 
     expect(parent.employerName).toBe('Lyon');
   });
@@ -288,6 +418,7 @@ describe('migration fan-in: fold-forward for late child writes', () => {
     // already holds, so a later fold could never move it), this lets a late child value actually
     // supersede what an earlier absorb wrote — the case these tests exercise.
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       parentOf: (child) => child.parent,
       absorb: absorbStreet,
@@ -368,6 +499,7 @@ describe('migration fan-in: "parent-wins" only protects a value the parent actua
     await db.flush();
 
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       parentOf: (child) => child.parent,
       absorb: absorbStreet,
@@ -410,6 +542,7 @@ describe('migration fan-in: "parent-wins" only protects a value the parent actua
     await db.flush();
 
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       parentOf: (child) => child.parent,
       absorb: absorbStreet,
@@ -442,6 +575,7 @@ describe('migration fan-in: "parent-wins" only protects a value the parent actua
     await db.flush();
 
     const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
       from: FanInChildDoc,
       parentOf: (child) => child.parent,
       absorb: absorbStreet,
@@ -553,6 +687,7 @@ describe('migration fan-in: fold-forward across a real partition, peer B a genui
 
         // `child-wins`, not `parent-wins` — see the fold-forward describe block's `setUp` for why.
         const migration = Migration.defineFanIn({
+          id: 'org.dxos.test.fanin.street',
           from: FanInChildDoc,
           parentOf: (child) => child.parent,
           absorb: absorbStreet,

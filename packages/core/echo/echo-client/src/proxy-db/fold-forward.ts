@@ -328,7 +328,7 @@ const foldObject = (db: Database.Database, migrations: readonly Migration.Migrat
 //
 
 /** The message a fan-in fold-forward write onto the PARENT is stamped with; mirrors {@link foldMessage}. */
-const fanInFoldMessage = (fromType: string, parentId: string): string => `fold: fan-in ${fromType} -> ${parentId}`;
+const fanInFoldMessage = (fanInId: string, parentId: string): string => `fold: fan-in ${fanInId} -> ${parentId}`;
 
 /**
  * Locates the automerge change that absorbed `child`: the one whose `message` equals the marker's own
@@ -442,7 +442,13 @@ const foldFanInChild = async (
     return;
   }
 
-  const patch = migration.absorb(parent, { id: child.id, ...getDecodedDataWithRefs(db, core, currentHeads) });
+  // Only keys whose absorbed value the late writes moved are folded, so a direct edit on the parent
+  // is never overwritten on account of an unrelated child key.
+  const patch = changedOutputEntries(
+    parentCore,
+    migration.absorb({ ...getDecodedDataWithRefs(db, core, base), id: child.id }),
+    migration.absorb({ ...getDecodedDataWithRefs(db, core, currentHeads), id: child.id }),
+  );
   const resolved = resolveFoldPatch(parent, patch, migration.collision, new Set(marker.fromChild));
   const dataWrites = computeGuardedDataWrites(parentCore, resolved);
 
@@ -454,7 +460,7 @@ const foldFanInChild = async (
           data[key] = value;
         }
       },
-      { message: fanInFoldMessage(migration.fromType.toString(), marker.parentId), scope: `fan-in:${child.id}` },
+      { message: fanInFoldMessage(migration.id, marker.parentId), scope: `fan-in:${child.id}` },
     );
   }
 
@@ -494,10 +500,8 @@ const foldFanInMigration = async (
     if (Option.isNone(markerOption)) {
       continue; // Not yet absorbed -- `runFanInMigration` handles a still-live child, not this pass.
     }
-    // Several fan-ins may share a `to` type; only the one that absorbed the child may fold it.
-    if (
-      markerOption.value.migration !== fanInAbsorbMessage(migration.fromType.toString(), markerOption.value.parentId)
-    ) {
+    // Several fan-ins may share a type; only the one that absorbed the child may fold it.
+    if (markerOption.value.migration !== fanInAbsorbMessage(migration.id, markerOption.value.parentId)) {
       continue;
     }
     processed.add(child.id);

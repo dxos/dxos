@@ -12,6 +12,7 @@ import { setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
+import { getDecodedDataWithRefs } from './encoded-value.ts';
 import { assignPatch } from './migration-context.ts';
 
 //
@@ -47,7 +48,7 @@ const resolveCollision = (
  * and stored verbatim as that marker's own `migration` field, so a fold-forward pass locates the exact
  * change by `message` + `deps` — see {@link Migration.FanInMarkerSchema}'s doc comment.
  */
-export const fanInAbsorbMessage = (fromType: string, parentId: string): string => `fan-in: ${fromType} -> ${parentId}`;
+export const fanInAbsorbMessage = (fanInId: string, parentId: string): string => `fan-in: ${fanInId} -> ${parentId}`;
 
 /** {@link resolvePatch}'s result: the resolved values, plus which keys came from the child. */
 export type ResolvedPatch = {
@@ -111,25 +112,26 @@ export const runFanInMigration = async (db: Database.Database, migration: Migrat
       continue;
     }
 
-    const parentRef = migration.parentOf(child);
+    // The absorb change is written at these heads, so a write replicated in while the parent loads
+    // is concurrent with it and folded forward, not silently covered by the tombstone.
+    const core = getObjectCore(child);
+    const readHeads = core.getHeads();
+    const data = { ...getDecodedDataWithRefs(db, core, readHeads), id: child.id };
+    const parentRef = migration.parentOf(data);
     if (!parentRef) {
       log.info('fan-in: child has no resolvable parent yet, skipping', { child: child.id });
       continue;
     }
     const parent = await parentRef.load();
 
-    const patch = migration.absorb(parent, child);
+    const patch = migration.absorb(data);
     const { values: resolved, fromChild } = resolvePatch(parent, patch, migration.collision);
     assignPatch(parent, resolved, `migration: fan-in ${migration.fromType.toString()}`);
     // The parent's frontier right after the absorb write landed — a fold-forward pass forks its own
     // write from here, so it stays concurrent with everything the parent does afterward.
     const absorbedAtParentHeads = getObjectCore(parent).getHeads();
-    // Captured immediately before the child's OWN change, never earlier: parent and child share one
-    // automerge document, so the `assign` above already moved the document's frontier, and the absorb
-    // change's real `deps` — what a fold-forward pass matches `preHeads` against — reflect that.
-    const preHeads = getObjectCore(child).getHeads();
 
-    absorbChild(child, migration, parent.id, preHeads, absorbedAtParentHeads, fromChild);
+    absorbChild(child, migration, parent.id, readHeads, absorbedAtParentHeads, fromChild);
   }
 };
 
@@ -150,7 +152,7 @@ const absorbChild = (
 ): void => {
   const core = getObjectCore(child);
   const mountPath = core.mountPath;
-  const message = fanInAbsorbMessage(migration.fromType.toString(), parentId);
+  const message = fanInAbsorbMessage(migration.id, parentId);
 
   const marker = core.encode(
     Schema.encodeSync(Migration.FanInMarkerSchema)({
@@ -163,7 +165,8 @@ const absorbChild = (
   );
   const typeRef = migration.toType ? EncodedReference.fromURI(migration.toType) : undefined;
 
-  core.change(
+  core.changeAt(
+    preHeads,
     (doc) => {
       setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'deleted'], true);
       if (typeRef) {

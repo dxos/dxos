@@ -388,14 +388,16 @@ export type CollisionPolicy =
  */
 export interface FanInMigration extends Migration {
   readonly kind: 'fanIn';
+  /** Stable identity, recorded on every absorbed child so fold-forward folds it with this fan-in only. */
+  id: string;
   from: Type.AnyObj;
   to?: Type.AnyObj;
   fromType: URI.URI;
   toType?: URI.URI;
   /** Resolves the child's parent, or `undefined` when it cannot be resolved yet (skipped this pass). */
-  parentOf(child: unknown): Ref.Ref<Obj.Unknown> | undefined;
-  /** Computes the patch to {@link ObjectMigrationContext.assign} onto the parent for one child. */
-  absorb(parent: Obj.Unknown, child: unknown): Record<string, unknown>;
+  parentOf(child: Record<string, unknown>): Ref.Ref<Obj.Unknown> | undefined;
+  /** Computes the patch assigned onto the parent for one child. */
+  absorb(child: Record<string, unknown>): Record<string, unknown>;
   collision: CollisionPolicy;
   removal: 'tombstone';
 }
@@ -409,11 +411,21 @@ export const isFanInMigration = (migration: Migration): migration is FanInMigrat
  * Options for {@link defineFanIn}.
  */
 export type DefineFanInOptions<From extends Type.AnyObj, To extends Type.AnyObj = From> = {
+  /**
+   * Stable identity for this fan-in, recorded on every absorbed child; two fan-ins from the same type
+   * must use different ids.
+   */
+  id: string;
   from: From;
   /** Optional type the child is switched to before being tombstoned; omit to tombstone under `from`. */
   to?: To;
-  parentOf: (child: MigrationInstanceType<From>) => Ref.Ref<Obj.Unknown> | undefined;
-  absorb: (parent: Obj.Unknown, child: MigrationInstanceType<From>) => Record<string, unknown>;
+  parentOf: (child: MigrationData<From>) => Ref.Ref<Obj.Unknown> | undefined;
+  /**
+   * Synchronous, pure function from the child's data to the patch absorbed into its parent; the
+   * declared `collision` resolves a key the parent already holds. Fold-forward re-runs it on the
+   * child's current data when an old client writes to an absorbed child.
+   */
+  absorb: (child: MigrationData<From>) => Record<string, unknown>;
   collision?: CollisionPolicy;
   removal?: 'tombstone';
 };
@@ -431,7 +443,8 @@ export type DefineFanInOptions<From extends Type.AnyObj, To extends Type.AnyObj 
  * const migration = Migration.defineFanIn({
  *   from: AddressV1,
  *   parentOf: (address) => address.owner,
- *   absorb: (parent, address) => ({ employerName: address.street }),
+ *   id: 'org.example.migration.address-into-person',
+ *   absorb: (address) => ({ employerName: address.street }),
  *   collision: 'parent-wins',
  *   removal: 'tombstone',
  * });
@@ -469,6 +482,7 @@ export const defineFanIn = <From extends Type.AnyObj, To extends Type.AnyObj = F
   return {
     [TypeId]: TypeId,
     kind: 'fanIn',
+    id: options.id,
     from: options.from,
     to: options.to,
     fromType,
@@ -491,7 +505,7 @@ export const defineFanIn = <From extends Type.AnyObj, To extends Type.AnyObj = F
  * with the fold instead of being silently overwritten.
  */
 export const FanInMarkerSchema = Schema.Struct({
-  /** `` `fan-in: <fromType> -> <parentId>` `` — also the absorb change's own `message`. */
+  /** `` `fan-in: <fan-in id> -> <parentId>` `` — also the absorb change's own `message`. */
   migration: Schema.String,
   /** Id of the parent object this child was absorbed into. */
   parentId: Schema.String,
