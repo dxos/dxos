@@ -453,23 +453,21 @@ export const steps = [
         selector: `[data-testid="deck.sidebar"] [data-testid="treeItem.heading"] span:text-is("${TABLE}") >> nth=1`,
         label: TABLE,
       });
-      // The grid renders empty cells ahead of the data, so count the Title cells that hold text.
+      // The grid renders empty cells ahead of the data, so count the cells that hold text in each column.
       await page.waitForFunction(
-        ({ grid, count }) => {
+        ({ grid, columns, count }) => {
           const headers = [
             ...document.querySelectorAll(`${grid} [data-dx-grid-plane="frozenRowsStart"] [aria-colindex]`),
           ];
-          const title = headers.find((header) => header.textContent?.trim() === 'Title')?.getAttribute('aria-colindex');
-          const cells = document.querySelectorAll(`${grid} [data-dx-grid-plane="grid"] [aria-colindex="${title}"]`);
-          return title !== undefined && [...cells].filter((cell) => cell.textContent?.trim()).length >= count;
+          return columns.every((label) => {
+            const index = headers.find((header) => header.textContent?.trim() === label)?.getAttribute('aria-colindex');
+            const cells = document.querySelectorAll(`${grid} [data-dx-grid-plane="grid"] [aria-colindex="${index}"]`);
+            return index != null && [...cells].filter((cell) => cell.textContent?.trim()).length >= count;
+          });
         },
-        { grid: TABLE_GRID, count: ROWS },
+        { grid: TABLE_GRID, columns: ['Title', LOCATION.label], count: ROWS },
         { timeout: 5 * 60_000 },
       );
-      await page
-        .locator('[data-testid="assistant.chat-status"]')
-        .first()
-        .waitFor({ state: 'hidden', timeout: 2 * 60_000 });
       await page.waitForTimeout(BEAT * 2);
     },
   },
