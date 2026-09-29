@@ -225,7 +225,7 @@ export interface SpawnOptions {
 
   /**
    * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
-   * invokes. Not persisted: a restored process's writes are `unknown` unless it serves a conversation.
+   * invokes. Persisted with the process, so a restored process keeps it.
    */
   readonly origin?: Database.Origin;
 
@@ -742,6 +742,7 @@ export class Impl implements Manager {
         params: { name: params.name ?? null, annotations: params.annotations },
         environment: { space: environment.space, conversation: environment.conversation },
         parentId: Option.getOrNull(parentOption),
+        ...(origin !== undefined ? { origin } : {}),
         state: Process.State.RUNNING,
         alarmDueAt: null,
         events: [],
@@ -813,7 +814,7 @@ export class Impl implements Manager {
       };
 
       const cancellation = new AbortController();
-      const origin = resolveOrigin(environment, undefined);
+      const origin = resolveOrigin(environment, record.origin);
       let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
