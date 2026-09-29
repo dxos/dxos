@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 import { describe, test } from 'vitest';
 
+import * as Database from '@dxos/echo/Database';
 import { EffectEx } from '@dxos/effect';
 import { type EventAttributes, RemoteEvents } from '@dxos/tracing';
 
@@ -45,7 +46,7 @@ describe('object events', () => {
       Effect.gen(function* () {
         const { events, next } = yield* setup;
 
-        events.emit('echo.object.add', entity('a', { origin: 'unknown' }));
+        events.emit(Database.TraceEvents.objectAdd, entity('a', { origin: 'unknown' }));
 
         expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'a', 'unknown'));
       }).pipe(Effect.scoped),
@@ -56,11 +57,11 @@ describe('object events', () => {
       Effect.gen(function* () {
         const { events, next, pending } = yield* setup;
 
-        events.emit('echo.object.add', entity('internal', { userType: false }));
-        events.emit('echo.object.add', entity('draft'));
-        events.emit('echo.object.remove', entity('draft'));
+        events.emit(Database.TraceEvents.objectAdd, entity('internal', { userType: false }));
+        events.emit(Database.TraceEvents.objectAdd, entity('draft'));
+        events.emit(Database.TraceEvents.objectRemove, entity('draft'));
         // Events are handled in order, so once this one is reported every earlier one has been decided.
-        events.emit('echo.object.add', entity('seeded', { origin: 'system' }));
+        events.emit(Database.TraceEvents.objectAdd, entity('seeded', { origin: 'system' }));
 
         expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'seeded', 'system'));
         yield* Effect.sleep(Duration.times(DRAFT_WINDOW, 3));
@@ -73,15 +74,15 @@ describe('object events', () => {
       Effect.gen(function* () {
         const { events, next } = yield* setup;
 
-        events.emit('echo.object.remove', entity('old'));
-        events.emit('echo.object.add', entity('link', { relation: true, userType: false }));
-        events.emit('echo.type.add', {
+        events.emit(Database.TraceEvents.objectRemove, entity('old'));
+        events.emit(Database.TraceEvents.objectAdd, entity('link', { relation: true, userType: false }));
+        events.emit(Database.TraceEvents.typeAdd, {
           spaceId: 'space-1',
           typename: 'com.example.type.task',
           version: '0.1.0',
           origin: 'user',
         });
-        events.emit('echo.feed.append', { ...entity('message'), feedId: 'feed-1' });
+        events.emit(Database.TraceEvents.feedAppend, { ...entity('message'), feedId: 'feed-1' });
 
         expect(yield* next).toEqual(reported(EVENTS.objectRemove, 'old'));
         expect(yield* next).toEqual({
@@ -96,6 +97,22 @@ describe('object events', () => {
       }).pipe(Effect.scoped),
     ));
 
+  test('a draft removed in one space does not cancel the same object id in another', ({ expect }) =>
+    EffectEx.runPromise(
+      Effect.gen(function* () {
+        const { events, next } = yield* setup;
+
+        events.emit(Database.TraceEvents.objectAdd, entity('shared', { spaceId: 'space-2' }));
+        events.emit(Database.TraceEvents.objectAdd, entity('shared'));
+        events.emit(Database.TraceEvents.objectRemove, entity('shared'));
+
+        expect(yield* next).toEqual({
+          ...reported(EVENTS.objectAdd, 'shared'),
+          properties: { ...reported(EVENTS.objectAdd, 'shared').properties, spaceId: 'space-2' },
+        });
+      }).pipe(Effect.scoped),
+    ));
+
   test('stops listening when its scope closes', ({ expect }) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
@@ -103,7 +120,7 @@ describe('object events', () => {
         const sent: Captured[] = [];
         yield* listen(events, (name, properties) => sent.push({ name, properties }), DRAFT_WINDOW).pipe(Effect.scoped);
 
-        events.emit('echo.object.add', entity('late'));
+        events.emit(Database.TraceEvents.objectAdd, entity('late'));
         yield* Effect.sleep(Duration.times(DRAFT_WINDOW, 3));
 
         expect(sent).toEqual([]);

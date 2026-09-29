@@ -54,7 +54,7 @@ describe('ECHO trace events', () => {
 
     expect(events.about(person, internal)).toEqual([
       {
-        name: 'echo.object.add',
+        name: Database.TraceEvents.objectAdd,
         attributes: {
           spaceId: db.spaceId,
           objectId: person.id,
@@ -65,7 +65,7 @@ describe('ECHO trace events', () => {
         },
       },
       {
-        name: 'echo.object.add',
+        name: Database.TraceEvents.objectAdd,
         attributes: {
           spaceId: db.spaceId,
           objectId: internal.id,
@@ -105,8 +105,8 @@ describe('ECHO trace events', () => {
     );
 
     expect(events.about(person).map(({ name, attributes }) => [name, attributes.origin])).toEqual([
-      ['echo.object.add', 'user'],
-      ['echo.object.remove', 'user'],
+      [Database.TraceEvents.objectAdd, 'user'],
+      [Database.TraceEvents.objectRemove, 'user'],
     ]);
   });
 
@@ -123,7 +123,7 @@ describe('ECHO trace events', () => {
     );
 
     expect(events.about(employment).map(({ name, attributes }) => [name, attributes.relation])).toEqual([
-      ['echo.object.add', true],
+      [Database.TraceEvents.objectAdd, true],
     ]);
   });
 
@@ -137,7 +137,7 @@ describe('ECHO trace events', () => {
 
     expect(events.about(person)).toEqual([
       {
-        name: 'echo.object.remove',
+        name: Database.TraceEvents.objectRemove,
         attributes: {
           spaceId: db.spaceId,
           objectId: person.id,
@@ -158,9 +158,9 @@ describe('ECHO trace events', () => {
     await db.addType(Task);
     await db.addType(Task);
 
-    expect(events.all().filter(({ name }) => name === 'echo.type.add')).toEqual([
+    expect(events.all().filter(({ name }) => name === Database.TraceEvents.typeAdd)).toEqual([
       {
-        name: 'echo.type.add',
+        name: Database.TraceEvents.typeAdd,
         attributes: { spaceId: db.spaceId, typename: 'com.example.type.task', version: '0.1.0', origin: 'unknown' },
       },
     ]);
@@ -180,8 +180,8 @@ describe('ECHO trace events', () => {
     expect(
       events.about(ada, grace).map(({ name, attributes }) => [name, attributes.feedId, attributes.origin]),
     ).toEqual([
-      ['echo.feed.append', feed.id, 'system'],
-      ['echo.feed.append', feed.id, 'unknown'],
+      [Database.TraceEvents.feedAppend, feed.id, 'system'],
+      [Database.TraceEvents.feedAppend, feed.id, 'unknown'],
     ]);
   });
 });
