@@ -8,6 +8,7 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
   type ClientServicesProvider,
+  ClientTraceEvents,
   type CreateSpaceOptions,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
@@ -266,7 +267,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   async create(meta?: SpaceProperties, options?: CreateSpaceOptions): Promise<Space> {
     const space = await this._createSpaceInternal(this._ctx, meta, options);
-    trace.events.emit('client.space.create', { spaceId: space.id, origin: options?.origin ?? 'unknown' });
+    trace.events.emit(ClientTraceEvents.spaceCreate, { spaceId: space.id, origin: options?.origin ?? 'unknown' });
     return space;
   }
 

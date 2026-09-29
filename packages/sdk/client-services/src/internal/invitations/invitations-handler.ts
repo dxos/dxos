@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
 import {
-  INVITATION_EVENTS,
+  ClientTraceEvents,
   INVITATION_TIMEOUT,
   getExpirationTime,
   invitationEventAttributes,
@@ -203,7 +203,7 @@ export class InvitationsHandler {
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation_State.SUCCESS);
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
-              _trace.events.emit(INVITATION_EVENTS.admit, invitationEventAttributes(guardedState.current));
+              _trace.events.emit(ClientTraceEvents.invitationAdmit, invitationEventAttributes(guardedState.current));
               log('host invitation handler opened');
               admitted = true;
               topology.retire(remotePeerId);
@@ -466,7 +466,7 @@ export class InvitationsHandler {
                 state: Invitation_State.SUCCESS,
               });
               if (firstAdmission) {
-                _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
+                _trace.events.emit(ClientTraceEvents.invitationAccept, invitationEventAttributes(guardedState.current));
               }
               log('guest invitation handler opened');
             } catch (err: any) {
@@ -508,7 +508,7 @@ export class InvitationsHandler {
         admittedBy = 'edge';
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation_State.SUCCESS });
         if (firstAdmission) {
-          _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
+          _trace.events.emit(ClientTraceEvents.invitationAccept, invitationEventAttributes(guardedState.current));
         }
       },
     });

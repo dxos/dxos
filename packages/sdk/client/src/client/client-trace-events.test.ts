@@ -4,6 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { ClientTraceEvents } from '@dxos/client-protocol';
 import { buf } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -18,7 +19,7 @@ const recordClientEvents = () => {
   const recorded: Recorded[] = [];
   const processor = {
     emit: (name: string, attributes: EventAttributes) => {
-      if (name.startsWith('client.')) {
+      if ((Object.values(ClientTraceEvents) as string[]).includes(name)) {
         recorded.push({ name, attributes });
       }
     },
@@ -53,19 +54,19 @@ describe('client trace events', () => {
     await expect
       .poll(() => events.map(({ name }) => name).sort())
       .toEqual([
-        'client.invitation.accept',
-        'client.invitation.admit',
-        'client.invitation.create',
-        'client.space.create',
-        'client.space.create',
+        ClientTraceEvents.invitationAccept,
+        ClientTraceEvents.invitationAdmit,
+        ClientTraceEvents.invitationCreate,
+        ClientTraceEvents.spaceCreate,
+        ClientTraceEvents.spaceCreate,
       ]);
     expect(events).toEqual(
       expect.arrayContaining([
-        { name: 'client.space.create', attributes: { spaceId: space.id, origin: 'unknown' } },
-        { name: 'client.space.create', attributes: { spaceId: settings.id, origin: 'system' } },
-        { name: 'client.invitation.create', attributes: shared },
-        { name: 'client.invitation.admit', attributes: shared },
-        { name: 'client.invitation.accept', attributes: shared },
+        { name: ClientTraceEvents.spaceCreate, attributes: { spaceId: space.id, origin: 'unknown' } },
+        { name: ClientTraceEvents.spaceCreate, attributes: { spaceId: settings.id, origin: 'system' } },
+        { name: ClientTraceEvents.invitationCreate, attributes: shared },
+        { name: ClientTraceEvents.invitationAdmit, attributes: shared },
+        { name: ClientTraceEvents.invitationAccept, attributes: shared },
       ]),
     );
   });

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { ClientTraceEvents } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { type EventAttributes, type RemoteEvents, TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -28,15 +29,15 @@ export const toProductEvent = (name: string, attributes: EventAttributes): Produ
   const { spaceId, kind, authMethod, multiUse, origin } = attributes;
   const device = kind === 'device';
   switch (name) {
-    case 'client.space.create':
+    case ClientTraceEvents.spaceCreate:
       return { name: EVENTS.spaceCreate, properties: { spaceId, origin } };
-    case 'client.invitation.create':
+    case ClientTraceEvents.invitationCreate:
       return device
         ? { name: EVENTS.deviceInvite, properties: { authMethod, multiUse } }
         : { name: EVENTS.spaceShare, properties: { spaceId, authMethod, multiUse } };
-    case 'client.invitation.accept':
+    case ClientTraceEvents.invitationAccept:
       return device ? { name: EVENTS.deviceJoin, properties: {} } : { name: EVENTS.spaceJoin, properties: { spaceId } };
-    case 'client.invitation.admit':
+    case ClientTraceEvents.invitationAdmit:
       return device
         ? { name: EVENTS.deviceAdmit, properties: { multiUse } }
         : { name: EVENTS.spaceAdmit, properties: { spaceId, multiUse } };

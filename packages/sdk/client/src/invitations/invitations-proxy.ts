@@ -8,7 +8,7 @@ import {
   AuthenticatingInvitation,
   CancellableInvitation,
   type ClientServices,
-  INVITATION_EVENTS,
+  ClientTraceEvents,
   InvitationEncoder,
   type Invitations,
   invitationEventAttributes,
@@ -226,7 +226,7 @@ export class InvitationsProxy implements Invitations {
     const { observable, created } = this.#share({ ...this.getInvitationOptions(), ...options });
     // Admits and accepts are reported by the services, which see each success once across tabs and reloads.
     if (created) {
-      trace.events.emit(INVITATION_EVENTS.create, invitationEventAttributes(observable.get()));
+      trace.events.emit(ClientTraceEvents.invitationCreate, invitationEventAttributes(observable.get()));
     }
     return observable;
   }

@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { ClientTraceEvents } from '@dxos/client-protocol';
+import * as Database from '@dxos/echo/Database';
 import { RemoteEvents } from '@dxos/tracing';
 
 import { EVENTS, listen } from './space-events.ts';
@@ -21,8 +23,8 @@ describe('space events', () => {
   test('reports every space created, with its origin', ({ expect }) => {
     const { events, captured } = setup();
 
-    events.emit('client.space.create', { spaceId: 'space-1', origin: 'user' });
-    events.emit('client.space.create', { spaceId: 'settings', origin: 'system' });
+    events.emit(ClientTraceEvents.spaceCreate, { spaceId: 'space-1', origin: 'user' });
+    events.emit(ClientTraceEvents.spaceCreate, { spaceId: 'settings', origin: 'system' });
 
     expect(captured).toEqual([
       { name: EVENTS.spaceCreate, properties: { spaceId: 'space-1', origin: 'user' } },
@@ -35,12 +37,12 @@ describe('space events', () => {
     const space = { kind: 'space', spaceId: 'space-1', authMethod: 'shared_secret', multiUse: false };
     const device = { kind: 'device', authMethod: 'shared_secret', multiUse: false };
 
-    events.emit('client.invitation.create', space);
-    events.emit('client.invitation.admit', space);
-    events.emit('client.invitation.accept', space);
-    events.emit('client.invitation.create', device);
-    events.emit('client.invitation.admit', device);
-    events.emit('client.invitation.accept', device);
+    events.emit(ClientTraceEvents.invitationCreate, space);
+    events.emit(ClientTraceEvents.invitationAdmit, space);
+    events.emit(ClientTraceEvents.invitationAccept, space);
+    events.emit(ClientTraceEvents.invitationCreate, device);
+    events.emit(ClientTraceEvents.invitationAdmit, device);
+    events.emit(ClientTraceEvents.invitationAccept, device);
 
     expect(captured.map(({ name }) => name)).toEqual([
       EVENTS.spaceShare,
@@ -56,9 +58,9 @@ describe('space events', () => {
   test('ignores other events and stops when cleaned up', ({ expect }) => {
     const { events, captured, stop } = setup();
 
-    events.emit('echo.object.add', { spaceId: 'space-1' });
+    events.emit(Database.TraceEvents.objectAdd, { spaceId: 'space-1' });
     stop();
-    events.emit('client.space.create', { spaceId: 'space-1', origin: 'user' });
+    events.emit(ClientTraceEvents.spaceCreate, { spaceId: 'space-1', origin: 'user' });
 
     expect(captured).toEqual([]);
   });

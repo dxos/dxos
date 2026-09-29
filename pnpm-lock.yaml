@@ -19392,6 +19392,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
       '@dxos/config':
         specifier: workspace:*
         version: link:../config

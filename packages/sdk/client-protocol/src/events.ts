@@ -5,13 +5,15 @@
 import { type Invitation, Invitation_AuthMethod, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 /**
- * The invitation trace events: `create` from the client that shares an invitation, and `admit` and `accept` from
- * the services of the host and guest peers, which see every success exactly once however the invitation started.
+ * The trace events the client and its services emit on `trace.events` from `@dxos/tracing`. Space creation and
+ * invitation `create` come from the client; `admit` and `accept` from the services of the host and guest peers, which
+ * see every success exactly once however the invitation started.
  */
-export const INVITATION_EVENTS = {
-  create: 'client.invitation.create',
-  admit: 'client.invitation.admit',
-  accept: 'client.invitation.accept',
+export const ClientTraceEvents = {
+  spaceCreate: 'client.space.create',
+  invitationCreate: 'client.invitation.create',
+  invitationAdmit: 'client.invitation.admit',
+  invitationAccept: 'client.invitation.accept',
 } as const;
 
 /** What an invitation trace event reports about the invitation: never its keys, secrets or guest identity. */
