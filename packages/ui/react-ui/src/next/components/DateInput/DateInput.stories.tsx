@@ -14,7 +14,7 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectPopupSize, expectScoped, sizeRow } from '../../testing.ts';
 import { type FieldRootProps } from '../Field/index.ts';
 
 type ValueFieldProps = Next.DateInputProps & { label: string; testId: string; fieldProps?: FieldRootProps };
@@ -35,45 +35,26 @@ const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: 
 
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
-    <ValueField label='Due' testId={`date-${size}`} size={size} defaultValue='2026-09-29' />
+    <ValueField label='Due' testId={`date-${size}`} defaultValue='2026-09-29' />
     <Next.Input aria-label='Note' data-testid={`input-${size}`} />
-    <ValueField label='Starts at' testId={`time-${size}`} type='time' size={size} defaultValue='09:30' />
-    <ValueField
-      label='Reminder'
-      testId={`datetime-${size}`}
-      type='datetime-local'
-      size={size}
-      defaultValue='2026-09-29T09:30'
-    />
-    <ValueField label='Empty' testId={`empty-${size}`} size={size} />
-    <ValueField label='Alarm' testId={`alarm-${size}`} type='time' hourCycle={12} size={size} />
+    <ValueField label='Starts at' testId={`time-${size}`} type='time' defaultValue='09:30' />
+    <ValueField label='Reminder' testId={`datetime-${size}`} type='datetime-local' defaultValue='2026-09-29T09:30' />
+    <ValueField label='Empty' testId={`empty-${size}`} />
+    <ValueField label='Alarm' testId={`alarm-${size}`} type='time' hourCycle={12} />
     <ValueField
       label='Window'
       testId={`window-${size}`}
-      size={size}
+      size='lg'
       min='2026-09-10'
       max='2026-09-20'
       defaultValue='2026-09-15'
     />
-    <ValueField label='Datum' testId={`locale-${size}`} locale='de-DE' size={size} defaultValue='2026-09-29' />
-    <ValueField
-      label='Locked'
-      testId={`readonly-${size}`}
-      size={size}
-      defaultValue='2026-09-29'
-      fieldProps={{ readOnly: true }}
-    />
-    <ValueField
-      label='Overdue'
-      testId={`invalid-${size}`}
-      size={size}
-      defaultValue='2026-01-01'
-      fieldProps={{ invalid: true }}
-    />
+    <ValueField label='Datum' testId={`locale-${size}`} locale='de-DE' defaultValue='2026-09-29' />
+    <ValueField label='Locked' testId={`readonly-${size}`} defaultValue='2026-09-29' fieldProps={{ readOnly: true }} />
+    <ValueField label='Overdue' testId={`invalid-${size}`} defaultValue='2026-01-01' fieldProps={{ invalid: true }} />
     <ValueField
       label='Archived'
       testId={`disabled-${size}`}
-      size={size}
       defaultValue='2026-09-29'
       fieldProps={{ disabled: true }}
     />
@@ -229,6 +210,8 @@ export const Test: Story = {
       let calendar = await openCalendar(canvasElement, `date-${size}`);
       const style = getComputedStyle(calendar);
       const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      // The calendar takes the field row's size (Phase 4 decision 2).
+      await expectPopupSize(calendar, size);
       const width = await expectEndAnchored(row, calendar);
       await expect(width, `${size} calendar width`).toBeCloseTo(7 * block + padding, 0);
       await expect(width, `${size} calendar narrower than the field`).toBeLessThan(row.getBoundingClientRect().width);
@@ -253,6 +236,8 @@ export const Test: Story = {
     const windowRow = byTestId(md, 'window-md');
     const calendar = await openCalendar(md, 'window-md');
     await expectEndAnchored(windowRow, calendar);
+    // An explicit size wins over the inherited one.
+    await expectPopupSize(calendar, 'lg');
     const day = (date: string, root = calendar) => {
       const cell = root.querySelector<HTMLElement>(`[data-part="table-cell-trigger"][data-value="${date}"]`);
       if (!cell) {

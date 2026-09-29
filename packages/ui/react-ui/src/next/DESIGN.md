@@ -140,7 +140,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 
 1. **Form actions use `Next.Group`**, a plain flex run with no role (`justify` start|end|between). Toolbar is reserved
    for a real keyboard contract; a row Container needs a track per child.
-2. **`Select.Content` keeps an explicit `size`.** Portalled content leaves the sized scope, and inferring the trigger's
+2. ~~**`Select.Content` keeps an explicit `size`.**~~ (superseded by 57: popups inherit the trigger's size) Portalled content leaves the sized scope, and inferring the trigger's
    size would need React context or DOM measurement, both ruled out by decisions 3 and 11.
 3. **Toolbar gap is `--nx-control-inset`** (was `--nx-gap-size`, superseded once IconButtons took an inset cell, 19):
    Buttons, Inputs and Select triggers in a toolbar take the same inline margin as an IconButton's cell, so any two
@@ -282,7 +282,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 37. **One `Default` and one `Test` story per component.** `withSizes()` (`stories.tsx`) renders the story once per
     size, each in a labelled `level='base'` rail-gutter Container (`data-testid='size-<size>'`, found by `sizeRow`
     in `testing.ts`) that passes the row's `size` as an arg, so every `Default` shows all sizes without per-file
-    scaffolding; portalled parts forward that arg to their own `size` (finding 9). Visual variants (states, valences,
+    scaffolding; portalled parts inherit it from their trigger (57). Visual variants (states, valences,
     arrows, justify) are rows or args of the same story rather than extra stories, and a single `Test` play function
     holds every geometry, role and behaviour assertion for the component, ending with any overlay open unless it
     tests dismissal. A variants × sizes matrix decorator was not needed: variants render as a row per size.
@@ -527,6 +527,17 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     drops its own inline-size containment so the Container collapses against the panel, as the toolbar and statusbar
     do. Panel `Test` covers the stacking, size reaching controls and rails, the overlay thumb in the end gutter and
     the collapse of a narrowed panel.
+57. **Popups inherit the trigger's size** (Phase 4 decision 2; supersedes follow-up 2 and the explicit sizes of 10,
+    16, 17, 26 and 54). `usePopupSize` (`PopupScroll.tsx`) resolves a portalled part's size: its own `size` if given,
+    else the `data-size` of the nearest sized ancestor of its trigger or anchor, looked up by the id zag gives that
+    element (`closest('[data-size]')`), recomputed whenever the popup opens; else a fallback. Select, Combobox (from
+    its control row), Menu (trigger or context trigger; a Sub's trigger is its item in the parent popup, so every level
+    takes the root's size), Popover (anchor, then trigger), Tooltip, Dialog and AlertDialog, and DateInput's calendar
+    (the row, its anchor) use it. Fallbacks keep the old defaults: `md` for Menu, Popover and Dialog, `sm` for Tooltip,
+    the `:root` metrics otherwise. A popup with no trigger element (a Dialog opened by state, a virtual anchor) takes
+    its fallback. Tooltip now follows its trigger too, so a label tooltip reads at the row's size rather than always
+    `sm`. The stories dropped their `size={size}` props; each popup's `Test` asserts an inherited size and one explicit
+    override (`expectPopupSize` in `testing.ts`), and Menu asserts every Sub level inherits.
 
 ## Phase 3: react-ui-form port
 

@@ -3,12 +3,12 @@
 //
 
 import { type Popover as PopoverPrimitive } from '@ark-ui/react/popover';
-import React, { type ReactElement, type ReactNode } from 'react';
+import React, { type ReactElement, type ReactNode, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
 import { recipes } from '../../recipes.ts';
-import { type Size } from '../../sizes.ts';
+import { type Size, SIZES } from '../../sizes.ts';
 import { ScrollArea } from './ScrollArea.tsx';
 
 type Positioning = NonNullable<PopoverPrimitive.RootProps['positioning']>;
@@ -41,6 +41,34 @@ export const popupPositioning = (gutter: number, positioning?: Positioning): Pos
   updatePosition: deferPosition,
   ...positioning,
 });
+
+/** The `data-size` of the nearest sized ancestor (or self) of the first of `ids` present in the document. */
+const readSize = (ids: string[]): Size | undefined => {
+  for (const id of ids) {
+    const element = document.getElementById(id);
+    if (element) {
+      const value = element.closest('[data-size]')?.getAttribute('data-size');
+      return SIZES.find((size) => size === value);
+    }
+  }
+};
+
+/**
+ * The size a portalled popup renders at (Phase 4 decision 2): its own `size` if given, else the `data-size` of the
+ * nearest sized ancestor of its trigger or anchor (the first of `ids` in the document), else `fallback`. A DOM lookup
+ * each time the popup opens rather than React context (decision 3); a popup with no trigger (a Dialog opened by state,
+ * a virtual anchor) takes the fallback.
+ */
+export const usePopupSize = (
+  size: Size | undefined,
+  open: boolean,
+  ids: (string | undefined)[],
+  fallback?: Size,
+): Size | undefined => {
+  const key = ids.filter(Boolean).join(' ');
+  // `open` recomputes on every opening, when the trigger is certainly mounted.
+  return useMemo(() => size ?? readSize(key.split(' ').filter(Boolean)) ?? fallback, [size, open, key, fallback]);
+};
 
 export type PopupScrollProps = {
   size?: Size;

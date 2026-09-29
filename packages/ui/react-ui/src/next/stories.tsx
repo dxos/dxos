@@ -9,8 +9,9 @@ import { Next } from './Next.tsx';
 import { type Size, SIZES } from './sizes.ts';
 
 /**
- * Args every sized story takes: `size` is a properties-panel control (a portalled part also needs it for its own `size`,
- * finding 9); `allSizes` renders every size at once, which the play tests use to assert geometry per size.
+ * Args every sized story takes: `size` is a properties-panel control (portalled parts inherit it from their trigger's
+ * row, DESIGN.md follow-up 57); `allSizes` renders every size at once, which the play tests use to assert geometry per
+ * size.
  */
 export type SizeArgs = {
   size?: Size;

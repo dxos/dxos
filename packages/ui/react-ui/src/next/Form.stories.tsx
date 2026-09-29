@@ -50,7 +50,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
             </Next.Block>
           </Next.Field.Header>
           <Next.Select.Trigger placeholder='Select a role' />
-          <Next.Select.Content size={size}>
+          <Next.Select.Content>
             {ROLES.map((item) => (
               <Next.Select.Item key={item.value} item={item} />
             ))}

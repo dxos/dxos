@@ -14,6 +14,7 @@ import { translationKey } from '#translations';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
+import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Months and years are laid out four to a row, as the current Calendar's pickers. */
 const GRID_COLUMNS = 4;
@@ -132,25 +133,30 @@ const YearView = () => {
 };
 
 export type DateCalendarProps = {
-  size: Size;
+  size?: Size;
   container?: RefObject<HTMLElement | null>;
   testId?: string;
 };
 
 /** The portalled calendar at `level='popup'`: zag's day, month and year views, switched by the caption. */
-export const DateCalendar = ({ size, container, testId }: DateCalendarProps) => (
-  <Portal container={container}>
-    <DatePickerPrimitive.Positioner>
-      <DatePickerPrimitive.Content
-        data-surface='popup'
-        data-size={size}
-        data-testid={testId}
-        className={mx(recipes.popup(), recipes.dateCalendar())}
-      >
-        <DayView />
-        <MonthView />
-        <YearView />
-      </DatePickerPrimitive.Content>
-    </DatePickerPrimitive.Positioner>
-  </Portal>
-);
+export const DateCalendar = ({ size, container, testId }: DateCalendarProps) => {
+  const datePicker = useDatePickerContext();
+  // The row (the picker's Control) is the anchor, so the calendar inherits the field's size.
+  const popupSize = usePopupSize(size, datePicker.open, [datePicker.getControlProps().id]);
+  return (
+    <Portal container={container}>
+      <DatePickerPrimitive.Positioner>
+        <DatePickerPrimitive.Content
+          data-surface='popup'
+          data-size={popupSize}
+          data-testid={testId}
+          className={mx(recipes.popup(), recipes.dateCalendar())}
+        >
+          <DayView />
+          <MonthView />
+          <YearView />
+        </DatePickerPrimitive.Content>
+      </DatePickerPrimitive.Positioner>
+    </Portal>
+  );
+};

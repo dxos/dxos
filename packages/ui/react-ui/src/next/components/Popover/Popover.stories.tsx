@@ -12,21 +12,24 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { type Size } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow } from '../../testing.ts';
+import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow, expectPopupSize } from '../../testing.ts';
 
-type SharePopoverProps = SizeArgs & {
+type SharePopoverProps = {
+  /** Overrides the size the popover inherits from its trigger's row. */
+  contentSize?: Size;
   arrow?: boolean;
   label: string;
   testId: string;
 };
 
-const SharePopover = ({ size, arrow, label, testId }: SharePopoverProps) => (
+const SharePopover = ({ contentSize, arrow, label, testId }: SharePopoverProps) => (
   <Next.Popover.Root>
     <Next.Popover.Trigger asChild>
       <Next.Button data-testid={`${testId}-trigger`}>{label}</Next.Button>
     </Next.Popover.Trigger>
-    <Next.Popover.Content size={size} arrow={arrow} data-testid={testId}>
+    <Next.Popover.Content size={contentSize} arrow={arrow} data-testid={testId}>
       <Next.Popover.Header>
         <Next.Popover.Title>Share space</Next.Popover.Title>
         <Next.Popover.CloseTrigger />
@@ -58,7 +61,7 @@ const NotesPopover = ({ size }: SizeArgs) => {
         <Next.Popover.Trigger asChild>
           <Next.Button data-testid={`notes-${size}-trigger`}>Notes</Next.Button>
         </Next.Popover.Trigger>
-        <Next.Popover.Content size={size} container={container} data-testid={`notes-${size}`}>
+        <Next.Popover.Content container={container} data-testid={`notes-${size}`}>
           <Next.Popover.Header>
             <Next.Popover.Title>Notes</Next.Popover.Title>
             <Next.Popover.CloseTrigger />
@@ -99,7 +102,7 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
         onOpenChange={({ open }) => setOpen(open)}
         positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
       >
-        <Next.Popover.Content size={size} data-testid={`anchored-${size}`}>
+        <Next.Popover.Content data-testid={`anchored-${size}`}>
           <Next.Popover.Description>Anchored to a span.</Next.Popover.Description>
         </Next.Popover.Content>
       </Next.Popover.Root>
@@ -109,12 +112,13 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
 
 /**
  * A popover with the default arrow and one with `arrow={false}`, a modal one with a scrolling Body portalled into a
- * local element, and one anchored to a span; the content takes the row's size (finding 9).
+ * local element, and one anchored to a span; the content takes the trigger row's size (Phase 4 decision 2), except
+ * the arrowless one, which is `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <Next.Group>
-    <SharePopover size={size} label='Share' testId={`popover-${size}`} />
-    <SharePopover size={size} arrow={false} label='Share (no arrow)' testId={`plain-${size}`} />
+    <SharePopover label='Share' testId={`popover-${size}`} />
+    <SharePopover contentSize='lg' arrow={false} label='Share (no arrow)' testId={`plain-${size}`} />
     <NotesPopover size={size} />
     <AnchoredPopover size={size} />
   </Next.Group>
@@ -165,7 +169,8 @@ export const Test: Story = {
 
     await userEvent.click(byTestId(canvasElement, 'popover-sm-trigger'));
     const small = await body.findByRole('dialog');
-    await expect(small).toHaveAttribute('data-size', 'sm');
+    // The popover takes its trigger's row size (Phase 4 decision 2).
+    await expectPopupSize(small, 'sm');
     const header = small.querySelector<HTMLElement>('[data-part="header"]');
     await expect(header?.getBoundingClientRect().height).toBeCloseTo(GEOMETRY.sm.block, 0);
     await userEvent.click(within(small).getByRole('button', { name: 'Done' }));
@@ -175,6 +180,8 @@ export const Test: Story = {
     await userEvent.click(plainTrigger);
     const plain = await body.findByRole('dialog');
     await expect(plain.querySelector('[data-part="arrow"]')).toBeNull();
+    // An explicit size wins over the inherited one.
+    await expectPopupSize(plain, 'lg');
     await expectAnchoredBelow(plainTrigger, plain, 'center');
     await userEvent.click(within(plain).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());

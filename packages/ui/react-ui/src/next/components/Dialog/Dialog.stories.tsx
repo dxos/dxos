@@ -16,7 +16,7 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, expectTooltip } from '../../testing.ts';
+import { byTestId, expectPopupSize, expectTooltip } from '../../testing.ts';
 
 random.seed(123);
 
@@ -30,7 +30,7 @@ const ROLES: Next.SelectOption[] = [
 
 const DESCRIPTION = 'Update how others see you.';
 
-const ProfileForm = ({ size }: { size: Size }) => (
+const ProfileForm = () => (
   <>
     <Next.Field.Root data-testid='name'>
       <Next.Field.Header>
@@ -50,7 +50,7 @@ const ProfileForm = ({ size }: { size: Size }) => (
           <Next.Select.Label>Role</Next.Select.Label>
         </Next.Field.Header>
         <Next.Select.Trigger placeholder='Select a role' />
-        <Next.Select.Content size={size}>
+        <Next.Select.Content>
           {ROLES.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
           ))}
@@ -64,19 +64,20 @@ const ProfileForm = ({ size }: { size: Size }) => (
 );
 
 type ProfileDialogProps = {
-  size: Size;
+  /** Overrides the size the dialog inherits from its trigger's row. */
+  contentSize?: Size;
   title: string;
   testId: string;
   /** Replaces the form with this many paragraphs. */
   paragraphs?: number;
 };
 
-const ProfileDialog = ({ size, title, testId, paragraphs }: ProfileDialogProps) => (
+const ProfileDialog = ({ contentSize, title, testId, paragraphs }: ProfileDialogProps) => (
   <Next.Dialog.Root>
     <Next.Dialog.Trigger asChild>
       <Next.Button data-testid={`${testId}-trigger`}>{title}</Next.Button>
     </Next.Dialog.Trigger>
-    <Next.Dialog.Content size={size} data-testid={testId}>
+    <Next.Dialog.Content size={contentSize} data-testid={testId}>
       <Next.Dialog.Header data-testid='header'>
         <Next.Dialog.Title>{title}</Next.Dialog.Title>
         <Next.Dialog.CloseTrigger data-testid='close' />
@@ -86,7 +87,7 @@ const ProfileDialog = ({ size, title, testId, paragraphs }: ProfileDialogProps) 
         {paragraphs ? (
           PARAGRAPHS.slice(0, paragraphs).map((text, index) => <Next.Typography key={index}>{text}</Next.Typography>)
         ) : (
-          <ProfileForm size={size} />
+          <ProfileForm />
         )}
       </Next.Dialog.Body>
       <Next.Dialog.Footer data-testid='footer'>
@@ -99,11 +100,13 @@ const ProfileDialog = ({ size, title, testId, paragraphs }: ProfileDialogProps) 
   </Next.Dialog.Root>
 );
 
-/** A form dialog and one whose body scrolls; the content takes the row's size (finding 9). */
+/**
+ * A form dialog, which takes its trigger row's size (Phase 4 decision 2), and one whose body scrolls, `lg` at every size.
+ */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <Next.Group>
-    <ProfileDialog size={size} title='Edit profile' testId={`dialog-${size}`} />
-    <ProfileDialog size={size} title='Read terms' paragraphs={40} testId={`long-${size}`} />
+    <ProfileDialog title='Edit profile' testId={`dialog-${size}`} />
+    <ProfileDialog contentSize='lg' title='Read terms' paragraphs={40} testId={`long-${size}`} />
   </Next.Group>
 );
 
@@ -170,13 +173,16 @@ export const Test: Story = {
 
     for (const [size, block] of HEADER_BLOCK) {
       const sized = await open(canvasElement, `dialog-${size}`);
-      await expect(sized).toHaveAttribute('data-size', size);
+      // The dialog takes its trigger's row size (Phase 4 decision 2).
+      await expectPopupSize(sized, size);
       await expect(within(sized).getByTestId('header').getBoundingClientRect().height, size).toBeCloseTo(block, 0);
       await userEvent.keyboard('{Escape}');
       await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
     }
 
     const long = await open(canvasElement, 'long-md', 'Read terms');
+    // An explicit size wins over the inherited one.
+    await expectPopupSize(long, 'lg');
     const viewport = long.querySelector<HTMLElement>('.nx-scroll-viewport');
     await expect(viewport).not.toBeNull();
     await expect(viewport && viewport.scrollHeight > viewport.clientHeight).toBe(true);

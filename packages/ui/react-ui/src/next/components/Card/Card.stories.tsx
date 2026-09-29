@@ -79,7 +79,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Next.Card.Header>
           <Next.Card.DragHandle label='Drag' data-testid={`drag-${size}`} />
           <Next.Card.Title>Project</Next.Card.Title>
-          <Next.Card.Menu label='Project actions' size={size}>
+          <Next.Card.Menu label='Project actions'>
             <Next.Menu.Item value='archive'>Archive</Next.Menu.Item>
           </Next.Card.Menu>
         </Next.Card.Header>

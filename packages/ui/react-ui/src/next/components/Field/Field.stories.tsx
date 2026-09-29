@@ -35,7 +35,7 @@ const EveryField = ({ size }: SizeArgs) => (
     </Next.Field.Root>
     <Next.Field.Root>
       <Next.Field.Label>Birthday</Next.Field.Label>
-      <Next.DateInput size={size} defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+      <Next.DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
     </Next.Field.Root>
     <Next.Field.Root>
       <Next.Field.Label>Wake up</Next.Field.Label>
@@ -43,7 +43,7 @@ const EveryField = ({ size }: SizeArgs) => (
     </Next.Field.Root>
     <Next.Field.Root>
       <Next.Field.Label>Meeting</Next.Field.Label>
-      <Next.DateInput type='datetime-local' size={size} defaultValue='2026-09-29T14:00' />
+      <Next.DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
     </Next.Field.Root>
     <Next.Field.Root>
       <Next.Field.Label>Code</Next.Field.Label>

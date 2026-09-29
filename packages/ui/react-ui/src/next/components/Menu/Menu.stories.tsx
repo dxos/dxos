@@ -10,9 +10,16 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type Size, SIZES } from '../../sizes.ts';
+import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, expectAnchoredBelow, expectArrow, expectScrollingPopup, popupFrame } from '../../testing.ts';
+import {
+  byTestId,
+  expectAnchoredBelow,
+  expectArrow,
+  expectPopupSize,
+  expectScrollingPopup,
+  popupFrame,
+} from '../../testing.ts';
 
 /** A menu tree three levels deep, rendered recursively as nested `Menu.Sub`s. */
 type MenuNode = { value: string; label: string; icon?: string; children?: MenuNode[] };
@@ -49,7 +56,7 @@ const HIERARCHY: MenuNode[] = [
   { value: 'close', label: 'Close', icon: 'ph--x--regular' },
 ];
 
-const MenuNodes = ({ nodes, size }: { nodes: MenuNode[]; size: Size }) => (
+const MenuNodes = ({ nodes }: { nodes: MenuNode[] }) => (
   <>
     {nodes.map(({ value, label, icon, children }) =>
       children ? (
@@ -57,8 +64,8 @@ const MenuNodes = ({ nodes, size }: { nodes: MenuNode[]; size: Size }) => (
           <Next.Menu.SubTrigger icon={icon} data-testid={`sub-${value}`}>
             {label}
           </Next.Menu.SubTrigger>
-          <Next.Menu.Content size={size}>
-            <MenuNodes nodes={children} size={size} />
+          <Next.Menu.Content>
+            <MenuNodes nodes={children} />
           </Next.Menu.Content>
         </Next.Menu.Sub>
       ) : (
@@ -91,7 +98,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Next.Menu.Trigger asChild>
           <Next.Button data-testid={`trigger-${size}`}>Actions</Next.Button>
         </Next.Menu.Trigger>
-        <Next.Menu.Content size={size}>
+        <Next.Menu.Content>
           <Next.Menu.ItemGroup>
             <Next.Menu.ItemGroupLabel>Edit</Next.Menu.ItemGroupLabel>
             <Next.Menu.Item value='cut' icon='ph--scissors--regular' shortcut='⌘X'>
@@ -123,7 +130,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Next.Menu.Separator />
           <Next.Menu.Sub>
             <Next.Menu.SubTrigger icon='ph--share--regular'>Share</Next.Menu.SubTrigger>
-            <Next.Menu.Content size={size}>
+            <Next.Menu.Content>
               <Next.Menu.Item value='email'>Email</Next.Menu.Item>
               <Next.Menu.Item value='link'>Copy link</Next.Menu.Item>
             </Next.Menu.Content>
@@ -134,15 +141,15 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Next.Menu.Trigger asChild>
           <Next.Button data-testid={`file-${size}`}>File</Next.Button>
         </Next.Menu.Trigger>
-        <Next.Menu.Content size={size}>
-          <MenuNodes nodes={HIERARCHY} size={size} />
+        <Next.Menu.Content>
+          <MenuNodes nodes={HIERARCHY} />
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Next.Menu.Trigger asChild>
           <Next.Button data-testid={`long-${size}`}>Long</Next.Button>
         </Next.Menu.Trigger>
-        <Next.Menu.Content size={size}>
+        <Next.Menu.Content size='lg'>
           {LONG.map((label) => (
             <Next.Menu.Item key={label} value={label}>
               {label}
@@ -154,7 +161,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Next.Menu.ContextTrigger asChild>
           <Next.Typography data-testid={`context-${size}`}>Right-click here</Next.Typography>
         </Next.Menu.ContextTrigger>
-        <Next.Menu.Content size={size}>
+        <Next.Menu.Content>
           <Next.Menu.Item value='rename'>Rename</Next.Menu.Item>
         </Next.Menu.Content>
       </Next.Menu.Root>
@@ -174,7 +181,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         onSelect={({ value }) => setSelected(value)}
         positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
       >
-        <Next.Menu.Content size={size} arrow data-testid={`anchored-${size}`}>
+        <Next.Menu.Content arrow data-testid={`anchored-${size}`}>
           <Next.Menu.Item value='pin'>Pin</Next.Menu.Item>
         </Next.Menu.Content>
       </Next.Menu.Root>
@@ -218,7 +225,8 @@ export const Default: Story = {};
  * Enter selects. Checkbox and radio items report `aria-checked` and update the caller's state, their labels aligned
  * by a leading indicator cell; a SubTrigger opens its nested menu beside it on ArrowRight. A ContextTrigger opens its
  * menu at the pointer; a menu without a trigger anchors to `positioning.getAnchorRect`. A long menu scrolls in a
- * thin ScrollArea with no native bar, keeping the highlight in view. The story ends with the menu open.
+ * thin ScrollArea with no native bar, keeping the highlight in view. Every menu level takes the trigger row's size
+ * unless given its own; a menu without a trigger falls back to `md`. The story ends with the menu open.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -260,6 +268,13 @@ export const Test: Story = {
       await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Diagram'));
       await userEvent.keyboard('{ArrowRight}');
       const diagramMenu = await beside('Diagram', 'Flowchart');
+      // Every level takes the File trigger's row size: a Sub's trigger is its item in the parent popup.
+      for (const level of [fileMenu, newMenu, diagramMenu]) {
+        if (!level) {
+          throw new Error('missing menu level');
+        }
+        await expectPopupSize(level, size);
+      }
       await waitFor(() => expect(diagramMenu && highlighted(diagramMenu)).toBe('Flowchart'));
       await userEvent.keyboard('{Enter}');
       await waitFor(() =>
@@ -357,6 +372,8 @@ export const Test: Story = {
     const long = await within(canvasElement.ownerDocument.body).findByRole('menu');
     await waitFor(() => expect(long).toHaveFocus());
     await expect(popupFrame(long)).toHaveAttribute('data-width', 'thin');
+    // An explicit size wins over the inherited one.
+    await expectPopupSize(long, 'lg');
     await expectScrollingPopup(long, 20);
     await waitFor(() => expect(highlighted(long)).toBe('Item 20'));
     await userEvent.keyboard('{Escape}');
@@ -377,6 +394,8 @@ export const Test: Story = {
     const anchored = await within(canvasElement.ownerDocument.body).findByTestId('anchored-md');
     await expectAnchoredBelow(byTestId(canvasElement, 'anchor-md'), anchored);
     await expectArrow(byTestId(canvasElement, 'anchor-md'), anchored);
+    // With no trigger to inherit from, a menu falls back to `md`.
+    await expectPopupSize(anchored, 'md');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
 

@@ -337,7 +337,7 @@ CardLink.displayName = 'Next.Card.Link';
 type CardMenuProps = {
   /** Names the trigger (and its Tooltip). */
   label: string;
-  /** The portalled menu leaves the card's sized scope, so it takes its own size. */
+  /** Overrides the menu's size, otherwise inherited from the trigger's nearest sized ancestor (Phase 4 decision 2). */
   size?: Size;
   /** `Menu.Item`s and friends. */
   children: ReactNode;

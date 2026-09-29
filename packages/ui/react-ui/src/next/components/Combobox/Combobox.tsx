@@ -14,7 +14,7 @@ import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon } from '../Icon/index.ts';
-import { PopupScroll, popupPositioning } from '../ScrollArea/PopupScroll.tsx';
+import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import { type SelectOption } from '../Select/index.ts';
 
 /** Gap between control and popup, in px (positioning takes a number, not a CSS variable). */
@@ -143,7 +143,7 @@ ComboboxInput.displayName = 'Next.Combobox.Input';
 //
 
 type ComboboxContentProps = ThemedClassName<ComboboxPrimitive.ContentProps> & {
-  /** Portalled content leaves the control's sized scope, so it takes its own size. */
+  /** Overrides the size inherited from the control's nearest sized ancestor (Phase 4 decision 2). */
   size?: Size;
   /** Shown when no option matches. */
   empty?: ReactNode;
@@ -164,18 +164,22 @@ const ComboboxViewport = composable<HTMLDivElement, ComboboxPrimitive.ContentPro
  * children it lists the options that match the typed text.
  */
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
-  ({ classNames, size, empty = 'No results', container, children, ...props }, forwardedRef) => (
-    <Portal container={container}>
-      <ComboboxPrimitive.Positioner>
-        <PopupScroll size={size} classNames={mx(classNames)}>
-          <ComboboxViewport {...props} ref={forwardedRef}>
-            {children ?? <ComboboxItems />}
-            <ComboboxPrimitive.Empty className={recipes.comboboxEmpty()}>{empty}</ComboboxPrimitive.Empty>
-          </ComboboxViewport>
-        </PopupScroll>
-      </ComboboxPrimitive.Positioner>
-    </Portal>
-  ),
+  ({ classNames, size, empty = 'No results', container, children, ...props }, forwardedRef) => {
+    const combobox = useComboboxContext();
+    const popupSize = usePopupSize(size, combobox.open, [combobox.getControlProps().id]);
+    return (
+      <Portal container={container}>
+        <ComboboxPrimitive.Positioner>
+          <PopupScroll size={popupSize} classNames={mx(classNames)}>
+            <ComboboxViewport {...props} ref={forwardedRef}>
+              {children ?? <ComboboxItems />}
+              <ComboboxPrimitive.Empty className={recipes.comboboxEmpty()}>{empty}</ComboboxPrimitive.Empty>
+            </ComboboxViewport>
+          </PopupScroll>
+        </ComboboxPrimitive.Positioner>
+      </Portal>
+    );
+  },
 );
 
 ComboboxContent.displayName = 'Next.Combobox.Content';

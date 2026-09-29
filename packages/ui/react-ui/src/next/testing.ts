@@ -39,6 +39,16 @@ export const centreX = (rect: DOMRect) => rect.left + rect.width / 2;
  */
 export const popupFrame = (popup: HTMLElement) => popup.closest<HTMLElement>('.nx-popup') ?? popup;
 
+/**
+ * Asserts a popup renders at `size` (Phase 4 decision 2): its surface carries the `data-size` and resolves that size's
+ * block, so its rows take that size's metrics.
+ */
+export const expectPopupSize = async (popup: HTMLElement, size: Size) => {
+  const frame = popupFrame(popup);
+  await expect(frame).toHaveAttribute('data-size', size);
+  await expect(getComputedStyle(frame).getPropertyValue('--nx-block-size')).toBe(`${GEOMETRY[size].block / 16}rem`);
+};
+
 /** A popup's arrow part, if it renders one; a scrolling popup draws it in its frame, outside the clipping viewport. */
 const arrowOf = (popup: HTMLElement) => popupFrame(popup).querySelector<HTMLElement>('[data-part="arrow"]');
 

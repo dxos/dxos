@@ -36,7 +36,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
       <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
         <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
-        <Next.Select.Content size={size}>
+        <Next.Select.Content>
           {OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
           ))}

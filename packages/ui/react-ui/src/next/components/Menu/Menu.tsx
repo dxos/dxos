@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Menu as MenuPrimitive } from '@ark-ui/react/menu';
+import { Menu as MenuPrimitive, useMenuContext } from '@ark-ui/react/menu';
 import { Portal } from '@ark-ui/react/portal';
 import React, { type ReactNode, type RefObject, createContext, forwardRef, useContext } from 'react';
 
@@ -13,7 +13,7 @@ import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon } from '../Icon/index.ts';
-import { PopupScroll, popupPositioning } from '../ScrollArea/PopupScroll.tsx';
+import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -89,7 +89,7 @@ MenuContextTrigger.displayName = 'Next.Menu.ContextTrigger';
 //
 
 type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
-  /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
   size?: Size;
   /** Point at the trigger with an arrow in the popup's surface colour, like Popover's; off by default for menus. */
   arrow?: boolean;
@@ -110,13 +110,21 @@ const MenuViewport = composable<HTMLDivElement, MenuPrimitive.ContentProps>((pro
  * Content is the same part inside a `Menu.Sub`.
  */
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
-  ({ classNames, size = 'md', arrow = false, container, children, ...props }, forwardedRef) => {
+  ({ classNames, size, arrow = false, container, children, ...props }, forwardedRef) => {
     const { sub } = useContext(MenuContext);
+    const menu = useMenuContext();
+    // A Sub's trigger is its item in the parent menu, so it inherits the parent popup's size.
+    const popupSize = usePopupSize(
+      size,
+      menu.open,
+      [menu.getTriggerProps().id, menu.getContextTriggerProps().id],
+      'md',
+    );
     return (
       <Portal container={container}>
         <MenuPrimitive.Positioner>
           <PopupScroll
-            size={size}
+            size={popupSize}
             classNames={mx(recipes.menuContent(), sub && recipes.submenuContent(), classNames)}
             outside={
               arrow && (

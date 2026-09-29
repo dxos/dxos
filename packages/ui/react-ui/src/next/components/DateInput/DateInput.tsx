@@ -51,7 +51,7 @@ export type DateInputProps = ThemedClassName<{
   'locale'?: string;
   /** A calendar behind a trailing trigger (`date` and `datetime-local` only; on by default). */
   'picker'?: boolean;
-  /** Portalled calendar leaves the field's sized scope, so it takes its own size (finding 9). */
+  /** Overrides the calendar's size, otherwise inherited from the row's nearest sized ancestor (Phase 4 decision 2). */
   'size'?: Size;
   /** Portals the calendar into this element instead of the body. */
   'container'?: RefObject<HTMLElement | null>;
@@ -89,7 +89,7 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
       hourCycle = 24,
       locale: localeProp,
       picker: pickerProp = true,
-      size = 'md',
+      size,
       container,
       disabled,
       readOnly,

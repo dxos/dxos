@@ -13,10 +13,12 @@ import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import {
+  GEOMETRY,
   byTestId,
   centreY,
   controlSize,
   expectAnchoredBelow,
+  expectPopupSize,
   expectScoped,
   expectScrollingPopup,
   popupFrame,
@@ -55,14 +57,14 @@ const VEGETABLES: Next.SelectOption[] = [
 
 /**
  * A plain select, one whose options have leading icons, then a grouped select with hued icons and custom item content,
- * a `multiple` select and a loading one; `Select.Content` takes the row's size (finding 9).
+ * a `multiple` select and a loading one; `Select.Content` inherits its trigger row's size, except the grouped one, `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
       <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
         <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
-        <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
+        <Next.Select.Content data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (
             <Fragment key={item.value}>
               {item.disabled && <Next.Select.Separator />}
@@ -73,7 +75,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Select.Root>
       <Next.Select.Root items={ICON_OPTIONS} positioning={{ sameWidth: true }}>
         <Next.Select.Trigger placeholder='View' aria-label='View' />
-        <Next.Select.Content size={size}>
+        <Next.Select.Content>
           {ICON_OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
           ))}
@@ -83,7 +85,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     <Next.Toolbar.Root>
       <Next.Select.Root items={[...FRUIT, ...VEGETABLES]}>
         <Next.Select.Trigger placeholder='Produce' aria-label='Produce' />
-        <Next.Select.Content size={size}>
+        <Next.Select.Content size='lg'>
           {[
             { label: 'Fruit', items: FRUIT },
             { label: 'Vegetables', items: VEGETABLES },
@@ -105,7 +107,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Select.Root>
       <Next.Select.Root items={OPTIONS} multiple>
         <Next.Select.Trigger placeholder='Colors' aria-label='Colors' />
-        <Next.Select.Content size={size}>
+        <Next.Select.Content>
           {OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
           ))}
@@ -113,7 +115,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Select.Root>
       <Next.Select.Root items={LONG}>
         <Next.Select.Trigger placeholder='Long' aria-label='Long' />
-        <Next.Select.Content size={size}>
+        <Next.Select.Content>
           {LONG.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
           ))}
@@ -121,7 +123,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Select.Root>
       <Next.Select.Root items={[]}>
         <Next.Select.Trigger placeholder='Loading' aria-label='Lookup' loading />
-        <Next.Select.Content size={size} />
+        <Next.Select.Content />
       </Next.Select.Root>
     </Next.Toolbar.Root>
   </>
@@ -148,7 +150,7 @@ export const Default: Story = {};
  * choosing; a decorative Separator spans the popup between options. Grouped options sit in labelled `group`s, a
  * `hue` colours an option's icon, and an Item's children replace its icon and label. A `multiple` select stays open
  * while choosing and lists every choice; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the
- * highlight in view; a `loading` trigger is busy and spins in place of its caret. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
+ * highlight in view; a `loading` trigger is busy and spins in place of its caret. A listbox takes its trigger row's size unless given its own. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
  */
 export const Test: Story = {
@@ -195,6 +197,19 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
     await expect(trigger).toHaveTextContent('Green');
 
+    // The listbox takes its trigger's row size (Phase 4 decision 2).
+    const smTrigger = within(sizeRow(canvasElement, 'sm')).getByRole('combobox', { name: 'Color' });
+    await userEvent.click(smTrigger);
+    const smList = await body.findByRole('listbox');
+    await expectPopupSize(smList, 'sm');
+    await expect(within(smList).getAllByRole('option')[0].getBoundingClientRect().height).toBeCloseTo(
+      GEOMETRY.sm.block,
+      0,
+    );
+    await waitFor(() => expect(smList).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
+
     const view = canvas.getByRole('combobox', { name: 'View' });
     await expect(view.querySelectorAll('.nx-icon')).toHaveLength(1);
     await userEvent.click(view);
@@ -212,6 +227,8 @@ export const Test: Story = {
     const produce = canvas.getByRole('combobox', { name: 'Produce' });
     await userEvent.click(produce);
     const produceList = await body.findByRole('listbox');
+    // An explicit size wins over the inherited one.
+    await expectPopupSize(produceList, 'lg');
     await expect(within(produceList).getByRole('group', { name: 'Fruit' })).toBeInTheDocument();
     const vegetables = within(produceList).getByRole('group', { name: 'Vegetables' });
     await expect(within(vegetables).getAllByRole('option')).toHaveLength(2);

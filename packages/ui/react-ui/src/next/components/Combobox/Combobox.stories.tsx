@@ -17,6 +17,7 @@ import {
   byTestId,
   controlSize,
   expectAnchoredBelow,
+  expectPopupSize,
   expectScoped,
   expectScrollingPopup,
   popupFrame,
@@ -50,7 +51,7 @@ const AsyncCombobox = ({ size = 'md' }: SizeArgs) => {
       <Next.Combobox.Root items={items} defaultValue={[OPTIONS[1].value]}>
         <Next.Combobox.Label>Lead</Next.Combobox.Label>
         <Next.Combobox.Input />
-        <Next.Combobox.Content size={size} />
+        <Next.Combobox.Content />
       </Next.Combobox.Root>
     </Next.Field.Root>
   );
@@ -63,7 +64,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Combobox.Root items={OPTIONS}>
         <Next.Combobox.Label>Owner</Next.Combobox.Label>
         <Next.Combobox.Input placeholder='Search people' data-testid={`combobox-${size}`} />
-        <Next.Combobox.Content size={size} data-testid={`listbox-${size}`} />
+        <Next.Combobox.Content data-testid={`listbox-${size}`} />
       </Next.Combobox.Root>
     </Next.Field.Root>
     <Next.Input aria-label='Note' data-testid={`input-${size}`} />
@@ -71,7 +72,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Combobox.Root items={OPTIONS} filter={startsWith}>
         <Next.Combobox.Label>Reviewer</Next.Combobox.Label>
         <Next.Combobox.Input placeholder='Starts with' />
-        <Next.Combobox.Content size={size} />
+        <Next.Combobox.Content size='lg' />
       </Next.Combobox.Root>
     </Next.Field.Root>
     <AsyncCombobox size={size} />
@@ -79,7 +80,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Combobox.Root items={LONG}>
         <Next.Combobox.Label>Assignee</Next.Combobox.Label>
         <Next.Combobox.Input placeholder='Many people' data-testid={`long-${size}`} />
-        <Next.Combobox.Content size={size} />
+        <Next.Combobox.Content />
       </Next.Combobox.Root>
     </Next.Field.Root>
   </>
@@ -105,7 +106,7 @@ export const Default: Story = {};
  * preselected value shows its label once late items load; typing then Enter selects the first match; a custom
  * `filter` replaces the default substring match. Typing filters the portalled listbox (case-insensitive substring) and
  * choosing fills the input; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the highlight in
- * view. The story ends open.
+ * view. The listbox takes its control row's size unless given its own. The story ends open.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -132,6 +133,8 @@ export const Test: Story = {
     const first = within(sizeRow(canvasElement, 'xs')).getByRole('combobox', { name: 'Owner' });
     await userEvent.click(first);
     await userEvent.type(first, 'ali');
+    // The listbox takes its control's row size (Phase 4 decision 2).
+    await expectPopupSize(await body.findByRole('listbox'), 'xs');
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(first).toHaveValue('Alice Green'));
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
@@ -139,6 +142,8 @@ export const Test: Story = {
     const reviewer = md.getByRole('combobox', { name: 'Reviewer' });
     await userEvent.type(reviewer, 'c');
     const prefixed = await body.findByRole('listbox');
+    // An explicit size wins over the inherited one.
+    await expectPopupSize(prefixed, 'lg');
     await waitFor(() => expect(within(prefixed).getAllByRole('option')).toHaveLength(1));
     await expect(within(prefixed).getByRole('option', { name: 'Carol Black' })).toBeVisible();
     await userEvent.keyboard('{Escape}');

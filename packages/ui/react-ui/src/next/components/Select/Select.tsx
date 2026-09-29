@@ -14,7 +14,7 @@ import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon, type IconHue } from '../Icon/index.ts';
-import { PopupScroll, popupPositioning } from '../ScrollArea/PopupScroll.tsx';
+import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 
@@ -139,7 +139,7 @@ SelectTrigger.displayName = 'Next.Select.Trigger';
 //
 
 type SelectContentProps = ThemedClassName<SelectPrimitive.ContentProps> & {
-  /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2). */
   size?: Size;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
@@ -155,17 +155,21 @@ const SelectViewport = composable<HTMLDivElement, SelectPrimitive.ContentProps>(
 
 /** Portalled listbox at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the listbox itself. */
 const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
-  ({ classNames, size, container, children, ...props }, forwardedRef) => (
-    <Portal container={container}>
-      <SelectPrimitive.Positioner>
-        <PopupScroll size={size} classNames={mx(classNames)}>
-          <SelectViewport {...props} ref={forwardedRef}>
-            {children}
-          </SelectViewport>
-        </PopupScroll>
-      </SelectPrimitive.Positioner>
-    </Portal>
-  ),
+  ({ classNames, size, container, children, ...props }, forwardedRef) => {
+    const select = useSelectContext();
+    const popupSize = usePopupSize(size, select.open, [select.getTriggerProps().id]);
+    return (
+      <Portal container={container}>
+        <SelectPrimitive.Positioner>
+          <PopupScroll size={popupSize} classNames={mx(classNames)}>
+            <SelectViewport {...props} ref={forwardedRef}>
+              {children}
+            </SelectViewport>
+          </PopupScroll>
+        </SelectPrimitive.Positioner>
+      </Portal>
+    );
+  },
 );
 
 SelectContent.displayName = 'Next.Select.Content';
