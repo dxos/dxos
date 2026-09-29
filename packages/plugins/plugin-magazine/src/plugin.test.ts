@@ -18,8 +18,6 @@ describe('MagazinePlugin', () => {
       plugins: [ClientPlugin.make({}), MagazinePlugin()],
     });
 
-    // OperationHandler is a dependency-mode root, so it activates immediately too. AppGraphBuilder
-    // carries `environments: ['browser', 'tauri']`, so the node barrel stubs it.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );

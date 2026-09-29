@@ -28,10 +28,6 @@ const findFirst = (dir: string, names: string[]): string | null =>
  * Generates the per-condition capability barrels for one plugin package:
  * `src/capabilities/gen/<env>.ts` for every condition named by an `environments` annotation in
  * the canonical barrel, plus the matching `#capabilities` condition map in package.json.
- *
- * A module is carried into a condition's barrel when its `environments` names that condition or
- * it has none. A plugin whose modules name no conditions generates nothing and keeps an
- * unconditioned `#capabilities` pointing at the canonical barrel.
  */
 export const generate = (pluginDir: string): GenerateResult => {
   const capabilitiesDir = path.join(pluginDir, 'src/capabilities');
@@ -230,8 +226,6 @@ const sortImports = (imports: string[]): string[] => {
 /**
  * Rewrites the `#capabilities` entry of the plugin's package.json so each generated environment
  * resolves the generated barrel (source condition) and its built counterpart (dist condition).
- * There is no `default`: a runtime the plugin names no condition for fails to resolve instead of
- * loading another runtime's barrel.
  */
 const syncPackageImports = (pluginDir: string, environments: string[], canonicalSource: string): void => {
   const pkgPath = path.join(pluginDir, 'package.json');

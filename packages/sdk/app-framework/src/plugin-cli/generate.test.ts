@@ -183,7 +183,6 @@ describe('dx-plugin gen', () => {
         expect(node).toContain('export const Launcher = undefined;');
 
         const entry = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).imports['#capabilities'];
-        // Tools take the first key they match, and workerd and tauri builds also match `browser`.
         expect(Object.keys(entry.source)).toEqual(['workerd', 'node', 'tauri', 'browser']);
         expect(Object.keys(entry)).toEqual(['source', 'types', 'workerd', 'node', 'tauri', 'browser']);
         expect(entry.browser).toEqual('./dist/lib/capabilities.browser.mjs');
