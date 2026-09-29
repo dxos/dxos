@@ -108,19 +108,20 @@ const createConnectionDelayHandler = (params: TestEdgeWsServerProps | undefined,
   let attempts = 0;
   return (_: any, callback: (admit: boolean) => void) => {
     const attempt = ++attempts;
+    const admit = () => {
+      callback(true);
+      admittedAttempts.push(attempt);
+    };
     if (params?.admitConnectionAttempt) {
-      void params.admitConnectionAttempt(attempt).then(() => {
-        callback(true);
-        admittedAttempts.push(attempt);
-      });
+      void params.admitConnectionAttempt(attempt).then(admit);
     } else if (params?.admitConnection) {
       log('delaying edge connection admission');
       void params.admitConnection.wait().then(() => {
-        callback(true);
+        admit();
         log('edge connection admitted');
       });
     } else {
-      callback(true);
+      admit();
     }
   };
 };
