@@ -108,6 +108,15 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   so a wave of retries took every slot and stalled every other document's round. A peer still
   answering when the round settles is not counted as failed, so the retry stops once another peer
   has succeeded instead of re-asking the slow peer until the heal budget runs out.
+- **A document on disk loads before its first round**: `SubductionSource` loaded a document's
+  stored blobs only after a round succeeded. A document stored only as Subduction records (its data
+  arrived while it was not loaded, e.g. through a heal retry of an evicted document) has no
+  Automerge snapshot to load from, so it stayed `loading` until a peer answered, and went
+  `unavailable` with no peer at all. A heal retry that succeeds without new data does not mark the
+  entry succeeded either, so it did not help. Found in a user's profile: all six commits of a
+  missing document, including the head EDGE reported, were on disk while EDGE was not answering.
+  `#loadStoredBlobs` now loads the stored blobs into an empty handle once the entry's stored ids are
+  listed, and `unavailable` waits for that listing.
 
 Why the gate is a patch and not `SubductionPolicy`: policy hooks can only allow/deny (a deny is a
 _failure_ with heal-backoff, not queueing), fire mid-round after resources are committed, carry no
