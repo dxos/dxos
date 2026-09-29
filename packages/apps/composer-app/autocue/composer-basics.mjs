@@ -74,8 +74,8 @@ const PROMPT =
   'the country as the Description, and the Location as [longitude, latitude].';
 const ROWS = 10;
 
-/** Rows of the table on screen: one row-header cell per row in the grid plane. */
-const TABLE_ROWS = '[data-testid="deck.plank"] .dx-grid [data-dx-grid-plane="grid"] [aria-colindex="0"]';
+/** The table plank's grid. */
+const TABLE_GRID = '[data-testid="deck.plank"] .dx-grid';
 
 /** The map of the table's rows. */
 const MAP = 'Data center map';
@@ -394,10 +394,19 @@ export const steps = [
   {
     name: 'Ask the assistant to fill the table',
     run: async ({ demo, page }) => {
-      await demo.click({
-        selector: '[data-testid="deck.plank"] [data-testid="plankHeading.companion"] >> nth=0',
-        label: 'Companion',
-      });
+      // The comments companion opened on the README stays open for the next plank.
+      if (
+        !(await page
+          .locator('[data-testid="deck.companion"]')
+          .first()
+          .isVisible()
+          .catch(() => false))
+      ) {
+        await demo.click({
+          selector: '[data-testid="deck.plank"] [data-testid="plankHeading.companion"] >> nth=0',
+          label: 'Companion',
+        });
+      }
       const tab = '[data-testid="deck.companion"] >> role=tab[name="Assistant"]';
       await page.locator(tab).first().waitFor({ state: 'visible', timeout: 15_000 });
       await demo.click({ selector: tab, label: 'Assistant' });
@@ -444,11 +453,23 @@ export const steps = [
         selector: `[data-testid="deck.sidebar"] [data-testid="treeItem.heading"] span:text-is("${TABLE}") >> nth=1`,
         label: TABLE,
       });
+      // The grid renders empty cells ahead of the data, so count the Title cells that hold text.
       await page.waitForFunction(
-        ({ selector, count }) => document.querySelectorAll(selector).length >= count,
-        { selector: TABLE_ROWS, count: ROWS },
+        ({ grid, count }) => {
+          const headers = [
+            ...document.querySelectorAll(`${grid} [data-dx-grid-plane="frozenRowsStart"] [aria-colindex]`),
+          ];
+          const title = headers.find((header) => header.textContent?.trim() === 'Title')?.getAttribute('aria-colindex');
+          const cells = document.querySelectorAll(`${grid} [data-dx-grid-plane="grid"] [aria-colindex="${title}"]`);
+          return title !== undefined && [...cells].filter((cell) => cell.textContent?.trim()).length >= count;
+        },
+        { grid: TABLE_GRID, count: ROWS },
         { timeout: 5 * 60_000 },
       );
+      await page
+        .locator('[data-testid="assistant.chat-status"]')
+        .first()
+        .waitFor({ state: 'hidden', timeout: 2 * 60_000 });
       await page.waitForTimeout(BEAT * 2);
     },
   },

@@ -10,7 +10,7 @@ import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui'
 import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
 
-import { type GeoControlProps, GlobeControl, MapControl } from '#components';
+import { type GeoControlProps, GlobeControl, MAP_MIN_ZOOM, MapControl } from '#components';
 import { MapCapabilities } from '#types';
 
 // Shared defaults so toggling between map and globe starts at the same position
@@ -30,10 +30,10 @@ const interpolate = (value: number, from: [number, number], to: [number, number]
   return to[0] + t * (to[1] - to[0]);
 };
 
-// Below the anchors a world-view map becomes the whole globe: map zoom 2 (the world fitted) is globe
-// zoom 1 (the whole sphere), so zooming out on the map never turns into a close-up on the globe.
+// Below the anchors a world-view map becomes the whole globe: the map's minimum zoom (where markers
+// spread across the world are fitted) is globe zoom 1 (the whole sphere).
 const WORLD_ANCHORS: { map: [number, number]; globe: [number, number] } = {
-  map: [2, ZOOM_ANCHORS.map[0]],
+  map: [MAP_MIN_ZOOM, ZOOM_ANCHORS.map[0]],
   globe: [1, ZOOM_ANCHORS.globe[0]],
 };
 
