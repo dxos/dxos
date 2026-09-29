@@ -45,6 +45,17 @@ export const Default: Story = {
   },
 };
 
+const REVEAL_SCROLL_ACTIVATION_WIDTH = 435;
+
+const typeAtLineEnd = async (canvasElement: HTMLElement, line: string, text: string) => {
+  const index = Array.from(canvasElement.querySelectorAll('.cm-line')).findIndex((element) =>
+    element.textContent?.startsWith(line),
+  );
+  await expect(index).toBeGreaterThanOrEqual(0);
+  await userEvent.click(canvasElement.querySelector<HTMLElement>('.cm-content')!);
+  await userEvent.keyboard(`${index > 0 ? `{ArrowDown>${index}/}` : ''}{End}${text}`);
+};
+
 const EditorStory = (props: RevealProps) => {
   const { themeMode } = useThemeContext();
   const [content, setContent] = useState(props.content);
@@ -65,7 +76,6 @@ const EditorStory = (props: RevealProps) => {
   );
 };
 
-/** Edit the markdown on the left; the deck on the right follows. */
 export const WithEditor: Story = {
   render: EditorStory,
   args: {
@@ -83,10 +93,6 @@ export const WithEditor: Story = {
   },
 };
 
-/**
- * Typing in the editor re-renders the running deck without moving the presenter off their slide or fragment,
- * keeps hidden slides out, and renders edited code through the highlight plugin as it did on load.
- */
 export const TestEditor: Story = {
   render: EditorStory,
   args: {
@@ -110,9 +116,8 @@ export const TestEditor: Story = {
     await waitFor(() => expect(present()?.querySelectorAll('.fragment.visible')).toHaveLength(1));
     await expect(present()?.querySelector('pre.code-wrapper .hljs-ln')).not.toBeNull();
 
-    // Edit the presented slide's heading (line 11), then add a slide after the code fence (line 17).
-    await userEvent.click(canvasElement.querySelector<HTMLElement>('.cm-content')!);
-    await userEvent.keyboard('{ArrowDown>10/}{End} edited{ArrowDown>6/}{End}{Enter}{Enter}---{Enter}{Enter}# Gamma');
+    await typeAtLineEnd(canvasElement, '# Beta', ' edited');
+    await typeAtLineEnd(canvasElement, 'const x', '{ArrowDown}{End}{Enter}{Enter}---{Enter}{Enter}# Gamma');
 
     await waitFor(() => expect(headings()).toEqual(['Alpha', 'Beta edited', 'Gamma']));
     await expect(present()?.querySelector('h1')?.textContent).toBe('Beta edited');
@@ -121,7 +126,6 @@ export const TestEditor: Story = {
   },
 };
 
-/** A deck narrower than Reveal's scroll-view width keeps its slide and fragment across an edit. */
 export const TestEditorNarrow: Story = {
   render: (args) => (
     <div className='w-[640px] h-full'>
@@ -138,14 +142,15 @@ export const TestEditorNarrow: Story = {
     const next = () => canvasElement.querySelector<HTMLElement>('.controls .navigate-right');
 
     await waitFor(() => expect(headings()).toEqual(['Alpha', 'Beta']));
-    await expect(canvasElement.querySelector<HTMLElement>('.reveal')!.offsetWidth).toBeLessThan(435);
+    await expect(canvasElement.querySelector<HTMLElement>('.reveal')!.offsetWidth).toBeLessThan(
+      REVEAL_SCROLL_ACTIVATION_WIDTH,
+    );
     await expect(next()).not.toBeNull();
     await userEvent.click(next()!);
     await userEvent.click(next()!);
     await waitFor(() => expect(present()?.querySelectorAll('.fragment.visible')).toHaveLength(1));
 
-    await userEvent.click(canvasElement.querySelector<HTMLElement>('.cm-content')!);
-    await userEvent.keyboard('{End} edited');
+    await typeAtLineEnd(canvasElement, '# Alpha', ' edited');
 
     await waitFor(() => expect(headings()).toEqual(['Alpha edited', 'Beta']));
     await expect(present()?.querySelector('h1')?.textContent).toBe('Beta');

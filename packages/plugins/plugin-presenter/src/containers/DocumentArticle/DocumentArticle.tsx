@@ -19,7 +19,6 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
   const handleExit = useExitPresenter(document);
   const layout = useLayout();
   const fullscreen = layout.mode === 'solo--fullscreen';
-  // Subscribes to the text itself so edits reach the running deck.
   const [content] = useObject(document.content, 'content');
 
   return (

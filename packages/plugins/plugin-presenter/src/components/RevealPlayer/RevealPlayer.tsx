@@ -10,7 +10,7 @@ import 'highlight.js/styles/tokyo-night-dark.css';
 
 import hljs from 'highlight.js';
 import typescript from 'highlight.js/lib/languages/typescript';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
@@ -77,11 +77,9 @@ type Player = {
   markdown: MarkdownPlugin;
   highlight: HighlightPlugin;
   slides: HTMLElement;
-  /** Markdown the slides were last rendered from. */
-  content: string;
+  renderedContent: string;
 };
 
-/** Replaces the slides with a single unparsed markdown section for the markdown plugin to split. */
 const setMarkdown = (slides: HTMLElement, content: string) => {
   const section = document.createElement('section');
   section.setAttribute('data-markdown', '');
@@ -92,10 +90,16 @@ const setMarkdown = (slides: HTMLElement, content: string) => {
   slides.replaceChildren(section);
 };
 
-/** Re-renders an initialized deck from new markdown, keeping the presenter at the same slide index and fragment. */
+const highlightCodeBlocks = (slides: HTMLElement, highlight: HighlightPlugin) => {
+  slides.querySelectorAll<HTMLElement>('pre code').forEach((block) => {
+    block.parentElement?.classList.add('code-wrapper');
+    highlight.highlightBlock(block);
+  });
+};
+
 const updateSlides = async (player: Player, content: string) => {
   const { deck, markdown, highlight, slides } = player;
-  player.content = content;
+  player.renderedContent = content;
   const { h, v, f } = deck.getIndices();
   setMarkdown(slides, content);
   await markdown.processSlides(slides);
@@ -108,11 +112,7 @@ const updateSlides = async (player: Player, content: string) => {
     });
   }
 
-  // Same per-block pass the highlight plugin's init makes, so edited code renders as it did on load.
-  slides.querySelectorAll<HTMLElement>('pre code').forEach((block) => {
-    block.parentElement?.classList.add('code-wrapper');
-    highlight.highlightBlock(block);
-  });
+  highlightCodeBlocks(slides, highlight);
   deck.sync();
   deck.slide(h, v, f);
 };
@@ -121,22 +121,15 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
   ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
     const slidesRef = useRef<HTMLDivElement>(null);
-    const playerRef = useRef<Player | null>(null);
-    const contentRef = useRef(content);
+    const [player, setPlayer] = useState<Player>();
 
     useEffect(() => {
-      contentRef.current = content;
-      const player = playerRef.current;
-      if (player && player.content !== content) {
+      if (player && player.renderedContent !== content) {
         void updateSlides(player, content);
       }
-    }, [content]);
+    }, [player, content]);
 
     useAsyncEffect(async (controller) => {
-      if (playerRef.current) {
-        return;
-      }
-
       // Required for syntax highlighting.
       hljs.registerLanguage('typescript', typescript);
 
@@ -147,8 +140,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       }
 
       const slides = slidesRef.current!;
-      const initialContent = contentRef.current;
-      setMarkdown(slides, initialContent);
+      setMarkdown(slides, content);
 
       // https://revealjs.com/react
       // https://revealjs.com/config
@@ -195,14 +187,10 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       });
 
       await deck.initialize();
-      // The effect's cleanup is only registered once this callback returns, so an unmount mid-init lands here.
       if (controller.signal.aborted) {
         deck.destroy();
         return;
       }
-
-      const player: Player = { deck, markdown, highlight, slides, content: initialContent };
-      playerRef.current = player;
 
       if (slide !== undefined) {
         deck.slide(slide < 0 ? deck.getTotalSlides() + slide : slide - 1);
@@ -212,14 +200,10 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         onExit?.();
       });
 
-      // Pick up edits that arrived while the deck was initializing.
-      if (contentRef.current !== player.content) {
-        void updateSlides(player, contentRef.current);
-      }
+      setPlayer({ deck, markdown, highlight, slides, renderedContent: content });
 
       return () => {
         try {
-          playerRef.current = null;
           deck.destroy();
         } catch {
           // Ignore.
@@ -247,7 +231,6 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
               rel='stylesheet'
               href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
             />
-            {/* Slides are owned by Reveal and filled imperatively from `content`. */}
             <div ref={slidesRef} className={mx('slides', !fullscreen && 'dx-base-surface p-8')} />
           </div>
         </div>
