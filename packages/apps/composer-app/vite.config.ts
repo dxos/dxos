@@ -195,9 +195,6 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // sourcemaps(),
 ];
 
-/**
- * https://vitejs.dev/config
- */
 /** Libraries a plugin shares with the host through its import map, so it must build against the same versions. */
 const PLUGIN_SHARED_PACKAGES = [
   'effect',
@@ -235,6 +232,9 @@ const pluginToolchain = (): string => {
   });
 };
 
+/**
+ * https://vitejs.dev/config
+ */
 export default defineConfig((env) => ({
   root: dirname,
   define: {

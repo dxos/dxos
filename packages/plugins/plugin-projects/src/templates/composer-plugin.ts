@@ -18,8 +18,8 @@ import { scaffoldProject } from './scaffold.ts';
 /** Plain key rather than an import, so this plugin does not depend on plugin-sandbox (the `SkillsAnnotation` idiom). */
 const SANDBOX_SKILL_KEY = 'org.dxos.skill.sandbox';
 
-/** The sandbox the run builds in, named so the reader can find it in the navtree. */
-export const SANDBOX_NAME = 'World Clock';
+/** The sandbox the World Clock run builds in, named so the reader can find it in the navtree. */
+const WORLD_CLOCK_SANDBOX = 'World Clock';
 
 /**
  * What the app was built from, stamped by composer-app's vite config: the commit its `@dxos/*` packages
@@ -45,7 +45,8 @@ const DXOS_PACKAGES = [
   'plugin-map',
 ];
 
-const GUIDE = 'docs/src/content/docs/docs/composer/publishing-plugins.md';
+/** The plugin guide, relative to the repository root. */
+export const GUIDE = 'docs/src/content/docs/docs/composer/publishing-plugins.md';
 
 /** pnpm checks `engines` against a node it cannot find under bun alone, and would skip rolldown's native binding. */
 const NPMRC = 'node-version=24.11.1\n';
@@ -122,7 +123,7 @@ export const desktopVariant = (toolchain: PluginToolchain): Variant => ({
   skill: SANDBOX_SKILL_KEY,
   instructions: `${PARENT_INSTRUCTIONS}
 
-Use the Sandbox skill. Before the first subtask, create one sandbox named "${SANDBOX_NAME}" and run every command \
+Use the Sandbox skill. Before the first subtask, create one sandbox named "${WORLD_CLOCK_SANDBOX}" and run every command \
 in it. It runs on this computer, every command starts in its workspace (the only directory it can write), and it \
 holds nothing but \`bun\` and \`bunx\`: the tasks fetch everything else from GitHub, pkg.pr.new and npm. Run the \
 commands in the tasks exactly as written, in the workspace, without \`cd\`. Write files with a quoted bash heredoc.

@@ -4,6 +4,7 @@
 
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import {
+  GUIDE,
   IDS,
   PARENT_INSTRUCTIONS,
   type Variant,
@@ -20,8 +21,6 @@ export const FOLDER = 'world-clock';
 
 /** The built manifest, as `vite preview` serves the Composer app's `out/composer`. */
 export const MANIFEST_URL = `http://localhost:4173/plugins/${FOLDER}/manifest.json`;
-
-const GUIDE = 'docs/src/content/docs/docs/composer/publishing-plugins.md';
 
 // Loading the plugin is the reader's click on the prompt the last subtask emits, not a task, so a chat
 // can run the plan end to end on its own.

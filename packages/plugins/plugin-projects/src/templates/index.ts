@@ -8,7 +8,15 @@ import { composerPlugin } from './composer-plugin.ts';
 import { defaultTemplate } from './default.ts';
 import { inboxResearch } from './inbox-research.ts';
 
-export * from './composer-plugin.ts';
+export {
+  GUIDE,
+  IDS,
+  PARENT_INSTRUCTIONS,
+  type Variant,
+  makeComposerPlugin,
+  readGuide,
+  writePlugin,
+} from './composer-plugin.ts';
 export * from './inbox-research.ts';
 export * from './scaffold.ts';
 
