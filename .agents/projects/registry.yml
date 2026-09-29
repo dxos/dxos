@@ -14,8 +14,8 @@ projects:
     summary: 'Every ECHO object gets an append-only feed of immutable Events — a new entity kind with DXN and user schema (Type.makeEvent). Stored in a feed-store feed keyed by the object id (no Feed.Feed object); Obj.appendEvents, Query.events(obj, type) and query.events() traversal. Events have ids but no parent, cannot be ref or relation targets, may hold refs; Feed.Feed objects reject events.'
     tasks: .agents/projects/echo-events/TASKS.md
     design: .agents/projects/echo-events/DESIGN.md
-    prs: []
-    resume: 'Spec only (DESIGN.md); decisions: namespace Event (alias @dxos/async Event), feed namespace data, Event.getTimestamp exposes block timestamp. NEXT: phase 1 — entity kind + Event module.'
+    prs: [13517]
+    resume: 'PR #13517 OPEN (spec only, DESIGN.md); decisions: namespace Event (alias @dxos/async Event), feed namespace data, Event.getTimestamp exposes block timestamp. NEXT: phase 1 — entity kind + Event module.'
   - name: architecture-rules
     status: active
     user: dmaretskyi
