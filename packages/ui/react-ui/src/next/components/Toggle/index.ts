@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './IconButton.tsx';
+export * from './Toggle.tsx';

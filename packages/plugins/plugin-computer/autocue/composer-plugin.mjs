@@ -31,13 +31,13 @@ import { fileURLToPath } from 'node:url';
  * shell cannot host. The agent writes the plugin's source from nothing.
  */
 
-const TWENTY_MIN = 20 * 60_000;
+export const TWENTY_MIN = 20 * 60_000;
 
 /** The Assistant's remote model; Composer's default (Claude Sonnet 5) left the delegated chat silent. */
 const MODEL = 'DeepSeek V4 Pro';
 
 /** The plugin the agent builds, as the template's tasks name it. */
-const PLUGIN_NAME = 'World Clock';
+export const PLUGIN_NAME = 'World Clock';
 
 /** The template's last subtask; the agent finishes it once it has told the reader the plugin is ready. */
 const OFFER_TASK = 'Offer the plugin to load';
@@ -46,7 +46,7 @@ const OFFER_TASK = 'Offer the plugin to load';
 const FINISHED = ['done', 'review'];
 
 /** A beat for the viewer to take in the result of a step. */
-const LINGER = 2_500;
+export const LINGER = 2_500;
 
 /** The Composer app directory, where the dev server runs as the template's command does. */
 const COMPOSER_APP = fileURLToPath(new URL('../../../apps/composer-app/', import.meta.url));
@@ -172,7 +172,7 @@ const startDevServer = async () => {
 const TAKE_PROJECT = join(tmpdir(), 'autocue-composer-plugin.project');
 
 /** A plugin card in the registry list, by its display name. */
-const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
+export const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
 
 /** The first space in the rail, where the take runs. */
 const SPACE = '[data-testid="spacePlugin.space"] >> nth=0';
@@ -194,7 +194,7 @@ const COMPANION_TAB = (name) => `[data-testid="deck.companion"] >> role=tab[name
  * A narrow window collapses the navtree into an overlay; open it before clicking an item in it. A workspace
  * that has just opened can collapse it a beat later, after the check, so a click that misses checks again.
  */
-const showSidebar = async ({ demo, page }, testId, label) => {
+export const showSidebar = async ({ demo, page }, testId, label) => {
   // A beat for the tree to render first: the button toggles, so pressing it over an open sidebar closes it.
   // Checked by position, not `isVisible`: the collapsed overlay keeps its items laid out, just off screen.
   const item = page.getByTestId(testId).first();

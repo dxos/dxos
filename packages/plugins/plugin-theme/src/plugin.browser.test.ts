@@ -17,7 +17,7 @@ import { ThemeCapabilities } from '#types';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
-// jsdom does not implement window.matchMedia — stub it for ThemePlugin's dark-mode detection.
+// Stubs the system dark-mode preference ThemePlugin reads.
 const stubMatchMedia = (matches: boolean) => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -43,7 +43,6 @@ beforeEach(() => {
 describe('ThemePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // Use createTestApp directly to avoid a circular dep with plugin-testing.
-    // jsdom environment (see vitest.config.ts) required for React + ThemeProvider rendering.
     await using harness = await createTestApp({
       plugins: [ProcessManagerPlugin(), ThemePlugin({})],
     });

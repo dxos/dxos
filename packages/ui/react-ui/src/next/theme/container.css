@@ -56,6 +56,20 @@
     grid-column: content-end / full-end;
   }
 
+  /* Row gap only: the columns belong to the template (or the parent's, through subgrid). */
+  .nx-grid[data-gap='none'] {
+    row-gap: 0;
+  }
+  .nx-grid[data-gap='sm'] {
+    row-gap: 0.25rem;
+  }
+  .nx-grid[data-gap='md'] {
+    row-gap: 0.5rem;
+  }
+  .nx-grid[data-gap='lg'] {
+    row-gap: 0.75rem;
+  }
+
   /* A row is at least one block tall so controls centre in it. */
   .nx-grid[data-layout='row'] {
     grid-auto-rows: minmax(var(--nx-block-size), auto);
