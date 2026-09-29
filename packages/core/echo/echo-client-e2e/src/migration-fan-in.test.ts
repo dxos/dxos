@@ -252,6 +252,36 @@ describe('migration fan-in: type switch on absorption', () => {
     expect(parent.employerName).toBe('2 Late Loop');
   });
 
+  test('a parent already holding the child value still lets later child edits fold under parent-wins', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [FanInParentDoc, FanInChildDoc] });
+    await using db = await peer.createDatabase();
+
+    // As if another peer's absorb of this child already replicated to the parent.
+    const parent = db.add(Obj.make(FanInParentDoc, { employerName: '1 Main St' }));
+    const child = db.add(Obj.make(FanInChildDoc, { street: '1 Main St' }));
+    Obj.update(child, (child) => {
+      child.parent = Ref.make(parent);
+    });
+    await db.flush();
+
+    const migration = Migration.defineFanIn({
+      id: 'org.dxos.test.fanin.street',
+      from: FanInChildDoc,
+      parentOf: (child) => child.parent,
+      absorb: absorbStreet,
+      collision: 'parent-wins',
+      removal: 'tombstone',
+    });
+    await db.runMigrations([migration]);
+
+    getObjectCore(child).setDecoded(['data', 'street'], '2 Side St');
+    await db.flush();
+    await db.foldForward([migration]);
+
+    expect(parent.employerName).toBe('2 Side St');
+  });
+
   test('two fan-ins sharing a "to" type each fold only the children they absorbed', async () => {
     await using builder = await new EchoTestBuilder().open();
     const peer = await builder.createPeer({

@@ -456,7 +456,7 @@ export class ObjectCore {
    * `heads` is not a re-run -- it legitimately conflicts with whatever is already there.
    *
    * @param heads Frontier the write is made concurrent with; must be ancestors of the current document.
-   * @param mutate Given the object's `data` map as it stood at `heads`, to mutate in place.
+   * @param mutate Given the object's `data` and `meta` maps as they stood at `heads`, to mutate in place.
    * @param options.message Deterministic commit message identifying the fold; `Obj.getConflict` reads
    *   it (a `fold:`/`migration:` prefix) to tell a fold from a direct edit. Stored tagged with `scope`.
    * @param options.scope Identifies the chain of folds this one belongs to (typically the object id plus
@@ -466,7 +466,7 @@ export class ObjectCore {
    */
   foldAt(
     heads: Heads,
-    mutate: (data: EntityStructure['data']) => void,
+    mutate: (data: EntityStructure['data'], meta: EntityStructure['meta']) => void,
     options: { message: string; scope: string },
   ): Heads | undefined {
     // Prevent recursive change calls.
@@ -478,7 +478,9 @@ export class ObjectCore {
     const applyMutate = (draft: unknown): void => {
       const data = getDeep<EntityStructure['data']>(draft, [...mountPath, DATA_NAMESPACE]);
       invariant(data, 'foldAt: object body not present at the recorded heads');
-      mutate(data);
+      const meta = getDeep<EntityStructure['meta']>(draft, [...mountPath, META_NAMESPACE]);
+      invariant(meta, 'foldAt: object meta not present at the recorded heads');
+      mutate(data, meta);
     };
 
     if (this.doc) {

@@ -196,6 +196,11 @@ export const define = <From extends MigrationSchemaInput, To extends MigrationSc
   if (!toType) {
     throw new Error('Invalid to schema');
   }
+  if (fromType === toType) {
+    throw new Error(
+      `Migration.define: "from" and "to" are the same type (${fromType}); a migration must change the type.`,
+    );
+  }
 
   return {
     [TypeId]: TypeId,

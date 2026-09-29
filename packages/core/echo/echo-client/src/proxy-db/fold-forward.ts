@@ -6,15 +6,23 @@ import { next as A, type Doc as AutomergeDoc, type Heads, type Patch } from '@au
 import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
-import { DATA_NAMESPACE } from '@dxos/echo-protocol';
-import { EntityId } from '@dxos/keys';
+import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
+import { MetaId } from '@dxos/echo/internal';
+import { EntityId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { setDeep } from '@dxos/util';
+import { getDeep, setDeep } from '@dxos/util';
 
-import { META_NAMESPACE, type ObjectCore } from '../core-db/index.ts';
+import { META_NAMESPACE, type ObjectCore, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { arrayFanOutSplitMessage } from './array-fan-out.ts';
-import { changedOutputEntries, computeGuardedDataWrites, getDecodedDataWithRefs, isRecord } from './encoded-value.ts';
+import { arrayFanOutSplitMessage, hasUnresolvedIdConflict } from './array-fan-out.ts';
+import {
+  changedOutputEntries,
+  computeGuardedDataWrites,
+  encodedValuesEqual,
+  getDecodedDataWithRefs,
+  isRecord,
+  removedOutputKeys,
+} from './encoded-value.ts';
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey } from './migration-context.ts';
 
@@ -102,11 +110,11 @@ const lateRetiredWrites = (
 };
 
 /**
- * Late writes to a `lens`'s overlaid target properties — an old client still lensing through it writes
- * one into the object's annotation dictionary (`overlay.ts`'s own storage shape:
- * `meta.annotations[OverlayAnnotation.key][lens.id][property]`), a meta path fold-forward's usual
- * data-path diff (`lateRetiredWrites`) never sees. Returns the changed property names, not patches: an
- * overlay write is folded as a whole-value read of its CURRENT state, never replayed op-by-op.
+ * The `lens`'s overlaid target properties whose overlay value changed between `base` and `current` —
+ * an old client still lensing through it writes one into the object's annotation dictionary
+ * (`meta.annotations[OverlayAnnotation.key][lens.id][property]`), a meta path the data-path diff
+ * never sees. Compared by value, since an overlay write replaces the whole dictionary and so touches
+ * every property's path.
  */
 const lateOverlayWrites = (
   doc: AutomergeDoc<unknown>,
@@ -116,22 +124,13 @@ const lateOverlayWrites = (
   lensId: string,
   overlaid: ReadonlySet<string>,
 ): ReadonlySet<string> => {
-  const properties = new Set<string>();
   const overlayPath = [...mountPath, META_NAMESPACE, 'annotations', Lens.OverlayAnnotation.key, lensId];
-  const propertyIndex = overlayPath.length;
-  for (const patch of A.diff(doc, base, current)) {
-    if (patch.action === 'conflict') {
-      continue;
-    }
-    if (patch.path.length <= propertyIndex || !overlayPath.every((segment, index) => patch.path[index] === segment)) {
-      continue;
-    }
-    const property = patch.path[propertyIndex];
-    if (typeof property === 'string' && overlaid.has(property)) {
-      properties.add(property);
-    }
-  }
-  return properties;
+  const atBase: unknown = getDeep(A.view(doc, base), overlayPath);
+  const atCurrent: unknown = getDeep(A.view(doc, current), overlayPath);
+  const valueOf = (overlay: unknown, property: string): unknown => (isRecord(overlay) ? overlay[property] : undefined);
+  return new Set(
+    [...overlaid].filter((property) => !encodedValuesEqual(valueOf(atBase, property), valueOf(atCurrent, property))),
+  );
 };
 
 /**
@@ -142,13 +141,14 @@ const recomputeMigrationOutput = (
   migration: Migration.ObjectMigration,
   id: string,
   snapshot: Record<string, unknown>,
-): Record<string, unknown> => {
+): { data: Record<string, unknown>; meta: Record<string, unknown> } => {
   const output = migration.transform({ ...snapshot, id });
   if (!isRecord(output)) {
-    return {};
+    return { data: {}, meta: {} };
   }
   const { id: _id, ...data } = output;
-  return data;
+  const meta: unknown = Reflect.get(output, MetaId);
+  return { data, meta: isRecord(meta) ? meta : {} };
 };
 
 /**
@@ -211,6 +211,8 @@ const foldStep = (
   // Only keys the late writes moved are folded: `before` is the current data with just the retired
   // keys taken back to the checkpoint, so a direct edit to a target key never counts as moved.
   let output: Record<string, unknown> = {};
+  let deletions: string[] = [];
+  let metaWrites = new Map<string, unknown>();
   if (lateWrites.size > 0) {
     const current = getDecodedDataWithRefs(db, core, currentHeads);
     const atBase = getDecodedDataWithRefs(db, core, base);
@@ -222,11 +224,15 @@ const foldStep = (
         delete before[key];
       }
     }
-    output = changedOutputEntries(
-      core,
-      recomputeMigrationOutput(migration, object.id, before),
-      recomputeMigrationOutput(migration, object.id, current),
+    const previous = recomputeMigrationOutput(migration, object.id, before);
+    const next = recomputeMigrationOutput(migration, object.id, current);
+    output = changedOutputEntries(core, previous.data, next.data);
+    // A late clear of an old field clears what the migration derived from it.
+    deletions = removedOutputKeys(previous.data, next.data).filter(
+      (key) => core.getRaw([DATA_NAMESPACE, key]) !== undefined,
     );
+    // A migration's meta patch (e.g. a registry key moved into meta) folds the same way.
+    metaWrites = computeGuardedDataWrites(core, changedOutputEntries(core, previous.meta, next.meta), META_NAMESPACE);
   }
 
   const dataWrites = new Map<string, unknown>();
@@ -249,12 +255,18 @@ const foldStep = (
     }
   }
 
-  if (dataWrites.size > 0) {
+  if (dataWrites.size > 0 || deletions.length > 0 || metaWrites.size > 0) {
     core.foldAt(
       postMigrationHeads,
-      (data) => {
+      (data, meta) => {
         for (const [key, value] of dataWrites) {
           data[key] = value;
+        }
+        for (const key of deletions) {
+          delete data[key];
+        }
+        for (const [key, value] of metaWrites) {
+          Reflect.set(meta, key, value);
         }
       },
       // Scoped to this object AND this step: a shared actor across steps (or objects) could otherwise
@@ -277,6 +289,23 @@ const foldStep = (
 };
 
 /**
+ * Sets the type to the latest recorded step's target when the type register reads otherwise: peers
+ * migrating concurrently to different versions write the type as a last-writer-wins register, but
+ * every peer derives the same latest step.
+ */
+const repairMigratedType = (object: Obj.Unknown, steps: readonly Migration.RecordedMigrationStep[]): void => {
+  const latest = steps.at(-1)?.step.to;
+  if (latest === undefined || Obj.getTypeURI(object)?.toString() === latest) {
+    return;
+  }
+  const core = getObjectCore(object);
+  const typeRef = EncodedReference.fromURI(URI.make(latest));
+  core.change((doc) => {
+    setDeep(doc, [...core.mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
+  });
+};
+
+/**
  * Folds every step of one migrated object's marker forward, in order (oldest first): step `k`'s own
  * migration is found by matching its recorded `from`/`to` against `migrations` (the full list passed
  * to {@link foldForwardMigrations}, not just the one whose query matched this object), so an object
@@ -285,7 +314,9 @@ const foldStep = (
  * skip the steps after it. Never throws: a bad object is logged and left for the next pass.
  */
 const foldObject = (db: Database.Database, migrations: readonly Migration.Migration[], object: Obj.Unknown): void => {
-  for (const { key, step } of Migration.getMigrationSteps(object)) {
+  const steps = Migration.getMigrationSteps(object);
+  repairMigratedType(object, steps);
+  for (const { key, step } of steps) {
     const migration = migrations.find(
       (candidate): candidate is Migration.ObjectMigration =>
         Migration.isObjectMigration(candidate) &&
@@ -302,7 +333,11 @@ const foldObject = (db: Database.Database, migrations: readonly Migration.Migrat
       continue;
     }
 
-    foldStep(db, migration, step, key, object);
+    try {
+      foldStep(db, migration, step, key, object);
+    } catch (err) {
+      log.warn('foldForward: failed to fold a migration step forward', { object: object.id, stepKey: key, err });
+    }
   }
 };
 
@@ -584,7 +619,10 @@ const setArrayFanOutRef = (parent: Obj.Unknown, toProperty: string, elementId: s
 /** One element of a source array snapshot, with its position. */
 type ArrayElement = { element: Record<string, unknown>; index: number };
 
-/** The id'd elements of `property` in a data snapshot, by element id; `missingIds` counts the rest. */
+/**
+ * The id'd elements of `property` in a data snapshot, by element id. An id held by more than one
+ * element is left out (it would collapse two elements into one child); `missingIds` counts the rest.
+ */
 const elementsById = (
   data: Record<string, unknown>,
   property: string,
@@ -592,16 +630,22 @@ const elementsById = (
 ): { elements: Map<string, ArrayElement>; missingIds: number } => {
   const elements = new Map<string, ArrayElement>();
   let missingIds = 0;
+  const duplicates = new Set<string>();
   const items = data[property];
   if (Array.isArray(items)) {
     items.forEach((element: unknown, index: number) => {
       const id = isRecord(element) ? element[elementId] : undefined;
-      if (isRecord(element) && typeof id === 'string') {
-        elements.set(id, { element, index });
-      } else {
+      if (!isRecord(element) || typeof id !== 'string') {
         missingIds++;
+      } else if (elements.has(id)) {
+        duplicates.add(id);
+      } else {
+        elements.set(id, { element, index });
       }
     });
+  }
+  for (const id of duplicates) {
+    elements.delete(id);
   }
   return { elements, missingIds };
 };
@@ -628,13 +672,19 @@ const foldArrayFanOutElement = async (
     elementId,
   );
   const existingChild = await findByConvergenceKey(db, migration.child, convergenceKey, childCache);
-  if (!existingChild || !before) {
-    const child =
-      existingChild ?? (await ensureByConvergenceKey(db, migration.child, convergenceKey, after, childCache));
-    setArrayFanOutRef(parent, migration.toProperty, elementId, child);
-    if (!existingChild) {
-      return;
+  if (existingChild && getObjectCore(existingChild).isDeleted()) {
+    return; // Deleted in the new shape; a late source write must not bring it back.
+  }
+  if (!existingChild) {
+    // Only an element added since the checkpoint gets a new child.
+    if (!before) {
+      const child = await ensureByConvergenceKey(db, migration.child, convergenceKey, after, childCache);
+      setArrayFanOutRef(parent, migration.toProperty, elementId, child);
     }
+    return;
+  }
+  if (!before) {
+    setArrayFanOutRef(parent, migration.toProperty, elementId, existingChild);
   }
 
   const childCore = getObjectCore(existingChild);
@@ -642,7 +692,10 @@ const foldArrayFanOutElement = async (
     childCore,
     before ? changedOutputEntries(childCore, before, after) : after,
   );
-  if (dataWrites.size === 0) {
+  const deletions = before
+    ? removedOutputKeys(before, after).filter((key) => childCore.getRaw([DATA_NAMESPACE, key]) !== undefined)
+    : [];
+  if (dataWrites.size === 0 && deletions.length === 0) {
     return;
   }
   const creationHeads = deriveChildCreationHeads(childCore);
@@ -655,6 +708,9 @@ const foldArrayFanOutElement = async (
     (data) => {
       for (const [key, value] of dataWrites) {
         data[key] = value;
+      }
+      for (const key of deletions) {
+        delete data[key];
       }
     },
     {
@@ -717,6 +773,10 @@ const foldArrayFanOutParent = async (
   // One durable query per parent-fold, shared across its elements.
   const childCache: ConvergenceKeyCache = new Map();
   for (const [elementId, { element, index }] of after) {
+    // Concurrent stamps that disagree would give two peers two different children.
+    if (hasUnresolvedIdConflict(parent, marker.property, index, marker.elementId)) {
+      continue;
+    }
     const previous = before.get(elementId);
     await foldArrayFanOutElement(
       db,
@@ -790,12 +850,16 @@ export const foldForwardMigrations = async (
   const fanIns = migrations.filter(Migration.isFanInMigration);
   const arrayFanOuts = migrations.filter(Migration.isArrayFanOutMigration);
   for (const object of objects) {
+    foldObject(db, migrations, object);
     try {
-      foldObject(db, migrations, object);
       await foldFanInObject(db, fanIns, object);
+    } catch (err) {
+      log.warn('foldForward: failed to fold a fan-in child forward', { object: object.id, err });
+    }
+    try {
       await foldArrayFanOutObject(db, arrayFanOuts, object);
     } catch (err) {
-      log.warn('foldForward: failed to fold an object forward', { object: object.id, err });
+      log.warn('foldForward: failed to fold an array fan-out parent forward', { object: object.id, err });
     }
   }
 };

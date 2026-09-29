@@ -8,9 +8,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Annotation, DXN, Lens, Migration, Obj, Ref, Type } from '@dxos/echo';
-import { DATA_NAMESPACE } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { setDeep } from '@dxos/util';
+import { getDeep, setDeep } from '@dxos/util';
 
 import { EchoTestBuilder, getObjectCore } from '../testing/index.ts';
 import { updateText } from '../text.ts';
@@ -137,6 +137,51 @@ const assignmentLens = Lens.make('org.dxos.test.foldForward.assignment.lens', As
   name: 'title',
 });
 const assignmentMigration = Migration.fromLens(assignmentLens);
+
+class ProfileV1 extends Type.makeObject<ProfileV1>(DXN.make('org.dxos.test.foldForward.Profile', '0.1.0'))(
+  Schema.Struct({ fullName: Schema.String, nickname: Schema.optional(Schema.String) }),
+) {}
+
+class ProfileV2 extends Type.makeObject<ProfileV2>(DXN.make('org.dxos.test.foldForward.Profile', '0.2.0'))(
+  Schema.Struct({ name: Schema.String, alias: Schema.optional(Schema.String) }),
+) {}
+
+const profileMigration = Migration.define({
+  from: ProfileV1,
+  to: ProfileV2,
+  transform: (from) => ({ name: from.fullName, alias: from.nickname }),
+});
+
+class KeyedV1 extends Type.makeObject<KeyedV1>(DXN.make('org.dxos.test.foldForward.Keyed', '0.1.0'))(
+  Schema.Struct({ name: Schema.String, key: Schema.String }),
+) {}
+
+class KeyedV2 extends Type.makeObject<KeyedV2>(DXN.make('org.dxos.test.foldForward.Keyed', '0.2.0'))(
+  Schema.Struct({ name: Schema.String }),
+) {}
+
+/** Moves `key` from data into the object's meta. */
+const keyedMigration = Migration.define({
+  from: KeyedV1,
+  to: KeyedV2,
+  transform: (from) => ({ [Obj.Meta]: { key: from.key }, name: from.name }),
+});
+
+class PlanV1 extends Type.makeObject<PlanV1>(DXN.make('org.dxos.test.foldForward.Plan', '0.1.0'))(
+  Schema.Struct({ title: Schema.String }),
+) {}
+
+class PlanV2 extends Type.makeObject<PlanV2>(DXN.make('org.dxos.test.foldForward.Plan', '0.2.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    priority: Schema.optional(Schema.String),
+    estimate: Schema.optional(Schema.String),
+  }),
+) {}
+
+/** Two target-only properties, both stored as overlays before the migration. */
+const planLens = Lens.make('org.dxos.test.foldForward.plan.lens', PlanV1, PlanV2, {});
+const planMigration = Migration.fromLens(planLens);
 
 let builder: EchoTestBuilder;
 
@@ -683,4 +728,135 @@ describe('fold-forward: per-step actor scoping', () => {
       expect(conflict.alternatives).to.have.length(2);
     },
   );
+});
+
+describe('fold-forward: late writes the checkpoint must not lose', () => {
+  test('an optional old field set for the first time after the migration folds forward', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ProfileV1, ProfileV2]);
+
+    const profile = db.add(Obj.make(ProfileV1, { fullName: 'Ada' }));
+    await db.flush();
+    await db.runMigrations([profileMigration]);
+
+    getObjectCore(profile).setDecoded(['data', 'nickname'], 'Countess');
+    await db.flush();
+    await db.foldForward([profileMigration]);
+
+    expect(Obj.getValue(profile, ['alias'])).to.eq('Countess');
+  });
+
+  test('a late clear of an old field clears what the migration derived from it', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ProfileV1, ProfileV2]);
+
+    const profile = db.add(Obj.make(ProfileV1, { fullName: 'Ada', nickname: 'Countess' }));
+    await db.flush();
+    await db.runMigrations([profileMigration]);
+    expect(Obj.getValue(profile, ['alias'])).to.eq('Countess');
+
+    const core = getObjectCore(profile);
+    core.change((doc) => {
+      const data = getDeep<Record<string, unknown>>(doc, [...core.mountPath, DATA_NAMESPACE]);
+      invariant(data, 'expected a data body');
+      delete data.nickname;
+    });
+    await db.flush();
+    await db.foldForward([profileMigration]);
+
+    expect(Obj.getValue(profile, ['alias'])).to.be.undefined;
+  });
+
+  test('a late write to a field the migration moved into meta folds into meta', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([KeyedV1, KeyedV2]);
+
+    const keyed = db.add(Obj.make(KeyedV1, { name: 'Report', key: 'org.example.report' }));
+    await db.flush();
+    await db.runMigrations([keyedMigration]);
+    expect(Obj.getMeta(keyed).key).to.eq('org.example.report');
+
+    getObjectCore(keyed).setDecoded(['data', 'key'], 'org.example.summary');
+    await db.flush();
+    await db.foldForward([keyedMigration]);
+
+    expect(Obj.getMeta(keyed).key).to.eq('org.example.summary');
+  });
+
+  test('a late write to one overlay leaves a direct edit to another overlaid property alone', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([PlanV1, PlanV2]);
+
+    const plan = db.add(Obj.make(PlanV1, { title: 'Ship' }));
+    await db.flush();
+    Lens.put(plan, planLens, { priority: 'high', estimate: '1d' });
+    await db.flush();
+    await db.runMigrations([planMigration]);
+
+    Obj.update(plan, (plan) => {
+      Obj.setValue(plan, ['estimate'], '2d');
+    });
+    await db.flush();
+    // An old client still viewing through the lens rewrites the overlay dictionary.
+    Lens.put(plan, planLens, { priority: 'low', estimate: '1d' });
+    await db.flush();
+    await db.foldForward([planMigration]);
+
+    expect(Obj.getValue(plan, ['estimate'])).to.eq('2d');
+    expect(Obj.getConflict(plan, 'estimate')).toBeUndefined();
+    expect(Obj.getValue(plan, ['priority'])).to.eq('low');
+  });
+
+  test('a step that fails to fold does not stop the later steps of the same object', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ScopeV1, ScopeV2, ScopeV3]);
+
+    const failing12 = Migration.define({
+      from: ScopeV1,
+      to: ScopeV2,
+      transform: (from) => {
+        if (from.fullName === 'boom') {
+          throw new Error('simulated transform failure');
+        }
+        return { name: from.fullName };
+      },
+    });
+    const contact = db.add(Obj.make(ScopeV1, { fullName: 'Ada' }));
+    await db.flush();
+    await db.runMigrations([failing12, scopeMigration23]);
+
+    const core = getObjectCore(contact);
+    core.setDecoded(['data', 'fullName'], 'boom');
+    core.setDecoded(['data', 'note'], 'late note');
+    await db.flush();
+    await db.foldForward([failing12, scopeMigration23]);
+
+    expect(Obj.getValue(contact, ['label'])).to.eq('late note');
+  });
+});
+
+describe('fold-forward: concurrent migrations to different versions', () => {
+  test('a type register left behind the recorded steps is repaired, and the older step is not re-run', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2, ContactV3]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([contactMigration, contactMigration23]);
+    Obj.update(contact, (contact) => {
+      Obj.setValue(contact, ['displayName'], 'Ada');
+    });
+
+    // Another peer's concurrent @1 -> @2 type write won the register.
+    const core = getObjectCore(contact);
+    core.change((doc) => {
+      setDeep(doc, [...core.mountPath, 'system', 'type'], EncodedReference.fromURI(contactMigration.toType));
+    });
+    await db.flush();
+    await db.runMigrations([contactMigration, contactMigration23]);
+
+    expect(Obj.getTypeURI(contact)?.toString()).to.eq(contactMigration23.toType.toString());
+    expect(Migration.getMigrationSteps(contact)).to.have.length(2);
+    expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada');
+  });
 });

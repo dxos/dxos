@@ -109,6 +109,10 @@ export const changedOutputEntries = (
   );
 };
 
+/** The keys `before` defines that `after` no longer does: a recomputed output that cleared them. */
+export const removedOutputKeys = (before: Record<string, unknown>, after: Record<string, unknown>): string[] =>
+  Object.keys(before).filter((key) => before[key] !== undefined && after[key] === undefined);
+
 /**
  * The data keys of `output` whose encoded value actually differs from `core`'s current document —
  * the value-compare guard shared by every writer onto an `ObjectCore`'s data namespace: the migration
@@ -116,7 +120,11 @@ export const changedOutputEntries = (
  * `undefined` is skipped, matching `core.encode`'s own object-valued branch, which never writes
  * `undefined` entries to the document.
  */
-export const computeGuardedDataWrites = (core: ObjectCore, output: Record<string, unknown>): Map<string, unknown> => {
+export const computeGuardedDataWrites = (
+  core: ObjectCore,
+  output: Record<string, unknown>,
+  namespace: string = DATA_NAMESPACE,
+): Map<string, unknown> => {
   const mappedOutput = mapRefsToEncodedReferences(output);
   const writes = new Map<string, unknown>();
   for (const [key, value] of Object.entries(mappedOutput)) {
@@ -124,7 +132,7 @@ export const computeGuardedDataWrites = (core: ObjectCore, output: Record<string
       continue;
     }
     const encoded = core.encode(value);
-    if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, key]))) {
+    if (!encodedValuesEqual(encoded, core.getRaw([namespace, key]))) {
       writes.set(key, encoded);
     }
   }

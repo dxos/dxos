@@ -128,6 +128,10 @@ class CrashSourceV2 extends Type.makeObject<CrashSourceV2>(
   DXN.make('org.dxos.test.migration.runner.crash.Source', '0.2.0'),
 )(Schema.Struct({ name: Schema.String })) {}
 
+class CrashSourceV3 extends Type.makeObject<CrashSourceV3>(
+  DXN.make('org.dxos.test.migration.runner.crash.Source', '0.3.0'),
+)(Schema.Struct({ name: Schema.String })) {}
+
 describe('migration runner: onMigration effects resume after a crash', () => {
   let builder: EchoTestBuilder;
 
@@ -175,6 +179,42 @@ describe('migration runner: onMigration effects resume after a crash', () => {
     // A third run is a no-op: the effects completed.
     await db.runMigrations([crashOnceMigration]);
     expect(attempts).toBe(2);
+  });
+
+  test('pending effects resume even after a later migration moved the object on', async () => {
+    builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [CrashSourceV1, CrashSourceV2, CrashSourceV3, CrashChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const source = db.add(Obj.make(CrashSourceV1, { name: 'Ada' }));
+    await db.flush();
+
+    let crash = true;
+    const migration12 = Migration.define({
+      from: CrashSourceV1,
+      to: CrashSourceV2,
+      transform: (from) => ({ name: from.name }),
+      onMigration: async ({ before, ensure }) => {
+        await ensure(CrashChildDoc, `chained-resume:${before.id}:child`, { note: 'child note' });
+        if (crash) {
+          throw new Error('simulated crash: after ensure, before the effects completed');
+        }
+      },
+    });
+    const migration23 = Migration.define({
+      from: CrashSourceV2,
+      to: CrashSourceV3,
+      transform: (from) => ({ name: from.name }),
+    });
+
+    await expect(db.runMigrations([migration12])).rejects.toThrow(/simulated crash/);
+    crash = false;
+    await db.runMigrations([migration12, migration23]);
+
+    expect(Obj.getTypeURI(source)?.toString()).toBe(migration23.toType.toString());
+    const [first] = Migration.getMigrationSteps(source);
+    expect(first.step.effectsPending).toBe(false);
+    expect(await db.query(Filter.type(CrashChildDoc)).run()).toHaveLength(1);
   });
 
   test('pending effects resume after a peer reload and ensure finds the child the earlier session created', async () => {

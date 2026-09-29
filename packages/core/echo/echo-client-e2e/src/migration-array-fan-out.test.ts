@@ -187,6 +187,26 @@ describe('migration array fan-out: stamping, the split, the gate, and the orphan
     ).toThrow(/must be a record/);
   });
 
+  test('elements that share an id leave the object unsplit', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(
+      Obj.make(ArrayFanParentV1, {
+        items: [
+          { id: 'shared', name: 'alpha' },
+          { id: 'shared', name: 'beta' },
+        ],
+      }),
+    );
+    await db.flush();
+    await db.runMigrations([fanOutMigration]);
+
+    expect(Obj.getTypeURI(parent)?.toString()).toBe(fanOutMigration.fromType.toString());
+    expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(0);
+  });
+
   test('raced stamps block the split until a stamping re-run reconciles them', async () => {
     // Peers must close before the network they replicate over.
     const builder = await new EchoTestBuilder().open();
@@ -441,6 +461,53 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
     expect(child.name).toBe('alpha-late');
   });
 
+  test('a child deleted in the new shape is not recreated by a late element edit', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const { parent, child } = await splitSingleElementParent(db, 'alpha');
+    db.remove(child);
+    await db.flush();
+
+    Obj.update(parent, (parent) => {
+      const items = Obj.getValue(parent, ['items']);
+      invariant(Array.isArray(items), 'expected the source array to remain');
+      items[0].name = 'alpha-late';
+    });
+    await db.flush();
+    await db.foldForward([fanOutMigration]);
+
+    expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(0);
+  });
+
+  test('an element whose id stamps disagree is not folded into a child', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const { parent } = await splitSingleElementParent(db, 'alpha');
+    Obj.update(parent, (parent) => {
+      const items = Obj.getValue(parent, ['items']);
+      invariant(Array.isArray(items), 'expected the source array to remain');
+      items.push({ name: 'beta' });
+    });
+    await db.flush();
+    // Two stamps written concurrently leave the new element's id register in conflict.
+    const core = getObjectCore(parent);
+    const unstamped = headsOf(parent);
+    core.setDecoded(['data', 'items', 1, 'id'], 'stamp-one');
+    core.changeAt(unstamped, (doc) => {
+      const element = getDeep<Record<string, unknown>>(doc, [...core.mountPath, 'data', 'items', 1]);
+      invariant(element, 'expected the new element');
+      element.id = 'stamp-two';
+    });
+    await db.flush();
+    await db.foldForward([fanOutMigration]);
+
+    expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(1);
+  });
+
   test('(b) a concurrent direct edit to the child conflicts with a late element edit; the direct edit is presented', async () => {
     await using builder = await new EchoTestBuilder().open();
     const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
@@ -685,6 +752,28 @@ const tagsFanOutTwoProp = Migration.defineArrayFanOut({
 });
 
 describe('migration array fan-out: per-property markers', () => {
+  test('re-running a same-version fan-out does not re-split and skip a late edit', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [TwoPropParentV1, TwoPropParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(TwoPropParentV1, { items: [{ name: 'alpha' }], tags: [{ name: 'red' }] }));
+    await db.flush();
+    await db.runMigrations([stampTwoPropItems, stampTwoPropTags]);
+    await db.runMigrations([itemsFanOutTwoProp, tagsFanOutTwoProp]);
+
+    Obj.update(parent, (parent) => {
+      const tags = Obj.getValue(parent, ['tags']);
+      invariant(Array.isArray(tags), 'expected the source array to remain');
+      tags[0].name = 'red-late';
+    });
+    await db.flush();
+    await db.runMigrations([itemsFanOutTwoProp, tagsFanOutTwoProp]);
+
+    const names = (await db.query(Filter.type(ArrayFanChildDoc)).run()).map((child) => child.name).sort();
+    expect(names).toEqual(['alpha', 'red-late']);
+  });
+
   test('a parent with two array properties, each split by its own migration, folds late edits on both', async () => {
     await using builder = await new EchoTestBuilder().open();
     const peer = await builder.createPeer({ types: [TwoPropParentV1, TwoPropParentV2, ArrayFanChildDoc] });

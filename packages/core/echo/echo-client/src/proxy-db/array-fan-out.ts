@@ -3,9 +3,10 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
+import { Annotation, type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -41,7 +42,12 @@ const getRawElement = (object: Obj.Unknown, property: string, index: number): un
  * Whether the element's id register holds concurrent stamps that DISAGREE: splitting then would
  * silently pick a side. Equal-valued leftovers (peers re-asserting the same id) are agreement.
  */
-const hasUnresolvedIdConflict = (object: Obj.Unknown, property: string, index: number, elementId: string): boolean => {
+export const hasUnresolvedIdConflict = (
+  object: Obj.Unknown,
+  property: string,
+  index: number,
+  elementId: string,
+): boolean => {
   const rawElement = getRawElement(object, property, index);
   if (typeof rawElement !== 'object' || rawElement === null) {
     return false;
@@ -68,6 +74,11 @@ export const runArrayFanOutMigration = async (
   for (const object of objects) {
     if (Obj.getTypeURI(object)?.toString() !== migration.fromType.toString()) {
       continue; // The type query's index can lag an earlier run's own type switch.
+    }
+    // A fan-out whose `from` and `to` are the same type is recognised as done by its marker.
+    const markers = Annotation.get(object, Migration.ArrayFanOutMarkerAnnotation);
+    if (Option.isSome(markers) && markers.value[migration.property]?.migration === arrayFanOutSplitMessage(migration)) {
+      continue;
     }
 
     // The split is written at these heads, so an element edit replicated in while children are
@@ -103,6 +114,12 @@ export const runArrayFanOutMigration = async (
       elements.push({ elementId: elementIdValue, element, index });
     }
     if (elements.length !== items.length) {
+      continue;
+    }
+    // Two elements sharing an id (a concurrent move leaves a copy) would collapse into one child.
+    if (new Set(elements.map(({ elementId }) => elementId)).size !== elements.length) {
+      skipped.push({ objectId: object.id, elementIndex: -1 });
+      log.info('array fan-out: elements share an id, skipping this object for now', { object: object.id });
       continue;
     }
 

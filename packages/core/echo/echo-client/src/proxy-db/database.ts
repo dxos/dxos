@@ -52,6 +52,7 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -858,6 +859,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await runStampElementIdsMigration(this, migration);
       }
     }
+    await this.#resumeMigrationEffects(migrations);
     await this._entityManager.flush();
 
     // A peer may already hold late old-shape writes to objects this run just migrated.
@@ -882,6 +884,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       if (Obj.getTypeURI(object)?.toString() !== migration.fromType.toString()) {
         continue;
       }
+      // A concurrent migration on another peer can leave the type register behind the steps it recorded;
+      // an object that already crossed this step is never migrated through it again.
+      if (
+        Migration.getMigrationSteps(object).some(
+          ({ step }) => step.from === migration.fromType.toString() && step.to === migration.toType.toString(),
+        )
+      ) {
+        continue;
+      }
 
       // Read, transformed and written in one synchronous block, so no replicated change can land
       // between the snapshot the output derives from and the heads the migration change records.
@@ -889,6 +900,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       const before = { ...getDecodedDataWithRefs(this, core, A.getHeads(core.getDoc())), id: object.id };
       const result = migration.transform(before);
       if (result instanceof Promise) {
+        result.catch((err: unknown) => log.catch(err));
         throw new TypeError(
           `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: transform must be synchronous`,
         );
@@ -929,10 +941,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
       await this.#runMigrationEffects(object, migration, stepKey, before);
     }
-
-    if (migration.onMigration) {
-      await this.#resumeMigrationEffects(migration);
-    }
   }
 
   /** Runs `onMigration` for one migrated object, then clears its step's `effectsPending` flag. */
@@ -952,18 +960,26 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
   }
 
-  /** Re-runs `onMigration` for objects whose migration change landed but whose effects never completed. */
-  async #resumeMigrationEffects(migration: Migration.ObjectMigration): Promise<void> {
-    const objects = await this._hypergraph.query(Query.select(Filter.type(migration.toType)).from(this)).run();
+  /**
+   * Re-runs `onMigration` for every recorded step whose migration change landed but whose effects never
+   * completed, found by its step rather than by type, since a later migration may have moved it on.
+   */
+  async #resumeMigrationEffects(migrations: readonly Migration.Migration[]): Promise<void> {
+    const withEffects = migrations.filter(
+      (migration): migration is Migration.ObjectMigration =>
+        Migration.isObjectMigration(migration) && migration.onMigration !== undefined,
+    );
+    if (withEffects.length === 0) {
+      return;
+    }
+    const objects = await this._hypergraph.query(Query.select(Filter.everything()).from(this)).run();
     for (const object of objects) {
       const core = getObjectCore(object);
       for (const { key, step } of Migration.getMigrationSteps(object)) {
-        if (
-          step.effectsPending &&
-          step.from === migration.fromType.toString() &&
-          step.to === migration.toType.toString() &&
-          A.hasHeads(core.getDoc(), [...step.preHeads])
-        ) {
+        const migration = withEffects.find(
+          (candidate) => candidate.fromType.toString() === step.from && candidate.toType.toString() === step.to,
+        );
+        if (migration && step.effectsPending && A.hasHeads(core.getDoc(), [...step.preHeads])) {
           const before = { ...getDecodedDataWithRefs(this, core, [...step.preHeads]), id: object.id };
           await this.#runMigrationEffects(object, migration, key, before);
         }
@@ -1018,8 +1034,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         from: fromType,
         to: toType,
         preHeads: [...preHeads],
-        retired: Object.keys(core.getRaw([DATA_NAMESPACE]) ?? {})
-          .filter((key) => !Object.hasOwn(output, key))
+        // Every source property the output drops, set or not: an optional one an old client sets for
+        // the first time after the migration is still a late write to fold.
+        retired: [
+          ...new Set([
+            ...SchemaEx.getProperties(migration.fromSchema.ast).map((property) => String(property.name)),
+            ...Object.keys(core.getRaw([DATA_NAMESPACE]) ?? {}),
+          ]),
+        ]
+          .filter((key) => key !== 'id' && !Object.hasOwn(output, key))
           .sort(),
         ...(migration.onMigration ? { effectsPending: true } : {}),
       }),

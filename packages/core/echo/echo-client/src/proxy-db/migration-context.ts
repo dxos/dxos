@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Database, Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Migration, Obj, Query, Ref, Type } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { setDeep } from '@dxos/util';
 
@@ -27,6 +27,31 @@ import { computeGuardedDataWrites } from './encoded-value.ts';
  */
 export type ConvergenceKeyCache = Map<Type.AnyObj, Map<string, Obj.Unknown>>;
 
+/**
+ * Every object of `type` carrying a convergence key, tombstones included: a child the user deleted
+ * must be found, or `ensure` would recreate it. A merged-away duplicate is skipped, its survivor is
+ * live, and a live object is preferred over a deleted one with the same key.
+ */
+const queryConvergenceKeyIndex = async (
+  db: Database.Database,
+  type: Type.AnyObj,
+): Promise<Map<string, Obj.Unknown>> => {
+  const index = new Map<string, Obj.Unknown>();
+  const candidates = await db.query(Query.select(Filter.type(type)).options({ deleted: 'include' })).run();
+  for (const candidate of candidates) {
+    const key = Obj.getMeta(candidate).convergenceKey;
+    const core = getObjectCore(candidate);
+    if (!key || core.getMergedInto() !== undefined) {
+      continue;
+    }
+    const existing = index.get(key);
+    if (!existing || (getObjectCore(existing).isDeleted() && !core.isDeleted())) {
+      index.set(key, candidate);
+    }
+  }
+  return index;
+};
+
 /** The `type`'s index within `cache`, durably queried (`run()`, not `runSync()`) the first time it is asked for. */
 const loadConvergenceKeyIndex = async (
   db: Database.Database,
@@ -37,21 +62,15 @@ const loadConvergenceKeyIndex = async (
   if (existingIndex) {
     return existingIndex;
   }
-  const index = new Map<string, Obj.Unknown>();
-  for (const candidate of await db.query(Filter.type(type)).run()) {
-    const key = Obj.getMeta(candidate).convergenceKey;
-    if (key) {
-      index.set(key, candidate);
-    }
-  }
+  const index = await queryConvergenceKeyIndex(db, type);
   cache.set(type, index);
   return index;
 };
 
 /**
  * Finds the object of `type` whose `meta.convergenceKey` equals `convergenceKey` — a durable query
- * (there is no `Filter` on the key itself, so every live candidate of `type` is read and matched).
- * `undefined` when no such object exists yet. Shared by {@link ensureByConvergenceKey} and the
+ * (there is no `Filter` on the key itself, so every candidate of `type` is read and matched), which
+ * may return a deleted object. `undefined` when no such object exists yet. Shared by {@link ensureByConvergenceKey} and the
  * array-fan-out fold-forward pass (`fold-forward.ts`), which must tell "child already exists, fold into
  * it" from "child missing, create it" apart before deciding what to write. Pass `cache` to fold several
  * calls against the same `type` into one query (see {@link ConvergenceKeyCache}).
@@ -65,9 +84,7 @@ export const findByConvergenceKey = async (
   if (cache) {
     return (await loadConvergenceKeyIndex(db, type, cache)).get(convergenceKey);
   }
-  return (await db.query(Filter.type(type)).run()).find(
-    (candidate) => Obj.getMeta(candidate).convergenceKey === convergenceKey,
-  );
+  return (await queryConvergenceKeyIndex(db, type)).get(convergenceKey);
 };
 
 /**
@@ -140,9 +157,13 @@ const addObject = (db: Database.Database, object: Obj.Unknown): void => {
 export const createObjectMigrationContext = (db: Database.Database): Migration.ObjectMigrationContext => ({
   db,
   ensure: async (type, convergenceKey, data) => {
-    const existing = (await db.query(Filter.type(type)).run()).find(
-      (candidate) => Obj.getMeta(candidate).convergenceKey === convergenceKey,
+    // Tombstones included, so a child the user deleted is not recreated; a live match wins.
+    const matches = (await db.query(Query.select(Filter.type(type)).options({ deleted: 'include' })).run()).filter(
+      (candidate) =>
+        Obj.getMeta(candidate).convergenceKey === convergenceKey &&
+        getObjectCore(candidate).getMergedInto() === undefined,
     );
+    const existing = matches.find((candidate) => !getObjectCore(candidate).isDeleted()) ?? matches[0];
     if (existing) {
       return Ref.make(existing);
     }

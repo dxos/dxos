@@ -6,13 +6,13 @@ import { type Heads } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Migration, Obj } from '@dxos/echo';
-import { EncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
-import { META_NAMESPACE, SYSTEM_NAMESPACE } from '../core-db/index.ts';
+import { META_NAMESPACE, type ObjectCore, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { getDecodedDataWithRefs } from './encoded-value.ts';
+import { encodedValuesEqual, getDecodedDataWithRefs, mapRefsToEncodedReferences } from './encoded-value.ts';
 import { assignPatch } from './migration-context.ts';
 
 //
@@ -54,13 +54,16 @@ export const fanInAbsorbMessage = (fanInId: string, parentId: string): string =>
 export type ResolvedPatch = {
   values: Record<string, unknown>;
   /**
-   * Keys whose resolved value came FROM THE CHILD: the parent had no value yet, or `collision` picked
-   * the child's value over a genuinely competing parent value. Excludes a key the parent's OWN
-   * pre-existing value won, and a key where parent and child already agreed (neither "absorbed" it —
-   * see {@link Migration.FanInMarkerSchema}'s `fromChild` field, which this is recorded into).
+   * Keys whose resolved value came FROM THE CHILD: the parent had no value yet, already held the
+   * child's value, or `collision` picked the child's value over a competing parent value. Excludes a
+   * key the parent's own value won (see {@link Migration.FanInMarkerSchema}'s `fromChild` field).
    */
   fromChild: readonly string[];
 };
+
+/** `value` as `core` would store it, for comparing against the raw document. */
+const encodeValue = (core: ObjectCore, value: unknown): unknown =>
+  core.encode(mapRefsToEncodedReferences({ value }).value);
 
 /**
  * Resolves `patch` (one child's proposed absorption) against `parent`'s CURRENT values: a key the
@@ -74,22 +77,26 @@ export const resolvePatch = (
   patch: Record<string, unknown>,
   collision: Migration.CollisionPolicy,
 ): ResolvedPatch => {
+  const core = getObjectCore(parent);
   const values: Record<string, unknown> = {};
   const fromChild: string[] = [];
   for (const [key, childValue] of Object.entries(patch)) {
-    const parentValue: unknown = Obj.getValue(parent, [key]);
-    if (parentValue === undefined) {
+    const rawParent = core.getRaw([DATA_NAMESPACE, key]);
+    const encodedChild = encodeValue(core, childValue);
+    // Equal values count as absorbed: another peer may already have absorbed this child, and every
+    // peer must record the same keys for the fold's `collision` bypass to agree.
+    if (rawParent === undefined || encodedValuesEqual(rawParent, encodedChild)) {
       values[key] = childValue;
       fromChild.push(key);
       continue;
     }
-    if (parentValue === childValue) {
-      values[key] = childValue; // Already agreed — neither side "absorbed" anything here.
-      continue;
-    }
+    const parentValue: unknown = Obj.getValue(parent, [key]);
     const resolved = resolveCollision(collision, parentValue, childValue, key);
     values[key] = resolved;
-    if (resolved === childValue) {
+    if (
+      resolved === childValue ||
+      (resolved !== parentValue && encodedValuesEqual(encodeValue(core, resolved), encodedChild))
+    ) {
       fromChild.push(key);
     }
   }
