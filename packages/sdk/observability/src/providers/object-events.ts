@@ -10,6 +10,7 @@ import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import * as Database from '@dxos/echo/Database';
 import { log } from '@dxos/log';
 import { type EventAttributes, type RemoteEvents, TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -58,32 +59,33 @@ export const listen = (
     const send = (event: string, properties: Record<string, unknown>) =>
       Effect.try(() => capture(event, properties)).pipe(Effect.catch((error) => Effect.sync(() => log.catch(error))));
 
-    // Keyed by object id so removing a draft interrupts its pending report.
+    // Keyed by space and object so removing a draft interrupts its own pending report and no other space's.
     const pending = yield* FiberMap.make<string>();
     yield* Stream.fromQueue(queue).pipe(
       Stream.runForEach(({ name, attributes }) =>
         Effect.gen(function* () {
           const { spaceId, objectId, typename, relation, userType, origin } = attributes;
+          const draftKey = `${String(spaceId)}/${String(objectId)}`;
           switch (name) {
-            case 'echo.object.add': {
+            case Database.TraceEvents.objectAdd: {
               if (typeof objectId !== 'string' || (relation !== true && userType !== true)) {
                 return;
               }
               const event = relation === true ? EVENTS.relationAdd : EVENTS.objectAdd;
               yield* FiberMap.run(
                 pending,
-                objectId,
+                draftKey,
                 Effect.sleep(draftWindow).pipe(Effect.andThen(send(event, { spaceId, objectId, typename, origin }))),
               );
               return;
             }
 
-            case 'echo.object.remove': {
+            case Database.TraceEvents.objectRemove: {
               if (typeof objectId !== 'string') {
                 return;
               }
-              if (yield* FiberMap.has(pending, objectId)) {
-                yield* FiberMap.remove(pending, objectId);
+              if (yield* FiberMap.has(pending, draftKey)) {
+                yield* FiberMap.remove(pending, draftKey);
                 return;
               }
               if (relation === true || userType === true) {
@@ -93,12 +95,12 @@ export const listen = (
               return;
             }
 
-            case 'echo.type.add': {
+            case Database.TraceEvents.typeAdd: {
               yield* send(EVENTS.typeAdd, { spaceId, typename, version: attributes.version, origin });
               return;
             }
 
-            case 'echo.feed.append': {
+            case Database.TraceEvents.feedAppend: {
               yield* send(EVENTS.feedAppend, { spaceId, feedId: attributes.feedId, objectId, typename, origin });
               return;
             }

@@ -580,7 +580,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // can only be typed as `Type.AnyEntity`; the caller's `T` is verified by the `Type.isType`
     // invariant inside `_addPersistentSchema`, not by the compiler.
     const persisted = this._addPersistentSchema(type, opts?.origin) as T;
-    trace.events.emit('echo.type.add', {
+    trace.events.emit(Database.TraceEvents.typeAdd, {
       spaceId: this.spaceId,
       typename,
       version,
@@ -629,7 +629,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     EchoReactiveHandler.instance.saveRefs(target);
     this._entityManager.addCore(getObjectCore(obj), opts);
     if (created) {
-      trace.events.emit('echo.object.add', this.#entityAttributes(obj, opts?.origin));
+      trace.events.emit(Database.TraceEvents.objectAdd, this.#entityAttributes(obj, opts?.origin));
     }
     return obj;
   }
@@ -637,7 +637,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   remove<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.WriteOptions): void {
     assertArgument(isEchoObject(obj), 'obj');
     this._entityManager.removeCore(getObjectCore(obj));
-    trace.events.emit('echo.object.remove', this.#entityAttributes(obj, opts?.origin));
+    trace.events.emit(Database.TraceEvents.objectRemove, this.#entityAttributes(obj, opts?.origin));
   }
 
   /** What ECHO's trace events report about a written entity. */
@@ -655,7 +655,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   #emitFeedAppend(feed: Feed.Feed, entities: Entity.Unknown[], origin?: Database.Origin): void {
     for (const entity of entities) {
-      trace.events.emit('echo.feed.append', { ...this.#entityAttributes(entity, origin), feedId: feed.id });
+      trace.events.emit(Database.TraceEvents.feedAppend, {
+        ...this.#entityAttributes(entity, origin),
+        feedId: feed.id,
+      });
     }
   }
 

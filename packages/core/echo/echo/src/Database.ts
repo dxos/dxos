@@ -73,6 +73,17 @@ export const Origin: Context.Reference<Origin | undefined> = Context.Reference<O
   { defaultValue: () => undefined },
 );
 
+/**
+ * The trace events ECHO emits on `trace.events` from `@dxos/tracing` for local writes, each with the write's
+ * {@link Origin}. Replicated writes are not reported.
+ */
+export const TraceEvents = {
+  objectAdd: 'echo.object.add',
+  objectRemove: 'echo.object.remove',
+  typeAdd: 'echo.type.add',
+  feedAppend: 'echo.feed.append',
+} as const;
+
 /** Options for writes that only carry attribution. */
 export type WriteOptions = {
   /** See {@link Origin}. */
