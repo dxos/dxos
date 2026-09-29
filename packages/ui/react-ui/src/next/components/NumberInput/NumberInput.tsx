@@ -4,9 +4,12 @@
 
 import { NumberInput as NumberInputPrimitive } from '@ark-ui/react/number-input';
 import React, { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
+
+import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { Button } from '../Button/index.ts';
@@ -38,7 +41,9 @@ export type NumberInputProps = ThemedClassName<
   'autoFocus'?: boolean;
   /** Hide the trailing decrement and increment buttons (the arrow keys still step). */
   'stepper'?: boolean;
+  /** Overrides the translated `number-input.increment.label`. */
   'incrementLabel'?: string;
+  /** Overrides the translated `number-input.decrement.label`. */
   'decrementLabel'?: string;
   'aria-label'?: string;
   'data-testid'?: string;
@@ -60,42 +65,57 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       placeholder,
       autoFocus,
       stepper = true,
-      incrementLabel = 'Increment',
-      decrementLabel = 'Decrement',
+      incrementLabel,
+      decrementLabel,
       'aria-label': ariaLabel,
       'data-testid': testId,
       ...props
     },
     forwardedRef,
-  ) => (
-    <NumberInputPrimitive.Root
-      {...props}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={onValueChange && (({ value, valueAsNumber }) => onValueChange(value, valueAsNumber))}
-      className={recipes.controlRoot()}
-    >
-      <NumberInputPrimitive.Control data-testid={testId} className={mx(recipes.numberInput(), classNames)}>
-        <NumberInputPrimitive.Input
-          placeholder={placeholder}
-          autoFocus={autoFocus}
-          aria-label={ariaLabel}
-          className={recipes.inputField()}
-          ref={forwardedRef}
-        />
-        {stepper && (
-          <span data-scope='number-input' data-part='end' className={recipes.inputAdornment()}>
-            <NumberInputPrimitive.DecrementTrigger asChild>
-              <Button icon='ph--minus--regular' label={decrementLabel} iconOnly variant='ghost' showTooltip={false} />
-            </NumberInputPrimitive.DecrementTrigger>
-            <NumberInputPrimitive.IncrementTrigger asChild>
-              <Button icon='ph--plus--regular' label={incrementLabel} iconOnly variant='ghost' showTooltip={false} />
-            </NumberInputPrimitive.IncrementTrigger>
-          </span>
-        )}
-      </NumberInputPrimitive.Control>
-    </NumberInputPrimitive.Root>
-  ),
+  ) => {
+    const { t } = useTranslation(translationKey);
+    return (
+      <NumberInputPrimitive.Root
+        {...props}
+        value={value}
+        defaultValue={defaultValue}
+        onValueChange={onValueChange && (({ value, valueAsNumber }) => onValueChange(value, valueAsNumber))}
+        className={recipes.controlRoot()}
+      >
+        <NumberInputPrimitive.Control data-testid={testId} className={mx(recipes.numberInput(), classNames)}>
+          <NumberInputPrimitive.Input
+            placeholder={placeholder}
+            autoFocus={autoFocus}
+            aria-label={ariaLabel}
+            className={recipes.inputField()}
+            ref={forwardedRef}
+          />
+          {stepper && (
+            <span data-scope='number-input' data-part='end' className={recipes.inputAdornment()}>
+              <NumberInputPrimitive.DecrementTrigger asChild>
+                <Button
+                  icon='ph--minus--regular'
+                  label={decrementLabel ?? t('number-input.decrement.label')}
+                  iconOnly
+                  variant='ghost'
+                  showTooltip={false}
+                />
+              </NumberInputPrimitive.DecrementTrigger>
+              <NumberInputPrimitive.IncrementTrigger asChild>
+                <Button
+                  icon='ph--plus--regular'
+                  label={incrementLabel ?? t('number-input.increment.label')}
+                  iconOnly
+                  variant='ghost'
+                  showTooltip={false}
+                />
+              </NumberInputPrimitive.IncrementTrigger>
+            </span>
+          )}
+        </NumberInputPrimitive.Control>
+      </NumberInputPrimitive.Root>
+    );
+  },
 );
 
 NumberInput.displayName = 'Next.NumberInput';

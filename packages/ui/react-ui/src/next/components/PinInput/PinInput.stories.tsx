@@ -101,7 +101,9 @@ export const Test: Story = {
     await expect(cells[0]).toHaveAttribute('autocomplete', 'one-time-code');
 
     const { userEvent: real } = await import('vitest/browser');
-    await real.click(cells[0]);
+    // Clicking the Field label focuses the first cell, not the hidden input the label points at.
+    await real.click(canvas.getByText('Code', { selector: 'label' }));
+    await expect(cells[0]).toHaveFocus();
     await realType('12345');
     await waitFor(() => expect(byTestId(md, 'pin-md-value')).toHaveTextContent('12345'));
     await expect(cells[5]).toHaveFocus();

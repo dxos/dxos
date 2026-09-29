@@ -501,8 +501,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
       `type`, `onValueComplete`; each cell is a `--nx-control-size` square. **`Next.NumberInput`** is Ark
       `number-input` in the control row with trailing decrement/increment Buttons (`stepper={false}` hides them);
       **`Next.PasswordInput`** is Ark `password-input` with an eye toggle whose label follows the state
-      (`ignorePasswordManagers` is Input's `noAutoFill`). Stepper and toggle labels are English props, since
-      translations belong to another change (AUDIT 2.10).
+      (`ignorePasswordManagers` is Input's `noAutoFill`). Stepper and toggle labels are translated (55).
     - **The control row is shared, not a new part.** Input's adorned row (`.nx-input-row`: adornments, outline ring,
       disabled dimming, a trailing icon-only Button inset to fit) now also hosts DateInput, NumberInput and
       PasswordInput; a popup trigger is a Button in its `end` slot. A frame for third-party editors stays with AUDIT
@@ -513,6 +512,13 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
       `variant='subdued'`.
     - **Tests.** zag reads segment and PIN digits from React's `onBeforeInput`, which only trusted key presses raise, so
       those stories type with the runner's real keyboard (`vitest/browser`) and PinInput also clicks with it.
+
+55. **Field follow-ups.** NumberInput's stepper and PasswordInput's toggle take their default labels from react-ui's
+    `number-input.increment|decrement.label` and `password-input.show|hide.label` translations (as SystemButton, 51);
+    the `*Label` props still override them. A label click cannot focus DateInput's or PinInput's hidden input, which is
+    what `Field.Label` points at, so each marks the part to focus (`LABEL_TARGET_ATTRIBUTE`: the first editable
+    segment, the first cell) and `Field.Label` focuses it, found beside the field's control element (a DOM lookup, no
+    context). Covered by the DateInput and PinInput `Test`s. Range/multiple date selection stays deferred.
 
 ## Phase 3: react-ui-form port
 

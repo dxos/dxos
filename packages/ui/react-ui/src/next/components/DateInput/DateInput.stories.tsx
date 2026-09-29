@@ -176,6 +176,10 @@ export const Test: Story = {
     ]);
     await expect(segmentTypes(canvas.getByRole('group', { name: 'Alarm' }))).toEqual(['hour', 'minute', 'dayPeriod']);
 
+    // Clicking the Field label focuses the first segment, not the hidden input the label points at.
+    await userEvent.click(canvas.getByText('Due', { selector: 'label' }));
+    await expect(within(due).getAllByRole('spinbutton')[0]).toHaveFocus();
+
     // Typing digits fills each segment and advances; the value is reported once complete.
     const empty = canvas.getByRole('group', { name: 'Empty' });
     await userEvent.click(within(empty).getAllByRole('spinbutton')[0]);

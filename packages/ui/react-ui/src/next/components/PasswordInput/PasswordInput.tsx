@@ -4,9 +4,12 @@
 
 import { PasswordInput as PasswordInputPrimitive, usePasswordInputContext } from '@ark-ui/react/password-input';
 import React, { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
+
+import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { Button } from '../Button/index.ts';
@@ -31,7 +34,9 @@ export type PasswordInputProps = ThemedClassName<
   'onVisibleChange'?: (visible: boolean) => void;
   'placeholder'?: string;
   'autoFocus'?: boolean;
+  /** Overrides the translated `password-input.show.label`. */
   'showLabel'?: string;
+  /** Overrides the translated `password-input.hide.label`. */
   'hideLabel'?: string;
   'aria-label'?: string;
   'data-testid'?: string;
@@ -40,13 +45,14 @@ export type PasswordInputProps = ThemedClassName<
 type VisibilityTriggerProps = Pick<PasswordInputProps, 'showLabel' | 'hideLabel'>;
 
 /** The eye toggle names the action it performs, which follows the machine's visibility. */
-const VisibilityTrigger = ({ showLabel = 'Show password', hideLabel = 'Hide password' }: VisibilityTriggerProps) => {
+const VisibilityTrigger = ({ showLabel, hideLabel }: VisibilityTriggerProps) => {
+  const { t } = useTranslation(translationKey);
   const { visible } = usePasswordInputContext();
   return (
     <PasswordInputPrimitive.VisibilityTrigger asChild>
       <Button
         icon={visible ? 'ph--eye-slash--regular' : 'ph--eye--regular'}
-        label={visible ? hideLabel : showLabel}
+        label={visible ? (hideLabel ?? t('password-input.hide.label')) : (showLabel ?? t('password-input.show.label'))}
         iconOnly
         variant='ghost'
         showTooltip={false}

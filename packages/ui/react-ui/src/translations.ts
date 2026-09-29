@@ -58,6 +58,11 @@ export const translations = [
         'calendar.footer.today.label': 'Today',
 
         'trigger-button.label': 'Open',
+
+        'number-input.increment.label': 'Increment',
+        'number-input.decrement.label': 'Decrement',
+        'password-input.show.label': 'Show password',
+        'password-input.hide.label': 'Hide password',
       },
     },
   },

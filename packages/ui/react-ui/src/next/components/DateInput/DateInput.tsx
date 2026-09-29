@@ -19,6 +19,7 @@ import { translationKey } from '#translations';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
+import { LABEL_TARGET_ATTRIBUTE } from '../Field/index.ts';
 import {
   type DateInputGranularity,
   type DateInputType,
@@ -166,6 +167,8 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
       positioning: { placement: 'bottom-end', gutter: 2 },
     });
 
+    const segmentList = dateInput.getSegments();
+    const firstEditable = segmentList.findIndex((segment) => segment.isEditable);
     const segments = (
       <DateInputPrimitive.Control className={recipes.dateInputSegments()}>
         <DateInputPrimitive.SegmentGroup
@@ -173,8 +176,13 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
           aria-describedby={field?.ariaDescribedby}
           className={recipes.dateInputSegmentGroup()}
         >
-          {dateInput.getSegments().map((segment, index) => (
-            <DateInputPrimitive.Segment key={index} segment={segment} className={recipes.dateInputSegment()} />
+          {segmentList.map((segment, index) => (
+            <DateInputPrimitive.Segment
+              key={index}
+              segment={segment}
+              {...(index === firstEditable && { [LABEL_TARGET_ATTRIBUTE]: '' })}
+              className={recipes.dateInputSegment()}
+            />
           ))}
         </DateInputPrimitive.SegmentGroup>
       </DateInputPrimitive.Control>

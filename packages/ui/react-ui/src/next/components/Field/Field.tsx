@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Field as FieldPrimitive } from '@ark-ui/react/field';
+import { Field as FieldPrimitive, useFieldContext } from '@ark-ui/react/field';
 import { useFieldsetContext } from '@ark-ui/react/fieldset';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
@@ -80,14 +80,34 @@ type FieldLabelProps = ThemedClassName<FieldPrimitive.LabelProps> & {
   srOnly?: boolean;
 };
 
-const FieldLabel = forwardRef<HTMLLabelElement, FieldLabelProps>(({ classNames, srOnly, ...props }, forwardedRef) => (
-  <FieldPrimitive.Label
-    {...props}
-    data-sr-only={srOnly ? '' : undefined}
-    className={mx(recipes.label(), classNames)}
-    ref={forwardedRef}
-  />
-));
+/**
+ * Marks the part a label click focuses in a control whose labelled element is a hidden input (DateInput's first
+ * segment, PinInput's first cell), since the browser cannot focus the hidden input the label points at.
+ */
+const LABEL_TARGET_ATTRIBUTE = 'data-label-target';
+
+const FieldLabel = forwardRef<HTMLLabelElement, FieldLabelProps>(
+  ({ classNames, srOnly, onClick, ...props }, forwardedRef) => {
+    const field = useFieldContext();
+    return (
+      <FieldPrimitive.Label
+        {...props}
+        onClick={(event) => {
+          onClick?.(event);
+          const control = field && event.currentTarget.ownerDocument.getElementById(field.ids.control);
+          const target = control?.parentElement?.querySelector<HTMLElement>(`[${LABEL_TARGET_ATTRIBUTE}]`);
+          if (!event.defaultPrevented && target) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
+        data-sr-only={srOnly ? '' : undefined}
+        className={mx(recipes.label(), classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 FieldLabel.displayName = 'Next.Field.Label';
 
@@ -123,6 +143,8 @@ export const Field = {
   HelperText: FieldHelperText,
   ErrorText: FieldErrorText,
 };
+
+export { LABEL_TARGET_ATTRIBUTE };
 
 export type {
   FieldErrorTextProps,

@@ -10,6 +10,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
+import { LABEL_TARGET_ATTRIBUTE } from '../Field/index.ts';
 
 export type PinInputProps = ThemedClassName<
   Pick<
@@ -91,7 +92,12 @@ export const PinInput = forwardRef<HTMLDivElement, PinInputProps>(
           ref={forwardedRef}
         >
           {Array.from({ length }, (_, index) => (
-            <PinInputPrimitive.Input key={index} index={index} className={recipes.pinInputCell()} />
+            <PinInputPrimitive.Input
+              key={index}
+              index={index}
+              {...(index === 0 && { [LABEL_TARGET_ATTRIBUTE]: '' })}
+              className={recipes.pinInputCell()}
+            />
           ))}
         </PinInputPrimitive.Control>
         <PinInputPrimitive.HiddenInput />
