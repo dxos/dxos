@@ -218,12 +218,12 @@ two ways to do it.
 This is the loop to use while you work on a plugin. Run Vite's dev server in your plugin's directory:
 
 ```bash
-vite --strictPort
+vite
 ```
 
 `composerPlugin` binds it to port **3967** and serves a dev manifest at `http://localhost:3967/manifest.json`,
-which points at your unbundled source. `--strictPort` makes Vite fail when the port is taken; without it Vite
-moves to the next free port, and Composer keeps loading from 3967.
+which points at your unbundled source. If the port is taken, Vite fails rather than moving to another one,
+since Composer loads from 3967.
 
 In Composer, click **Plugin Settings** in the rail and open **Plugins**. Under **Dev Server**, the **Manifest URL** defaults to
 `http://localhost:3967/manifest.json`; change it only if you passed another `port` to `composerPlugin`. Click
@@ -258,7 +258,7 @@ server; assign them to the agent to start it. The assistant cannot keep a dev se
 yourself once the chat asks, from the Composer app directory:
 
 ```bash
-node_modules/.bin/vite temp/plugins/world-clock --strictPort
+node_modules/.bin/vite temp/plugins/world-clock
 ```
 
 When the chat says the plugin is ready, turn on **Dev Server** as above.

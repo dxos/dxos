@@ -119,7 +119,7 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
     - Composer is a bundled build served by `vite preview` on :4173 against EDGE preview — a plugin's bare
       `@dxos/*` imports resolve through the bundle's import map, and EDGE production rejects the AI requests
     - the plugin's Vite dev server serves `temp/plugins/world-clock` on :3967 (`node_modules/.bin/vite
-      temp/plugins/world-clock --strictPort` from the Composer app directory), started from its `dx.config.ts`,
+      temp/plugins/world-clock` from the Composer app directory), started from its `dx.config.ts`,
       `vite.config.ts` and `tsconfig.json`; the Computer shell kills scripts that outlive its timeout, so the
       agent cannot run it
     - Plugins → Dev Server is off

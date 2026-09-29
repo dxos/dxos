@@ -146,7 +146,7 @@ const stopDevServer = async () => {
 const startDevServer = async () => {
   const log = openSync(DEV_SERVER_LOG, 'w');
   const vite = join(COMPOSER_APP, 'node_modules/vite/bin/vite.js');
-  const child = spawn(process.execPath, [vite, 'temp/plugins/world-clock', '--strictPort'], {
+  const child = spawn(process.execPath, [vite, 'temp/plugins/world-clock'], {
     cwd: COMPOSER_APP,
     detached: true,
     stdio: ['ignore', log, log],
