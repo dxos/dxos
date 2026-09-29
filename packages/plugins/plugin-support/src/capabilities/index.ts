@@ -44,7 +44,7 @@ export const Tour = Capability.lazyModule(
   'Tour',
   {
     provides: [AppCapabilities.Tour],
-    environments: [],
+    environments: ['browser', 'tauri'],
     props: (options: { helpSteps?: () => Promise<TourModule.Step[]> }) => options.helpSteps,
   },
   () => import('./tour.ts'),

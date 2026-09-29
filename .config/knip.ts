@@ -316,6 +316,8 @@ const bundledDependencies = (dir: string): string[] =>
     return [name, ...(manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).dependencies ?? {}) : [])];
   });
 
+const DX_PLUGIN_GEN_INPUT = 'src/capabilities/index.{ts,tsx}';
+
 /**
  * Files the shared root configs reach into a workspace for by path — the vitest browser log setup
  * is loaded this way. Nothing in the owning workspace imports them.
@@ -430,6 +432,7 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@dxos/echo',
     '@dxos/echo-react',
     '@dxos/graph',
+    '@dxos/react-ui-attention',
     '@dxos/react-ui-geo',
   ],
   // edge-compute generates a function entrypoint containing
@@ -517,6 +520,7 @@ for (const manifest of globSync(
     ...pathResolvedEntry(dir),
     ...moonReferencedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
+    DX_PLUGIN_GEN_INPUT,
   ];
 
   workspaces[dir] = {

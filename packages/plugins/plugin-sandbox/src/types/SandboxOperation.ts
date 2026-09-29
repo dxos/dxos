@@ -122,3 +122,28 @@ export const DownloadFile = Operation.make({
   }),
   services: [Database.Service, SandboxService.Service],
 });
+
+export const PublishFiles = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sandbox.publishFiles'),
+    name: 'PublishFiles',
+    description:
+      'Serves a directory of a local sandbox read-only over HTTP on this machine and returns its base URL, so this app can load what a command built there, such as a plugin manifest. Desktop app only.',
+    icon: 'ph--share-network--regular',
+  },
+  input: Schema.Struct({
+    sandbox: SandboxRef,
+    path: Schema.String.annotate({
+      description: 'Directory in the sandbox to serve, relative to its workspace (or under /workspace).',
+    }),
+  }),
+  output: Schema.Struct({
+    url: Schema.String.annotate({
+      description: 'Base URL of the directory, ending in "/"; append a file path inside it. Empty when it failed.',
+    }),
+    error: Schema.optional(Schema.String).annotate({
+      description: 'Why the directory could not be served; set iff url is empty.',
+    }),
+  }),
+  services: [Database.Service, SandboxService.Service],
+});

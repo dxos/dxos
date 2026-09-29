@@ -788,8 +788,8 @@ projects:
     summary: 'Next-generation react-ui primitives as a parallel `Next.*` namespace: sizes/levels as data-attribute CSS variables, zag-machine behavior (Solid-ready layering), components own padding and containers own gaps, grid/Column model for scrolling containers with gutters.'
     tasks: packages/ui/react-ui/src/next/TASKS.md
     design: packages/ui/react-ui/src/next/DESIGN.md
-    prs: [13502]
-    resume: 'PR #13502 in merge queue (auto-merge on): Phase 1 + Phase 2 (FieldSet, Card+Poster, Image, Collapsible, Menu, Switch, Tooltip), 39 play tests green. NEXT: land; then Phase 3 (first plugin adoption via exported next subpath, Tooltip focus-swap fix, React/Solid parity).'
+    prs: [13502, 13504]
+    resume: '#13502 MERGED (Phases 1-2). #13504 OPEN: Phase 3 part 1 (Tooltip/Switch/IconButton fixes, @dxos/react-ui/next export, Textarea/DateInput/Popover/Combobox/Tag/ToggleIconButton), 111 play tests green. NEXT: land #13504; then react-ui-form/next core, settings-layout decision, Ref/lookup fields, pilot plugin.'
 ended:
   - name: task-planning-skill
     user: burdon

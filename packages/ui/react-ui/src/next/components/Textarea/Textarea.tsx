@@ -1,0 +1,38 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Field as FieldPrimitive } from '@ark-ui/react/field';
+import React, { type TextareaHTMLAttributes } from 'react';
+
+import { composable, composableProps } from '../../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+
+/** Fewest lines a textarea shows, so it never reads as a single-line Input. */
+const MIN_ROWS = 3;
+
+export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  /** Grow with the content from `rows` lines (at least 3) instead of scrolling. */
+  autoResize?: boolean;
+};
+
+/** Multi-line text at control width; inside a `Field.Root` it takes the field's id, label and description wiring. */
+export const Textarea = composable<HTMLTextAreaElement, TextareaProps>(
+  ({ rows = MIN_ROWS, autoResize = false, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props, { classNames: recipes.textarea() });
+    return (
+      <FieldPrimitive.Textarea
+        {...rest}
+        // Auto-resize measures from `height: auto`, where `rows` sets the intrinsic height, so rows stay the minimum.
+        rows={Math.max(rows, MIN_ROWS)}
+        autoresize={autoResize}
+        data-scope='textarea'
+        data-part='root'
+        className={className}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+Textarea.displayName = 'Next.Textarea';

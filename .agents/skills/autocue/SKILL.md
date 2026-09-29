@@ -293,6 +293,60 @@ Four things about storybook that cost a cycle each:
   so it sits over a composer or a footer toolbar and swallows the click. Clear it, interact, caption
   again.
 
+### The native desktop app (Tauri)
+
+The same driver drives the desktop app with `--target tauri`: every op, the overlay, captions, cuts, flow
+scripts and the trimmer work unchanged. Playwright cannot attach to a WebKitGTK or WKWebView webview, so the
+driver speaks W3C WebDriver instead — `tauri-driver` hands the session to `WebKitWebDriver`, whose pointer
+and key actions arrive in the page as **trusted** platform events (menus open, CodeMirror takes typed text).
+`scripts/tauri/page.mjs` is a Playwright-shaped `page` over that session and `scripts/tauri/selectors.mjs`
+evaluates Playwright's selector syntax in the page (`>>`, `nth=`, `text=`, `role=…[name=…]`, `:visible`,
+`:has-text()`, `:text-is()`, `:has()`), so a flow written for Chromium runs as is. What it does not have:
+open shadow roots are not pierced, the log tap misses entries logged before the first drain, and there is
+no `page.on('console' | 'response')`.
+
+**Linux (and the cloud sandbox) only.** macOS has no WebDriver for WKWebView, so there is no route there;
+Windows would work through `msedgedriver` but is untested.
+
+One-time setup:
+
+```bash
+apt-get install -y libwebkit2gtk-4.1-dev webkit2gtk-driver xvfb ffmpeg bubblewrap socat
+cargo install tauri-driver --locked
+node .agents/skills/autocue/scripts/tauri/smoke.mjs   # the adapter against stock MiniBrowser, ~5s
+```
+
+Build the app — a release build, and with `custom-protocol`: a bare `cargo build` leaves Tauri in `cfg(dev)`,
+which embeds no frontend and serves blank pages. The frontend is `out/composer`, so bundle it first:
+
+```bash
+DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:bundle
+moon run composer-app:stage-sandbox-helper        # dx-sandbox beside the binary, for local sandboxes
+(cd packages/apps/composer-app/src-tauri && cargo build --release --features tauri/custom-protocol)
+node .agents/skills/autocue/scripts/driver.mjs --target tauri --out /tmp/demo
+```
+
+- **The app boots where it always does**, its channel's `http://localhost:<port>`, so `goto` with no `url`
+  waits for the ready plank and cuts the boot without navigating; `restart` reloads that origin.
+- **With no `DISPLAY` the app gets its own Xvfb screen** sized to the window in device pixels (`--width`,
+  `--height`, `--scale`), and `scripts/tauri/recorder.mjs` grabs it with ffmpeg: H.264 while recording, VP9
+  once on `stop`, from the last `cut`. `--headed on` uses your `$DISPLAY` instead.
+- **`--theme` works through GTK** (`GTK_THEME=Adwaita:dark`), and the cloud sandbox's proxy through GLib's
+  `https_proxy`, which the launcher sets; WebKit needs neither of Chromium's TLS flags.
+- **The app keeps a profile** (`~/.local/share/org.dxos.composer`), like manual mode's Chromium profile: its
+  identity and spaces carry over between runs. Delete that directory for a first-run take.
+- `--app <binary>` drives another build; `--driver-port` moves tauri-driver off 4444.
+- **Bundle with `VITE_DX_STORAGE=memory` for Linux.** WebKitGTK cannot hand a worker an OPFS sync access
+  handle (its file-handle IPC is Cocoa-only), so Composer's SQLite store cannot open there and the app stops
+  at a System Error. The app switches the needed WebKit features on itself (`src-tauri/src/webkit_features.rs`),
+  but the handle is not a feature. With the memory store every launch — and every reload — is a new identity;
+  only localStorage (plugin settings, layout) persists, so a flow that reloads re-selects the first space.
+- **Nothing on Xvfb may disable the DMA-BUF renderer.** `WEBKIT_DISABLE_DMABUF_RENDERER=1` makes the app
+  segfault in `AcceleratedBackingStore::update` on the first composited frame; the launcher sets
+  `LIBGL_ALWAYS_SOFTWARE=1` instead. For a crash, run the app under `gdb` via a wrapper passed as `--app`,
+  with `libwebkit2gtk-4.1-0-dbgsym` from `ddebs.ubuntu.com` for symbols.
+- **Restart the driver after editing `scripts/tauri/*`**: the adapter loads once. Flow scripts reload per `run`.
+
 ## 2. Start the driver
 
 ```bash

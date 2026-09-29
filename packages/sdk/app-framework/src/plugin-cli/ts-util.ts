@@ -128,7 +128,10 @@ export const topLevelLocalDeclarations = (sourceFile: SourceFile): LocalDeclarat
           out.push({ name: decl.name.text, text: statementTextWithLeadingComments(sourceFile, stmt) });
         }
       }
-    } else if (ts.isFunctionDeclaration(stmt) && stmt.name) {
+    } else if (
+      (ts.isFunctionDeclaration(stmt) || ts.isTypeAliasDeclaration(stmt) || ts.isInterfaceDeclaration(stmt)) &&
+      stmt.name
+    ) {
       out.push({ name: stmt.name.text, text: statementTextWithLeadingComments(sourceFile, stmt) });
     }
   }

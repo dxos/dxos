@@ -27,7 +27,7 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.t
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: SheetEvents.Start,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const ComputeGraphRegistry = Capability.lazyModule(
   'ComputeGraphRegistry',
@@ -42,7 +42,7 @@ export const ComputeGraphRegistry = Capability.lazyModule(
   () => import('./compute-graph-registry.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
@@ -67,11 +67,11 @@ export const SheetState = Capability.lazyModule(
   () => import('./state.ts'),
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: SheetEvents.Start,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

@@ -33,7 +33,7 @@ type FieldSetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
   size?: Size;
 };
 
-/** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or IconButtons. */
+/** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or icon-only Buttons. */
 const FieldSetLegend = forwardRef<HTMLLegendElement, FieldSetLegendProps>(
   ({ classNames, size = 'sm', ...props }, forwardedRef) => (
     <FieldsetPrimitive.Legend

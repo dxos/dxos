@@ -24,4 +24,13 @@
   .nx-image[data-fit='contain'] > img {
     object-fit: contain;
   }
+
+  .nx-image-clickable {
+    cursor: pointer;
+  }
+  /* An outline, not the inset ring: the image fills the frame and would paint over an inset shadow. */
+  .nx-image-clickable:focus-visible {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
 }

@@ -5,6 +5,7 @@
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
@@ -18,27 +19,38 @@ export const DEFAULT_PORT = 8080;
 
 type TestEdgeWsServerProps = {
   admitConnection?: Trigger;
+  /** Resolves when the numbered upgrade attempt (from 1) may complete; overrides `admitConnection`. */
+  admitConnectionAttempt?: (attempt: number) => Promise<void>;
   payloadDecoder?: (payload: Uint8Array) => any;
   messageHandler?: (payload: any) => Promise<Uint8Array | undefined>;
 };
 
 export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestEdgeWsServerProps) => {
+  const admittedAttempts: number[] = [];
   const wsServer = new WebSocket.Server({
     port,
-    verifyClient: createConnectionDelayHandler(params),
+    verifyClient: createConnectionDelayHandler(params, admittedAttempts),
     handleProtocols: () => EdgeWebsocketProtocol.V1,
   });
 
-  let connection: { ws: WebSocket; muxer: WebSocketMuxer } | undefined;
+  // Open sockets in admission order. Like EDGE's router, the server talks to the newest open one.
+  const connections: { ws: WebSocket; muxer: WebSocketMuxer }[] = [];
+  const newestConnection = () => connections.at(-1);
+  const requireNewestConnection = () => {
+    const connection = newestConnection();
+    invariant(connection, 'The test server has no open connection.');
+    return connection;
+  };
 
   const messageSink: any[] = [];
   const messageSourceLog: any[] = [];
   const closeTrigger = new Trigger();
-  const sendResponseMessage = createResponseSender(() => connection!.muxer);
+  const sendResponseMessage = createResponseSender(() => requireNewestConnection().muxer);
 
   wsServer.on('connection', (ws: WebSocket) => {
     const muxer = new WebSocketMuxer(ws);
-    connection = { ws, muxer };
+    const connection = { ws, muxer };
+    connections.push(connection);
     ws.on('error', (err: Error) => log.catch(err));
     ws.on('message', async (data: any) => {
       if (String(data) === '__ping__') {
@@ -53,7 +65,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
       messageSourceLog.push(request.source);
       if (params?.messageHandler) {
         const responsePayload = await params.messageHandler(requestPayload);
-        if (responsePayload && connection) {
+        if (responsePayload && newestConnection()) {
           sendResponseMessage(request, responsePayload);
         }
       }
@@ -62,10 +74,9 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     });
 
     ws.on('close', () => {
-      // During a reconnect the new connection may be admitted before the old
-      // socket's close event fires; only clear if this socket is still current.
-      if (connection?.ws === ws) {
-        connection = undefined;
+      const index = connections.indexOf(connection);
+      if (index !== -1) {
+        connections.splice(index, 1);
       }
       closeTrigger.wake();
     });
@@ -77,29 +88,40 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     messageSourceLog,
     endpoint: `ws://127.0.0.1:${port}`,
     cleanup: () => wsServer.close(),
-    currentConnection: () => connection,
+    currentConnection: newestConnection,
+    openConnectionCount: () => connections.length,
+    /** Upgrade attempts admitted so far, by number; an admitted attempt's socket may already be gone. */
+    admittedAttempts: () => [...admittedAttempts],
     sendResponseMessage,
     sendMessage: (msg: Message) => {
-      return connection!.muxer.send(msg);
+      return requireNewestConnection().muxer.send(msg);
     },
     closeConnection: () => {
       closeTrigger.reset();
-      connection!.ws.close(1011);
+      requireNewestConnection().ws.close(1011);
       return closeTrigger.wait();
     },
   };
 };
 
-const createConnectionDelayHandler = (params: TestEdgeWsServerProps | undefined) => {
+const createConnectionDelayHandler = (params: TestEdgeWsServerProps | undefined, admittedAttempts: number[]) => {
+  let attempts = 0;
   return (_: any, callback: (admit: boolean) => void) => {
-    if (params?.admitConnection) {
+    const attempt = ++attempts;
+    const admit = () => {
+      callback(true);
+      admittedAttempts.push(attempt);
+    };
+    if (params?.admitConnectionAttempt) {
+      void params.admitConnectionAttempt(attempt).then(admit);
+    } else if (params?.admitConnection) {
       log('delaying edge connection admission');
       void params.admitConnection.wait().then(() => {
-        callback(true);
+        admit();
         log('edge connection admitted');
       });
     } else {
-      callback(true);
+      admit();
     }
   };
 };
