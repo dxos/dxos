@@ -81,11 +81,6 @@ export type ReorderListController<T> = {
     refs: { row: HTMLElement; handle: HTMLElement },
     onItemState: (state: ReorderItemState) => void,
   ) => () => void;
-  /**
-   * Bind the list element as a drop target that accepts this list's rows but drops nothing, so the gaps between rows keep
-   * the drag's move cursor instead of falling through to whatever lies beneath. Returns a cleanup function.
-   */
-  bindList: (element: HTMLElement) => () => void;
 };
 
 export type UseReorderListReturn<T> = {
@@ -205,7 +200,16 @@ export const useReorderList = <T>({
           return () => {};
         }
         const allowedEdges: Edge[] = axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right'];
+        // pragmatic-drag-and-drop sets `dropEffect` only over a drop target and never `effectAllowed`, so over the source
+        // row (which rejects itself) the browser falls back to its copy cursor, which flickers as the pointer crosses rows.
+        const handleNativeDragStart = (event: DragEvent) => {
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+          }
+        };
+        refs.row.addEventListener('dragstart', handleNativeDragStart);
         return combine(
+          () => refs.row.removeEventListener('dragstart', handleNativeDragStart),
           draggable({
             element: refs.row,
             dragHandle: refs.handle,
@@ -286,14 +290,6 @@ export const useReorderList = <T>({
           }),
         );
       },
-      bindList: (element) =>
-        dropTargetForElements({
-          element,
-          canDrop: ({ source }) =>
-            canDropRef.current ? canDropRef.current({ source }) : source.data[REORDER_LIST_KEY] === listId,
-          // No `id`, so the monitor's lookup finds no index and a drop in a gap is a no-op.
-          getData: () => ({ [REORDER_LIST_KEY]: listId }),
-        }),
     }),
     [listId, axis, findIndex],
   );

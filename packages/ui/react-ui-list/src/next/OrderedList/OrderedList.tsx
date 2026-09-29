@@ -141,28 +141,11 @@ type OrderedListContentProps = Next.ContainerProps;
  */
 const OrderedListContent: ForwardRefExoticComponent<
   ComposableProps<OrderedListContentProps> & RefAttributes<HTMLDivElement>
-> = composable<HTMLDivElement, OrderedListContentProps>(({ gutter = 'inset', children, ...props }, forwardedRef) => {
-  const { reorder } = useOrderedListContext('OrderedList.Content');
-  const cleanupRef = useRef<(() => void) | null>(null);
-  const ref = useCallback(
-    (node: HTMLDivElement | null) => {
-      cleanupRef.current?.();
-      cleanupRef.current = node ? reorder.bindList(node) : null;
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(node);
-      } else if (forwardedRef) {
-        forwardedRef.current = node;
-      }
-    },
-    [reorder, forwardedRef],
-  );
-
-  return (
-    <Next.Container role='list' {...props} gutter={gutter} ref={ref}>
-      {children}
-    </Next.Container>
-  );
-});
+> = composable<HTMLDivElement, OrderedListContentProps>(({ gutter = 'inset', children, ...props }, forwardedRef) => (
+  <Next.Container role='list' {...props} gutter={gutter} ref={forwardedRef}>
+    {children}
+  </Next.Container>
+));
 
 OrderedListContent.displayName = 'OrderedList.Content';
 
