@@ -1840,6 +1840,40 @@ describe('reentrancy', () => {
       expect(firstIncarnation.aborted).toBe(false);
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'a rehydrated process keeps the origin it was spawned with',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const seen: (Database.Origin | undefined)[] = [];
+      const executable = Process.make(
+        { key: 'test.origin-rehydrate', input: Schema.Number, output: Schema.Void, services: [] },
+        () =>
+          Effect.succeed({
+            onSpawn: () => Effect.void,
+            onInput: () =>
+              Effect.gen(function* () {
+                seen.push(yield* Database.Origin);
+              }),
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+      );
+
+      const handle = yield* manager.spawn(executable, { origin: 'user' });
+      yield* handle.submitInput(1);
+      yield* handle.runToCompletion();
+
+      yield* manager.shutdown();
+      yield* manager.startup();
+      const dormant = yield* manager.list({ key: executable.key });
+      const restored = yield* dormant[0].hydrate(executable);
+      yield* restored.submitInput(2);
+      yield* restored.runToCompletion();
+
+      expect(seen).toEqual(['user', 'user']);
+    }, Effect.provide(TestLayer)),
+  );
 });
 
 describe('durability', () => {
