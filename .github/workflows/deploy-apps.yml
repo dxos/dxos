@@ -237,8 +237,8 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Composer version: $version (env=$ENVIRONMENT)"
 
-  # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
-  # don't each rebuild it.
+  # Build Composer's web bundle and share it as an artifact with the web deploy. The native (Tauri) jobs
+  # build their own: they resolve the `tauri` package condition.
   build-bundle:
     needs: [plan, release, version]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.version.result == 'success' }}
@@ -286,7 +286,7 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
 
-      # Build only — the artifact is deployed by `deploy` and embedded by the tauri jobs.
+      # Build only — the artifact is deployed by `deploy`.
       - name: Build Composer bundle
         run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV" composer
         env:

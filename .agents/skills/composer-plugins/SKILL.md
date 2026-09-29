@@ -652,8 +652,8 @@ A module that only works inside the Tauri shell (spawning a helper process, nati
 annotated `environments: ['tauri']` in the canonical barrel. `tauri` is additive, unlike `node` and
 `workerd`: `dx-plugin gen` gives it a barrel with every browser module plus the annotated ones, and
 generates `gen/default.ts` without them, pointing `#capabilities.default` there so the web bundle
-never carries them. Only composer-app's native bundles resolve `tauri` (`bundle-tauri`, or
-`tauri dev` via `TAURI_ENV_PLATFORM`). A plugin with such a module must not list `capabilities` as
+never carries them. Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`,
+or `tauri dev` via `TAURI_ENV_PLATFORM`). A plugin with such a module must not list `capabilities` as
 an explicit `entry` in `vite.config.ts`: an explicit entry overrides the derived one and would build
 the canonical barrel as the `default` dist.
 

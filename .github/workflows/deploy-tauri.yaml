@@ -17,8 +17,8 @@ on:
         type: string
         default: ''
       version:
-        # Computed once by deploy-apps' `version` job so the web bundle embedded here and the native
-        # build report the same version. Required — there is no sensible local fallback.
+        # Computed once by deploy-apps' `version` job so the web bundle, the desktop bundle built here and
+        # the native builds report the same version. The iOS bundle is not stamped. Required — there is no sensible local fallback.
         description: Version to build.
         type: string
         required: true
@@ -248,15 +248,38 @@ jobs:
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
-      # The Tauri build doesn't run deploy-env.mjs (which performs this mapping for
-      # the web deploy), so reproduce it here before the Vite bundle runs.
-      - name: Export DX_POSTHOG_API_KEY for Tauri bundle
-        run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
+      # Stamp the version BEFORE the bundle: `runtime.app.build.version` is read out of package.json at
+      # vite build time, as in deploy-apps.yml's build-bundle.
+      - name: Stamp the Composer version
+        run: |
+          jq --arg version "$VERSION" '.version = $version' packages/apps/composer-app/package.json > version.tmp
+          mv version.tmp packages/apps/composer-app/package.json
+        env:
+          VERSION: ${{ inputs.version }}
 
-      # Not the web bundle deploy-apps.yml builds: the desktop bundle resolves the `tauri` condition,
-      # which carries modules annotated `environments: ['tauri']` (plugin-sandbox's local sandbox launcher).
+      # Not the web bundle deploy-apps.yml builds: `DX_TAURI` resolves the `tauri` condition, which carries
+      # modules annotated `environments: ['tauri']` (plugin-sandbox's local sandbox launcher). Built through
+      # bundle-env.mjs so it gets the web bundle's environment (PostHog ids, LOG_FILTER).
       - name: Build Composer bundle
-        run: moon run composer-app:bundle-tauri
+        run: .github/workflows/scripts/bundle-env.mjs "$ENVIRONMENT" composer
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          NODE_ENV: production
+          DX_TAURI: 'true'
+
+      - name: Upload source maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != ''
+        continue-on-error: true
+        working-directory: packages/apps/composer-app
+        env:
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ env.COMPOSER_APP_POSTHOG_PROJECT_ID }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: >-
+          pnpm dlx @posthog/cli@0.16.0 sourcemap process
+          --directory out/composer
+          --release-name composer
+          --release-version "$RELEASE_VERSION"
 
       - name: Fetch Ollama runtime
         run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs --packaged)

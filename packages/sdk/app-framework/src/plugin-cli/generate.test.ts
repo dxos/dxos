@@ -218,6 +218,9 @@ describe('dx-plugin gen', () => {
           "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
           '',
         ].join('\n'),
+        // Left over from when a module was tauri-only.
+        'src/capabilities/gen/default.ts': '',
+        'src/capabilities/gen/tauri.ts': '',
       },
       (dir) => {
         generate(dir);
