@@ -157,13 +157,6 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
       }),
       signal: controller.signal,
     });
-    if (!upstream.ok) {
-      // Surfaces origin rejections in `wrangler tail composer`. The query is dropped: private feeds put tokens there.
-      console.warn('rss proxy: upstream responded non-2xx', {
-        url: `${parsedFeedUrl.origin}${parsedFeedUrl.pathname}`,
-        status: upstream.status,
-      });
-    }
 
     const contentLength = Number(upstream.headers.get('content-length') ?? 0);
     if (contentLength > RSS_MAX_BODY_SIZE) {
