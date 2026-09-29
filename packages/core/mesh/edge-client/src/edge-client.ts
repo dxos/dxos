@@ -311,7 +311,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
             this._ready.wake();
             this._notifyReconnected();
           } else {
-            log.verbose('connected callback ignored, because connection is not active');
+            // EDGE's router writes to a device's newest open socket, so a replaced one left open takes every reply.
+            log.verbose('closing a connection that connected after it was replaced');
+            void connection.close().catch((err) => log.catch(err));
           }
         },
         onRestartRequired: (reason) => {
@@ -332,6 +334,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
               from: message.source,
               type: message.payload?.typeUrl,
             });
+            void connection.close().catch((err) => log.catch(err));
           }
         },
       },
@@ -353,6 +356,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
       restartRequired.wait().then(() => false),
     ]);
     if (!becameReady) {
+      // Left dialing, the socket could still be admitted after the retry's, and EDGE writes to the newest.
+      await connection.close();
       throw new EdgeConnectionClosedError();
     }
 
