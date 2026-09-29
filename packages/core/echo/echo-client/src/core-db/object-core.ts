@@ -84,6 +84,9 @@ const updatedAtCache = new WeakMap<AutomergeDoc<unknown>, { heads: string; updat
 const deriveFoldActorId = (localActorId: string, documentId: string, scope: string): A.ActorId =>
   bytesToHex(sha256(utf8ToBytes(`${localActorId}:${documentId}:${scope}:fold`))).slice(0, 32);
 
+/** The throwaway actor `foldChangeAt` authors a probe under, to derive the real actor from its ops. */
+const FOLD_PROBE_ACTOR = '00000000000000000000000000000000';
+
 /** The change message `foldAt` stores: the caller's message tagged with its scope, so any session can find the scope's earlier folds. */
 const scopedFoldMessage = (message: string, scope: string): string => `${message} [${scope}]`;
 
@@ -517,10 +520,11 @@ export class ObjectCore {
   }
 
   /**
-   * Writes one fold change forked at exactly `heads`, under an actor derived from `actorSeed` alone,
-   * with time fixed at `0`. Every peer that folds the same input from the same `heads` with the same
-   * `actorSeed` therefore authors a byte-identical change, which Automerge merges as one, so a list
-   * insert or text splice folded independently on several peers is applied once.
+   * Writes one fold change forked at exactly `heads`, under an actor derived from `actorSeed` and the
+   * change's own ops, with time fixed at `0`. Every peer that folds the same input from the same `heads`
+   * therefore authors a byte-identical change, which Automerge merges as one, so a list insert or text
+   * splice folded independently on several peers is applied once. Each such change adds one actor to
+   * the document.
    *
    * @param heads The exact fork point; must be ancestors of the current document.
    * @param mutate Given the document draft as it stood at `heads` and this object's mount path.
@@ -536,11 +540,22 @@ export class ObjectCore {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-    const actorId = bytesToHex(sha256(utf8ToBytes(`${options.actorSeed}:fold-change`))).slice(0, 32);
     const fold = <T>(doc: AutomergeDoc<T>) => {
       invariant(A.hasHeads(doc, heads), 'foldChangeAt: heads are not an ancestor of the current document');
-      const clone = A.clone(A.view(doc, heads), actorId);
-      return A.changeAt(clone, heads, { message: options.message, time: 0 }, (draft) => mutate(draft, this.mountPath));
+      const view = A.view(doc, heads);
+      const author = (actorId: A.ActorId) =>
+        A.changeAt(A.clone(view, actorId), heads, { message: options.message, time: 0 }, (draft) =>
+          mutate(draft, this.mountPath),
+        );
+      // The actor is derived from the ops a probe authors, so two builds that fold the same input into
+      // different ops never write one (actor, seq) with two different hashes.
+      const probe = author(FOLD_PROBE_ACTOR);
+      const change = probe.newHeads && A.getLastLocalChange(probe.newDoc);
+      if (!change) {
+        return probe;
+      }
+      const ops = JSON.stringify(A.decodeChange(change).ops).replaceAll(FOLD_PROBE_ACTOR, '');
+      return author(bytesToHex(sha256(utf8ToBytes(`${options.actorSeed}:${ops}:fold-change`))).slice(0, 32));
     };
 
     if (this.doc) {

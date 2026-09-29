@@ -6,10 +6,8 @@ import { next as A, type Doc as AutomergeDoc, type Heads, type Patch } from '@au
 import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
-import { DATA_NAMESPACE, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { MetaId } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 import { EntityId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getDeep, setDeep } from '@dxos/util';
@@ -27,6 +25,7 @@ import {
   removedOutputKeys,
 } from './encoded-value.ts';
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
+import { type ChangeGraph, ancestorsOf, applyStructuralEdit, frontierOf, isMapValue } from './fold-edit.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey } from './migration-context.ts';
 
 //
@@ -34,8 +33,9 @@ import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey 
 // Phase C; `.agents/projects/lenses/M0-REPORT.md` design items 1, 6, 9). A migrated object is
 // "behind" when a retired property was written to after its step's migration — derivable from the
 // document at any time via the recorded steps (`Migration.getMigrationSteps`), so no
-// separate durable intent is kept: each step's own `foldedAt` checkpoint is enough to
-// make a re-run cheap and a crash between writes harmless (every fold is value-compare guarded). A
+// separate durable intent is kept: each step's own `foldedAt` checkpoint is enough to make a re-run
+// cheap and a crash between writes harmless (a per-change fold is found by its message, and a per-pass
+// fold is value-compare guarded). A
 // marker holds a CHAIN of steps, one per `from -> to` boundary the object has
 // crossed, so a late write in the object's ORIGINAL shape still folds all the way to its current type
 // even after several migrations — see {@link foldObject}.
@@ -43,6 +43,9 @@ import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey 
 
 /** The message `#applyObjectMigration` stamps on a migration's own change. */
 const migrationMessage = (from: string, to: string): string => `migration: ${from} -> ${to}`;
+
+/** The message an object's `foldedAt` checkpoint write is stamped with, so the next pass can skip it. */
+const checkpointMessage = (objectId: string): string => `checkpoint: fold [${objectId}]`;
 
 /** The message a fold-forward write is stamped with; `Obj.getConflict` reads this prefix. */
 const foldMessage = (from: string, to: string): string => `fold: ${from} -> ${to}`;
@@ -57,18 +60,26 @@ const sameHeadSet = (a: readonly string[], b: readonly string[]): boolean => {
 };
 
 /**
- * Locates the automerge change that applied `step`'s migration to this document: the one whose
- * `message` names the migration and whose `deps` are exactly the step's `preHeads` — the runner
- * reads `preHeads` and authors that change synchronously right after, so no other change can share
- * both. Its own hash is therefore the object's post-migration frontier (heads are deliberately not a
- * stored field on the step — see {@link Migration.MigrationStepSchema}'s `preHeads`).
+ * Locates the automerge change that applied `step`'s migration to this document: one whose `message`
+ * names the migration and whose `deps` are exactly the step's `preHeads`. Peers that migrated from the
+ * same heads each authored one; the one with the greatest actor wins Automerge's tie-break on every key
+ * both wrote, so every peer forks from the change whose values are visible. Its own hash is the object's
+ * post-migration frontier (heads are deliberately not a stored field on the step — see
+ * {@link Migration.MigrationStepSchema}'s `preHeads`).
  */
 const findPostMigrationHeads = (doc: AutomergeDoc<unknown>, step: Migration.MigrationStep): Heads | undefined => {
   const message = migrationMessage(step.from, step.to);
-  const change = A.getChangesMetaSince(doc, []).find(
-    (candidate) => candidate.message === message && sameHeadSet(candidate.deps, step.preHeads),
-  );
-  return change && [change.hash];
+  let winner: A.ChangeMetadata | undefined;
+  for (const candidate of A.getChangesMetaSince(doc, [])) {
+    if (
+      candidate.message === message &&
+      sameHeadSet(candidate.deps, step.preHeads) &&
+      (!winner || candidate.actor > winner.actor)
+    ) {
+      winner = candidate;
+    }
+  }
+  return winner && [winner.hash];
 };
 
 /** One property's late writes, scoped under `[...mountPath, 'data', <key>]` and ordered as `A.diff` returned them. */
@@ -136,48 +147,38 @@ const lateOverlayWrites = (
   );
 };
 
+/** A step's source properties: the retired ones, and the kept ones (held before the migration, not retired). */
+type StepSource = { retired: ReadonlySet<string>; kept: ReadonlySet<string> };
+
+const stepSource = (db: Database.Database, core: ObjectCore, step: Migration.MigrationStep): StepSource => {
+  const retired = new Set(step.retired);
+  const kept = new Set(
+    Object.keys(getDecodedDataWithRefs(db, core, [...step.preHeads])).filter((key) => !retired.has(key)),
+  );
+  return { retired, kept };
+};
+
 /**
  * The migration's data output for one snapshot of the object — `transform` is pure over the object's
- * own data, so re-running it is exactly what the migration would have written from that snapshot.
+ * own data, so re-running it is exactly what the migration would have written from that snapshot. Only
+ * the step's source properties are passed: a target the migration itself wrote is not an input.
  */
 const recomputeMigrationOutput = (
   migration: Migration.ObjectMigration,
   id: string,
   snapshot: Record<string, unknown>,
+  source: StepSource,
 ): { data: Record<string, unknown>; meta: Record<string, unknown> } => {
-  const output = migration.transform({ ...snapshot, id });
+  const input = Object.fromEntries(
+    Object.entries(snapshot).filter(([key]) => source.retired.has(key) || source.kept.has(key)),
+  );
+  const output = migration.transform({ ...input, id });
   if (!isRecord(output)) {
     return { data: {}, meta: {} };
   }
   const { id: _id, ...data } = output;
   const meta: unknown = Reflect.get(output, MetaId);
   return { data, meta: isRecord(meta) ? meta : {} };
-};
-
-/** Each change's deps, by change hash. */
-type ChangeGraph = Map<string, readonly string[]>;
-
-/** `hashes` and every change they depend on. */
-const ancestorsOf = (graph: ChangeGraph, hashes: Iterable<string>): Set<string> => {
-  const seen = new Set<string>();
-  const stack = [...hashes];
-  for (let hash = stack.pop(); hash !== undefined; hash = stack.pop()) {
-    if (!seen.has(hash)) {
-      seen.add(hash);
-      stack.push(...(graph.get(hash) ?? []));
-    }
-  }
-  return seen;
-};
-
-/** The heads `hashes` span: each one no other of them depends on, sorted so equal sets compare equal. */
-const frontierOf = (graph: ChangeGraph, hashes: Iterable<string>): Heads => {
-  const unique = [...new Set(hashes)];
-  const covered = ancestorsOf(
-    graph,
-    unique.flatMap((hash) => graph.get(hash) ?? []),
-  );
-  return unique.filter((hash) => !covered.has(hash)).sort();
 };
 
 /** Keys whose value differs between two outputs, including keys `next` clears. */
@@ -189,108 +190,30 @@ const movedOutputKeys = (
   ...new Set([...Object.keys(changedOutputEntries(core, previous, next)), ...removedOutputKeys(previous, next)]),
 ];
 
-/** A record that is a map in the document, not an encoded reference. */
-const isMapValue = (value: unknown): value is Record<string, unknown> =>
-  isRecord(value) && !isEncodedReference(value) && !(value instanceof A.RawString) && !(value instanceof Uint8Array);
+/** A value a fold edits in place: a map, a list, or text. Anything else is written whole. */
+const isEditableValue = (value: unknown): boolean =>
+  typeof value === 'string' || Array.isArray(value) || isMapValue(value);
 
-/** Lists longer than this pair their differing middles by position instead of by a quadratic LCS. */
-const LIST_DIFF_LIMIT = 250_000;
-
-/** Index pairs of the longest common subsequence of `from` and `to`, by encoded value. */
-const commonSubsequence = (from: readonly unknown[], to: readonly unknown[]): [number, number][] => {
-  const rows = from.length;
-  const columns = to.length;
-  if (rows * columns > LIST_DIFF_LIMIT) {
-    return [];
-  }
-  const lengths = Array.from({ length: rows + 1 }, () => new Array<number>(columns + 1).fill(0));
-  for (let row = rows - 1; row >= 0; row--) {
-    for (let column = columns - 1; column >= 0; column--) {
-      lengths[row][column] = encodedValuesEqual(from[row], to[column])
-        ? lengths[row + 1][column + 1] + 1
-        : Math.max(lengths[row + 1][column], lengths[row][column + 1]);
-    }
-  }
-  const pairs: [number, number][] = [];
-  for (let row = 0, column = 0; row < rows && column < columns;) {
-    if (encodedValuesEqual(from[row], to[column])) {
-      pairs.push([row, column]);
-      row++;
-      column++;
-    } else if (lengths[row + 1][column] >= lengths[row][column + 1]) {
-      row++;
-    } else {
-      column++;
-    }
-  }
-  return pairs;
+/** What {@link foldLateChanges} leaves to the per-pass whole-value fold. */
+type WholeValueFolds = {
+  /** Output keys some late change moved by replacing a source value, or that are not maps, lists or text. */
+  keys: Set<string>;
+  /** Whether any late change touched a retired key: the migration's meta output is folded per pass. */
+  touched: boolean;
+  /** Set when a late change could not be classified; every moved key is then folded whole. */
+  all: boolean;
 };
 
 /**
- * Edits the value at `path` in `draft` from `from` (its value there) into `to`, as nested edits rather
- * than one replacement: a map is updated key by key, a list by inserts and deletes around the elements
- * the two share, and a string by a text diff. A concurrent direct edit elsewhere in the same map, list
- * or text therefore survives the merge.
- */
-const applyStructuralEdit = (draft: unknown, path: readonly (string | number)[], from: unknown, to: unknown): void => {
-  if (encodedValuesEqual(from, to)) {
-    return;
-  }
-  if (typeof from === 'string' && typeof to === 'string') {
-    invariant(typeof draft === 'object' && draft !== null, 'fold draft is not a document');
-    A.updateText(draft, [...path], to);
-    return;
-  }
-  if (isMapValue(from) && isMapValue(to)) {
-    const map = getDeep(draft, [...path]);
-    invariant(isRecord(map), 'fold target is not a map');
-    for (const key of Object.keys(from)) {
-      if (!Object.hasOwn(to, key)) {
-        delete map[key];
-      }
-    }
-    for (const [key, value] of Object.entries(to)) {
-      applyStructuralEdit(draft, [...path, key], from[key], value);
-    }
-    return;
-  }
-  if (Array.isArray(from) && Array.isArray(to)) {
-    const list = getDeep(draft, [...path]);
-    invariant(Array.isArray(list), 'fold target is not a list');
-    // Shift from an index in `from` to the same element's index in the list being edited.
-    let shift = 0;
-    let fromIndex = 0;
-    let toIndex = 0;
-    for (const [fromMatch, toMatch] of [...commonSubsequence(from, to), [from.length, to.length]]) {
-      const paired = Math.min(fromMatch - fromIndex, toMatch - toIndex);
-      for (let offset = 0; offset < paired; offset++) {
-        applyStructuralEdit(
-          draft,
-          [...path, fromIndex + offset + shift],
-          from[fromIndex + offset],
-          to[toIndex + offset],
-        );
-      }
-      const removed = fromMatch - fromIndex - paired;
-      const inserted = to.slice(toIndex + paired, toMatch);
-      list.splice(fromIndex + paired + shift, removed, ...inserted);
-      shift += inserted.length - removed;
-      fromIndex = fromMatch + 1;
-      toIndex = toMatch + 1;
-    }
-    return;
-  }
-  setDeep(draft, [...path], to);
-};
-
-/**
- * Folds each late change to a retired property as a change of its own, forked at the migration plus
- * the folds of that change's own late ancestors. Every input — the fork, the source snapshots before
- * and after the change, and so the edit — is a function of the source history alone, so peers that
- * receive the late changes in any order author byte-identical folds (`ObjectCore.foldChangeAt`), and a
- * list insert or text splice lands once. A change that edits inside a retired value is folded as edits
- * inside the target ({@link applyStructuralEdit}), so a direct edit elsewhere in the same value stays;
- * one that sets it outright is folded whole, and conflicts with a direct edit to the target.
+ * Folds each late change's edits inside maps, lists and text as a change of its own, forked at the
+ * migration plus the folds of that change's own late ancestors. Every input — the fork, the source
+ * snapshots before and after the change, and so the edit — is a function of the source history alone,
+ * so peers that receive the late changes in any order author byte-identical folds
+ * (`ObjectCore.foldChangeAt`), and a list insert or text splice lands once. The edit is the one the late
+ * change made, placed on the target at the fork ({@link applyStructuralEdit}), so a direct edit
+ * elsewhere in the same value stays. A key that depends on a source value replaced since the migration
+ * (by the change or any late ancestor), or whose value is not a map, list or text, is returned for the
+ * per-pass whole-value fold instead, which recomputes it from the merged current data.
  */
 const foldLateChanges = (
   db: Database.Database,
@@ -299,20 +222,17 @@ const foldLateChanges = (
   stepKey: string,
   object: Obj.Unknown,
   postMigrationHeads: Heads,
-  base: Heads,
-): void => {
+  pending: readonly A.ChangeMetadata[],
+): WholeValueFolds => {
   const core = getObjectCore(object);
   const mountPath = core.mountPath;
-  const retired = new Set(step.retired);
+  const source = stepSource(db, core, step);
+  const { retired, kept } = source;
   const scope = `${object.id}:${stepKey}`;
-  const messagePrefix = `${foldMessage(step.from, step.to)} [${scope}] `;
-  // An old client writes a kept property directly; folding its write as well would apply it twice.
-  const kept = new Set(
-    [
-      ...SchemaEx.getProperties(migration.fromSchema.ast).map((property) => String(property.name)),
-      ...Object.keys(getDecodedDataWithRefs(db, core, [...step.preHeads])),
-    ].filter((key) => !retired.has(key)),
-  );
+  // Keyed by the migration change too: a winner that arrives later is folded onto again.
+  const messagePrefix = `${foldMessage(step.from, step.to)} [${scope}] ${postMigrationHeads.join(',')} `;
+  const whole: WholeValueFolds = { keys: new Set(), touched: false, all: false };
+  const atMigration = getDecodedDataWithRefs(db, core, postMigrationHeads);
 
   const doc = core.getDoc();
   const graph: ChangeGraph = new Map();
@@ -324,71 +244,131 @@ const foldLateChanges = (
     }
   }
 
-  for (const change of A.getChangesMetaSince(doc, base)) {
-    if (foldOf.has(change.hash) || change.message?.startsWith(messagePrefix)) {
+  for (const change of pending) {
+    const before = [...postMigrationHeads, ...change.deps];
+    const after = [...postMigrationHeads, change.hash];
+    if (lateRetiredWrites(core.getDoc(), mountPath, before, after, retired).size === 0) {
       continue;
     }
-    const before = frontierOf(graph, [...postMigrationHeads, ...change.deps]);
-    const after = frontierOf(graph, [...postMigrationHeads, change.hash]);
-    const writes = lateRetiredWrites(core.getDoc(), mountPath, before, after, retired);
-    if (writes.size === 0) {
-      continue;
-    }
-    // A late change that sets a retired property outright replaces it, as a property set does; one that
-    // edits inside it (a list insert, a text splice) is folded as edits inside the target the same way.
-    const replaces = [...writes.values()].some((patches) =>
-      patches.some((patch) => patch.path.length === mountPath.length + 2),
-    );
+    whole.touched = true;
 
-    const previous = recomputeMigrationOutput(migration, object.id, getDecodedDataWithRefs(db, core, before));
-    const next = recomputeMigrationOutput(migration, object.id, getDecodedDataWithRefs(db, core, after));
-    const dataKeys = movedOutputKeys(core, previous.data, next.data).filter((key) => !kept.has(key));
-    const metaKeys = movedOutputKeys(core, previous.meta, next.meta);
-    if (dataKeys.length === 0 && metaKeys.length === 0) {
-      continue;
-    }
+    try {
+      const beforeData = getDecodedDataWithRefs(db, core, before);
+      const afterData = getDecodedDataWithRefs(db, core, after);
+      const previous = recomputeMigrationOutput(migration, object.id, beforeData, source);
+      const next = recomputeMigrationOutput(migration, object.id, afterData, source);
+      // An old client writes a kept property directly; folding its write as well would apply it twice.
+      const moved = movedOutputKeys(core, previous.data, next.data).filter((key) => !kept.has(key));
 
-    const lateAncestors = ancestorsOf(graph, change.deps);
-    const fork = frontierOf(graph, [
-      ...postMigrationHeads,
-      ...[...foldOf].filter(([late]) => lateAncestors.has(late)).map(([, fold]) => fold),
-    ]);
-    const atFork: unknown = getDeep(A.view(core.getDoc(), fork), [...mountPath]);
-    const nextData = mapRefsToEncodedReferences(next.data);
-    const nextMeta = mapRefsToEncodedReferences(next.meta);
-    const edits = [
-      ...dataKeys.map((key) => ({ path: [DATA_NAMESPACE, key], value: nextData[key] })),
-      ...metaKeys.map((key) => ({ path: [META_NAMESPACE, key], value: nextMeta[key] })),
-    ].map(({ path, value }) => ({ path, value: value === undefined ? undefined : core.encode(value) }));
-
-    const heads = core.foldChangeAt(
-      fork,
-      (draft, mountPath) => {
-        for (const { path, value } of edits) {
-          const fullPath = [...mountPath, ...path];
-          if (value === undefined) {
-            const parent = getDeep(draft, fullPath.slice(0, -1));
-            if (isRecord(parent)) {
-              delete parent[String(fullPath.at(-1))];
-            }
-          } else if (!replaces && path[0] === DATA_NAMESPACE) {
-            applyStructuralEdit(draft, fullPath, getDeep(atFork, path), value);
-          } else {
-            setDeep(draft, fullPath, value);
-          }
+      // A source value replaced since the migration (by this change or a late ancestor) shows as a put at
+      // the key itself. An output that depends on one was put whole by the per-pass fold, which replaced
+      // the target value an edit inside it would land in, so it stays whole.
+      const replaced = [...lateRetiredWrites(core.getDoc(), mountPath, postMigrationHeads, after, retired)]
+        .filter(([, patches]) => patches.some((patch) => patch.path.length === mountPath.length + 2))
+        .map(([key]) => key);
+      const reverted = { ...afterData };
+      for (const key of replaced) {
+        if (Object.hasOwn(atMigration, key)) {
+          reverted[key] = atMigration[key];
+        } else {
+          delete reverted[key];
         }
-      },
-      {
-        message: `${messagePrefix}${change.hash}`,
-        actorSeed: JSON.stringify({ scope, late: change.hash, fork, replaces, edits }),
-      },
-    );
-    if (heads) {
-      const [fold] = heads;
-      graph.set(fold, fork);
-      foldOf.set(change.hash, fold);
+      }
+      const dependsOnReplaced = new Set(
+        movedOutputKeys(core, next.data, recomputeMigrationOutput(migration, object.id, reverted, source).data),
+      );
+      const structural: string[] = [];
+      for (const key of moved) {
+        if (dependsOnReplaced.has(key) || !isEditableValue(previous.data[key]) || !isEditableValue(next.data[key])) {
+          whole.keys.add(key);
+        } else {
+          structural.push(key);
+        }
+      }
+      if (structural.length === 0 || foldOf.has(change.hash)) {
+        continue;
+      }
+
+      const lateAncestors = ancestorsOf(graph, change.deps);
+      const fork = frontierOf(graph, [
+        ...postMigrationHeads,
+        ...[...foldOf].filter(([late]) => lateAncestors.has(late)).map(([, fold]) => fold),
+      ]);
+      const atFork: unknown = getDeep(A.view(core.getDoc(), fork), [...mountPath, DATA_NAMESPACE]);
+      const encodedPrevious = mapRefsToEncodedReferences(previous.data);
+      const encodedNext = mapRefsToEncodedReferences(next.data);
+      const edits = structural.map((key) => ({
+        key,
+        previous: core.encode(encodedPrevious[key]),
+        next: core.encode(encodedNext[key]),
+      }));
+      const heads = core.foldChangeAt(
+        fork,
+        (draft, mountPath) => {
+          for (const { key, previous, next } of edits) {
+            applyStructuralEdit(draft, [...mountPath, DATA_NAMESPACE, key], previous, next, getDeep(atFork, [key]));
+          }
+        },
+        {
+          message: `${messagePrefix}${change.hash}`,
+          actorSeed: JSON.stringify({ scope, late: change.hash, fork, edits }),
+        },
+      );
+      if (heads) {
+        const [fold] = heads;
+        graph.set(fold, fork);
+        foldOf.set(change.hash, fold);
+      }
+    } catch (err) {
+      // The transform sees every intermediate state an old client wrote, which need not be valid; the
+      // per-pass fold then carries the current state instead.
+      log.warn('foldForward: could not fold a late change on its own', { object: object.id, stepKey, err });
+      whole.all = true;
     }
   }
+  return whole;
+};
+
+/**
+ * Folds the keys {@link foldLateChanges} left whole, plus the migration's meta output, from the merged
+ * current data: the current snapshot against the same snapshot with only the retired keys at the
+ * checkpoint. One change per pass, concurrent with direct edits.
+ */
+const foldWholeValues = (
+  db: Database.Database,
+  migration: Migration.ObjectMigration,
+  object: Obj.Unknown,
+  step: Migration.MigrationStep,
+  base: Heads,
+  currentHeads: Heads,
+  whole: WholeValueFolds,
+): { data: Map<string, unknown>; deletions: string[]; meta: Map<string, unknown> } => {
+  const core = getObjectCore(object);
+  const current = getDecodedDataWithRefs(db, core, currentHeads);
+  const atBase = getDecodedDataWithRefs(db, core, base);
+  const before = { ...current };
+  for (const key of step.retired) {
+    if (Object.hasOwn(atBase, key)) {
+      before[key] = atBase[key];
+    } else {
+      delete before[key];
+    }
+  }
+  const source = stepSource(db, core, step);
+  const included = (key: string) => !source.kept.has(key) && (whole.all || whole.keys.has(key));
+  const previous = recomputeMigrationOutput(migration, object.id, before, source);
+  const next = recomputeMigrationOutput(migration, object.id, current, source);
+  const output = Object.fromEntries(
+    Object.entries(changedOutputEntries(core, previous.data, next.data)).filter(([key]) => included(key)),
+  );
+  return {
+    data: computeGuardedDataWrites(core, output),
+    // A late clear of an old field clears what the migration derived from it.
+    deletions: removedOutputKeys(previous.data, next.data).filter(
+      (key) => included(key) && core.getRaw([DATA_NAMESPACE, key]) !== undefined,
+    ),
+    meta: computeGuardedDataWrites(core, changedOutputEntries(core, previous.meta, next.meta), META_NAMESPACE),
+  };
 };
 
 /**
@@ -408,7 +388,8 @@ const foldStep = (
   step: Migration.MigrationStep,
   stepKey: string,
   object: Obj.Unknown,
-): void => {
+  laterSteps: readonly string[],
+): Heads | undefined => {
   const core = getObjectCore(object);
   const doc = core.getDoc();
   const mountPath = core.mountPath;
@@ -417,24 +398,49 @@ const foldStep = (
     // A foreign frontier (e.g. an epoch re-root) — never fold on foreign heads (M0-REPORT.md design
     // item 8): `A.diff` against them would silently report "everything is new".
     log.warn('foldForward: skipping step with foreign migration heads', { object: object.id, stepKey });
-    return;
+    return undefined;
   }
 
   const postMigrationHeads = findPostMigrationHeads(doc, step);
   if (!postMigrationHeads) {
     log.warn('foldForward: could not locate the migration change for step', { object: object.id, stepKey });
-    return;
+    return undefined;
   }
 
-  const base: Heads = step.foldedAt ? [...step.foldedAt] : postMigrationHeads;
+  // A checkpoint written before the winning migration change arrived does not cover it, so the changes
+  // it skipped are classified again against the winner.
+  const checkpoint: Heads | undefined = step.foldedAt && [...step.foldedAt];
+  const coversMigration =
+    checkpoint !== undefined &&
+    (!A.hasHeads(doc, checkpoint) ||
+      !A.getChangesMetaSince(doc, checkpoint).some((change) => postMigrationHeads.includes(change.hash)));
+  const base: Heads = checkpoint && coversMigration ? checkpoint : postMigrationHeads;
   if (!A.hasHeads(doc, base)) {
     log.warn('foldForward: skipping step with a foreign fold checkpoint', { object: object.id, stepKey });
-    return;
+    return undefined;
   }
 
   const currentHeads = A.getHeads(doc);
-  const retired = new Set(step.retired);
-  const lateWrites = lateRetiredWrites(doc, mountPath, base, currentHeads, retired);
+  const scope = `${object.id}:${stepKey}`;
+  const ownFold = `${foldMessage(step.from, step.to)} [${scope}]`;
+  // This step's own folds, this object's checkpoints, and later steps' folds (which never write this
+  // step's retired keys) are no new work; checkpointing past them alone would never settle.
+  const ownCheckpoint = checkpointMessage(object.id);
+  const isRunnerChange = (message: string | null | undefined): boolean =>
+    message === ownCheckpoint ||
+    message?.startsWith(ownFold) === true ||
+    laterSteps.some((key) => message?.startsWith('fold:') === true && message.includes(`[${object.id}:${key}]`));
+  // Only changes that write this object: a document can hold other objects, whose writes are no work.
+  const pending = A.getChangesMetaSince(doc, base).filter(
+    (change) =>
+      !isRunnerChange(change.message) &&
+      A.diff(doc, [...change.deps], [change.hash]).some((patch) =>
+        mountPath.every((segment, index) => patch.path[index] === segment),
+      ),
+  );
+  if (pending.length === 0) {
+    return undefined;
+  }
 
   // `Lens.coverage` throws for a coded lens, but `Migration.fromLens` already calls it at definition
   // time (and only sets `lens` for a `fromLens` migration), so a lens present here always has a plan.
@@ -444,50 +450,54 @@ const foldStep = (
       ? lateOverlayWrites(doc, mountPath, base, currentHeads, migration.lens.id, overlaid)
       : new Set<string>();
 
-  if (lateWrites.size === 0 && overlayLateWrites.size === 0) {
-    return;
-  }
-
-  if (lateWrites.size > 0) {
-    foldLateChanges(db, migration, step, stepKey, object, postMigrationHeads, base);
-  }
+  // Every change since the checkpoint is classified on its own, never by the net diff: a late write and
+  // its revert must still be folded, or a later fold's fork would depend on when the pass ran.
+  const whole = foldLateChanges(db, migration, step, stepKey, object, postMigrationHeads, pending);
+  const {
+    data: dataWrites,
+    deletions,
+    meta: metaWrites,
+  } = whole.touched
+    ? foldWholeValues(db, migration, object, step, base, currentHeads, whole)
+    : { data: new Map<string, unknown>(), deletions: [], meta: new Map<string, unknown>() };
 
   // An overlay write is never part of the transform's input (it lives in meta, not data), so it is
-  // folded from the object's CURRENT overlay value directly, whole-value, in one change per step.
-  const overlayWrites = new Map<string, unknown>();
+  // folded from the object's CURRENT overlay value directly, whole-value, into the same change.
   if (migration.lens) {
     for (const property of overlayLateWrites) {
+      if (dataWrites.has(property)) {
+        continue;
+      }
       const value = Lens.getOverlay(object, migration.lens.id, property);
       for (const [key, encoded] of computeGuardedDataWrites(core, { [property]: value })) {
-        overlayWrites.set(key, encoded);
+        dataWrites.set(key, encoded);
       }
     }
   }
-  if (overlayWrites.size > 0) {
+
+  if (dataWrites.size > 0 || deletions.length > 0 || metaWrites.size > 0) {
     core.foldAt(
       postMigrationHeads,
-      (data) => {
-        for (const [key, value] of overlayWrites) {
+      (data, meta) => {
+        for (const [key, value] of dataWrites) {
           data[key] = value;
+        }
+        for (const key of deletions) {
+          delete data[key];
+        }
+        for (const [key, value] of metaWrites) {
+          Reflect.set(meta, key, value);
         }
       },
       // Scoped to this object AND this step: a shared actor across steps (or objects) could otherwise
       // fork from a LATER step's fold, which itself already carries a direct edit made between the two
       // steps, and so wrongly inherit that edit as an ancestor instead of staying concurrent with it.
-      { message: foldMessage(step.from, step.to), scope: `${object.id}:${stepKey}` },
+      { message: foldMessage(step.from, step.to), scope },
     );
   }
 
-  // Ordinary (non-fold) write: this is the runner's own bookkeeping, never user data. Checkpoints the
-  // heads the diff above read; a crash before this lands just re-diffs a wider, value-compared
-  // (harmless) range. Written directly at the step's own key, never
-  // as a whole-marker (or whole-step) replace, so a sibling step's own checkpoint — or one a
-  // concurrent peer is writing to a DIFFERENT step of the same marker — is never disturbed.
-  const stepPath = [...mountPath, META_NAMESPACE, 'annotations', stepKey];
-  const foldedAt = core.encode([...currentHeads]);
-  core.change((doc) => {
-    setDeep(doc, [...stepPath, 'foldedAt'], foldedAt);
-  });
+  // The heads this pass read, so a write that lands during the pass is still ahead of the checkpoint.
+  return currentHeads;
 };
 
 /**
@@ -518,7 +528,8 @@ const repairMigratedType = (object: Obj.Unknown, steps: readonly Migration.Recor
 const foldObject = (db: Database.Database, migrations: readonly Migration.Migration[], object: Obj.Unknown): void => {
   const steps = Migration.getMigrationSteps(object);
   repairMigratedType(object, steps);
-  for (const { key, step } of steps) {
+  const checkpoints = new Map<string, Heads>();
+  for (const [index, { key, step }] of steps.entries()) {
     const migration = migrations.find(
       (candidate): candidate is Migration.ObjectMigration =>
         Migration.isObjectMigration(candidate) &&
@@ -536,10 +547,30 @@ const foldObject = (db: Database.Database, migrations: readonly Migration.Migrat
     }
 
     try {
-      foldStep(db, migration, step, key, object);
+      const laterSteps = steps.slice(index + 1).map((later) => later.key);
+      const heads = foldStep(db, migration, step, key, object, laterSteps);
+      if (heads) {
+        checkpoints.set(key, heads);
+      }
     } catch (err) {
       log.warn('foldForward: failed to fold a migration step forward', { object: object.id, stepKey: key, err });
     }
+  }
+
+  // Ordinary (non-fold) write: the runner's own bookkeeping, never user data. Each step checkpoints at
+  // the heads its pass read, all in one change, so no step's checkpoint is new work for another. A crash
+  // before this lands re-classifies the same changes, whose folds are found by message. Written at each
+  // step's own key, never as a whole-marker replace, so a sibling step is never disturbed.
+  if (checkpoints.size > 0) {
+    const core = getObjectCore(object);
+    core.change(
+      (doc) => {
+        for (const [key, heads] of checkpoints) {
+          setDeep(doc, [...core.mountPath, META_NAMESPACE, 'annotations', key, 'foldedAt'], core.encode([...heads]));
+        }
+      },
+      { message: checkpointMessage(object.id) },
+    );
   }
 };
 

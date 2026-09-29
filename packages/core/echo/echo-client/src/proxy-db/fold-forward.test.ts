@@ -159,6 +159,44 @@ const listMigration = Migration.define({
   transform: (from) => ({ tags: [...from.labels], location: { ...from.address } }),
 });
 
+class NameV1 extends Type.makeObject<NameV1>(DXN.make('org.dxos.test.foldForward.Name', '0.1.0'))(
+  Schema.Struct({ first: Schema.String, last: Schema.String }),
+) {}
+
+class NameV2 extends Type.makeObject<NameV2>(DXN.make('org.dxos.test.foldForward.Name', '0.2.0'))(
+  Schema.Struct({ fullName: Schema.String }),
+) {}
+
+/** Derives one target from two retired sources. */
+const nameMigration = Migration.define({
+  from: NameV1,
+  to: NameV2,
+  transform: (from) => ({ fullName: `${from.first} ${from.last}` }),
+});
+
+class LabelV1 extends Type.makeObject<LabelV1>(DXN.make('org.dxos.test.foldForward.Label', '0.1.0'))(
+  Schema.Struct({ first: Schema.String, last: Schema.String, displayName: Schema.optional(Schema.String) }),
+) {}
+
+class LabelV2 extends Type.makeObject<LabelV2>(DXN.make('org.dxos.test.foldForward.Label', '0.2.0'))(
+  Schema.Struct({ displayName: Schema.String }),
+) {}
+
+/** Keeps `displayName` when set, else derives it from the retired names. */
+const labelMigration = Migration.define({
+  from: LabelV1,
+  to: LabelV2,
+  transform: (from) => ({ displayName: from.displayName ?? `${from.first} ${from.last}` }),
+});
+
+/** Writes `value` at a retired `key` in a change concurrent with everything after `heads`. */
+const lateWriteAt = (object: Obj.Unknown, heads: A.Heads, key: string, value: string): void => {
+  const core = getObjectCore(object);
+  core.changeAt(heads, (doc) => {
+    setDeep(doc, [...core.mountPath, DATA_NAMESPACE, key], value);
+  });
+};
+
 /** An old client's push onto a retired list, made on the raw document as its replicated change lands. */
 const latePush = (object: Obj.Unknown, key: string, value: string): void => {
   const core = getObjectCore(object);
@@ -422,6 +460,37 @@ describe('fold-forward: retired scalar properties', () => {
   });
 });
 
+describe('ObjectCore.foldChangeAt', () => {
+  test('the same fold authored twice is one change; a fold with other ops under the same seed is another actor', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV2, { name: 'Ada' }));
+    await db.flush();
+    const core = getObjectCore(contact);
+    const heads = A.getHeads(core.getDoc());
+    const fold = (name: string) =>
+      core.foldChangeAt(
+        heads,
+        (draft, mountPath) => {
+          setDeep(draft, [...mountPath, DATA_NAMESPACE, 'name'], name);
+        },
+        { message: 'fold: test', actorSeed: 'seed' },
+      );
+
+    const first = fold('Grace');
+    const length = A.getHistory(core.getDoc()).length;
+    expect(fold('Grace')).to.deep.eq(first);
+    expect(A.getHistory(core.getDoc())).to.have.length(length);
+
+    const other = fold('Hopper');
+    invariant(first && other);
+    const actorOf = ([hash]: A.Heads) =>
+      A.getChangesMetaSince(core.getDoc(), []).find((change) => change.hash === hash)?.actor;
+    expect(actorOf(other)).not.to.eq(actorOf(first));
+  });
+});
+
 describe('fold-forward: text, lists and maps fold as edits inside the value', () => {
   test('a late text splice folds as a splice; a concurrent direct splice to the target survives', async () => {
     const { db, graph } = await builder.createDatabase();
@@ -486,6 +555,146 @@ describe('fold-forward: text, lists and maps fold as edits inside the value', ()
     await db.foldForward([listMigration]);
 
     expect(Obj.getValue(item, ['location'])).to.deep.eq({ city: 'Lyon', zip: '2' });
+  });
+
+  test('a change that replaces one retired value and edits inside another folds each its own way', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ListV1, ListV2]);
+
+    const item = db.add(Obj.make(ListV1, { labels: ['a'], address: { city: 'Paris', zip: '1' } }));
+    await db.flush();
+    await db.runMigrations([listMigration]);
+
+    Obj.update(item, (item) => {
+      Obj.setValue(item, ['tags', 1], 'direct');
+    });
+    await db.flush();
+    const core = getObjectCore(item);
+    core.change((doc) => {
+      const data = getDeep(doc, [...core.mountPath, DATA_NAMESPACE]);
+      invariant(data && typeof data === 'object' && 'labels' in data && Array.isArray(data.labels));
+      Reflect.set(data, 'address', { city: 'Lyon', zip: '9' });
+      data.labels.push('late');
+    });
+    await db.flush();
+    await db.foldForward([listMigration]);
+
+    expect(Obj.getValue(item, ['tags'])).to.have.members(['a', 'direct', 'late']);
+    expect(Obj.getValue(item, ['location'])).to.deep.eq({ city: 'Lyon', zip: '9' });
+  });
+
+  test('a later edit inside a value that depends on a replaced source folds whole', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ListV1, ListV2]);
+
+    const cityMigration = Migration.define({
+      from: ListV1,
+      to: ListV2,
+      transform: (from) => ({ tags: [...from.labels, from.address.city], location: { ...from.address } }),
+    });
+    const item = db.add(Obj.make(ListV1, { labels: ['a'], address: { city: 'Paris', zip: '1' } }));
+    await db.flush();
+    await db.runMigrations([cityMigration]);
+
+    getObjectCore(item).setDecoded(['data', 'address'], { city: 'Lyon', zip: '1' });
+    await db.flush();
+    await db.foldForward([cityMigration]);
+    expect(Obj.getValue(item, ['tags'])).to.deep.eq(['a', 'Lyon']);
+
+    latePush(item, 'labels', 'late');
+    await db.flush();
+    await db.foldForward([cityMigration]);
+    expect(Obj.getValue(item, ['tags'])).to.deep.eq(['a', 'late', 'Lyon']);
+  });
+
+  test('concurrent late writes to two sources of one derived value fold to the merged value', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([NameV1, NameV2]);
+
+    const person = db.add(Obj.make(NameV1, { first: 'Ada', last: 'Lovelace' }));
+    await db.flush();
+    await db.runMigrations([nameMigration]);
+
+    const heads = A.getHeads(getObjectCore(person).getDoc());
+    lateWriteAt(person, heads, 'first', 'Grace');
+    lateWriteAt(person, heads, 'last', 'Hopper');
+    await db.flush();
+    await db.foldForward([nameMigration]);
+
+    expect(Obj.getValue(person, ['fullName'])).to.eq('Grace Hopper');
+  });
+
+  test('a late write to a source of an optional target the object did not hold folds forward', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([LabelV1, LabelV2]);
+
+    const label = db.add(Obj.make(LabelV1, { first: 'Ada', last: 'Lovelace' }));
+    await db.flush();
+    await db.runMigrations([labelMigration]);
+    expect(Obj.getValue(label, ['displayName'])).to.eq('Ada Lovelace');
+
+    getObjectCore(label).setDecoded(['data', 'first'], 'Grace');
+    await db.flush();
+    await db.foldForward([labelMigration]);
+
+    expect(Obj.getValue(label, ['displayName'])).to.eq('Grace Lovelace');
+  });
+
+  test('an intermediate state the transform rejects does not stop later late changes from folding', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ListV1, ListV2]);
+
+    const strictMigration = Migration.define({
+      from: ListV1,
+      to: ListV2,
+      transform: (from) => {
+        invariant(!from.labels.includes('bad'), 'bad label');
+        return { tags: [...from.labels], location: { ...from.address } };
+      },
+    });
+    const item = db.add(Obj.make(ListV1, { labels: ['a'], address: { city: 'Paris', zip: '1' } }));
+    await db.flush();
+    await db.runMigrations([strictMigration]);
+
+    latePush(item, 'labels', 'bad');
+    const core = getObjectCore(item);
+    core.change((doc) => {
+      const labels = getDeep(doc, [...core.mountPath, DATA_NAMESPACE, 'labels']);
+      invariant(Array.isArray(labels));
+      labels.splice(1, 1);
+    });
+    latePush(item, 'labels', 'ok');
+    await db.flush();
+    await db.foldForward([strictMigration]);
+
+    expect(Obj.getValue(item, ['tags'])).to.deep.eq(['a', 'ok']);
+  });
+
+  test('a late write and its revert are each folded, so later folds do not depend on when a pass ran', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ListV1, ListV2]);
+
+    const item = db.add(Obj.make(ListV1, { labels: ['a'], address: { city: 'Paris', zip: '1' } }));
+    await db.flush();
+    await db.runMigrations([listMigration]);
+
+    const core = getObjectCore(item);
+    latePush(item, 'labels', 'x');
+    const [insert] = A.getHeads(core.getDoc());
+    core.change((doc) => {
+      const labels = getDeep(doc, [...core.mountPath, DATA_NAMESPACE, 'labels']);
+      invariant(Array.isArray(labels));
+      labels.splice(1, 1);
+    });
+    const [revert] = A.getHeads(core.getDoc());
+    await db.flush();
+    await db.foldForward([listMigration]);
+
+    const folded = (late: string) =>
+      A.getChangesMetaSince(core.getDoc(), []).some((change) => change.message?.endsWith(` ${late}`));
+    expect(folded(insert)).to.eq(true);
+    expect(folded(revert)).to.eq(true);
+    expect(Obj.getValue(item, ['tags'])).to.deep.eq(['a']);
   });
 
   test('a late write that replaces a retired list folds whole-value', async () => {

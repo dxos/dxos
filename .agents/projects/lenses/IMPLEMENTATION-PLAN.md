@@ -69,14 +69,16 @@ Make the API unable to express the cases that thrashed in converge, instead of p
 
 Follow-up (2026-09-29), superseding item 1:
 
-8. **Per-change structural folds.** Each late change to a retired property is folded as its own change,
-   forked at the migration plus the folds of that change's late ancestors, under an actor derived from its
-   content (`ObjectCore.foldChangeAt`). Every input is a function of the source history, so peers that fold
-   the same late change, in any order and at any time, author one byte-identical change. A late write that
-   sets a property outright folds whole-value; one that edits inside it folds as map-key puts, list inserts
-   and deletes around the shared elements, or a text diff. Rich-text fields may be migrated again; marks are
-   not carried. Kept properties are never folded, since an old client writes them directly. Overlay folds
-   stay per-pass. Fan-in and array fan-out folds remain whole-value per key.
+8. **Per-change structural folds.** A late change's edits inside a map, list or text are folded as a
+   change of their own, forked at the winning migration change plus the folds of that change's late
+   ancestors, under an actor derived from the fold's ops (`ObjectCore.foldChangeAt`), and placed on the
+   target where its elements are (`fold-edit.ts`). Peers that fold the same late change, in any order and
+   at any time, author one byte-identical change. Keys a late change moved by replacing a source value
+   (in it or an ancestor), scalar keys, meta, and anything a change fails to classify are folded per pass
+   from the merged current data, as before. The transform is recomputed on the step's source properties
+   only. Every change that writes the object is classified, never the net diff, and one checkpoint change
+   per object records each step at the heads its pass read. Rich-text fields may be migrated again; marks
+   are not carried. Fan-in and array fan-out folds remain whole-value per key.
 9. **Kept keys keep their value.** The runner rejects a transform that changes the value of a property it
    keeps under the same name: an old client keeps writing it in its old meaning, where fold-forward cannot
    tell the two apart. A changed meaning takes a new name.

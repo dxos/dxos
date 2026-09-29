@@ -419,7 +419,7 @@ test('a transform that changes a kept property value is rejected before writing'
   const core = getObjectCore(item);
   const preHeads = A.getHeads(core.getDoc());
 
-  const reinterpret = defineObjectMigration({
+  const reinterpret = Migration.define({
     from: PriceV1,
     to: PriceV2,
     transform: (from) => ({ label: from.label, price: from.price / 100 }),
@@ -429,7 +429,7 @@ test('a transform that changes a kept property value is rejected before writing'
   expect(A.getHeads(core.getDoc())).to.deep.eq(preHeads);
 
   // The same conversion under a new name retires `price`, so late writes to it fold forward.
-  const renamed = defineObjectMigration({
+  const renamed = Migration.define({
     from: PriceV1,
     to: PriceV3,
     transform: (from) => ({ label: from.label, priceDollars: from.price / 100 }),

@@ -281,14 +281,17 @@ describe('fold-forward across a real partition, peer B a genuinely old client', 
     await db1.foldForward([personMigration]);
     await db2.foldForward([personMigration]);
     await heal();
-    // `waitUntilHeadsReplicated` targets each side's heads as captured at call time, so poll until both
-    // peers hold both sides' folds.
+    // Two independent concurrent forks (one per peer, both off `postMigrationHeads`) can take more
+    // than one `syncAll` round to fully reconcile both ways: `waitUntilHeadsReplicated` targets each
+    // side's heads as captured at call time, which is stale the instant the OTHER side's own fold is
+    // still in flight — polling (as every cross-peer read in this suite does) rather than a fixed
+    // round count is what actually waits for both peers to see all three alternatives.
     await expect
       .poll(async () => {
         await syncAll(db1, db2);
-        return headsOf(obj1).join() === headsOf(obj2).join();
+        return [Obj.getConflict(obj1, 'name')?.alternatives.length, Obj.getConflict(obj2, 'name')?.alternatives.length];
       })
-      .toBe(true);
+      .toEqual([3, 3]);
 
     const conflict1 = Obj.getConflict(obj1, 'name');
     const conflict2 = Obj.getConflict(obj2, 'name');
@@ -300,16 +303,18 @@ describe('fold-forward across a real partition, peer B a genuinely old client', 
     expect(conflict1.presented).to.eq('Amazing Grace');
     expect(conflict2.presented).to.eq('Amazing Grace');
 
-    // Two alternatives: both peers folded the same late write into one byte-identical change.
-    expect(conflict1.alternatives).to.have.length(2);
+    // Three alternatives, not two: each peer folds under its own derived actor, so peer A's and peer
+    // B's folds are distinct changes carrying the same value, kept beside the one direct edit.
+    expect(conflict1.alternatives).to.have.length(3);
     const normalize = (conflict: Obj.Conflict) =>
       [...conflict.alternatives].sort((a, b) => a.actor.localeCompare(b.actor));
     expect(normalize(conflict1)).to.deep.eq(normalize(conflict2));
     const folds = conflict1.alternatives.filter((alternative) => alternative.fold);
     const direct = conflict1.alternatives.find((alternative) => !alternative.fold);
-    expect(folds).to.have.length(1);
+    expect(folds).to.have.length(2);
     invariant(direct, 'expected the direct edit among the alternatives');
-    expect(folds[0].value).to.eq('Grace Murray Hopper');
+    expect(folds.every((fold) => fold.value === 'Grace Murray Hopper')).to.eq(true);
+    expect(new Set(folds.map((fold) => fold.actor)).size).to.eq(2); // two distinct actors, one per peer.
     expect(direct.value).to.eq('Amazing Grace');
 
     // Re-running on both, again independently, performs no further writes — value-compare guards a
@@ -376,6 +381,64 @@ describe('fold-forward of list edits across a real partition', () => {
 
       expect(Obj.getValue(obj1, ['tags'])).to.deep.eq(['a', 'first', 'second']);
       expect(Obj.getValue(obj2, ['tags'])).to.deep.eq(['a', 'first', 'second']);
+    } finally {
+      await builder.close();
+      await pair.network.close();
+    }
+  });
+});
+
+describe('fold-forward when two peers migrate from the same heads', () => {
+  test('each peer folds its late insert onto its own migration, and both inserts survive onto the winner', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    // Not `await using`: the network must close after the builder.
+    const builder = await new EchoTestBuilder().open();
+    const pair = await createPartitionedPair(builder, [TagsV1, TagsV2]);
+    try {
+      const { peer1, peer2, partition, heal, syncAll } = pair;
+      await using db1 = await peer1.createDatabase(spaceKey);
+      const obj1 = db1.add(Obj.make(TagsV1, { labels: ['a'] }));
+      await db1.flush();
+      const rootUrl = db1.rootUrl;
+      invariant(rootUrl, 'root url');
+      await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+      await syncAll(db1, db2);
+      let found: TagsV1 | undefined;
+      await expect
+        .poll(async () => {
+          [found] = await db2.query(Filter.id(obj1.id)).run();
+          return found;
+        })
+        .toBeDefined();
+      invariant(found, 'expected the replicated object');
+      const obj2 = found;
+
+      // Both peers migrate from the same heads, so each authors its own change for one recorded step.
+      await partition();
+      await db1.runMigrations([tagsMigration]);
+      await db2.runMigrations([tagsMigration]);
+      pushLabel(obj1, 'one');
+      pushLabel(obj2, 'two');
+      await db1.foldForward([tagsMigration]);
+      await db2.foldForward([tagsMigration]);
+
+      await heal();
+      const converged = async () => {
+        await expect
+          .poll(async () => {
+            await syncAll(db1, db2);
+            return headsOf(obj1).join() === headsOf(obj2).join();
+          })
+          .toBe(true);
+      };
+      await converged();
+      await db1.foldForward([tagsMigration]);
+      await db2.foldForward([tagsMigration]);
+      await converged();
+
+      expect(Migration.getMigrationSteps(obj1)).to.have.length(1);
+      expect(Obj.getValue(obj1, ['tags'])).to.have.members(['a', 'one', 'two']);
+      expect(Obj.getValue(obj2, ['tags'])).to.deep.eq(Obj.getValue(obj1, ['tags']));
     } finally {
       await builder.close();
       await pair.network.close();

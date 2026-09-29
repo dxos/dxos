@@ -913,6 +913,17 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
       delete output?.id;
 
+      // An old client keeps writing a kept key in its old meaning, straight into the new field, where
+      // fold-forward cannot tell the two apart; a changed meaning needs a new name.
+      const reinterpreted = [...computeGuardedDataWrites(core, output ?? {}).keys()].filter(
+        (key) => core.getRaw([DATA_NAMESPACE, key]) !== undefined,
+      );
+      if (reinterpreted.length > 0) {
+        throw new Error(
+          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: transform changes the value of kept properties [${reinterpreted.join(', ')}] on object ${object.id}; write a changed value under a new property name`,
+        );
+      }
+
       // An overlay value lives in the object's meta, which the data-only transform input omits.
       if (migration.lens && output) {
         const overlays = Lens.getOverlays(object, migration.lens.id);
@@ -932,17 +943,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         throw new Error(
           `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: invalid transform output for object ${object.id}`,
           { cause },
-        );
-      }
-
-      // An old client keeps writing a kept key in its old meaning, straight into the new field, where
-      // fold-forward cannot tell the two apart; a changed meaning needs a new name.
-      const reinterpreted = [...computeGuardedDataWrites(core, output ?? {}).keys()].filter(
-        (key) => core.getRaw([DATA_NAMESPACE, key]) !== undefined,
-      );
-      if (reinterpreted.length > 0) {
-        throw new Error(
-          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: transform changes the value of kept properties [${reinterpreted.join(', ')}] on object ${object.id}; write a changed value under a new property name`,
         );
       }
 

@@ -172,9 +172,13 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
  * A property kept under the same name must keep its value: the runner rejects a transform that changes
  * one, since an old client keeps writing it in its old meaning. Write a changed value under a new name.
  *
- * Fold-forward mirrors the late write: one that sets an old property outright replaces the target value,
+ * Fold-forward mirrors the late write: one that sets an old property outright replaces the target value
+ * (a concurrent direct edit then conflicts with it, and `Obj.getConflict` presents the direct edit),
  * while one that edits inside it (a map key, a list insert, a text splice) edits inside the target, so a
- * concurrent direct edit elsewhere in the same map, list or text survives. Text marks are not carried.
+ * concurrent direct edit elsewhere in the same map, list or text survives, as between two new clients:
+ * a conflict below the top-level property resolves in Automerge order, and a direct replacement of the
+ * whole target value drops the edit. Text marks are not carried. A target derived from a kept property
+ * is not re-derived when an old client writes that property.
  *
  * @example
  * ```ts
@@ -246,9 +250,13 @@ export type FromLensOptions = {
  * incompatible-type) mapping always fails, and the lens's `GetPut` law is re-checked against every
  * object right before its transform output is computed.
  *
- * Fold-forward mirrors the late write: one that sets an old property outright replaces the target value,
+ * Fold-forward mirrors the late write: one that sets an old property outright replaces the target value
+ * (a concurrent direct edit then conflicts with it, and `Obj.getConflict` presents the direct edit),
  * while one that edits inside it (a map key, a list insert, a text splice) edits inside the target, so a
- * concurrent direct edit elsewhere in the same map, list or text survives. Text marks are not carried.
+ * concurrent direct edit elsewhere in the same map, list or text survives, as between two new clients:
+ * a conflict below the top-level property resolves in Automerge order, and a direct replacement of the
+ * whole target value drops the edit. Text marks are not carried. A target derived from a kept property
+ * is not re-derived when an old client writes that property.
  *
  * @example
  * ```ts
