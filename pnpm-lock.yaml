@@ -11969,9 +11969,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-observability':
-        specifier: workspace:*
-        version: link:../plugin-observability
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -18492,6 +18489,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -18559,9 +18559,6 @@ importers:
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

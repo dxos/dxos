@@ -31,7 +31,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Database } from '@dxos/echo';
 import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -43,6 +43,18 @@ import { createProcessTraceService } from './process-trace.ts';
 import * as ProcessHandle from './ProcessHandle.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
+
+/**
+ * The origin a process's database writes are attributed to. A process serving a conversation is an agent's work,
+ * not a person's, and its children inherit the conversation; any other process takes the origin it was spawned with.
+ */
+const resolveOrigin = (
+  environment: Process.Environment,
+  requested: Database.Origin | undefined,
+): Database.Origin | undefined => (environment.conversation != null ? 'system' : requested);
+
+const originContext = (origin: Database.Origin | undefined): Context.Context<never> =>
+  origin !== undefined ? Context.make(Database.Origin, origin) : Context.empty();
 
 export {
   type ProcessIdGenerator,
@@ -210,6 +222,12 @@ export interface SpawnOptions {
   readonly traceMeta?: Trace.Meta;
 
   readonly environment?: Process.Environment;
+
+  /**
+   * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
+   * invokes. Persisted with the process, so a restored process keeps it.
+   */
+  readonly origin?: Database.Origin;
 
   /**
    * User-facing notifications requested for this process's lifecycle phases.
@@ -582,7 +600,8 @@ export class Impl implements Manager {
       // One controller per run, fired by {@link ProcessHandle.Impl.terminate} — the
       // local counterpart of the EDGE-provided Cancellation service.
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      const origin = resolveOrigin(environment, options?.origin);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -610,6 +629,7 @@ export class Impl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
@@ -722,6 +742,7 @@ export class Impl implements Manager {
         params: { name: params.name ?? null, annotations: params.annotations },
         environment: { space: environment.space, conversation: environment.conversation },
         parentId: Option.getOrNull(parentOption),
+        ...(origin !== undefined ? { origin } : {}),
         state: Process.State.RUNNING,
         alarmDueAt: null,
         events: [],
@@ -793,7 +814,8 @@ export class Impl implements Manager {
       };
 
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      const origin = resolveOrigin(environment, record.origin);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -819,6 +841,7 @@ export class Impl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);

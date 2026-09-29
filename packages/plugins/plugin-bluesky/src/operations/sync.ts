@@ -120,7 +120,10 @@ const syncBinding = ({ client, binding }: { client: Client; binding: Cursor.Exte
       const input = BlueskyApi.toSubscriptionPostInput(item);
       return Subscription.makePost({ source: feedRef, ...input });
     });
-    yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(Database.layer(space.db)));
+    yield* EchoFeed.append(echoFeed, postObjects).pipe(
+      Effect.provideService(Database.Origin, 'system'),
+      Effect.provide(Database.layer(space.db)),
+    );
 
     if (newestUri) {
       Obj.update(subscriptionFeed, (subscriptionFeed) => {

@@ -213,7 +213,9 @@ const summarize = Effect.fnUntraced(function* (
     );
     if (text.length > 0) {
       const target = Mailbox.findOrCreateAnnotations(mailbox, db);
-      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]);
+      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]).pipe(
+        Effect.provideService(Database.Origin, 'system'),
+      );
       summarized_ += 1;
     }
     reportStatus({ current: summarized_, message: stringProperty(subject, 'subject') });
