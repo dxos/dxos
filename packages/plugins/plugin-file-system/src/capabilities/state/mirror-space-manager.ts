@@ -66,7 +66,7 @@ export class MirrorSpaceManager {
 
     const space = await this._client.spaces.create(
       {},
-      { tags: [FILE_SYSTEM_MIRROR_TAG], membershipPolicy: MembershipPolicy.LOCKED },
+      { tags: [FILE_SYSTEM_MIRROR_TAG], membershipPolicy: MembershipPolicy.LOCKED, origin: 'system' },
     );
     await space.waitUntilReady();
 

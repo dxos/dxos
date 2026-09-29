@@ -33,16 +33,6 @@ export default Capability.makeModule(
     return [
       Capability.contribute(AppCapabilities.ObservabilityMapping, [
         ObservabilityMapping.make({
-          operation: SpaceOperation.Create,
-          event: 'space.create',
-          properties: (_input, output) => ({ spaceId: output.space.id }),
-        }),
-        ObservabilityMapping.make({
-          operation: SpaceOperation.Share,
-          event: 'space.share',
-          properties: (input) => ({ spaceId: input.space.id }),
-        }),
-        ObservabilityMapping.make({
           operation: SpaceOperation.Migrate,
           event: 'space.migrate',
           properties: (input) => ({

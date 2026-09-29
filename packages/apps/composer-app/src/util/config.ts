@@ -127,6 +127,7 @@ export const initializeObservability = async (
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),
     Observability.addDataProvider(ObservabilityProvider.Storage.provider),
     Observability.addDataProvider(ObservabilityProvider.ObjectEvents.provider),
+    Observability.addDataProvider(ObservabilityProvider.SpaceEvents.provider),
     // Registered here rather than in plugin-observability because this runs in the dedicated
     // worker too, and the plugin's capability only runs in the tab — so the worker's own event
     // loop would otherwise never be measured.
