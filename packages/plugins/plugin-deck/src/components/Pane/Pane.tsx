@@ -116,6 +116,7 @@ export type PaneTab = {
   icon: string;
   /** Already-localized label. */
   label: string;
+  testId?: string;
 };
 
 type PaneTabsProps = Merge<
@@ -142,13 +143,14 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
         className={mx('flex-1 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
         ref={forwardedRef}
       >
-        {tabs.map(({ id, icon, label }) => (
+        {tabs.map(({ id, icon, label, testId }) => (
           <IconButton
             key={id}
             role='tab'
             aria-selected={value === id}
             tabIndex={value === id ? 0 : -1}
             data-id={id}
+            data-testid={testId}
             icon={icon}
             iconOnly={tabs.length > maxTabs && value !== id}
             label={label}
