@@ -646,16 +646,21 @@ pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
 See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
 `plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
 
-### Tauri-only modules
+### Runtime conditions
 
-A module that only works inside the Tauri shell (spawning a helper process, native plugins) is
-annotated `environments: ['tauri']` in the canonical barrel. `tauri` is additive, unlike `node` and
-`workerd`: `dx-plugin gen` gives it a barrel with every browser module plus the annotated ones, and
-generates `gen/default.ts` without them, pointing `#capabilities.default` there so the web bundle
-never carries them. Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`,
-or `tauri dev` via `TAURI_ENV_PLATFORM`). A plugin with such a module must not list `capabilities` as
-an explicit `entry` in `vite.config.ts`: an explicit entry overrides the derived one and would build
-the canonical barrel as the `default` dist.
+`environments` on a module lists every runtime condition it loads in: `browser`, `tauri`, `node`,
+`workerd`. `dx-plugin gen` slices one barrel per condition by a single rule (a module is carried when
+its list names the condition or it has no list) and writes `#capabilities` with no `default`. Tools
+take the first key they match, so `browser` goes last: workerd and tauri builds also match it.
+
+- Maker families set the usual list: UI families `['browser', 'tauri']`, headless families all four.
+  A call site that restates a list names every runtime it wants, `tauri` included.
+- A module that only works inside the Tauri shell is `['tauri']` (`LocalLauncher`).
+- A plugin loaded under a runtime needs that condition in its map, or `#capabilities` fails to resolve.
+  A UI-only plugin has no `node` key, so its plugin tests run in browser mode (`plugin-mermaid`).
+
+Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`, or `tauri dev`
+via `TAURI_ENV_PLATFORM`).
 
 See: `plugin-sandbox/src/capabilities/index.ts` (`LocalLauncher`), `app-framework/src/plugin-cli/generate.ts`
 

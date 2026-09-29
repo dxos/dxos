@@ -1,6 +1,6 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 # Composer plugins on the single-entry pattern: one canonical plugin.ts + capabilities/index.ts
-# with per-module `environments` annotations. `gen-modules` emits the headless `#capabilities`
+# with per-module `environments` annotations. `gen-modules` emits the per-condition `#capabilities`
 # barrels (src/capabilities/gen/, gitignored) and syncs the package.json condition
 # map. `build` and `test` name it directly rather than through the `~:#prebuild` tag: a
 # same-project tag dep declared in this file resolves to nothing (moon applies the tag after the

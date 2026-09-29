@@ -118,7 +118,7 @@ const task = createEvalRunner({
   scored: true,
 });
 
-// Skipped: the SVG drawing variant is browser-only (`environments: []` in plugin-illustrator's
+// Skipped: the SVG drawing variant is browser-only (`environments: ['browser', 'tauri']` in plugin-illustrator's
 // capabilities), so under Node the illustrator tools are exposed with no variant behind them and
 // every call fails. Unskip once the variant ships in the node barrel.
 evalite.skip('Illustrator — diagram a described system as a legible, grounded flowchart', {

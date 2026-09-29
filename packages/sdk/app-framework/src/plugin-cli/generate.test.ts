@@ -84,14 +84,15 @@ describe('dx-plugin gen', () => {
           "import * as Capability from '@dxos/app-framework/Capability';",
           '',
           "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
-          "export const BrowserOnly = Capability.lazyModule('BrowserOnly', { environments: [] }, () => import('./ui'));",
+          "export const BrowserOnly = Capability.lazyModule('BrowserOnly', { environments: ['browser'] }, () => import('./ui'));",
           '',
         ].join('\n'),
       },
       (dir) => {
         const result = generate(dir);
-        expect(result.files[0].included).toEqual(1);
-        expect(result.files[0].stubbed).toEqual(1);
+        const nodeFile = result.files.find((file) => file.path.endsWith('node.ts'))!;
+        expect(nodeFile.included).toEqual(1);
+        expect(nodeFile.stubbed).toEqual(1);
 
         const node = read(dir, 'node');
         // The stub has to exist: `Plugin.addModule` skips `undefined`, and an absent export would
@@ -151,62 +152,56 @@ describe('dx-plugin gen', () => {
     );
   });
 
-  it('adds a tauri-only module on top of the default barrel and removes it from default', () => {
+  it('slices every condition by the same rule, with no default', () => {
     withPlugin(
       {
         'package.json': PACKAGE_JSON,
         'src/capabilities/index.ts': [
           "import * as Capability from '@dxos/app-framework/Capability';",
           '',
-          "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
-          "export const BrowserOnly = Capability.lazyModule('BrowserOnly', { environments: [] }, () => import('./ui'));",
+          "export const Isomorphic = Capability.lazyModule('Isomorphic', {}, () => import('./iso'));",
+          "export const Headless = Capability.lazyModule('Headless', { environments: ['browser', 'node', 'tauri', 'workerd'] }, () => import('./headless'));",
+          "export const Ui = Capability.lazyModule('Ui', { environments: ['browser', 'tauri'] }, () => import('./ui'));",
           "export const Launcher = Capability.lazyModule('Launcher', { environments: ['tauri'] }, () => import('./launcher'));",
           '',
         ].join('\n'),
       },
       (dir) => {
         const result = generate(dir);
-        expect(result.environments).toEqual(['node', 'tauri']);
+        expect(result.environments).toEqual(['browser', 'node', 'tauri', 'workerd']);
 
         const tauri = read(dir, 'tauri');
-        expect(tauri).toContain("import('../launcher')");
-        expect(tauri).toContain("Capability.lazyModule('BrowserOnly'");
-        expect(tauri).toContain("Capability.lazyModule('Headless'");
-
-        const fallback = read(dir, 'default');
-        expect(fallback).toContain("Capability.lazyModule('BrowserOnly'");
-        expect(fallback).toContain('export const Launcher = undefined;');
-
-        expect(read(dir, 'node')).toContain('export const Launcher = undefined;');
+        for (const name of ['Isomorphic', 'Headless', 'Ui', 'Launcher']) {
+          expect(tauri).toContain(`Capability.lazyModule('${name}'`);
+        }
+        const browser = read(dir, 'browser');
+        expect(browser).toContain("Capability.lazyModule('Ui'");
+        expect(browser).toContain('export const Launcher = undefined;');
+        const node = read(dir, 'node');
+        expect(node).toContain("Capability.lazyModule('Isomorphic'");
+        expect(node).toContain('export const Ui = undefined;');
+        expect(node).toContain('export const Launcher = undefined;');
 
         const entry = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).imports['#capabilities'];
-        expect(entry.source).toEqual({
-          node: './src/capabilities/gen/node.ts',
-          tauri: './src/capabilities/gen/tauri.ts',
-          default: './src/capabilities/gen/default.ts',
-        });
-        expect(entry.tauri).toEqual('./dist/lib/capabilities.tauri.mjs');
-        expect(entry.default).toEqual('./dist/lib/capabilities.mjs');
+        // Tools take the first key they match, and workerd and tauri builds also match `browser`.
+        expect(Object.keys(entry.source)).toEqual(['workerd', 'node', 'tauri', 'browser']);
+        expect(Object.keys(entry)).toEqual(['source', 'types', 'workerd', 'node', 'tauri', 'browser']);
+        expect(entry.browser).toEqual('./dist/lib/capabilities.browser.mjs');
       },
     );
   });
 
-  it('points default back at the canonical barrel once no module is additive-only', () => {
+  it('retracts conditions no module names any more', () => {
     withPlugin(
       {
         'package.json': JSON.stringify({
           name: '@dxos/plugin-fixture',
           imports: {
             '#capabilities': {
-              source: {
-                node: './src/capabilities/gen/node.ts',
-                tauri: './src/capabilities/gen/tauri.ts',
-                default: './src/capabilities/gen/default.ts',
-              },
+              source: { node: './src/capabilities/gen/node.ts', tauri: './src/capabilities/gen/tauri.ts' },
               types: './dist/types/src/capabilities/index.d.ts',
               node: './dist/lib/capabilities.node.mjs',
               tauri: './dist/lib/capabilities.tauri.mjs',
-              default: './dist/lib/capabilities.mjs',
             },
           },
         }),
@@ -216,19 +211,49 @@ describe('dx-plugin gen', () => {
           "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
           '',
         ].join('\n'),
-        'src/capabilities/gen/default.ts': '',
         'src/capabilities/gen/tauri.ts': '',
       },
       (dir) => {
         generate(dir);
         const entry = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).imports['#capabilities'];
-        expect(entry.source).toEqual({
-          node: './src/capabilities/gen/node.ts',
-          default: './src/capabilities/index.ts',
-        });
+        expect(entry.source).toEqual({ node: './src/capabilities/gen/node.ts' });
         expect(entry.tauri).toBeUndefined();
-        expect(fs.existsSync(path.join(dir, 'src/capabilities/gen/default.ts'))).toBe(false);
         expect(fs.existsSync(path.join(dir, 'src/capabilities/gen/tauri.ts'))).toBe(false);
+      },
+    );
+  });
+
+  it('collapses back to the canonical barrel once no module names a condition', () => {
+    withPlugin(
+      {
+        'package.json': JSON.stringify({
+          name: '@dxos/plugin-fixture',
+          imports: {
+            '#capabilities': {
+              source: { node: './src/capabilities/gen/node.ts', browser: './src/capabilities/gen/browser.ts' },
+              types: './dist/types/src/capabilities/index.d.ts',
+              node: './dist/lib/capabilities.node.mjs',
+              browser: './dist/lib/capabilities.browser.mjs',
+            },
+          },
+        }),
+        'src/capabilities/index.ts': [
+          "import * as Capability from '@dxos/app-framework/Capability';",
+          '',
+          "export const Isomorphic = Capability.lazyModule('Isomorphic', {}, () => import('./iso'));",
+          '',
+        ].join('\n'),
+        'src/capabilities/gen/node.ts': '',
+      },
+      (dir) => {
+        generate(dir);
+        const entry = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).imports['#capabilities'];
+        expect(entry).toEqual({
+          source: './src/capabilities/index.ts',
+          types: './dist/types/src/capabilities/index.d.ts',
+          default: './dist/lib/capabilities.mjs',
+        });
+        expect(fs.existsSync(path.join(dir, 'src/capabilities/gen'))).toBe(false);
       },
     );
   });
