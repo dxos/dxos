@@ -904,7 +904,7 @@ export class PersistentOperation_v0_1_0 extends Type.makeObject<PersistentOperat
 const _migration = Migration.define({
   from: PersistentOperation_v0_1_0,
   to: PersistentOperation,
-  transform: async (from) => ({
+  transform: (from) => ({
     [Obj.Meta]: { key: from.key, version: from.version },
     name: from.name,
     description: from.description,

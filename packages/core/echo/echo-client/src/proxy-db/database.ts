@@ -21,6 +21,7 @@ import {
   Feed,
   Filter,
   JsonSchema,
+  Lens,
   Migration,
   Obj,
   Query,
@@ -81,7 +82,7 @@ import {
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { runArrayFanOutMigration, runStampElementIdsMigration } from './array-fan-out.ts';
-import { computeGuardedDataWrites, encodedValuesEqual } from './encoded-value.ts';
+import { computeGuardedDataWrites, encodedValuesEqual, getDecodedDataWithRefs } from './encoded-value.ts';
 import { runFanInMigration } from './fan-in.ts';
 import { type FoldForwardOptions, foldForwardMigrations } from './fold-forward.ts';
 import { createObjectMigrationContext } from './migration-context.ts';
@@ -297,9 +298,9 @@ const combineSyncState = (
 
 /**
  * The properties `#runObjectMigration` reads/deletes off a migration's `transform` result —
- * `Migration.ObjectMigration.transform` is declared as `(from: unknown, ...) => Promise<unknown>`
- * on the type-erased interface, but its actual shape always matches `Migration.TransformResult<To>`:
- * an `id`/`[MetaId]` envelope around the target type's own data keys (the index signature).
+ * `Migration.ObjectMigration.transform` returns `unknown` on the type-erased interface, but its
+ * actual shape always matches `Migration.TransformResult<To>`: an `id`/`[MetaId]` envelope around the
+ * target type's own data keys (the index signature).
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta>; [key: string]: unknown };
 
@@ -881,17 +882,34 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       if (Obj.getTypeURI(object)?.toString() !== migration.fromType.toString()) {
         continue;
       }
-      const before = JSON.parse(JSON.stringify(object));
 
-      const output = (await migration.transform(object, createObjectMigrationContext(this))) as
-        | MigrationOutput
-        | undefined;
+      // Read, transformed and written in one synchronous block, so no replicated change can land
+      // between the snapshot the output derives from and the heads the migration change records.
+      const core = getObjectCore(object);
+      const before = { ...getDecodedDataWithRefs(this, core, A.getHeads(core.getDoc())), id: object.id };
+      const result = migration.transform(before);
+      if (result instanceof Promise) {
+        throw new TypeError(
+          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: transform must be synchronous`,
+        );
+      }
+      const output = result as MigrationOutput | undefined;
       const metaPatch = output?.[MetaId];
       if (metaPatch !== undefined && output != null) {
         delete output[MetaId];
       }
 
       delete output?.id;
+
+      // An overlay value lives in the object's meta, which the data-only transform input omits.
+      if (migration.lens && output) {
+        const overlays = Lens.getOverlays(object, migration.lens.id);
+        for (const property of Lens.coverage(migration.lens).overlaid) {
+          if (output[property] === undefined && overlays[property] !== undefined) {
+            output[property] = overlays[property];
+          }
+        }
+      }
 
       // Whole-set validation before any write lands: an invalid transform must not half-write the
       // object. `toSchema` is the target's entity schema (it requires `id`, which the transform
@@ -905,12 +923,66 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         );
       }
 
-      this.#applyObjectMigration(object, migration, output ?? {}, metaPatch);
+      const stepIndex = this.#applyObjectMigration(object, migration, output ?? {}, metaPatch);
       const postMigrationType = Obj.getTypeURI(object);
       invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
 
-      if (migration.onMigration) {
-        await migration.onMigration({ before, object, db: this });
+      await this.#runMigrationEffects(object, migration, stepIndex, before);
+    }
+
+    if (migration.onMigration) {
+      await this.#resumeMigrationEffects(migration);
+    }
+  }
+
+  /** Runs `onMigration` for one migrated object, then clears its step's `effectsPending` flag. */
+  async #runMigrationEffects(
+    object: Obj.Unknown,
+    migration: Migration.ObjectMigration,
+    stepIndex: number,
+    before: Record<string, unknown> & { id: string },
+  ): Promise<void> {
+    if (!migration.onMigration) {
+      return;
+    }
+    await migration.onMigration({ ...createObjectMigrationContext(this), before, object });
+    const core = getObjectCore(object);
+    core.change((doc) => {
+      setDeep(
+        doc,
+        [
+          ...core.mountPath,
+          META_NAMESPACE,
+          'annotations',
+          Migration.MigrationMarkerAnnotation.key,
+          'steps',
+          stepIndex,
+          'effectsPending',
+        ],
+        false,
+      );
+    });
+  }
+
+  /** Re-runs `onMigration` for objects whose migration change landed but whose effects never completed. */
+  async #resumeMigrationEffects(migration: Migration.ObjectMigration): Promise<void> {
+    const objects = await this._hypergraph.query(Query.select(Filter.type(migration.toType)).from(this)).run();
+    for (const object of objects) {
+      const marker = Annotation.get(object, Migration.MigrationMarkerAnnotation);
+      if (Option.isNone(marker)) {
+        continue;
+      }
+      const core = getObjectCore(object);
+      for (const [stepIndex, step] of marker.value.steps.entries()) {
+        if (
+          step.effectsPending &&
+          step.from === migration.fromType.toString() &&
+          step.to === migration.toType.toString() &&
+          A.hasHeads(core.getDoc(), [...step.preHeads])
+        ) {
+          const before = { ...getDecodedDataWithRefs(this, core, [...step.preHeads]), id: object.id };
+          await this.#runMigrationEffects(object, migration, stepIndex, before);
+        }
       }
     }
   }
@@ -934,7 +1006,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     migration: Migration.ObjectMigration,
     output: MigrationOutput,
     metaPatch: Partial<ProtocolEntityMeta> | undefined,
-  ): void {
+  ): number {
     const core = getObjectCore(object);
     const mountPath = core.mountPath;
     const preHeads = A.getHeads(core.getDoc());
@@ -962,6 +1034,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         retired: Object.keys(core.getRaw([DATA_NAMESPACE]) ?? {})
           .filter((key) => !Object.hasOwn(output, key))
           .sort(),
+        ...(migration.onMigration ? { effectsPending: true } : {}),
       }),
     );
     const existingStepCount = Annotation.get(object, Migration.MigrationMarkerAnnotation).pipe(
@@ -991,6 +1064,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       },
       { message: `migration: ${fromType} -> ${toType}` },
     );
+    return existingStepCount;
   }
 
   /**

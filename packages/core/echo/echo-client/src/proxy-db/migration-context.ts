@@ -10,16 +10,10 @@ import { getObjectCore } from '../echo-handler/index.ts';
 import { computeGuardedDataWrites } from './encoded-value.ts';
 
 //
-// Phase D (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md`; M0-REPORT.md design items 2, 3, 4):
-// the `ensure`/`assign` primitives a migration `transform` uses for fan-out (create-by-meta-key) and
-// cross-object writes. Effects happen during `transform`, so a crash mid-object leaves the source
-// under its old type (the next `runMigrations` pass re-executes `transform` from scratch) and both
-// primitives are idempotent by construction — `ensure` finds what an earlier attempt already created,
-// `assign` never rewrites an already-equal value. `ensure`'s find is DURABLE (`db.query(...).run()`),
-// never the local working set alone: a working-set-only (`runSync`) check cannot see a child an
-// earlier, separate `runMigrations`/`foldForward` call created once this session's in-memory query
-// cache has moved on, nor one created before a crash or a peer reload — confirmed empirically while
-// building array-fan-out's fold-forward pass, which is what closes this gap.
+// The `ensure`/`assign` primitives `onMigration` uses for fan-out and cross-object writes. Both are
+// idempotent, since a resumed `onMigration` repeats them: `ensure` finds what an earlier attempt created
+// (durably, so a child from an earlier session or before a reload is found), `assign` never rewrites an
+// equal value.
 //
 
 /**
@@ -140,18 +134,8 @@ const addObject = (db: Database.Database, object: Obj.Unknown): void => {
 };
 
 /**
- * Builds the `ensure`/`assign` pair {@link Migration.ObjectMigrationContext} exposes to a migration's
- * `transform`. `ensure`'s find branch and create branch are both written here (not delegated to
- * {@link findByConvergenceKey}/{@link ensureByConvergenceKey}, which fan-in and array-fan-out use) so
- * the query and the creation both run under the caller's own generic `To` — abstract here, inside a
- * property implementing a generic interface method — letting the returned `Ref` carry
- * `Type.InstanceType<To>` rather than the widened `Obj.Unknown` those two callers get. The find is
- * durable (`run()`, not `runSync()`), for the same reason {@link findByConvergenceKey} is: a
- * `transform` re-run by a later, separate `runMigrations` call (or after a crash or a peer reload) must
- * still find what an earlier one already created. Uncached, unlike the array-fan-out callers' shared
- * {@link ConvergenceKeyCache}: `#runObjectMigration` calls `transform` once per matched SOURCE object,
- * not once per element of an array, so the per-call query cost here does not compound the way it would
- * in a per-element loop.
+ * The {@link Migration.ObjectMigrationContext} `onMigration` receives. `ensure` queries under the
+ * caller's own `To` so the returned `Ref` keeps its type, and is uncached since it runs once per object.
  */
 export const createObjectMigrationContext = (db: Database.Database): Migration.ObjectMigrationContext => ({
   db,

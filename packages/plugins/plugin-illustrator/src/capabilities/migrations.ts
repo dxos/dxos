@@ -16,7 +16,7 @@ import { Drawing, LegacySketch } from '#types';
 export const sketchToDrawing = Migration.define({
   from: LegacySketch.Sketch,
   to: Drawing.Drawing,
-  transform: async ({ name, canvas }) => ({ name, canvas }),
+  transform: ({ name, canvas }) => ({ name, canvas }),
 });
 
 const migrations = [sketchToDrawing];

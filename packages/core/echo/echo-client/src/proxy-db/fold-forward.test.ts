@@ -37,7 +37,7 @@ class ContactV2 extends Type.makeObject<ContactV2>(DXN.make('org.dxos.test.foldF
 const contactMigration = Migration.define({
   from: ContactV1,
   to: ContactV2,
-  transform: async (from) => ({ name: from.fullName }),
+  transform: (from) => ({ name: from.fullName }),
 });
 
 class ContactV3 extends Type.makeObject<ContactV3>(DXN.make('org.dxos.test.foldForward.Contact', '0.3.0'))(
@@ -48,7 +48,7 @@ class ContactV3 extends Type.makeObject<ContactV3>(DXN.make('org.dxos.test.foldF
 const contactMigration23 = Migration.define({
   from: ContactV2,
   to: ContactV3,
-  transform: async (from) => ({ displayName: from.name }),
+  transform: (from) => ({ displayName: from.name }),
 });
 
 // A second chain, for the "per-step actor scoping" describe block: unlike `ContactV1/V2/V3` above,
@@ -71,14 +71,14 @@ class ScopeV3 extends Type.makeObject<ScopeV3>(DXN.make('org.dxos.test.foldForwa
 const scopeMigration12 = Migration.define({
   from: ScopeV1,
   to: ScopeV2,
-  transform: async (from) => ({ name: from.fullName }),
+  transform: (from) => ({ name: from.fullName }),
 });
 
 /** Step 1: carries `name` through unchanged (echoes it back, so its own write never touches it) and renames `note` to `label`. */
 const scopeMigration23 = Migration.define({
   from: ScopeV2,
   to: ScopeV3,
-  transform: async (from) => ({ name: from.name, label: from.note }),
+  transform: (from) => ({ name: from.name, label: from.note }),
 });
 
 class NoteV1 extends Type.makeObject<NoteV1>(DXN.make('org.dxos.test.foldForward.Note', '0.1.0'))(
@@ -226,7 +226,7 @@ describe('fold-forward: retired scalar properties', () => {
     expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace');
   });
 
-  test('a late write that lands while a pass awaits its transform is folded by the next pass', async () => {
+  test('a late write made while a pass recomputes is folded by the next pass', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([ContactV1, ContactV2]);
 
@@ -234,7 +234,7 @@ describe('fold-forward: retired scalar properties', () => {
     const migration = Migration.define({
       from: ContactV1,
       to: ContactV2,
-      transform: async (from) => {
+      transform: (from) => {
         const name = from.fullName;
         duringTransform?.();
         return { name };
@@ -267,7 +267,7 @@ describe('fold-forward: retired scalar properties', () => {
     const migration = Migration.define({
       from: DerivedV1,
       to: DerivedV2,
-      transform: async (from) => ({ name: from.fullName, derived: external }),
+      transform: (from) => ({ name: from.fullName, derived: external }),
     });
 
     const object = db.add(Obj.make(DerivedV1, { fullName: 'Ada Lovelace' }));
@@ -290,9 +290,9 @@ describe('fold-forward: retired scalar properties', () => {
     const slowMigration = Migration.define({
       from: ContactV1,
       to: ContactV2,
-      transform: async (from) => {
+      transform: (from) => ({ name: from.fullName }),
+      onMigration: async () => {
         await sleep(10);
-        return { name: from.fullName };
       },
     });
 

@@ -48,7 +48,7 @@ const ContactV3 = Type.makeObject(DXN.make('com.example.type.person', '0.3.0'))(
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
   to: ContactV2,
-  transform: async (from) => {
+  transform: (from) => {
     return { name: `${from.firstName} ${from.lastName}` };
   },
   onMigration: async () => {},
@@ -57,7 +57,7 @@ const migrationV2 = defineObjectMigration({
 const migrationV3 = defineObjectMigration({
   from: ContactV2,
   to: ContactV3,
-  transform: async (from) => {
+  transform: (from) => {
     return { ...from, email: `${from.name.toLocaleLowerCase().replaceAll(' ', '.')}@example.com` };
   },
   onMigration: async () => {},
@@ -133,7 +133,7 @@ test('migration moves data key/version into meta', async () => {
   const migration = defineObjectMigration({
     from: RegistryEntryV1,
     to: RegistryEntryV2,
-    transform: async (from) => ({
+    transform: (from) => ({
       [Obj.Meta]: { key: from.key, version: from.version },
       name: from.name,
     }),
@@ -204,14 +204,20 @@ test('applies the write set, the type switch, and the marker in exactly one auto
   const core = getObjectCore(contact);
   const historyBefore = A.getHistory(core.getDoc()).length;
 
-  await db.runMigrations([migrationV2]);
+  // No `onMigration`, so no effects bookkeeping follows the migration change.
+  const migration = Migration.define({
+    from: ContactV1,
+    to: ContactV2,
+    transform: (from) => ({ name: `${from.firstName} ${from.lastName}` }),
+  });
+  await db.runMigrations([migration]);
 
   const history = A.getHistory(core.getDoc());
   // A dependency-free change is a document genesis the host side can contribute late, not an edit.
   const edits = history.slice(historyBefore).filter((entry) => entry.change.deps.length > 0);
   expect(edits).to.have.length(1);
   expect(edits[0].change.message).to.eq(
-    `migration: ${migrationV2.fromType.toString()} -> ${migrationV2.toType.toString()}`,
+    `migration: ${migration.fromType.toString()} -> ${migration.toType.toString()}`,
   );
 });
 
@@ -226,7 +232,7 @@ test('does not write a data key whose transformed value is unchanged', async () 
   const profileMigration = defineObjectMigration({
     from: ProfileV1,
     to: ProfileV2,
-    transform: async (from) => ({ handle: from.handle, bio: from.bio }),
+    transform: (from) => ({ handle: from.handle, bio: from.bio }),
   });
 
   const { db, graph } = await builder.createDatabase();
@@ -261,7 +267,7 @@ test('retires a field the transform drops instead of deleting it, and marks the 
   const noteMigration = defineObjectMigration({
     from: NoteV1,
     to: NoteV2,
-    transform: async (from) => ({ title: from.title }),
+    transform: (from) => ({ title: from.title }),
   });
 
   const { db, graph } = await builder.createDatabase();
@@ -448,7 +454,7 @@ test('a run that fails partway is completed by the next run, each object migrate
   const flaky = Migration.define({
     from: ContactV1,
     to: ContactV2,
-    transform: async (from) => {
+    transform: (from) => {
       if (from.id === failOn) {
         throw new Error('simulated crash');
       }

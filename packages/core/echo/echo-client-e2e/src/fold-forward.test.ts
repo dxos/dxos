@@ -37,7 +37,7 @@ class PersonV2 extends Type.makeObject<PersonV2>(DXN.make('org.dxos.test.foldFor
 const personMigration = Migration.define({
   from: PersonV1,
   to: PersonV2,
-  transform: async (from) => ({ name: from.fullName }),
+  transform: (from) => ({ name: from.fullName }),
 });
 
 // A second `@2 -> @3` hop for the chained-migration variant below: peer A knows the whole chain, peer B
@@ -59,13 +59,13 @@ class ChainPersonV3 extends Type.makeObject<ChainPersonV3>(
 const chainMigration12 = Migration.define({
   from: ChainPersonV1,
   to: ChainPersonV2,
-  transform: async (from) => ({ name: from.fullName }),
+  transform: (from) => ({ name: from.fullName }),
 });
 
 const chainMigration23 = Migration.define({
   from: ChainPersonV2,
   to: ChainPersonV3,
-  transform: async (from) => ({ displayName: from.name }),
+  transform: (from) => ({ displayName: from.name }),
 });
 
 /**

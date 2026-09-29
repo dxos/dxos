@@ -59,24 +59,35 @@ export type TransformResult<To extends MigrationSchemaInput> = Omit<MigrationIns
   [MetaId]?: Partial<EntityMeta>;
 };
 
+/**
+ * The data a `transform` reads: the object's own properties as plain values (references as `Ref`s),
+ * never the live object, so the same function can be re-run by fold-forward on any snapshot.
+ */
+export type MigrationData<S extends MigrationSchemaInput> = Entity.Properties<MigrationInstanceType<S>> & {
+  readonly id: string;
+};
+
 type DefineObjectMigrationOptions<From extends MigrationSchemaInput, To extends MigrationSchemaInput> = {
   from: From;
   to: To;
   /**
-   * Pure function that converts the old object data to the new object data.
+   * Synchronous, pure function from the object's old data to its new data. Fold-forward re-runs it
+   * whenever an old client writes the old shape, so it must read nothing but `from`: anything that
+   * reads other objects or writes (children, cross-object edits) belongs in `onMigration`.
    *
    * The returned object may include an optional `[Obj.Meta]` entry to update the object's meta
    * (e.g. registry `key` / `version`) atomically with the data swap.
    */
-  // TODO(dmaretskyi): `id` should not be a part of the schema.
-  transform: (from: MigrationInstanceType<From>, context: ObjectMigrationContext) => Promise<TransformResult<To>>;
+  transform: (from: MigrationData<From>) => TransformResult<To>;
 
   /**
-   * Callback that is called after the object is migrated. Called for every object that is migrated.
+   * Runs once per migrated object after its migration change lands, and is resumed by the next run if
+   * the process stops before it completes; fold-forward never re-runs it. The place for reads of other
+   * objects and for effects: `ensure` fan-out children, `assign` cross-object edits.
    *
-   * NOTE: Database mutations performed in this callback are not guaranteed to be idempotent.
-   *       If multiple peers run the migration separately, the effects may be applied multiple times.
-   *       Must not call `db.runMigrations` or `db.foldForward`: the running pass holds their lock.
+   * NOTE: Effects may be applied once per peer, since peers migrate independently; `ensure` and
+   *       `assign` converge. Must not call `db.runMigrations` or `db.foldForward`: the running pass
+   *       holds their lock.
    */
   onMigration?: (params: OnMigrateProps<From, To>) => Promise<void>;
 };
@@ -90,7 +101,7 @@ type DefineObjectMigrationOptions<From extends MigrationSchemaInput, To extends 
 export type EnsureData<To extends Type.AnyObj> = Entity.Properties<Type.InstanceType<To>>;
 
 /**
- * Context passed to object migration callbacks.
+ * Effects available to `onMigration`.
  */
 export type ObjectMigrationContext = {
   db: Database.Database;
@@ -102,7 +113,7 @@ export type ObjectMigrationContext = {
    * `runMigrations`/`foldForward` call created once this session's in-memory query cache has moved on
    * (confirmed empirically — the gap this async signature closes), nor one created before a crash or
    * reload. Creates one with a random id and that key when none is found. Idempotent by construction: a
-   * re-run of the same `transform` finds the object it (or a duplicate independently minted by another
+   * resumed `onMigration` finds the object it (or a duplicate independently minted by another
    * peer, once collapsed by the merge engine's creation-heads replay) already created. Callers must
    * namespace `convergenceKey` by the migration, e.g. `` `${migrationId}:${sourceId}:${role}` ``, so two
    * unrelated fan-outs never collide.
@@ -114,18 +125,18 @@ export type ObjectMigrationContext = {
   ): Promise<Ref.Ref<Type.InstanceType<To>>>;
 
   /**
-   * Applies a value-compare-guarded patch to `target` — another object, not the one the enclosing
-   * `transform` is migrating — in one automerge change on `target`'s own core. The cross-object write
+   * Applies a value-compare-guarded patch to `target` — another object, not the one being
+   * migrated — in one automerge change on `target`'s own core. The cross-object write
    * primitive an N→N move or a fan-in absorption uses; a patch value equal to `target`'s current value
    * writes nothing (M0-REPORT.md design item 1's guard, applied across objects).
    */
   assign<T extends Obj.Unknown>(target: T, patch: Partial<Entity.Properties<T>>): void;
 };
 
-type OnMigrateProps<From extends MigrationSchemaInput, To extends MigrationSchemaInput> = {
-  before: MigrationInstanceType<From>;
+type OnMigrateProps<From extends MigrationSchemaInput, To extends MigrationSchemaInput> = ObjectMigrationContext & {
+  /** The object's data as it stood before its migration change. */
+  before: MigrationData<From>;
   object: MigrationInstanceType<To>;
-  db: Database.Database;
 };
 
 /**
@@ -137,7 +148,7 @@ export interface ObjectMigration extends Migration {
   toType: URI.URI;
   fromSchema: Schema.Codec<any, any>;
   toSchema: Schema.Codec<any, any>;
-  transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
+  transform: (from: Record<string, unknown>) => unknown;
   onMigration?: (params: OnMigrateProps<any, any>) => Promise<void>;
   /** The lens {@link fromLens} derived this migration from, for the fold-forward runner to reuse. Absent for a hand-written `transform`. */
   lens?: Lens.Any;
@@ -166,7 +177,7 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
  * const migration = Migration.define({
  *   from: ContactV1,
  *   to: ContactV2,
- *   transform: async (from) => ({ name: `${from.firstName} ${from.lastName}` }),
+ *   transform: (from) => ({ name: `${from.firstName} ${from.lastName}` }),
  *   onMigration: async () => {},
  * });
  * ```
@@ -270,6 +281,8 @@ export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectM
     throw new Error(`Migration.fromLens: "${lens.id}" has unresolved suspicious mappings: ${detail}.`);
   }
 
+  const sourceKeys = new Set([...(lens.plan?.entries.flatMap((entry) => entry.from) ?? []), ...coverage.dropped]);
+
   return {
     [TypeId]: TypeId,
     kind: 'object',
@@ -278,19 +291,23 @@ export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectM
     fromSchema,
     toSchema,
     lens,
-    transform: async (from: unknown) => {
-      if (!Obj.isObject(from)) {
-        throw new Error(`Migration.fromLens: "${lens.id}" transform received a non-object value.`);
-      }
+    transform: (data: Record<string, unknown>) => {
+      // `data` may also carry target-shaped keys (a fold-forward snapshot), which the source schema
+      // would reject as unknown properties.
+      const { id, ...rest } = data;
+      const from = Obj.make(
+        lens.source,
+        Object.fromEntries(Object.entries(rest).filter(([key]) => sourceKeys.has(key))),
+      );
 
       const lawCheck = Lens.checkLaws(from, lens);
       if (!lawCheck.holds) {
         const detail = lawCheck.violations.map((violation) => `${violation.property} (${violation.path})`).join('; ');
-        throw new Error(`Migration.fromLens: "${lens.id}" fails the GetPut law for object ${from.id}: ${detail}.`);
+        throw new Error(`Migration.fromLens: "${lens.id}" fails the GetPut law for object ${String(id)}: ${detail}.`);
       }
 
-      const { id: _id, ...rest } = Lens.get(from, lens);
-      return rest;
+      const { id: _id, ...output } = Lens.get(from, lens);
+      return output;
     },
     onMigration: options.onMigration,
   };
@@ -888,6 +905,8 @@ export const MigrationStepSchema = Schema.Struct({
    * range on the next pass.
    */
   foldedAt: Schema.optional(Schema.Array(Schema.String)),
+  /** Set when the step's `onMigration` has not completed yet; the next run resumes it. */
+  effectsPending: Schema.optional(Schema.Boolean),
 });
 
 /**

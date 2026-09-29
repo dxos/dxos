@@ -16,7 +16,7 @@ import { type TestDatabase, createPartitionedPair } from './migration-bench/harn
 
 //
 // Phase D item 2 (`.agents/projects/lenses/IMPLEMENTATION-PLAN.md`; M0-REPORT.md design item 4):
-// fan-out through the real `Migration.define` + `context.ensure` API, on a single peer and on two
+// fan-out through the real `Migration.define` + `onMigration`'s `ensure` API, on a single peer and on two
 // partitioned peers that migrate independently. `Write.ensure` = create with a random id + a
 // migration-namespaced `meta.convergenceKey`; collapse and ref redirects come from the LANDED merge
 // engine (#12412), never from this code — this suite proves `ensure` mints exactly the shape the
@@ -41,11 +41,14 @@ const FAN_OUT_MIGRATION_ID = 'org.dxos.test.migration.fanout';
 const fanOutMigration = Migration.define({
   from: FanOutParentV1,
   to: FanOutParentV2,
-  transform: async (from, context) => {
-    const address = await context.ensure(FanOutChildDoc, `${FAN_OUT_MIGRATION_ID}:${from.id}:address`, {
-      street: from.employerAddress,
+  transform: (from) => ({ employerAddress: from.employerAddress }),
+  onMigration: async ({ before, object, ensure }) => {
+    const address = await ensure(FanOutChildDoc, `${FAN_OUT_MIGRATION_ID}:${before.id}:address`, {
+      street: before.employerAddress,
     });
-    return { employerAddress: from.employerAddress, address };
+    Obj.update(object, (object) => {
+      object.address = address;
+    });
   },
 });
 

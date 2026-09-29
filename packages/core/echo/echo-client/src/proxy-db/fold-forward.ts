@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
@@ -16,12 +15,7 @@ import { META_NAMESPACE, type ObjectCore } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { changedOutputEntries, computeGuardedDataWrites, getDecodedDataWithRefs, isRecord } from './encoded-value.ts';
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
-import {
-  type ConvergenceKeyCache,
-  createObjectMigrationContext,
-  ensureByConvergenceKey,
-  findByConvergenceKey,
-} from './migration-context.ts';
+import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey } from './migration-context.ts';
 
 //
 // Fold-forward as a standing rule (Phase C2/C3, `.agents/projects/lenses/IMPLEMENTATION-PLAN.md`
@@ -140,45 +134,20 @@ const lateOverlayWrites = (
 };
 
 /**
- * Every property `fromType` itself declares: the union of what the lens's plan reads (`entry.from`)
- * and what it drops (`Lens.coverage(lens).dropped`) — together exactly `fromType`'s own property set
- * (`mapping.ts#plan`'s own `dropped` computation is the mirror of this). A `fromLens` migration always
- * has a plan: {@link Migration.fromLens} calls `Lens.coverage`, which throws for a coded lens before
- * the migration is ever constructed.
+ * The migration's data output for one snapshot of the object — `transform` is pure over the object's
+ * own data, so re-running it is exactly what the migration would have written from that snapshot.
  */
-const lensSourceKeys = (lens: Lens.Any): ReadonlySet<string> => {
-  invariant(lens.plan, 'foldForward: expected a fromLens migration to carry a compiled plan');
-  const keys = new Set(lens.plan.entries.flatMap((entry) => entry.from));
-  for (const dropped of lens.plan.coverage.dropped) {
-    keys.add(dropped);
-  }
-  return keys;
-};
-
-/**
- * The migration's write set recomputed from the object's CURRENT data (including retired keys) —
- * a `fromLens` migration re-runs the lens; an opaque `define` migration re-runs its `transform`. Both
- * read the same source-shaped snapshot, so a late write to a retired property is reflected exactly as
- * it would be if the migration ran again from scratch.
- */
-const recomputeMigrationOutput = async (
-  db: Database.Database,
+const recomputeMigrationOutput = (
   migration: Migration.ObjectMigration,
   id: string,
   snapshot: Record<string, unknown>,
-): Promise<Record<string, unknown>> => {
-  if (migration.lens) {
-    // `snapshot` also carries the object's CURRENT (target-shaped) keys, which the source schema
-    // does not declare and would reject as unknown properties — restrict to `fromType`'s own keys.
-    const sourceKeys = lensSourceKeys(migration.lens);
-    const sourceSnapshot = Object.fromEntries(Object.entries(snapshot).filter(([key]) => sourceKeys.has(key)));
-    const detached = Obj.make(migration.lens.source, sourceSnapshot);
-    const { id: _id, ...rest } = Lens.get(detached, migration.lens);
-    return rest;
+): Record<string, unknown> => {
+  const output = migration.transform({ ...snapshot, id });
+  if (!isRecord(output)) {
+    return {};
   }
-
-  const output = await migration.transform({ id, ...snapshot }, createObjectMigrationContext(db));
-  return isRecord(output) ? output : {};
+  const { id: _id, ...data } = output;
+  return data;
 };
 
 /**
@@ -192,13 +161,13 @@ const recomputeMigrationOutput = async (
  * runs, its own `A.diff`/snapshot reads see step `k`'s fold as part of history, exactly as if an old
  * client had written it.
  */
-const foldStep = async (
+const foldStep = (
   db: Database.Database,
   migration: Migration.ObjectMigration,
   step: Migration.MigrationStep,
   stepIndex: number,
   object: Obj.Unknown,
-): Promise<void> => {
+): void => {
   const core = getObjectCore(object);
   const doc = core.getDoc();
   const mountPath = core.mountPath;
@@ -238,26 +207,25 @@ const foldStep = async (
     return;
   }
 
-  // Only keys the late writes actually moved are folded: a transform may read more than the object's
-  // own data (other objects, a text target the user is typing into), and re-deriving a key whose
-  // inputs did not change would overwrite the value the migration or a direct edit put there.
-  // These are the only awaits: everything after them runs synchronously, so no other pass or
-  // replicated change can land between the text replay, the fold and the checkpoint.
+  // Only keys the late writes moved are folded: `before` is the current data with just the retired
+  // keys taken back to the checkpoint, so a direct edit to a target key never counts as moved.
   let output: Record<string, unknown> = {};
   if (lateWrites.size > 0) {
-    const { id: _idBefore, ...before } = await recomputeMigrationOutput(
-      db,
-      migration,
-      object.id,
-      getDecodedDataWithRefs(db, core, base),
+    const current = getDecodedDataWithRefs(db, core, currentHeads);
+    const atBase = getDecodedDataWithRefs(db, core, base);
+    const before = { ...current };
+    for (const key of retired) {
+      if (Object.hasOwn(atBase, key)) {
+        before[key] = atBase[key];
+      } else {
+        delete before[key];
+      }
+    }
+    output = changedOutputEntries(
+      core,
+      recomputeMigrationOutput(migration, object.id, before),
+      recomputeMigrationOutput(migration, object.id, current),
     );
-    const { id: _idAfter, ...after } = await recomputeMigrationOutput(
-      db,
-      migration,
-      object.id,
-      getDecodedDataWithRefs(db, core, currentHeads),
-    );
-    output = changedOutputEntries(core, before, after);
   }
 
   const dataWrites = new Map<string, unknown>();
@@ -296,8 +264,8 @@ const foldStep = async (
   }
 
   // Ordinary (non-fold) write: this is the runner's own bookkeeping, never user data. Checkpoints the
-  // heads the diff above read, so a write that replicated in during the awaits is diffed next pass;
-  // a crash before this lands just re-diffs a wider, value-compared (harmless) range. Written directly at `steps[stepIndex]`, never
+  // heads the diff above read; a crash before this lands just re-diffs a wider, value-compared
+  // (harmless) range. Written directly at `steps[stepIndex]`, never
   // as a whole-marker (or whole-step) replace, so a sibling step's own checkpoint — or one a
   // concurrent peer is writing to a DIFFERENT step of the same marker — is never disturbed.
   const stepPath = [
@@ -322,11 +290,7 @@ const foldStep = async (
  * A step whose migration is not among `migrations` is skipped (logged), never treated as a reason to
  * skip the steps after it. Never throws: a bad object is logged and left for the next pass.
  */
-const foldObject = async (
-  db: Database.Database,
-  migrations: readonly Migration.Migration[],
-  object: Obj.Unknown,
-): Promise<void> => {
+const foldObject = (db: Database.Database, migrations: readonly Migration.Migration[], object: Obj.Unknown): void => {
   const markerOption = Annotation.get(object, Migration.MigrationMarkerAnnotation);
   if (Option.isNone(markerOption)) {
     return;
@@ -351,7 +315,7 @@ const foldObject = async (
       continue;
     }
 
-    await foldStep(db, migration, step, stepIndex, object);
+    foldStep(db, migration, step, stepIndex, object);
   }
 };
 
@@ -945,7 +909,7 @@ export const foldForwardMigrations = async (
         }
         processed.add(object.id);
         try {
-          await foldObject(db, migrations, object);
+          foldObject(db, migrations, object);
         } catch (err) {
           log.warn('foldForward: failed to fold an object forward', { object: object.id, err });
         }

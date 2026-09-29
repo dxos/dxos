@@ -23,7 +23,7 @@ class ContactV2 extends Type.makeObject<ContactV2>(DXN.make('org.dxos.test.foldB
 const migration = Migration.define({
   from: ContactV1,
   to: ContactV2,
-  transform: async (from) => ({ name: from.fullName, note: from.note }),
+  transform: (from) => ({ name: from.fullName, note: from.note }),
 });
 
 const time = async (run: () => Promise<void>): Promise<number> => {

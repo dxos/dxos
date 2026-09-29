@@ -58,7 +58,7 @@ describe('rename migration', () => {
     const migration = Migration.define({
       from: Operation,
       to: Operation,
-      transform: async (from) => ({ name: from.name }),
+      transform: (from) => ({ name: from.name }),
     });
     expect(Migration.isMigration(migration)).to.be.true;
     expect(migration.kind).to.eq('object');
