@@ -74,7 +74,7 @@ const SimpleStory = () => (
 const ScrollableStory = () => {
   const [items, , move] = useItems(LONG);
   return (
-    <div className='h-64 flex flex-col'>
+    <div data-place='full' className='h-64 flex flex-col'>
       <OrderedList.Root items={items} getId={getId} onMove={move} dragPreview={(item) => item.label}>
         {({ items }) => (
           <OrderedList.Viewport>

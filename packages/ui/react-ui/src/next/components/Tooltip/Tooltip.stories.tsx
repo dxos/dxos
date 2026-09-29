@@ -10,8 +10,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const LONG =
   'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';

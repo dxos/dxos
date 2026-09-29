@@ -13,8 +13,8 @@ import { hues } from '@dxos/ui-types';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Label text (one step below the body) per size, in px. */
 const LABEL_FONT: Record<Size, number> = { xs: 12, sm: 12, md: 14, lg: 16, xl: 18 };

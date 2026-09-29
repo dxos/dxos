@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, controlSize, expectScoped, expectTooltip, realHover, realUnhover, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Icon-only toggles (one pressed, one disabled), a labelled toggle, a controlled one, and one with an `activeIcon`. */
 const DefaultStory = ({ size }: SizeArgs) => {

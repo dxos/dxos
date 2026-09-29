@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** A single-select group of icon-only items (alignment) and a multiple-select group of text items (marks). */
 const DefaultStory = ({ size }: SizeArgs) => {

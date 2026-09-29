@@ -11,8 +11,8 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectPopupSize } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 type ConfirmProps = {
   /** Overrides the size the dialog inherits from its trigger's row. */

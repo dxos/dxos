@@ -11,8 +11,8 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Types with the runner's real keyboard, so zag's `beforeinput` validation (numeric cells) sees trusted input. */
 const realType = async (text: string) => {

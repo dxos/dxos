@@ -12,8 +12,8 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, expectScoped, realHover } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import { type ScrollAreaRootProps } from './ScrollArea.tsx';
 
 random.seed(123);

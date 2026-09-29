@@ -13,7 +13,6 @@ import { translations } from '#translations';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import {
   byTestId,
   controlSize,
@@ -23,6 +22,7 @@ import {
   realUnhover,
   sizeRow,
 } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 type PresetProps = { 'iconOnly': boolean; 'data-testid': string };
 

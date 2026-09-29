@@ -8,7 +8,7 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'next': 'src/next/index.ts',
-    'next-testing': 'src/next/stories.tsx',
+    'next-testing': 'src/next/testing/stories.tsx',
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
   },

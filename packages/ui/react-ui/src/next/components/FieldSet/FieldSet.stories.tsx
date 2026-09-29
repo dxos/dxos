@@ -10,8 +10,8 @@ import { expect, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Valid and enabled sets, then an invalid and a disabled one; test ids are scoped by the size row. */
 const DefaultStory = () => (

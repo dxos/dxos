@@ -11,8 +11,8 @@ import { expect, waitFor } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const ROWS = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 

@@ -37,8 +37,8 @@
       "default": "./src/next/theme/index.css"
     },
     "./next/testing": {
-      "source": "./src/next/stories.tsx",
-      "types": "./dist/types/src/next/stories.d.ts",
+      "source": "./src/next/testing/stories.tsx",
+      "types": "./dist/types/src/next/testing/stories.d.ts",
       "import": "./dist/lib/next-testing.mjs"
     },
     "./testing": {

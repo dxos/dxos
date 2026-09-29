@@ -13,8 +13,8 @@ import { random } from '@dxos/random';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow, expectPopupSize } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 type SharePopoverProps = {
   /** Overrides the size the popover inherits from its trigger's row. */

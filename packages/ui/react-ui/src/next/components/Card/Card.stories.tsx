@@ -10,8 +10,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, expectTooltip, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Inline SVG, so the story never fetches from the network. */
 const POSTER = `data:image/svg+xml,${encodeURIComponent(

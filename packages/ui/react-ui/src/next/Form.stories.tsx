@@ -12,8 +12,8 @@ import { translations } from '#translations';
 
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
-import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
 import { expectAnchoredBelow } from './testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs } from './testing/stories.tsx';
 
 const ROLES: Next.SelectOption[] = [
   { value: 'owner', label: 'Owner' },

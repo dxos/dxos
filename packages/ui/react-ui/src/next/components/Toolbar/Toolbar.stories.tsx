@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const OPTIONS: Next.SelectOption[] = [
   { value: 'red', label: 'Red' },

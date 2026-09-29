@@ -2,11 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react-vite';
-import React from 'react';
+import React, { type ComponentType, type ReactElement } from 'react';
 
-import { Next } from './Next.tsx';
-import { type Size, SIZES } from './sizes.ts';
+import { Next } from '../Next.tsx';
+import { type Size, SIZES } from '../sizes.ts';
 
 /**
  * Args every sized story takes: `size` is a properties-panel control (portalled parts inherit it from their trigger's
@@ -24,6 +23,15 @@ export const SIZE_ARG_TYPES = {
   allSizes: { table: { disable: true } },
 } as const;
 
+/**
+ * A storybook decorator, typed structurally so this published entry does not depend on storybook: storybook passes the
+ * story (rendered with overridden args) and the story context.
+ */
+type SizesDecorator = (
+  Story: ComponentType<{ args?: Record<string, unknown> }>,
+  context: { args: Record<string, unknown> },
+) => ReactElement;
+
 export type WithSizesOptions = {
   /** Tailwind width of the frame; the frame is the pane (the query container of decision 5). */
   width?: string;
@@ -35,7 +43,7 @@ export type WithSizesOptions = {
  * `level='base'` rail-gutter Container at that size, `data-testid='size-<size>'`, with the size passed as the `size` arg.
  */
 export const withSizes =
-  ({ width = 'w-[32rem]', sizes = SIZES }: WithSizesOptions = {}): Decorator =>
+  ({ width = 'w-[32rem]', sizes = SIZES }: WithSizesOptions = {}): SizesDecorator =>
   (Story, context) => {
     const selected = SIZES.find((size) => size === context.args.size) ?? 'md';
     const shown = context.args.allSizes === true ? sizes : [selected];

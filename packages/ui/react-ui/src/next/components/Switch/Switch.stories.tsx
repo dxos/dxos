@@ -11,8 +11,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Icon size (and so track height) per size, in px. */
 const ICON: Record<Size, number> = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };

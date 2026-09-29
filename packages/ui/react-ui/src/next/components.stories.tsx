@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
 import { type Size, SIZES } from './sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
 import { byTestId } from './testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs } from './testing/stories.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 

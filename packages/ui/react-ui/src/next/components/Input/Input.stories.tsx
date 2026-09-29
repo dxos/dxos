@@ -11,8 +11,8 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
 const DefaultStory = ({ size }: SizeArgs) => (
