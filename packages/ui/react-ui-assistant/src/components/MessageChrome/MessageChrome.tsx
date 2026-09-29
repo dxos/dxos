@@ -243,6 +243,7 @@ const CollapsiblePrompt = ({ message, children }: PropsWithChildren<{ message: M
 
   return (
     <>
+      {/* The theme has no fade token; the clipped text dissolves over its last 4rem, as in `MarkdownCard`. */}
       <div
         ref={contentRef}
         className={mx(collapsed && 'overflow-hidden mask-b-from-[calc(100%-4rem)] mask-b-to-100%')}
@@ -254,7 +255,7 @@ const CollapsiblePrompt = ({ message, children }: PropsWithChildren<{ message: M
       {overflows && (
         <button
           type='button'
-          className='flex items-center gap-1 pt-1 text-xs text-description hover:text-base-text'
+          className='flex items-center gap-1 pt-1 text-xs text-description hover:text-base-fg'
           aria-expanded={expanded}
           data-testid='chat.prompt.toggle'
           onClick={() => setExpanded((expanded) => !expanded)}
