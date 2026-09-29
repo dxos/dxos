@@ -109,14 +109,16 @@ with Phase 4 milestone 5).
 ## Phase 4: react-ui-list and react-ui-form rewrite
 
 Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in the milestone order of
-[AUDIT.md](./AUDIT.md) §5; each lands with stories, play tests, a parity table and one pilot plugin.
+[AUDIT.md](./AUDIT.md) §5 (open questions in §6); each lands with stories, play tests, a parity table and one pilot plugin.
 
 ### Tasks
 
 - [ ] **1. Foundations** — pane host, popup size decision, Container child span, Group stretch, required marker, depth-5 benchmark, `+1` fallback.
-- [ ] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
+  - Done: `Next.Panel`, popup size inheritance, Group `fill`. Open: child span, required marker, benchmark (AUDIT.md §6 points 7, 8).
+- [x] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
 - [ ] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
 - [ ] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
+  - Done: DragHandle (keyboard moves), DropIndicator, DragPreview. In progress: OrderedList with milestone 3.
 - [ ] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
 - [ ] **6. `react-ui-form/next` core** — parts, scalar renderers, `fieldMap`/`fieldProvider`/`createSelectField`; pilot plugin-thread `ChannelCreatePanel`.
 - [ ] **7. Settings layout** — needs a decision (AUDIT.md §3.2); pilot plugin-pwa, plugin-excalidraw, plugin-settings.

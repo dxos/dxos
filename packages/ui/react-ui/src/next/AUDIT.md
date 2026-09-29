@@ -1,5 +1,7 @@
 # react-ui-form and react-ui-list on Next: audit and plan
 
+Status and open questions: [§6 Decision points](#6-decision-points).
+
 Next can already render every scalar form row, a nested field set, a dialog and a card. It cannot yet host
 a form inside a real plank, open a correctly sized popup from a form without per-call-site props, pick a
 reference object, or render a list row. Five gaps block the rewrite (see [Blocking gaps](#blocking-gaps)); the
@@ -451,3 +453,78 @@ A plugin moves a container and all of the renderers in its `fieldMap` together, 
 current controls misaligns inside a next form and nothing in the type system catches it. The pilots cover
 each renderer shape: plugin-space (`fieldMap` rows and refs), plugin-higgsfield and plugin-studio (the most
 renderers: 6 and 5 files), and plugin-assistant (`createSelectField`).
+
+## 6. Decision points
+
+What is settled, what is deferred, and what still needs an answer before react-ui-list and react-ui-form can
+reach parity. Numbered once across the section so a reply can cite a number.
+
+### Settled
+
+| Topic                   | Decision                                                                                                 | Where                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Pane host (gap 1)       | `Next.Panel` (`Root`, `Toolbar`, `Content`, `Statusbar`) sets `data-size`/level and is the query container | DESIGN.md Phase 4 decision 1 |
+| Popup size (gap 2)      | a popup copies `data-size` from its trigger's nearest sized ancestor on open; `size` still wins           | Phase 4 decision 2           |
+| List primitives (gap 4) | `Next.Listbox` on Ark listbox; `DragHandle`, `DropIndicator`, `DragPreview` with keyboard moves           | Phase 4 decision 5           |
+| Drag and drop           | stays on pragmatic-drag-and-drop; plugins keep `onMove`, `canDrop`, `getDropKind`                         | Phase 4 decision 5           |
+| i18n (2.10)             | Next parts translate their default labels through `@dxos/react-ui` translations                           | follow-ups 51, 54            |
+
+### Deferred, with a recommendation
+
+1. **Settings layout (gap 5, milestone 7).** Options in §3.2: (1) two-track subgrid rows, (2) label-above
+   cards, (3) drop the variant. Recommendation: 1. The react-ui piece is letting `Field.Root` join a parent's
+   `columns` as a subgrid row; decide when milestone 6 lands, so a real settings form can be tried in both shapes.
+2. **Tree (milestone 11).** Options: (1) Ark `tree-view` driven by `TreeModel` atoms, (2) keep the current Tree
+   logic and restyle its rows on Container, (3) a Listbox with indentation. Recommendation: spike 1 against a
+   5,000-node story; fall back to 2 if lazy children or virtualization fight zag's collection model.
+
+### Open
+
+3. **Virtualization (2.5).** Listbox and OrderedList rows are Container subgrid rows; `react-ui-virtual`
+   positions rows absolutely, which drops them out of the grid. Options: (1) virtualize only flat lists and give
+   rows fixed `columns` instead of subgrid, (2) `content-visibility: auto` on rows and no virtualizer, (3) keep
+   the current list for large collections. Recommendation: 2 for lists under a few thousand rows, 1 for Tree.
+4. **Selection state ownership.** Ark's listbox owns selection and focus; `useListSelection` (4 users) owns it
+   today. Options: (1) Listbox controlled through `value`/`onValueChange` and `useListSelection` becomes a
+   thin adapter, (2) retire `useListSelection`. Recommendation: 1 until the four callers migrate.
+5. **Unselectable lists.** `role=list` rows (OrderedList, plain lists) have no Ark machine. Options:
+   (1) `OrderedList` on a plain Container stack with roving focus from Toolbar's pattern, (2) Ark listbox with
+   `selectionMode='none'`. Recommendation: 2, so keyboard navigation and typeahead come from one machine.
+6. **Row template.** `useListGrid` builds a grid template per list; Next rows take Container `columns`.
+   Options: (1) the Root takes `columns` and rows inherit as subgrid, (2) each row sets its own. Recommendation:
+   1, so drag handles, titles and trailing buttons align across rows.
+7. **Container child span (§3.4 item 3).** `Form.Layout` needs a child to span tracks. Options: (1) a `span`
+   prop on Container, (2) a `Container.Cell` part. Recommendation: 1; still unimplemented.
+8. **Required marker (§3.4 item 4).** `Field.Root required` sets the attribute but draws no marker. Options:
+   (1) CSS on `[data-required]` in the label, (2) a `Field.Label required` prop. Recommendation: 1.
+9. **Combobox trigger mode (gap 3, milestone 5).** Extend `Next.Combobox` with a button trigger and the input
+   inside the popup, or add a separate `Next.Picker`. Recommendation: extend Combobox (one machine, one set of
+   item parts); retire the list package's `Combobox` and `Picker` in `/next`.
+10. **Control frame (§3.4 item 7).** DateInput's frame (adornments inside a bordered control) generalised for
+    PasswordInput, MarkdownField and RefEditor. Options: (1) `Next.ControlFrame` part, (2) Input `start`/`end`
+    slots only. Recommendation: 1, since editors are not inputs.
+11. **Mixing guard (2.11).** A lint rule forbidding current `@dxos/react-ui` controls inside `/next` files.
+    Options: (1) oxlint `no-restricted-imports` per `src/next/**`, (2) the no-className test extended to imports.
+    Recommendation: 1.
+12. **Boot budget.** The Composer boot graph is at 4.52 of 4.55 MB. Next code and `next/theme.css` must load only
+    from lazy plugin modules. Options: (1) each pilot imports the CSS in its lazy surface module, (2) raise the
+    budget once Next replaces the current components. Recommendation: 1 until the old implementations are
+    deleted.
+13. **Image dominant colour** (TASKS Parity). Move the sampler to a shared utility and adopt it in `Next.Image`,
+    or leave it out per decision 11. Recommendation: leave it out until a list or card consumer asks.
+
+### Milestone status
+
+| #   | Milestone                     | Status                                                                              |
+| --- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| 1   | Foundations                   | pane host, popup size, Group stretch done; child span (point 7), required marker (point 8), depth-5 benchmark open |
+| 2   | Next.Listbox                  | done                                                                                |
+| 3   | `react-ui-list/next` scaffold | in progress (plugin-registry pilot)                                                 |
+| 4   | OrderedList next              | DragHandle, DropIndicator, DragPreview done; OrderedList in progress with milestone 3         |
+| 5   | Combobox trigger mode         | blocked on point 9                                                                        |
+| 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                             |
+| 7   | Settings layout               | blocked on point 1                                                                        |
+| 8   | Arrays and layout templates   | needs milestones 4, 6, 7                                                                       |
+| 9   | Ref and lookup fields         | needs milestones 5, 6                                                                          |
+| 10  | Higher-level form components  | needs milestones 7–9, point 10                                                                   |
+| 11  | Tree next                     | blocked on points 2, 3                                                                     |
