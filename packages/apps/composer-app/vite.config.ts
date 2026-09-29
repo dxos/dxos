@@ -3,6 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
+import { execFileSync } from 'node:child_process';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
@@ -197,6 +198,43 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
 /**
  * https://vitejs.dev/config
  */
+/** Libraries a plugin shares with the host through its import map, so it must build against the same versions. */
+const PLUGIN_SHARED_PACKAGES = [
+  'effect',
+  'react',
+  'react-dom',
+  '@types/react',
+  '@vitejs/plugin-react',
+  'typescript',
+  'vite',
+];
+
+/**
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
+ * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * commit, for a build of a branch whose own commit was never published. Empty when neither is available.
+ */
+const pluginToolchain = (): string => {
+  let commit = process.env.DX_PLUGIN_TOOLCHAIN_COMMIT;
+  try {
+    commit ??= execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dirname, encoding: 'utf8' }).trim();
+  } catch {
+    return '';
+  }
+  // Read from `node_modules` directly, since not every package exports its `package.json`; the app's own
+  // links first, then the workspace root that pnpm hoists the rest of the toolchain to.
+  const version = (name: string): string => {
+    const [manifest] = [dirname, path.resolve(dirname, '../../..')]
+      .map((dir) => path.join(dir, 'node_modules', name, 'package.json'))
+      .filter((file) => existsSync(file));
+    return manifest ? JSON.parse(readFileSync(manifest, 'utf8')).version : '';
+  };
+  return JSON.stringify({
+    commit,
+    versions: Object.fromEntries(PLUGIN_SHARED_PACKAGES.map((name) => [name, version(name)])),
+  });
+};
+
 export default defineConfig((env) => ({
   root: dirname,
   define: {
@@ -207,13 +245,8 @@ export default defineConfig((env) => ({
     '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
     '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
-    // The tree a desktop dev build's agent builds plugins against (plugin-computer's Composer Plugin template, via
-    // plugin-sandbox); only the desktop app reads it, and it is a path on the building machine, so dev builds only.
-    'import.meta.env.VITE_DX_SOURCE_ROOT': JSON.stringify(
-      env.command === 'serve' || process.env.DX_ENVIRONMENT === 'dev' || isTrue(process.env.DX_DEV)
-        ? path.resolve(dirname, '../../..')
-        : '',
-    ),
+    // Pins the desktop app's Composer Plugin template (plugin-projects) to what this bundle was built from.
+    'import.meta.env.VITE_DX_PLUGIN_TOOLCHAIN': JSON.stringify(pluginToolchain()),
   },
   server: {
     host: true,

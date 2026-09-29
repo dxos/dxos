@@ -106,7 +106,6 @@
     "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
-    "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
