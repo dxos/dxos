@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOpe
       // After the refusals, so a refused call leaves the task's assignee as it found it.
       let asker = actor;
       if (remoteSession) {
-        asker = yield* assignToSession(remoteSession, actor);
+        asker = yield* assignToSession(remoteSession, actor, { defaultTitle: task.title });
         Task.update(task, { assignee: asker }, { actor: asker });
       }
 

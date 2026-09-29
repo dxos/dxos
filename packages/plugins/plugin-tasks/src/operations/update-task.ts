@@ -36,7 +36,9 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       const task = yield* Database.load(taskRef);
       // Resolved before the patch so the actor it produces is what `Task.update` writes, and so a
       // session that does not exist yet is created rather than dropping the assignment.
-      const sessionAssignee = remoteSession ? yield* assignToSession(remoteSession, assignee ?? undefined) : undefined;
+      const sessionAssignee = remoteSession
+        ? yield* assignToSession(remoteSession, assignee ?? undefined, { defaultTitle: title ?? task.title })
+        : undefined;
       const taskSet =
         milestone !== undefined || parentTask !== undefined ? yield* TaskSet.findTaskSet(task) : undefined;
 

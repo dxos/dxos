@@ -239,6 +239,12 @@ invisible to the space unless it reports itself. Keep a session object for your 
   notice you have drifted from what you were asked to do.
 - To assign a task to yourself, find the session object with `tasks-list-sessions { sessionId }`
   and use it as the assignee's `subject` (see "Assignee").
+- **Name the session after the work once you pick up a task.** Pass `title` — the task's title,
+  or the root task's when you claim a tree — on `tasks-record-session` and in `remoteSession` on
+  `tasks-update`, so Composer lists the run by what it is doing rather than by a bare harness id. A
+  `remoteSession` with no `title` names a still-untitled session after the task it claims; a
+  session that already has a title keeps it. If your harness can rename its own session (a
+  session-title tool), give it the same name.
 - **When you stop**, record once more with `state: "finished"` (or `"failed"`) so the session is not
   left looking like it is still running.
 
