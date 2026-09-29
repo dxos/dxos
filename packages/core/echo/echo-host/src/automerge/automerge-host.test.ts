@@ -10,7 +10,7 @@ import {
   generateAutomergeUrl,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -367,7 +367,7 @@ describe('AutomergeHost', () => {
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
   });
 
-  // EDGE soak: EDGE advertised a stale tip beside a newer commit; sharing the tip must not hide the commit.
+  // EDGE can advertise a stale tip beside a newer commit, and sharing the tip must not hide the commit.
   test('a resident document is different when an overlapping remote head is missing locally', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -399,8 +399,7 @@ describe('AutomergeHost', () => {
     expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(0);
   });
 
-  // EDGE soak: a peer that never received a fragment had evicted the document, and EDGE advertised the
-  // stale tip beside the new head, so the overlap alone read as converged and nothing fetched it.
+  // An evicted document cannot be asked directly, so an unconfirmed head must fault it in to be fetched.
   test('an evicted document is different until an overlapping remote head is confirmed', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -445,6 +444,71 @@ describe('AutomergeHost', () => {
     expect(await differentDocuments()).toEqual(0);
     synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
     expect(await differentDocuments()).toEqual(1);
+  });
+
+  // A head no peer can deliver would otherwise fault the document in again after every eviction.
+  test('an evicted document is not re-checked for a head it was found to lack until the check expires', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({
+      runtime,
+      useSubduction: true,
+      residency: { evictionDelay: 0, minResidentDocuments: 0 },
+    });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
+    const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+    const synchronizer = (host as any)._collectionSynchronizer;
+    const peerId = 'test-peer' as PeerId;
+    const differentDocuments = async () =>
+      (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
+
+    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
+    expect(await differentDocuments()).toEqual(1);
+
+    handle[Symbol.dispose]();
+    await waitForEviction(expect, host, documentId);
+    expect(await differentDocuments()).toEqual(0);
+
+    const now = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 10 * 60_000);
+    onTestFinished(() => clock.mockRestore());
+    expect(await differentDocuments()).toEqual(1);
+  });
+
+  // Garbage collection deletes the document; a peer's later push must not bring it back.
+  test('data stored for a removed document does not fault it back in', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+    handle[Symbol.dispose]();
+    await host.removeDocument(documentId);
+
+    const repo = (host as any)._repo;
+    repo.emit('subduction-detached-data', { documentId });
+    await sleep(100);
+    expect(repo.handles[documentId]).toBeUndefined();
   });
 
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,

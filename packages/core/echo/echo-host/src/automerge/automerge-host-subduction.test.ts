@@ -132,8 +132,7 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
-  // EDGE soak: a change pushed while the receiver had the document evicted was stored by Subduction
-  // and never applied, so the receiver's heads (and every query index built on them) stayed behind.
+  // Subduction stores a push for an evicted document without applying it, which leaves its heads behind.
   test('a change that arrives while the document is evicted is applied', async ({ expect }) => {
     const rt1 = createRuntime();
     onTestFinished(() => rt1.dispose());

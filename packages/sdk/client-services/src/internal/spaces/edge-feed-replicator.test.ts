@@ -191,8 +191,7 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => feedLength()).toEqual(1);
   });
 
-  // EDGE soak: a block broadcast to the joiner ahead of its metadata reply left the feed with a hole the
-  // length comparison could not see, so its admission credentials were never read.
+  // A sparse push moves `feed.length` past a hole that a length comparison cannot see.
   test('fetches the blocks below a block pushed ahead of the metadata reply', async () => {
     const source = await createNewFeed();
     for (const _ of range(3)) {

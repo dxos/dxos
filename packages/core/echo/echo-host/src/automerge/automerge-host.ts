@@ -235,6 +235,12 @@ export class AutomergeHost extends Resource {
   private _repo!: Repo;
   /** Changes the collection diff has confirmed present per document; see {@link _hasLocalChange}. */
   private readonly _confirmedChanges = new Map<DocumentId, Set<string>>();
+
+  /** When the collection diff last found each change absent from a resident document. */
+  private readonly _absentChanges = new Map<DocumentId, Map<string, number>>();
+
+  /** Documents garbage-collected by {@link removeDocument}, which a later push must not revive. */
+  private readonly _removedDocuments = new Set<DocumentId>();
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
 
@@ -440,7 +446,8 @@ export class AutomergeHost extends Resource {
       // in runs the load that applies it, and keeps it resident until that load has landed.
       Event.wrap<{ documentId: DocumentId }>(this._repo, 'subduction-detached-data').on(this._ctx, ({ documentId }) => {
         // Storage migrations write while the host is still opening; a document's first load applies those.
-        if (this.isOpen) {
+        if (this.isOpen && !this._removedDocuments.has(documentId)) {
+          this._absentChanges.delete(documentId);
           this._leaseUntilSettled(documentId);
         }
       });
@@ -951,6 +958,8 @@ export class AutomergeHost extends Resource {
     // it would re-create — and re-announce — the query this call deletes.
     this._leases.forget(documentId);
     this._confirmedChanges.delete(documentId);
+    this._absentChanges.delete(documentId);
+    this._removedDocuments.add(documentId);
 
     // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
     // row could never be found again.
@@ -1495,10 +1504,9 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Whether the local replica holds a change, for the collection diff. A resident document answers
-   * directly and records each change it confirms: a change never leaves a document, so the record
-   * still answers once the document is evicted, and loading it on every poll is avoided. An evicted
-   * document with an unconfirmed change reports it missing, which faults the document in to check.
+   * Whether the local replica holds a change, for the collection diff. Answers are remembered so an
+   * evicted document is loaded to check a change only when it was never checked, or its absence was
+   * found long enough ago that a retry may now fetch it.
    */
   private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean | undefined {
     if (this._confirmedChanges.get(documentId)?.has(changeHash)) {
@@ -1509,18 +1517,30 @@ export class AutomergeHost extends Resource {
     if (!CHANGE_HASH_PATTERN.test(changeHash)) {
       return undefined;
     }
-    if (!this._repo || getHandleState(this._repo, documentId) !== 'ready') {
-      return false;
-    }
-    const doc = this._repo.getHandle(documentId)?.doc();
+    const doc =
+      this._repo && getHandleState(this._repo, documentId) === 'ready'
+        ? this._repo.getHandle(documentId)?.doc()
+        : undefined;
     if (!doc) {
+      const checkedAt = this._absentChanges.get(documentId)?.get(changeHash);
+      return checkedAt !== undefined && Date.now() - checkedAt < ABSENT_CHANGE_RECHECK_INTERVAL ? undefined : false;
+    }
+    if (!changeIsPresentInDoc(doc, changeHash)) {
+      const absent = defaultMap(this._absentChanges, documentId, () => new Map<string, number>());
+      if (absent.size >= MAX_REMEMBERED_CHANGES_PER_DOCUMENT) {
+        absent.clear();
+      }
+      absent.set(changeHash, Date.now());
       return false;
     }
-    const present = changeIsPresentInDoc(doc, changeHash);
-    if (present) {
-      defaultMap(this._confirmedChanges, documentId, () => new Set<string>()).add(changeHash);
+    this._absentChanges.get(documentId)?.delete(changeHash);
+    const confirmed = defaultMap(this._confirmedChanges, documentId, () => new Set<string>());
+    // Bounded per document: forgetting costs at most one reload to check again.
+    if (confirmed.size >= MAX_REMEMBERED_CHANGES_PER_DOCUMENT) {
+      confirmed.clear();
     }
-    return present;
+    confirmed.add(changeHash);
+    return true;
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1843,6 +1863,11 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
 
 /** A hex-encoded change hash, the only form `getChangeByHash` accepts. */
 const CHANGE_HASH_PATTERN = /^[0-9a-f]{64}$/;
+
+/** How long a change found absent keeps an evicted document from being loaded to check it again. */
+const ABSENT_CHANGE_RECHECK_INTERVAL = 5 * 60_000;
+
+const MAX_REMEMBERED_CHANGES_PER_DOCUMENT = 64;
 
 const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
   return !!getBackend(doc).getChangeByHash(changeHash);

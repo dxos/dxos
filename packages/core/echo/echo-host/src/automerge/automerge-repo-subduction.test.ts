@@ -56,8 +56,7 @@ describe('AutomergeRepo with Subduction', () => {
     expect(progress.peek().state).to.equal('loading');
   });
 
-  // EDGE soak: a document faulted in while the EDGE socket was down finished its sync round with no
-  // peers and stayed on its older copy, although the newer commit was already in Subduction storage.
+  // A round with no peers delivers nothing, so stored blobs are the only source of the newer commit.
   test('a document opened with no peers applies what Subduction already stored', async () => {
     const storage = await createSqliteAdapter();
     let url: AutomergeUrl | undefined;

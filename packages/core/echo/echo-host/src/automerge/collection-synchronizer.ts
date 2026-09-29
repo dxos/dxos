@@ -23,8 +23,8 @@ const MIN_QUERY_INTERVAL = 5_000;
 const POLL_INTERVAL = 10_000;
 
 /**
- * Whether the local replica of a document contains the change with the given hash: `true` or
- * `false` when the document is resident, `undefined` when answering would require loading it.
+ * Whether the local replica of a document contains the change with the given hash, or `undefined`
+ * when that cannot or need not be answered; `false` marks the document `different`.
  */
 export type HasLocalChange = (documentId: DocumentId, changeHash: string) => boolean | undefined;
 
@@ -467,7 +467,8 @@ export const isCollectionStateEqual = (left: CollectionState, right: CollectionS
       return false;
     }
     const leftHeads = new Set(leftDocuments[documentId]);
-    return rightHeads.length === leftHeads.size && rightHeads.every((head) => leftHeads.has(head));
+    const rightSet = new Set(rightHeads);
+    return rightSet.size === leftHeads.size && [...rightSet].every((head) => leftHeads.has(head));
   });
 };
 
@@ -542,9 +543,8 @@ export const diffCollectionState = (
       // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips —
       // it has no notion of fragments — so the two views can disagree on a doc's
       // head set even when every change byte is replicated. We treat the doc as in
-      // sync as long as both sides agree on at least one head — unless the remote also advertises
-      // a change the resident local document lacks, since a shared stale tip would otherwise hide
-      // a newer commit from every peer that holds only that tip.
+      // sync as long as both sides agree on at least one head and the remote advertises no change
+      // the local replica lacks, which a shared stale tip would otherwise hide.
       different.push(documentId);
     }
   }

@@ -16,6 +16,7 @@ import {
   CollectionSynchronizer,
   diffCollectionState,
   diffCollectionStateForPeer,
+  isCollectionStateEqual,
   subsetRemoteToLocal,
   withoutEmptyHeads,
 } from './collection-synchronizer.ts';
@@ -250,6 +251,12 @@ describe('CollectionSynchronizer', () => {
     });
   });
 
+  test('states whose head lists repeat a head are not equal to states with a different head', ({ expect }) => {
+    const state = (heads: string[]): CollectionState => ({ documents: { a: heads } as Record<DocumentId, A.Heads> });
+    expect(isCollectionStateEqual(state(['h1', 'h2']), state(['h2', 'h1']))).toBe(true);
+    expect(isCollectionStateEqual(state(['h1', 'h2']), state(['h1', 'h1']))).toBe(false);
+  });
+
   test('edge peer diff intersects remote with local key set', ({ expect }) => {
     // Edge ships every sedimentree it knows about (orphans + stale roots).
     // The client-side diff must hide those from `missingOnLocal` and only
@@ -431,8 +438,7 @@ describe('CollectionSynchronizer', () => {
       expect(updates).toEqual([edgePeerId, edgePeerId, edgePeerId]);
     });
 
-    // EDGE soak: the dedupe compared states with the overlap rule, so a peer's new head beside a shared
-    // one read as "unchanged" and the new state was never recorded.
+    // An overlap-based dedupe would drop the new head and never record the new state.
     test('a remote state that adds a head beside a shared one is not deduped', async ({ expect }) => {
       const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
       const collectionId = 'collection-test';
