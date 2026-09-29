@@ -604,4 +604,8 @@ parallel-namespace approach; no compatibility shims).
    against `TreeModel` (lazy atom children, virtualization, drop-on-row).
 5. **Drag and drop stays on pragmatic-drag-and-drop** (vanilla core, Solid-compatible; reuses `useReorder` and plugins'
    `onMove`/drop policies). Next adds a `DragHandle` part (ghost icon-only Button, grip icon), `--nx-*` drop
-   indicators, a size-scaled drag preview, and keyboard move-up/down on the handle.
+   indicators, a size-scaled drag preview, and keyboard move-up/down on the handle. Every reorder drag is a move:
+   rows set `effectAllowed = 'move'` on `dragstart`, and the source row accepts itself as a no-op drop target, so no
+   `dragover` in the list is left to the browser (which answers with its copy cursor). Known limitation: Chrome on
+   macOS still shows the green "+" copy badge for one frame before the page answers the first `dragover`; Mosaic
+   shows the same flash, and page code cannot reach it.
