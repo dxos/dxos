@@ -19,15 +19,24 @@ import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 /** Months and years are laid out four to a row, as the current Calendar's pickers. */
 const GRID_COLUMNS = 4;
 
+type CalendarView = 'day' | 'month' | 'year';
+
+/** What the previous and next triggers step by in each view: months, years or decades. */
+const NAV_LABELS: Record<CalendarView, { previous: string; next: string }> = {
+  day: { previous: 'calendar.nav.previous.label', next: 'calendar.nav.next.label' },
+  month: { previous: 'calendar.nav.previous-year.label', next: 'calendar.nav.next-year.label' },
+  year: { previous: 'calendar.nav.previous-decade.label', next: 'calendar.nav.next-decade.label' },
+};
+
 /** Previous, view (month/year/decade caption) and next, over each view's table. */
-const ViewControl = () => {
+const ViewControl = ({ view }: { view: CalendarView }) => {
   const { t } = useTranslation(translationKey);
   return (
     <DatePickerPrimitive.ViewControl className={recipes.dateCalendarHeader()}>
       <DatePickerPrimitive.PrevTrigger asChild>
         <Button
           icon='ph--caret-left--regular'
-          label={t('calendar.nav.previous.label')}
+          label={t(NAV_LABELS[view].previous)}
           iconOnly
           variant='ghost'
           showTooltip={false}
@@ -41,7 +50,7 @@ const ViewControl = () => {
       <DatePickerPrimitive.NextTrigger asChild>
         <Button
           icon='ph--caret-right--regular'
-          label={t('calendar.nav.next.label')}
+          label={t(NAV_LABELS[view].next)}
           iconOnly
           variant='ghost'
           showTooltip={false}
@@ -55,7 +64,7 @@ const DayView = () => {
   const picker = useDatePickerContext();
   return (
     <DatePickerPrimitive.View view='day' className={recipes.dateCalendarView()}>
-      <ViewControl />
+      <ViewControl view='day' />
       <DatePickerPrimitive.Table className={recipes.dateCalendarTable()}>
         <DatePickerPrimitive.TableHead>
           <DatePickerPrimitive.TableRow>
@@ -88,7 +97,7 @@ const MonthView = () => {
   const picker = useDatePickerContext();
   return (
     <DatePickerPrimitive.View view='month' className={recipes.dateCalendarView()}>
-      <ViewControl />
+      <ViewControl view='month' />
       <DatePickerPrimitive.Table columns={GRID_COLUMNS} className={recipes.dateCalendarTable()}>
         <DatePickerPrimitive.TableBody>
           {picker.getMonthsGrid({ columns: GRID_COLUMNS, format: 'short' }).map((months, index) => (
@@ -112,7 +121,7 @@ const YearView = () => {
   const picker = useDatePickerContext();
   return (
     <DatePickerPrimitive.View view='year' className={recipes.dateCalendarView()}>
-      <ViewControl />
+      <ViewControl view='year' />
       <DatePickerPrimitive.Table columns={GRID_COLUMNS} className={recipes.dateCalendarTable()}>
         <DatePickerPrimitive.TableBody>
           {picker.getYearsGrid({ columns: GRID_COLUMNS }).map((years, index) => (

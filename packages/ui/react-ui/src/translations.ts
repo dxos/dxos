@@ -55,6 +55,10 @@ export const translations = [
 
         'calendar.nav.previous.label': 'Previous month',
         'calendar.nav.next.label': 'Next month',
+        'calendar.nav.previous-year.label': 'Previous year',
+        'calendar.nav.next-year.label': 'Next year',
+        'calendar.nav.previous-decade.label': 'Previous decade',
+        'calendar.nav.next-decade.label': 'Next decade',
         'calendar.footer.today.label': 'Today',
 
         'trigger-button.label': 'Open',
@@ -64,7 +68,7 @@ export const translations = [
         'password-input.show.label': 'Show password',
         'password-input.hide.label': 'Hide password',
 
-        'drag-handle.role': 'drag handle',
+        'drag-handle.role.label': 'drag handle',
         'drag-handle.grabbed.message': 'Grabbed. Press the arrow keys to move, Space to drop.',
         'drag-handle.moved-up.message': 'Moved up.',
         'drag-handle.moved-down.message': 'Moved down.',

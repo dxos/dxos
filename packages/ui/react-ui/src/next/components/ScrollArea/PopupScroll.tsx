@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useEnvironmentContext } from '@ark-ui/react/environment';
 import { type Popover as PopoverPrimitive } from '@ark-ui/react/popover';
 import React, { type ReactElement, type ReactNode, useMemo } from 'react';
 
@@ -42,10 +43,17 @@ export const popupPositioning = (gutter: number, positioning?: Positioning): Pos
   ...positioning,
 });
 
-/** The `data-size` of the nearest sized ancestor (or self) of the first of `ids` present in the document. */
-const readSize = (ids: string[]): Size | undefined => {
+/** The `data-size` of the nearest sized ancestor (or self) of the first of `ids` present under `root`. */
+const readSize = (
+  root: ReturnType<ReturnType<typeof useEnvironmentContext>['getRootNode']>,
+  ids: string[],
+): Size | undefined => {
+  if (!('getElementById' in root)) {
+    return undefined;
+  }
+
   for (const id of ids) {
-    const element = document.getElementById(id);
+    const element = root.getElementById(id);
     if (element) {
       const value = element.closest('[data-size]')?.getAttribute('data-size');
       return SIZES.find((size) => size === value);
@@ -55,7 +63,7 @@ const readSize = (ids: string[]): Size | undefined => {
 
 /**
  * The size a portalled popup renders at (Phase 4 decision 2): its own `size` if given, else the `data-size` of the
- * nearest sized ancestor of its trigger or anchor (the first of `ids` in the document), else `fallback`. A DOM lookup
+ * nearest sized ancestor of its trigger or anchor (the first of `ids` in the popup's root node), else `fallback`. A DOM lookup
  * each time the popup opens rather than React context (decision 3); a popup with no trigger (a Dialog opened by state,
  * a virtual anchor) takes the fallback.
  */
@@ -65,9 +73,14 @@ export const usePopupSize = (
   ids: (string | undefined)[],
   fallback?: Size,
 ): Size | undefined => {
+  // The root zag resolves the popup in, so a trigger in a shadow root or another document is still found.
+  const { getRootNode } = useEnvironmentContext();
   const key = ids.filter(Boolean).join(' ');
   // `open` recomputes on every opening, when the trigger is certainly mounted.
-  return useMemo(() => size ?? readSize(key.split(' ').filter(Boolean)) ?? fallback, [size, open, key, fallback]);
+  return useMemo(
+    () => size ?? readSize(getRootNode(), key.split(' ').filter(Boolean)) ?? fallback,
+    [size, open, key, fallback, getRootNode],
+  );
 };
 
 export type PopupScrollProps = {
