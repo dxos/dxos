@@ -235,9 +235,12 @@ test QA-3: Build a plugin with an agent in the desktop app
       note: The project's skill is Sandbox, not Coding (Dev); its instructions name the source root it links.
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox", text: "World Clock" }
+      capture: sandboxes
       expect: |
         a "World Clock" sandbox exists, all five tasks are done, and the chat shows a "Load plugin" prompt whose
         URL is `http://localhost:<port>/files/<key>/manifest.json`
+      assert: return $result.results.length === 1
     - name: Load and enable the plugin
       do: As QA-2 steps 10 and 11.
       expect: World Clock loads from the sandbox's published directory and activates from Labs
@@ -245,10 +248,14 @@ test QA-3: Build a plugin with an agent in the desktop app
       do: As QA-2 steps 12 and 13.
       expect: the page shows the map above three ticking clock cards and the plus card
   after:
-    - name: Delete the project and the sandbox
-      do: Right-click the "World Clock" project, then the "World Clock" sandbox, in the navtree and choose Delete.
+    - name: Delete the project
+      do: Right-click the "World Clock" project in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
-      expect: both leave the navtree
+      expect: the project leaves the navtree
+    - name: Delete the sandbox
+      do: Right-click the "World Clock" sandbox in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandboxes.results[0].dxn }], target: $given.space }
+      expect: the sandbox leaves the navtree and its shell environment is torn down
     - name: Uninstall World Clock
       do: As QA-2's after step 2.
       expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
