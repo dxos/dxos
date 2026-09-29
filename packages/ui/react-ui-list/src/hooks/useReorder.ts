@@ -164,7 +164,7 @@ export const useReorderList = <T>({
         }
         const sourceIdx = findIndexFromPayload(source.data);
         const targetIdx = findIndexFromPayload(target.data);
-        if (sourceIdx < 0 || targetIdx < 0) {
+        if (sourceIdx < 0 || targetIdx < 0 || sourceIdx === targetIdx) {
           return;
         }
         const destinationIndex = getReorderDestinationIndex({
@@ -265,11 +265,13 @@ export const useReorderList = <T>({
               setActive(null);
             },
           }),
+          // The source row accepts itself (a drop there moves nothing) so the browser never gets an uncancelled
+          // `dragover` inside the list, which it answers with its own cursor; it keeps its dragging state throughout.
           dropTargetForElements({
             element: refs.row,
             canDrop: ({ source }) => {
               if (source.element === refs.row) {
-                return false;
+                return true;
               }
               if (canDropRef.current) {
                 return canDropRef.current({ source });
@@ -279,13 +281,21 @@ export const useReorderList = <T>({
             getData: ({ input }) =>
               attachClosestEdge({ [REORDER_LIST_KEY]: listId, id }, { element: refs.row, input, allowedEdges }),
             getIsSticky: () => true,
-            onDragEnter: ({ self }) => {
-              onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+            onDragEnter: ({ self, source }) => {
+              if (source.element !== refs.row) {
+                onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+              }
             },
-            onDrag: ({ self }) => {
-              onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+            onDrag: ({ self, source }) => {
+              if (source.element !== refs.row) {
+                onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+              }
             },
-            onDragLeave: () => onItemState(IDLE),
+            onDragLeave: ({ source }) => {
+              if (source.element !== refs.row) {
+                onItemState(IDLE);
+              }
+            },
             onDrop: () => onItemState(IDLE),
           }),
         );
