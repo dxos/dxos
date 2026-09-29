@@ -8,6 +8,7 @@ import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 
+import { RepositoryClient } from './RepositoryClient.ts';
 import { SandboxClient } from './SandboxClient.ts';
 
 /**
@@ -85,4 +86,10 @@ const createAuthHeaderProvider = (client: Client, sandboxUrl: string): (() => Pr
 export const createSandboxClient = (client: Client): SandboxClient => {
   const url = getSandboxServiceUrl(client);
   return new SandboxClient(url, createAuthHeaderProvider(client, url));
+};
+
+/** Builds a {@link RepositoryClient}: the same service and credential as {@link createSandboxClient}. */
+export const createRepositoryClient = (client: Client): RepositoryClient => {
+  const url = getSandboxServiceUrl(client);
+  return new RepositoryClient(url, createAuthHeaderProvider(client, url));
 };

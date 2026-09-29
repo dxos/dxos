@@ -7,8 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { SandboxSkill } from '#skills';
+import { RepositorySkill, SandboxSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, SandboxSkill)]);
+const skillDefinition = () =>
+  Effect.succeed([
+    Capability.contribute(AppCapabilities.SkillDefinition, SandboxSkill),
+    Capability.contribute(AppCapabilities.SkillDefinition, RepositorySkill),
+  ]);
 
 export default skillDefinition;

@@ -11,10 +11,12 @@ import { ClientService } from '@dxos/client';
 
 import { getLocalSandboxBackend } from '#local-backend';
 
+import * as RepositoryService from '../types/RepositoryService.ts';
 import * as SandboxCapabilities from '../types/SandboxCapabilities.ts';
 import * as SandboxService from '../types/SandboxService.ts';
 import type * as Settings from '../types/Settings.ts';
 import { makeEdgeBackend } from './edge-backend.ts';
+import { makeEdgeRepositoryBackend } from './repository-backend.ts';
 
 /** Environment variable selecting the backend under Node or Bun; it overrides the plugin setting. */
 export const SANDBOX_BACKEND_ENV = 'DX_SANDBOX_BACKEND';
@@ -24,6 +26,14 @@ export const layerEdge: Layer.Layer<SandboxService.Service, never, ClientService
   SandboxService.Service,
   Effect.gen(function* () {
     return makeEdgeBackend(yield* ClientService);
+  }),
+);
+
+/** Repositories live on EDGE whichever backend runs the sandboxes: they are what outlives them. */
+export const layerRepository: Layer.Layer<RepositoryService.Service, never, ClientService> = Layer.effect(
+  RepositoryService.Service,
+  Effect.gen(function* () {
+    return makeEdgeRepositoryBackend(yield* ClientService);
   }),
 );
 
