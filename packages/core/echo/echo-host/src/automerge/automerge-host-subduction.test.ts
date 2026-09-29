@@ -132,6 +132,47 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
+  // EDGE soak: a change pushed while the receiver had the document evicted was stored by Subduction
+  // and never applied, so the receiver's heads (and every query index built on them) stayed behind.
+  test('a change that arrives while the document is evicted is applied', async ({ expect }) => {
+    const rt1 = createRuntime();
+    onTestFinished(() => rt1.dispose());
+    const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+    const rt2 = createRuntime();
+    onTestFinished(() => rt2.dispose());
+    const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+
+    using created = await host1.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    await host1.flush(Context.default());
+
+    const network = await new TestReplicationNetwork().open();
+    try {
+      await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+      const mirrored = await host2.loadDoc<any>(Context.default(), documentId);
+      invariant(mirrored);
+      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
+      mirrored[Symbol.dispose]();
+      await waitForEviction(expect, host2, documentId);
+
+      created.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await host1.flush(Context.default());
+      const [expected] = await host1.getHeads([documentId]);
+
+      await expect
+        .poll(async () => (await host2.getHeads([documentId]))[0], { timeout: SYNC_WINDOW_MS })
+        .toEqual(expected);
+    } finally {
+      await host1.close();
+      await host2.close();
+      await network.close();
+    }
+  });
+
   test(
     'a peer not holding a document catches up when its sync round outlasts the eviction delay',
     {

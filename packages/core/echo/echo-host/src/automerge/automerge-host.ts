@@ -434,6 +434,15 @@ export class AutomergeHost extends Resource {
         }
       });
 
+      // Subduction stores a push for an evicted document without applying it; faulting the document
+      // in runs the load that applies it, and keeps it resident until that load has landed.
+      Event.wrap<{ documentId: DocumentId }>(this._repo, 'subduction-detached-data').on(this._ctx, ({ documentId }) => {
+        // Storage migrations write while the host is still opening; a document's first load applies those.
+        if (this.isOpen) {
+          this._leaseUntilSettled(documentId);
+        }
+      });
+
       // Quiet subduction_core's console WARNs: every per-sedimentree sync round fans out to all
       // space-scoped edge peers, and each correct cross-space `authorizeFetch` denial is logged by
       // the WASM at WARN ("not authorized to access sedimentree"), flooding the console. Must run

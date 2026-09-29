@@ -225,6 +225,40 @@ describe('AutomergeRepo with Subduction', () => {
       await expect.poll(() => peer2Handle.doc(), { timeout: SYNC_WINDOW_MS }).toEqual(hostHandle.doc());
     });
 
+    // A change whose hash starts with a zero byte is a sedimentree fragment boundary, which Subduction
+    // ships as a fragment rather than a loose commit.
+    test('a fragment-boundary change reaches a peer through a relay', async () => {
+      const { repos, adapters, repoPairs } = await createRepoTopology({
+        peers: ['author', 'relay', 'receiver'],
+        connections: [
+          ['author', 'relay'],
+          ['relay', 'receiver'],
+        ],
+      });
+      const [author, relay, receiver] = repos;
+      await connectAdapters(adapters, { repoPairs });
+
+      const handle = author.create<{ count: number }>({ count: 0 });
+      await waitForSubductionSave(repos);
+      const relayed = await findInStates<{ count: number }>(relay, handle.url, FIND_STATES);
+      await expect.poll(() => relayed.doc()?.count, { timeout: SYNC_WINDOW_MS }).toEqual(0);
+      const received = await findInStates<{ count: number }>(receiver, handle.url, FIND_STATES);
+      await expect.poll(() => received.doc()?.count, { timeout: SYNC_WINDOW_MS }).toEqual(0);
+
+      // One change at a time, each saved before the next, as the soak's replicants write.
+      let count = 0;
+      do {
+        count++;
+        handle.change((doc) => {
+          doc.count = count;
+        });
+        await waitForSubductionSave([author]);
+      } while (!A.getHeads(handle.doc()).some((head) => head.startsWith('00')) && count < 2_000);
+      await waitForSubductionSave(repos);
+
+      await expect.poll(() => received.doc()?.count, { timeout: SYNC_WINDOW_MS }).toEqual(count);
+    });
+
     test('client creates doc and Repo persists it to disk', async () => {
       const storage = await createSqliteAdapter();
       const repo = createRepo({ network: [], storage });
