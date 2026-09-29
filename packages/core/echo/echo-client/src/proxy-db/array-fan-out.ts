@@ -27,6 +27,10 @@ import { type ConvergenceKeyCache, ensureByConvergenceKey } from './migration-co
 // one; `ensure`'s idempotence is what makes the next pass safe to retry.
 //
 
+/** The message of an array fan-out's split change, also recorded as its marker's `migration`. */
+export const arrayFanOutSplitMessage = (migration: Migration.ArrayFanOutMigration): string =>
+  `migration: array-fan-out ${migration.fromType.toString()} -> ${migration.toType.toString()}`;
+
 /** Reads the RAW (still-live, automerge-backed) element at `property[index]`, for {@link A.getConflicts}. */
 const getRawElement = (object: Obj.Unknown, property: string, index: number): unknown => {
   const core = getObjectCore(object);
@@ -146,7 +150,7 @@ const applyArrayFanOut = (
 ): void => {
   const core = getObjectCore(object);
   const mountPath = core.mountPath;
-  const message = `migration: array-fan-out ${migration.fromType.toString()} -> ${migration.toType.toString()}`;
+  const message = arrayFanOutSplitMessage(migration);
 
   const dataWrites = computeGuardedDataWrites(core, { [migration.toProperty]: refs });
   const typeRef = EncodedReference.fromURI(migration.toType);

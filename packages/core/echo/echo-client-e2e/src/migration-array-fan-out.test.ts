@@ -40,6 +40,16 @@ class ArrayFanParentV2 extends Type.makeObject<ArrayFanParentV2>(
   }),
 ) {}
 
+class ArrayFanParentV3 extends Type.makeObject<ArrayFanParentV3>(
+  DXN.make('org.dxos.test.migration.arrayfanout.Parent', '0.3.0'),
+)(
+  Schema.Struct({
+    items: Schema.optional(Schema.Array(ElementStruct)),
+    itemsRefs: Schema.optional(Schema.Record(Schema.String, Ref.Ref(ArrayFanChildDoc))),
+    label: Schema.optional(Schema.String),
+  }),
+) {}
+
 class NoIdElementParentDoc extends Type.makeObject<NoIdElementParentDoc>(
   DXN.make('org.dxos.test.migration.arrayfanout.NoIdParent', '0.1.0'),
 )(Schema.Struct({ items: Schema.optional(Schema.Array(Schema.Struct({ name: Schema.String }))) })) {}
@@ -402,6 +412,33 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
     expect([alpha.order, beta.order]).toEqual([1, 0]);
     expect(alpha.name).toBe('Alpha!');
     expect(Obj.getConflict(alpha, 'name')).toBeUndefined();
+  });
+
+  test('a split parent that a later migration moved on still folds late array edits', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({
+      types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanParentV3, ArrayFanChildDoc],
+    });
+    await using db = await peer.createDatabase();
+
+    const { parent, child } = await splitSingleElementParent(db, 'alpha');
+    const laterMigration = Migration.define({
+      from: ArrayFanParentV2,
+      to: ArrayFanParentV3,
+      transform: (from) => ({ items: from.items, itemsRefs: from.itemsRefs, label: 'v3' }),
+    });
+    await db.runMigrations([laterMigration]);
+    expect(Obj.getTypeURI(parent)?.toString()).toBe(laterMigration.toType.toString());
+
+    Obj.update(parent, (parent) => {
+      const items = Obj.getValue(parent, ['items']);
+      invariant(Array.isArray(items), 'expected the source array to remain');
+      items[0].name = 'alpha-late';
+    });
+    await db.flush();
+    await db.foldForward([fanOutMigration, laterMigration]);
+
+    expect(child.name).toBe('alpha-late');
   });
 
   test('(b) a concurrent direct edit to the child conflicts with a late element edit; the direct edit is presented', async () => {

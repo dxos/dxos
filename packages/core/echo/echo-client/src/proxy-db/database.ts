@@ -3,9 +3,10 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
+import { sha256 } from '@noble/hashes/sha2';
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 import * as EffectContext from 'effect/Context';
 import * as Equal from 'effect/Equal';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
@@ -13,7 +14,6 @@ import { type CleanupFn, Event, Mutex, type ReadOnlyEvent, synchronized } from '
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
-  Annotation,
   type Blob,
   type Change,
   Database,
@@ -57,7 +57,7 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { getDeep, setDeep } from '@dxos/util';
+import { setDeep } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
@@ -923,11 +923,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         );
       }
 
-      const stepIndex = this.#applyObjectMigration(object, migration, output ?? {}, metaPatch);
+      const stepKey = this.#applyObjectMigration(object, migration, output ?? {}, metaPatch);
       const postMigrationType = Obj.getTypeURI(object);
       invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
 
-      await this.#runMigrationEffects(object, migration, stepIndex, before);
+      await this.#runMigrationEffects(object, migration, stepKey, before);
     }
 
     if (migration.onMigration) {
@@ -939,7 +939,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   async #runMigrationEffects(
     object: Obj.Unknown,
     migration: Migration.ObjectMigration,
-    stepIndex: number,
+    stepKey: string,
     before: Record<string, unknown> & { id: string },
   ): Promise<void> {
     if (!migration.onMigration) {
@@ -948,19 +948,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await migration.onMigration({ ...createObjectMigrationContext(this), before, object });
     const core = getObjectCore(object);
     core.change((doc) => {
-      setDeep(
-        doc,
-        [
-          ...core.mountPath,
-          META_NAMESPACE,
-          'annotations',
-          Migration.MigrationMarkerAnnotation.key,
-          'steps',
-          stepIndex,
-          'effectsPending',
-        ],
-        false,
-      );
+      setDeep(doc, [...core.mountPath, META_NAMESPACE, 'annotations', stepKey, 'effectsPending'], false);
     });
   }
 
@@ -968,12 +956,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   async #resumeMigrationEffects(migration: Migration.ObjectMigration): Promise<void> {
     const objects = await this._hypergraph.query(Query.select(Filter.type(migration.toType)).from(this)).run();
     for (const object of objects) {
-      const marker = Annotation.get(object, Migration.MigrationMarkerAnnotation);
-      if (Option.isNone(marker)) {
-        continue;
-      }
       const core = getObjectCore(object);
-      for (const [stepIndex, step] of marker.value.steps.entries()) {
+      for (const { key, step } of Migration.getMigrationSteps(object)) {
         if (
           step.effectsPending &&
           step.from === migration.fromType.toString() &&
@@ -981,7 +965,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           A.hasHeads(core.getDoc(), [...step.preHeads])
         ) {
           const before = { ...getDecodedDataWithRefs(this, core, [...step.preHeads]), id: object.id };
-          await this.#runMigrationEffects(object, migration, stepIndex, before);
+          await this.#runMigrationEffects(object, migration, key, before);
         }
       }
     }
@@ -992,10 +976,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * `ObjectCore`: data keys the transform's output actually changed (value-compare guarded — an
    * unchanged key emits no op, and a key the output omits is left untouched as a retired property),
    * the meta patch (merged key by key, same guard), the type switch, and a new
-   * {@link Migration.MigrationStep} appended to {@link Migration.MigrationMarkerAnnotation} (post-step
-   * heads are this very change, locatable by its `message`) — the object's PREVIOUS steps, if any,
-   * are kept: a `@1 -> @2 -> @3` object carries both, so fold-forward can still find a late `@1`-shaped
-   * write against step one after step two has run.
+   * {@link Migration.MigrationStep} under its own annotation key (post-step heads are this very
+   * change, locatable by its `message`) — the object's PREVIOUS steps are kept: a `@1 -> @2 -> @3`
+   * object carries both, so fold-forward can still find a late `@1`-shaped write against step one.
+   *
+   * @returns The annotation key the step was recorded under.
    *
    * Every `ObjectCore` helper (`setDecoded`, `setType`, ...) opens its own `change`, so nesting them
    * here would produce several changes; every write below instead goes straight onto the doc at
@@ -1006,7 +991,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     migration: Migration.ObjectMigration,
     output: MigrationOutput,
     metaPatch: Partial<ProtocolEntityMeta> | undefined,
-  ): number {
+  ): string {
     const core = getObjectCore(object);
     const mountPath = core.mountPath;
     const preHeads = A.getHeads(core.getDoc());
@@ -1026,8 +1011,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
     const fromType = migration.fromType.toString();
     const toType = migration.toType.toString();
+    const index = Migration.getMigrationSteps(object).length;
     const newStep = core.encode(
       Schema.encodeSync(Migration.MigrationStepSchema)({
+        index,
         from: fromType,
         to: toType,
         preHeads: [...preHeads],
@@ -1037,10 +1024,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         ...(migration.onMigration ? { effectsPending: true } : {}),
       }),
     );
-    const existingStepCount = Annotation.get(object, Migration.MigrationMarkerAnnotation).pipe(
-      Option.map((marker) => marker.steps.length),
-      Option.getOrElse(() => 0),
-    );
+    // Derived from what identifies the step, so two peers recording the same step write the same key.
+    const stepKey = `${Migration.MIGRATION_STEP_KEY_PREFIX}${bytesToHex(
+      sha256(utf8ToBytes(`${fromType}|${toType}|${[...preHeads].sort().join(',')}`)),
+    ).slice(0, 32)}`;
     const typeRef = EncodedReference.fromURI(migration.toType);
 
     core.change(
@@ -1052,19 +1039,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           setDeep(doc, [...mountPath, META_NAMESPACE, key], value);
         }
 
-        const markerPath = [...mountPath, META_NAMESPACE, 'annotations', Migration.MigrationMarkerAnnotation.key];
-        if (getDeep(doc, markerPath) === undefined) {
-          setDeep(doc, markerPath, { steps: [] });
-        }
-        // Written by index, never as a whole-marker replace: a concurrent peer's own step, appended at
-        // a DIFFERENT index of the same array, must survive alongside this one (Automerge keeps both
-        // list insertions at the same position rather than dropping one, unlike a whole-value overwrite).
-        setDeep(doc, [...markerPath, 'steps', existingStepCount], newStep);
+        setDeep(doc, [...mountPath, META_NAMESPACE, 'annotations', stepKey], newStep);
         setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
       },
       { message: `migration: ${fromType} -> ${toType}` },
     );
-    return existingStepCount;
+    return stepKey;
   }
 
   /**

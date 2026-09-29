@@ -3,7 +3,6 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -11,6 +10,7 @@ import { sleep } from '@dxos/async';
 import { Annotation, DXN, Lens, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { setDeep } from '@dxos/util';
 
 import { EchoTestBuilder, getObjectCore } from '../testing/index.ts';
 import { updateText } from '../text.ts';
@@ -300,8 +300,7 @@ describe('fold-forward: retired scalar properties', () => {
     await db.flush();
     await Promise.all([db.runMigrations([slowMigration]), db.runMigrations([slowMigration])]);
 
-    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
-    expect(marker.steps).to.have.length(1);
+    expect(Migration.getMigrationSteps(contact)).to.have.length(1);
   });
 
   test('a concurrent direct edit to the target creates a real conflict; Obj.getConflict presents the direct edit', async () => {
@@ -526,12 +525,10 @@ describe('fold-forward: safety', () => {
     // Corrupt step 0's `preHeads` to a hash the document has never seen — the ancestry check
     // (M0-REPORT.md design item 1: "never fold on foreign heads") must skip it, not throw or diff
     // against "everything is new".
-    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
-    const [step] = marker.steps;
-    Obj.update(contact, (contact) => {
-      Annotation.set(contact, Migration.MigrationMarkerAnnotation, {
-        steps: [{ ...step, preHeads: ['0'.repeat(64)] }],
-      });
+    const [{ key }] = Migration.getMigrationSteps(contact);
+    const core = getObjectCore(contact);
+    core.change((doc) => {
+      setDeep(doc, [...core.mountPath, 'meta', 'annotations', key, 'preHeads'], ['0'.repeat(64)]);
     });
     await db.flush();
 
@@ -557,8 +554,7 @@ describe('fold-forward: chained migrations', () => {
     await db.runMigrations([contactMigration, contactMigration23]);
     expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada Lovelace');
 
-    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
-    expect(marker.steps).to.have.length(2);
+    expect(Migration.getMigrationSteps(contact)).to.have.length(2);
 
     // A late `@1`-shaped write from an old client that never saw either migration, straight on the raw core.
     getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');

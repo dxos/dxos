@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { SchemaEx } from '@dxos/effect';
@@ -163,7 +164,7 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
  * Define a migration between two object schemas.
  *
  * The runner applies each object's transform output as minimal writes in one change, keeps source
- * properties the output omits (recorded as retired in {@link MigrationMarkerAnnotation}), and
+ * properties the output omits (recorded as retired in {@link getMigrationSteps}), and
  * resumes safely after a partial run. A write made in the old shape after an object migrated (e.g.
  * by a peer that was offline) is carried forward by fold-forward, which re-runs `transform` on the
  * object's current data. `onMigration` effects may run once per peer.
@@ -498,7 +499,7 @@ export const defineFanIn = <From extends Type.AnyObj, To extends Type.AnyObj = F
  * Value of {@link FanInMarkerAnnotation}: recorded on the CHILD by {@link runFanInMigration} (in
  * `@dxos/echo-client`) in the same change as its type switch and tombstone. `migration` doubles as
  * that change's own `message`, so a fold-forward pass locates it by message + `deps` the same way
- * {@link MigrationMarkerAnnotation}'s steps locate their own migration change; `preHeads` is the
+ * {@link getMigrationSteps}' steps locate their own migration change; `preHeads` is the
  * child's frontier immediately before that change, and `absorbedAtParentHeads` is the PARENT's
  * frontier immediately after the `assign` that absorbed this child landed — the base a late fold
  * writes into the parent concurrently with, so a direct edit made after absorption still conflicts
@@ -708,7 +709,7 @@ export const defineArrayFanOut = <From extends Type.AnyObj, To extends Type.AnyO
  * (`runArrayFanOutMigration` in `@dxos/echo-client`) in the SAME change as that property's `toProperty`
  * refs and the type switch, mirroring {@link FanInMarkerSchema}'s combination of state into one write.
  * `migration` doubles as that change's own `message`, so a fold-forward pass locates it by message +
- * `deps`, the same way {@link MigrationMarkerAnnotation}'s steps and {@link FanInMarkerSchema} locate
+ * `deps`, the same way {@link getMigrationSteps}' steps and {@link FanInMarkerSchema} locate
  * their own change; `preHeads` is the parent's frontier immediately before that change.
  */
 export const ArrayFanOutMarkerSchema = Schema.Struct({
@@ -912,6 +913,8 @@ export const defineStampElementIds = <T extends Type.AnyObj>(
 };
 
 export const MigrationStepSchema = Schema.Struct({
+  /** Position in the object's chain of steps: how many steps it had crossed before this one. */
+  index: Schema.Number,
   /** URI of the type the object was migrated from. */
   from: Schema.String,
   /** URI of the type the object was migrated to. */
@@ -939,27 +942,27 @@ export const MigrationStepSchema = Schema.Struct({
 });
 
 /**
- * One step of a migration marker's chain: everything the runner recorded when an object crossed one
- * `from -> to` boundary. Exported so the runner can encode a single new step without re-encoding the
- * whole marker (`#applyObjectMigration` appends a step in place).
+ * One migration step: everything the runner recorded when an object crossed one `from -> to` boundary.
  */
 export type MigrationStep = Schema.Schema.Type<typeof MigrationStepSchema>;
 
-/** Every step the object has been migrated through, oldest first. */
-const MigrationMarkerSchema = Schema.Struct({ steps: Schema.Array(MigrationStepSchema) });
-
 /**
- * Value of {@link MigrationMarkerAnnotation}: recorded on an object by the runner immediately after
- * it applies an object migration's single change.
+ * Prefix of the `EntityMeta.annotations` key each migration step is recorded under. A key per step,
+ * never one shared container, so two peers migrating the same object concurrently each keep their
+ * record instead of racing to create the container.
  */
-export type MigrationMarker = Schema.Schema.Type<typeof MigrationMarkerSchema>;
+export const MIGRATION_STEP_KEY_PREFIX = 'org.dxos.annotation.migrationStep:';
 
-/**
- * Per-object marker left in `EntityMeta.annotations` by the migration runner, so a later pass (the
- * fold-forward runner, a doctor diagnostic) can find a migrated object and replay any source-property
- * write that landed after a step's `preHeads`.
- */
-export const MigrationMarkerAnnotation = Annotation.make<MigrationMarker>({
-  id: 'org.dxos.annotation.migrationMarker',
-  schema: MigrationMarkerSchema,
-});
+/** A recorded migration step and the annotation key it lives under. */
+export type RecordedMigrationStep = { readonly key: string; readonly step: MigrationStep };
+
+const decodeMigrationStep = Schema.decodeUnknownOption(MigrationStepSchema);
+
+/** Every migration step recorded on `object`, oldest first. */
+export const getMigrationSteps = (object: Obj.Unknown): RecordedMigrationStep[] =>
+  Object.entries(Obj.getMeta(object).annotations ?? {})
+    .filter(([key]) => key.startsWith(MIGRATION_STEP_KEY_PREFIX))
+    .flatMap(([key, value]) =>
+      Option.match(decodeMigrationStep(value), { onNone: () => [], onSome: (step) => [{ key, step }] }),
+    )
+    .sort((left, right) => left.step.index - right.step.index || left.key.localeCompare(right.key));

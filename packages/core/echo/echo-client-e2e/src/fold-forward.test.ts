@@ -12,7 +12,14 @@ import { TestReplicationNetwork, type TestReplicator } from '@dxos/echo-host/tes
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { type TestDatabase, changedProps, diffSince, headsOf, writesSince } from './migration-bench/harness.ts';
+import {
+  type TestDatabase,
+  changedProps,
+  createPartitionedPair,
+  diffSince,
+  headsOf,
+  writesSince,
+} from './migration-bench/harness.ts';
 
 //
 // Fold-forward acceptance (Phase C2/C3, `.agents/projects/lenses/IMPLEMENTATION-PLAN.md` Phase C):
@@ -363,5 +370,53 @@ describe('fold-forward chained migrations across a real partition, peer B stuck 
     const preSecondPassHeads = headsOf(obj1);
     await db1.foldForward([chainMigration12, chainMigration23]);
     expect(writesSince(obj1, preSecondPassHeads)).to.deep.eq([]);
+  });
+});
+
+describe('fold-forward e2e: migration steps recorded concurrently', () => {
+  test('two peers migrating the same object while partitioned each keep their step', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    // Not `await using`: the network must close after the builder.
+    const builder = await new EchoTestBuilder().open();
+    const pair = await createPartitionedPair(builder, [PersonV1, PersonV2]);
+    try {
+      const { peer1, peer2, partition, heal, syncAll } = pair;
+      await using db1 = await peer1.createDatabase(spaceKey);
+      const person1 = db1.add(Obj.make(PersonV1, { fullName: 'Ada' }));
+      await db1.flush();
+      const rootUrl = db1.rootUrl;
+      invariant(rootUrl, 'root url');
+      await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+      await syncAll(db1, db2);
+      let person2: PersonV1 | undefined;
+      await expect
+        .poll(async () => {
+          [person2] = await db2.query(Filter.id(person1.id)).run();
+          return person2;
+        })
+        .toBeDefined();
+      invariant(person2, 'expected the replicated person');
+
+      await partition();
+      // Different pre-migration heads on each side, so the two steps are distinct records.
+      Obj.update(person1, (person1) => {
+        person1.fullName = 'Ada Lovelace';
+      });
+      await db1.flush();
+      await db1.runMigrations([personMigration]);
+      await db2.runMigrations([personMigration]);
+
+      await heal();
+      const replicated = person2;
+      await expect
+        .poll(async () => {
+          await syncAll(db1, db2);
+          return [Migration.getMigrationSteps(person1).length, Migration.getMigrationSteps(replicated).length];
+        })
+        .toEqual([2, 2]);
+    } finally {
+      await builder.close();
+      await pair.network.close();
+    }
   });
 });

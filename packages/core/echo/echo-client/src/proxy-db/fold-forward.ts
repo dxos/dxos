@@ -7,11 +7,13 @@ import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, type ObjectCore } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
+import { arrayFanOutSplitMessage } from './array-fan-out.ts';
 import { changedOutputEntries, computeGuardedDataWrites, getDecodedDataWithRefs, isRecord } from './encoded-value.ts';
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey } from './migration-context.ts';
@@ -20,7 +22,7 @@ import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey 
 // Fold-forward as a standing rule (Phase C2/C3, `.agents/projects/lenses/IMPLEMENTATION-PLAN.md`
 // Phase C; `.agents/projects/lenses/M0-REPORT.md` design items 1, 6, 9). A migrated object is
 // "behind" when a retired property was written to after its step's migration — derivable from the
-// document at any time via the migration marker (`Migration.MigrationMarkerAnnotation`), so no
+// document at any time via the recorded steps (`Migration.getMigrationSteps`), so no
 // separate durable intent is kept: each step's own `foldedAt` checkpoint is enough to
 // make a re-run cheap and a crash between writes harmless (every fold is value-compare guarded). A
 // marker holds a CHAIN of steps, one per `from -> to` boundary the object has
@@ -48,7 +50,7 @@ const sameHeadSet = (a: readonly string[], b: readonly string[]): boolean => {
  * `message` names the migration and whose `deps` are exactly the step's `preHeads` — the runner
  * reads `preHeads` and authors that change synchronously right after, so no other change can share
  * both. Its own hash is therefore the object's post-migration frontier (heads are deliberately not a
- * stored field on the marker — see {@link Migration.MigrationMarkerAnnotation}'s own doc comment).
+ * stored field on the step — see {@link Migration.MigrationStepSchema}'s `preHeads`).
  */
 const findPostMigrationHeads = (doc: AutomergeDoc<unknown>, step: Migration.MigrationStep): Heads | undefined => {
   const message = migrationMessage(step.from, step.to);
@@ -164,7 +166,7 @@ const foldStep = (
   db: Database.Database,
   migration: Migration.ObjectMigration,
   step: Migration.MigrationStep,
-  stepIndex: number,
+  stepKey: string,
   object: Obj.Unknown,
 ): void => {
   const core = getObjectCore(object);
@@ -174,19 +176,19 @@ const foldStep = (
   if (!A.hasHeads(doc, [...step.preHeads])) {
     // A foreign frontier (e.g. an epoch re-root) — never fold on foreign heads (M0-REPORT.md design
     // item 8): `A.diff` against them would silently report "everything is new".
-    log.warn('foldForward: skipping step with foreign migration heads', { object: object.id, stepIndex });
+    log.warn('foldForward: skipping step with foreign migration heads', { object: object.id, stepKey });
     return;
   }
 
   const postMigrationHeads = findPostMigrationHeads(doc, step);
   if (!postMigrationHeads) {
-    log.warn('foldForward: could not locate the migration change for step', { object: object.id, stepIndex });
+    log.warn('foldForward: could not locate the migration change for step', { object: object.id, stepKey });
     return;
   }
 
   const base: Heads = step.foldedAt ? [...step.foldedAt] : postMigrationHeads;
   if (!A.hasHeads(doc, base)) {
-    log.warn('foldForward: skipping step with a foreign fold checkpoint', { object: object.id, stepIndex });
+    log.warn('foldForward: skipping step with a foreign fold checkpoint', { object: object.id, stepKey });
     return;
   }
 
@@ -258,23 +260,16 @@ const foldStep = (
       // Scoped to this object AND this step: a shared actor across steps (or objects) could otherwise
       // fork from a LATER step's fold, which itself already carries a direct edit made between the two
       // steps, and so wrongly inherit that edit as an ancestor instead of staying concurrent with it.
-      { message: foldMessage(step.from, step.to), scope: `${object.id}:${stepIndex}` },
+      { message: foldMessage(step.from, step.to), scope: `${object.id}:${stepKey}` },
     );
   }
 
   // Ordinary (non-fold) write: this is the runner's own bookkeeping, never user data. Checkpoints the
   // heads the diff above read; a crash before this lands just re-diffs a wider, value-compared
-  // (harmless) range. Written directly at `steps[stepIndex]`, never
+  // (harmless) range. Written directly at the step's own key, never
   // as a whole-marker (or whole-step) replace, so a sibling step's own checkpoint — or one a
   // concurrent peer is writing to a DIFFERENT step of the same marker — is never disturbed.
-  const stepPath = [
-    ...mountPath,
-    META_NAMESPACE,
-    'annotations',
-    Migration.MigrationMarkerAnnotation.key,
-    'steps',
-    stepIndex,
-  ];
+  const stepPath = [...mountPath, META_NAMESPACE, 'annotations', stepKey];
   const foldedAt = core.encode([...currentHeads]);
   core.change((doc) => {
     setDeep(doc, [...stepPath, 'foldedAt'], foldedAt);
@@ -290,14 +285,7 @@ const foldStep = (
  * skip the steps after it. Never throws: a bad object is logged and left for the next pass.
  */
 const foldObject = (db: Database.Database, migrations: readonly Migration.Migration[], object: Obj.Unknown): void => {
-  const markerOption = Annotation.get(object, Migration.MigrationMarkerAnnotation);
-  if (Option.isNone(markerOption)) {
-    return;
-  }
-
-  const steps = markerOption.value.steps;
-  for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
-    const step = steps[stepIndex];
+  for (const { key, step } of Migration.getMigrationSteps(object)) {
     const migration = migrations.find(
       (candidate): candidate is Migration.ObjectMigration =>
         Migration.isObjectMigration(candidate) &&
@@ -307,14 +295,14 @@ const foldObject = (db: Database.Database, migrations: readonly Migration.Migrat
     if (!migration) {
       log.verbose('foldForward: no migration passed in for a recorded step, skipping it', {
         object: object.id,
-        stepIndex,
+        stepKey: key,
         from: step.from,
         to: step.to,
       });
       continue;
     }
 
-    foldStep(db, migration, step, stepIndex, object);
+    foldStep(db, migration, step, key, object);
   }
 };
 
@@ -473,42 +461,20 @@ const foldFanInChild = async (
   });
 };
 
-/**
- * Folds every already-absorbed child of one {@link Migration.FanInMigration} forward — see
- * {@link foldFanInChild}. Queried with `deleted: 'include'` since an absorbed child is a tombstone,
- * excluded from every default query.
- */
-const foldFanInMigration = async (
+/** Folds `object` with the fan-in that absorbed it, if it is an absorbed child. */
+const foldFanInObject = async (
   db: Database.Database,
-  migration: Migration.FanInMigration,
-  processed: Set<string>,
-  options: FoldForwardOptions,
+  fanIns: readonly Migration.FanInMigration[],
+  object: Obj.Unknown,
 ): Promise<void> => {
-  // An absorb with a declared `to` switches the child's type in the same change.
-  const children: Obj.Unknown[] = await db
-    .query(Query.select(Filter.type(migration.toType ?? migration.fromType)).options({ deleted: 'include' }))
-    .run();
-  for (const child of children) {
-    if (options.objectIds && !options.objectIds.has(child.id)) {
-      continue;
-    }
-    if (processed.has(child.id)) {
-      continue;
-    }
-    const markerOption = Annotation.get(child, Migration.FanInMarkerAnnotation);
-    if (Option.isNone(markerOption)) {
-      continue; // Not yet absorbed -- `runFanInMigration` handles a still-live child, not this pass.
-    }
-    // Several fan-ins may share a type; only the one that absorbed the child may fold it.
-    if (markerOption.value.migration !== fanInAbsorbMessage(migration.id, markerOption.value.parentId)) {
-      continue;
-    }
-    processed.add(child.id);
-    try {
-      await foldFanInChild(db, migration, child, markerOption.value);
-    } catch (err) {
-      log.warn('foldForward: failed to fold a fan-in child forward', { child: child.id, err });
-    }
+  const markerOption = Annotation.get(object, Migration.FanInMarkerAnnotation);
+  if (Option.isNone(markerOption)) {
+    return;
+  }
+  const marker = markerOption.value;
+  const migration = fanIns.find((candidate) => marker.migration === fanInAbsorbMessage(candidate.id, marker.parentId));
+  if (migration) {
+    await foldFanInChild(db, migration, object, marker);
   }
 };
 
@@ -777,42 +743,22 @@ const foldArrayFanOutParent = async (
   });
 };
 
-/**
- * Folds every split parent of one {@link Migration.ArrayFanOutMigration} forward — see
- * {@link foldArrayFanOutParent}. Queried by `toType`, like an ordinary object migration: a split parent
- * keeps its identity (never tombstoned), just a new type. Tracks visited parents in a set local to THIS
- * migration (not the caller's shared `processed`): two different `ArrayFanOutMigration`s can share a
- * `toType` while fanning out two DIFFERENT properties of the same parent, each under its own marker key
- * (see {@link Migration.ArrayFanOutMarkerAnnotation}), and each must still get its own fold pass over
- * that parent.
- */
-const foldArrayFanOutMigration = async (
+/** Folds each array property `object` split, with the array fan-out that split it. */
+const foldArrayFanOutObject = async (
   db: Database.Database,
-  migration: Migration.ArrayFanOutMigration,
-  options: FoldForwardOptions,
+  arrayFanOuts: readonly Migration.ArrayFanOutMigration[],
+  object: Obj.Unknown,
 ): Promise<void> => {
-  const visited = new Set<string>();
-  const parents: Obj.Unknown[] = await db.query(Filter.type(migration.toType)).run();
-  for (const parent of parents) {
-    if (options.objectIds && !options.objectIds.has(parent.id)) {
-      continue;
-    }
-    if (visited.has(parent.id)) {
-      continue;
-    }
-    visited.add(parent.id);
-    const markerMapOption = Annotation.get(parent, Migration.ArrayFanOutMarkerAnnotation);
-    if (Option.isNone(markerMapOption)) {
-      continue; // Not yet split -- `runArrayFanOutMigration` handles a still-live `from` parent, not this pass.
-    }
-    const marker = markerMapOption.value[migration.property];
-    if (!marker) {
-      continue; // A marker exists for a DIFFERENT property of this parent, not this migration's.
-    }
-    try {
-      await foldArrayFanOutParent(db, migration, parent, marker);
-    } catch (err) {
-      log.warn('foldForward: failed to fold an array fan-out parent forward', { parent: parent.id, err });
+  const markersOption = Annotation.get(object, Migration.ArrayFanOutMarkerAnnotation);
+  if (Option.isNone(markersOption)) {
+    return;
+  }
+  for (const [property, marker] of Object.entries(markersOption.value)) {
+    const migration = arrayFanOuts.find(
+      (candidate) => candidate.property === property && marker.migration === arrayFanOutSplitMessage(candidate),
+    );
+    if (migration) {
+      await foldArrayFanOutParent(db, migration, object, marker);
     }
   }
 };
@@ -824,43 +770,32 @@ export type FoldForwardOptions = {
 };
 
 /**
- * Scans objects of each object migration's `toType`, and folds every one that carries a migration
- * marker and fell behind — see {@link foldObject}. An object is visited at most once per call even
- * though several migrations' `toType` queries could in principle name it (its current type matches
- * exactly one of them in practice); {@link foldObject} then walks its WHOLE step chain, not just the
- * step belonging to the migration whose query found it. Rename migrations carry no marker and are
- * skipped. A {@link Migration.FanInMigration} is folded via {@link foldFanInMigration} instead — its
- * children live under a different type (`fromType`, not `toType`) and are tombstoned, not renamed. A
- * {@link Migration.ArrayFanOutMigration} is folded via {@link foldArrayFanOutMigration}: its marker
- * lives on the split PARENT (a `toType` object, like an ordinary object migration), not on any child.
+ * Folds every late old-shape write forward — see {@link foldObject}, {@link foldFanInChild} and
+ * {@link foldArrayFanOutParent}. Objects are found by the markers they carry, not by type, so an object
+ * a later migration moved on (or a tombstoned fan-in child) still folds. Never throws for one object: it
+ * is logged and left for the next pass.
  */
 export const foldForwardMigrations = async (
   db: Database.Database,
   migrations: Migration.Migration[],
   options: FoldForwardOptions = {},
 ): Promise<void> => {
-  const processed = new Set<string>();
-  for (const migration of migrations) {
-    if (Migration.isObjectMigration(migration)) {
-      const objects = await db.query(Filter.type(migration.toType)).run();
-      for (const object of objects) {
-        if (options.objectIds && !options.objectIds.has(object.id)) {
-          continue;
-        }
-        if (processed.has(object.id)) {
-          continue;
-        }
-        processed.add(object.id);
-        try {
-          foldObject(db, migrations, object);
-        } catch (err) {
-          log.warn('foldForward: failed to fold an object forward', { object: object.id, err });
-        }
-      }
-    } else if (Migration.isFanInMigration(migration)) {
-      await foldFanInMigration(db, migration, processed, options);
-    } else if (Migration.isArrayFanOutMigration(migration)) {
-      await foldArrayFanOutMigration(db, migration, options);
+  const ids = options.objectIds && [...options.objectIds].filter((id) => EntityId.isValid(id));
+  if (ids?.length === 0) {
+    return;
+  }
+  const objects: Obj.Unknown[] = await db
+    .query(Query.select(ids ? Filter.id(...ids) : Filter.everything()).options({ deleted: 'include' }))
+    .run();
+  const fanIns = migrations.filter(Migration.isFanInMigration);
+  const arrayFanOuts = migrations.filter(Migration.isArrayFanOutMigration);
+  for (const object of objects) {
+    try {
+      foldObject(db, migrations, object);
+      await foldFanInObject(db, fanIns, object);
+      await foldArrayFanOutObject(db, arrayFanOuts, object);
+    } catch (err) {
+      log.warn('foldForward: failed to fold an object forward', { object: object.id, err });
     }
   }
 };
