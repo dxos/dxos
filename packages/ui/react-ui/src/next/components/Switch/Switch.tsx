@@ -24,7 +24,8 @@ export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(
         <SwitchPrimitive.Thumb className={recipes.switchThumb()} />
       </SwitchPrimitive.Control>
       {label && <SwitchPrimitive.Label>{label}</SwitchPrimitive.Label>}
-      <SwitchPrimitive.HiddenInput aria-label={ariaLabel} />
+      {/* The zag machine implements the switch keyboard contract (Space toggles), so the role is earned (follow-up 21). */}
+      <SwitchPrimitive.HiddenInput role='switch' aria-label={ariaLabel} />
     </SwitchPrimitive.Root>
   ),
 );

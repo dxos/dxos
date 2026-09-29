@@ -75,6 +75,8 @@ export const layerFromCapabilities: Layer.Layer<SandboxService.Service, never, C
 
 const NO_LOCAL_RUNTIME = 'Local sandboxes need the desktop app, or Node or Bun.';
 
+const NO_PUBLISH = 'Publishing files needs a local sandbox in the desktop app.';
+
 /**
  * A backend that picks EDGE or local per call. Asking for local where nothing can run it is an
  * error rather than a silent fall back to EDGE, since the caller chose local to keep work off the network.
@@ -112,6 +114,12 @@ const selecting = ({
     readFileBytes: (...args) => Effect.flatMap(select, (backend) => backend.readFileBytes(...args)),
     writeFile: (...args) => Effect.flatMap(select, (backend) => backend.writeFile(...args)),
     listFiles: (...args) => Effect.flatMap(select, (backend) => backend.listFiles(...args)),
+    publish: (...args) =>
+      Effect.flatMap(select, (backend) =>
+        backend.publish
+          ? backend.publish(...args)
+          : Effect.fail(new SandboxService.SandboxError({ message: NO_PUBLISH })),
+      ),
   };
 };
 

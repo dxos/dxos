@@ -10,74 +10,92 @@ import { expect, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { byTestId, expectScoped } from '../../testing.ts';
+import { type SizeArgs, withSizes } from '../../stories.tsx';
+import { byTestId, expectScoped, sizeRow } from '../../testing.ts';
 
-type StoryArgs = {
-  justify?: Next.GroupProps['justify'];
-};
+const JUSTIFY = ['start', 'end', 'between'] as const;
 
-const DefaultStory = ({ justify }: StoryArgs) => (
-  <div className='nx-scope @container w-[28rem] border border-separator' data-size='md'>
-    <Next.Container gutter='rail' level='base' data-testid='host'>
-      <Next.Group justify={justify} data-testid='group'>
-        <Next.Button data-testid='cancel'>Cancel</Next.Button>
-        <Next.Button variant='primary' data-testid='save'>
+/** One Group per `justify`, each holding a Cancel and a primary Save, then a `fill` pair and a lone `fill` Submit. */
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    {JUSTIFY.map((justify) => (
+      <Next.Group
+        key={justify}
+        justify={justify === 'start' ? undefined : justify}
+        data-testid={`group-${justify}-${size}`}
+      >
+        <Next.Button data-testid={`cancel-${justify}-${size}`}>Cancel</Next.Button>
+        <Next.Button variant='primary' data-testid={`save-${justify}-${size}`}>
           Save
         </Next.Button>
       </Next.Group>
-    </Next.Container>
-  </div>
+    ))}
+    <Next.Group fill data-testid={`fill-${size}`}>
+      <Next.Button data-testid={`fill-cancel-${size}`}>Cancel</Next.Button>
+      <Next.Button variant='primary' data-testid={`fill-save-${size}`}>
+        Save changes
+      </Next.Button>
+    </Next.Group>
+    <Next.Group fill data-testid={`stretch-${size}`}>
+      <Next.Button variant='primary' data-testid={`stretch-submit-${size}`}>
+        Submit
+      </Next.Button>
+    </Next.Group>
+  </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/group',
+  title: 'ui/react-ui-core/next/components/group',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta<StoryArgs>;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const edges = (root: HTMLElement) => {
-  const group = byTestId(root, 'group').getBoundingClientRect();
-  return {
-    group,
-    cancel: byTestId(root, 'cancel').getBoundingClientRect(),
-    save: byTestId(root, 'save').getBoundingClientRect(),
-  };
-};
+const edges = (root: HTMLElement, justify: (typeof JUSTIFY)[number]) => ({
+  group: byTestId(root, `group-${justify}-md`).getBoundingClientRect(),
+  cancel: byTestId(root, `cancel-${justify}-md`).getBoundingClientRect(),
+  save: byTestId(root, `save-${justify}-md`).getBoundingClientRect(),
+});
 
 export const Default: Story = {};
 
-/** A group claims no role or keyboard contract, unlike Toolbar (follow-up 1); by default it packs to the start. */
-export const Start: Story = {
+/**
+ * A group claims no role or keyboard contract, unlike Toolbar (follow-up 1); by default it packs to the start, and
+ * `justify` packs it to the end or spreads it between. `fill` gives each child an equal share of the width, so a lone
+ * child stretches across the group.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(sizeRow(canvasElement, 'md'));
     await expect(canvas.queryByRole('toolbar')).toBeNull();
-    await expect(byTestId(canvasElement, 'group')).not.toHaveAttribute('role');
-    await expect(byTestId(canvasElement, 'save').tabIndex).toBe(0);
-    await expect(byTestId(canvasElement, 'cancel').tabIndex).toBe(0);
-    const { group, cancel } = edges(canvasElement);
-    await expect(cancel.left).toBeCloseTo(group.left, 0);
+    await expect(byTestId(canvasElement, 'group-start-md')).not.toHaveAttribute('role');
+    await expect(byTestId(canvasElement, 'save-start-md').tabIndex).toBe(0);
+    await expect(byTestId(canvasElement, 'cancel-start-md').tabIndex).toBe(0);
+    const start = edges(canvasElement, 'start');
+    await expect(start.cancel.left).toBeCloseTo(start.group.left, 0);
     await expectScoped(canvasElement);
-  },
-};
 
-export const End: Story = {
-  args: { justify: 'end' },
-  play: async ({ canvasElement }) => {
-    const { group, save } = edges(canvasElement);
-    await expect(save.right).toBeCloseTo(group.right, 0);
-  },
-};
+    const end = edges(canvasElement, 'end');
+    await expect(end.save.right).toBeCloseTo(end.group.right, 0);
 
-export const Between: Story = {
-  args: { justify: 'between' },
-  play: async ({ canvasElement }) => {
-    const { group, cancel, save } = edges(canvasElement);
-    await expect(cancel.left).toBeCloseTo(group.left, 0);
-    await expect(save.right).toBeCloseTo(group.right, 0);
+    const between = edges(canvasElement, 'between');
+    await expect(between.cancel.left).toBeCloseTo(between.group.left, 0);
+    await expect(between.save.right).toBeCloseTo(between.group.right, 0);
+
+    const fill = byTestId(canvasElement, 'fill-md').getBoundingClientRect();
+    const cancel = byTestId(canvasElement, 'fill-cancel-md').getBoundingClientRect();
+    const save = byTestId(canvasElement, 'fill-save-md').getBoundingClientRect();
+    await expect(cancel.width).toBeCloseTo(save.width, 0);
+    await expect(cancel.left).toBeCloseTo(fill.left, 0);
+    await expect(save.right).toBeCloseTo(fill.right, 0);
+    const stretch = byTestId(canvasElement, 'stretch-md').getBoundingClientRect();
+    await expect(byTestId(canvasElement, 'stretch-submit-md').getBoundingClientRect().width).toBeCloseTo(
+      stretch.width,
+      0,
+    );
   },
 };

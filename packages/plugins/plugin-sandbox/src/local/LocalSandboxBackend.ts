@@ -145,7 +145,11 @@ export class LocalSandboxBackend implements SandboxService.Backend {
       const result = yield* this.#transfer(entry, `read ${path}`, [
         `f=${shellQuote(target)}`,
         '[ -f "$f" ] || { echo "not a file" >&2; exit 2; }',
-        'exec cat -- "$f"',
+        // The path check above is lexical; a symlink in the workspace can still name any file the sandbox may
+        // read, and a read here leaves the sandbox (a download into ECHO, a published URL).
+        `w=$(realpath -e -- ${shellQuote(entry.workspaceDir)}) && r=$(realpath -e -- "$f") || exit 2`,
+        'case "$r" in "$w"/*) ;; *) echo "outside the sandbox workspace" >&2; exit 2 ;; esac',
+        'exec cat -- "$r"',
       ]);
       const bytes = new Uint8Array(result.stdout.bytes());
       return { bytes, type: sniffMimeType(bytes) };

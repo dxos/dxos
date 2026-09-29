@@ -1,0 +1,15 @@
+{
+  "identifier": "macos-capability",
+  "description": "Permissions for plugins only the macOS build links (see Cargo.toml's macOS dependencies), split from desktop-capability so that one also applies on Linux.",
+  "platforms": ["macOS"],
+  "windows": ["main", "popover"],
+  "remote": {
+    "urls": [
+      "http://localhost:26777/*",
+      "http://localhost:26778/*",
+      "http://localhost:26779/*",
+      "http://localhost:26780/*"
+    ]
+  },
+  "permissions": ["macos-passkey:default"]
+}

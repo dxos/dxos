@@ -43,11 +43,26 @@ export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
             () => {
               // Sequential: a composite's later steps depend on what the earlier ones wrote, so they
               // must not race.
-              void (async () => {
-                for (const { operation, input } of invocations) {
-                  await invoker.invokePromise(operation, input, { spaceId });
+              const run = (async () => {
+                let text: string | undefined;
+                for (const { operation, input, clipboard } of invocations) {
+                  const { data, error } = await invoker.invokePromise(operation, input, { spaceId });
+                  if (error) {
+                    throw error;
+                  }
+                  text = clipboard?.(data) ?? text;
                 }
-              })().catch((err) => log.warn('task action failed', { id: action.id, err }));
+                return text;
+              })();
+
+              // Opened before the first await: WebKit rejects a clipboard write begun after the gesture.
+              if (invocations.some(({ clipboard }) => clipboard)) {
+                writeClipboard(
+                  run.then((text) => text ?? Promise.reject(new Error('The action produced no clipboard text.'))),
+                );
+              }
+
+              void run.catch((err) => log.warn('task action failed', { id: action.id, err }));
             },
             { label: action.label, icon: action.icon, testId: `tasks.task.${action.id}` },
           ),
@@ -56,4 +71,26 @@ export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
     },
     [actions, invoker],
   );
+};
+
+/**
+ * Starts a clipboard write whose text is still being computed.
+ *
+ * A `ClipboardItem` holding a promise is what lets the write begin inside the user gesture — the
+ * condition WebKit enforces — and complete once the text exists; `writeText` after the await is the
+ * fallback for a browser without `ClipboardItem`.
+ */
+const writeClipboard = (text: Promise<string>): void => {
+  const clipboard = globalThis.navigator?.clipboard;
+  if (!clipboard) {
+    return;
+  }
+
+  const write =
+    typeof ClipboardItem === 'undefined'
+      ? text.then((value) => clipboard.writeText(value))
+      : clipboard.write([
+          new ClipboardItem({ 'text/plain': text.then((value) => new Blob([value], { type: 'text/plain' })) }),
+        ]);
+  void write.catch((err) => log.warn('clipboard write failed', { err }));
 };
