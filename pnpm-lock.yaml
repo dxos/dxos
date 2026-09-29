@@ -9487,9 +9487,6 @@ importers:
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../plugin-projects
-      '@dxos/plugin-sandbox':
-        specifier: workspace:*
-        version: link:../plugin-sandbox
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
