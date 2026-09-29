@@ -40,31 +40,29 @@ const setup = Effect.gen(function* () {
 });
 
 describe('object events', () => {
-  test('reports an object once it outlives the draft window, with who created it', ({ expect }) =>
+  test('reports an object once it outlives the draft window, including one nobody attributed', ({ expect }) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const { events, next } = yield* setup;
 
-        events.emit('echo.object.add', entity('a', { origin: 'agent' }));
+        events.emit('echo.object.add', entity('a', { origin: 'unknown' }));
 
-        expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'a', 'agent'));
+        expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'a', 'unknown'));
       }).pipe(Effect.scoped),
     ));
 
-  test('skips internal types, integration and system writes, and cancelled drafts', ({ expect }) =>
+  test('skips internal types and cancelled drafts, and reports system writes with their origin', ({ expect }) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const { events, next, pending } = yield* setup;
 
         events.emit('echo.object.add', entity('internal', { userType: false }));
-        events.emit('echo.object.add', entity('synced', { origin: 'integration' }));
-        events.emit('echo.object.add', entity('seeded', { origin: 'system' }));
         events.emit('echo.object.add', entity('draft'));
         events.emit('echo.object.remove', entity('draft'));
         // Events are handled in order, so once this one is reported every earlier one has been decided.
-        events.emit('echo.object.add', entity('kept'));
+        events.emit('echo.object.add', entity('seeded', { origin: 'system' }));
 
-        expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'kept'));
+        expect(yield* next).toEqual(reported(EVENTS.objectAdd, 'seeded', 'system'));
         yield* Effect.sleep(Duration.times(DRAFT_WINDOW, 3));
         expect(yield* pending).toBe(0);
       }).pipe(Effect.scoped),

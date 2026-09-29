@@ -1461,20 +1461,26 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     }),
   );
 
-  const InheritanceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
-    Layer.provideMerge(RemoteProcessManager.layerNoop),
-    Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-    Layer.provideMerge(SpaceAwareResolverLayer),
-    Layer.provideMerge(
-      TestDatabaseLayer({
-        types: [Organization.Organization],
-      }),
-    ),
-    Layer.provide(KeyValueStore.layerMemory),
-    Layer.provide(OperationHandlerSet.provide(inheritanceHandlers)),
-    Layer.provideMerge(Registry.layer),
-    Layer.provide(Trace.layerNoop),
+  const makeInheritanceTestLayer = (invokerLayer: typeof ProcessManager.ProcessOperationInvoker.layer) =>
+    Layer.mergeAll(invokerLayer, ProcessMonitor.layer).pipe(
+      Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+      Layer.provideMerge(RemoteProcessManager.layerNoop),
+      Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+      Layer.provideMerge(SpaceAwareResolverLayer),
+      Layer.provideMerge(
+        TestDatabaseLayer({
+          types: [Organization.Organization],
+        }),
+      ),
+      Layer.provide(KeyValueStore.layerMemory),
+      Layer.provide(OperationHandlerSet.provide(inheritanceHandlers)),
+      Layer.provideMerge(Registry.layer),
+      Layer.provide(Trace.layerNoop),
+    );
+  const InheritanceTestLayer = makeInheritanceTestLayer(ProcessManager.ProcessOperationInvoker.layer);
+  // What an app host does for its own invoker: operations it invokes are the person's actions.
+  const UserInvokerTestLayer = makeInheritanceTestLayer(
+    ProcessManager.ProcessOperationInvoker.layer.pipe(Layer.provide(Layer.succeed(Database.Origin, 'user'))),
   );
 
   it.effect(
@@ -1562,7 +1568,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   );
 
   it.effect(
-    'processes serving a conversation, and their children, attribute database writes to the agent',
+    'processes serving a conversation, and their children, attribute database writes to the system',
     Effect.fn(function* ({ expect }) {
       const { db } = yield* Database.Service;
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
@@ -1571,11 +1577,28 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const agent = yield* invoker.invokeFiber(ParentOriginOp, undefined, {
         environment: { space: db.spaceId, conversation },
       });
-      const user = yield* invoker.invokeFiber(ParentOriginOp, undefined, { environment: { space: db.spaceId } });
+      const unlabeled = yield* invoker.invokeFiber(ParentOriginOp, undefined, { environment: { space: db.spaceId } });
 
-      expect(yield* agent.await.pipe(Effect.flatten)).toEqual({ origin: 'agent', childOrigin: 'agent' });
-      expect(yield* user.await.pipe(Effect.flatten)).toEqual({ origin: undefined, childOrigin: undefined });
+      expect(yield* agent.await.pipe(Effect.flatten)).toEqual({ origin: 'system', childOrigin: 'system' });
+      expect(yield* unlabeled.await.pipe(Effect.flatten)).toEqual({ origin: undefined, childOrigin: undefined });
     }, Effect.provide(InheritanceTestLayer)),
+  );
+
+  it.effect(
+    'an invoker built under an origin attributes the processes it spawns, and their children, to it',
+    Effect.fn(function* ({ expect }) {
+      const { db } = yield* Database.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
+
+      const user = yield* invoker.invokeFiber(ParentOriginOp, undefined, { environment: { space: db.spaceId } });
+      const agent = yield* invoker.invokeFiber(ParentOriginOp, undefined, {
+        environment: { space: db.spaceId, conversation },
+      });
+
+      expect(yield* user.await.pipe(Effect.flatten)).toEqual({ origin: 'user', childOrigin: 'user' });
+      expect(yield* agent.await.pipe(Effect.flatten)).toEqual({ origin: 'system', childOrigin: 'system' });
+    }, Effect.provide(UserInvokerTestLayer)),
   );
 });
 

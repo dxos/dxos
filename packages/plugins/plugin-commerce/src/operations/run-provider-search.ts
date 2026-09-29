@@ -110,7 +110,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       }
       if (fresh.length > 0) {
         yield* Feed.append(feed, fresh).pipe(
-          Effect.provideService(Database.Origin, 'integration'),
+          Effect.provideService(Database.Origin, 'system'),
           Effect.provide(databaseLayer),
         );
       }

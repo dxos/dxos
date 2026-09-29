@@ -214,7 +214,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                 yield* Database.load(localRoot.backend.config);
                 const feed = Channel.getFeed(localRoot);
                 invariant(feed, 'Channel is not feed-backed');
-                yield* Feed.append(feed, mapped).pipe(Effect.provideService(Database.Origin, 'integration'));
+                yield* Feed.append(feed, mapped).pipe(Effect.provideService(Database.Origin, 'system'));
 
                 newestId = messages[messages.length - 1].id;
 

@@ -45,11 +45,16 @@ import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
 
 /**
- * A process serving a conversation is an agent's work, and its children inherit the conversation, so the
- * database writes of every operation an agent calls are attributed to the agent.
+ * The origin a process's database writes are attributed to. A process serving a conversation is an agent's work,
+ * not a person's, and its children inherit the conversation; any other process takes the origin it was spawned with.
  */
-const withOrigin = (environment: Process.Environment): Context.Context<never> =>
-  environment.conversation != null ? Context.make(Database.Origin, 'agent') : Context.empty();
+const resolveOrigin = (
+  environment: Process.Environment,
+  requested: Database.Origin | undefined,
+): Database.Origin | undefined => (environment.conversation != null ? 'system' : requested);
+
+const originContext = (origin: Database.Origin | undefined): Context.Context<never> =>
+  origin !== undefined ? Context.make(Database.Origin, origin) : Context.empty();
 
 export {
   type ProcessIdGenerator,
@@ -217,6 +222,12 @@ export interface SpawnOptions {
   readonly traceMeta?: Trace.Meta;
 
   readonly environment?: Process.Environment;
+
+  /**
+   * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
+   * invokes. Not persisted: a restored process's writes are `unknown` unless it serves a conversation.
+   */
+  readonly origin?: Database.Origin;
 
   /**
    * User-facing notifications requested for this process's lifecycle phases.
@@ -589,7 +600,8 @@ export class Impl implements Manager {
       // One controller per run, fired by {@link ProcessHandle.Impl.terminate} — the
       // local counterpart of the EDGE-provided Cancellation service.
       const cancellation = new AbortController();
-      let builtinCtx = withOrigin(environment).pipe(
+      const origin = resolveOrigin(environment, options?.origin);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -617,6 +629,7 @@ export class Impl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
@@ -800,7 +813,8 @@ export class Impl implements Manager {
       };
 
       const cancellation = new AbortController();
-      let builtinCtx = withOrigin(environment).pipe(
+      const origin = resolveOrigin(environment, undefined);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -826,6 +840,7 @@ export class Impl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
