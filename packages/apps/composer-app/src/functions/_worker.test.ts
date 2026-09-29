@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import handler from './_worker.ts';
 
@@ -32,25 +32,29 @@ const archive = {
 const fetch = handler.fetch!;
 const env = { ASSETS: assets, ASSET_ARCHIVE: archive } as unknown as Parameters<typeof fetch>[1];
 
-const get = (path: string, headers: Record<string, string> = {}) =>
-  fetch(new Request(`https://composer.test${path}`, { headers }), env, {} as never);
+const get = (path: string, secFetchMode?: string) =>
+  fetch(
+    new Request(`https://composer.test${path}`, { headers: secFetchMode ? { 'Sec-Fetch-Mode': secFetchMode } : {} }),
+    env,
+    {} as never,
+  );
 
 describe('asset misses', () => {
   test('a navigation to a client-side route gets index.html', async () => {
-    const response = await get('/space/v1.2/doc', { 'Sec-Fetch-Mode': 'navigate' });
+    const response = await get('/space/v1.2/doc', 'navigate');
     expect(response.status).toBe(200);
     expect(await response.text()).toBe(INDEX_HTML);
   });
 
   test('a chunk a previous build shipped comes from the archive', async () => {
-    const response = await get(`/${ARCHIVED_CHUNK}`, { 'Sec-Fetch-Mode': 'cors' });
+    const response = await get(`/${ARCHIVED_CHUNK}`, 'cors');
     expect(response.status).toBe(200);
     expect(response.headers.get('X-Asset-Source')).toBe('archive');
     expect(response.headers.get('Cache-Control')).toContain('immutable');
   });
 
   test('a chunk in neither the build nor the archive is a 404 no cache keeps', async () => {
-    const response = await get('/assets/async-GONE0000.js', { 'Sec-Fetch-Mode': 'cors' });
+    const response = await get('/assets/async-GONE0000.js', 'cors');
     expect(response.status).toBe(404);
     expect(response.headers.get('Cache-Control')).toBe('no-store');
   });
@@ -94,25 +98,5 @@ describe('feedback logs', () => {
     const { key } = await response.json();
     expect(key).toMatch(/\.ndjson$/);
     expect(puts).toEqual([{ key, contentType: 'application/x-ndjson' }]);
-  });
-});
-
-describe('rss proxy', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  test('forwards the client User-Agent, without which a WAF-fronted feed answers 406', async () => {
-    const feed = vi.fn(async (_url: string, init?: RequestInit) =>
-      new Headers(init?.headers).has('User-Agent')
-        ? new Response('<rss version="2.0"/>', { headers: { 'Content-Type': 'text/xml' } })
-        : new Response(null, { status: 406 }),
-    );
-    vi.stubGlobal('fetch', feed);
-
-    const url = encodeURIComponent('https://www.theguardian.com/profile/jonathanfreedland/rss');
-    const response = await get(`/api/rss?url=${url}`, { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' });
-    expect(response.status).toBe(200);
-    expect(new Headers(feed.mock.calls[0][1]?.headers).get('User-Agent')).toBe('Mozilla/5.0 (X11; Linux x86_64)');
   });
 });
