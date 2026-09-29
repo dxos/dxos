@@ -29,6 +29,9 @@ import {
   Dialog as NextDialog,
   DragHandle as NextDragHandle,
   type DragHandleProps as NextDragHandleProps,
+  type DragMoveDirection as NextDragMoveDirection,
+  DragPreview as NextDragPreview,
+  DropIndicator as NextDropIndicator,
   Field as NextField,
   FieldSet as NextFieldSet,
   type FieldValence as NextFieldValence,
@@ -81,6 +84,7 @@ import {
   Tooltip as NextTooltip,
   Typography as NextTypography,
   type TypographyProps as NextTypographyProps,
+  dragScope as nextDragScope,
 } from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
@@ -129,6 +133,10 @@ export namespace Next {
   export const Card = NextCard;
   export const DragHandle = NextDragHandle;
   export type DragHandleProps = NextDragHandleProps;
+  export type DragMoveDirection = NextDragMoveDirection;
+  export const DropIndicator = NextDropIndicator;
+  export const DragPreview = NextDragPreview;
+  export const dragScope = nextDragScope;
   export const Collapsible = NextCollapsible;
   export const Menu = NextMenu;
   export const Tooltip = NextTooltip;

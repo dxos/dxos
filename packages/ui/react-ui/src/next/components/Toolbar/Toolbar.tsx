@@ -4,33 +4,17 @@
 
 import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
-import React, {
-  type AnchorHTMLAttributes,
-  type HTMLAttributes,
-  createContext,
-  forwardRef,
-  useContext,
-  useId,
-} from 'react';
+import React, { type AnchorHTMLAttributes, type HTMLAttributes, forwardRef, useContext, useId } from 'react';
 
 import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import { DragHandle } from '../DragHandle/index.ts';
 import { ScrollArea } from '../ScrollArea/index.ts';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { ToggleGroup, type ToggleGroupRootProps } from '../ToggleGroup/index.ts';
+import { ToolbarContext, useToolbarItem } from './toolbar-context.ts';
 import * as toolbar from './toolbar-machine.ts';
-
-// Optional by design: a control outside a toolbar renders without roving props.
-const ToolbarContext = createContext<toolbar.ToolbarApi | undefined>(undefined);
-
-/** Roving-focus props for a control inside a Toolbar; empty outside one. */
-export const useToolbarItem = (disabled?: boolean) => {
-  const api = useContext(ToolbarContext);
-  const value = useId();
-  return api?.getItemProps({ value, disabled });
-};
 
 //
 // Root
@@ -172,40 +156,6 @@ const ToolbarLink = composable<HTMLAnchorElement, ToolbarLinkProps>(
 ToolbarLink.displayName = 'Next.Toolbar.Link';
 
 //
-// DragHandle
-//
-
-type DragHandleProps = {
-  /** Names the handle for assistive tech; required, since Next ships no translated defaults (AUDIT 2.10). */
-  'label': string;
-  'data-testid'?: string;
-};
-
-/**
- * A ghost icon-only Button with the six-dot grip for a drag-and-drop source to bind (`Toolbar.DragHandle`,
- * `Card.DragHandle`). It never joins a toolbar's roving focus (dragging is a pointer gesture) and shows no Tooltip.
- */
-export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
-  ({ label, 'data-testid': testId }, forwardedRef) => (
-    <ToolbarContext.Provider value={undefined}>
-      <Button
-        icon='ph--dots-six-vertical--regular'
-        label={label}
-        iconOnly
-        showTooltip={false}
-        variant='ghost'
-        tabIndex={-1}
-        data-drag-handle=''
-        data-testid={testId}
-        ref={forwardedRef}
-      />
-    </ToolbarContext.Provider>
-  ),
-);
-
-DragHandle.displayName = 'Next.DragHandle';
-
-//
 // ToggleGroup
 //
 
@@ -228,11 +178,4 @@ export const Toolbar = {
   ToggleGroupItem: ToggleGroup.Item,
 };
 
-export type {
-  DragHandleProps,
-  ToolbarLinkProps,
-  ToolbarRootProps,
-  ToolbarSeparatorProps,
-  ToolbarTextProps,
-  ToolbarToggleGroupProps,
-};
+export type { ToolbarLinkProps, ToolbarRootProps, ToolbarSeparatorProps, ToolbarTextProps, ToolbarToggleGroupProps };

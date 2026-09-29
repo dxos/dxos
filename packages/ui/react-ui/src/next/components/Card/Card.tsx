@@ -13,11 +13,11 @@ import { type Size } from '../../sizes.ts';
 import { Block } from '../Block/index.ts';
 import { Button, type ButtonProps } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
+import { DragHandle } from '../DragHandle/index.ts';
 import { Group } from '../Group/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Image, type ImageProps } from '../Image/index.ts';
 import { Menu } from '../Menu/index.ts';
-import { DragHandle } from '../Toolbar/index.ts';
 import { Typography } from '../Typography/index.ts';
 
 /** A click inside a clickable card or row (a trailing action, a menu) must not also activate it. */

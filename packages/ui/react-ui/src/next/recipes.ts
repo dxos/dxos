@@ -120,4 +120,6 @@ export const recipes = {
   listboxItemContent: () => 'nx-listbox-item-content',
   listboxItemTrailing: () => 'nx-listbox-item-trailing',
   listboxItemIndicator: () => 'nx-listbox-item-indicator',
+  dropIndicator: () => 'nx-drop-indicator',
+  dragPreview: () => 'nx-drag-preview',
 } as const;

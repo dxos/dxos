@@ -550,6 +550,19 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     `dx-hover`/`dx-selected`/`dx-current` do: hover and highlight `--color-hover-surface`, selected
     `--color-selected-surface`, `current` (`aria-current`) `--color-current-surface`; the focus ring is drawn on the
     highlighted row while the listbox has focus. Groups are not exposed yet (no caller in react-ui-list needs them).
+59. **Drag and drop parts** (Phase 4 decision 5). `Next.DragHandle` moved to `components/DragHandle/` (Toolbar's
+    roving context now lives in `Toolbar/toolbar-context.ts`, so the handle can opt out of it without a cycle) and
+    gains `onMove(direction)`: with it the handle is a tab stop with `aria-roledescription` "drag handle" and a
+    keyboard contract — Alt+ArrowUp/Down move at once; Space or Enter grabs (`aria-pressed`, lit), ArrowUp/Down then
+    move, and Space, Enter, Escape or blur drops. A move reorders and so blurs the handle's element; the handle ignores
+    that blur and refocuses itself in the next frame. Steps are announced through one shared polite live region
+    (`announce`, created at the end of the body, so it adds no grid track beside the handle), with react-ui
+    translations (`drag-handle.*`). Without `onMove` the handle stays a pointer-only grip outside the tab order (43).
+    `Next.DropIndicator` is an absolutely placed 2px line on a row's `top` or `bottom` edge in
+    `--nx-drop-indicator-color` (the focus-ring colour), taking no track in a row Container; Listbox rows are
+    positioned for it. `Next.DragPreview` is a block-tall chip whose `data-size` and level come from its source row's
+    nearest ancestors (`dragScope`: attribute reads, no layout), for pragmatic-drag-and-drop's portalled native
+    preview (AUDIT 2.6). react-ui adds no drag binding: pointer dragging and reorder logic stay in react-ui-list.
 
 ## Phase 3: react-ui-form port
 

@@ -12,6 +12,7 @@ export * from './Combobox/index.ts';
 export * from './Container/index.ts';
 export * from './DateInput/index.ts';
 export * from './Dialog/index.ts';
+export * from './DragHandle/index.ts';
 export * from './Field/index.ts';
 export * from './FieldSet/index.ts';
 export * from './Group/index.ts';

@@ -63,6 +63,12 @@ export const translations = [
         'number-input.decrement.label': 'Decrement',
         'password-input.show.label': 'Show password',
         'password-input.hide.label': 'Hide password',
+
+        'drag-handle.role': 'drag handle',
+        'drag-handle.grabbed.message': 'Grabbed. Press the arrow keys to move, Space to drop.',
+        'drag-handle.moved-up.message': 'Moved up.',
+        'drag-handle.moved-down.message': 'Moved down.',
+        'drag-handle.dropped.message': 'Dropped.',
       },
     },
   },

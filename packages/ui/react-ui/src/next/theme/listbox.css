@@ -24,6 +24,7 @@
   }
 
   .nx-listbox-item {
+    position: relative;
     border-radius: var(--radius-sm, 0.25rem);
     cursor: default;
   }
