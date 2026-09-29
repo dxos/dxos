@@ -599,7 +599,7 @@ export interface ArrayFanOutMigration extends Migration {
   property: string;
   toProperty: string;
   elementId: string;
-  toChild(element: Record<string, unknown>): Record<string, unknown>;
+  toChild(element: Record<string, unknown>, index: number): Record<string, unknown>;
   /** Disambiguates the convergence key when a parent fans out more than one array into `childType`. */
   childRole?: string;
 }
@@ -621,20 +621,26 @@ export type DefineArrayFanOutOptions<From extends Type.AnyObj, To extends Type.A
   /** Name of the stable per-element id field on the array's element schema. */
   elementId: string;
   child: Child;
-  toChild: (element: Record<string, unknown>) => EnsureData<Child>;
+  /**
+   * Synchronous, pure function from one element (and its position in the source array) to its child's
+   * data; fold-forward re-runs it when an old client edits or reorders the array. Map `index` into a
+   * child field to keep the array's order, since `toProperty` is an unordered map.
+   */
+  toChild: (element: Record<string, unknown>, index: number) => EnsureData<Child>;
   childRole?: string;
-  /** Target property on `to` receiving the array of refs. Defaults to `` `${property}Refs` ``. */
+  /**
+   * Target property on `to` receiving the children, as a `Record<elementId, Ref<Child>>`. Defaults to
+   * `` `${property}Refs` ``.
+   */
   toProperty?: string;
 };
 
 /**
  * Define an array fan-out: one child (via {@link ObjectMigrationContext.ensure}, keyed by the
- * element's stable id) per element of `from`'s `property`. An element is skipped this pass — logged,
- * never erred — when it has no id yet or its id register carries an unresolved concurrent conflict
- * (`A.getConflicts`); an object with any skipped element is left entirely alone (still `from`) so the
- * eventual full migration is one minimal, all-or-nothing write, not a half-applied one. Re-running is
- * the crash-recovery and fold-forward mechanism: `ensure` is idempotent, so a re-run only ever
- * completes what an earlier pass could not.
+ * element's stable id) per element of `from`'s `property`, referenced from `toProperty` by element id.
+ * An object whose array has any element with no id yet, or with an unresolved concurrent id conflict
+ * (`A.getConflicts`), is left entirely alone this pass (logged, never erred), before any child is
+ * created. Re-running is the crash-recovery mechanism: `ensure` is idempotent.
  *
  * @example
  * ```ts
@@ -644,7 +650,7 @@ export type DefineArrayFanOutOptions<From extends Type.AnyObj, To extends Type.A
  *   property: 'items',
  *   elementId: 'id',
  *   child: ItemDoc,
- *   toChild: (element) => ({ name: element.name }),
+ *   toChild: (element, index) => ({ name: element.name, order: index }),
  * });
  * ```
  */
@@ -658,9 +664,18 @@ export const defineArrayFanOut = <From extends Type.AnyObj, To extends Type.AnyO
   }
   assertElementIdField(fromSchema, options.property, options.elementId, 'defineArrayFanOut');
 
-  const toType = getSchemaURI(Type.getSchema(options.to));
+  const toSchema = Type.getSchema(options.to);
+  const toType = getSchemaURI(toSchema);
   if (!toType) {
     throw new Error('Migration.defineArrayFanOut: invalid "to" schema.');
+  }
+  const toProperty = options.toProperty ?? `${options.property}Refs`;
+  const refsProperty = SchemaEx.getProperties(toSchema.ast).find((candidate) => String(candidate.name) === toProperty);
+  if (!refsProperty || refsProperty.type._tag !== 'Objects' || refsProperty.type.indexSignatures.length === 0) {
+    throw new Error(
+      `Migration.defineArrayFanOut: "${toProperty}" on "to" must be a record of element id to child ref, so two ` +
+        'peers adding the same element converge on one entry.',
+    );
   }
 
   const childType = getSchemaURI(Type.getSchema(options.child));
@@ -677,7 +692,7 @@ export const defineArrayFanOut = <From extends Type.AnyObj, To extends Type.AnyO
     fromType,
     toType,
     property: options.property,
-    toProperty: options.toProperty ?? `${options.property}Refs`,
+    toProperty,
     elementId: options.elementId,
     childType,
     // `EnsureData<Child>` is `Entity.Properties<Type.InstanceType<Child>>`, which the erased

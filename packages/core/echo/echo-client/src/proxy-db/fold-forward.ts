@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
-import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
@@ -595,124 +594,65 @@ const deriveChildCreationHeads = (core: ObjectCore): Heads | undefined => {
 };
 
 /**
- * Appends a ref to `child` onto `parent`'s `toProperty`, at the next index — never a whole-array
- * replace, so a sibling child ref another peer already wrote (or is concurrently writing) is never
- * clobbered. Idempotent within one peer's own view: a ref already present for `child` is not
- * duplicated, though two peers folding the very same late-added element independently can each still
- * append their own copy before either replicates to the other — {@link dedupeArrayFanOutRefs} is what
- * collapses that down to one entry once both peers see each other.
+ * Points `toProperty[elementId]` at `child` unless it already does. A map entry, so two peers adding the
+ * same late element write the same key rather than appending two refs.
  */
-const appendArrayFanOutRef = (parent: Obj.Unknown, toProperty: string, child: Obj.Unknown): void => {
-  Obj.update(parent, (parent) => {
-    let refs: unknown = Obj.getValue(parent, [toProperty]);
-    if (!Array.isArray(refs)) {
-      Obj.setValue(parent, [toProperty], []);
-      refs = Obj.getValue(parent, [toProperty]);
-    }
-    if (Array.isArray(refs) && !refs.some(Ref.hasEntityId(child.id))) {
-      refs.push(Ref.make(child));
-    }
-  });
-};
-
-/**
- * The live end of a `mergedInto` redirect chain starting at `id`: an id whose entity has no further
- * redirect, or that could not be loaded at all (foreign, deleted-and-gone). Durable and
- * `deleted: 'include'`-scoped — like {@link foldFanInMigration}'s own query — since the loser of a merge
- * is always tombstoned; a plain default-scoped query would never see it and so could never find its
- * `mergedInto` field. Cycle-guarded the same way `ObjectCore`'s own private redirect walk is: a repeated
- * id (corrupt data) stops the walk at the last id seen rather than looping forever.
- */
-const resolveArrayFanOutRefTarget = async (db: Database.Database, id: string): Promise<string> => {
-  let current = id;
-  const seen = new Set<string>([current]);
-  for (;;) {
-    const [candidate] = await db.query(Query.select(Filter.id(current)).options({ deleted: 'include' })).run();
-    const next = candidate ? getObjectCore(candidate).getMergedInto() : undefined;
-    if (next === undefined || seen.has(next)) {
-      return current;
-    }
-    current = next;
-    seen.add(current);
-  }
-};
-
-/**
- * Deletes any LATER entry of `toProperty` whose target resolves — directly, or through a `mergedInto`
- * redirect chain (see {@link resolveArrayFanOutRefTarget}) — to the same live child as an earlier entry.
- * Never a whole-array replace: one `splice` per duplicate index, from the highest index down so
- * removing one never shifts another still-pending index out from under it. A duplicate arises when two
- * peers independently fold-append a ref for the same late-added element before either replicates the
- * other's write ({@link appendArrayFanOutRef}), or when two elements' children are later merged by the
- * convergence-key merger. `findOrphanedChildren` is a different diagnostic (a child whose element id the
- * parent's array no longer shows) and does not cover this case.
- */
-const dedupeArrayFanOutRefs = async (db: Database.Database, parent: Obj.Unknown, toProperty: string): Promise<void> => {
+const setArrayFanOutRef = (parent: Obj.Unknown, toProperty: string, elementId: string, child: Obj.Unknown): void => {
+  // Element ids are not valid JSON-path segments, so the record is indexed directly.
   const refs: unknown = Obj.getValue(parent, [toProperty]);
-  if (!Array.isArray(refs) || refs.length < 2) {
+  const current = isRecord(refs) ? refs[elementId] : undefined;
+  if (Ref.isRef(current) && Ref.hasEntityId(child.id)(current)) {
     return;
   }
-
-  const resolvedIds: (string | undefined)[] = [];
-  for (const ref of refs) {
-    if (!Ref.isRef(ref)) {
-      resolvedIds.push(undefined);
-      continue;
-    }
-    const uri = EID.tryParse(ref.uri);
-    const id = uri && EID.isLocal(uri) ? EID.getEntityId(uri) : undefined;
-    resolvedIds.push(id === undefined ? undefined : await resolveArrayFanOutRefTarget(db, id));
-  }
-
-  const seen = new Set<string>();
-  const duplicateIndexes: number[] = [];
-  for (let index = 0; index < resolvedIds.length; index++) {
-    const id = resolvedIds[index];
-    if (id === undefined) {
-      continue;
-    }
-    if (seen.has(id)) {
-      duplicateIndexes.push(index);
-    } else {
-      seen.add(id);
-    }
-  }
-  if (duplicateIndexes.length === 0) {
-    return;
-  }
-
   Obj.update(parent, (parent) => {
-    const refs: unknown = Obj.getValue(parent, [toProperty]);
-    if (!Array.isArray(refs)) {
-      return;
+    if (!isRecord(Obj.getValue(parent, [toProperty]))) {
+      Obj.setValue(parent, [toProperty], {});
     }
-    for (const index of [...duplicateIndexes].sort((left, right) => right - left)) {
-      refs.splice(index, 1);
+    const record: unknown = Obj.getValue(parent, [toProperty]);
+    if (isRecord(record)) {
+      record[elementId] = Ref.make(child);
     }
   });
 };
 
+/** One element of a source array snapshot, with its position. */
+type ArrayElement = { element: Record<string, unknown>; index: number };
+
+/** The id'd elements of `property` in a data snapshot, by element id; `missingIds` counts the rest. */
+const elementsById = (
+  data: Record<string, unknown>,
+  property: string,
+  elementId: string,
+): { elements: Map<string, ArrayElement>; missingIds: number } => {
+  const elements = new Map<string, ArrayElement>();
+  let missingIds = 0;
+  const items = data[property];
+  if (Array.isArray(items)) {
+    items.forEach((element: unknown, index: number) => {
+      const id = isRecord(element) ? element[elementId] : undefined;
+      if (isRecord(element) && typeof id === 'string') {
+        elements.set(id, { element, index });
+      } else {
+        missingIds++;
+      }
+    });
+  }
+  return { elements, missingIds };
+};
+
 /**
- * Folds one element of the CURRENT source array forward: an element whose child already exists gets
- * `toChild(element)` recomputed and the difference folded into that CHILD, at the child's OWN creation
- * heads, so a direct edit to the child made since fold concurrently rather than being overwritten — the
- * array-fan-out counterpart of {@link foldFanInChild}. An element whose child does not exist yet (added
- * by an old client after the split, but already carrying a stable id) has one created now
- * ({@link ensureByConvergenceKey}) and its ref appended. Never throws: a missing child core or foreign
- * creation heads is logged and left for the next pass.
- *
- * `childCache` folds every element's lookup into one durable query per parent-fold ({@link
- * findByConvergenceKey}/{@link ensureByConvergenceKey} share it against `migration.child`), never
- * `runSync`'s local working set, which reflects only objects THIS session itself created or already
- * loaded — too little for a child another peer's earlier pass created, or one this session created in
- * an earlier, separate `runMigrations` call.
+ * Folds one element of the source array forward into its child: only the child keys whose `toChild`
+ * output the late writes moved, at the child's creation heads, so a direct edit to the child stays
+ * concurrent. An element with no child yet (added by an old client after the split) gets one, and
+ * its ref. Never throws: a child with underivable creation heads is logged and left for the next pass.
  */
 const foldArrayFanOutElement = async (
   db: Database.Database,
   migration: Migration.ArrayFanOutMigration,
   parent: Obj.Unknown,
   elementId: string,
-  element: Record<string, unknown>,
+  before: Record<string, unknown> | undefined,
+  after: Record<string, unknown>,
   childCache: ConvergenceKeyCache,
 ): Promise<void> => {
   const convergenceKey = Migration.makeArrayFanOutConvergenceKey(
@@ -721,26 +661,27 @@ const foldArrayFanOutElement = async (
     migration.childRole ?? migration.property,
     elementId,
   );
-  const recomputed: Record<string, unknown> = Object.fromEntries(Object.entries(migration.toChild(element)));
   const existingChild = await findByConvergenceKey(db, migration.child, convergenceKey, childCache);
-
-  if (!existingChild) {
-    // Added late by an old client that already knew how to stamp an id, but never learned `toType` —
-    // its write never reaches a child until a fold-forward pass creates one.
-    const child = await ensureByConvergenceKey(db, migration.child, convergenceKey, recomputed, childCache);
-    appendArrayFanOutRef(parent, migration.toProperty, child);
-    return;
+  if (!existingChild || !before) {
+    const child =
+      existingChild ?? (await ensureByConvergenceKey(db, migration.child, convergenceKey, after, childCache));
+    setArrayFanOutRef(parent, migration.toProperty, elementId, child);
+    if (!existingChild) {
+      return;
+    }
   }
 
   const childCore = getObjectCore(existingChild);
+  const dataWrites = computeGuardedDataWrites(
+    childCore,
+    before ? changedOutputEntries(childCore, before, after) : after,
+  );
+  if (dataWrites.size === 0) {
+    return;
+  }
   const creationHeads = deriveChildCreationHeads(childCore);
   if (!creationHeads) {
     log.warn('foldForward: could not derive creation heads for an array fan-out child', { child: existingChild.id });
-    return;
-  }
-
-  const dataWrites = computeGuardedDataWrites(childCore, recomputed);
-  if (dataWrites.size === 0) {
     return;
   }
   childCore.foldAt(
@@ -758,14 +699,10 @@ const foldArrayFanOutElement = async (
 };
 
 /**
- * Folds one split parent's source array forward if it changed since the split (or the last fold) —
- * see the module doc comment for each element case. An element with no id yet is left alone (logged):
- * the next id-stamping pass covers it (see `runStampElementIdsMigration`'s own doc comment on covering
- * already-split parents), and the fold-forward pass after that picks it up once it has one. A removed
- * element is simply absent from the current array and so never visited here — its child is neither
- * deleted nor folded, left exactly as {@link findOrphanedChildren} expects to find (and report) it.
- * `marker` is THIS migration's own property's marker, already picked out of the parent's per-property
- * map by the caller.
+ * Folds one split parent's source array forward if it changed since the split (or the last fold):
+ * each current id'd element whose `toChild` output moved is folded into its child, and a new one gets
+ * a child. An element with no id yet is left for the next stamping pass; a removed element's child is
+ * left for {@link Migration.findOrphanedChildren}. `marker` is this migration's own property's marker.
  */
 const foldArrayFanOutParent = async (
   db: Database.Database,
@@ -795,47 +732,49 @@ const foldArrayFanOutParent = async (
   }
 
   const currentHeads = A.getHeads(doc);
-  if (hasLateArrayWrites(doc, mountPath, marker.property, base, currentHeads)) {
-    const items: unknown = Obj.getValue(parent, [marker.property]);
-    if (Array.isArray(items)) {
-      // Shared across every element of THIS pass — one durable query per parent-fold, not one per
-      // element (see `foldArrayFanOutElement`'s own doc comment on `childCache`).
-      const childCache: ConvergenceKeyCache = new Map();
-      for (const item of items) {
-        if (!isRecord(item)) {
-          continue;
-        }
-        const elementIdValue = item[marker.elementId];
-        if (typeof elementIdValue !== 'string') {
-          log.info('foldForward: array fan-out element has no stable id yet, leaving it for the stamping migration', {
-            parent: parent.id,
-          });
-          continue;
-        }
-        await foldArrayFanOutElement(db, migration, parent, elementIdValue, item, childCache);
-      }
-    }
-
-    // Ordinary (non-fold) write, advanced in place under THIS property's own key — never a
-    // whole-annotation (or whole-marker) replace, so a sibling property's marker (or a concurrent
-    // peer's identical checkpoint) is never disturbed.
-    const markerPath = [
-      ...mountPath,
-      META_NAMESPACE,
-      'annotations',
-      Migration.ArrayFanOutMarkerAnnotation.key,
-      marker.property,
-    ];
-    const foldedAt = core.encode([...currentHeads]);
-    core.change((doc) => {
-      setDeep(doc, [...markerPath, 'foldedAt'], foldedAt);
-    });
+  if (!hasLateArrayWrites(doc, mountPath, marker.property, base, currentHeads)) {
+    return;
   }
 
-  // Independent of whether the source array itself changed this pass: a duplicate ref can arrive via
-  // replication alone (a peer's own append, or a merge collapsing two children) with no corresponding
-  // write to `property` on THIS peer.
-  await dedupeArrayFanOutRefs(db, parent, migration.toProperty);
+  const before = elementsById(getDecodedDataWithRefs(db, core, base), marker.property, marker.elementId).elements;
+  const { elements: after, missingIds } = elementsById(
+    getDecodedDataWithRefs(db, core, currentHeads),
+    marker.property,
+    marker.elementId,
+  );
+  if (missingIds > 0) {
+    log.info('foldForward: array fan-out elements have no stable id yet, leaving them for the stamping migration', {
+      parent: parent.id,
+      missingIds,
+    });
+  }
+  // One durable query per parent-fold, shared across its elements.
+  const childCache: ConvergenceKeyCache = new Map();
+  for (const [elementId, { element, index }] of after) {
+    const previous = before.get(elementId);
+    await foldArrayFanOutElement(
+      db,
+      migration,
+      parent,
+      elementId,
+      previous && migration.toChild(previous.element, previous.index),
+      migration.toChild(element, index),
+      childCache,
+    );
+  }
+
+  // Ordinary (non-fold) write under this property's own marker key, at the heads the pass read.
+  const markerPath = [
+    ...mountPath,
+    META_NAMESPACE,
+    'annotations',
+    Migration.ArrayFanOutMarkerAnnotation.key,
+    marker.property,
+  ];
+  const foldedAt = core.encode([...currentHeads]);
+  core.change((doc) => {
+    setDeep(doc, [...markerPath, 'foldedAt'], foldedAt);
+  });
 };
 
 /**

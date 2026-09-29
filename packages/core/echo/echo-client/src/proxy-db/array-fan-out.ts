@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
+import { next as A, type Heads } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
@@ -13,7 +13,7 @@ import { getDeep, setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { computeGuardedDataWrites, isRecord } from './encoded-value.ts';
+import { computeGuardedDataWrites, getDecodedDataWithRefs, isRecord } from './encoded-value.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey } from './migration-context.ts';
 
 //
@@ -66,24 +66,26 @@ export const runArrayFanOutMigration = async (
       continue; // The type query's index can lag an earlier run's own type switch.
     }
 
-    const items: unknown = Obj.getValue(object, [migration.property]);
+    // The split is written at these heads, so an element edit replicated in while children are
+    // ensured is concurrent with it and folded forward.
+    const core = getObjectCore(object);
+    const readHeads = core.getHeads();
+    const items: unknown = getDecodedDataWithRefs(db, core, readHeads)[migration.property];
     if (!Array.isArray(items)) {
       continue;
     }
 
-    const refs: Ref.Ref<Obj.Unknown>[] = [];
-    let allResolved = true;
+    // Every element is gated before any child is created, so a skipped object leaves nothing behind.
+    const elements: { elementId: string; element: Record<string, unknown>; index: number }[] = [];
     for (let index = 0; index < items.length; index++) {
       const element: unknown = items[index];
       const elementIdValue: unknown = isRecord(element) ? element[migration.elementId] : undefined;
-
-      if (typeof elementIdValue !== 'string') {
+      if (!isRecord(element) || typeof elementIdValue !== 'string') {
         skipped.push({ objectId: object.id, elementIndex: index });
         log.info('array fan-out: element has no stable id yet, skipping this object for now', {
           object: object.id,
           index,
         });
-        allResolved = false;
         continue;
       }
       if (hasUnresolvedIdConflict(object, migration.property, index, migration.elementId)) {
@@ -92,33 +94,33 @@ export const runArrayFanOutMigration = async (
           object: object.id,
           index,
         });
-        allResolved = false;
         continue;
       }
+      elements.push({ elementId: elementIdValue, element, index });
+    }
+    if (elements.length !== items.length) {
+      continue;
+    }
 
-      // The `continue` above already proves `element` is a record (it is the only way `elementIdValue`
-      // could be a string), but a computed-key read does not narrow `element` itself for TypeScript, so
-      // `toChild`'s argument is re-derived the same way rather than indexed unchecked.
-      const elementRecord: Record<string, unknown> = isRecord(element) ? element : {};
+    const refs: Record<string, Ref.Ref<Obj.Unknown>> = {};
+    for (const { elementId, element, index } of elements) {
       const convergenceKey = Migration.makeArrayFanOutConvergenceKey(
         migration.fromType.toString(),
         object.id,
         migration.childRole ?? migration.property,
-        elementIdValue,
+        elementId,
       );
-      const childData: Record<string, unknown> = Object.fromEntries(Object.entries(migration.toChild(elementRecord)));
-      const child = await ensureByConvergenceKey(db, migration.child, convergenceKey, childData, childCache);
-      refs.push(Ref.make(child));
+      const child = await ensureByConvergenceKey(
+        db,
+        migration.child,
+        convergenceKey,
+        migration.toChild(element, index),
+        childCache,
+      );
+      refs[elementId] = Ref.make(child);
     }
 
-    // All-or-nothing: a partial migration would leave the object under a mix of `from`'s array and
-    // `to`'s refs with no marker recording which elements are done — re-run once every element clears
-    // the gate instead.
-    if (!allResolved) {
-      continue;
-    }
-
-    applyArrayFanOut(object, migration, refs);
+    applyArrayFanOut(object, migration, refs, readHeads);
   }
 
   return skipped;
@@ -139,11 +141,11 @@ export const runArrayFanOutMigration = async (
 const applyArrayFanOut = (
   object: Obj.Unknown,
   migration: Migration.ArrayFanOutMigration,
-  refs: Ref.Ref<Obj.Unknown>[],
+  refs: Record<string, Ref.Ref<Obj.Unknown>>,
+  preHeads: Heads,
 ): void => {
   const core = getObjectCore(object);
   const mountPath = core.mountPath;
-  const preHeads = A.getHeads(core.getDoc());
   const message = `migration: array-fan-out ${migration.fromType.toString()} -> ${migration.toType.toString()}`;
 
   const dataWrites = computeGuardedDataWrites(core, { [migration.toProperty]: refs });
@@ -157,7 +159,8 @@ const applyArrayFanOut = (
     }),
   );
 
-  core.change(
+  core.changeAt(
+    preHeads,
     (doc) => {
       for (const [key, value] of dataWrites) {
         setDeep(doc, [...mountPath, DATA_NAMESPACE, key], value);

@@ -25,7 +25,7 @@ const ElementStruct = Schema.Struct({ id: Schema.optional(Schema.String), name: 
 
 class ArrayFanChildDoc extends Type.makeObject<ArrayFanChildDoc>(
   DXN.make('org.dxos.test.migration.arrayfanout.Child', '0.1.0'),
-)(Schema.Struct({ name: Schema.optional(Schema.String) })) {}
+)(Schema.Struct({ name: Schema.optional(Schema.String), order: Schema.optional(Schema.Number) })) {}
 
 class ArrayFanParentV1 extends Type.makeObject<ArrayFanParentV1>(
   DXN.make('org.dxos.test.migration.arrayfanout.Parent', '0.1.0'),
@@ -36,7 +36,7 @@ class ArrayFanParentV2 extends Type.makeObject<ArrayFanParentV2>(
 )(
   Schema.Struct({
     items: Schema.optional(Schema.Array(ElementStruct)),
-    itemsRefs: Schema.optional(Schema.Array(Ref.Ref(ArrayFanChildDoc))),
+    itemsRefs: Schema.optional(Schema.Record(Schema.String, Ref.Ref(ArrayFanChildDoc))),
   }),
 ) {}
 
@@ -46,7 +46,16 @@ class NoIdElementParentDoc extends Type.makeObject<NoIdElementParentDoc>(
 
 const stampMigration = Migration.defineStampElementIds({ type: ArrayFanParentV1, property: 'items', elementId: 'id' });
 
-const toChild = (element: Record<string, unknown>): { name: string } => ({ name: String(element.name) });
+const toChild = (element: Record<string, unknown>, index: number): { name: string; order: number } => ({
+  name: String(element.name),
+  order: index,
+});
+
+/** The child refs a split parent holds under `property`, keyed by element id. */
+const refsOf = (parent: Obj.Unknown, property: string): Ref.Ref<Obj.Unknown>[] => {
+  const refs: unknown = Obj.getValue(parent, [property]);
+  return typeof refs === 'object' && refs !== null ? Object.values(refs).filter((ref) => Ref.isRef(ref)) : [];
+};
 
 const fanOutMigration = Migration.defineArrayFanOut({
   from: ArrayFanParentV1,
@@ -106,8 +115,7 @@ describe('migration array fan-out: stamping, the split, the gate, and the orphan
     expect(itemsAfter).toHaveLength(2);
 
     // The new property carries one ref per element.
-    const refsAfter: unknown = Obj.getValue(parent, ['itemsRefs']);
-    invariant(Array.isArray(refsAfter), 'expected the refs array to exist');
+    const refsAfter = refsOf(parent, 'itemsRefs');
     expect(refsAfter).toHaveLength(2);
     for (const ref of refsAfter) {
       invariant(Ref.isRef(ref), 'expected each entry to be a Ref');
@@ -130,6 +138,43 @@ describe('migration array fan-out: stamping, the split, the gate, and the orphan
 
     expect(Obj.getTypeURI(parent)?.toString()).toBe('dxn:org.dxos.test.migration.arrayfanout.Parent:0.1.0');
     expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(0);
+  });
+
+  test('a stamped element beside an unstamped one creates no child before the gate fails', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(
+      Obj.make(ArrayFanParentV1, { items: [{ id: PublicKey.random().toHex(), name: 'alpha' }, { name: 'beta' }] }),
+    );
+    await db.flush();
+
+    await db.runMigrations([fanOutMigration]);
+
+    expect(Obj.getTypeURI(parent)?.toString()).toBe('dxn:org.dxos.test.migration.arrayfanout.Parent:0.1.0');
+    expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(0);
+  });
+
+  test('is a definition error when the refs property is not a record keyed by element id', () => {
+    class ArrayRefsParentDoc extends Type.makeObject<ArrayRefsParentDoc>(
+      DXN.make('org.dxos.test.migration.arrayfanout.ArrayRefsParent', '0.2.0'),
+    )(
+      Schema.Struct({
+        items: Schema.optional(Schema.Array(ElementStruct)),
+        itemsRefs: Schema.optional(Schema.Array(Ref.Ref(ArrayFanChildDoc))),
+      }),
+    ) {}
+    expect(() =>
+      Migration.defineArrayFanOut({
+        from: ArrayFanParentV1,
+        to: ArrayRefsParentDoc,
+        property: 'items',
+        elementId: 'id',
+        child: ArrayFanChildDoc,
+        toChild,
+      }),
+    ).toThrow(/must be a record/);
   });
 
   test('raced stamps block the split until a stamping re-run reconciles them', async () => {
@@ -306,8 +351,8 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
       property: 'items',
       elementId: 'id',
       child: ArrayFanChildDoc,
-      toChild: (element) => {
-        const result = toChild(element);
+      toChild: (element, index) => {
+        const result = toChild(element, index);
         duringToChild?.();
         return result;
       },
@@ -324,6 +369,39 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
 
     await db.foldForward([hookedMigration]);
     expect(child.name).toBe('alpha-again');
+  });
+
+  test('a reorder folds only each child order, leaving a direct edit to another child key alone', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(ArrayFanParentV1, { items: [{ name: 'alpha' }, { name: 'beta' }] }));
+    await db.flush();
+    await db.runMigrations([stampMigration]);
+    await db.runMigrations([fanOutMigration]);
+    const children = await db.query(Filter.type(ArrayFanChildDoc)).run();
+    const alpha = children.find((child) => child.name === 'alpha');
+    const beta = children.find((child) => child.name === 'beta');
+    invariant(alpha && beta, 'expected both children');
+    expect([alpha.order, beta.order]).toEqual([0, 1]);
+
+    Obj.update(alpha, (alpha) => {
+      alpha.name = 'Alpha!';
+    });
+    // An old client moves beta to the front.
+    Obj.update(parent, (parent) => {
+      const items = Obj.getValue(parent, ['items']);
+      invariant(Array.isArray(items), 'expected the source array to remain');
+      const [first, second] = items.map((item) => ({ ...item }));
+      items.splice(0, 2, second, first);
+    });
+    await db.flush();
+    await db.foldForward([fanOutMigration]);
+
+    expect([alpha.order, beta.order]).toEqual([1, 0]);
+    expect(alpha.name).toBe('Alpha!');
+    expect(Obj.getConflict(alpha, 'name')).toBeUndefined();
   });
 
   test('(b) a concurrent direct edit to the child conflicts with a late element edit; the direct edit is presented', async () => {
@@ -379,9 +457,12 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
     const children = await db.query(Filter.type(ArrayFanChildDoc)).run();
     expect(children.map((candidate) => candidate.name).sort()).toEqual(['alpha', 'beta']);
 
-    const refsAfter: unknown = Obj.getValue(parent, ['itemsRefs']);
-    invariant(Array.isArray(refsAfter), 'expected the refs array to exist');
+    const refsAfter = refsOf(parent, 'itemsRefs');
     expect(refsAfter).toHaveLength(2);
+    const refsById: unknown = Obj.getValue(parent, ['itemsRefs']);
+    expect(
+      Ref.isRef(typeof refsById === 'object' && refsById !== null ? Reflect.get(refsById, newElementId) : undefined),
+    ).toBe(true);
     const loaded = await Promise.all(refsAfter.map((ref) => (Ref.isRef(ref) ? ref.load() : undefined)));
     expect(loaded.map((candidate) => (candidate ? Obj.getValue(candidate, ['name']) : undefined)).sort()).toEqual([
       'alpha',
@@ -412,8 +493,7 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
     await db.foldForward([fanOutMigration]);
     // Skipped this pass: no id yet, so no child and no ref for it.
     expect(await db.query(Filter.type(ArrayFanChildDoc)).run()).toHaveLength(1);
-    const refsBeforeStamp: unknown = Obj.getValue(parent, ['itemsRefs']);
-    invariant(Array.isArray(refsBeforeStamp), 'expected the refs array to exist');
+    const refsBeforeStamp = refsOf(parent, 'itemsRefs');
     expect(refsBeforeStamp).toHaveLength(1);
 
     // The next stamping pass (run against the `to` type — the parent is already split) gives it an id.
@@ -426,8 +506,7 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
     await db.foldForward([fanOutMigration]);
     const children = await db.query(Filter.type(ArrayFanChildDoc)).run();
     expect(children.map((candidate) => candidate.name).sort()).toEqual(['alpha', 'gamma']);
-    const refsAfter: unknown = Obj.getValue(parent, ['itemsRefs']);
-    invariant(Array.isArray(refsAfter), 'expected the refs array to exist');
+    const refsAfter = refsOf(parent, 'itemsRefs');
     expect(refsAfter).toHaveLength(2);
   });
 
@@ -536,8 +615,8 @@ class TwoPropParentV2 extends Type.makeObject<TwoPropParentV2>(
   Schema.Struct({
     items: Schema.optional(Schema.Array(ElementStruct)),
     tags: Schema.optional(Schema.Array(ElementStruct)),
-    itemsRefs: Schema.optional(Schema.Array(Ref.Ref(ArrayFanChildDoc))),
-    tagsRefs: Schema.optional(Schema.Array(Ref.Ref(ArrayFanChildDoc))),
+    itemsRefs: Schema.optional(Schema.Record(Schema.String, Ref.Ref(ArrayFanChildDoc))),
+    tagsRefs: Schema.optional(Schema.Record(Schema.String, Ref.Ref(ArrayFanChildDoc))),
   }),
 ) {}
 
@@ -585,13 +664,8 @@ describe('migration array fan-out: per-property markers', () => {
     const childrenAfterSplit = await db.query(Filter.type(ArrayFanChildDoc)).run();
     expect(childrenAfterSplit.map((candidate) => candidate.name).sort()).toEqual(['alpha', 'red']);
 
-    const itemsRefsAfterSplit: unknown = Obj.getValue(parent, ['itemsRefs']);
-    const tagsRefsAfterSplit: unknown = Obj.getValue(parent, ['tagsRefs']);
-    invariant(Array.isArray(itemsRefsAfterSplit), 'expected itemsRefs to exist');
-    invariant(
-      Array.isArray(tagsRefsAfterSplit),
-      'expected tagsRefs to exist — the tags marker must not have been lost',
-    );
+    const itemsRefsAfterSplit = refsOf(parent, 'itemsRefs');
+    const tagsRefsAfterSplit = refsOf(parent, 'tagsRefs');
     expect(itemsRefsAfterSplit).toHaveLength(1);
     expect(tagsRefsAfterSplit).toHaveLength(1);
 
@@ -688,104 +762,5 @@ describe('migration array fan-out: fold-forward across a real partition, peer B 
       await builder.close();
       await pair.network.close();
     }
-  });
-});
-
-//
-// Ref dedup after a merge (coordinator follow-up to "Limit fixes" item 4): two partitioned peers
-// independently folding the SAME late id'd element would each mint their own child and append their
-// own ref — two entries, two objects, one convergence key. Reconciling the two objects into one is the
-// convergence-key merger's job (`@dxos/echo-host`'s `ConvergenceKeyMerger`), out of scope for
-// array-fan-out's own runner; modeled here directly (rather than through a genuine two-peer partition,
-// whose cross-peer document discovery this lightweight test harness does not make deterministic) is
-// exactly the state that race — and the merger, once it runs — would leave: two live children sharing
-// one convergence key, then a `mergedInto` redirect from one to the other. Once that redirect exists,
-// array-fan-out's fold-forward pass must still collapse the now-stale duplicate ref down to one.
-//
-
-describe('migration array fan-out: fold-forward deduplicates refs after a merge', () => {
-  test('two refs pointing at duplicate children (one merged into the other) collapse to one after a fold pass', async () => {
-    await using builder = await new EchoTestBuilder().open();
-    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
-    await using db = await peer.createDatabase();
-
-    const { parent } = await splitSingleElementParent(db, 'alpha');
-
-    // A late, already-stamped element that two partitioned peers would each independently fold.
-    const newElementId = PublicKey.random().toHex();
-    Obj.update(parent, (parent) => {
-      const items = Obj.getValue(parent, ['items']);
-      invariant(Array.isArray(items), 'expected the source array to remain');
-      items.push({ id: newElementId, name: 'beta' });
-    });
-    await db.flush();
-
-    // Models what each of two partitioned peers' own `foldForward` would have produced independently:
-    // one child each, both carrying the SAME convergence key, and a ref to each appended the way
-    // `appendArrayFanOutRef` does it.
-    const convergenceKey = Migration.makeArrayFanOutConvergenceKey(
-      fanOutMigration.fromType.toString(),
-      parent.id,
-      'items',
-      newElementId,
-    );
-    const survivor = db.add(Obj.make(ArrayFanChildDoc, { name: 'beta' }));
-    Obj.update(survivor, (survivor) => {
-      Obj.getMeta(survivor).convergenceKey = convergenceKey;
-    });
-    const loser = db.add(Obj.make(ArrayFanChildDoc, { name: 'beta' }));
-    Obj.update(loser, (loser) => {
-      Obj.getMeta(loser).convergenceKey = convergenceKey;
-    });
-    await db.flush();
-    // Forces the durable query index to catch up with both creations right here, rather than polling
-    // for it under whatever load this run happens to be under — `updateIndexes` is what every
-    // cross-peer test in this suite already calls for the same reason after a sync.
-    await db.updateIndexes();
-
-    Obj.update(parent, (parent) => {
-      const refs = Obj.getValue(parent, ['itemsRefs']);
-      invariant(Array.isArray(refs), 'expected itemsRefs to exist');
-      refs.push(Ref.make(survivor));
-      refs.push(Ref.make(loser));
-    });
-    await db.flush();
-
-    // The convergence-key merger's own outcome (out of scope here — array-fan-out's dedup trusts
-    // whatever `mergedInto` chain already exists): the loser redirects to the survivor and is
-    // tombstoned, exactly as `ConvergenceKeyMerger#mergeGroup` would leave it.
-    const loserCore = getObjectCore(loser);
-    loserCore.setMergedInto(survivor.id, loserCore.getHeads());
-    loserCore.setDeleted(true);
-    await db.flush();
-    // `resolveArrayFanOutRefTarget`'s own lookup of the loser (`deleted: 'include'`) is index-backed
-    // too, so the redirect just written must be caught up here, not assumed already visible.
-    await db.updateIndexes();
-
-    // A fold pass is index-backed throughout (`resolveArrayFanOutRefTarget` re-queries per ref) and so
-    // can need more than one attempt for the index to fully settle under load, same as every other
-    // cross-object convergence check in this suite — poll rather than assert on a single pass.
-    let refsAfter: unknown;
-    await expect
-      .poll(async () => {
-        await db.foldForward([fanOutMigration]);
-        refsAfter = Obj.getValue(parent, ['itemsRefs']);
-        return Array.isArray(refsAfter) ? refsAfter.length : -1;
-      })
-      .toBe(2); // alpha's ref, plus exactly one surviving beta ref.
-
-    invariant(Array.isArray(refsAfter), 'expected itemsRefs to exist');
-    invariant(Ref.isRef(refsAfter[1]), 'expected the surviving entry to still be a Ref');
-    expect(Ref.hasEntityId(survivor.id)(refsAfter[1])).toBe(true);
-    const loaded = await Promise.all(refsAfter.map((ref) => (Ref.isRef(ref) ? ref.load() : undefined)));
-    expect(loaded.map((child) => (child ? Obj.getValue(child, ['name']) : undefined)).sort()).toEqual([
-      'alpha',
-      'beta',
-    ]);
-
-    // Idempotent: a re-run removes nothing further.
-    const preSecondPassHeads = headsOf(parent);
-    await db.foldForward([fanOutMigration]);
-    expect(writesSince(parent, preSecondPassHeads)).to.deep.eq([]);
   });
 });
