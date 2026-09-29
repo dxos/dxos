@@ -266,7 +266,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   async create(meta?: SpaceProperties, options?: CreateSpaceOptions): Promise<Space> {
     const space = await this._createSpaceInternal(this._ctx, meta, options);
-    trace.events.emit('client.space.create', { spaceId: space.id, origin: options?.origin ?? 'user' });
+    trace.events.emit('client.space.create', { spaceId: space.id, origin: options?.origin ?? 'unknown' });
     return space;
   }
 

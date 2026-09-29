@@ -18,13 +18,16 @@ const setup = () => {
 };
 
 describe('space events', () => {
-  test('reports spaces people create, but not the ones the app makes for itself', ({ expect }) => {
+  test('reports every space created, with its origin', ({ expect }) => {
     const { events, captured } = setup();
 
     events.emit('client.space.create', { spaceId: 'space-1', origin: 'user' });
     events.emit('client.space.create', { spaceId: 'settings', origin: 'system' });
 
-    expect(captured).toEqual([{ name: EVENTS.spaceCreate, properties: { spaceId: 'space-1', origin: 'user' } }]);
+    expect(captured).toEqual([
+      { name: EVENTS.spaceCreate, properties: { spaceId: 'space-1', origin: 'user' } },
+      { name: EVENTS.spaceCreate, properties: { spaceId: 'settings', origin: 'system' } },
+    ]);
   });
 
   test('reports space and device invitations under their own names', ({ expect }) => {

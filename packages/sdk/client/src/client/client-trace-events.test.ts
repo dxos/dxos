@@ -61,7 +61,7 @@ describe('client trace events', () => {
       ]);
     expect(events).toEqual(
       expect.arrayContaining([
-        { name: 'client.space.create', attributes: { spaceId: space.id, origin: 'user' } },
+        { name: 'client.space.create', attributes: { spaceId: space.id, origin: 'unknown' } },
         { name: 'client.space.create', attributes: { spaceId: settings.id, origin: 'system' } },
         { name: 'client.invitation.create', attributes: shared },
         { name: 'client.invitation.admit', attributes: shared },

@@ -20,7 +20,7 @@ import type { SpaceProperties } from './types/index.ts';
 export type CreateSpaceOptions = {
   tags?: string[];
   membershipPolicy?: MembershipPolicy;
-  /** Who the space is attributed to in `client.space.create`; a space the app makes for itself is `system`. */
+  /** Whether creating the space was a person's action (see `Database.Origin`); `unknown` when not given. */
   origin?: Database.Origin;
 };
 

@@ -29,8 +29,7 @@ export const toProductEvent = (name: string, attributes: EventAttributes): Produ
   const device = kind === 'device';
   switch (name) {
     case 'client.space.create':
-      // Spaces the app makes for itself (the default and settings spaces) are not user activity.
-      return origin === 'system' ? undefined : { name: EVENTS.spaceCreate, properties: { spaceId, origin } };
+      return { name: EVENTS.spaceCreate, properties: { spaceId, origin } };
     case 'client.invitation.create':
       return device
         ? { name: EVENTS.deviceInvite, properties: { authMethod, multiUse } }
