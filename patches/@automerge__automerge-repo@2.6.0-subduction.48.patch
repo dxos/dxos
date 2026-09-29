@@ -448,7 +448,7 @@ index 4760a1899a8c0127db4840d5de090f6825211d97..590986560d039afeaa029f7ba67aed07
              clearTimeout(timer);
              resolve();
 diff --git a/dist/subduction/SyncScheduler.js b/dist/subduction/SyncScheduler.js
-index 609e087a8829d5170733ff14da63f8fbe81194b4..ebd2348333202d053689282621f4ac9c5ee90638 100644
+index 609e087a8829d5170733ff14da63f8fbe81194b4..b07ef33c13bc9f83036d63e72ea264891bfff907 100644
 --- a/dist/subduction/SyncScheduler.js
 +++ b/dist/subduction/SyncScheduler.js
 @@ -6,10 +6,10 @@ const DEFAULT_HEAL_MAX_ATTEMPTS = 10;
@@ -511,7 +511,7 @@ index 609e087a8829d5170733ff14da63f8fbe81194b4..ebd2348333202d053689282621f4ac9c
              // If new data was received during the heal, load it into the handle
              // immediately — otherwise the recovered commits/fragments would sit
              // in subduction storage until some other event surfaced them.
-@@ -99,7 +115,7 @@ export class SyncScheduler {
+@@ -99,12 +115,29 @@ export class SyncScheduler {
                      this.#log.debug(`onSyncDataReceived threw during heal for ${key.slice(0, 8)}: %O`, e);
                  }
              }
@@ -520,6 +520,28 @@ index 609e087a8829d5170733ff14da63f8fbe81194b4..ebd2348333202d053689282621f4ac9c
                  const currentDelay = this.#healBackoff.get(key) ?? this.#healInitialDelayMs;
                  const nextDelay = Math.min(currentDelay * 2, this.#healMaxDelayMs);
                  this.#healBackoff.set(key, nextDelay);
+                 this.scheduleHealSync(sedimentreeId);
+             }
++            else if (answered.length < results.length) {
++                // DXOS patch: the round no longer waits for a peer still answering, so the retry does:
++                // a peer that then fails is retried as a failed round is.
++                this.#log.debug(`heal sync for ${key.slice(0, 8)} waits for a peer still answering`);
++                const answers = results.filter(r => r.stillPending).map(r => r.answer);
++                void Promise.all(answers).then(late => {
++                    if (late.some(r => !r.success || (r.transportErrors?.length ?? 0) > 0)) {
++                        const currentDelay = this.#healBackoff.get(key) ?? this.#healInitialDelayMs;
++                        this.#healBackoff.set(key, Math.min(currentDelay * 2, this.#healMaxDelayMs));
++                        this.scheduleHealSync(sedimentreeId);
++                    }
++                    // A retry scheduled since, for a newer failure, keeps its state.
++                    else if (!this.#healTimers.has(key)) {
++                        this.resetHealState(key);
++                    }
++                });
++            }
+             else {
+                 this.#log.debug(`heal sync succeeded for ${key.slice(0, 8)}`);
+                 this.resetHealState(key);
 diff --git a/dist/subduction/network.js b/dist/subduction/network.js
 index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f22361b550 100644
 --- a/dist/subduction/network.js
@@ -606,7 +628,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..835a3d33bedf7ad32db0ef3339095ba2
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa9fab634e 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..27e5cb6d840be4831677dcede976efb2a495d0f7 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -13,8 +13,8 @@ import { WebSocketEndpoint, } from "./websocket-endpoint.js";
@@ -651,9 +673,9 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
 +const noAnswer = (transportErrors = []) => ({ success: false, stats: undefined, transportErrors });
 +/**
 + * DXOS patch: the result a round records for a peer whose request was still running when the round
-+ * settled. The request carries on, and a heal retry does not count the peer as failed.
++ * settled. The request carries on, and `answer` resolves with its result, which a heal retry waits for.
 + */
-+const stillPending = () => ({ success: false, stats: undefined, transportErrors: [], stillPending: true });
++const stillPending = (answer) => ({ success: false, stats: undefined, transportErrors: [], stillPending: true, answer });
 +/** DXOS patch: whether a peer's answer brought commits or fragments. */
 +const receivedData = (result) => {
 +    const stats = result.stats;
@@ -983,7 +1005,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -730,6 +898,198 @@ export class SubductionSource {
+@@ -730,6 +898,202 @@ export class SubductionSource {
              this.#scheduleRecompute(entry);
          }
      }
@@ -1000,7 +1022,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
 +            return [];
 +        return new Promise(resolve => {
 +            const results = [];
-+            let pending = peerIds.length;
++            const unanswered = new Set();
 +            let settled = false;
 +            let graceTimer;
 +            let deadlineTimer;
@@ -1008,21 +1030,23 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
 +                settled = true;
 +                clearTimeout(graceTimer);
 +                clearTimeout(deadlineTimer);
-+                for (; pending > 0; pending--)
-+                    results.push(stillPending());
++                for (const request of unanswered)
++                    results.push(stillPending(request));
 +                resolve(results);
 +            };
 +            // A started request carries its own deadline; this one also bounds the wait for a gate slot.
 +            deadlineTimer = setTimeout(settle, timeoutMs);
 +            for (const peerId of peerIds) {
-+                void this.#requestPeerSync(entry, subduction, peerId, timeoutMs).then(result => {
++                const request = this.#requestPeerSync(entry, subduction, peerId, timeoutMs);
++                unanswered.add(request);
++                void request.then(result => {
 +                    if (settled) {
 +                        void this.#applyLatePeerResult(entry, subduction, result);
 +                        return;
 +                    }
++                    unanswered.delete(request);
 +                    results.push(result);
-+                    pending--;
-+                    if (pending === 0)
++                    if (unanswered.size === 0)
 +                        settle();
 +                    else if (graceTimer === undefined && this.#answerLetsRoundSettle(entry, result))
 +                        graceTimer = setTimeout(settle, LATE_PEER_GRACE_MS);
@@ -1052,23 +1076,25 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
 +            return [];
 +        return new Promise(resolve => {
 +            const results = [];
-+            let pending = peerIds.length;
++            const unanswered = new Set();
 +            let settled = false;
 +            const settle = () => {
 +                settled = true;
 +                clearTimeout(deadlineTimer);
-+                for (; pending > 0; pending--)
-+                    results.push(stillPending());
++                for (const request of unanswered)
++                    results.push(stillPending(request));
 +                resolve(results);
 +            };
 +            const deadlineTimer = setTimeout(settle, timeoutMs);
 +            for (const peerId of peerIds) {
-+                void this.#queuePeerSync(peerId, () => subduction.syncWithPeer(peerId, sedimentreeId, true, timeoutMs)).then(result => {
++                const request = this.#queuePeerSync(peerId, () => subduction.syncWithPeer(peerId, sedimentreeId, true, timeoutMs));
++                unanswered.add(request);
++                void request.then(result => {
 +                    if (settled)
 +                        return;
++                    unanswered.delete(request);
 +                    results.push(result);
-+                    pending--;
-+                    if (pending === 0 || result.success)
++                    if (unanswered.size === 0 || result.success)
 +                        settle();
 +                });
 +            }
@@ -1182,7 +1208,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
      /**
       * Pair each stored blob with the commit or fragment id it belongs to.
       */
-@@ -758,7 +1118,7 @@ export class SubductionSource {
+@@ -758,7 +1122,7 @@ export class SubductionSource {
       * handle via `Automerge.loadIncremental`. If new data was loaded, signal
       * the query so it can transition to "ready".
       *
@@ -1191,7 +1217,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
       * data, making handle updates immediate.
       */
      async #loadBlobsIntoHandle(entry, subduction) {
-@@ -875,6 +1235,40 @@ export class SubductionSource {
+@@ -875,6 +1239,40 @@ export class SubductionSource {
          }
          finally {
              entry.blobLoadInFlight = false;
@@ -1232,7 +1258,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
              this.#scheduleRecompute(entry);
          }
      }
-@@ -1026,7 +1420,10 @@ export class SubductionSource {
+@@ -1026,7 +1424,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
@@ -1244,7 +1270,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
-@@ -1297,6 +1694,28 @@ export class SubductionSource {
+@@ -1297,6 +1698,28 @@ export class SubductionSource {
      isHealing(sedimentreeId) {
          return this.#scheduler.isHealing(sedimentreeId);
      }
@@ -1273,7 +1299,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..80812a35b70a3fc9ea3385ccb1fe6eaa
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -1478,12 +1897,28 @@ export class SubductionSource {
+@@ -1478,12 +1901,28 @@ export class SubductionSource {
          catch (e) {
              this.#log.debug("error disconnecting subduction transports: %O", e);
          }
