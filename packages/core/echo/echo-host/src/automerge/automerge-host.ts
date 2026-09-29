@@ -1491,7 +1491,15 @@ export class AutomergeHost extends Resource {
       return undefined;
     }
     const doc = this._repo.getHandle(documentId)?.doc();
-    return doc ? changeIsPresentInDoc(doc, changeHash) : undefined;
+    if (!doc) {
+      return undefined;
+    }
+    try {
+      return changeIsPresentInDoc(doc, changeHash);
+    } catch {
+      // A remote head is only validated as a string, and the lookup throws on one that is not a hash.
+      return undefined;
+    }
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {

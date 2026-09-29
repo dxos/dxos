@@ -47,6 +47,9 @@ export class EdgeFeedReplicator extends Resource {
    */
   private _pushMutex = new ComplexMap<PublicKey, Mutex>(PublicKey.hash);
 
+  /** End of the block range already requested per feed on this connection, so a burst of pushes cannot re-request it. */
+  private _requestedUpTo = new ComplexMap<PublicKey, number>(PublicKey.hash);
+
   constructor({ messenger, spaceId }: EdgeFeedReplicatorProps) {
     super();
     this._messenger = messenger;
@@ -118,6 +121,7 @@ export class EdgeFeedReplicator extends Resource {
     await this._connectionCtx?.dispose();
     this._connectionCtx = undefined;
     this._remoteLength.clear();
+    this._requestedUpTo.clear();
   }
 
   async addHypercore(feed: HypercoreWrapper<any>): Promise<void> {
@@ -206,6 +210,7 @@ export class EdgeFeedReplicator extends Resource {
               feedKey: feedKey.toHex(),
               range: { from: firstMissing, to: message.length },
             });
+            this._requestedUpTo.set(feedKey, message.length);
           } else if (message.length < feed.length && feed.has(message.length, feed.length)) {
             log('pushing blocks to remote', logMeta);
 
@@ -290,9 +295,10 @@ export class EdgeFeedReplicator extends Resource {
       return;
     }
     const to = Math.max(...blocks.map((block) => block.index)) + 1;
-    const from = findFirstMissing(feed, to);
+    const from = Math.max(findFirstMissing(feed, to), this._requestedUpTo.get(feed.key) ?? 0);
     if (from < to) {
       log('requesting blocks missing below a pushed block', { feedKey: feed.key, from, to });
+      this._requestedUpTo.set(feed.key, to);
       await this._sendMessage(this._connectionCtx, { type: 'request', feedKey: feed.key.toHex(), range: { from, to } });
     }
   }

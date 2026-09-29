@@ -367,6 +367,38 @@ describe('AutomergeHost', () => {
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
   });
 
+  // EDGE soak: EDGE advertised a stale tip beside a newer commit; sharing the tip must not hide the commit.
+  test('a resident document is different when an overlapping remote head is missing locally', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
+    const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+
+    const synchronizer = (host as any)._collectionSynchronizer;
+    const peerId = 'test-peer' as PeerId;
+    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
+    expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(1);
+
+    // Heads come from any peer and are only validated as strings; a malformed one is unanswerable, not fatal.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, {
+      documents: { [documentId]: [localHead, 'not-a-hash'] },
+    });
+    expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(0);
+  });
+
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
   // so an evicted diverged document must not re-arm it on every diff pass.
   test('a diverged evicted document does not kick the share policy', async () => {

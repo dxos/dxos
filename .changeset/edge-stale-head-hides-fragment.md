@@ -2,4 +2,4 @@
 '@dxos/echo': patch
 ---
 
-Peers no longer stay stuck on an older copy of a document when EDGE advertises the new commit alongside a stale head they already hold; the collection sync now detects the missing change and reapplies what Subduction already stored locally.
+Peers joining or editing a space through EDGE no longer stall: a feed block pushed ahead of the metadata reply no longer leaves a gap that blocks feed admission, and a commit EDGE advertises alongside a stale head is now detected as missing and reapplied from local storage.

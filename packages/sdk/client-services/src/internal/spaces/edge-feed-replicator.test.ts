@@ -239,6 +239,59 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => range(3).every((index) => replica.has(index))).toBe(true);
   });
 
+  test('does not re-request blocks already requested when later blocks are pushed', async () => {
+    const source = await createNewFeed();
+    for (const _ of range(5)) {
+      await source.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
+    }
+    const blockAt = async (index: number) => {
+      const data = await source.get(index, { valueEncoding: 'binary' });
+      const proof = await source.proof(index);
+      return { index, data, nodes: proof.nodes, signature: proof.signature };
+    };
+
+    const replica = await openReplica(source.key);
+    const requests: { from: number; to: number }[] = [];
+    const port = await getPort({ host: 'localhost', port: 7400, portRange: [7400, 7499] });
+    const admitConnection = new Trigger();
+    const { cleanup, endpoint, sendResponseMessage } = await createTestEdgeWsServer(port, {
+      admitConnection,
+      payloadDecoder: decodeCbor,
+      messageHandler: async (message: any, request) => {
+        if (message.type === 'get-metadata') {
+          return encodeCbor({ type: 'metadata', feedKey: message.feedKey, length: 3 });
+        }
+        if (message.type === 'request') {
+          requests.push(message.range);
+          if (requests.length === 1) {
+            // Blocks broadcast while the first request is still unanswered, as a busy feed does.
+            for (const index of [3, 4]) {
+              sendResponseMessage(
+                request,
+                encodeCbor({ type: 'data', feedKey: message.feedKey, blocks: [await blockAt(index)] }),
+              );
+            }
+            await waitForCondition({ condition: () => replica.has(4) });
+          }
+          const blocks = await Promise.all(
+            range(message.range.to - message.range.from, (offset) => blockAt(message.range.from + offset)),
+          );
+          return encodeCbor({ type: 'data', feedKey: message.feedKey, blocks });
+        }
+      },
+    });
+    onTestFinished(cleanup);
+
+    const { messenger } = await createClient(endpoint);
+    const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
+    await replicator.addHypercore(replica);
+    await openAndClose(replicator);
+    admitConnection.wake();
+
+    await expect.poll(() => range(5).every((index) => replica.has(index))).toBe(true);
+    expect(requests.filter(({ from }) => from < 3)).toHaveLength(1);
+  });
+
   const createEdge = async () => {
     const port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
     let lastBlockIndex = -1;
