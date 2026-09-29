@@ -31,18 +31,29 @@ type Doc = { value?: number };
  * A reader connected to `edge` and to `second`, whose link each test shapes.
  */
 const createReader = async ({
+  edgeLink,
   edgeTransport,
   secondLink,
   secondTransport,
   policies,
   healInitialDelayMs = 100,
+  roundDeadlineMs = ROUND_DEADLINE_MS,
 }: {
+  edgeLink?: TestConnectionStateProvider;
   edgeTransport?: TestTransportOptions;
   secondLink?: TestConnectionStateProvider;
   secondTransport?: TestTransportOptions;
   policies?: Record<string, SubductionPolicy>;
   healInitialDelayMs?: number;
+  roundDeadlineMs?: number;
 }) => {
+  const connectionStateProviderByConnection: Record<number, TestConnectionStateProvider> = {};
+  if (edgeLink) {
+    connectionStateProviderByConnection[0] = edgeLink;
+  }
+  if (secondLink) {
+    connectionStateProviderByConnection[1] = secondLink;
+  }
   const transportByConnection: Record<number, TestTransportOptions> = {};
   if (edgeTransport) {
     transportByConnection[0] = edgeTransport;
@@ -57,10 +68,10 @@ const createReader = async ({
       ['reader', 'second'],
     ],
     options: {
-      connectionStateProviderByConnection: secondLink ? { 1: secondLink } : {},
+      connectionStateProviderByConnection,
       transportByConnection,
       subductionPolicies: policies,
-      subductionTimeouts: { syncMs: ROUND_DEADLINE_MS, healInitialDelayMs },
+      subductionTimeouts: { syncMs: roundDeadlineMs, healInitialDelayMs },
     },
   });
   const [reader, edge, second] = repos;
@@ -282,5 +293,61 @@ describe('Subduction sync with a slow peer', () => {
     refuse = false;
     secondLink = 'off';
     await expect.poll(() => edgePolicy.counters.authorizeFetch - asked, { timeout: WITHIN_MS }).toBeGreaterThan(0);
+  });
+
+  test('a heal retry asks again when a peer still answering then fails', async ({ expect }) => {
+    let edgeLink: 'on' | 'off' = 'on';
+    let secondLink: 'on' | 'off' = 'on';
+    // A short deadline, so a request to a peer that stopped answering fails within the test.
+    const { reader, second, connect } = await createReader({
+      edgeLink: () => edgeLink,
+      secondLink: () => secondLink,
+      healInitialDelayMs: 500,
+      roundDeadlineMs: 1_500,
+    });
+    await connect(expect);
+    const handle = reader.create<Doc>();
+    handle.change((doc) => {
+      doc.value = 0;
+    });
+    await expect.poll(() => reader.hasPendingSubductionSync(handle.documentId), { timeout: WITHIN_MS }).toBe(false);
+
+    const subduction = await reader.subduction;
+    const syncWithPeer = subduction.syncWithPeer.bind(subduction);
+    let failures = 0;
+    subduction.syncWithPeer = async (peerId, sedimentreeId, subscribe, timeoutMs) => {
+      const result = await syncWithPeer(peerId, sedimentreeId, subscribe, timeoutMs);
+      if (!result.success) {
+        failures++;
+        // With `edge` answering again, a failure is `second`'s request in the heal retry: it may
+        // answer the next one.
+        if (edgeLink === 'on') {
+          secondLink = 'on';
+        }
+      }
+      return result;
+    };
+
+    // The edit's round fails at both peers, so it schedules a heal retry, which `edge` answers
+    // while `second` is still silent.
+    edgeLink = 'off';
+    secondLink = 'off';
+    handle.change((doc) => {
+      doc.value = 1;
+    });
+    await expect.poll(() => failures, { timeout: WITHIN_MS }).toBeGreaterThanOrEqual(2);
+    edgeLink = 'on';
+
+    // Read `second`'s store directly: loading the document there would pull the edit from `reader`.
+    const stored = await second.subduction;
+    const sedimentreeId = documentIdToSedimentreeId(handle.documentId);
+    const storedValue = async () => {
+      let doc = A.init<Doc>();
+      for (const blob of await stored.getBlobs(sedimentreeId)) {
+        doc = A.loadIncremental(doc, blob);
+      }
+      return doc.value;
+    };
+    await expect.poll(storedValue, { timeout: WITHIN_MS }).toBe(1);
   });
 });

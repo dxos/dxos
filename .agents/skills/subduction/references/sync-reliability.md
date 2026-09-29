@@ -105,9 +105,19 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   waited on it and a space's initial sync fell from about 100 rounds a second to nearly none.
 - **Heal retries use the same round**: `SyncScheduler` runs `SubductionSource#syncHealRound`, not
   `syncWithAllPeers`. A retry waiting on a silent peer used to hold its gate slot until the deadline,
-  so a wave of retries took every slot and stalled every other document's round. A peer still
-  answering when the round settles is not counted as failed, so the retry stops once another peer
-  has succeeded instead of re-asking the slow peer until the heal budget runs out.
+  so a wave of retries took every slot and stalled every other document's round. The retry now
+  waits outside the round for a peer still answering when the round settles: if that peer then
+  fails, the next retry is scheduled with backoff, as for a failed round, and the heal budget still
+  bounds them. Counting such a peer as done instead left it without the edits it missed.
+- **A document on disk loads before its first round**: `SubductionSource` loaded a document's
+  stored blobs only after a round succeeded. A document stored only as Subduction records (its data
+  arrived while it was not loaded, e.g. through a heal retry of an evicted document) has no
+  Automerge snapshot to load from, so it stayed `loading` until a peer answered, and went
+  `unavailable` with no peer at all. A heal retry that succeeds without new data does not mark the
+  entry succeeded either, so it did not help. Found in a user's profile: all six commits of a
+  missing document, including the head EDGE reported, were on disk while EDGE was not answering.
+  `#loadStoredBlobs` now loads the stored blobs into an empty handle once the entry's stored ids are
+  listed, and `unavailable` waits for that listing.
 
 Why the gate is a patch and not `SubductionPolicy`: policy hooks can only allow/deny (a deny is a
 _failure_ with heal-backoff, not queueing), fire mid-round after resources are committed, carry no
