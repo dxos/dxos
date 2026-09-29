@@ -4,6 +4,7 @@
 
 export * from './rtc-rpc.ts';
 export * from './config.ts';
+export * from './events.ts';
 export * as Rpc from './Rpc.ts';
 export type * from './echo.ts';
 export type * from './halo.ts';

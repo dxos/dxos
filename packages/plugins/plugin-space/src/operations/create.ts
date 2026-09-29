@@ -10,7 +10,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -47,6 +47,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       const hue = hue_ ?? match?.hue ?? hues[Math.floor(Math.random() * hues.length)];
       const icon = icon_ ?? getTemplateIcon(match) ?? iconValues[Math.floor(Math.random() * iconValues.length)];
 
+      // The invoker attributes the operation (`user` from the app's UI), and the client cannot read Effect context.
+      const origin = yield* Database.Origin;
       const space = yield* Effect.promise(() =>
         client.spaces.create(
           {
@@ -55,7 +57,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
             icon,
           },
           // Membership policy is written into the genesis credential and cannot be changed later.
-          { membershipPolicy: isPrivate ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE },
+          { membershipPolicy: isPrivate ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE, origin },
         ),
       );
       if (edgeReplication) {
