@@ -236,6 +236,7 @@ const RoutineFormImpl = ({
       onValuesChanged={handleValuesChanged}
       onSave={onSave}
       onCancel={onCancel}
+      testId='routine-form'
     >
       <Form.Viewport scroll {...composableProps(props)} ref={forwardedRef}>
         <Form.Content>

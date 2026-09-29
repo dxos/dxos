@@ -16,7 +16,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, Field, Flex, Icon, IconButton, Menu, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Field, Flex, Icon, Menu, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -205,14 +205,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                 <Field.Root>
                   <Field.Input value={space.id} disabled classNames='flex-1 font-mono text-xs' />
                 </Field.Root>
-                <IconButton
-                  icon='ph--copy--regular'
-                  iconOnly
-                  label={t('copy-space-id.label')}
-                  onClick={() => {
-                    void navigator.clipboard.writeText(space.id);
-                  }}
-                />
+                <SystemIconButton.Clipboard iconOnly label={t('copy-space-id.label')} value={space.id} />
               </Flex>
             </Form.Field>
             <Form.Field standalone label={t('backup-space.title')} description={t('backup-space.description')}>

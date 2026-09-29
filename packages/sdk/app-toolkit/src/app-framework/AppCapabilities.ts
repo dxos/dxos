@@ -21,7 +21,7 @@ import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import type { Database, Type } from '@dxos/echo';
+import type { Database, Obj, Type } from '@dxos/echo';
 import type * as Retention$ from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
@@ -29,6 +29,8 @@ import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
 
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as AppUpdate$ from '../app/AppUpdate.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations.ts';
 import type * as AppSettings from '../types/AppSettings.ts';
@@ -365,6 +367,22 @@ export type CommentConfig = Readonly<{
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
 
+/**
+ * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
+ * type's `Annotation.UserType`; see `DefaultParent.resolve`, which asks the matching rules in `position`
+ * order and takes the first parent one returns.
+ * @category Capability
+ */
+export type DefaultParent = {
+  /** The `Annotation.UserType` tag this rule applies to. */
+  readonly tag: string;
+  /** The parent for the object; undefined passes to the next rule, as does a failure (which is logged). */
+  readonly resolve: (object: Obj.Unknown) => Effect$.Effect<Obj.Unknown | undefined, Error, Database.Service>;
+  readonly position?: Position.Position;
+};
+
+export const DefaultParent = Capability$.make<DefaultParent>()('org.dxos.app-framework.capability.defaultParent');
+
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */
   path: string;
@@ -477,6 +495,16 @@ export type ProgressRegistry = Readonly<{
  */
 export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
   'org.dxos.app-toolkit.capability.progressRegistry',
+);
+
+/**
+ * The app's update channel, contributed by whichever plugin owns updates on this platform —
+ * `plugin-native` for the desktop OTA updater, `plugin-pwa` for the service worker. Exactly one
+ * contributes at a time, so a settings surface can render either without knowing which it got.
+ * @category Capability
+ */
+export const UpdateManager = Capability$.makeSingleton<AppUpdate$.Manager>()(
+  'org.dxos.app-toolkit.capability.updateManager',
 );
 
 export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;

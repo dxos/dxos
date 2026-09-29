@@ -22,7 +22,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { TypeSafeCapabilities, TypeSafeSettings } from '#types';
 
 import { TYPESAFE_SOURCE } from '../constants.ts';
-import { EDGE_ENDPOINT, isEdgeRequest, makeEdgeHttpClient } from './edge-http-client.ts';
+import { EDGE_ENDPOINT, WORKERS_AI_ENDPOINT, isEdgeRequest, makeEdgeHttpClient } from './edge-http-client.ts';
 
 const aiError = (reason: AiError.AiErrorReason): AiError.AiError =>
   AiError.make({ module: 'TypeSafe', method: 'decide', reason });
@@ -72,10 +72,10 @@ export const requiredApiKey = (endpoint: string) =>
       );
 
 /**
- * Where a call goes. Unset routes through EDGE; so does the vendor URL, the previous default and still
- * in persisted settings, since a browser can never call it (no CORS).
+ * Where a TypeSafe call goes. Unset routes through EDGE; so does the vendor URL, the previous default
+ * and still in persisted settings, since a browser can never call it (no CORS).
  */
-const resolveEndpoint = (configured: string | undefined): string => {
+export const resolveEndpoint = (configured: string | undefined): string => {
   const endpoint = configured?.trim();
   return endpoint && endpoint !== TypeSafeResolver.DEFAULT_ENDPOINT ? endpoint : EDGE_ENDPOINT;
 };
@@ -122,7 +122,11 @@ export default Capability.makeModule(
 
     return Capability.contribute(
       AppCapabilities.AiModelResolver,
-      TypeSafeResolver.make({ apiKey, endpoint }).pipe(Layer.provide(httpClient)),
+      TypeSafeResolver.make({
+        typesafe: { apiKey, endpoint },
+        // Workers AI bills the platform Cloudflare account, so there is no vendor key to send.
+        workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => WORKERS_AI_ENDPOINT },
+      }).pipe(Layer.provide(httpClient)),
     );
   }),
 );

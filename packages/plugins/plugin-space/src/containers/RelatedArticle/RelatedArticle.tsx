@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
-import { RelatedObjectCard, RelatedTypeFilter } from '#components';
+import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
 
 export type RelatedArticleProps = Pick<
@@ -25,7 +25,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
   const { types, items, toggle } = useRelatedTypeFilter(related, contextId);
 
   return (
-    <Masonry.Root Tile={RelatedObjectCard}>
+    <Masonry.Root Tile={ObjectCard}>
       <Panel.Root role={role}>
         {/* TODO(burdon): Build this out into a real toolbar: text filter, and a table/card view
             toggle as TypeArticle has. */}

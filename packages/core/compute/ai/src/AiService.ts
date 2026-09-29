@@ -101,9 +101,14 @@ export const languageModel: {
   );
 
 /**
- * Resolves a decision model layer from a bare NSID name, validated like {@link languageModel}.
+ * Resolves a decision model layer from a bare NSID name, validated like {@link languageModel}, or from
+ * a model DXN already in hand (a catalog entry's `id`, e.g. `Model.cloudflareJev.id`).
  */
 export const decisionModel: {
+  (
+    model: DXN.DXN,
+    options?: ResolveOptions,
+  ): Layer.Layer<DecisionModel.DecisionModel, AiModelNotAvailableError, AiService>;
   <Id extends string>(
     model: [DXN.Name<Id>] extends [never] ? `Invalid NSID "${Id}": final segment must be camelCase (no hyphens)` : Id,
     options?: ResolveOptions,
@@ -113,7 +118,7 @@ export const decisionModel: {
   options?: ResolveOptions,
 ): Layer.Layer<DecisionModel.DecisionModel, AiModelNotAvailableError, AiService> =>
   AiService.pipe(
-    Effect.map((service) => service.decisionModel(DXN.make(model), options)),
+    Effect.map((service) => service.decisionModel(DXN.isDXN(model) ? model : DXN.make(model), options)),
     Layer.unwrap,
   );
 

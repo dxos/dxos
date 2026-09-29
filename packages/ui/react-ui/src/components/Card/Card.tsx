@@ -538,7 +538,7 @@ function CardPoster({
 
   if (icon) {
     return (
-      <div role='image' className={tx('card.poster-icon', {}, [aspect, classNames])} aria-label={alt}>
+      <div role='image' className={tx('card.poster-icon', {}, aspect, classNames)} aria-label={alt}>
         <Icon icon={icon} size={10} />
       </div>
     );

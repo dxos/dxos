@@ -70,6 +70,20 @@ export class ObjectSnapshotIndex implements Index {
     });
   }
 
+  /**
+   * How many indexed objects have no snapshot yet. Non-zero only while the store is filling after
+   * its introduction; a reader that cannot tolerate a partial store waits for this to reach zero.
+   */
+  countMissingSnapshots(): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const [row] = yield* sql<{ missing: number }>`
+        SELECT COUNT(*) AS missing FROM objectMeta m LEFT JOIN objectSnapshot s ON s.recordId = m.recordId
+        WHERE s.recordId IS NULL`;
+      return row?.missing ?? 0;
+    });
+  }
+
   /** Delete snapshot rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ObjectSnapshotIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>

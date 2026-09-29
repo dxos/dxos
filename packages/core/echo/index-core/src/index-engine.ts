@@ -12,10 +12,13 @@ import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
-import { type IndexDataSource } from './data-source.ts';
+import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import { IndexedObjectSource } from './indexed-object-source.ts';
 import {
+  ActivityIndex,
+  type ActivityQuery,
+  type ActivityRow,
   type EntityMeta,
   EntityMetaIndex,
   FtsIndex,
@@ -30,6 +33,7 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes/index.ts';
+import { isUnauthorizedFunctionError } from './utils.ts';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -38,6 +42,13 @@ import {
 export type IndexingResult = {
   updated: number;
   done: boolean;
+  /**
+   * Every change the sources held when the pass read them is now indexed. Unlike `done`, it holds for
+   * a pass that indexed something, so writes arriving faster than passes complete can still settle a
+   * caller waiting for the writes it made — `done` needs an empty batch, which such a stream never
+   * leaves.
+   */
+  drained: boolean;
   spaces: ReadonlySet<SpaceId>;
   queues: ReadonlySet<EntityId>;
   documents: ReadonlySet<string>;
@@ -48,6 +59,7 @@ export type IndexingResult = {
 type MutableIndexingResult = {
   updated: number;
   done: boolean;
+  drained: boolean;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -58,6 +70,7 @@ type MutableIndexingResult = {
 const makeEmptyIndexingResult = (): MutableIndexingResult => ({
   updated: 0,
   done: true,
+  drained: true,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -102,9 +115,39 @@ const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
 /** Name every index tracks its cursor under; a new name retires the old cursor and rebuilds. */
 const INDEX_NAMES = {
   objectSnapshot: 'objectSnapshot',
-  reverseRef: 'reverseRef2',
+  // Bumped for `propPathNormalized`, which the compiled query path matches reference paths on.
+  reverseRef: 'reverseRef3',
   fts: 'fts7',
+  activity: 'activity',
 } as const;
+
+/** `json_type(x, path)`, which the compiled query path relies on, returns NULL for a missing path only from here. */
+const MIN_SQLITE_VERSION = [3, 45, 0] as const;
+
+const compareVersions = (version: string, minimum: readonly number[]): number => {
+  const parts = version.split('.').map((part) => Number.parseInt(part, 10));
+  for (let index = 0; index < minimum.length; index++) {
+    const actual = parts[index] ?? 0;
+    if (actual !== minimum[index]) {
+      return actual < minimum[index] ? -1 : 1;
+    }
+  }
+  return 0;
+};
+
+/** A source may hand back every cursor it holds, so progress is a cursor whose position changed. */
+const anyCursorMoved = (
+  sourceName: string,
+  previous: readonly IndexCursor[],
+  updated: readonly DataSourceCursor[],
+): boolean => {
+  const positions = new Map(
+    previous
+      .filter((cursor) => cursor.sourceName === sourceName)
+      .map((cursor) => [`${cursor.spaceId}/${cursor.resourceId}`, cursor.cursor]),
+  );
+  return updated.some((cursor) => positions.get(`${cursor.spaceId}/${cursor.resourceId}`) !== cursor.cursor);
+};
 
 export class IndexEngine {
   readonly #sql: SqlClient.SqlClient;
@@ -116,6 +159,7 @@ export class IndexEngine {
   readonly #ftsIndex: FtsIndex;
   readonly #objectSnapshotIndex: ObjectSnapshotIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #activityIndex: ActivityIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
   readonly #indexedObjectSource: IndexedObjectSource;
 
@@ -126,17 +170,30 @@ export class IndexEngine {
     this.#ftsIndex = new FtsIndex(sql);
     this.#objectSnapshotIndex = new ObjectSnapshotIndex(sql);
     this.#reverseRefIndex = new ReverseRefIndex(sql);
+    this.#activityIndex = new ActivityIndex(sql);
     this.#convergenceKeyIntents = new ConvergenceKeyIntentStore(sql);
     this.#indexedObjectSource = new IndexedObjectSource(sql);
   }
 
   migrate() {
     return Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const version = yield* sql<{ version: string }>`SELECT sqlite_version() AS version`.pipe(
+        Effect.map(([row]) => row.version),
+        // Durable Object SQLite denies `sqlite_version()`, and its bundled SQLite is well past the minimum.
+        Effect.catchIf(isUnauthorizedFunctionError, () => Effect.succeed(undefined)),
+      );
+      if (version !== undefined && compareVersions(version, MIN_SQLITE_VERSION) < 0) {
+        return yield* Effect.die(
+          new Error(`SQLite ${version} is below the ${MIN_SQLITE_VERSION.join('.')} the index requires`),
+        );
+      }
       yield* this.#tracker.migrate();
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
       yield* this.#objectSnapshotIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
+      yield* this.#activityIndex.migrate();
       yield* this.#convergenceKeyIntents.migrate();
     });
   }
@@ -157,6 +214,10 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
+  queryActivity(query: ActivityQuery): Effect.Effect<readonly ActivityRow[], SqlError.SqlError> {
+    return this.#activityIndex.query(query);
+  }
+
   /**
    * Referrers of one target in one space, joined to the object metadata for the referrer's
    * document (see {@link ReverseRefIndex.queryReferrers}).
@@ -172,6 +233,20 @@ export class IndexEngine {
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryAll(query);
+  }
+
+  /**
+   * True once every `objectMeta` row has a snapshot.
+   *
+   * `objectSnapshot` is filled by the indexing pass, so a database that predates it holds rows
+   * without one, and the store fills over several passes after upgrade. The compiled query path
+   * reads that store directly instead of loading documents, so until it is complete a query there
+   * would silently return fewer objects than exist — not stale data, missing data. The query
+   * service gates a compiled query's first execution on this and caches `true` once seen, since it
+   * never goes back to false. The in-memory path loads documents itself and is not gated.
+   */
+  hasCompleteSnapshots(): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectSnapshotIndex.countMissingSnapshots().pipe(Effect.map((missing) => missing === 0));
   }
 
   /**
@@ -192,7 +267,7 @@ export class IndexEngine {
       const result = makeEmptyIndexingResult();
       const cursors = yield* this.#tracker.queryCursorsBySource({ sourceName: this.#indexedObjectSource.sourceName });
 
-      const { updated, done, objects } = yield* this.#update(ctx, this.#ftsIndex, this.#indexedObjectSource, {
+      const { updated, done, drained, objects } = yield* this.#update(ctx, this.#ftsIndex, this.#indexedObjectSource, {
         indexName: INDEX_NAMES.fts,
         spaceId: null,
         limit: opts?.limit,
@@ -200,6 +275,7 @@ export class IndexEngine {
       });
       result.updated += updated;
       result.done = result.done && done;
+      result.drained = result.drained && drained;
       accumulateIndexingResult(result, objects);
 
       return result as IndexingResult;
@@ -355,6 +431,7 @@ export class IndexEngine {
       const {
         updated: updatedSnapshotIndex,
         done: doneSnapshotIndex,
+        drained: drainedSnapshotIndex,
         objects: snapshotObjects,
       } = yield* this.#update(ctx, this.#objectSnapshotIndex, dataSource, {
         indexName: INDEX_NAMES.objectSnapshot,
@@ -364,11 +441,13 @@ export class IndexEngine {
       });
       result.updated += updatedSnapshotIndex;
       result.done = result.done && doneSnapshotIndex;
+      result.drained = result.drained && drainedSnapshotIndex;
       accumulateIndexingResult(result, snapshotObjects);
 
       const {
         updated: updatedReverseRefIndex,
         done: doneReverseRefIndex,
+        drained: drainedReverseRefIndex,
         objects: reverseRefObjects,
       } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
         indexName: INDEX_NAMES.reverseRef,
@@ -378,7 +457,21 @@ export class IndexEngine {
       });
       result.updated += updatedReverseRefIndex;
       result.done = result.done && doneReverseRefIndex;
+      result.drained = result.drained && drainedReverseRefIndex;
       accumulateIndexingResult(result, reverseRefObjects);
+
+      const activity = yield* this.#updateActivity(ctx, dataSource, {
+        spaceId: opts.spaceId,
+        limit: opts.limit,
+        cursors: cursorsByIndex.get(INDEX_NAMES.activity) ?? [],
+      });
+      result.updated += activity.updated;
+      result.done = result.done && activity.done;
+      result.drained = result.drained && activity.drained;
+      for (const { spaceId, documentId } of activity.documents) {
+        result.spaces.add(spaceId);
+        result.documents.add(documentId);
+      }
 
       return result as IndexingResult;
     }).pipe(
@@ -404,7 +497,10 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
-  ): Effect.Effect<{ updated: number; done: boolean; objects: readonly IndexerObject[] }, SqlError.SqlError> {
+  ): Effect.Effect<
+    { updated: number; done: boolean; drained: boolean; objects: readonly IndexerObject[] },
+    SqlError.SqlError
+  > {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
 
@@ -412,12 +508,18 @@ export class IndexEngine {
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
       // TransactionConnection context. If those reads ran inside withTransaction, they would
       // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
-      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, opts.cursors, {
+      const {
+        objects,
+        cursors: updatedCursors,
+        more,
+      } = yield* source.getChangedObjects(ctx, opts.cursors, {
         limit: opts.limit,
       });
 
+      // An empty batch counts as drained even when the source says it stopped at the limit: the
+      // entries it skipped (a document that will not load) do not advance, so waiting would spin.
       if (objects.length === 0) {
-        return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
+        return { updated: 0, done: true, drained: true, objects: [] as readonly IndexerObject[] };
       }
 
       // Convergence keys in this batch, deduplicated — recorded as durable merge intents inside the
@@ -460,9 +562,59 @@ export class IndexEngine {
               cursor: _.cursor,
             })),
           );
-          return { updated: objects.length, done: false, objects };
+          return { updated: objects.length, done: false, drained: more === false, objects };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
+  }
+
+  #updateActivity(
+    ctx: Context,
+    source: IndexDataSource,
+    opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
+  ): Effect.Effect<
+    {
+      updated: number;
+      done: boolean;
+      drained: boolean;
+      documents: readonly { spaceId: SpaceId; documentId: string }[];
+    },
+    SqlError.SqlError
+  > {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+
+      const {
+        cursors: updatedCursors,
+        activity = [],
+        more,
+      } = yield* source.getChangedObjects(ctx, opts.cursors, {
+        limit: opts.limit,
+        activity: true,
+        objects: false,
+      });
+
+      if (updatedCursors.length === 0) {
+        return { updated: 0, done: true, drained: true, documents: [] };
+      }
+
+      return yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          yield* this.#activityIndex.record(activity);
+          yield* this.#tracker.updateCursors(
+            updatedCursors.map((_): IndexCursor => ({
+              indexName: INDEX_NAMES.activity,
+              spaceId: _.spaceId,
+              sourceName: source.sourceName,
+              resourceId: _.resourceId,
+              cursor: _.cursor,
+            })),
+          );
+          const updated = activity.reduce((sum, entry) => sum + entry.changes.length, 0);
+          const done = !anyCursorMoved(source.sourceName, opts.cursors, updatedCursors);
+          return { updated, done, drained: done || more === false, documents: activity };
+        }),
+      );
+    }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }

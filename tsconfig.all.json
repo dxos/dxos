@@ -181,6 +181,9 @@
       "path": "packages/core/echo/echo-solid/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-sqlite/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {
@@ -992,6 +995,9 @@
     },
     {
       "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-module-url/tsconfig.json"
     },
     {
       "path": "tools/vite-plugin-shutdown/tsconfig.json"

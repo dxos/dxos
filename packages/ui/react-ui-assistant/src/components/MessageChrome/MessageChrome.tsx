@@ -4,7 +4,14 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
+import {
+  Icon,
+  IconButton,
+  SystemIconButton,
+  type ThemedClassName,
+  createContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -48,13 +55,12 @@ export { MessageChromeProvider };
 const CopyButton = ({ message }: { message: Message.Message }) => {
   const { t } = useTranslation(translationKey);
   return (
-    <IconButton
-      icon='ph--copy--regular'
+    <SystemIconButton.Clipboard
       iconOnly
       label={t('copy.label')}
       variant='ghost'
       density='sm'
-      onClick={() => void navigator.clipboard?.writeText(Message.extractText(message))}
+      onCopy={() => Message.extractText(message)}
     />
   );
 };

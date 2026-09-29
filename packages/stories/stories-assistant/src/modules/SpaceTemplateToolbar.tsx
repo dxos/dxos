@@ -10,7 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Project from '@dxos/compute/Project';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -85,7 +85,7 @@ const TemplateSelect = () => {
       const model = TEMPLATE_MODELS[templateId];
       if (model) {
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(model.id);
+          chat.session = { ...chat.session, model: model.id };
         });
       }
       if (project) {

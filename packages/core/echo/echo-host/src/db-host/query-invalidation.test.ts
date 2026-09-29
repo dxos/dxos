@@ -93,6 +93,7 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 0,
       done: true,
+      drained: true,
       spaces: new Set(),
       queues: new Set(),
       documents: new Set(),
@@ -108,6 +109,7 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 1,
       done: true,
+      drained: true,
       spaces: new Set([spaceId]),
       queues: new Set(),
       documents: new Set(['doc-1']),
@@ -130,6 +132,7 @@ describe('hintFromIndexingResult', () => {
     const result = hintFromIndexingResult({
       updated: 2,
       done: true,
+      drained: true,
       spaces: new Set([SpaceId.random()]),
       queues: new Set(),
       documents: new Set(),

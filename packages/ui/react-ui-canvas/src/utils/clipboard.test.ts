@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { reduceIntent } from '../model/projection.ts';
-import { type Scene } from '../model/types.ts';
+import { type Link, type Scene, endpointNode } from '../model/types.ts';
 import { copySelection, pasteFragment } from './clipboard.ts';
 import { createSceneTree } from './testing.ts';
 
@@ -45,12 +45,46 @@ describe('clipboard', () => {
     expect(ids).toEqual(['ellipse-1', 'class-2', 'spline-3']);
     const next = reduceIntent(scene, intent);
     expect(Object.keys(next.nodes).length).toBe(6);
-    expect(next.nodes['ellipse-1'].center).toEqual({ x: 768, y: 256 });
+    // Offsets are read against the fixture, whose coordinates are a layout and change with it.
+    const origin = scene.nodes['scene:r/b'].center;
+    expect(next.nodes['ellipse-1'].center).toEqual({ x: origin.x + 64, y: origin.y + 64 });
+    const source = scene.links['scene:r/bc'];
+    const controls = source.type === 'spline' ? source.points : [];
     const spline = next.links['spline-3'];
-    expect(spline.type === 'spline' && spline.points).toEqual([{ x: 704, y: 576 }]);
-    expect(spline.source.node).toBe('ellipse-1');
-    expect(spline.target.node).toBe('class-2');
+    expect(spline.type === 'spline' && spline.points).toEqual(controls.map(({ x, y }) => ({ x: x + 64, y: y + 64 })));
+    expect(endpointNode(spline.source)).toBe('ellipse-1');
+    expect(endpointNode(spline.target)).toBe('class-2');
     // The originals are untouched.
     expect(next.nodes['scene:r/b'].center).toEqual(scene.nodes['scene:r/b'].center);
+  });
+
+  test('a free end is copied with its node and moves with the paste', ({ expect }) => {
+    const scene = fixture();
+    const free: Link = {
+      type: 'line',
+      id: 'f',
+      z: 'z',
+      source: { node: 'scene:r/a' },
+      target: { point: { x: 0, y: 0 } },
+    };
+    const withFree = { ...scene, links: { ...scene.links, f: free } };
+    const clipboard = copySelection(withFree, ['scene:r/a']);
+    expect(clipboard?.links.map(({ id }) => id)).toEqual(['f']);
+    // A link with two free ends is nobody's: it comes along only when selected itself.
+    const loose: Link = { ...free, id: 'loose', source: { point: { x: 1, y: 1 } } };
+    const withLoose = { ...withFree, links: { ...withFree.links, loose } };
+    expect(copySelection(withLoose, ['scene:r/b'])?.links).toEqual([]);
+    expect(copySelection(withLoose, ['scene:r/b', 'loose'])?.links.map(({ id }) => id)).toEqual(['loose']);
+    if (!clipboard) {
+      throw new Error('nothing copied');
+    }
+    const { intent } = pasteFragment({
+      clipboard,
+      offset: { x: 64, y: 32 },
+      createId: (prefix) => `${prefix}-x`,
+      nodeZ: () => 'n',
+      linkZ: () => 'l',
+    });
+    expect(reduceIntent(withFree, intent).links['line-x']?.target).toEqual({ point: { x: 64, y: 32 } });
   });
 });

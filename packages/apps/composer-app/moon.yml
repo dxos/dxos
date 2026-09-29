@@ -20,6 +20,8 @@ tasks:
   # Vite's `emptyOutDir`.
   bundle:
     script: pnpm exec vite build --configLoader native && pnpm run --silent build:functions
+    inputs:
+      - public/**/*
     options:
       # Same untracked `.env` as `serve`, so a local production bundle carries the same keys.
       envFile: .env
@@ -102,6 +104,7 @@ tasks:
     deps:
       - bundle
       - fetch-ollama
+      - stage-sandbox-helper
   # iOS counterpart of `tauri-build`; no ollama (its runtime is desktop-only). Embeds the
   # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
   # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
@@ -137,6 +140,16 @@ tasks:
       - scripts/fetch-ollama.mjs
     outputs:
       - src-tauri/sidecar
+  # Stages plugin-sandbox's local sandbox helper for the desktop bundle. Its own output directory,
+  # so a cache restore of `fetch-ollama`'s `src-tauri/sidecar` cannot drop it.
+  stage-sandbox-helper:
+    command: node scripts/stage-sandbox-helper.mjs --required
+    deps:
+      - plugin-sandbox:compile-sidecar
+    inputs:
+      - scripts/stage-sandbox-helper.mjs
+    outputs:
+      - src-tauri/sandbox
   # Regenerates `src/vite/optimize-deps.ts` from a cold dependency scan. Not cacheable — the point
   # is to re-derive the list from the current source graph, and it rewrites a checked-in file.
   gen-optimize-deps:

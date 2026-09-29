@@ -515,3 +515,62 @@ describe('EdgeHttpClient api key', () => {
 /** Narrow a `fetch` input to its URL string, covering all three shapes the contract allows. */
 const requestUrl = (input: RequestInfo | URL): string =>
   input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url;
+
+describe('EdgeHttpClient inbox', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const json = (data: unknown) =>
+    new Response(JSON.stringify({ success: true, data }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  const notice = { id: 'n1', senderDid: 'did:halo:sender', sentAt: 1, expiresAt: 2, payload: 'AAAA' };
+
+  const stubFetch = () => {
+    const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
+      const url = new URL(String(input instanceof URL ? input : (input.url ?? input)));
+      switch (`${init?.method} ${url.pathname}`) {
+        case 'POST /inbox/did%3Ahalo%3Arecipient':
+          return json({ id: 'n1' });
+        case 'GET /inbox':
+          return json({ notices: [notice] });
+        case 'POST /inbox/ack':
+          return new Response(null, { status: 204 });
+        default:
+          return new Response(null, { status: 200 });
+      }
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  };
+
+  const callTo = (fetchMock: ReturnType<typeof stubFetch>, pathname: string) =>
+    fetchMock.mock.calls.find((call) => new URL(String(call[0])).pathname === pathname);
+
+  test('sends, lists and acks against the inbox endpoints', async ({ expect }) => {
+    const fetchMock = stubFetch();
+    const client = new EdgeHttpClient('https://edge.example.com');
+
+    expect(await client.sendInboxMessage(Context.default(), 'did:halo:recipient', 'AAAA')).toEqual({ id: 'n1' });
+    expect(JSON.parse(String(callTo(fetchMock, '/inbox/did%3Ahalo%3Arecipient')?.[1]?.body))).toEqual({
+      payload: 'AAAA',
+    });
+
+    expect(await client.listInbox(Context.default())).toEqual({ notices: [notice] });
+
+    await client.ackInbox(Context.default(), ['n1']);
+    expect(JSON.parse(String(callTo(fetchMock, '/inbox/ack')?.[1]?.body))).toEqual({ ids: ['n1'] });
+  });
+
+  test('rejects a malformed list response', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => json({ notices: [{ id: 1 }] })),
+    );
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await expect(client.listInbox(Context.default())).rejects.toThrow();
+  });
+});

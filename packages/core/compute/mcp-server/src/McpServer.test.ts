@@ -575,18 +575,23 @@ describe('McpServer', () => {
       const serverInfo = (await response.json()).result._meta['io.modelcontextprotocol/serverInfo'];
       expect(serverInfo.title).to.equal(McpServer.identity.title);
       expect(serverInfo.websiteUrl).to.equal(McpServer.identity.websiteUrl);
-      expect(serverInfo.icons[0].src).to.equal(`https://mcp.example${McpServer.ICON_LIGHT_PATH}`);
+      expect(serverInfo.icons[0].src).to.equal(`https://mcp.example${McpServer.ICON_PATH}`);
       // The name the layer set is the host's own and must survive the merge.
       expect(serverInfo.name).to.equal('x');
     });
 
     test('serves the embedded mark for its own paths only', async ({ expect }) => {
-      const icon = McpServer.iconResponse(McpServer.ICON_DARK_PATH);
-      if (!icon) {
-        throw new Error('the mark was not served for its own path');
+      for (const [path, contentType] of [
+        [McpServer.ICON_PATH, 'image/png'],
+        [McpServer.FAVICON_PATH, 'image/x-icon'],
+      ]) {
+        const icon = McpServer.iconResponse(path);
+        if (!icon) {
+          throw new Error(`the mark was not served for ${path}`);
+        }
+        expect(icon.headers.get('Content-Type')).to.equal(contentType);
+        expect((await icon.arrayBuffer()).byteLength).to.be.greaterThan(0);
       }
-      expect(icon.headers.get('Content-Type')).to.equal('image/png');
-      expect((await icon.arrayBuffer()).byteLength).to.be.greaterThan(0);
       expect(McpServer.iconResponse('/nope.png')).to.be.undefined;
     });
 

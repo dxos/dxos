@@ -22,6 +22,7 @@ import { isNonNullable } from '@dxos/util';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
@@ -76,7 +77,7 @@ const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 // concurrent dynamic imports before Safari 27 (TDZ, "undefined is not an object" at plugin
 // activation: https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by the module-loader rewrite
 // in https://github.com/WebKit/WebKit/pull/57827). Resolving to `slim` and initializing explicitly
-// per realm via `initAutomergeWasm()` before the client boots avoids both.
+// per realm (`util/automerge-wasm.ts`) before the client boots avoids both.
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**
@@ -187,6 +188,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
+  // `?module-url` imports: compiled module URLs handed to a worker to `import()`.
+  ModuleUrlPlugin(),
   wasm(),
   // sourcemaps(),
 ];
@@ -201,9 +204,16 @@ export default defineConfig((env) => ({
     // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
-    __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
-    __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
+    '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
+    // The tree a desktop dev build's agent builds plugins against (plugin-computer's Composer Plugin template, via
+    // plugin-sandbox); only the desktop app reads it, and it is a path on the building machine, so dev builds only.
+    'import.meta.env.VITE_DX_SOURCE_ROOT': JSON.stringify(
+      env.command === 'serve' || process.env.DX_ENVIRONMENT === 'dev' || isTrue(process.env.DX_DEV)
+        ? path.resolve(dirname, '../../..')
+        : '',
+    ),
   },
   server: {
     host: true,

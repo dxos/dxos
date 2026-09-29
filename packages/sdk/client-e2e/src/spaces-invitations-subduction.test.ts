@@ -38,10 +38,7 @@ import { type SpaceGenesis } from '@dxos/protocols/buf/dxos/halo/credentials_pb'
 // + sedimentree byte transport between 2-4 clients. Each completes in ~1-2s on dev
 // machines but consistently brushes against vitest's 5s default under CI worker
 // contention — bump for the whole describe to keep the suite stable.
-// TODO(mykola): subduction wasm/network tests are flaky on CI runners
-// (limited concurrency, signal-server timing). Re-enable once the suite
-// is stable in CI.
-describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30_000 }, () => {
+describe('Spaces/invitations (subduction)', { timeout: 30_000 }, () => {
   test('creates a space and invites a peer', async ({ expect }) => {
     const [client1, client2] = await createInitializedClients(2);
     await Promise.all([client1, client2].map((c) => c.addTypes([TestSchema.Expando])));
@@ -161,7 +158,9 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
         }
       } else if (msg.action === QueryInvitationsResponse_Action.REMOVED) {
         msg.invitations?.forEach((inv) => invitationIds.delete(inv.invitationId));
-        if (invitationIds.size > 0) {
+        // `waitEmpty()` awaits emptiness, so the wake must fire when the set drains — the inverse
+        // condition hung the waiter whenever the last invitation was removed after the call.
+        if (invitationIds.size === 0) {
           invitationsEmpty.wake();
         }
       }

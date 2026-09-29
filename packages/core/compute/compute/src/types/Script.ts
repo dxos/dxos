@@ -23,6 +23,7 @@ export class Script extends Type.makeObject<Script>(DXN.make('org.dxos.type.scri
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--code--regular', hue: 'sky' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

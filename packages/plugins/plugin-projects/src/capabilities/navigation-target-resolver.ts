@@ -6,20 +6,23 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { getProjectChatPath } from '../paths.ts';
+import { getProjectArtifactPath, getProjectChatPath } from '../paths.ts';
+import { artifacts } from './app-graph-builder.ts';
 
 /**
- * Places a project's chats on that project's Chats branch. Without this a project chat resolves
- * only to the assistant's Chats section, whose connector queries unparented chats — so the path
- * names a node that does not exist and opening it leaves a blank pane.
+ * Places a project's chats on its Chats branch and the artifacts it is parent of on its Artifacts
+ * branch. Without this a project chat resolves only to the assistant's Chats section, whose connector
+ * queries unparented chats — so the path names a node that does not exist and opening it leaves a
+ * blank pane.
  *
- * `Position.first`: the branch is where the tree actually shows the chat, so it outranks both the
+ * `Position.first`: the branch is where the tree shows the object as its own, so it outranks both the
  * type section's answer and the generic database subtree.
  */
 export default Capability.makeModule(
@@ -35,21 +38,30 @@ export default Capability.makeModule(
         }
 
         const { db } = yield* Database.Service;
-        const chat = yield* Database.load(db.makeRef(targetUri)).pipe(Effect.catch(() => Effect.succeed(null)));
-        if (!chat || !Obj.instanceOf(Chat.Chat, chat)) {
+        const object = yield* Database.load(db.makeRef(targetUri)).pipe(Effect.catch(() => Effect.succeed(null)));
+        if (!object || !Obj.isObject(object)) {
           return [];
         }
 
-        const project = Obj.getParent(chat);
+        const project = Obj.getParent(object);
         if (!project || !Obj.instanceOf(Project.Project, project)) {
+          return [];
+        }
+
+        const path = Obj.instanceOf(Chat.Chat, object)
+          ? getProjectChatPath(db.spaceId, project.id, object.id)
+          : ContainerModel.includes(artifacts(project), object)
+            ? getProjectArtifactPath(db.spaceId, project.id, object.id)
+            : undefined;
+        if (!path) {
           return [];
         }
 
         return [
           {
-            path: getProjectChatPath(db.spaceId, project.id, chat.id),
-            label: Entity.getLabel(chat) ?? '',
-            type: Obj.getTypename(chat)!,
+            path,
+            label: Entity.getLabel(object) ?? '',
+            type: Obj.getTypename(object)!,
             position: Position.first,
           },
         ];

@@ -28,9 +28,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -56,9 +53,6 @@
     },
     {
       "path": "../../ui/react-ui-dnd"
-    },
-    {
-      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-menu"

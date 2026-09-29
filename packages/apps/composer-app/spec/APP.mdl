@@ -473,6 +473,7 @@ test QA-5: First run and logout
     - composer-e2e:basic.spec.ts#Basic tests › create identity, space is created by default
     - composer-e2e:basic.spec.ts#Basic tests › create space, which is displayed in tree
     - composer-e2e:basic.spec.ts#Basic tests › logout
+    - composer-e2e:basic.spec.ts#Basic tests › recover identity
   given:
     - no identity exists — a first run, not a reset of an existing profile
   steps:
@@ -488,13 +489,16 @@ test QA-5: First run and logout
     - name: Log out
       do: Open the user's Devices panel and choose Log out.
       expect: |
-        storage is wiped and the page reloads on its own. Boot after a reset is SLOW (~8-11s) —
-        an assertion here needs several times the usual budget before it means anything.
+        the identity and its spaces are deleted in place — the page does not reload — and a fresh
+        identity is created straight away
     - name: A fresh identity comes back
-      do: Wait for the reload to settle.
+      do: Wait for the new identity to land on its default space's Home.
       expect: one space again — the second one is gone with the identity that owned it
+    - name: Recover the identity
+      do: Create a recovery code under Security, then choose Recover under Devices and enter it.
+      expect: the same identity returns in place, spaces and all, without a reload
   then:
-    - no error is logged at any point; a reset that throws still reloads, so the reload alone is not the criterion
+    - no error is logged at any point, and the page is never reloaded
 ```
 
 ```mdl
@@ -565,6 +569,7 @@ test QA-7: A second device on one identity
   status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/halo.spec.ts
   automated:
     - composer-e2e:halo.spec.ts#HALO tests › join new identity
+    - composer-e2e:halo.spec.ts#HALO tests › log in to an existing identity with its recovery code
     - composer-e2e:halo.spec.ts#HALO tests › settings sync across devices, and one device can keep its own
     - composer-e2e:halo.spec.ts#HALO tests › deleting a space replicates across devices
   given:
@@ -573,7 +578,9 @@ test QA-7: A second device on one identity
   steps:
     - name: Invite the second device
       do: On device A open Devices and create a device invitation; enter the code on device B.
-      expect: device B lands on device A's identity and its workspace root, and A's Devices list shows two devices
+      expect: |
+        device B leaves its own identity in place — no reload — and lands on device A's identity and
+        its workspace root, and A's Devices list shows two devices
       note: |
         B stops at the workspace ROOT, not at `/home` — a joined device does not replay the
         first-run navigation, so asserting A's landing URL here fails for the wrong reason.
@@ -658,6 +665,36 @@ test QA-9: The guided tours
       expect: it runs from "Sharing" to "Feedback" as before
 ```
 
+```mdl
+test QA-10: Invite a known contact to a second space
+  desc: |
+    A host who already shares a space with someone (and so has them as a contact) invites that same
+    person into a DIFFERENT space directly from the contact picker, skipping the invitation-code
+    exchange — as opposed to QA-8's fresh, code-based invitation.
+  actors: human
+  status: unverified        # 2026-09-24, written from composer-e2e/src/playwright/contacts.spec.ts
+  automated:
+    - composer-e2e:contacts.spec.ts#Contacts › host adds a known contact to a second space
+  given:
+    - host: a booted app with an identity, one space shared with the guest (so the guest is a contact), and a second space the host owns
+    - guest: a SECOND browser profile, already a member of the first space
+  steps:
+    - name: Open the second space's members panel
+      do: On the host, switch to the second space and open its share/members panel.
+      expect: the contact picker is available (the host is Owner of this space)
+    - name: Pick the known contact
+      do: Open the contact picker and select the guest.
+      expect: the guest appears selected; the picker stays open
+    - name: Add and get the join link
+      do: Click Add.
+      expect: a join-URL field appears, carrying a `?spaceKey=` link to the second space
+    - name: Guest follows the link
+      do: On the guest, navigate to the join URL.
+      expect: the guest lands in the second space, with no invitation-code or auth-code exchange
+  then:
+    - the guest is a member of the second space, reached purely from the host's contact picker
+```
+
 ## Suites
 
 ```mdl
@@ -681,7 +718,7 @@ suite multi-peer: Journeys that need a second browser profile
     every member needs a profile the other suites do not: a second TAB shares storage and would
     pass these without replicating anything.
   tags: [nightly]
-  tests: [QA-7, QA-8]
+  tests: [QA-7, QA-8, QA-10]
 ```
 
 ```mdl

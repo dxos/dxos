@@ -44,8 +44,6 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'indigo' }),
-    // Owned child of a MediaArtifact — hidden from the navtree and object picker (mirrors Instructions).
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 

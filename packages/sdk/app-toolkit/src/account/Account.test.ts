@@ -39,11 +39,17 @@ describe('access codes', () => {
     expect(Account.isValidAccessCodeFormat('AB-CD-23-45')).toBe(true);
   });
 
-  test('rejects wrong lengths and ambiguous letters', ({ expect }) => {
+  test('accepts vanity codes, with or without their hyphens', ({ expect }) => {
+    expect(Account.isValidAccessCodeFormat('SF-MEETUP-7K2Q')).toBe(true);
+    expect(Account.isValidAccessCodeFormat('sfmeetup7k2q')).toBe(true);
+    // A vanity prefix may use any letter, so a code that reads as ambiguous Crockford is still well-formed.
+    expect(Account.isValidAccessCodeFormat('ABCI-2345')).toBe(true);
+  });
+
+  test('rejects wrong lengths and stray characters', ({ expect }) => {
     expect(Account.isValidAccessCodeFormat('ABCD234')).toBe(false);
-    expect(Account.isValidAccessCodeFormat('ABCD23456')).toBe(false);
-    // I, L, O and U are absent from the Crockford alphabet.
-    expect(Account.isValidAccessCodeFormat('ABCI2345')).toBe(false);
+    expect(Account.isValidAccessCodeFormat('A-VERY-LONG-MEETUP-NAME-FOR-SF-7K2Q')).toBe(false);
+    expect(Account.isValidAccessCodeFormat('SF MEETUP 7K2Q')).toBe(false);
     expect(Account.isValidAccessCodeFormat('')).toBe(false);
   });
 

@@ -20,6 +20,7 @@ import {
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
+import { describeInput } from './fields.ts';
 
 /**
  * The repo's own ECHO API, written as an Effect program: `yield* Database.query(Filter.type(...)).run`.
@@ -122,7 +123,23 @@ export const EffectDialect: Dialect = {
     yield* Database.add(Obj.make(types['example.com/type/Task'], { title: 'Review', status: 'open', owner: Ref.make(owner) }));
     \`\`\`
 
-    Read a reference back with \`yield* Database.load(task.owner)\`.
+    Read a reference back with \`yield* Database.load(task.owner)\`. To fetch an object whose id you
+    hold, query for it: \`const [task] = yield* Database.query(Filter.id(id)).run;\`.
+
+    A ref array can point at objects that were deleted, and one failed load fails the whole
+    program, so load such arrays one ref at a time through \`Effect.result\`. Its value is
+    \`{ _tag: 'Success', success }\` or \`{ _tag: 'Failure', failure }\` — there is no \`value\`:
+
+    \`\`\`js
+    for (const ref of taskSet.tasks) {
+      const loaded = yield* Effect.result(Database.load(ref));
+      if (loaded._tag === 'Failure') { yield* print('missing', ref.uri); continue; }
+      yield* print(loaded.success.title);
+    }
+    \`\`\`
+
+    Do not guess at a helper this reference does not show: an unshown name fails as \`is not a
+    function\` and costs a call.
 
     ${renderTypes(types)}
 
@@ -143,15 +160,26 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
   const result = yield* Operation.invoke(ops['dxn:com.example.operation.example'], { ...input });
   \`\`\`
 
-  A failed operation fails the effect, so wrap a call you expect to fail in \`Effect.result\`.
-  Where an input takes objects or references, pass the objects you hold (or \`Ref.make(obj)\`),
-  not ids. Most of what an operation does to one object is a line of \`Obj\`/\`Database\` code;
-  prefer that.
+  A failed operation fails the effect, so wrap a call you expect to fail in \`Effect.result\` (shape
+  above).
+  Each \`input\` below is the operation's own schema. Where it takes an object or a \`Ref<typename>\`,
+  pass the object you hold (or \`Ref.make(obj)\`) — never an id or a URI string; fetch the object
+  first if all you hold is its id. A skill that spells a reference as a \`{"/": "echo:..."}\` envelope
+  or a URI string is describing the tool form; this reference wins. Most of what an operation does
+  to one object is a line of \`Obj\`/\`Database\` code; prefer that.
 
   ${operations
-    .filter((operation) => operation.definition)
-    .map((operation) =>
-      renderOperation(operation, () => `yield* Operation.invoke(ops['${operationKey(operation.definition!)}'], input)`),
-    )
+    .flatMap((operation) => {
+      const { definition } = operation;
+      return definition
+        ? [
+            renderOperation(
+              operation,
+              () => `yield* Operation.invoke(ops['${operationKey(definition)}'], input)`,
+              describeInput(definition.input),
+            ),
+          ]
+        : [];
+    })
     .join('\n')}
 `;

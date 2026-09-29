@@ -58,7 +58,7 @@ const readWasmMemory = async (target: Attached): Promise<WasmReading | undefined
 };
 
 /**
- * Live memory of every attached target, after a forced GC.
+ * Live memory of every attached target, after a forced GC; with `collect: false`, as it stands.
  *
  * Per target rather than summed at the source: the page and the shared worker move for different
  * reasons, and a single total hides which one grew.
@@ -67,10 +67,15 @@ const readWasmMemory = async (target: Attached): Promise<WasmReading | undefined
  * boundary — and it is a quantity the JS-heap figures are silent about, so a reader comparing
  * `usedBytes` across a run is looking at a fraction of what the realm holds.
  */
-export const readHeap = async (targets: Attached[]): Promise<HeapReading[]> => {
+export const readHeap = async (
+  targets: Attached[],
+  { collect = true }: { collect?: boolean } = {},
+): Promise<HeapReading[]> => {
   const readings: HeapReading[] = [];
   for (const target of targets) {
-    await settle(target);
+    if (collect) {
+      await settle(target);
+    }
     const usage = await target.cdp.trySend<{
       usedSize: number;
       totalSize: number;

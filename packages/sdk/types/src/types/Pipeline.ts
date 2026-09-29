@@ -35,6 +35,7 @@ export class Pipeline extends Type.makeObject<Pipeline>(DXN.make('org.dxos.type.
     Schema.annotate({ title: 'Pipeline' }),
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'purple' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

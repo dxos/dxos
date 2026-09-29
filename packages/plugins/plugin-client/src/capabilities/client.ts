@@ -21,7 +21,7 @@ import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
 type ClientCapabilityOptions = Omit<
   ClientOptions.ClientPluginOptions,
-  'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam' | 'onReset'
+  'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam'
 >;
 
 /** The client did not finish initializing inside the configured timeout. */

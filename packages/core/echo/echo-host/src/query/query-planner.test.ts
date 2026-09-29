@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Feed, Filter, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Annotation, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { type QueryPlan } from './plan.ts';
@@ -746,6 +748,15 @@ describe('QueryPlanner', () => {
             },
           },
           {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+          {
             "_tag": "TraverseStep",
             "traversal": {
               "_tag": "ReferenceTraversal",
@@ -756,15 +767,6 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
-          },
-          {
-            "_tag": "OrderStep",
-            "order": [
-              {
-                "direction": "asc",
-                "kind": "natural",
-              },
-            ],
           },
         ],
       }
@@ -858,6 +860,23 @@ describe('QueryPlanner', () => {
         ],
       }
     `);
+  });
+
+  test('type AND has-parent AND negated annotation keeps the type-indexed select', () => {
+    const Archived = Annotation.make({ id: 'org.dxos.annotation.test-archived', schema: Schema.Boolean });
+    const query = Query.select(
+      Filter.and(
+        Filter.type(TestSchema.Person),
+        Filter.hasParent(false),
+        Filter.not(Filter.annotation(Archived, true)),
+      ),
+    );
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const select = plan.steps.find((step) => step._tag === 'SelectStep');
+    expect(select?._tag === 'SelectStep' && select.selector._tag).toEqual('TypeSelector');
+    const filters = plan.steps.flatMap((step) => (step._tag === 'FilterStep' ? [step.filter.type] : []));
+    expect(filters).toEqual(expect.arrayContaining(['has-parent', 'not']));
   });
 
   test('full-text search AND type pushes the typename into the selector', () => {
@@ -2087,6 +2106,15 @@ describe('QueryPlanner', () => {
             },
           },
           {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+          {
             "_tag": "TraverseStep",
             "traversal": {
               "_tag": "ReferenceTraversal",
@@ -2097,15 +2125,6 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
-          },
-          {
-            "_tag": "OrderStep",
-            "order": [
-              {
-                "direction": "asc",
-                "kind": "natural",
-              },
-            ],
           },
         ],
       }
@@ -2352,6 +2371,66 @@ describe('QueryPlanner', () => {
       const step = selectStep(query.ast);
       expect(step.feedScan).toBeUndefined();
       expect(step).toMatchObject({ limit: 5, feedCursorRange: { begin: '3' } });
+    });
+  });
+
+  describe('changes', () => {
+    const task = Obj.make(TestSchema.Task, { title: 'Task' });
+    const plan = (query: Query.Any) => planner.createPlan(withSpaceIdOptions(query.ast));
+    const selectorOf = (query: Query.Any) => {
+      const [select] = plan(query).steps;
+      invariant(select._tag === 'SelectStep');
+      return select.selector;
+    };
+
+    test('a space-wide count by day reads the activity index', () => {
+      const query = Query.select(Filter.changes()).aggregate({
+        day: Aggregate.time('time', 'day'),
+        source: Aggregate.group('source'),
+        changes: Aggregate.count(),
+        ops: Aggregate.sum('ops'),
+      });
+      expect(selectorOf(query)).toEqual({ _tag: 'ChangesSelector', targets: undefined, source: 'index' });
+      expect(plan(query).steps.map((step) => step._tag)).toEqual(['SelectStep', 'OrderStep', 'AggregateStep']);
+    });
+
+    test('targets narrow the index to their documents', () => {
+      const query = Query.select(Filter.changes(task)).aggregate({ hour: Aggregate.time('time', 'hour') });
+      expect(selectorOf(query)).toMatchObject({ source: 'index', targets: [expect.stringContaining(task.id)] });
+    });
+
+    test('anything the index cannot answer replays the targets', () => {
+      const history = Query.select(Filter.changes(task)).orderBy(Order.property('time', 'desc')).limit(10);
+      const byActor = Query.select(Filter.changes(task)).aggregate({
+        actor: Aggregate.group('actor'),
+        changes: Aggregate.count(),
+      });
+      const limitedFirst = Query.select(Filter.changes(task)).limit(5).aggregate({ changes: Aggregate.count() });
+      expect(selectorOf(history)).toMatchObject({ source: 'replay' });
+      expect(selectorOf(byActor)).toMatchObject({ source: 'replay' });
+      expect(selectorOf(limitedFirst)).toMatchObject({ source: 'replay' });
+      expect(plan(history).steps.at(-1)).toMatchObject({ _tag: 'LimitStep', limit: 10 });
+    });
+
+    test('a space-wide query must be one the index answers', () => {
+      expect(() => plan(Query.select(Filter.changes()))).toThrow('space-wide');
+      expect(() =>
+        plan(Query.select(Filter.changes()).aggregate({ actor: Aggregate.group('actor'), n: Aggregate.count() })),
+      ).toThrow('space-wide');
+      expect(() => plan(Query.select(Filter.changes()).aggregate({ max: Aggregate.max('ops') }))).toThrow('space-wide');
+    });
+
+    test('changes cannot mix with object filters, member lists or system timestamps', () => {
+      expect(() => plan(Query.select(Filter.and(Filter.changes(task), Filter.type(TestSchema.Task))))).toThrow(
+        'cannot be combined',
+      );
+      expect(() => plan(Query.select(Filter.not(Filter.changes(task))))).toThrow('cannot be combined');
+      expect(() => plan(Query.select(Filter.changes(task)).aggregate({ items: Aggregate.items() }))).toThrow(
+        'Aggregate.items()',
+      );
+      expect(() => plan(Query.select(Filter.changes(task)).aggregate({ day: Aggregate.updated('day') }))).toThrow(
+        'Aggregate.updated()',
+      );
     });
   });
 });

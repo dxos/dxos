@@ -14,7 +14,8 @@ import { EffectEx } from '@dxos/effect';
 import { TypeSafeSettings } from '#types';
 
 import { TYPESAFE_SOURCE } from '../constants.ts';
-import { connectedApiKey, requiredApiKey } from './model-resolver.ts';
+import { EDGE_ENDPOINT } from './edge-http-client.ts';
+import { connectedApiKey, requiredApiKey, resolveEndpoint } from './model-resolver.ts';
 
 const credentials = (query: () => Promise<Credential.ServiceCredential[]>) =>
   Layer.succeed(Credential.CredentialsService, {
@@ -85,5 +86,14 @@ describe('endpoint override validation', () => {
     expect(TypeSafeSettings.isAllowedEndpoint('http://[::1]:8787/v1/systemone')).toBe(true);
     expect(TypeSafeSettings.isAllowedEndpoint('http://typesafe.example/v1/systemone')).toBe(false);
     expect(TypeSafeSettings.isAllowedEndpoint('not a url')).toBe(false);
+  });
+});
+
+describe('resolveEndpoint', () => {
+  test('routes through EDGE unless an override is set', ({ expect }) => {
+    const endpoint = 'https://typesafe.example/v1/systemone';
+    expect(resolveEndpoint(undefined)).toBe(EDGE_ENDPOINT);
+    expect(resolveEndpoint('  ')).toBe(EDGE_ENDPOINT);
+    expect(resolveEndpoint(endpoint)).toBe(endpoint);
   });
 });

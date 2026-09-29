@@ -28,6 +28,7 @@ export class Trip extends Type.makeObject<Trip>(DXN.make('org.dxos.type.trip', '
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--airplane-takeoff--regular', hue: 'sky' }),
     Skill.SkillsAnnotation.set([TRIP_SKILL_KEY]),
+    Annotation.UserType.set(),
   ),
 ) {}
 

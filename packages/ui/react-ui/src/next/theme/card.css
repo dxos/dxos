@@ -1,0 +1,121 @@
+/*
+ * Card: a `gutter='md'` Container lifted one level above its host; Header, Body and Footer share its content edge and
+ * a Poster spans the gutters.
+ */
+
+@layer dx-components {
+  .nx-card {
+    box-sizing: border-box;
+    padding-block: var(--nx-gap-size);
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+  /* A leading poster is flush with the card's top edge. */
+  .nx-card:has(> .nx-card-poster:first-child) {
+    padding-block-start: 0;
+  }
+  /* Inside the border, so the inner radius is the card's less its border width. */
+  .nx-card > .nx-card-poster:first-child {
+    border-start-start-radius: calc(var(--radius-md, 0.375rem) - 1px);
+    border-start-end-radius: calc(var(--radius-md, 0.375rem) - 1px);
+  }
+
+  .nx-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+  }
+  .nx-card-header > .nx-block {
+    width: var(--nx-control-size);
+    height: var(--nx-control-size);
+    margin: var(--nx-control-inset);
+  }
+
+  .nx-card-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    font-weight: 500;
+  }
+
+  .nx-card-description {
+    margin: 0;
+    color: var(--color-description);
+  }
+
+  .nx-card[data-border='false'] {
+    border-color: transparent;
+  }
+  .nx-card[data-selected] {
+    border-color: var(--color-accent-bg);
+  }
+
+  /* A clickable card or row: the hover surface, and the shared inset ring on keyboard focus. */
+  .nx-card-clickable {
+    cursor: pointer;
+  }
+  .nx-card-clickable:hover {
+    background: var(--color-hover-surface);
+  }
+
+  .nx-card-section-title {
+    display: flex;
+    align-items: center;
+    min-height: var(--nx-control-size);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
+    color: var(--color-description);
+  }
+
+  /*
+   * Row: icon, text and trailing content. The icon cell is a fixed block, so rows with icons align without a shared
+   * template (fixed tracks align across subtrees, decision 5); the trailing cell keeps its width while the text
+   * truncates.
+   */
+  .nx-card-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    color: inherit;
+    text-decoration: none;
+  }
+  .nx-card-row[data-icon],
+  .nx-card-row.nx-card-link {
+    grid-template-columns: var(--nx-block-size) minmax(0, 1fr) auto;
+    column-gap: 0;
+  }
+  .nx-card-row-content {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nx-card-row-trailing {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    justify-self: end;
+  }
+  .nx-card-row[aria-current='true'] {
+    background: var(--color-hover-surface);
+  }
+  .nx-card-link:hover {
+    background: var(--color-hover-surface);
+  }
+  .nx-card-link > .nx-block:last-child {
+    visibility: hidden;
+  }
+  .nx-card-link:is(:hover, :focus-visible) > .nx-block:last-child {
+    visibility: visible;
+  }
+  /* A Header or Row action sits in the block cell an icon-only Button always takes. */
+  .nx-card-row-trailing > .nx-button[data-square] {
+    margin: var(--nx-control-inset);
+  }
+}

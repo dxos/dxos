@@ -13,7 +13,7 @@ import { ATTR_META } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref/index.ts';
-import { type EntityPropPath, EscapedPropPath, chunkArray } from '../utils.ts';
+import { type EntityPropPath, EscapedPropPath, chunkArray, normalizePropPath } from '../utils.ts';
 import type { Index, IndexerObject } from './interface.ts';
 
 /**
@@ -208,7 +208,7 @@ export class ReverseRefIndex implements Index {
             yield* Effect.forEach(
               refs,
               (ref) =>
-                sql`INSERT INTO reverseRef (recordId, targetDXN, propPath) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)})`,
+                sql`INSERT INTO reverseRef (recordId, targetDXN, propPath, propPathNormalized) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)}, ${EscapedPropPath.escape(normalizePropPath(ref.path))})`,
               { discard: true },
             );
           }),

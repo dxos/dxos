@@ -21,4 +21,10 @@ and meters the usage against the user's account; a connected key rides as `X-BYO
 The `endpoint` setting bypasses EDGE for a self-hosted endpoint the browser can reach, and needs a
 connected key.
 
+The same model also runs on Cloudflare Workers AI
+([`typesafe/jev`](https://developers.cloudflare.com/ai/models/typesafe/jev/)): ask for
+`Model.cloudflareJev` (`com.cloudflare.model.typesafe-jev.default`) instead of `Model.typesafeJev`
+(`ai.typesafe.model.jev.latest`). It goes through EDGE's `/ai/generate/workers-ai/typesafe` route on
+EDGE's Cloudflare account, so no key is sent and every call is metered.
+
 See [docs/DESIGN.md](./docs/DESIGN.md); the provider itself lives in `@dxos/ai/resolvers`.

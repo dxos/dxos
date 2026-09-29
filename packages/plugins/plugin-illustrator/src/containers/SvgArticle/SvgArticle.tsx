@@ -26,9 +26,8 @@ export const SvgArticle = ({ canvas, selection, onSelectionChange, onActivate }:
 
   return (
     <Panel.Root classNames='dx-fill'>
-      <Panel.Content asChild>
+      <Panel.Content classNames='dx-attention-surface'>
         <SceneSvg
-          classNames='dx-attention-surface dx-fill'
           objects={objects}
           selection={selection}
           onSelectionChange={onSelectionChange}

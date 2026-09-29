@@ -1,0 +1,2981 @@
+diff --git a/.changeset/filter-changes.md b/.changeset/filter-changes.md
+new file mode 100644
+index 00000000..906f373a
+--- /dev/null
++++ b/.changeset/filter-changes.md
+@@ -0,0 +1,5 @@
++---
++'@dxos/echo': minor
++---
++
++`Filter.changes(targets?)` selects Automerge changes instead of objects. Each result is a frozen `Change.Change` record (`key`, `source`, `time`, `actor`, `seq`, `ops`), not an entity. A space-wide query must aggregate with `Aggregate.time('time', …)`, `Aggregate.group('source')`, `Aggregate.count()` and `Aggregate.sum('ops')`. The host answers those from hourly buckets it keeps per document, which survive garbage collection. With targets, any shape works, including a plain ordered history: the host replays the documents holding those entities. Two new aggregates work on any type, and the SQL executor compiles both: `Aggregate.sum(property)` and `Aggregate.time(property, unit)`. Change queries always run on their own executor, since changes are not stored in SQLite. **Breaking:** the `timeZone` option is removed from `Aggregate.updated` and `Aggregate.created`; every hour and day group is UTC. To show local days, group by `'hour'` and roll the hours into days in the caller, as the space heatmap now does. `Query.AggregateResult` is renamed to `Query.RecordResult`. The space home heatmap now counts every change on the day it was made, so objects edited on several days, or since deleted, show on each of those days.
+diff --git a/packages/core/echo/echo-client-e2e/src/query.test.ts b/packages/core/echo/echo-client-e2e/src/query.test.ts
+index b6fa59d8..80d7545f 100644
+--- a/packages/core/echo/echo-client-e2e/src/query.test.ts
++++ b/packages/core/echo/echo-client-e2e/src/query.test.ts
+@@ -377,6 +377,117 @@ describe('Query', () => {
+     });
+   });
+ 
++  describe.each(['memory', 'sql'] as const)('changes (%s executor)', (queryExecutor) => {
++    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
++    const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
++
++    test('a space-wide count by day follows new edits', async () => {
++      const db = await createDatabase();
++      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
++      await db.flush({ indexes: true });
++
++      let rows: readonly { day: number | null; changes: number; ops: number }[] = [];
++      const unsubscribe = db
++        .query(
++          Query.select(Filter.changes()).aggregate({
++            day: Aggregate.time('time', 'day'),
++            changes: Aggregate.count(),
++            ops: Aggregate.sum('ops'),
++          }),
++        )
++        .subscribe((result) => {
++          rows = result.results;
++        });
++      onTestFinished(unsubscribe);
++
++      await waitForCondition({ condition: () => total(rows) > 0, timeout: 5000 });
++      const before = total(rows);
++      expect(rows.every((row) => row.ops >= row.changes)).to.be.true;
++
++      Obj.update(object, (object) => {
++        object.value = 2;
++      });
++      await db.flush({ indexes: true });
++      await waitForCondition({ condition: () => total(rows) > before, timeout: 5000 });
++    });
++
++    test("an object's history comes back as frozen change records, newest first", async () => {
++      const db = await createDatabase();
++      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
++      for (const value of [2, 3]) {
++        Obj.update(object, (object) => {
++          object.value = value;
++        });
++      }
++      await db.flush({ indexes: true });
++
++      const changes = await db
++        .query(Query.select(Filter.changes(object)).orderBy(Order.property('time', 'desc')).limit(2))
++        .run();
++
++      expect(changes).to.have.length(2);
++      expect(changes[0].time).to.be.greaterThanOrEqual(changes[1].time);
++      for (const change of changes) {
++        expect(change).to.include({ source: 'document' });
++        expect(change).to.include.keys('key', 'time', 'actor', 'seq', 'ops');
++        expect(Object.isFrozen(change)).to.be.true;
++        expect(Reflect.set(change, 'ops', 0)).to.be.false;
++      }
++    });
++
++    test("the index and a replay agree on an object's changes", async () => {
++      const db = await createDatabase();
++      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
++      Obj.update(object, (object) => {
++        object.value = 2;
++      });
++      await db.flush({ indexes: true });
++
++      const [indexed, replayed] = await Promise.all([
++        db
++          .query(
++            Query.select(Filter.changes(object)).aggregate({ changes: Aggregate.count(), ops: Aggregate.sum('ops') }),
++          )
++          .run(),
++        db
++          .query(
++            Query.select(Filter.changes(object)).aggregate({
++              actor: Aggregate.group('actor'),
++              changes: Aggregate.count(),
++              ops: Aggregate.sum('ops'),
++            }),
++          )
++          .run(),
++      ]);
++
++      expect(total(indexed)).to.be.greaterThan(0);
++      expect(total(replayed)).to.equal(total(indexed));
++      expect(replayed.reduce((sum, row) => sum + row.ops, 0)).to.equal(indexed[0].ops);
++    });
++
++    test('sums and time buckets apply to ordinary objects', async () => {
++      const db = await createDatabase();
++      const day = Date.UTC(2026, 0, 2);
++      db.add(Obj.make(TestSchema.Expando, { at: day + 1_000, amount: 2 }));
++      db.add(Obj.make(TestSchema.Expando, { at: day + 2_000, amount: 3 }));
++      db.add(Obj.make(TestSchema.Expando, { at: day - 1_000, amount: 7 }));
++      await db.flush({ indexes: true });
++
++      const rows = await db
++        .query(
++          Query.select(Filter.type(TestSchema.Expando))
++            .aggregate({ day: Aggregate.time('at', 'day'), amount: Aggregate.sum('amount') })
++            .orderBy(Order.property('day', 'asc')),
++        )
++        .run();
++
++      expect(rows.map(({ day, amount }) => ({ day, amount }))).to.deep.equal([
++        { day: day - 86_400_000, amount: 7 },
++        { day, amount: 5 },
++      ]);
++    });
++  });
++
+   describe('aggregate', () => {
+     test('groups by a single property, with per-group counts', async () => {
+       const { db } = await builder.createDatabase();
+diff --git a/packages/core/echo/echo-client/src/client/index-query-source-provider.ts b/packages/core/echo/echo-client/src/client/index-query-source-provider.ts
+index ca57f98e..e2577852 100644
+--- a/packages/core/echo/echo-client/src/client/index-query-source-provider.ts
++++ b/packages/core/echo/echo-client/src/client/index-query-source-provider.ts
+@@ -571,6 +571,15 @@ export class IndexQuerySource implements QuerySource {
+       };
+     }
+ 
++    if (result.recordJson !== undefined) {
++      return {
++        id: result.id,
++        match: { rank: result.rank },
++        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
++        record: Object.freeze(JSON.parse(result.recordJson)),
++      };
++    }
++
+     recordObjectDiagnostic(result.id, () => ({
+       objectId: result.id,
+       spaceId: result.spaceId,
+diff --git a/packages/core/echo/echo-client/src/query/graph-query-context.ts b/packages/core/echo/echo-client/src/query/graph-query-context.ts
+index c80db4d0..5c52efd2 100644
+--- a/packages/core/echo/echo-client/src/query/graph-query-context.ts
++++ b/packages/core/echo/echo-client/src/query/graph-query-context.ts
+@@ -6,7 +6,7 @@ import { Event, asyncTimeout } from '@dxos/async';
+ import { Context } from '@dxos/context';
+ import { Obj, Query, type QueryResult } from '@dxos/echo';
+ import { filterMatchDoc } from '@dxos/echo-host/filter';
+-import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
++import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
+ import { QueryAST } from '@dxos/echo-protocol';
+ import { type SpaceId } from '@dxos/keys';
+ import { log } from '@dxos/log';
+@@ -403,6 +403,10 @@ export class SpaceQuerySource implements QuerySource {
+   }
+ 
+   private _isValidSourceForQuery(query: QueryAST.Query): boolean {
++    if (queryContainsChanges(query)) {
++      return false;
++    }
++
+     const targetSpaces = getTargetSpacesForQuery(query);
+     // Disabled by spaces filter.
+     if (targetSpaces.length > 0 && !targetSpaces.includes(this.spaceId)) {
+diff --git a/packages/core/echo/echo-client/src/query/query-context.ts b/packages/core/echo/echo-client/src/query/query-context.ts
+index 77149a52..686f9bf7 100644
+--- a/packages/core/echo/echo-client/src/query/query-context.ts
++++ b/packages/core/echo/echo-client/src/query/query-context.ts
+@@ -28,6 +28,7 @@ export type EntryGroup = {
+  */
+ export type SourceEntry<O extends Entity.Unknown = Entity.Unknown> = QueryResult.EntityEntry<O> & {
+   group?: EntryGroup;
++  record?: Readonly<Record<string, unknown>>;
+ };
+ 
+ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
+diff --git a/packages/core/echo/echo-client/src/query/query-result.ts b/packages/core/echo/echo-client/src/query/query-result.ts
+index 411097c1..85c965d0 100644
+--- a/packages/core/echo/echo-client/src/query/query-result.ts
++++ b/packages/core/echo/echo-client/src/query/query-result.ts
+@@ -219,25 +219,30 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
+     const results = this._queryContext.getResults();
+     const presented = this._presentResults(results);
+ 
+-    const changed = presented.grouped
+-      ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
+-        // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
+-        !_groupsEqual(
+-          this._objectCache as unknown as GroupResult[] | undefined,
+-          presented.objects as unknown as GroupResult[],
+-        )
+-      : !this._objectCache ||
+-        this._objectCache.length !== presented.objects.length ||
+-        this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
++    const changed =
++      presented.kind === 'groups'
++        ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
++          // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
++          !_groupsEqual(
++            this._objectCache as unknown as GroupResult[] | undefined,
++            presented.objects as unknown as GroupResult[],
++          )
++        : presented.kind === 'records'
++          ? !this._resultCache ||
++            this._resultCache.length !== presented.entries.length ||
++            this._resultCache.some((entry, index) => entry.id !== presented.entries[index].id)
++          : !this._objectCache ||
++            this._objectCache.length !== presented.objects.length ||
++            this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
+ 
+     log('recomputeResult', { changed });
+ 
+-    // An aggregate query assembles its group records fresh on every recompute, so an unchanged result
++    // An aggregate or change query assembles its records fresh on every recompute, so an unchanged result
+     // still yields a new array — and `useQuery` reads `results` as its `useSyncExternalStore` snapshot
+     // on every render, which would then see a new reference for identical data. Hold the previous
+     // arrays in that case only: on the flat path `changed` compares ids and order alone, so pinning
+     // would serve stale entities and stale per-row match metadata.
+-    if (!presented.grouped || changed) {
++    if (presented.kind === 'entities' || changed) {
+       this._resultCache = presented.entries;
+       this._objectCache = presented.objects;
+     }
+@@ -250,9 +255,9 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
+    * uniformly across all entries or none), assembles flat aggregate records instead of deduped rows.
+    */
+   private _presentResults(entries: SourceEntry<T>[]): {
++    kind: 'entities' | 'groups' | 'records';
+     objects: T[];
+     entries: QueryResult.EntityEntry<T>[];
+-    grouped: boolean;
+   } {
+     const { kept, removed } = this._collapseDuplicates(entries);
+     entries = kept;
+@@ -263,17 +268,18 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
+         _groupAggregatesFromQuery(this._query.ast),
+         removed,
+       );
+-      // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
+-      // return type), but this class is written generically over the row type — aggregation is a
+-      // presentation transform applied on top of row-level entries, with the row type erased at runtime.
+       return {
+-        objects: groups as unknown as T[],
++        kind: 'groups',
++        objects: _asResultRows<T>(groups),
+         entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
+-        grouped: true,
+       };
+     }
+ 
+-    return { objects: this._uniqueObjects(entries), entries, grouped: false };
++    if (entries.length > 0 && entries[0].record !== undefined) {
++      return { kind: 'records', objects: _asResultRows<T>(entries.map((entry) => entry.record)), entries };
++    }
++
++    return { kind: 'entities', objects: this._uniqueObjects(entries), entries };
+   }
+ 
+   /**
+@@ -361,6 +367,13 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
+  */
+ type GroupResult = { [field: string]: unknown };
+ 
++/**
++ * Boundary cast: T is a plain record for aggregate and change queries (`Query.RecordResult`), but
++ * this class is written generically over the entity type — records are a presentation transform
++ * applied on top of row-level entries, with the row type erased at runtime.
++ */
++const _asResultRows = <T>(rows: readonly unknown[]): T[] => rows as unknown as T[];
++
+ /**
+  * Buckets flat row-level entries into flat aggregate records, in the order groups first appear in
+  * `entries`. The host/local query sources already deliver an aggregate query's entries with groups
+@@ -457,7 +470,10 @@ const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly
+     case 'group':
+     case 'type':
+     case 'timestamp':
++    case 'time':
+       return undefined; // Group-key fields are assembled from the source key, not here.
++    case 'sum':
++      return GroupBy.sum(members.map((value) => getDeep(value as Record<string, unknown>, [aggregate.property])));
+     case 'items':
+       return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;
+     case 'count':
+diff --git a/packages/core/echo/echo-client/src/query/working-set-executor.ts b/packages/core/echo/echo-client/src/query/working-set-executor.ts
+index bbd8fc5e..0edff9fb 100644
+--- a/packages/core/echo/echo-client/src/query/working-set-executor.ts
++++ b/packages/core/echo/echo-client/src/query/working-set-executor.ts
+@@ -77,6 +77,12 @@ const WorkingSetItem = Object.freeze({
+           // A core carries no index timestamps; `tryExecute` already declines these plans.
+           key[aggregate.name] = null;
+           break;
++        case 'time':
++          key[aggregate.name] = GroupBy.truncateTime(
++            WorkingSetItem.getAggregateProperty(item, aggregate.property),
++            aggregate.unit,
++          );
++          break;
+       }
+     }
+     return key;
+diff --git a/packages/core/echo/echo-host/src/db-host/automerge-data-source.test.ts b/packages/core/echo/echo-host/src/db-host/automerge-data-source.test.ts
+index 160601b0..36fcfba2 100644
+--- a/packages/core/echo/echo-host/src/db-host/automerge-data-source.test.ts
++++ b/packages/core/echo/echo-host/src/db-host/automerge-data-source.test.ts
+@@ -327,4 +327,106 @@ describe('AutomergeDataSource', () => {
+     expect(result.objects).toHaveLength(1);
+     expect(result.objects[0].spaceId).toBe(spaceId);
+   });
++
++  test('a late-arriving old change lands in its own hour and is counted once', async () => {
++    const host = await setupAutomergeHost();
++    const spaceId = SpaceId.random();
++
++    const handle = await createDatabaseDirectory(host, spaceId, {
++      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Original' } }),
++    });
++    await host.flush(Context.default());
++
++    const dataSource = new AutomergeDataSource(host);
++
++    const firstResult = await EffectEx.runAndForwardErrors(
++      dataSource.getChangedObjects(Context.default(), [], { activity: true }),
++    );
++    expect(firstResult.activity).toEqual([expect.objectContaining({ documentId: handle.documentId, full: true })]);
++    const firstChanges = firstResult.activity![0].changes;
++    expect(firstChanges.length).toBeGreaterThan(0);
++    const now = Date.now();
++    for (const change of firstChanges) {
++      expect(Math.abs(change.time - now)).toBeLessThan(5_000);
++    }
++    const firstCursor = firstResult.cursors[0];
++
++    const OLD_MS = Date.now() - 30 * 24 * 3_600_000;
++    const OLD_S = Math.floor(OLD_MS / 1000);
++    handle.change(
++      (doc: DatabaseDirectory) => {
++        // A string field is spliced character-by-character in this Automerge build and would not exercise `ops === 1`.
++        doc.objects!['obj-1'].data.count = 42;
++      },
++      { time: OLD_S },
++    );
++    await host.flush(Context.default());
++
++    const cursorsAfterFirstCall: IndexCursor[] = [
++      {
++        indexName: 'activity',
++        spaceId: null,
++        sourceName: 'automerge',
++        resourceId: handle.documentId,
++        cursor: firstCursor.cursor,
++      },
++    ];
++    const secondResult = await EffectEx.runAndForwardErrors(
++      dataSource.getChangedObjects(Context.default(), cursorsAfterFirstCall, { activity: true }),
++    );
++    expect(secondResult.activity).toEqual([
++      { spaceId, documentId: handle.documentId, full: false, changes: [{ time: OLD_S * 1000, ops: 1 }] },
++    ]);
++    const secondCursor = secondResult.cursors[0];
++
++    const cursorsAfterSecondCall: IndexCursor[] = [
++      {
++        indexName: 'activity',
++        spaceId: null,
++        sourceName: 'automerge',
++        resourceId: handle.documentId,
++        cursor: secondCursor.cursor,
++      },
++    ];
++    const thirdResult = await EffectEx.runAndForwardErrors(
++      dataSource.getChangedObjects(Context.default(), cursorsAfterSecondCall, { activity: true }),
++    );
++    expect(thirdResult.activity).toEqual([]);
++  });
++
++  test('a branch document counted before its root was read is discarded once the root names it', async () => {
++    const host = await setupAutomergeHost();
++    const spaceId = SpaceId.random();
++    const dataSource = new AutomergeDataSource(host);
++    const toCursors = (result: { cursors: { resourceId: string | null; cursor: string | number }[] }): IndexCursor[] =>
++      result.cursors.map(({ resourceId, cursor }) => ({
++        indexName: 'activity',
++        spaceId: null,
++        sourceName: 'automerge',
++        resourceId,
++        cursor,
++      }));
++
++    const branch = await createDatabaseDirectory(host, spaceId, {
++      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'On a branch' } }),
++    });
++    await host.flush(Context.default());
++    const first = await EffectEx.runAndForwardErrors(
++      dataSource.getChangedObjects(Context.default(), [], { activity: true }),
++    );
++    expect(first.activity).toEqual([expect.objectContaining({ documentId: branch.documentId, full: true })]);
++    expect(first.activity![0].changes.length).toBeGreaterThan(0);
++
++    const root = await createDatabaseDirectory(host, spaceId, {});
++    root.change((doc: DatabaseDirectory) => {
++      doc.branches = { 'obj-1': { feature: { members: { 'obj-1': branch.url } } } };
++    });
++    await host.flush(Context.default());
++    await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
++    const second = await EffectEx.runAndForwardErrors(
++      dataSource.getChangedObjects(Context.default(), toCursors(first), { activity: true }),
++    );
++    expect(second.activity).toContainEqual({ spaceId, documentId: branch.documentId, full: true, changes: [] });
++    expect(second.activity).toContainEqual(expect.objectContaining({ documentId: root.documentId }));
++  });
+ });
+diff --git a/packages/core/echo/echo-host/src/db-host/automerge-data-source.ts b/packages/core/echo/echo-host/src/db-host/automerge-data-source.ts
+index bacbb91e..caf4b011 100644
+--- a/packages/core/echo/echo-host/src/db-host/automerge-data-source.ts
++++ b/packages/core/echo/echo-host/src/db-host/automerge-data-source.ts
+@@ -3,16 +3,22 @@
+ //
+ 
+ import * as A from '@automerge/automerge';
+-import { type DocumentId } from '@automerge/automerge-repo';
++import { type DocumentId, interpretAsDocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
+ import * as Effect from 'effect/Effect';
+ 
+ import { type Context } from '@dxos/context';
+ import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+ import { objectStructureToJson } from '@dxos/echo/internal';
+-import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
++import {
++  type DataSourceCursor,
++  type DocumentActivity,
++  type IndexDataSource,
++  type IndexerObject,
++} from '@dxos/index-core';
+ import { log } from '@dxos/log';
+ 
+ import { type AutomergeHost } from '../automerge/index.ts';
++import { toChangeRecord } from './change-record.ts';
+ 
+ const HEADS_DELIMITER = '|';
+ 
+@@ -42,6 +48,10 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean
+   return cursor !== headsCodec.encode(currentHeads);
+ };
+ 
++export type AutomergeDataSourceOptions = {
++  isBranchDocument?: (documentId: DocumentId) => boolean;
++};
++
+ /**
+  * Data source that fetches objects from AutomergeHost.
+  * Iterates all documents from SqliteHeadsStore and tracks document heads as cursors to detect changes.
+@@ -50,6 +60,7 @@ export class AutomergeDataSource implements IndexDataSource {
+   readonly sourceName = 'automerge';
+ 
+   readonly #automergeHost: AutomergeHost;
++  readonly #isBranchDocument: ((documentId: DocumentId) => boolean) | undefined;
+ 
+   /**
+    * Heads for every document, captured once per `IndexEngine.update` pass. `listDocumentHeads()` is
+@@ -60,8 +71,16 @@ export class AutomergeDataSource implements IndexDataSource {
+   #passHeads: Promise<{ documentId: DocumentId; heads: A.Heads }[]> | null = null;
+   #passActive = false;
+ 
+-  constructor(automergeHost: AutomergeHost) {
++  /**
++   * Branch documents seen as a space root's registry, across every pass. A merge lands a branch's
++   * changes in the main document under the same hashes, so counting the branch document too would
++   * double-count every merged change.
++   */
++  readonly #branchDocumentIds = new Set<DocumentId>();
++
++  constructor(automergeHost: AutomergeHost, options?: AutomergeDataSourceOptions) {
+     this.#automergeHost = automergeHost;
++    this.#isBranchDocument = options?.isBranchDocument;
+   }
+ 
+   beginPass(): void {
+@@ -95,8 +114,8 @@ export class AutomergeDataSource implements IndexDataSource {
+   getChangedObjects(
+     ctx: Context,
+     cursors: DataSourceCursor[],
+-    opts?: { limit?: number },
+-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
++    opts?: { limit?: number; activity?: boolean; objects?: boolean },
++  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] }> {
+     return Effect.gen({ self: this }, function* () {
+       // Build a map of documentId -> cursor for quick lookup.
+       const cursorMap = new Map<string, string>();
+@@ -123,6 +142,9 @@ export class AutomergeDataSource implements IndexDataSource {
+       // Load changed documents and extract objects.
+       const objects: IndexerObject[] = [];
+       const updatedCursors: DataSourceCursor[] = [];
++      const pendingActivity = new Map<DocumentId, DocumentActivity>();
++      const branchDiscards = new Map<DocumentId, DocumentActivity>();
++      const extractObjects = opts?.objects !== false;
+ 
+       for (const { documentId, heads: docHeads } of changedDocuments) {
+         try {
+@@ -144,10 +166,24 @@ export class AutomergeDataSource implements IndexDataSource {
+             continue;
+           }
+ 
++          if (doc.branches) {
++            for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
++              if (!isValidAutomergeUrl(url)) {
++                continue;
++              }
++              const branchId = interpretAsDocumentId(url);
++              this.#branchDocumentIds.add(branchId);
++              branchDiscards.set(branchId, { spaceId, documentId: branchId, full: true, changes: [] });
++            }
++          }
++
+           const existingCursor = cursorMap.get(documentId);
+-          const { changedObjectIds, updatedAt } = inspectDocChanges(doc, existingCursor);
++          const { changedObjectIds, updatedAt, changesMeta } = inspectDocChanges(doc, existingCursor, {
++            changes: !!opts?.activity,
++            objects: extractObjects,
++          });
+ 
+-          const docObjects = doc.objects ?? {};
++          const docObjects = extractObjects ? (doc.objects ?? {}) : {};
+           for (const [objectId, structure] of Object.entries(docObjects)) {
+             if (changedObjectIds && !changedObjectIds.has(objectId)) {
+               continue;
+@@ -172,52 +208,79 @@ export class AutomergeDataSource implements IndexDataSource {
+             resourceId: documentId,
+             cursor: headsCodec.encode(docHeads),
+           });
++          if (opts?.activity) {
++            pendingActivity.set(documentId, {
++              spaceId,
++              documentId,
++              full: existingCursor === undefined,
++              changes: changesMeta.flatMap((meta) => {
++                const change = toChangeRecord(meta);
++                return change ? [{ time: change.time, ops: change.ops }] : [];
++              }),
++            });
++          }
+         } catch (error) {
+           log.error('Error loading document for indexing', { documentId, error });
+         }
+       }
+ 
+-      return { objects, cursors: updatedCursors };
++      if (!opts?.activity) {
++        return { objects, cursors: updatedCursors };
++      }
++      const activity: DocumentActivity[] = [...branchDiscards.values()];
++      for (const [documentId, entry] of pendingActivity) {
++        if (branchDiscards.has(documentId)) {
++          continue;
++        }
++        const isBranch = this.#branchDocumentIds.has(documentId) || this.#isBranchDocument?.(documentId);
++        activity.push(isBranch ? { ...entry, full: true, changes: [] } : entry);
++      }
++      return { objects, cursors: updatedCursors, activity };
+     });
+   }
+ }
+ 
+ /**
+- * Determines which ECHO objects changed and the document-level max change timestamp.
++ * Determines which ECHO objects changed, the document-level max change timestamp, and (when
++ * `opts.changes` is set) the Automerge changes behind them.
+  *
+  * Uses `A.diff` to extract changed objectIds from patch paths (`["objects", objectId, ...]`),
+- * and `A.getChangesMetaSince` for the max timestamp (second-level precision).
++ * and `A.getChangesMetaSince` for both the max timestamp (second-level precision) and the change
++ * metadata.
+  * Returns `changedObjectIds: null` when all objects should be indexed (new document).
+  */
+ const inspectDocChanges = (
+   doc: DatabaseDirectory,
+   existingCursor: string | undefined,
+-): { changedObjectIds: Set<string> | null; updatedAt: number } => {
++  opts: { changes: boolean; objects: boolean },
++): { changedObjectIds: Set<string> | null; updatedAt: number; changesMeta: A.ChangeMetadata[] } => {
+   if (!existingCursor) {
+     // On first indexing we don't have a prior cursor so we can't isolate per-object
+     // change timestamps.  Fall back to the current wall-clock time so that freshly
+     // indexed objects sort "recent" in `Order.updated` queries.
+-    return { changedObjectIds: null, updatedAt: Date.now() };
++    const changesMeta = opts.changes ? A.getChangesMetaSince(doc, []) : [];
++    return { changedObjectIds: null, updatedAt: Date.now(), changesMeta };
+   }
+ 
+   const oldHeads = headsCodec.decode(existingCursor);
+ 
+-  const patches = A.diff(doc, oldHeads, A.getHeads(doc));
+   const changedObjectIds = new Set<string>();
+-  for (const patch of patches) {
+-    if (patch.path.length >= 2 && patch.path[0] === 'objects') {
+-      changedObjectIds.add(String(patch.path[1]));
++  if (opts.objects) {
++    for (const patch of A.diff(doc, oldHeads, A.getHeads(doc))) {
++      if (patch.path.length >= 2 && patch.path[0] === 'objects') {
++        changedObjectIds.add(String(patch.path[1]));
++      }
+     }
+   }
+ 
+-  const changes = A.getChangesMetaSince(doc, oldHeads);
++  const changesMeta = A.getChangesMetaSince(doc, oldHeads);
+   let maxTime = 0;
+-  for (const change of changes) {
++  for (const change of changesMeta) {
+     if (change.time > maxTime) {
+       maxTime = change.time;
+     }
+   }
+   const updatedAt = maxTime > 0 ? maxTime * 1000 : Date.now();
+ 
+-  return { changedObjectIds, updatedAt };
++  return { changedObjectIds, updatedAt, changesMeta };
+ };
+diff --git a/packages/core/echo/echo-host/src/db-host/change-record.ts b/packages/core/echo/echo-host/src/db-host/change-record.ts
+new file mode 100644
+index 00000000..46dc77ab
+--- /dev/null
++++ b/packages/core/echo/echo-host/src/db-host/change-record.ts
+@@ -0,0 +1,23 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++import type * as A from '@automerge/automerge';
++import type * as Schema from 'effect/Schema';
++
++import { type Change } from '@dxos/echo';
++
++export type ChangeRecord = Schema.Schema.Type<typeof Change.Change>;
++
++/** A document change as `Filter.changes` reports it, or `null` for one made without a clock (time 0). */
++export const toChangeRecord = (meta: A.ChangeMetadata): ChangeRecord | null =>
++  meta.time > 0
++    ? {
++        key: meta.hash,
++        source: 'document',
++        time: meta.time * 1000,
++        actor: meta.actor,
++        seq: meta.seq,
++        ops: meta.maxOp - meta.startOp + 1,
++      }
++    : null;
+diff --git a/packages/core/echo/echo-host/src/db-host/echo-host.ts b/packages/core/echo/echo-host/src/db-host/echo-host.ts
+index 5f0b73c7..de2241e7 100644
+--- a/packages/core/echo/echo-host/src/db-host/echo-host.ts
++++ b/packages/core/echo/echo-host/src/db-host/echo-host.ts
+@@ -233,7 +233,9 @@ export class EchoHost extends Resource {
+ 
+     this._runtime = runtime;
+     this._spaceStateManager = new SpaceStateManager({ runtime });
+-    this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
++    this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
++      isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
++    });
+ 
+     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
+     this._feedDataSource = new FeedDataSource({
+diff --git a/packages/core/echo/echo-host/src/db-host/query-service.ts b/packages/core/echo/echo-host/src/db-host/query-service.ts
+index 5ce9af4f..44d85a5d 100644
+--- a/packages/core/echo/echo-host/src/db-host/query-service.ts
++++ b/packages/core/echo/echo-host/src/db-host/query-service.ts
+@@ -188,9 +188,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers
+       );
+       scheduleMicroTask(ctx, async () => {
+         await queryEntry.executor.open();
+-        // Only the compiled path reads the snapshot store directly, so only it has to wait for the
+-        // store to fill; a memory-path query loads the documents itself and is not affected.
+-        if (queryEntry.feedScoped || (queryEntry.executor.mode === 'sql' && !(await this.#snapshotsComplete()))) {
++        const readsSnapshotStore = queryEntry.executor.compiled;
++        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
+           await this._params.updateIndexes();
+         }
+         queryEntry.open = true;
+diff --git a/packages/core/echo/echo-host/src/db-host/space-state-manager.ts b/packages/core/echo/echo-host/src/db-host/space-state-manager.ts
+index 529cfece..c454b65e 100644
+--- a/packages/core/echo/echo-host/src/db-host/space-state-manager.ts
++++ b/packages/core/echo/echo-host/src/db-host/space-state-manager.ts
+@@ -2,7 +2,12 @@
+ // Copyright 2024 DXOS.org
+ //
+ 
+-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
++import {
++  type AutomergeUrl,
++  type DocumentId,
++  interpretAsDocumentId,
++  isValidAutomergeUrl,
++} from '@automerge/automerge-repo';
+ import * as Effect from 'effect/Effect';
+ import * as Migrator from 'effect/unstable/sql/Migrator';
+ import * as SqlClient from 'effect/unstable/sql/SqlClient';
+@@ -11,7 +16,7 @@ import isEqual from 'fast-deep-equal';
+ 
+ import { Event, UpdateScheduler } from '@dxos/async';
+ import { Context, LifecycleState, Resource } from '@dxos/context';
+-import { type DatabaseDirectory } from '@dxos/echo-protocol';
++import { DatabaseDirectory } from '@dxos/echo-protocol';
+ import { RuntimeProvider } from '@dxos/effect';
+ import { invariant } from '@dxos/invariant';
+ import { type SpaceId } from '@dxos/keys';
+@@ -103,6 +108,21 @@ export class SpaceStateManager extends Resource {
+     return this._roots.get(documentId);
+   }
+ 
++  isBranchDocument(documentId: DocumentId): boolean {
++    for (const root of this._roots.values()) {
++      const doc = root.doc();
++      if (!doc) {
++        continue;
++      }
++      for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
++        if (isValidAutomergeUrl(url) && interpretAsDocumentId(url) === documentId) {
++          return true;
++        }
++      }
++    }
++    return false;
++  }
++
+   /**
+    * References carried by the space root document, or undefined for a space that has none yet
+    * (every space created before the root document existed).
+diff --git a/packages/core/echo/echo-host/src/query/changes-executor.ts b/packages/core/echo/echo-host/src/query/changes-executor.ts
+new file mode 100644
+index 00000000..0e05723b
+--- /dev/null
++++ b/packages/core/echo/echo-host/src/query/changes-executor.ts
+@@ -0,0 +1,222 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++import * as A from '@automerge/automerge';
++import { type DocumentId } from '@automerge/automerge-repo';
++import type * as Effect from 'effect/Effect';
++import type * as SqlClient from 'effect/unstable/sql/SqlClient';
++
++import { type Context } from '@dxos/context';
++import { type QueryAST } from '@dxos/echo-protocol';
++import { type IndexEngine } from '@dxos/index-core';
++import { invariant } from '@dxos/invariant';
++import { EID, type SpaceId } from '@dxos/keys';
++import { type QueryService } from '@dxos/protocols/rpc';
++
++import type { AutomergeHost } from '../automerge/index.ts';
++import { type ChangeRecord, toChangeRecord } from '../db-host/change-record.ts';
++import type { SpaceStateManager } from '../db-host/index.ts';
++import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
++import { type QueryPlan } from './plan.ts';
++
++/** A replayed change, or an hourly activity bucket standing for its `changes`. */
++type ChangeRow =
++  | { kind: 'change'; change: ChangeRecord }
++  | { kind: 'bucket'; hour: number; changes: number; ops: number };
++
++export type ChangeItem = {
++  spaceId: SpaceId;
++  row: ChangeRow;
++  weight: number;
++  groupKey?: GroupKeyValue;
++  aggregates?: GroupAggregates;
++  collapsed?: { size: number };
++};
++
++export type ChangesExecutorDeps = {
++  indexEngine: IndexEngine;
++  automergeHost: AutomergeHost;
++  spaceStateManager: SpaceStateManager;
++  runInRuntime: <T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>) => Promise<T>;
++};
++
++export const executeChangesPlan = async (
++  ctx: Context,
++  plan: QueryPlan.Plan,
++  deps: ChangesExecutorDeps,
++): Promise<ChangeItem[]> => {
++  const [select, ...rest] = plan.steps;
++  if (select._tag !== 'SelectStep' || select.selector._tag !== 'ChangesSelector') {
++    throw new Error('Expected a changes select step.');
++  }
++  const spaceIds = select.scope.flatMap((scope) => (scope._tag === 'space' ? [scope.spaceId as SpaceId] : []));
++  let workingSet = await selectChanges(ctx, select.selector, spaceIds, deps);
++  for (const step of rest) {
++    workingSet = execStep(step, workingSet);
++  }
++  return workingSet;
++};
++
++export const changeResults = (items: readonly ChangeItem[]): QueryService.QueryResult[] =>
++  items.map((item): QueryService.QueryResult => {
++    if (item.collapsed !== undefined && item.groupKey !== undefined) {
++      const groupKey = GroupBy.serializeGroupKey(item.groupKey);
++      return {
++        id: groupKey,
++        spaceId: item.spaceId,
++        rank: 1,
++        groupKey,
++        groupCount: item.collapsed.size,
++        aggregates: JSON.stringify(item.aggregates ?? {}),
++      };
++    }
++    invariant(item.row.kind === 'change', 'Only a replayed change ships as a record.');
++    const { change } = item.row;
++    return { id: change.key, spaceId: item.spaceId, rank: 1, recordJson: JSON.stringify(change) };
++  });
++
++export const serializeChangeResults = (items: readonly ChangeItem[]): string =>
++  JSON.stringify(changeResults(items).map(({ id, groupCount, aggregates }) => [id, groupCount, aggregates]));
++
++const selectChanges = async (
++  ctx: Context,
++  selector: QueryPlan.ChangesSelector,
++  spaceIds: readonly SpaceId[],
++  deps: ChangesExecutorDeps,
++): Promise<ChangeItem[]> => {
++  const documents = selector.targets && (await resolveDocuments(selector.targets, spaceIds, deps));
++  const items: ChangeItem[] = [];
++
++  if (selector.source === 'index') {
++    for (const spaceId of spaceIds) {
++      const documentIds = documents?.filter((document) => document.spaceId === spaceId).map((doc) => doc.documentId);
++      const rows = await deps.runInRuntime(deps.indexEngine.queryActivity({ spaceId, documentIds }));
++      for (const { hour, changes, ops } of rows) {
++        items.push({ spaceId, row: { kind: 'bucket', hour, changes, ops }, weight: changes });
++      }
++    }
++    return items;
++  }
++
++  for (const { spaceId, documentId } of documents ?? []) {
++    if (deps.spaceStateManager.isBranchDocument(documentId)) {
++      continue;
++    }
++    using lease = await deps.automergeHost.loadDoc<Record<string, unknown>>(ctx, documentId, {
++      fetchFromNetwork: false,
++    });
++    if (!lease) {
++      continue;
++    }
++    for (const meta of A.getChangesMetaSince(lease.doc(), [])) {
++      const change = toChangeRecord(meta);
++      if (change) {
++        items.push({ spaceId, row: { kind: 'change', change }, weight: 1 });
++      }
++    }
++  }
++  return items.sort(compareNatural);
++};
++
++const resolveDocuments = async (
++  targets: readonly EID.EID[],
++  spaceIds: readonly SpaceId[],
++  deps: ChangesExecutorDeps,
++): Promise<{ spaceId: SpaceId; documentId: DocumentId }[]> => {
++  const objectIds = targets.flatMap((target) => {
++    const entityId = EID.getEntityId(target);
++    return entityId ? [entityId] : [];
++  });
++  if (objectIds.length === 0 || spaceIds.length === 0) {
++    return [];
++  }
++  const metas = await deps.runInRuntime(deps.indexEngine.queryObjectIds({ spaceIds, objectIds }));
++  const documents = new Map<string, { spaceId: SpaceId; documentId: DocumentId }>();
++  for (const meta of metas) {
++    if (meta.documentId) {
++      documents.set(`${meta.spaceId}/${meta.documentId}`, {
++        spaceId: meta.spaceId as SpaceId,
++        documentId: meta.documentId as DocumentId,
++      });
++    }
++  }
++  return [...documents.values()];
++};
++
++const execStep = (step: QueryPlan.Step, workingSet: ChangeItem[]): ChangeItem[] => {
++  const grouped = workingSet.length > 0 && workingSet[0].groupKey !== undefined;
++  switch (step._tag) {
++    case 'OrderStep': {
++      const compare = (a: ChangeItem, b: ChangeItem) => compareMultiOrder(a, b, step.order);
++      const sorted = grouped ? GroupBy.orderGroups(workingSet, getGroupKey, compare) : [...workingSet].sort(compare);
++      if (step.limit === undefined) {
++        return sorted;
++      }
++      return grouped ? GroupBy.takeGroups(sorted, step.limit, getGroupKey) : sorted.slice(0, step.limit);
++    }
++    case 'LimitStep':
++      return grouped ? GroupBy.takeGroups(workingSet, step.limit, getGroupKey) : workingSet.slice(0, step.limit);
++    case 'SkipStep':
++      return grouped ? GroupBy.dropGroups(workingSet, step.skip, getGroupKey) : workingSet.slice(step.skip);
++    case 'AggregateStep': {
++      const withKeys = workingSet.map((item) => ({ ...item, groupKey: groupKeyOf(item, step.aggregates) }));
++      const partitioned = GroupBy.partitionByGroupKey(withKeys, getGroupKey);
++      const stamped = GroupBy.withGroupAggregates(partitioned, getGroupKey, step.aggregates, (item, property) =>
++        fieldOf(item.row, property),
++      );
++      return GroupBy.collapseGroups(stamped, getGroupKey);
++    }
++    default:
++      throw new Error(`Unexpected step after a changes select: ${step._tag}`);
++  }
++};
++
++const getGroupKey = (item: ChangeItem): string => {
++  invariant(item.groupKey, 'Grouped steps run only after an aggregate keyed every item.');
++  return GroupBy.serializeGroupKey(item.groupKey);
++};
++
++/** The row's `Change.Change` fields; a bucket has only `source`, `time` and `ops`, all the planner lets it read. */
++const fieldsOf = (row: ChangeRow): Readonly<Record<string, unknown>> =>
++  row.kind === 'change' ? row.change : { source: 'document', time: row.hour, ops: row.ops };
++
++const fieldOf = (row: ChangeRow, property: string): unknown => fieldsOf(row)[property];
++
++const groupKeyOf = (item: ChangeItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
++  const key: GroupKeyValue = {};
++  for (const aggregate of aggregates) {
++    if (aggregate.kind === 'group') {
++      key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
++        fieldOf(item.row, property),
++      );
++    } else if (aggregate.kind === 'time') {
++      key[aggregate.name] = GroupBy.truncateTime(fieldOf(item.row, aggregate.property), aggregate.unit);
++    }
++  }
++  return key;
++};
++
++const compareNatural = (a: ChangeItem, b: ChangeItem): number =>
++  Number(fieldOf(a.row, 'time')) - Number(fieldOf(b.row, 'time')) ||
++  String(fieldOf(a.row, 'key') ?? '').localeCompare(String(fieldOf(b.row, 'key') ?? ''));
++
++const compareMultiOrder = (a: ChangeItem, b: ChangeItem, orders: readonly QueryAST.Order[]): number => {
++  for (const order of orders) {
++    const comparison =
++      order.kind === 'natural'
++        ? compareNatural(a, b)
++        : order.kind === 'property'
++          ? GroupBy.compareScalar(propertyOf(a, order.property), propertyOf(b, order.property))
++          : 0;
++    if (comparison !== 0) {
++      return order.direction === 'desc' ? -comparison : comparison;
++    }
++  }
++  return 0;
++};
++
++const propertyOf = (item: ChangeItem, property: string) =>
++  item.aggregates && property in item.aggregates
++    ? item.aggregates[property]
++    : GroupBy.coerceKeyComponent(fieldOf(item.row, property));
+diff --git a/packages/core/echo/echo-host/src/query/group-by.test.ts b/packages/core/echo/echo-host/src/query/group-by.test.ts
+index a61a919c..bb243b52 100644
+--- a/packages/core/echo/echo-host/src/query/group-by.test.ts
++++ b/packages/core/echo/echo-host/src/query/group-by.test.ts
+@@ -6,26 +6,29 @@ import { describe, expect, test } from 'vitest';
+ 
+ import { GroupBy } from './group-by.ts';
+ 
+-describe('GroupBy.truncateTimestamp', () => {
++describe('GroupBy.truncateTime', () => {
+   const at = (iso: string) => Date.parse(iso);
+ 
+-  test('an hour starts on the UTC hour', () => {
+-    expect(GroupBy.truncateTimestamp(at('2026-01-05T18:45:12Z'), 'hour')).toBe(at('2026-01-05T18:00:00Z'));
++  test('floors to the UTC hour or day, before 1970 too', () => {
++    expect(GroupBy.truncateTime(at('2026-01-05T18:45:12Z'), 'hour')).toBe(at('2026-01-05T18:00:00Z'));
++    expect(GroupBy.truncateTime(at('2026-01-05T18:45:00Z'), 'day')).toBe(at('2026-01-05T00:00:00Z'));
++    expect(GroupBy.truncateTime(at('1969-12-31T23:00:00Z'), 'day')).toBe(at('1969-12-31T00:00:00Z'));
+   });
+ 
+-  test('a day starts at local midnight, including half-hour zones and daylight-saving days', () => {
+-    // 00:15 on 6 January in India (+05:30).
+-    expect(GroupBy.truncateTimestamp(at('2026-01-05T18:45:00Z'), 'day', 'Asia/Kolkata')).toBe(
+-      at('2026-01-05T18:30:00Z'),
+-    );
+-    // 13:00 PDT on 8 March, the day clocks go forward; that day began at midnight PST (-08:00).
+-    expect(GroupBy.truncateTimestamp(at('2026-03-08T20:00:00Z'), 'day', 'America/Los_Angeles')).toBe(
+-      at('2026-03-08T08:00:00Z'),
+-    );
+-    // Santiago's clocks go forward at midnight on 6 September, so that day starts at 01:00 local.
+-    expect(GroupBy.truncateTimestamp(at('2026-09-06T12:00:00Z'), 'day', 'America/Santiago')).toBe(
+-      at('2026-09-06T04:00:00Z'),
+-    );
+-    expect(GroupBy.truncateTimestamp(at('2026-01-05T18:45:00Z'), 'day')).toBe(at('2026-01-05T00:00:00Z'));
++  test('is null for anything but a finite number', () => {
++    expect(GroupBy.truncateTime('2026-01-05', 'day')).toBeNull();
++    expect(GroupBy.truncateTime(null, 'day')).toBeNull();
++    expect(GroupBy.truncateTime(Number.NaN, 'hour')).toBeNull();
++  });
++});
++
++describe('GroupBy aggregates', () => {
++  test('sum adds finite numbers and counts anything else as 0', () => {
++    expect(GroupBy.sum([1, 2.5, null, undefined, 'x', Number.NaN, Number.POSITIVE_INFINITY])).toBe(3.5);
++    expect(GroupBy.sum([])).toBe(0);
++  });
++
++  test('a weighted member counts as the changes it stands for', () => {
++    expect(GroupBy.countMembers([{ weight: 3 }, {}, { weight: 2 }])).toBe(6);
+   });
+ });
+diff --git a/packages/core/echo/echo-host/src/query/group-by.ts b/packages/core/echo/echo-host/src/query/group-by.ts
+index 671e438e..508b023a 100644
+--- a/packages/core/echo/echo-host/src/query/group-by.ts
++++ b/packages/core/echo/echo-host/src/query/group-by.ts
+@@ -26,41 +26,7 @@ export type GroupAggregates = Record<string, AggregateValue>;
+  */
+ const HOUR_MS = 3_600_000;
+ 
+-const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
+-
+-/** Wall-clock fields of `timestamp` in `timeZone`, from a formatter cached per zone. */
+-const wallClock = (timestamp: number, timeZone: string) => {
+-  let format = dateTimeFormats.get(timeZone);
+-  if (!format) {
+-    format = new Intl.DateTimeFormat('en-US', {
+-      timeZone,
+-      hourCycle: 'h23',
+-      year: 'numeric',
+-      month: 'numeric',
+-      day: 'numeric',
+-      hour: 'numeric',
+-      minute: 'numeric',
+-      second: 'numeric',
+-    });
+-    dateTimeFormats.set(timeZone, format);
+-  }
+-  const parts = format.formatToParts(timestamp);
+-  const field = (type: Intl.DateTimeFormatPartTypes): number => Number(parts.find((part) => part.type === type)?.value);
+-  return {
+-    year: field('year'),
+-    month: field('month'),
+-    day: field('day'),
+-    hour: field('hour'),
+-    minute: field('minute'),
+-    second: field('second'),
+-  };
+-};
+-
+-/** How far `timeZone` is ahead of UTC at `timestamp`, in ms. */
+-const zoneOffset = (timestamp: number, timeZone: string): number => {
+-  const { year, month, day, hour, minute, second } = wallClock(timestamp, timeZone);
+-  return Date.UTC(year, month - 1, day, hour, minute, second) - Math.floor(timestamp / 1000) * 1000;
+-};
++const DAY_MS = 86_400_000;
+ 
+ /**
+  * Code-unit order, the collation SQLite's `BINARY` applies. Both executors order strings through
+@@ -71,27 +37,15 @@ export const compareCodeUnits = (a: string, b: string): number => (a < b ? -1 :
+ 
+ export const GroupBy = Object.freeze({
+   /**
+-   * The start of the hour or calendar day `timestamp` falls in, in unix ms, or `null` when unknown.
+-   * Hours are UTC. Days follow `timeZone` (UTC when absent), so a day that starts or ends on a
+-   * daylight-saving change still begins at that zone's local midnight.
++   * The start of the UTC hour or day a unix-ms `value` falls in, or `null` when it is not a finite
++   * number: the key of a `timestamp` or `time` aggregate.
+    */
+-  truncateTimestamp: (timestamp: number | null | undefined, unit: 'hour' | 'day', timeZone = 'UTC'): number | null => {
+-    if (timestamp == null) {
++  truncateTime: (value: unknown, unit: 'hour' | 'day'): number | null => {
++    if (typeof value !== 'number' || !Number.isFinite(value)) {
+       return null;
+     }
+-    if (unit === 'hour') {
+-      return Math.floor(timestamp / HOUR_MS) * HOUR_MS;
+-    }
+-    const { year, month, day } = wallClock(timestamp, timeZone);
+-    const midnightAsUtc = Date.UTC(year, month - 1, day);
+-    // The offset at local midnight can differ from the offset at `timestamp` across a DST change, so
+-    // correct again unless the first candidate already falls on the day asked for. A zone that skips
+-    // midnight (Santiago in September) has no 00:00, and its first candidate is the day's first instant.
+-    const candidate = midnightAsUtc - zoneOffset(midnightAsUtc, timeZone);
+-    const onDay = wallClock(candidate, timeZone);
+-    return onDay.year === year && onDay.month === month && onDay.day === day
+-      ? candidate
+-      : midnightAsUtc - zoneOffset(candidate, timeZone);
++    const size = unit === 'hour' ? HOUR_MS : DAY_MS;
++    return Math.floor(value / size) * size;
+   },
+ 
+   /**
+@@ -219,6 +173,17 @@ export const GroupBy = Object.freeze({
+     return compareCodeUnits(String(a), String(b));
+   },
+ 
++  /** Members a group stands for: an item carrying a `weight` (an index bucket) counts that many times. */
++  countMembers: (members: readonly { weight?: number }[]): number =>
++    members.reduce((total, member) => total + (member.weight ?? 1), 0),
++
++  /** Adds the numeric values of a `sum` aggregate; anything else counts as 0. */
++  sum: (values: readonly unknown[]): number =>
++    values.reduce<number>(
++      (total, value) => (typeof value === 'number' && Number.isFinite(value) ? total + value : total),
++      0,
++    ),
++
+   /**
+    * Reduces a group's member values under a `max`/`min` aggregate. Ignores `null`s (values missing
+    * or non-scalar); a group with no scalar values yields `null`.
+@@ -258,7 +223,7 @@ export const GroupBy = Object.freeze({
+    * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
+    * rather than silently honoring only one of them.
+    */
+-  withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates }>(
++  withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates; weight?: number }>(
+     items: readonly T[],
+     getKey: (item: T) => string,
+     aggregates: readonly QueryAST.GroupAggregate[],
+@@ -310,14 +275,16 @@ export const GroupBy = Object.freeze({
+         }
+         computed[aggregate.name] =
+           aggregate.kind === 'count'
+-            ? members.length
+-            : isGroupKeyAggregate(aggregate)
+-              ? // All members of a group share the key, so read the component off any member.
+-                (members[0].groupKey?.[aggregate.name] ?? null)
+-              : GroupBy.reduceAggregate(
+-                  members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
+-                  aggregate.kind,
+-                );
++            ? GroupBy.countMembers(members)
++            : aggregate.kind === 'sum'
++              ? GroupBy.sum(members.map((member) => getProperty(member, aggregate.property)))
++              : isGroupKeyAggregate(aggregate)
++                ? // All members of a group share the key, so read the component off any member.
++                  (members[0].groupKey?.[aggregate.name] ?? null)
++                : GroupBy.reduceAggregate(
++                    members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
++                    aggregate.kind,
++                  );
+       }
+       for (const member of members) {
+         result.push({ ...member, aggregates: computed });
+@@ -332,7 +299,7 @@ export const GroupBy = Object.freeze({
+    * for no members, so nothing downstream has to carry or ship the objects.
+    * Assumes `items` are already partitioned into contiguous groups (see {@link partitionByGroupKey}).
+    */
+-  collapseGroups: <T extends { collapsed?: { size: number } }>(
++  collapseGroups: <T extends { collapsed?: { size: number }; weight?: number }>(
+     items: readonly T[],
+     getKey: (item: T) => string,
+   ): T[] => {
+@@ -344,7 +311,7 @@ export const GroupBy = Object.freeze({
+       while (end < items.length && getKey(items[end]) === key) {
+         end += 1;
+       }
+-      result.push({ ...items[index], collapsed: { size: end - index } });
++      result.push({ ...items[index], collapsed: { size: GroupBy.countMembers(items.slice(index, end)) } });
+       index = end;
+     }
+     return result;
+diff --git a/packages/core/echo/echo-host/src/query/plan.ts b/packages/core/echo/echo-host/src/query/plan.ts
+index bf3318ad..8499cf7f 100644
+--- a/packages/core/echo/echo-host/src/query/plan.ts
++++ b/packages/core/echo/echo-host/src/query/plan.ts
+@@ -4,7 +4,7 @@
+ 
+ import type { QueryAST } from '@dxos/echo-protocol';
+ import type { EscapedPropPath } from '@dxos/index-core';
+-import type { EntityId, URI } from '@dxos/keys';
++import type { EID, EntityId, URI } from '@dxos/keys';
+ 
+ export namespace QueryPlan {
+   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
+@@ -129,7 +129,25 @@ export namespace QueryPlan {
+     | TypeSelector
+     | TextSelector
+     | TimestampSelector
+-    | IncomingReferenceSelector;
++    | IncomingReferenceSelector
++    | ChangesSelector;
++
++  /**
++   * Select Automerge changes (`Filter.changes`) rather than objects. The working set holds change
++   * records, so only ordering, paging and aggregation may follow.
++   */
++  export type ChangesSelector = {
++    _tag: 'ChangesSelector';
++
++    /** Entities whose documents to read; every document in scope when absent. */
++    targets?: readonly EID.EID[];
++
++    /**
++     * `index` reads hourly buckets from the activity index, valid only for the aggregates it can
++     * answer; `replay` lists each target document's change history.
++     */
++    source: 'index' | 'replay';
++  };
+ 
+   export type WildcardSelector = {
+     _tag: 'WildcardSelector';
+diff --git a/packages/core/echo/echo-host/src/query/query-executor.ts b/packages/core/echo/echo-host/src/query/query-executor.ts
+index 1ddb3e13..f1f1c630 100644
+--- a/packages/core/echo/echo-host/src/query/query-executor.ts
++++ b/packages/core/echo/echo-host/src/query/query-executor.ts
+@@ -38,6 +38,7 @@ import type { AutomergeHost } from '../automerge/index.ts';
+ import type { SpaceStateManager } from '../db-host/index.ts';
+ import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
+ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
++import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
+ import { QueryError } from './errors.ts';
+ import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
+ import { QueryPlan } from './plan.ts';
+@@ -197,7 +198,13 @@ const QueryItem = Object.freeze({
+           key[aggregate.name] = QueryItem.getTypeUri(item);
+           break;
+         case 'timestamp':
+-          key[aggregate.name] = GroupBy.truncateTimestamp(item[aggregate.field], aggregate.unit, aggregate.timeZone);
++          key[aggregate.name] = GroupBy.truncateTime(item[aggregate.field], aggregate.unit);
++          break;
++        case 'time':
++          key[aggregate.name] = GroupBy.truncateTime(
++            QueryItem.getAggregateProperty(item, aggregate.property),
++            aggregate.unit,
++          );
+           break;
+       }
+     }
+@@ -633,6 +640,7 @@ export class QueryExecutor extends Resource {
+   readonly #includeAllFeeds: boolean;
+   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
+   private _lastResultSet: QueryItem[] = [];
++  #changeResultSet: ChangeItem[] | undefined;
+   readonly #planner: QueryPlanner;
+   readonly #mode: QueryExecutorMode;
+ 
+@@ -689,16 +697,14 @@ export class QueryExecutor extends Resource {
+     return this._trace;
+   }
+ 
+-  /**
+-   * The path this host asked for. Answerable before the first execution, because the caller gating
+-   * on indexing has to know which store the query may read; a plan the compiler declines still
+-   * reports `sql` here and runs in memory, which only makes that gate conservative.
+-   */
+-  get mode(): QueryExecutorMode {
+-    return this.#mode;
++  get compiled(): boolean {
++    return this._plan.steps.some((step) => step._tag === 'SqlStep');
+   }
+ 
+   getResults(): QueryService.QueryResult[] {
++    if (this.#changeResultSet) {
++      return changeResults(this.#changeResultSet);
++    }
+     // Computed over the final (post-filter) result set so counts always match shipped records.
+     const groupCounts = new Map<string, number>();
+     for (const item of this._lastResultSet) {
+@@ -766,7 +772,7 @@ export class QueryExecutor extends Resource {
+     log('exec query', {
+       queryId: this._id,
+       query: Query.pretty(Query.fromAst(this._query)),
+-      mode: this.mode,
++      mode: this.#mode,
+     });
+ 
+     // Subquery results can change between reactive runs, so resolved `in-query` sets must not
+@@ -774,6 +780,19 @@ export class QueryExecutor extends Resource {
+     this.#inQuerySetCache = new Map();
+     this.#inQueryTracesAttached = new Set();
+ 
++    const [select] = this._plan.steps;
++    if (select?._tag === 'SelectStep' && select.selector._tag === 'ChangesSelector') {
++      const previous = this.#changeResultSet;
++      const next = await executeChangesPlan(this._ctx, this._plan, {
++        indexEngine: this._indexEngine,
++        automergeHost: this._automergeHost,
++        spaceStateManager: this._spaceStateManager,
++        runInRuntime: (effect) => this._runInRuntime(effect),
++      });
++      this.#changeResultSet = next;
++      return { changed: serializeChangeResults(previous ?? []) !== serializeChangeResults(next) };
++    }
++
+     const previous = this._lastResultSet;
+     const { workingSet, trace } = await this._resolveWorkingSet();
+     this._lastResultSet = workingSet;
+@@ -804,7 +823,7 @@ export class QueryExecutor extends Resource {
+       const { workingSet, trace } = await this._execPlan(this._plan, []);
+       // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
+       // the compiler declined runs step by step even under `sql` and needs the filter.
+-      if (this._plan.steps.some((step) => step._tag === 'SqlStep')) {
++      if (this.compiled) {
+         return { workingSet, trace };
+       }
+       // Unresolvable items never reach the client, where hydration would fail or stall on them.
+@@ -1030,6 +1049,9 @@ export class QueryExecutor extends Resource {
+         break;
+       }
+ 
++      case 'ChangesSelector':
++        throw new Error('A changes plan runs through executeChangesPlan.');
++
+       case 'IncomingReferenceSelector': {
+         const beginIndexQuery = performance.now();
+         const metas = await this._queryIncomingReferencesByTarget([step.selector.targetDXN], step.selector.property);
+diff --git a/packages/core/echo/echo-host/src/query/query-planner.test.ts b/packages/core/echo/echo-host/src/query/query-planner.test.ts
+index d360d510..a5b98d71 100644
+--- a/packages/core/echo/echo-host/src/query/query-planner.test.ts
++++ b/packages/core/echo/echo-host/src/query/query-planner.test.ts
+@@ -4,9 +4,10 @@
+ 
+ import { describe, expect, test } from 'vitest';
+ 
+-import { Aggregate, Feed, Filter, Order, Query, Ref } from '@dxos/echo';
++import { Aggregate, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
+ import { type QueryAST } from '@dxos/echo-protocol';
+ import { TestSchema } from '@dxos/echo/testing';
++import { invariant } from '@dxos/invariant';
+ import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
+ 
+ import { type QueryPlan } from './plan.ts';
+@@ -2354,6 +2355,66 @@ describe('QueryPlanner', () => {
+       expect(step).toMatchObject({ limit: 5, feedCursorRange: { begin: '3' } });
+     });
+   });
++
++  describe('changes', () => {
++    const task = Obj.make(TestSchema.Task, { title: 'Task' });
++    const plan = (query: Query.Any) => planner.createPlan(withSpaceIdOptions(query.ast));
++    const selectorOf = (query: Query.Any) => {
++      const [select] = plan(query).steps;
++      invariant(select._tag === 'SelectStep');
++      return select.selector;
++    };
++
++    test('a space-wide count by day reads the activity index', () => {
++      const query = Query.select(Filter.changes()).aggregate({
++        day: Aggregate.time('time', 'day'),
++        source: Aggregate.group('source'),
++        changes: Aggregate.count(),
++        ops: Aggregate.sum('ops'),
++      });
++      expect(selectorOf(query)).toEqual({ _tag: 'ChangesSelector', targets: undefined, source: 'index' });
++      expect(plan(query).steps.map((step) => step._tag)).toEqual(['SelectStep', 'OrderStep', 'AggregateStep']);
++    });
++
++    test('targets narrow the index to their documents', () => {
++      const query = Query.select(Filter.changes(task)).aggregate({ hour: Aggregate.time('time', 'hour') });
++      expect(selectorOf(query)).toMatchObject({ source: 'index', targets: [expect.stringContaining(task.id)] });
++    });
++
++    test('anything the index cannot answer replays the targets', () => {
++      const history = Query.select(Filter.changes(task)).orderBy(Order.property('time', 'desc')).limit(10);
++      const byActor = Query.select(Filter.changes(task)).aggregate({
++        actor: Aggregate.group('actor'),
++        changes: Aggregate.count(),
++      });
++      const limitedFirst = Query.select(Filter.changes(task)).limit(5).aggregate({ changes: Aggregate.count() });
++      expect(selectorOf(history)).toMatchObject({ source: 'replay' });
++      expect(selectorOf(byActor)).toMatchObject({ source: 'replay' });
++      expect(selectorOf(limitedFirst)).toMatchObject({ source: 'replay' });
++      expect(plan(history).steps.at(-1)).toMatchObject({ _tag: 'LimitStep', limit: 10 });
++    });
++
++    test('a space-wide query must be one the index answers', () => {
++      expect(() => plan(Query.select(Filter.changes()))).toThrow('space-wide');
++      expect(() =>
++        plan(Query.select(Filter.changes()).aggregate({ actor: Aggregate.group('actor'), n: Aggregate.count() })),
++      ).toThrow('space-wide');
++      expect(() => plan(Query.select(Filter.changes()).aggregate({ max: Aggregate.max('ops') }))).toThrow('space-wide');
++    });
++
++    test('changes cannot mix with object filters, member lists or system timestamps', () => {
++      expect(() => plan(Query.select(Filter.and(Filter.changes(task), Filter.type(TestSchema.Task))))).toThrow(
++        'cannot be combined',
++      );
++      expect(() => plan(Query.select(Filter.not(Filter.changes(task))))).toThrow('cannot be combined');
++      expect(() => plan(Query.select(Filter.changes(task)).aggregate({ items: Aggregate.items() }))).toThrow(
++        'Aggregate.items()',
++      );
++      expect(() => plan(Query.select(Filter.changes(task)).aggregate({ day: Aggregate.updated('day') }))).toThrow(
++        'Aggregate.updated()',
++      );
++    });
++  });
+ });
+ 
+ const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'); // Stable id for inline snapshots.
+diff --git a/packages/core/echo/echo-host/src/query/query-planner.ts b/packages/core/echo/echo-host/src/query/query-planner.ts
+index 11c4ef11..b12bddf7 100644
+--- a/packages/core/echo/echo-host/src/query/query-planner.ts
++++ b/packages/core/echo/echo-host/src/query/query-planner.ts
+@@ -90,15 +90,91 @@ export class QueryPlanner {
+   #buildSteps(query: QueryAST.Query): QueryPlan.Plan {
+     this._validateQueryScoped(query);
+     this._validateAggregatePlacement(query);
++    const selectsChanges = queryContainsChanges(query);
++    if (selectsChanges) {
++      this._validateChangesFilters(query);
++    }
+     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
+     plan = this._optimizeEmptyFilters(plan);
+     plan = this._optimizeSoloUnions(plan);
+     plan = this._ensureOrderStep(plan);
++    if (selectsChanges) {
++      return this._routeChanges(plan, query);
++    }
+     plan = this._optimizeLimits(plan);
+     plan = this._optimizeBareAggregate(plan);
+     return plan;
+   }
+ 
++  private _validateChangesFilters(query: QueryAST.Query): void {
++    QueryAST.visit(query, (node) => {
++      if (
++        (node.type === 'filter' && filterContainsChanges(node.filter)) ||
++        (node.type === 'select' && node.filter.type !== 'changes' && filterContainsChanges(node.filter))
++      ) {
++        throw new QueryError({
++          message: 'Filter.changes() cannot be combined with other filters, traversals or unions.',
++          context: { query: Query.pretty(Query.fromAst(query)) },
++        });
++      }
++    });
++  }
++
++  private _routeChanges(plan: QueryPlan.Plan, query: QueryAST.Query): QueryPlan.Plan {
++    const fail = (message: string): never => {
++      throw new QueryError({ message, context: { query: Query.pretty(Query.fromAst(query)) } });
++    };
++    const [select, ...rest] = plan.steps;
++    if (select?._tag !== 'SelectStep' || select.selector._tag !== 'ChangesSelector') {
++      return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
++    }
++    if (!select.scope.every((scope) => scope._tag === 'space')) {
++      return fail('Filter.changes() selects from spaces, not feeds.');
++    }
++    for (const step of rest) {
++      switch (step._tag) {
++        case 'LimitStep':
++        case 'SkipStep':
++          break;
++        case 'OrderStep':
++          if (!step.order.every((order) => order.kind === 'natural' || order.kind === 'property')) {
++            return fail('Changes can only be ordered by a property or naturally (by time).');
++          }
++          break;
++        case 'AggregateStep': {
++          const unsupported = step.aggregates.find(
++            (aggregate) => aggregate.kind === 'items' || aggregate.kind === 'type' || aggregate.kind === 'timestamp',
++          );
++          if (unsupported) {
++            const name =
++              unsupported.kind === 'timestamp'
++                ? unsupported.field === 'updatedAt'
++                  ? 'updated'
++                  : 'created'
++                : unsupported.kind;
++            return fail(`Aggregate.${name}() does not apply to changes.`);
++          }
++          break;
++        }
++        default:
++          return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
++      }
++    }
++
++    const indexAnswers = activityIndexAnswers(rest);
++    if (!indexAnswers && select.selector.targets === undefined) {
++      return fail(
++        "A space-wide Filter.changes() query must aggregate with only Aggregate.time('time', …), " +
++          "Aggregate.group('source'), Aggregate.count() and Aggregate.sum('ops'); pass targets to Filter.changes() " +
++          'for anything else.',
++      );
++    }
++    return QueryPlan.Plan.make([
++      { ...select, selector: { ...select.selector, source: indexAnswers ? 'index' : 'replay' } },
++      ...rest,
++    ]);
++  }
++
+   /**
+    * Marks the select of a plan that only counts objects by index fields as {@link QueryPlan.SelectStep.bare},
+    * so the executor groups index rows instead of loading documents. Eligible shape: a space-scoped
+@@ -409,6 +485,19 @@ export class QueryPlanner {
+         ]);
+       }
+ 
++      case 'changes': {
++        if (context.selectionInverted) {
++          throw queryTooComplexError(context.originalQuery);
++        }
++        return QueryPlan.Plan.make([
++          {
++            _tag: 'SelectStep',
++            scope: context.scope,
++            selector: { _tag: 'ChangesSelector', targets: filter.targets, source: 'replay' },
++          },
++        ]);
++      }
++
+       // Mnemonic — a local predicate on the object's own id, so it runs as a filter step over
+       // a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
+       case 'mnemonic': {
+@@ -919,7 +1008,7 @@ export class QueryPlanner {
+    * pagination clauses `limit()`/`skip()` may wrap it. At most one `aggregate` may appear anywhere
+    * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so an
+    * aggregated subquery would otherwise produce an unsupported double-`aggregate`). The DSL's types
+-   * can't enforce this (`Query<AggregateResult & ...>` still exposes `orderBy`/`select`/etc.), so
++   * can't enforce this (`Query<RecordResult & ...>` still exposes `orderBy`/`select`/etc.), so
+    * it's validated here at plan time.
+    *
+    * `limit`/`skip` above an `aggregate` page over whole groups (see the group-aware `LimitStep`/
+@@ -1485,6 +1574,50 @@ const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
+   }
+ };
+ 
++/** Whether hourly activity buckets answer the steps after a changes select as individual changes would. */
++const activityIndexAnswers = (steps: readonly QueryPlan.Step[]): boolean => {
++  const aggregateIndex = steps.findIndex((step) => step._tag === 'AggregateStep');
++  const aggregate = steps[aggregateIndex];
++  return (
++    aggregate?._tag === 'AggregateStep' &&
++    steps.slice(0, aggregateIndex).every(isNaturalOrderStep) &&
++    aggregate.aggregates.every(readsOnlyBucketFields)
++  );
++};
++
++const isNaturalOrderStep = (step: QueryPlan.Step): boolean =>
++  step._tag === 'OrderStep' && step.order.every((order) => order.kind === 'natural');
++
++const readsOnlyBucketFields = (aggregate: QueryAST.GroupAggregate): boolean =>
++  aggregate.kind === 'count' ||
++  (aggregate.kind === 'sum' && aggregate.property === 'ops') ||
++  (aggregate.kind === 'time' && aggregate.property === 'time') ||
++  (aggregate.kind === 'group' && aggregate.properties.length === 1 && aggregate.properties[0] === 'source');
++
++const filterContainsChanges = (filter: QueryAST.Filter): boolean => {
++  switch (filter.type) {
++    case 'changes':
++      return true;
++    case 'not':
++      return filterContainsChanges(filter.filter);
++    case 'and':
++    case 'or':
++      return filter.filters.some(filterContainsChanges);
++    default:
++      return false;
++  }
++};
++
++export const queryContainsChanges = (query: QueryAST.Query): boolean => {
++  let found = false;
++  QueryAST.visit(query, (node) => {
++    if ((node.type === 'select' || node.type === 'filter') && filterContainsChanges(node.filter)) {
++      found = true;
++    }
++  });
++  return found;
++};
++
+ /**
+  * Returns true if the filter is a subquery-membership predicate (`Filter.in(query.project(...))`,
+  * AST type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
+diff --git a/packages/core/echo/echo-host/src/query/sql/compile.test.ts b/packages/core/echo/echo-host/src/query/sql/compile.test.ts
+index eefcf6a2..dcb6df1c 100644
+--- a/packages/core/echo/echo-host/src/query/sql/compile.test.ts
++++ b/packages/core/echo/echo-host/src/query/sql/compile.test.ts
+@@ -81,7 +81,7 @@ const seed = Effect.gen(function* () {
+     doc(
+       ids.t1,
+       TASK,
+-      { title: 'alpha', priority: 2, tags: ['a', 'b'], assignee: ref(ids.alice) },
++      { title: 'alpha', priority: 2, due: -1, tags: ['a', 'b'], assignee: ref(ids.alice) },
+       { [ATTR_PARENT]: EID.make({ entityId: ids.project }) },
+     ),
+     doc(
+@@ -90,9 +90,10 @@ const seed = Effect.gen(function* () {
+       { title: 'beta', priority: 1, tags: ['b'], assignee: ref(ids.bob) },
+       { [ATTR_PARENT]: EID.make({ entityId: ids.deletedProject }) },
+     ),
+-    doc(ids.t3, TASK, { title: 'gamma', priority: 3, tags: [], assignee: ref(ids.alice) }),
++    doc(ids.t3, TASK, { title: 'gamma', priority: 3, due: 3_600_001, tags: [], assignee: ref(ids.alice) }),
+     doc(ids.t4, TASK, {
+       title: 'delta',
++      due: 'soon',
+       tags: ['a'],
+       done: true,
+       [ATTR_META]: { keys: [{ source: 'github.com', id: '42' }] },
+@@ -409,32 +410,52 @@ describe('SqlPlanCompiler', () => {
+     }).pipe(Effect.provide(TestLayer)),
+   );
+ 
+-  // Placing local day boundaries needs the store's timestamp range, which would both make
+-  // compilation impure and bake a range that goes stale as the store grows — so the compiler
+-  // declines these and the in-memory executor, which recomputes them per run, answers instead.
+-  it.effect('declines a day group in a named time zone', () =>
++  it.effect('sums a property and buckets a time property by floored hour', () =>
+     Effect.gen(function* () {
+       const fixture = yield* seed;
+       const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+-      const planner = new QueryPlanner();
+-      const planSubquery = (query: QueryAST.Query) => planner.createPlan(query);
+-      const named = planner.createPlan(
+-        Query.select(Filter.type(TASK))
+-          .aggregate({ day: Aggregate.created('day', { timeZone: 'Asia/Kolkata' }), items: Aggregate.items() })
+-          .from(scope).ast,
+-      );
+-      expect(planDeclinedByCompiler(named, planSubquery)).toBe(true);
+-
+-      // UTC needs no boundary table, so it still compiles.
+-      const utc = planner.createPlan(
++      const { rows } = yield* run(
++        fixture,
+         Query.select(Filter.type(TASK))
+-          .aggregate({ day: Aggregate.created('day'), items: Aggregate.items() })
+-          .from(scope).ast,
++          .aggregate({ hour: Aggregate.time('due', 'hour'), priority: Aggregate.sum('priority'), n: Aggregate.count() })
++          .from(scope),
+       );
+-      expect(planDeclinedByCompiler(utc, planSubquery)).toBe(false);
++      const groups = rows
++        .map((row) => ({ ...JSON.parse(row.groupKey ?? '{}'), ...JSON.parse(row.aggregates ?? '{}') }))
++        .sort((a, b) => (a.hour ?? Infinity) - (b.hour ?? Infinity));
++      expect(groups).toEqual([
++        { hour: -3_600_000, priority: 2, n: 1 },
++        { hour: 3_600_000, priority: 3, n: 1 },
++        { hour: null, priority: 0, n: 1 },
++      ]);
+     }).pipe(Effect.provide(TestLayer)),
+   );
+ 
++  it('declines change queries but compiles sums and time buckets', () => {
++    const scope = [{ _tag: 'space' as const, spaceId: SpaceId.random() }];
++    const plan = (query: Query.Any) => new QueryPlanner().createPlan(query.from(scope).ast);
++    expect(
++      planDeclinedByCompiler(
++        plan(Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), n: Aggregate.count() })),
++        planSubquery,
++      ),
++    ).toBe(true);
++    expect(
++      planDeclinedByCompiler(
++        plan(
++          Query.select(Filter.type(TASK)).aggregate({
++            day: Aggregate.time('due', 'day'),
++            total: Aggregate.sum('estimate'),
++          }),
++        ),
++        planSubquery,
++      ),
++    ).toBe(false);
++    expect(
++      planDeclinedByCompiler(plan(Query.select(Filter.type(TASK)).aggregate({ n: Aggregate.count() })), planSubquery),
++    ).toBe(false);
++  });
++
+   // Result field names come from the query author, so one that is not an identifier must still
+   // compile: it used to throw here while the in-memory executor accepted it.
+   it.effect('compiles an aggregate whose name is not an identifier', () =>
+diff --git a/packages/core/echo/echo-host/src/query/sql/compile.ts b/packages/core/echo/echo-host/src/query/sql/compile.ts
+index 274f1937..27a953a6 100644
+--- a/packages/core/echo/echo-host/src/query/sql/compile.ts
++++ b/packages/core/echo/echo-host/src/query/sql/compile.ts
+@@ -986,7 +986,10 @@ export class SqlPlanCompiler {
+         case 'group':
+         case 'type':
+         case 'timestamp':
++        case 'time':
+           return sql`k.${sql.literal(keyColumn(aggregate.name))} AS ${name}`;
++        case 'sum':
++          return sql`TOTAL(${this.#numericProperty(aggregate.property)}) OVER (PARTITION BY k.groupKey) AS ${name}`;
+         case 'count':
+           return sql`COUNT(*) OVER (PARTITION BY k.groupKey) AS ${name}`;
+         case 'max':
+@@ -1031,31 +1034,17 @@ export class SqlPlanCompiler {
+         return sql`CASE WHEN m.typeDXN = ${UNTYPED_INDEX_TYPE} THEN NULL ELSE m.typeDXN END`;
+       case 'timestamp':
+         return this.#truncatedTimestamp(aggregate);
++      case 'time':
++        return this.#truncatedProperty(aggregate);
+       default:
+         throw new QueryError({ message: 'Not a group key aggregate', context: { kind: aggregate.kind } });
+     }
+   }
+ 
+-  /**
+-   * The start of the hour or day a system timestamp falls in, as unix ms. Hours and UTC days are
+-   * arithmetic; a day in a named zone is looked up in the boundaries `compilePlan` computed with
+-   * `GroupBy.truncateTimestamp`, so both executors agree on daylight-saving days.
+-   */
+   #truncatedTimestamp(aggregate: QueryAST.GroupAggregate & { kind: 'timestamp' }): Fragment {
+     const sql = this.#sql;
+     const column = aggregate.field === 'updatedAt' ? sql`m.updatedAt` : sql`m.createdAt`;
+-    if (aggregate.unit === 'hour') {
+-      return sql`CAST(${column} / ${HOUR_MS} AS INTEGER) * ${HOUR_MS}`;
+-    }
+-    if (!aggregate.timeZone || aggregate.timeZone === 'UTC') {
+-      return sql`CAST(${column} / ${DAY_MS} AS INTEGER) * ${DAY_MS}`;
+-    }
+-    // Local day boundaries need the store's timestamp range, and bake it in, so
+-    // `planDeclinedByCompiler` sends these plans to the in-memory executor before compilation starts.
+-    throw new QueryError({
+-      message: 'Day grouping in a named time zone is not compilable',
+-      context: { timeZone: aggregate.timeZone },
+-    });
++    return this.#floorTo(column, aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
+   }
+ 
+   /** The grouped working-set columns, with `groupOrd` (and optionally `ord`) replaced. */
+@@ -1075,6 +1064,26 @@ export class SqlPlanCompiler {
+     return sql.csv(columns);
+   }
+ 
++  #truncatedProperty(aggregate: QueryAST.GroupAggregate & { kind: 'time' }): Fragment {
++    return this.#floorTo(this.#numericProperty(aggregate.property), aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
++  }
++
++  #floorTo(value: Fragment, size: number): Fragment {
++    const sql = this.#sql;
++    // `CAST` truncates toward zero; stepping back one below a negative fraction makes it a floor.
++    const floored = sql`(CAST(${value} AS INTEGER) - (${value} < CAST(${value} AS INTEGER)))`;
++    return sql`(${floored} - ((${floored} % ${size}) + ${size}) % ${size})`;
++  }
++
++  #numericProperty(property: string): Fragment {
++    const sql = this.#sql;
++    if (property === 'id') {
++      return sql`NULL`;
++    }
++    const at = jsonPathLiteral(sql, [property]);
++    return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('integer', 'real') THEN json_extract(d.snapshot, ${at}) END`;
++  }
++
+   /** A property coerced to the scalar domain (`null` for anything else); `id` is the entity id. */
+   #coercedProperty(property: string, row: Fragment = this.#sql`m`): Fragment {
+     const sql = this.#sql;
+@@ -1151,40 +1160,6 @@ export const compilePlan = (
+ 
+ const metaVersionKey = (key: string, range: string): string => `${key}\0${range}`;
+ 
+-/** IANA zones of every `timestamp` group key that truncates to a local day, sub-plans included. */
+-const collectDayTimeZones = (plan: QueryPlan.Plan): Set<string> => {
+-  const zones = new Set<string>();
+-  const visit = (plan: QueryPlan.Plan) => {
+-    for (const step of plan.steps) {
+-      switch (step._tag) {
+-        case 'AggregateStep':
+-          for (const aggregate of step.aggregates) {
+-            if (
+-              aggregate.kind === 'timestamp' &&
+-              aggregate.unit === 'day' &&
+-              aggregate.timeZone &&
+-              aggregate.timeZone !== 'UTC'
+-            ) {
+-              zones.add(aggregate.timeZone);
+-            }
+-          }
+-          break;
+-        case 'UnionStep':
+-          step.plans.forEach(visit);
+-          break;
+-        case 'SetDifferenceStep':
+-          visit(step.source);
+-          visit(step.exclude);
+-          break;
+-        default:
+-          break;
+-      }
+-    }
+-  };
+-  visit(plan);
+-  return zones;
+-};
+-
+ /** True when any select step, sub-plans included, scopes a space with `includeAllFeeds`. */
+ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
+   plan.steps.some((step) => {
+@@ -1211,16 +1186,17 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
+ /**
+  * Whether the compiler declines this plan, leaving it for the in-memory executor.
+  *
+- * Three reasons, all of which would otherwise need the store read before the statement is built:
+- * `objectSnapshot` drops `@meta` for document rows; a `metaVersion` semver range has to be resolved
+- * to the versions actually present; and a named-zone day group needs the store's timestamp range to
+- * place local day boundaries, which also goes stale as the store grows. Declining them keeps
+- * compilation pure — steps in, SQL out — and the plan correct.
++ * Two reasons would need the store read before the statement is built: `objectSnapshot` drops
++ * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
++ * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
+  */
+ export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
++  planSelectsChanges(plan) ||
+   planReadsObjectMeta(plan, planSubquery) ||
+-  collectMetaVersionFilters(plan, planSubquery).length > 0 ||
+-  collectDayTimeZones(plan).size > 0;
++  collectMetaVersionFilters(plan, planSubquery).length > 0;
++
++const planSelectsChanges = (plan: QueryPlan.Plan): boolean =>
++  plan.steps.some((step) => step._tag === 'SelectStep' && step.selector._tag === 'ChangesSelector');
+ 
+ const planReadsObjectMeta = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean => {
+   const readsMeta = (filter: QueryAST.Filter): boolean => {
+diff --git a/packages/core/echo/echo-protocol/src/query/ast.ts b/packages/core/echo/echo-protocol/src/query/ast.ts
+index 219f2a64..5c4bebf4 100644
+--- a/packages/core/echo/echo-protocol/src/query/ast.ts
++++ b/packages/core/echo/echo-protocol/src/query/ast.ts
+@@ -259,6 +259,19 @@ const FilterMnemonic_ = Schema.Struct({
+ export interface FilterMnemonic extends Schema.Schema.Type<typeof FilterMnemonic_> {}
+ export const FilterMnemonic: Schema.Codec<FilterMnemonic> = FilterMnemonic_;
+ 
++/**
++ * Select Automerge changes rather than objects: one record per change to the documents holding
++ * `targets`, or to every document in the space when `targets` is absent. Only the host answers it,
++ * and it cannot be combined with object predicates.
++ */
++const FilterChanges_ = Schema.Struct({
++  type: Schema.Literal('changes'),
++  targets: Schema.optional(Schema.Array(EID.Schema)),
++});
++
++export interface FilterChanges extends Schema.Schema.Type<typeof FilterChanges_> {}
++export const FilterChanges: Schema.Codec<FilterChanges> = FilterChanges_;
++
+ /**
+  * Union of filters.
+  */
+@@ -276,6 +289,7 @@ export const Filter = Schema.Union([
+   FilterChildOf,
+   FilterHasParent,
+   FilterMnemonic,
++  FilterChanges,
+   FilterNot,
+   FilterAnd,
+   FilterOr,
+@@ -504,8 +518,10 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
+  *   input stream / the resulting groups, not this aggregate's member selection).
+  * - `count` yields the member count. Opt-in — a row carries no count otherwise.
+  * - `type` partitions members by their type URI; the field carries the URI string.
+- * - `timestamp` partitions members by the hour or calendar day a system timestamp falls in; the field
+- *   carries the start of that interval in unix ms. Days are local to `timeZone` (UTC when absent).
++ * - `timestamp` partitions members by the UTC hour or day a system timestamp falls in; the field
++ *   carries the start of that interval in unix ms.
++ * - `time` is `timestamp` over a unix-ms member `property` instead of a system timestamp.
++ * - `sum` adds a numeric member `property`; non-numeric values count as 0.
+  */
+ const GroupAggregateGroup_ = Schema.Struct({
+   name: Schema.String,
+@@ -533,10 +549,16 @@ const GroupAggregateTimestamp_ = Schema.Struct({
+   kind: Schema.Literal('timestamp'),
+   field: Schema.Literals(['createdAt', 'updatedAt']),
+   unit: Schema.Literals(['hour', 'day']),
+-  /** IANA time zone that `day` boundaries follow. */
+-  timeZone: Schema.optional(Schema.String),
+ });
+ 
++const GroupAggregateTime_ = Schema.Struct({
++  name: Schema.String,
++  kind: Schema.Literal('time'),
++  property: Schema.String,
++  unit: Schema.Literals(['hour', 'day']),
++});
++const GroupAggregateSum_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('sum'), property: Schema.String });
++
+ const GroupAggregate_ = Schema.Union([
+   GroupAggregateGroup_,
+   GroupAggregateMax_,
+@@ -545,13 +567,18 @@ const GroupAggregate_ = Schema.Union([
+   GroupAggregateCount_,
+   GroupAggregateType_,
+   GroupAggregateTimestamp_,
++  GroupAggregateTime_,
++  GroupAggregateSum_,
+ ]);
+ 
+ /** Aggregate kinds that contribute a component to the group key. */
+ export const isGroupKeyAggregate = (
+   aggregate: GroupAggregate,
+-): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' }> =>
+-  aggregate.kind === 'group' || aggregate.kind === 'type' || aggregate.kind === 'timestamp';
++): aggregate is Extract<GroupAggregate, { kind: 'group' | 'type' | 'timestamp' | 'time' }> =>
++  aggregate.kind === 'group' ||
++  aggregate.kind === 'type' ||
++  aggregate.kind === 'timestamp' ||
++  aggregate.kind === 'time';
+ 
+ export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
+ export const GroupAggregate: Schema.Codec<GroupAggregate> = GroupAggregate_;
+diff --git a/packages/core/echo/echo-react/src/usePagination.ts b/packages/core/echo/echo-react/src/usePagination.ts
+index 6f549107..be40340d 100644
+--- a/packages/core/echo/echo-react/src/usePagination.ts
++++ b/packages/core/echo/echo-react/src/usePagination.ts
+@@ -39,12 +39,8 @@ export type PaginationResult<T> = {
+ /** Reactive snapshot handed to React by `useSyncExternalStore`; a fresh object only on real change. */
+ type Snapshot<O> = { items: O[]; skip: number; limit: number; isLoading: boolean };
+ 
+-/**
+- * The element type a paginated query yields: the flat record for an aggregate query (branded with
+- * {@link Query.AggregateResult}), otherwise the query's entity type. Mirrors `useQuery`'s overloads.
+- */
+ type PaginationElement<Q extends Query.Any> =
+-  Query.Type<Q> extends Query.AggregateResult ? Query.Type<Q> : Entity.Entity<Query.Type<Q>>;
++  Query.Type<Q> extends Query.RecordResult ? Query.Type<Q> : Entity.Entity<Query.Type<Q>>;
+ 
+ /**
+  * Builds the external store backing `usePagination` for one query identity (filter/order/page
+diff --git a/packages/core/echo/echo-react/src/useQuery.ts b/packages/core/echo/echo-react/src/useQuery.ts
+index 2af91147..616dbd7d 100644
+--- a/packages/core/echo/echo-react/src/useQuery.ts
++++ b/packages/core/echo/echo-react/src/useQuery.ts
+@@ -11,9 +11,8 @@ const EMPTY_ARRAY: never[] = [];
+ const noop = () => {};
+ 
+ interface UseQueryFn {
+-  // Aggregate queries produce flat records branded with `Query.AggregateResult`; return them as-is,
+-  // never wrapped in `Entity.Entity` (they are not entities).
+-  <R extends Query.AggregateResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
++  <R extends Query.RecordResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
++  <R extends Query.RecordResult>(resource: Database.Queryable | undefined, filter: Filter.Filter<R>): R[];
+ 
+   <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>>(
+     resource: Database.Queryable | undefined,
+@@ -32,7 +31,7 @@ interface UseQueryFn {
+  * @param queryOrFilter - The query or filter to apply. Query is memoized based on the AST. No need to call useMemo.
+  */
+ // The overloaded public signature returns `O[]` (entities) or the flat record `R[]` (aggregate
+-// queries) depending on the query shape; the implementation forwards whatever the query result
++// rows and changes) depending on the query shape; the implementation forwards whatever the query result
+ // produces, so — as with any implementation of a multi-signature overloaded function type — it is
+ // typed as `any[]` here rather than picking one of the mutually-incompatible overload return shapes.
+ export const useQuery: UseQueryFn = (
+diff --git a/packages/core/echo/echo/package.json b/packages/core/echo/echo/package.json
+index fb998355..50930ef3 100644
+--- a/packages/core/echo/echo/package.json
++++ b/packages/core/echo/echo/package.json
+@@ -43,6 +43,11 @@
+       "types": "./dist/types/src/Blob.d.ts",
+       "import": "./dist/lib/Blob.mjs"
+     },
++    "./Change": {
++      "source": "./src/Change.ts",
++      "types": "./dist/types/src/Change.d.ts",
++      "import": "./dist/lib/Change.mjs"
++    },
+     "./Collection": {
+       "source": "./src/Collection.ts",
+       "types": "./dist/types/src/Collection.d.ts",
+diff --git a/packages/core/echo/echo/src/Aggregate.ts b/packages/core/echo/echo/src/Aggregate.ts
+index 5a24f1f2..7c520335 100644
+--- a/packages/core/echo/echo/src/Aggregate.ts
++++ b/packages/core/echo/echo/src/Aggregate.ts
+@@ -23,7 +23,9 @@ export type Spec =
+   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
+   | { kind: 'count' }
+   | { kind: 'type' }
+-  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt'; unit: TimeUnit; timeZone?: string };
++  | { kind: 'timestamp'; field: 'createdAt' | 'updatedAt'; unit: TimeUnit }
++  | { kind: 'time'; property: string; unit: TimeUnit }
++  | { kind: 'sum'; property: string };
+ 
+ export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
+ export type AggregateTypeId = typeof AggregateTypeId;
+@@ -50,7 +52,7 @@ export type ValueOf<A> = A extends Aggregate<any, infer V> ? V : never;
+ 
+ /** Computes the flat result type of `Query.aggregate(aggregates)` for a given aggregate record `A`. */
+ export type AggregationResult<A extends Record<string, Any>> = EffectTypes.Simplify<
+-  Query.AggregateResult & { readonly [N in keyof A]: ValueOf<A[N]> }
++  Query.RecordResult & { readonly [N in keyof A]: ValueOf<A[N]> }
+ >;
+ 
+ class AggregateClass<T, V> implements Aggregate<T, V> {
+@@ -113,6 +115,16 @@ export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
+ export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Aggregate<T, T[]> =>
+   new AggregateClass({ kind: 'items', limit: options?.limit, order: options?.order?.map((order) => order.ast) });
+ 
++export type NumericKeys<T> = { [K in keyof T & string]: T[K] extends number | null | undefined ? K : never }[keyof T &
++  string];
++
++/**
++ * Sum a numeric property across the group's members; values that are not numbers count as 0, so
++ * a group always sums to a number.
++ */
++export const sum = <T, K extends NumericKeys<T>>(property: K): Aggregate<T, number> =>
++  new AggregateClass({ kind: 'sum', property });
++
+ /**
+  * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.
+  */
+@@ -124,31 +136,28 @@ export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: '
+  */
+ export const type = <T>(): Aggregate<T, string | null> => new AggregateClass({ kind: 'type' });
+ 
+-/** Time units a timestamp aggregate can group by. */
++/**
++ * Time units a timestamp aggregate can group by, both in UTC. To show local days, group by `hour` and
++ * roll the hours into the viewer's days; an hour straddles local midnight in a zone offset by a
++ * fraction of an hour (India, Newfoundland), so its members land on one side of it.
++ */
+ export type TimeUnit = 'hour' | 'day';
+ 
+-export type TimeUnitOptions = {
+-  /** IANA time zone that day boundaries follow, e.g. the viewer's. Defaults to UTC. */
+-  timeZone?: string;
+-};
+-
+ /**
+- * Group members by the hour or calendar day their system `updatedAt` falls in. The field carries the
+- * start of that interval in unix ms, or `null` when the timestamp is unknown.
++ * Group members by the UTC hour or day their system `updatedAt` falls in. The field carries the start
++ * of that interval in unix ms, or `null` when the timestamp is unknown.
+  */
+-export const updated = <T>(unit: TimeUnit, options?: TimeUnitOptions): Aggregate<T, number | null> =>
+-  new AggregateClass({
+-    kind: 'timestamp',
+-    field: 'updatedAt',
+-    unit,
+-    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
+-  });
++export const updated = <T>(unit: TimeUnit): Aggregate<T, number | null> =>
++  new AggregateClass({ kind: 'timestamp', field: 'updatedAt', unit });
+ 
+ /** Like {@link updated}, over the system `createdAt` timestamp. */
+-export const created = <T>(unit: TimeUnit, options?: TimeUnitOptions): Aggregate<T, number | null> =>
+-  new AggregateClass({
+-    kind: 'timestamp',
+-    field: 'createdAt',
+-    unit,
+-    ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
+-  });
++export const created = <T>(unit: TimeUnit): Aggregate<T, number | null> =>
++  new AggregateClass({ kind: 'timestamp', field: 'createdAt', unit });
++
++/**
++ * Group members by the UTC hour or day a unix-ms property falls in, like {@link updated} over a
++ * property instead of a system timestamp. The field carries the start of that interval in unix ms,
++ * or `null` when the property is not a number.
++ */
++export const time = <T, K extends NumericKeys<T>>(property: K, unit: TimeUnit): Aggregate<T, number | null> =>
++  new AggregateClass({ kind: 'time', property, unit });
+diff --git a/packages/core/echo/echo/src/Change.ts b/packages/core/echo/echo/src/Change.ts
+new file mode 100644
+index 00000000..bc1ce5ce
+--- /dev/null
++++ b/packages/core/echo/echo/src/Change.ts
+@@ -0,0 +1,34 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++// @import-as-namespace
++
++import * as Schema from 'effect/Schema';
++
++import type * as Query from './Query.ts';
++
++/**
++ * One change to an object, as {@link Filter.changes} returns it: a plain, frozen record, not an
++ * entity. It cannot be added to a database, referenced or mutated.
++ */
++export const Change = Schema.Struct({
++  /** Unique among a query's results: the Automerge change hash for a document change. */
++  key: Schema.String,
++  /** Where the change is stored; only documents report changes today. */
++  source: Schema.Literals(['document', 'feed']),
++  /** The author's clock when the change was made, unix ms. */
++  time: Schema.Number,
++  /** Writer that made the change; for a document change, an Automerge actor, which is a device, not a member. */
++  actor: Schema.String,
++  /** The actor's sequence number for this change. */
++  seq: Schema.Number,
++  /**
++   * Primitive writes in the change, at the storage's granularity: Automerge ops (a field set, a
++   * character inserted) for a document change; 1 for a feed block, which writes one whole object.
++   * Compare sums within one `source`.
++   */
++  ops: Schema.Number,
++});
++
++export type Change = Schema.Schema.Type<typeof Change> & Query.RecordResult;
+diff --git a/packages/core/echo/echo/src/Filter.ts b/packages/core/echo/echo/src/Filter.ts
+index b63d6be2..89b0bcc9 100644
+--- a/packages/core/echo/echo/src/Filter.ts
++++ b/packages/core/echo/echo/src/Filter.ts
+@@ -14,6 +14,7 @@ import { SchemaAST } from '@dxos/effect';
+ import { assertArgument } from '@dxos/invariant';
+ import { EID, EntityId, type URI } from '@dxos/keys';
+ 
++import type * as Change from './Change.ts';
+ import type * as Entity from './Entity.ts';
+ import type * as Feed from './Feed.ts';
+ import * as internal from './internal/index.ts';
+@@ -493,6 +494,34 @@ export const childOf = (
+   });
+ };
+ 
++/**
++ * Select Automerge changes instead of objects: one {@link Change.Change} per change to the documents
++ * holding `targets`, or to every document in the space when called with no argument.
++ *
++ * Changes belong to documents, not entities. Entities that share a document share its changes, and
++ * content held by another entity (a document's `Text`) needs its own target. Only the host answers
++ * these queries; a space-wide query must aggregate, and the index answers it only at hour
++ * granularity (see `Aggregate.time`).
++ *
++ * @example
++ * ```ts
++ * Query.select(Filter.changes()).aggregate({ day: Aggregate.time('time', 'day'), changes: Aggregate.count() });
++ * Query.select(Filter.changes([doc, doc.content])).orderBy(Order.property('time', 'desc')).limit(50);
++ * ```
++ */
++export const changes = (
++  targets?: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
++): Filter<Change.Change> => {
++  if (targets === undefined) {
++    return new FilterClass({ type: 'changes' });
++  }
++  const items = Array.isArray(targets) ? targets : [targets];
++  return new FilterClass({
++    type: 'changes',
++    targets: items.map((item) => (Ref.isRef(item) ? EID.parse(item.uri) : EID.parse(internal.getUri(item)))),
++  });
++};
++
+ /**
+  * Filter objects by whether they have a parent, regardless of which object it is.
+  * `Filter.hasParent(false)` selects root objects — those never passed to `Obj.setParent`.
+diff --git a/packages/core/echo/echo/src/Query.ts b/packages/core/echo/echo/src/Query.ts
+index 57de261e..58961dfb 100644
+--- a/packages/core/echo/echo/src/Query.ts
++++ b/packages/core/echo/echo/src/Query.ts
+@@ -47,14 +47,14 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
+       : never;
+ 
+ /**
+- * Phantom brand on the flat row produced by {@link Query.aggregate}. Present only at the type level
+- * (never at runtime), it lets hooks like `useQuery`/`usePagination` distinguish an aggregate-row
+- * query from an entity query and avoid wrapping the row in `Entity.Entity`. The brand is a required
+- * property so `T extends AggregateResult` discriminates — an optional one would be satisfied by any
+- * type. Consumers never read it.
++ * Phantom brand on query results that are plain records rather than entities: the flat row
++ * {@link Query.aggregate} produces, and {@link Change.Change}. Present only at the type level (never
++ * at runtime), it lets hooks like `useQuery`/`usePagination` return the record as-is instead of
++ * wrapping it in `Entity.Entity`. The brand is a required property so `T extends RecordResult`
++ * discriminates — an optional one would be satisfied by any type. Consumers never read it.
+  */
+-export interface AggregateResult {
+-  readonly '~@dxos/echo/Query.AggregateResult': true;
++export interface RecordResult {
++  readonly '~@dxos/echo/Query.RecordResult': true;
+ }
+ 
+ export const QueryTypeId = '~@dxos/echo/Query' as const;
+diff --git a/packages/core/echo/echo/src/index.ts b/packages/core/echo/echo/src/index.ts
+index 7497326e..ab88fcf1 100644
+--- a/packages/core/echo/echo/src/index.ts
++++ b/packages/core/echo/echo/src/index.ts
+@@ -8,6 +8,7 @@ export { DXN, EID, URI } from '@dxos/keys';
+ export * as Aggregate from './Aggregate.ts';
+ export * as Annotation from './Annotation.ts';
+ export * as Blob from './Blob.ts';
++export * as Change from './Change.ts';
+ export * as Database from './Database.ts';
+ export * as Entity from './Entity.ts';
+ export * as Error from './Error.ts';
+diff --git a/packages/core/echo/echo/src/internal/Filter/match.ts b/packages/core/echo/echo/src/internal/Filter/match.ts
+index af7a7660..dce0be50 100644
+--- a/packages/core/echo/echo/src/internal/Filter/match.ts
++++ b/packages/core/echo/echo/src/internal/Filter/match.ts
+@@ -336,6 +336,10 @@ export const makeFilterMatcher = <T>(
+         throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+       }
+ 
++      case 'changes': {
++        throw new Error('changes filters select change records on the host; they never match an object.');
++      }
++
+       case 'has-parent': {
+         return accessor.hasParent(record) === filter.value;
+       }
+diff --git a/packages/core/echo/echo/src/internal/Query/pretty.ts b/packages/core/echo/echo/src/internal/Query/pretty.ts
+index 5c4ce43a..4a01717a 100644
+--- a/packages/core/echo/echo/src/internal/Query/pretty.ts
++++ b/packages/core/echo/echo/src/internal/Query/pretty.ts
+@@ -70,6 +70,10 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
+       return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
+     case 'mnemonic':
+       return `Filter.mnemonic(${JSON.stringify(filter.mnemonic)})`;
++    case 'changes':
++      return filter.targets
++        ? `Filter.changes([${filter.targets.map((target) => JSON.stringify(target)).join(', ')}])`
++        : 'Filter.changes()';
+     case 'has-parent':
+       return `Filter.hasParent(${filter.value})`;
+     case 'not':
+@@ -188,9 +192,9 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
+     case 'type':
+       return '';
+     case 'timestamp':
+-      return aggregate.timeZone !== undefined
+-        ? `${JSON.stringify(aggregate.unit)}, { timeZone: ${JSON.stringify(aggregate.timeZone)} }`
+-        : JSON.stringify(aggregate.unit);
++      return JSON.stringify(aggregate.unit);
++    case 'time':
++      return `${JSON.stringify(aggregate.property)}, ${JSON.stringify(aggregate.unit)}`;
+     case 'items':
+       return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
+     case 'group':
+@@ -199,6 +203,7 @@ const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
+         : `{ coalesce: ${JSON.stringify(aggregate.properties)} }`;
+     case 'max':
+     case 'min':
++    case 'sum':
+       return JSON.stringify(aggregate.property);
+   }
+ };
+diff --git a/packages/core/echo/echo/vite.config.ts b/packages/core/echo/echo/vite.config.ts
+index fdecee41..4cc8ceac 100644
+--- a/packages/core/echo/echo/vite.config.ts
++++ b/packages/core/echo/echo/vite.config.ts
+@@ -13,6 +13,7 @@ export default defineConfig({
+     Obj: 'src/Obj.ts',
+     Annotation: 'src/Annotation.ts',
+     Blob: 'src/Blob.ts',
++    Change: 'src/Change.ts',
+     Database: 'src/Database.ts',
+     Error: 'src/Error.ts',
+     Feed: 'src/Feed.ts',
+diff --git a/packages/core/echo/index-core/src/data-source.ts b/packages/core/echo/index-core/src/data-source.ts
+index 08079cb5..21b44bf7 100644
+--- a/packages/core/echo/index-core/src/data-source.ts
++++ b/packages/core/echo/index-core/src/data-source.ts
+@@ -8,7 +8,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
+ import { type Context } from '@dxos/context';
+ import type { SpaceId } from '@dxos/keys';
+ 
+-import { type IndexerObject } from './indexes/interface.ts';
++import { type DocumentActivity, type IndexerObject } from './indexes/interface.ts';
+ 
+ /**
+  * Cursor into indexable data-source.
+@@ -46,9 +46,18 @@ export interface IndexDataSource {
+   beginPass?(): void;
+   endPass?(): void;
+ 
++  /**
++   * Objects changed since `cursors`, and, when `opts.activity` is set, the changes behind them per
++   * document (the activity index's input). Both are relative to the same cursors, so a source
++   * reporting a change once per cursor advance reports it exactly once. `opts.objects === false`
++   * asks for the activity alone, so an activity-only caller does not pay for object extraction.
++   */
+   getChangedObjects(
+     ctx: Context,
+     cursors: DataSourceCursor[],
+-    opts?: { limit?: number },
+-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError>;
++    opts?: { limit?: number; activity?: boolean; objects?: boolean },
++  ): Effect.Effect<
++    { objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] },
++    SqlError.SqlError
++  >;
+ }
+diff --git a/packages/core/echo/index-core/src/index-engine.test.ts b/packages/core/echo/index-core/src/index-engine.test.ts
+index 2a0665a3..bfd92177 100644
+--- a/packages/core/echo/index-core/src/index-engine.test.ts
++++ b/packages/core/echo/index-core/src/index-engine.test.ts
+@@ -17,7 +17,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
+ import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
+ import { IndexEngine, type IndexingResult } from './index-engine.ts';
+ import { type IndexCursor } from './index-tracker.ts';
+-import { EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
++import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
+ 
+ const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
+ const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
+@@ -87,6 +87,53 @@ class MockIndexDataSource implements IndexDataSource {
+   }
+ }
+ 
++class ActivityMockDataSource implements IndexDataSource {
++  readonly sourceName = 'activity-mock-source';
++
++  constructor(
++    private readonly spaceId: SpaceId,
++    private readonly documentId: string,
++    private readonly objectId: EntityId,
++  ) {}
++
++  getChangedObjects(
++    _ctx: Context,
++    cursors: IndexCursor[],
++    opts?: { limit?: number; activity?: boolean },
++  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[] }> {
++    return Effect.sync(() => {
++      const seen = cursors.some((cursor) => cursor.resourceId === this.documentId && cursor.cursor === 'v1');
++      if (seen) {
++        return { objects: [], cursors: [], activity: [] };
++      }
++
++      const object: IndexerObject = {
++        spaceId: this.spaceId,
++        documentId: this.documentId,
++        queueId: null,
++        queueNamespace: null,
++        recordId: null,
++        createdAt: null,
++        updatedAt: Date.now(),
++        data: { id: this.objectId, [ATTR_TYPE]: TYPE_DEFAULT, title: 'Activity' },
++      };
++      const newCursors: DataSourceCursor[] = [{ spaceId: this.spaceId, resourceId: this.documentId, cursor: 'v1' }];
++      const activity: DocumentActivity[] | undefined = opts?.activity
++        ? [
++            {
++              spaceId: this.spaceId,
++              documentId: this.documentId,
++              full: true,
++              changes: [{ time: 1700000000000, ops: 1 }],
++            },
++          ]
++        : undefined;
++
++      return { objects: [object], cursors: newCursors, activity };
++    });
++  }
++}
++
+ describe('IndexEngine', () => {
+   const setup = Effect.gen(function* () {
+     const engine = new IndexEngine(yield* SqlClient.SqlClient);
+@@ -407,6 +454,32 @@ describe('IndexEngine', () => {
+     }, Effect.provide(TestLayer)),
+   );
+ 
++  it.effect(
++    'activity survives garbage collection and counts a replicated-again document once',
++    Effect.fnUntraced(function* () {
++      const { engine } = yield* setup;
++      const spaceId = SpaceId.random();
++      const documentId = 'doc-activity';
++      const objectId = EntityId.random();
++      const dataSource = new ActivityMockDataSource(spaceId, documentId, objectId);
++      const indexAll = Effect.gen(function* () {
++        let done = false;
++        while (!done) {
++          done = (yield* engine.update(Context.default(), dataSource, { spaceId: null })).done;
++        }
++      });
++
++      yield* indexAll;
++      expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
++
++      yield* engine.deleteObjects({ spaceId, documentIds: [documentId], objects: [] });
++      expect(yield* engine.queryActivity({ spaceId })).toHaveLength(1);
++
++      yield* indexAll;
++      expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
++    }, Effect.provide(TestLayer)),
++  );
++
+   describe('secondary indexes', () => {
+     const makeObject = (spaceId: SpaceId, documentId: string, title: string): IndexerObject => ({
+       spaceId,
+diff --git a/packages/core/echo/index-core/src/index-engine.ts b/packages/core/echo/index-core/src/index-engine.ts
+index 291525cf..4da4e811 100644
+--- a/packages/core/echo/index-core/src/index-engine.ts
++++ b/packages/core/echo/index-core/src/index-engine.ts
+@@ -12,10 +12,13 @@ import { SpanAttributes } from '@dxos/effect';
+ import type { EntityId, SpaceId, URI } from '@dxos/keys';
+ 
+ import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
+-import { type IndexDataSource } from './data-source.ts';
++import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
+ import { type IndexCursor, IndexTracker } from './index-tracker.ts';
+ import { IndexedObjectSource } from './indexed-object-source.ts';
+ import {
++  ActivityIndex,
++  type ActivityQuery,
++  type ActivityRow,
+   type EntityMeta,
+   EntityMetaIndex,
+   FtsIndex,
+@@ -106,6 +109,7 @@ const INDEX_NAMES = {
+   // Bumped for `propPathNormalized`, which the compiled query path matches reference paths on.
+   reverseRef: 'reverseRef3',
+   fts: 'fts7',
++  activity: 'activity',
+ } as const;
+ 
+ /** `json_type(x, path)`, which the compiled query path relies on, returns NULL for a missing path only from here. */
+@@ -122,6 +126,20 @@ const compareVersions = (version: string, minimum: readonly number[]): number =>
+   return 0;
+ };
+ 
++/** A source may hand back every cursor it holds, so progress is a cursor whose position changed. */
++const anyCursorMoved = (
++  sourceName: string,
++  previous: readonly IndexCursor[],
++  updated: readonly DataSourceCursor[],
++): boolean => {
++  const positions = new Map(
++    previous
++      .filter((cursor) => cursor.sourceName === sourceName)
++      .map((cursor) => [`${cursor.spaceId}/${cursor.resourceId}`, cursor.cursor]),
++  );
++  return updated.some((cursor) => positions.get(`${cursor.spaceId}/${cursor.resourceId}`) !== cursor.cursor);
++};
++
+ export class IndexEngine {
+   readonly #sql: SqlClient.SqlClient;
+ 
+@@ -132,6 +150,7 @@ export class IndexEngine {
+   readonly #ftsIndex: FtsIndex;
+   readonly #objectSnapshotIndex: ObjectSnapshotIndex;
+   readonly #reverseRefIndex: ReverseRefIndex;
++  readonly #activityIndex: ActivityIndex;
+   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
+   readonly #indexedObjectSource: IndexedObjectSource;
+ 
+@@ -142,6 +161,7 @@ export class IndexEngine {
+     this.#ftsIndex = new FtsIndex(sql);
+     this.#objectSnapshotIndex = new ObjectSnapshotIndex(sql);
+     this.#reverseRefIndex = new ReverseRefIndex(sql);
++    this.#activityIndex = new ActivityIndex(sql);
+     this.#convergenceKeyIntents = new ConvergenceKeyIntentStore(sql);
+     this.#indexedObjectSource = new IndexedObjectSource(sql);
+   }
+@@ -164,6 +184,7 @@ export class IndexEngine {
+       yield* this.#ftsIndex.migrate();
+       yield* this.#objectSnapshotIndex.migrate();
+       yield* this.#reverseRefIndex.migrate();
++      yield* this.#activityIndex.migrate();
+       yield* this.#convergenceKeyIntents.migrate();
+     });
+   }
+@@ -184,6 +205,10 @@ export class IndexEngine {
+     return this.#reverseRefIndex.query(query);
+   }
+ 
++  queryActivity(query: ActivityQuery): Effect.Effect<readonly ActivityRow[], SqlError.SqlError> {
++    return this.#activityIndex.query(query);
++  }
++
+   /**
+    * Referrers of one target in one space, joined to the object metadata for the referrer's
+    * document (see {@link ReverseRefIndex.queryReferrers}).
+@@ -421,6 +446,18 @@ export class IndexEngine {
+       result.done = result.done && doneReverseRefIndex;
+       accumulateIndexingResult(result, reverseRefObjects);
+ 
++      const activity = yield* this.#updateActivity(ctx, dataSource, {
++        spaceId: opts.spaceId,
++        limit: opts.limit,
++        cursors: cursorsByIndex.get(INDEX_NAMES.activity) ?? [],
++      });
++      result.updated += activity.updated;
++      result.done = result.done && activity.done;
++      for (const { spaceId, documentId } of activity.documents) {
++        result.spaces.add(spaceId);
++        result.documents.add(documentId);
++      }
++
+       return result as IndexingResult;
+     }).pipe(
+       // The snapshot must be dropped even when a pass fails, or the next pass would diff against
+@@ -506,4 +543,48 @@ export class IndexEngine {
+       );
+     }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
+   }
++
++  #updateActivity(
++    ctx: Context,
++    source: IndexDataSource,
++    opts: { spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
++  ): Effect.Effect<
++    { updated: number; done: boolean; documents: readonly { spaceId: SpaceId; documentId: string }[] },
++    SqlError.SqlError
++  > {
++    return Effect.gen({ self: this }, function* () {
++      const sql = this.#sql;
++
++      const { cursors: updatedCursors, activity = [] } = yield* source.getChangedObjects(ctx, opts.cursors, {
++        limit: opts.limit,
++        activity: true,
++        objects: false,
++      });
++
++      if (updatedCursors.length === 0) {
++        return { updated: 0, done: true, documents: [] };
++      }
++
++      return yield* sql.withTransaction(
++        Effect.gen({ self: this }, function* () {
++          yield* this.#activityIndex.record(activity);
++          yield* this.#tracker.updateCursors(
++            updatedCursors.map((_): IndexCursor => ({
++              indexName: INDEX_NAMES.activity,
++              spaceId: _.spaceId,
++              sourceName: source.sourceName,
++              resourceId: _.resourceId,
++              cursor: _.cursor,
++            })),
++          );
++          const updated = activity.reduce((sum, entry) => sum + entry.changes.length, 0);
++          return {
++            updated,
++            done: !anyCursorMoved(source.sourceName, opts.cursors, updatedCursors),
++            documents: activity,
++          };
++        }),
++      );
++    }).pipe(Effect.withSpan('IndexEngine.#updateActivity'), SpanAttributes.annotateSpace(opts.spaceId));
++  }
+ }
+diff --git a/packages/core/echo/index-core/src/index.ts b/packages/core/echo/index-core/src/index.ts
+index 16438b3e..48811927 100644
+--- a/packages/core/echo/index-core/src/index.ts
++++ b/packages/core/echo/index-core/src/index.ts
+@@ -7,7 +7,8 @@ export { IndexEngine, type IndexingResult } from './index-engine.ts';
+ export { IndexedObjectSource } from './indexed-object-source.ts';
+ export { type IndexCursor, IndexTracker } from './index-tracker.ts';
+ export { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
+-export { type Index, type IndexerObject } from './indexes/interface.ts';
++export { ActivityIndex, type ActivityRow } from './indexes/activity-index.ts';
++export { type ChangeSummary, type DocumentActivity, type Index, type IndexerObject } from './indexes/interface.ts';
+ export { FtsIndex, type FtsQuery, buildFtsCondition } from './indexes/fts-index.ts';
+ export { ObjectSnapshotIndex } from './indexes/object-snapshot-index.ts';
+ export {
+diff --git a/packages/core/echo/index-core/src/indexes/activity-index.test.ts b/packages/core/echo/index-core/src/indexes/activity-index.test.ts
+new file mode 100644
+index 00000000..d4d3a908
+--- /dev/null
++++ b/packages/core/echo/index-core/src/indexes/activity-index.test.ts
+@@ -0,0 +1,72 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
++import { describe, expect, it } from '@effect/vitest';
++import * as Effect from 'effect/Effect';
++import * as Layer from 'effect/Layer';
++import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
++import * as SqlClient from 'effect/unstable/sql/SqlClient';
++
++import { SpaceId } from '@dxos/keys';
++
++import { ActivityIndex, HOUR_MS } from './activity-index.ts';
++
++const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
++
++const HOUR = Math.floor(1700000000000 / HOUR_MS) * HOUR_MS;
++
++const setup = Effect.gen(function* () {
++  const index = new ActivityIndex(yield* SqlClient.SqlClient);
++  yield* index.migrate();
++  return index;
++});
++
++describe('ActivityIndex', () => {
++  it.effect('buckets each document by hour and accumulates across record calls', () =>
++    Effect.gen(function* () {
++      const index = yield* setup;
++      const spaceId = SpaceId.random();
++
++      yield* index.record([
++        {
++          spaceId,
++          documentId: 'a',
++          full: true,
++          changes: [
++            { time: HOUR + 1, ops: 3 },
++            { time: HOUR + 60_000, ops: 2 },
++          ],
++        },
++        { spaceId, documentId: 'b', full: true, changes: [{ time: HOUR + 5, ops: 1 }] },
++      ]);
++      yield* index.record([{ spaceId, documentId: 'a', full: false, changes: [{ time: HOUR + HOUR_MS, ops: 1 }] }]);
++
++      expect(yield* index.query({ spaceId })).toEqual([
++        { documentId: 'a', hour: HOUR, changes: 2, ops: 5 },
++        { documentId: 'b', hour: HOUR, changes: 1, ops: 1 },
++        { documentId: 'a', hour: HOUR + HOUR_MS, changes: 1, ops: 1 },
++      ]);
++      expect(yield* index.query({ spaceId, documentIds: ['b'] })).toEqual([
++        { documentId: 'b', hour: HOUR, changes: 1, ops: 1 },
++      ]);
++      expect(yield* index.query({ spaceId, documentIds: [] })).toEqual([]);
++    }).pipe(Effect.provide(TestLayer)),
++  );
++
++  it.effect('a full entry replaces the document, so a replayed history counts once', () =>
++    Effect.gen(function* () {
++      const index = yield* setup;
++      const spaceId = SpaceId.random();
++      const history = { spaceId, documentId: 'a', full: true, changes: [{ time: HOUR, ops: 1 }] };
++
++      yield* index.record([history]);
++      yield* index.record([history]);
++      expect(yield* index.query({ spaceId })).toEqual([{ documentId: 'a', hour: HOUR, changes: 1, ops: 1 }]);
++
++      yield* index.record([{ spaceId, documentId: 'a', full: true, changes: [] }]);
++      expect(yield* index.query({ spaceId })).toEqual([]);
++    }).pipe(Effect.provide(TestLayer)),
++  );
++});
+diff --git a/packages/core/echo/index-core/src/indexes/activity-index.ts b/packages/core/echo/index-core/src/indexes/activity-index.ts
+new file mode 100644
+index 00000000..051ad834
+--- /dev/null
++++ b/packages/core/echo/index-core/src/indexes/activity-index.ts
+@@ -0,0 +1,113 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++import * as Effect from 'effect/Effect';
++import * as Migrator from 'effect/unstable/sql/Migrator';
++import * as SqlClient from 'effect/unstable/sql/SqlClient';
++import type * as SqlError from 'effect/unstable/sql/SqlError';
++
++import type { SpaceId } from '@dxos/keys';
++
++import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/activity/index.ts';
++import { chunkArray } from '../utils.ts';
++import type { DocumentActivity } from './interface.ts';
++
++export const HOUR_MS = 3_600_000;
++
++/** One document's changes in one UTC hour. */
++export type ActivityRow = {
++  readonly documentId: string;
++  /** Start of the hour, unix ms. */
++  readonly hour: number;
++  readonly changes: number;
++  readonly ops: number;
++};
++
++export type ActivityQuery = {
++  spaceId: SpaceId;
++  /** Restrict to these documents; all documents in the space when omitted. */
++  documentIds?: readonly string[];
++};
++
++/**
++ * Counts Automerge changes (and their ops) per document per UTC hour.
++ *
++ * Rows outlive their document: deleting an object does not undo the edits made to it, so garbage
++ * collection leaves this index alone.
++ */
++export class ActivityIndex {
++  readonly #sql: SqlClient.SqlClient;
++
++  constructor(sql: SqlClient.SqlClient) {
++    this.#sql = sql;
++  }
++
++  migrate = Effect.fn('ActivityIndex.migrate')(() =>
++    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
++      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
++      Effect.asVoid,
++      Effect.provideService(SqlClient.SqlClient, this.#sql),
++    ),
++  );
++
++  /** Accumulates each document's changes into its hour buckets; a `full` entry replaces the document's rows. */
++  record = Effect.fn('ActivityIndex.record')(
++    (activity: readonly DocumentActivity[]): Effect.Effect<void, SqlError.SqlError> =>
++      Effect.gen({ self: this }, function* () {
++        const sql = this.#sql;
++        for (const entry of activity) {
++          if (entry.full) {
++            yield* sql`DELETE FROM activity WHERE spaceId = ${entry.spaceId} AND documentId = ${entry.documentId}`;
++          }
++
++          const buckets = new Map<number, { changes: number; ops: number }>();
++          for (const change of entry.changes) {
++            const hour = Math.floor(change.time / HOUR_MS);
++            const bucket = buckets.get(hour) ?? { changes: 0, ops: 0 };
++            bucket.changes += 1;
++            bucket.ops += change.ops;
++            buckets.set(hour, bucket);
++          }
++
++          yield* Effect.forEach(
++            buckets,
++            ([hour, bucket]) => sql`
++              INSERT INTO activity (spaceId, documentId, hour, changes, ops)
++              VALUES (${entry.spaceId}, ${entry.documentId}, ${hour}, ${bucket.changes}, ${bucket.ops})
++              ON CONFLICT(spaceId, documentId, hour)
++              DO UPDATE SET changes = changes + excluded.changes, ops = ops + excluded.ops
++            `,
++            { discard: true },
++          );
++        }
++      }),
++  );
++
++  /** Hour buckets for one space, ordered by hour then document. */
++  query = Effect.fn('ActivityIndex.query')(
++    ({ spaceId, documentIds }: ActivityQuery): Effect.Effect<readonly ActivityRow[], SqlError.SqlError> =>
++      Effect.gen({ self: this }, function* () {
++        const sql = this.#sql;
++        const select = (documents: readonly string[] | null) => sql<{
++          documentId: string;
++          hour: number;
++          changes: number;
++          ops: number;
++        }>`
++          SELECT documentId, hour, changes, ops FROM activity
++          WHERE spaceId = ${spaceId}
++          ${documents ? sql`AND documentId IN ${sql.in(documents)}` : sql``}
++        `;
++
++        const rows =
++          documentIds === undefined
++            ? yield* select(null)
++            : (yield* Effect.forEach(chunkArray(documentIds), (chunk) => select(chunk))).flat();
++
++        return rows
++          .map((row) => ({ ...row, hour: row.hour * HOUR_MS }))
++          .sort((a, b) => a.hour - b.hour || a.documentId.localeCompare(b.documentId));
++      }),
++  );
++}
+diff --git a/packages/core/echo/index-core/src/indexes/index.ts b/packages/core/echo/index-core/src/indexes/index.ts
+index 247c2a07..cfce5ce0 100644
+--- a/packages/core/echo/index-core/src/indexes/index.ts
++++ b/packages/core/echo/index-core/src/indexes/index.ts
+@@ -2,9 +2,10 @@
+ // Copyright 2026 DXOS.org
+ //
+ 
++export * from './activity-index.ts';
++export * from './entity-meta-index.ts';
+ export * from './fts-index.ts';
++export * from './interface.ts';
+ export * from './object-snapshot-index.ts';
+-export * from './entity-meta-index.ts';
+ export * from './reverse-ref-index.ts';
+-export * from './interface.ts';
+ export * from './text-extractor.ts';
+diff --git a/packages/core/echo/index-core/src/indexes/interface.ts b/packages/core/echo/index-core/src/indexes/interface.ts
+index 3c4c9f1f..07cd2ce9 100644
+--- a/packages/core/echo/index-core/src/indexes/interface.ts
++++ b/packages/core/echo/index-core/src/indexes/interface.ts
+@@ -61,6 +61,26 @@ export interface IndexerObject {
+   updatedAt: number;
+ }
+ 
++export interface ChangeSummary {
++  /** Author's clock, unix ms. */
++  time: number;
++  ops: number;
++}
++
++/**
++ * Changes to one document since its activity cursor.
++ */
++export interface DocumentActivity {
++  spaceId: SpaceId;
++  documentId: string;
++  /**
++   * `changes` is the document's whole history and replaces whatever was recorded for it; with no
++   * changes the document's rows are discarded (a branch document).
++   */
++  full: boolean;
++  changes: readonly ChangeSummary[];
++}
++
+ /**
+  * SQLite-based index for storing and querying object data.
+  */
+diff --git a/packages/core/echo/index-core/src/migrations/activity/0001_init.sql b/packages/core/echo/index-core/src/migrations/activity/0001_init.sql
+new file mode 100644
+index 00000000..7df383e1
+--- /dev/null
++++ b/packages/core/echo/index-core/src/migrations/activity/0001_init.sql
+@@ -0,0 +1,11 @@
++--
++-- Immutable: recorded in `activity_migrations` and never re-run.
++--
++CREATE TABLE IF NOT EXISTS activity (
++  spaceId TEXT NOT NULL,
++  documentId TEXT NOT NULL,
++  hour INTEGER NOT NULL,
++  changes INTEGER NOT NULL,
++  ops INTEGER NOT NULL,
++  PRIMARY KEY (spaceId, documentId, hour)
++);
+diff --git a/packages/core/echo/index-core/src/migrations/activity/index.ts b/packages/core/echo/index-core/src/migrations/activity/index.ts
+new file mode 100644
+index 00000000..07115fae
+--- /dev/null
++++ b/packages/core/echo/index-core/src/migrations/activity/index.ts
+@@ -0,0 +1,13 @@
++//
++// Copyright 2026 DXOS.org
++//
++
++import { SqlMigrations } from '@dxos/sql-sqlite';
++
++import init from './0001_init.sql?raw';
++
++export const MIGRATIONS = {
++  '0001_init': SqlMigrations.apply(init),
++};
++
++export const MIGRATIONS_TABLE = 'activity_migrations';
+diff --git a/packages/core/echo/index-core/src/migrations/migrations.test.ts b/packages/core/echo/index-core/src/migrations/migrations.test.ts
+index 8106a53f..71cc0e20 100644
+--- a/packages/core/echo/index-core/src/migrations/migrations.test.ts
++++ b/packages/core/echo/index-core/src/migrations/migrations.test.ts
+@@ -12,6 +12,8 @@ import { test } from 'vitest';
+ 
+ import { SqlMigrations } from '@dxos/sql-sqlite';
+ 
++import activityInit from './activity/0001_init.sql?raw';
++import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
+ import entityMetaInit from './entity-meta/0001_init.sql?raw';
+ import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
+ import ftsInit from './fts/0001_init.sql?raw';
+@@ -26,6 +28,7 @@ import { MIGRATIONS as TRACKER } from './tracker/index.ts';
+ const TestLayer = SqliteClient.layer({ filename: ':memory:' });
+ 
+ const STORES = [
++  { name: 'activity', init: activityInit, manifest: ACTIVITY },
+   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
+   { name: 'fts', init: ftsInit, manifest: FTS },
+   { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
+diff --git a/packages/core/protocols/src/QueryService.ts b/packages/core/protocols/src/QueryService.ts
+index 7d78cc0f..3ee51e3c 100644
+--- a/packages/core/protocols/src/QueryService.ts
++++ b/packages/core/protocols/src/QueryService.ts
+@@ -96,6 +96,11 @@ export const QueryResult = Schema.Struct({
+    * serialized group key.
+    */
+   aggregates: Schema.optional(Schema.String),
++  /**
++   * JSON-encoded plain record for a result that is not an entity (an Automerge change selected by
++   * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
++   */
++  recordJson: Schema.optional(Schema.String),
+ });
+ export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
+ 
+diff --git a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.stories.tsx b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.stories.tsx
+index fa3afd24..345e7f39 100644
+--- a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.stories.tsx
++++ b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.stories.tsx
+@@ -93,7 +93,6 @@ export default meta;
+ 
+ type Story = StoryObj<typeof meta>;
+ 
+-/** Counts every object by type and places them all on today, the day they were written. */
+ export const Default: Story = {
+   play: async ({ canvasElement }) => {
+     const canvas = within(canvasElement);
+@@ -103,7 +102,7 @@ export const Default: Story = {
+     await canvas.findByTestId('space-home-dashboard.objects', {}, { timeout: 10_000 });
+     await waitFor(() => expect(valueOf('objects')).toBe(String(OBJECT_COUNT + 1)), { timeout: 10_000 });
+     await expect(valueOf('types')).toBe('3');
+-    await expect(valueOf('active-days')).toBe('1');
++    await waitFor(() => expect(valueOf('active-days')).toBe('1'), { timeout: 10_000 });
+     await expect(canvasElement.querySelectorAll('[data-level]:not([data-level="0"])')).toHaveLength(1);
+   },
+ };
+diff --git a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.tsx b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.tsx
+index 23406db1..5bc32545 100644
+--- a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.tsx
++++ b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/SpaceHomeDashboard.tsx
+@@ -15,7 +15,7 @@ import { Dashboard } from '@dxos/react-ui-dashboard';
+ import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
+ import { meta } from '#meta';
+ 
+-import { dailyActivityQuery, toActivity } from './activity.ts';
++import { HOURLY_ACTIVITY_QUERY, toActivity } from './activity.ts';
+ 
+ const STAT_IDS = ['objects', 'types', 'collections', 'members', 'active-days', 'plugins'] as const;
+ 
+@@ -30,10 +30,6 @@ type SpaceHomeDashboardProps = {
+ 
+ const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
+ 
+-/**
+- * Space stats and activity matrix for the Home article: a count of objects by type and a count by
+- * local last-updated day, both answered by the host from index rows, so no object is loaded to draw them.
+- */
+ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
+   const { t } = useTranslation(meta.profile.key);
+   const members = useMembers(space?.key);
+@@ -43,10 +39,9 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
+   const enabled = useAtomValue(manager.enabled);
+   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);
+ 
+-  const dailyQuery = useMemo(() => dailyActivityQuery(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
+   const counts = useQuery(space?.db, SPACE_STATS_QUERY);
+-  const days = useQuery(space?.db, dailyQuery);
+-  const activity = useMemo(() => toActivity(days), [days]);
++  const hours = useQuery(space?.db, HOURLY_ACTIVITY_QUERY);
++  const activity = useMemo(() => toActivity(hours), [hours]);
+ 
+   const values: Record<SpaceStatId, number> = {
+     'objects': countObjects(counts),
+diff --git a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.test.ts b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.test.ts
+index 9428ca73..42321efc 100644
+--- a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.test.ts
++++ b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.test.ts
+@@ -7,15 +7,17 @@ import { describe, test } from 'vitest';
+ import { toActivity } from './activity.ts';
+ 
+ describe('toActivity', () => {
+-  test('gives each day one calendar entry and drops unknown days', ({ expect }) => {
++  test('rolls hours into local days and drops unknown hours', ({ expect }) => {
++    const at = (day: number, hour: number) => new Date(2026, 0, day, hour).getTime();
+     const rows = [
+-      { day: new Date(2026, 0, 5).getTime(), count: 3 },
+-      { day: null, count: 4 },
+-      { day: new Date(2026, 0, 6).getTime(), count: 5 },
++      { hour: at(6, 9), count: 5 },
++      { hour: at(5, 1), count: 3 },
++      { hour: null, count: 4 },
++      { hour: at(5, 23), count: 2 },
+     ];
+ 
+     expect(toActivity(rows)).toEqual([
+-      { date: new Date(2026, 0, 5), value: 3 },
++      { date: new Date(2026, 0, 5), value: 5 },
+       { date: new Date(2026, 0, 6), value: 5 },
+     ]);
+   });
+diff --git a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.ts b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.ts
+index 84dbcd99..a82a9f5b 100644
+--- a/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.ts
++++ b/packages/plugins/plugin-space/src/containers/SpaceHomeDashboard/activity.ts
+@@ -5,19 +5,25 @@
+ import { Aggregate, Filter, Query } from '@dxos/echo';
+ import { type ActivityDatum } from '@dxos/react-ui-dashboard';
+ 
+-/** Counts live objects by the local day in `timeZone` they were last updated; one row per day. */
+-export const dailyActivityQuery = (timeZone: string) =>
+-  Query.select(Filter.everything()).aggregate({
+-    day: Aggregate.updated('day', { timeZone }),
+-    count: Aggregate.count(),
+-  });
++export const HOURLY_ACTIVITY_QUERY = Query.select(Filter.changes()).aggregate({
++  hour: Aggregate.time('time', 'hour'),
++  count: Aggregate.count(),
++});
+ 
+-/** A row of {@link dailyActivityQuery}. */
+-export type DayCount = {
+-  readonly day: number | null;
++export type HourCount = {
++  readonly hour: number | null;
+   readonly count: number;
+ };
+ 
+-/** One calendar entry per day; a `null` day (no timestamp recorded) has no square and is dropped. */
+-export const toActivity = (rows: readonly DayCount[]): ActivityDatum[] =>
+-  rows.flatMap(({ day, count }) => (day === null ? [] : [{ date: new Date(day), value: count }]));
++export const toActivity = (rows: readonly HourCount[]): ActivityDatum[] => {
++  const days = new Map<number, number>();
++  for (const { hour, count } of rows) {
++    if (hour === null) {
++      continue;
++    }
++    const date = new Date(hour);
++    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
++    days.set(day, (days.get(day) ?? 0) + count);
++  }
++  return [...days].sort(([a], [b]) => a - b).map(([day, value]) => ({ date: new Date(day), value }));
++};

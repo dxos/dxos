@@ -59,7 +59,7 @@ export class FeedDataSource implements IndexDataSource {
     _ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
-  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+  ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more: boolean }> {
     // For queue, the cursor is assumed to have:
     // spaceId = set
     // resourceId = null
@@ -130,9 +130,9 @@ export class FeedDataSource implements IndexDataSource {
           // Process blocks
           for (const block of result.blocks) {
             try {
-              // Inject the block's queue position so indexed feed items carry a KEY_QUEUE_POSITION
-              // foreign key (mirrors the local feed-service read path); the index snapshot persists it.
-              const data = EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON;
+              // Stamp the block's id and position (mirrors the local feed-service read path); the index
+              // snapshot persists them, which is how a reader recognises a block it already applied.
+              const data = EchoFeedCodec.decodeBlock(block) as ObjectJSON;
 
               objects.push({
                 spaceId: cursor.spaceId,
@@ -161,7 +161,9 @@ export class FeedDataSource implements IndexDataSource {
         }
       }
 
-      return { objects, cursors: updatedCursors };
+      // A spent limit may have stopped mid-feed or skipped feeds; the store cannot say which, so the
+      // next pass finds out, and reads empty if there was nothing left.
+      return { objects, cursors: updatedCursors, more: remainingLimit <= 0 };
     }).pipe(RuntimeProvider.provide(this._runtime), Effect.withSpan('FeedDataSource.getChangedObjects'), Effect.orDie);
   }
 }

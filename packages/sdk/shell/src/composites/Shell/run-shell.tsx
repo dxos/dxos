@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import { AppContextRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
-import { Button, Clipboard, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -35,13 +35,11 @@ export const runShell = async (config: Config = new Config()) => {
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
           <ClientProvider config={config} services={services} noBanner>
-            <Clipboard.Provider>
-              <Tooltip.Provider>
-                <AgentHostingProvider>
-                  <Shell runtime={runtime} />
-                </AgentHostingProvider>
-              </Tooltip.Provider>
-            </Clipboard.Provider>
+            <Tooltip.Provider>
+              <AgentHostingProvider>
+                <Shell runtime={runtime} />
+              </AgentHostingProvider>
+            </Tooltip.Provider>
           </ClientProvider>
         </ThemeProvider>
       </StrictMode>,

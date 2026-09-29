@@ -14,22 +14,24 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
 
+import { centeredOrigin } from '../../utils/layout.ts';
 import { initialKeys } from '../../utils/order.ts';
 import { createNode, withLabel } from '../../utils/shapes.ts';
 import { type Projection } from '../projection.ts';
 import {
+  type BuiltinNodeType,
   type Capabilities,
   type Intent,
   type Link,
   type Node,
-  type NodeType,
   type Point,
   type Scene,
   type Size,
+  endpointNode,
 } from '../types.ts';
 import { labelOf } from './constrained.ts';
 
-export type GraphNode = { id: string; label?: string; type?: NodeType };
+export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
 export type GraphEdge = { id: string; from: string; to: string };
 
 export type GraphModel = {
@@ -45,21 +47,21 @@ export type Overlay = {
 export type DynamicOptions = {
   pitch?: Size;
   size?: Size;
+  /** The first slot's centre; by default the layout straddles the origin. */
   origin?: Point;
 };
 
 /** Multiples of the major grid, so a laid-out graph is already snapped. */
-const DEFAULTS: Required<DynamicOptions> = {
+const DEFAULTS: Required<Omit<DynamicOptions, 'origin'>> = {
   pitch: { width: 256, height: 192 },
   size: { width: 192, height: 128 },
-  origin: { x: 160, y: 128 },
 };
 
 export const DYNAMIC_SCENE_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
 export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions = {}): Scene => {
-  const { pitch, size, origin } = { ...DEFAULTS, ...options };
+  const { pitch, size } = { ...DEFAULTS, ...options };
   const ids = graph.nodes.map(({ id }) => id);
   const known = new Set(ids);
   const ranks = Layout.rank(
@@ -75,6 +77,14 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   for (const members of byRow.values()) {
     [...members].sort().forEach((id, index) => columns.set(id, index));
   }
+
+  // Taken from the ranks rather than from the placed nodes, so dragging a node (which only writes an
+  // override) leaves the rest of the graph where it is.
+  const extent = {
+    columns: Math.max(...[...byRow.values()].map(({ length }) => length), 1),
+    rows: Math.max(...byRow.keys(), 0) + 1,
+  };
+  const origin = options.origin ?? centeredOrigin(extent, pitch, size);
 
   const keys = initialKeys(graph.nodes.length + graph.edges.length);
   const nodes: Record<string, Node> = {};
@@ -151,13 +161,13 @@ export const createDynamicProjection = ({
       case 'link': {
         const model = registry.get(graph);
         const { link } = intent;
-        if (model.edges.some((edge) => edge.id === link.id)) {
+        const from = endpointNode(link.source);
+        const to = endpointNode(link.target);
+        // The graph has edges between nodes only; a free-ended link has no place in it.
+        if (from === undefined || to === undefined || model.edges.some((edge) => edge.id === link.id)) {
           return;
         }
-        registry.set(graph, {
-          ...model,
-          edges: [...model.edges, { id: link.id, from: link.source.node, to: link.target.node }],
-        });
+        registry.set(graph, { ...model, edges: [...model.edges, { id: link.id, from, to }] });
         break;
       }
       case 'delete': {

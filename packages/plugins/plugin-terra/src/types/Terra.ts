@@ -49,12 +49,13 @@ export class Terra extends Type.makeObject<Terra>(DXN.make('org.dxos.type.terra'
     /** Owned objects: `SetParent` cascades each with the world. */
     objects: Ref.Ref(TerraObject.TerraObject).pipe(
       Schema.Array,
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--globe-hemisphere-west--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

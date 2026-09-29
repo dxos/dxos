@@ -8,6 +8,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
+import { TextTooltip } from './TextTooltip.tsx';
 import { Tooltip, type TooltipSide } from './Tooltip.tsx';
 
 /**
@@ -67,6 +68,23 @@ describe('Tooltip', () => {
     fireEvent.pointerLeave(first);
     fireEvent.pointerDown(first);
     await waitFor(() => expect(first.getAttribute('aria-describedby')).toEqual('own-description'));
+  });
+
+  test('a text tooltip that fits stays closed without cancelling the pointer event', async ({ expect }) => {
+    render(
+      <Tooltip.Provider delayDuration={0} disableHoverableContent>
+        <TextTooltip text='label' onlyWhenTruncating>
+          <button>label</button>
+        </TextTooltip>
+      </Tooltip.Provider>,
+      { wrapper: Wrapper },
+    );
+    const button = screen.getByRole('button');
+
+    expect(fireEvent.pointerMove(button, { pointerType: 'mouse' })).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(button.getAttribute('data-state')).toEqual('closed');
+    expect(button.getAttribute('aria-describedby')).toBeNull();
   });
 
   test('hovering one trigger does not re-render the others', async ({ expect }) => {

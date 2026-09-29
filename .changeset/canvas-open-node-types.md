@@ -1,0 +1,11 @@
+---
+'@dxos/react-ui-canvas': minor
+---
+
+The scene engine takes open node types and becomes the canvas a host can build on. Every node is a `NodeBase` with a centre and a size; a `NodeDef` carries its type's schema, `create` and default size, and `createSceneSchema` composes a host's scene schema from its registry. Ports declare what they `accept` (`in`, `out`), links carry `directed` or explicit `ends` markers, and an endpoint may be a free scene `point`. A link may also be `smart`: it stores no geometry and routes itself from its ports, so it follows the nodes as they move.
+
+`SceneView` is a composite. `SceneView.Root` holds the state and is the element gestures land on, and `Canvas`, `Navigation`, `Actions`, `Debug` and `Palette` are parts a host arranges — so a host renders the chrome it wants rather than passing flags for the chrome it does not. Editor parity comes with it: hover borders, selection painted on top, ghost previews for create drags and palette drops, shift-symmetric resize, alt-subtract marquee, auto layout as a `layout` intent the projection answers, and an in-place editor for a node's text parts.
+
+The compute shapes run on it: `computeNodeDefs` / `computeNodeRegistry` register every shape as a scene node definition, `createComputeProjection` keeps the compute graph in step with the scene, `Bullets` animates outputs along links, and `sceneFromCircuit` maps a canvas-editor circuit to a scene. A board persists through `createEchoStore(board)`, which makes a `CanvasBoard`'s own `layout` the scene store and derives z-order from array order, so a board written by the previous editor opens unchanged.
+
+Breaking: `SceneView` is a namespace rather than a component — render `SceneView.Root` with the parts a host wants, and pass `liveDepth` and `overlay` to `SceneView.Canvas`; `showToolbar` and `showPalette` are gone with it. An ellipse's `rx`/`ry` became `size`, the `Node` schema is now `BuiltinNode` (`Node` is the open type), `Endpoint` is a union narrowed by `endpointNode` / `isPointEndpoint`, the free-text node type is `note` (leaving `text` to hosts), and `withRegistry` moved from `@dxos/storybook-utils` to `@dxos/react-ui/testing` beside `withTheme` and `withLayout`.

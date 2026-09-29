@@ -7,18 +7,28 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AiContext } from '@dxos/assistant';
-import { McpServer } from '@dxos/assistant-toolkit';
 import type * as ChatModule from '@dxos/assistant/Chat';
-import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
+import * as McpServer from '@dxos/compute/McpServer';
+import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Field, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { getSkillId, useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
+import {
+  getSkillId,
+  useActiveSkills,
+  useContextObjects,
+  useFilteredTypes,
+  useMcpServerSignIn,
+  useMcpServerStatus,
+  useSkillHandlers,
+  useSkills,
+} from '#hooks';
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
@@ -224,7 +234,12 @@ const ModelsPanel = ({
       <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
         <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.Item
+              key={id}
+              id={id}
+              classNames='px-2 py-1 dx-focus-ring rounded-xs'
+              data-testid={`assistant.models.${id}`}
+            >
               <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
               <Listbox.Indicator />
             </Listbox.Item>
@@ -273,14 +288,34 @@ type McpServersPanelProps = {
   db: Database.Database;
 };
 
+type McpServerDraft = {
+  name: string;
+  url: string;
+  protocol: McpServer.Spec['protocol'];
+  apiKey?: string;
+};
+
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const [adding, setAdding] = useState(false);
 
   const handleAdd = useCallback(
-    (name: string, url: string, protocol: 'sse' | 'http', apiKey?: string) => {
-      db.add(Obj.make(McpServer.McpServer, { name, url, protocol, apiKey, enabled: true }));
+    ({ name, url, protocol, apiKey }: McpServerDraft) => {
+      // The key goes in an `AccessToken` rather than on the server, so it resolves through the
+      // credentials service like every other secret in the space.
+      const accessToken = apiKey
+        ? db.add(AccessToken.make({ source: new URL(url).hostname, account: name, token: apiKey }))
+        : undefined;
+      db.add(
+        Obj.make(McpServer.McpServer, {
+          name,
+          url,
+          protocol,
+          enabled: true,
+          ...(accessToken && { accessToken: Ref.make(accessToken) }),
+        }),
+      );
       setAdding(false);
     },
     [db],
@@ -288,29 +323,36 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
 
   const handleRemove = useCallback(
     (server: McpServer.McpServer) => {
+      const accessToken = server.accessToken?.peek();
       db.remove(server);
+      if (accessToken) {
+        db.remove(accessToken);
+      }
     },
     [db],
   );
 
   return (
-    <div className='p-form-chrome'>
-      {servers.map((server) => (
-        <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
-      ))}
+    <Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>
+      <Listbox.Root>
+        <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
+          {servers.map((server) => (
+            <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div>
-          <IconButton
-            variant='ghost'
-            icon='ph--plus--regular'
-            label={t('mcp-server-add.label')}
-            onClick={() => setAdding(true)}
-          />
-        </div>
+        <IconButton
+          variant='ghost'
+          icon='ph--plus--regular'
+          label={t('mcp-server-add.label')}
+          onClick={() => setAdding(true)}
+          data-testid='assistant.mcp-server.add'
+        />
       )}
-    </div>
+    </Flex>
   );
 };
 
@@ -321,34 +363,86 @@ type McpServerRowProps = {
 
 /**
  * `useQuery` returns live objects but only re-renders on result-identity changes,
- * so we must subscribe to the per-server `enabled` field via `useObject` to keep the
- * switch in sync with mutations made through the returned setter.
+ * so we must subscribe to the per-server `enabled`/`oauth`/`name`/`url` fields via `useObject`
+ * to keep the row in sync with mutations made through the returned setters (or elsewhere).
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
+  // Subscribed so the status re-checks once a sign-in stores tokens.
+  useObject(server, 'oauth');
+  const [name] = useObject(server, 'name');
+  const [url] = useObject(server, 'url');
+  const [revision, setRevision] = useState(0);
+  const status = useMcpServerStatus(server, { enabled: enabled !== false, revision });
+  const { signIn, pending, error } = useMcpServerSignIn(server);
+  const handleSignIn = useCallback(() => {
+    void signIn().then(() => setRevision((revision) => revision + 1));
+  }, [signIn]);
+
+  const statusLabel =
+    status.state === 'connected'
+      ? t('mcp-server-status.connected', { count: status.tools.length })
+      : status.state === 'error'
+        ? status.message
+        : t(`mcp-server-status.${status.state}`);
 
   return (
-    <div className='flex items-center gap-2 px-form-chrome'>
-      <Field.Root>
-        <Field.Label srOnly>{server.name}</Field.Label>
-        <Field.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
-      </Field.Root>
-      <span className='flex-1 truncate text-sm'>{server.name}</span>
-      <span className='truncate text-xs text-description'>{server.url}</span>
-      <IconButton
-        variant='ghost'
-        icon='ph--x--regular'
-        iconOnly
-        label={t('mcp-server-remove.label')}
-        onClick={() => onRemove(server)}
-      />
-    </div>
+    <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
+      <Flex align='center' gap='sm'>
+        <Field.Root>
+          <Field.Label srOnly>{name}</Field.Label>
+          <Field.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+        </Field.Root>
+        <Flex column grow classNames='min-w-0'>
+          <span className='truncate text-sm'>{name}</span>
+          <span className='truncate text-xs text-description'>{url}</span>
+        </Flex>
+        {status.state === 'unauthorized' && (
+          <IconButton
+            variant='primary'
+            icon='ph--sign-in--regular'
+            label={t('mcp-server-sign-in.label')}
+            disabled={pending}
+            onClick={handleSignIn}
+            data-testid='assistant.mcp-server.sign-in'
+          />
+        )}
+        {(status.state === 'error' || status.state === 'unauthorized') && (
+          <IconButton
+            variant='ghost'
+            icon='ph--arrow-clockwise--regular'
+            iconOnly
+            label={t('mcp-server-retry.label')}
+            onClick={() => setRevision((revision) => revision + 1)}
+          />
+        )}
+        <IconButton
+          variant='ghost'
+          icon='ph--x--regular'
+          iconOnly
+          label={t('mcp-server-remove.label')}
+          onClick={() => onRemove(server)}
+        />
+      </Flex>
+      <span
+        className={mx(
+          'text-xs truncate',
+          status.state === 'connected' && 'text-success-text',
+          (status.state === 'error' || status.state === 'unauthorized' || error) && 'text-error-text',
+        )}
+        title={error ?? statusLabel}
+        data-testid='assistant.mcp-server.status'
+        data-state={status.state}
+      >
+        {error ?? statusLabel}
+      </span>
+    </Listbox.Item>
   );
 };
 
 type McpServerFormProps = {
-  onSubmit: (name: string, url: string, protocol: 'sse' | 'http', apiKey?: string) => void;
+  onSubmit: (draft: McpServerDraft) => void;
   onCancel: () => void;
 };
 
@@ -356,18 +450,26 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
-  const [protocol, setProtocol] = useState<'sse' | 'http'>('sse');
+  // Streamable HTTP is the current transport; the client falls back to SSE when a server answers 405.
+  const [protocol, setProtocol] = useState<McpServer.Spec['protocol']>('http');
   const [apiKey, setApiKey] = useState('');
 
-  const canSubmit = name.trim().length > 0 && url.trim().length > 0;
+  const validUrl = URL.canParse(url.trim());
+  const canSubmit = name.trim().length > 0 && validUrl;
   const handleSubmit = useCallback(() => {
     if (canSubmit) {
-      onSubmit(name.trim(), url.trim(), protocol, apiKey.trim() || undefined);
+      onSubmit({ name: name.trim(), url: url.trim(), protocol, apiKey: apiKey.trim() || undefined });
     }
   }, [canSubmit, name, url, protocol, apiKey, onSubmit]);
 
   return (
-    <div className='space-y-2 px-form-chrome'>
+    <form
+      className='space-y-2 px-form-chrome'
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSubmit();
+      }}
+    >
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
         <Field.Input
@@ -375,23 +477,26 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           value={name}
           onChange={(event) => setName(event.target.value)}
           autoFocus
+          data-testid='assistant.mcp-server.name'
         />
       </Field.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
         <Field.Input
+          type='url'
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
           onChange={(event) => setUrl(event.target.value)}
+          data-testid='assistant.mcp-server.url'
         />
       </Field.Root>
-      <Select.Root value={protocol} onValueChange={(value) => setProtocol(value as 'sse' | 'http')}>
+      <Select.Root value={protocol} onValueChange={(value) => setProtocol(value === 'sse' ? 'sse' : 'http')}>
         <Select.TriggerButton placeholder={t('mcp-server-protocol.label')} />
         <Select.Portal>
           <Select.Content>
             <Select.Viewport>
-              <Select.Option value='sse'>SSE</Select.Option>
               <Select.Option value='http'>HTTP</Select.Option>
+              <Select.Option value='sse'>SSE</Select.Option>
             </Select.Viewport>
           </Select.Content>
         </Select.Portal>
@@ -400,23 +505,33 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
         <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
         <Field.Input
           type='password'
+          autoComplete='off'
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
+          data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
       <div className='flex gap-2'>
         <IconButton
+          type='submit'
           variant='ghost'
           icon='ph--check--regular'
           iconOnly
           label={t('save.button')}
-          onClick={handleSubmit}
           disabled={!canSubmit}
+          data-testid='assistant.mcp-server.save'
         />
-        <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('cancel.button')} onClick={onCancel} />
+        <IconButton
+          type='button'
+          variant='ghost'
+          icon='ph--x--regular'
+          iconOnly
+          label={t('cancel.button')}
+          onClick={onCancel}
+        />
       </div>
-    </div>
+    </form>
   );
 };
 

@@ -24,6 +24,7 @@ import { TestReplicationNetwork } from '../testing/index.ts';
 import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host.ts';
 import { type EchoNetworkAdapter } from './echo-network-adapter.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
+import { waitForEviction } from './subduction-test-utils.ts';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -389,8 +390,7 @@ describe('AutomergeHost', () => {
     const collectionId = 'test-collection';
     await host.updateLocalCollectionState(collectionId, [documentId]);
     handle[Symbol.dispose]();
-    await host.drainEvictions();
-    expect(host.loadedDocumentIds).not.toContain(documentId);
+    await waitForEviction(expect, host, documentId);
 
     const task = (host as any)._sharePolicyChangedTask;
     const schedule = task.schedule.bind(task);

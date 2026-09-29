@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./extension": {
+      "source": "./src/extension/index.ts",
+      "types": "./dist/types/src/extension/index.d.ts",
+      "import": "./dist/lib/extension.mjs"
+    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -31,13 +36,25 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/lint": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dagrejs/dagre": "catalog:",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@lezer/common": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "@lezer/lr": "catalog:",
     "elkjs": "catalog:"
   },
   "devDependencies": {
-    "effect": "catalog:"
+    "@lezer/generator": "catalog:",
+    "@uiw/codemirror-theme-vscode": "catalog:",
+    "effect": "catalog:",
+    "tsx": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

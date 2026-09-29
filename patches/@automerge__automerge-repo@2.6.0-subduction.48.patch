@@ -1,5 +1,5 @@
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22feeef8906b 100644
+index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..6c09e332f25cb930a48d15bf88d99048b3d84f96 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
 @@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
@@ -22,7 +22,20 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22fe
      /** Returns a list of all connected peer ids */
      get peers(): PeerId[];
      /** Returns the local peer id */
-@@ -345,6 +351,8 @@ export interface RepoEvents {
+@@ -160,6 +166,12 @@ export declare class Repo extends EventEmitter<RepoEvents> {
+      * there is no Subduction source or the document is not attached to it.
+      */
+     resyncSubduction: (documentId: DocumentId) => void;
++    /**
++     * DXOS patch: whether Subduction still has a sync round, or the load that
++     * follows a successful one, ahead of the document's handle. False when there
++     * is no Subduction source or the document is not attached to it.
++     */
++    hasPendingSubductionSync: (documentId: DocumentId) => boolean;
+     /**
+      * Drain pending writes for the given documents (or all documents
+      * when `documents` is omitted) so they are durable in storage.
+@@ -345,6 +357,8 @@ export interface RepoEvents {
      "heal-exhausted": (payload: {
          documentId: DocumentId;
      }) => void;
@@ -32,7 +45,7 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..cf0b893473bc8fd7ae1e5860a20c22fe
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index adfddd9b3926510604274217c42f97f104e119a3..840b9b859d0d9265a69d324ed9848ba443afab7a 100644
+index adfddd9b3926510604274217c42f97f104e119a3..19ea2a2044d7a3c8282f7f2d3f1bf267803fea48 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
 @@ -157,6 +157,18 @@ export class Repo extends EventEmitter {
@@ -69,6 +82,34 @@ index adfddd9b3926510604274217c42f97f104e119a3..840b9b859d0d9265a69d324ed9848ba4
      /** Returns a list of all connected peer ids */
      get peers() {
          return this.synchronizer.peers;
+@@ -492,6 +512,12 @@ export class Repo extends EventEmitter {
+     // ability to not create a doc handle if we abort while loading. Once the DocHandle
+     // was running the abort signal didn't have much effect
+     _options) {
++        // DXOS patch: a bare document id whose query exists resolves to it directly. Parsing
++        // checksum-validates the id (base58check, two SHA-256 passes), and callers look documents up
++        // by id far more often than they open new ones.
++        if (typeof id === "string" && this.#queries[id]) {
++            return this.#queries[id];
++        }
+         const parsed = isValidAutomergeUrl(id)
+             ? parseAutomergeUrl(id)
+             : {
+@@ -667,6 +693,14 @@ export class Repo extends EventEmitter {
+     resyncSubduction = (documentId) => {
+         this.#subductionSource?.resync(documentId);
+     };
++    /**
++     * DXOS patch: whether Subduction still has a sync round, or the load that
++     * follows a successful one, ahead of the document's handle. False when there
++     * is no Subduction source or the document is not attached to it.
++     */
++    hasPendingSubductionSync = (documentId) => {
++        return this.#subductionSource?.hasPendingSync(documentId) ?? false;
++    };
+     /**
+      * Drain pending writes for the given documents (or all documents
+      * when `documents` is omitted) so they are durable in storage.
 diff --git a/dist/StorageSource.js b/dist/StorageSource.js
 index 2701ebc492066feba0d05cf556a3d8473312bc39..b359189739a660d354633bb0b7239b4270b31742 100644
 --- a/dist/StorageSource.js
@@ -127,10 +168,18 @@ index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e0
  export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
  export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
 diff --git a/dist/storage/StorageSubsystem.js b/dist/storage/StorageSubsystem.js
-index 373de48918620aaf26b7d375d5269c8fc6ffada5..fb7d5ae3dafc4f1b9e63a3829f4bf7849e5981f5 100644
+index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0fd313f619 100644
 --- a/dist/storage/StorageSubsystem.js
 +++ b/dist/storage/StorageSubsystem.js
-@@ -158,6 +158,22 @@ export class StorageSubsystem extends EventEmitter {
+@@ -5,7 +5,6 @@ import { mergeArrays } from "../helpers/mergeArrays.js";
+ import { keyHash, headsHash } from "./keyHash.js";
+ import * as Uuid from "uuid";
+ import { EventEmitter } from "eventemitter3";
+-import { encodeHeads } from "../AutomergeUrl.js";
+ import { SavedHeads } from "./SavedHeads.js";
+ /**
+  * The storage subsystem is responsible for saving and loading Automerge documents to and from
+@@ -158,6 +157,22 @@ export class StorageSubsystem extends EventEmitter {
          // Don't bother saving if the document hasn't changed
          if (!this.#shouldSave(documentId, doc))
              return;
@@ -153,6 +202,17 @@ index 373de48918620aaf26b7d375d5269c8fc6ffada5..fb7d5ae3dafc4f1b9e63a3829f4bf784
          const sourceChunks = this.#chunkInfos.get(documentId) ?? [];
          if (this.#shouldCompact(sourceChunks)) {
              await this.#saveTotal(documentId, doc, sourceChunks);
+@@ -271,7 +286,9 @@ export class StorageSubsystem extends EventEmitter {
+             return true;
+         }
+         const newHeads = A.getHeads(doc);
+-        if (headsAreSame(encodeHeads(newHeads), encodeHeads(oldHeads))) {
++        // DXOS patch: compared as stored. Encoding maps each hash to a unique string, so the answer is
++        // the same, without two base58check encodes per head for every document a flush checks.
++        if (headsAreSame(newHeads, oldHeads)) {
+             // the document hasn't changed
+             return false;
+         }
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
 index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..826676a1b2ea406a000f874d429b11e3ff0caa98 100644
 --- a/dist/subduction/AdapterConnections.d.ts
@@ -435,7 +495,7 @@ index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f2
      };
      /** Send a tagged frame over the adapter. */
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c4b3a41ac 100644
+index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..835a3d33bedf7ad32db0ef3339095ba26dd9ce0c 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
@@ -481,7 +541,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c
      policy?: Policy;
      /**
       * What priority this source should have w.r.t to other sources
-@@ -123,12 +146,13 @@ export interface SubductionSourceOptions {
+@@ -123,15 +146,18 @@ export interface SubductionSourceOptions {
  export declare class SubductionSource implements DocumentSource {
      #private;
      readonly priority: SourcePriority;
@@ -497,8 +557,13 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..89dade2240e7847aa4c1fda131cfe62c
      shareConfigChanged(): void;
      /** Check whether a sedimentree is currently in heal-backoff. */
      isHealing(sedimentreeId: SedimentreeId): boolean;
++    /** DXOS patch: whether a sync round, or the blob load after a successful one, is still ahead of the document's handle. */
++    hasPendingSync(documentId: DocumentId): boolean;
+     /**
+      * Force a fresh outbound sync round for a document, re-arming the
+      * self-healing retry loop.
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e97549889 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..9ecf98a45a215e189d8d162769209adec5b26ce8 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -753,3 +818,32 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..4208e417a74688bc85cbd9217cba503e
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
+@@ -1297,6 +1405,28 @@ export class SubductionSource {
+     isHealing(sedimentreeId) {
+         return this.#scheduler.isHealing(sedimentreeId);
+     }
++    /**
++     * DXOS patch: whether a sync round, or the blob load that follows a successful
++     * one, is still ahead of this document's handle. A host that unloads idle
++     * documents keeps it resident until then: `detach` drops the entry, and the
++     * round's result with it, so a handle unloaded mid-round never catches up.
++     */
++    hasPendingSync(documentId) {
++        const entry = this.#entries.get(toSedimentreeId(documentId).toString());
++        if (entry === undefined)
++            return false;
++        // The load after a successful round, running or due on the next recompute,
++        // reads local storage only.
++        if (entry.blobLoadInFlight ||
++            (entry.syncState === "initializing" && entry.lastSyncResult === "succeeded"))
++            return true;
++        // A round with no peer to reach brings nothing in.
++        if (!this.isConnected())
++            return false;
++        // A round in flight, or one the next recompute starts: never run for this
++        // handle, or re-armed by a save or `resync`.
++        return entry.syncInFlight || entry.lastSyncResult === null;
++    }
+     /**
+      * Force a fresh outbound sync round for a document, re-arming the
+      * self-healing retry loop.

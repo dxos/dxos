@@ -10,7 +10,7 @@ import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { findFirstFocusable } from '@dxos/react-focus';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
@@ -54,6 +54,7 @@ DeckPlank.displayName = 'DeckPlank';
 const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
+  const { attention } = useAttentionContext('DeckPlank');
   const {
     node,
     unresolved,
@@ -101,10 +102,12 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
         contentFocusRef.current = focusContent(rootRef.current);
       } else if (scrollIntoView.focus !== false) {
         focusPane(rootRef.current);
+      } else if (attention && rootRef.current) {
+        Attention.attendElement(attention, rootRef.current);
       }
       onScrollIntoView(undefined);
     }
-  }, [scrollIntoView, id, onScrollIntoView]);
+  }, [scrollIntoView, id, onScrollIntoView, attention]);
   useLayoutEffect(() => () => contentFocusRef.current?.(), []);
 
   // The landmark focus group should move focus to Main on Escape, but something blocks it; handle directly.

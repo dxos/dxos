@@ -87,9 +87,9 @@ export type AutomergeHostProps = {
   useSubduction?: boolean;
 
   /**
-   * Residency policy for loaded documents. Defaults suit a long-lived process; a host whose
-   * invocations are shorter than {@link EVICT_IDLE_DELAY} (a Worker) or whose budget is tighter
-   * than {@link MIN_RESIDENT_DOCUMENTS} documents should set its own.
+   * Residency policy for loaded documents. The default evicts a released document after
+   * {@link EVICT_IDLE_DELAY} and keeps no floor; a host whose invocations are shorter than the delay
+   * (a Worker) should set its own.
    */
   residency?: {
     /** How long a document stays resident after its last lease is disposed. */
@@ -207,16 +207,11 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
 
 /**
  * How long a document stays resident after its last lease is disposed. Long enough to span the gap
- * between two passes over the same working set (indexing then querying it), because re-faulting a
- * document allocates automerge memory the runtime never gives back.
+ * between two passes over the same working set (indexing then querying it), which would otherwise
+ * load each document twice. Nothing stays past it: an evicted document's Automerge memory is reused by
+ * the next one loaded.
  */
 const EVICT_IDLE_DELAY = 30_000;
-
-/**
- * How many released documents stay resident regardless of age. Keeps the hot working set loaded on a
- * host whose whole session is shorter than {@link EVICT_IDLE_DELAY}.
- */
-const MIN_RESIDENT_DOCUMENTS = 256;
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -354,7 +349,7 @@ export class AutomergeHost extends Resource {
       },
       evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
       evictionDelay: residency?.evictionDelay ?? EVICT_IDLE_DELAY,
-      minResidentDocuments: residency?.minResidentDocuments ?? MIN_RESIDENT_DOCUMENTS,
+      minResidentDocuments: residency?.minResidentDocuments,
     });
     this._runtime = runtime;
     this._useSubduction = useSubduction;
@@ -786,6 +781,12 @@ export class AutomergeHost extends Resource {
     // document to read.
     if (isCancelled()) {
       log('cancelled eviction of a re-leased document', { documentId });
+      return false;
+    }
+    // A document faulted in to catch up is ready from its older local copy, so dropping it before its
+    // sync round lands would discard the round and leave it behind for good.
+    if (this._useSubduction && this._repo.hasPendingSubductionSync(documentId)) {
+      log('deferred eviction of a document with a sync round pending', { documentId });
       return false;
     }
     if (this._repo.handles[documentId]) {
