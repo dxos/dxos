@@ -10,10 +10,10 @@ import 'highlight.js/styles/tokyo-night-dark.css';
 
 import hljs from 'highlight.js';
 import typescript from 'highlight.js/lib/languages/typescript';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
-import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
+import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
 
 import { useAsyncEffect } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -67,29 +67,100 @@ export type RevealProps = {
   onExit?: () => void;
 };
 
+type HighlightPlugin = Reveal.Plugin & { highlightBlock: (block: HTMLElement) => void };
+
+// @types/reveal.js types the bundled highlight plugin as a bare `Plugin`, omitting the `highlightBlock` it exports.
+const isHighlightPlugin = (plugin: Reveal.Plugin): plugin is HighlightPlugin => 'highlightBlock' in plugin;
+
+type Player = {
+  deck: Reveal.Api;
+  markdown: MarkdownPlugin;
+  highlight: HighlightPlugin;
+  slides: HTMLElement;
+  /** Markdown the slides were last rendered from. */
+  content: string;
+};
+
+/** Replaces the slides with a single unparsed markdown section for the markdown plugin to split. */
+const setMarkdown = (slides: HTMLElement, content: string) => {
+  const section = document.createElement('section');
+  section.setAttribute('data-markdown', '');
+  const template = document.createElement('textarea');
+  template.setAttribute('data-template', '');
+  template.textContent = [styles, content].join('\n');
+  section.appendChild(template);
+  slides.replaceChildren(section);
+};
+
+/** Re-renders an initialized deck from new markdown, keeping the presenter at the same slide index and fragment. */
+const updateSlides = async (player: Player, content: string) => {
+  const { deck, markdown, highlight, slides } = player;
+  player.content = content;
+  const { h, v, f } = deck.getIndices();
+  setMarkdown(slides, content);
+  await markdown.processSlides(slides);
+  await markdown.convertSlides();
+  // Reveal drops hidden slides only once, at start, so rebuilt sections must be pruned here.
+  if (!deck.getConfig().showHiddenSlides) {
+    slides.querySelectorAll('section[data-visibility="hidden"]').forEach((section) => {
+      const stack = section.parentElement;
+      (stack?.matches('section') && stack.childElementCount === 1 ? stack : section).remove();
+    });
+  }
+
+  // Same per-block pass the highlight plugin's init makes, so edited code renders as it did on load.
+  slides.querySelectorAll<HTMLElement>('pre code').forEach((block) => {
+    block.parentElement?.classList.add('code-wrapper');
+    highlight.highlightBlock(block);
+  });
+  deck.sync();
+  deck.slide(h, v, f);
+};
+
 export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
   ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
-    const deckRef = useRef<Reveal.Api | null>(null);
+    const slidesRef = useRef<HTMLDivElement>(null);
+    const playerRef = useRef<Player | null>(null);
+    const contentRef = useRef(content);
 
-    useAsyncEffect(async () => {
-      if (deckRef.current) {
+    useEffect(() => {
+      contentRef.current = content;
+      const player = playerRef.current;
+      if (player && player.content !== content) {
+        void updateSlides(player, content);
+      }
+    }, [content]);
+
+    useAsyncEffect(async (controller) => {
+      if (playerRef.current) {
         return;
       }
 
       // Required for syntax highlighting.
       hljs.registerLanguage('typescript', typescript);
 
+      const markdown = RevealMarkdown();
+      const highlight = RevealHighlight();
+      if (!isHighlightPlugin(highlight)) {
+        throw new Error('reveal.js highlight plugin does not expose highlightBlock');
+      }
+
+      const slides = slidesRef.current!;
+      const initialContent = contentRef.current;
+      setMarkdown(slides, initialContent);
+
       // https://revealjs.com/react
       // https://revealjs.com/config
       // https://github.com/hakimel/reveal.js
       // TODO(burdon): Fragments and scroll view steps 2 at a time (safe mode?)
-      deckRef.current = new Reveal(deckDivRef.current!, {
-        // view: 'scroll',
+      const deck = new Reveal(deckDivRef.current!, {
         progress: false,
         transition: 'none',
         slideNumber: false,
         embedded: true,
+        // Narrow decks scale like wide ones; scroll view would wrap the sections that edits replace.
+        scrollActivationWidth: 0,
 
         // Disable autoplay to prevent errors in headless environments (e.g., CI).
         autoPlayMedia: false,
@@ -107,7 +178,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
 
         // https://revealjs.com/markdown
         // TODO(burdon): Requires server to serve popout window.
-        plugins: [RevealMarkdown, RevealHighlight],
+        plugins: [() => markdown, () => highlight],
 
         // See https://marked.js.org/using_advanced#options
         markdown: {
@@ -123,22 +194,33 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         },
       });
 
-      await deckRef.current.initialize();
-
-      if (slide !== undefined) {
-        deckRef.current.slide(slide < 0 ? deckRef.current?.getTotalSlides() + slide : slide - 1);
+      await deck.initialize();
+      // The effect's cleanup is only registered once this callback returns, so an unmount mid-init lands here.
+      if (controller.signal.aborted) {
+        deck.destroy();
+        return;
       }
 
-      deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
+      const player: Player = { deck, markdown, highlight, slides, content: initialContent };
+      playerRef.current = player;
+
+      if (slide !== undefined) {
+        deck.slide(slide < 0 ? deck.getTotalSlides() + slide : slide - 1);
+      }
+
+      deck.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
         onExit?.();
       });
 
+      // Pick up edits that arrived while the deck was initializing.
+      if (contentRef.current !== player.content) {
+        void updateSlides(player, contentRef.current);
+      }
+
       return () => {
         try {
-          if (deckRef.current) {
-            deckRef.current.destroy();
-            deckRef.current = null;
-          }
+          playerRef.current = null;
+          deck.destroy();
         } catch {
           // Ignore.
         }
@@ -165,12 +247,8 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
               rel='stylesheet'
               href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
             />
-            <div className={mx('slides', !fullscreen && 'dx-base-surface p-8')}>
-              <div />
-              <section {...{ 'data-markdown': [] }}>
-                <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
-              </section>
-            </div>
+            {/* Slides are owned by Reveal and filled imperatively from `content`. */}
+            <div ref={slidesRef} className={mx('slides', !fullscreen && 'dx-base-surface p-8')} />
           </div>
         </div>
       </div>

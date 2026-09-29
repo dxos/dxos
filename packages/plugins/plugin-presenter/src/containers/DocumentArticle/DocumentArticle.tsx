@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { AppSurface, useLayout } from '@dxos/app-toolkit/ui';
-import { useResolveRef } from '@dxos/echo-react';
+import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Panel } from '@dxos/react-ui';
 
@@ -19,9 +19,8 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
   const handleExit = useExitPresenter(document);
   const layout = useLayout();
   const fullscreen = layout.mode === 'solo--fullscreen';
-  // RevealPlayer seeds its deck once from `content` (via a `defaultValue`); wait for the markdown ref to
-  // resolve so the presentation isn't initialized empty and left blank when the content arrives later.
-  const content = useResolveRef(document.content)?.content;
+  // Subscribes to the text itself so edits reach the running deck.
+  const [content] = useObject(document.content, 'content');
 
   return (
     <Panel.Root role={role} classNames='relative'>
