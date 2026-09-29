@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Annotation, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Annotation, DXN, Feed, Filter, Obj, Order, Query, Ref, Type } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -13,6 +13,10 @@ import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { type QueryPlan } from './plan.ts';
 import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
+
+class Viewed extends Type.makeEvent<Viewed>(DXN.make('com.example.type.viewed', '0.1.0'))(
+  Schema.Struct({ by: Schema.String }),
+) {}
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();
@@ -65,6 +69,22 @@ describe('QueryPlanner', () => {
         ],
       }
     `);
+  });
+
+  test('events of all people', () => {
+    const query = Query.type(TestSchema.Person).events(Viewed);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const traverseIndex = plan.steps.findIndex(
+      (step) => step._tag === 'TraverseStep' && step.traversal._tag === 'EventTraversal',
+    );
+    // The owners are selected first, their events traversed to, and the event filter applies last.
+    expect(plan.steps[0]._tag).toEqual('SelectStep');
+    expect(traverseIndex).toBeGreaterThan(0);
+    const eventFilter = plan.steps
+      .slice(traverseIndex + 1)
+      .find((step): step is QueryPlan.FilterStep => step._tag === 'FilterStep');
+    expect(eventFilter?.filter).toMatchObject({ type: 'object', typename: 'dxn:com.example.type.viewed:0.1.0' });
   });
 
   test('get all people ordered by name', () => {

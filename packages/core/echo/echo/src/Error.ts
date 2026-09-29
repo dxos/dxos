@@ -96,3 +96,30 @@ export class GetReactiveError extends BaseError.extend(
     super({ context: { reason: options.reason, snapshotId: options.snapshotId }, ...options });
   }
 }
+
+/**
+ * Thrown when an operation that events do not support is attempted — mutating an event, giving it
+ * a parent, referencing it, using it as a relation endpoint, or storing it anywhere but an object's
+ * event feed.
+ */
+export class EventNotSupportedError extends BaseError.extend(
+  'EventNotSupportedError',
+  'Operation is not supported for events',
+) {
+  constructor(operation: string, options?: BaseErrorOptions) {
+    super({ context: { operation }, ...options });
+  }
+}
+
+/**
+ * Thrown by `Obj.appendEvents` when the object cannot own an event feed: it is a `Feed.Feed` (whose
+ * id already names its item feed), is not an object, is not in a database, or is deleted.
+ */
+export class EventsNotSupportedError extends BaseError.extend(
+  'EventsNotSupportedError',
+  'Object does not support events',
+) {
+  constructor(reason: string, options?: BaseErrorOptions) {
+    super({ context: { reason }, ...options });
+  }
+}

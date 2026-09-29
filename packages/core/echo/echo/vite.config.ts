@@ -16,6 +16,7 @@ export default defineConfig({
     Change: 'src/Change.ts',
     Database: 'src/Database.ts',
     Error: 'src/Error.ts',
+    Event: 'src/Event.ts',
     Feed: 'src/Feed.ts',
     Filter: 'src/Filter.ts',
     Format: 'src/Format.ts',

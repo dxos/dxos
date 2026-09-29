@@ -171,6 +171,8 @@ export const make = <T extends Type.AnyRelation>(
     delete props[internal.MetaId];
   }
 
+  internal.assertNotEvent(props[Source], 'relation source');
+  internal.assertNotEvent(props[Target], 'relation target');
   const sourceDXN = internal.getObjectEchoUri(props[Source]) ?? raise(new Error('Unresolved relation source'));
   const targetDXN = internal.getObjectEchoUri(props[Target]) ?? raise(new Error('Unresolved relation target'));
 
@@ -236,6 +238,7 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
  * regardless of kind. The object-parent counterpart is {@link Obj.setParent}.
  */
 export const setParent = (entity: Obj.Unknown, parent: Unknown): Obj.Unknown => {
+  internal.assertNotEvent(entity, 'parent');
   assertArgument(Obj.isObject(entity), 'Expected an object');
   assertArgument(isRelation(parent), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(entity);
@@ -337,6 +340,7 @@ export type Mutable<T> = internal.Mutable<T>;
  * Note: Only accepts relations. Use `Obj.update` for objects.
  */
 export const update = <T extends Unknown>(relation: T, callback: internal.ChangeCallback<T>): void => {
+  internal.assertNotEvent(relation, 'update');
   internal.change(relation, callback);
 };
 

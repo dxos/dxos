@@ -8,17 +8,20 @@ import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
 
 import { Ref } from '../../Ref/index.ts';
 import {
+  ATTR_KIND,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_TYPE,
+  EntityKind,
+  KindId,
   RelationSourceDXNId,
   RelationTargetDXNId,
   SelfURIId,
   TypeId,
 } from '../types/index.ts';
 import { ATTR_META, type EntityMeta } from '../types/meta.ts';
-import { ATTR_DELETED, MetaId, ObjectDeletedId } from '../types/model-symbols.ts';
+import { ATTR_DELETED, ATTR_TIMESTAMP, EventTimestampId, MetaId, ObjectDeletedId } from '../types/model-symbols.ts';
 
 /**
  * Attaches a toJSON method to the object for typed serialization.
@@ -48,6 +51,13 @@ export const typedJsonSerializer = function (this: any) {
 
   if (this[TypeId]) {
     result[ATTR_TYPE] = this[TypeId];
+  }
+
+  if (this[KindId] === EntityKind.Event) {
+    result[ATTR_KIND] = EntityKind.Event;
+    if (typeof this[EventTimestampId] === 'number') {
+      result[ATTR_TIMESTAMP] = this[EventTimestampId];
+    }
   }
 
   if (this[MetaId]) {

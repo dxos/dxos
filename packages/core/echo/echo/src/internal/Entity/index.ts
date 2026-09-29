@@ -4,6 +4,7 @@
 
 export * from './api.ts';
 export * from './entity.ts';
+export * from './event.ts';
 export * from './model.ts'; // TODO(burdon): Rename.
 export * from './object.ts';
 export * from './relation.ts';

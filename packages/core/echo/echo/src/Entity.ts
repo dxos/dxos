@@ -321,6 +321,7 @@ export type Mutable<T> = internal.Mutable<T>;
  * Note: For type-specific operations, prefer `Obj.update` or `Relation.update`.
  */
 export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCallback<T>): void => {
+  internal.assertNotEvent(entity, 'update');
   internal.change(entity, callback);
 };
 

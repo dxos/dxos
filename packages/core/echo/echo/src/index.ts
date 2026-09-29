@@ -12,6 +12,7 @@ export * as Change from './Change.ts';
 export * as Database from './Database.ts';
 export * as Entity from './Entity.ts';
 export * as Error from './Error.ts';
+export * as Event from './Event.ts';
 export * as Feed from './Feed.ts';
 export * as Filter from './Filter.ts';
 export * as Format from './Format.ts';

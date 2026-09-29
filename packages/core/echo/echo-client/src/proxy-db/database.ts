@@ -15,6 +15,8 @@ import {
   type Blob,
   type Change,
   Database,
+  Error as EchoError,
+  Event as EchoEvent,
   Entity,
   Feed,
   Filter,
@@ -460,7 +462,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       meta =
         getTypeAnnotation(schema) ??
         ({
-          kind: Type.isRelation(entity) ? EntityKind.Relation : EntityKind.Object,
+          kind: Type.isRelation(entity)
+            ? EntityKind.Relation
+            : Type.isEvent(entity)
+              ? EntityKind.Event
+              : EntityKind.Object,
           typename: Type.getTypename(entity),
           version: Type.getVersion(entity),
         } satisfies TypeAnnotation);
@@ -539,6 +545,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    if (EchoEvent.isEvent(obj)) {
+      throw new EchoError.EventNotSupportedError('adding an event to the database; use Obj.appendEvents');
+    }
     if (opts?.to) {
       // Synchronous feed append: registers the object as a live feed object and schedules the
       // background write. Returns the same instance; confirm persistence with `db.flush()`.
@@ -627,6 +636,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this.#getFeedHandle(feed).append(entities);
   }
 
+  appendEvents(obj: Obj.Unknown, events: EchoEvent.Unknown[]): void {
+    this.#getEventFeedHandle(obj.id).appendSync(events);
+  }
+
   async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
     await this.removeFeedItemsByIds(
       feed,
@@ -659,10 +672,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Returns the feed handle for a URI, creating it if a backend service is available.
    * Returns `undefined` only when no service is connected.
    */
-  _getOrCreateFeedHandle(feedUri: EID.EID, namespace?: string): FeedHandle {
+  _getOrCreateFeedHandle(feedUri: EID.EID, namespace?: string, options?: { events?: boolean }): FeedHandle {
     assertState(this.#feedService, 'Feed service not connected');
     const existing = this.#feeds.get(feedUri);
     if (existing) {
+      invariant(existing.events === (options?.events ?? false), 'Feed handle kind mismatch');
       return existing;
     }
     const handle = new FeedHandle(
@@ -672,6 +686,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       feedUri,
       this,
       namespace,
+      options?.events ?? false,
     );
     this.#feeds.set(feedUri, handle);
     return handle;
@@ -688,6 +703,17 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
     return this._getOrCreateFeedHandle(feedUri, namespace);
+  }
+
+  /**
+   * @internal
+   * The event-feed counterpart of {@link _getFeedHandleIfAvailable}, for the object with `ownerId`.
+   */
+  _getEventFeedHandleIfAvailable(ownerId: EntityId): FeedHandle | undefined {
+    if (!this.#feedService) {
+      return undefined;
+    }
+    return this.#getEventFeedHandle(ownerId);
   }
 
   /**
@@ -721,6 +747,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       this.#feeds.delete(feedUri);
       await handle.dispose();
     }
+  }
+
+  /** An object's event feed shares the object's EID, and events always use the `data` namespace. */
+  #getEventFeedHandle(ownerId: EntityId): FeedHandle {
+    return this._getOrCreateFeedHandle(EID.make({ spaceId: this.spaceId, entityId: ownerId }), 'data', {
+      events: true,
+    });
   }
 
   #getFeedHandle(feed: Feed.Feed): FeedHandle {

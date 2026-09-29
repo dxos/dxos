@@ -12,11 +12,13 @@ import { assumeType } from '@dxos/util';
 import type * as Database from '../../Database.ts';
 import {
   ATTR_DELETED,
+  ATTR_KIND,
   type ATTR_PARENT,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
+  ATTR_TIMESTAMP,
   type ATTR_TYPE,
   EntityKind,
   KindId,
@@ -93,6 +95,8 @@ export interface ObjectJSON {
   [ATTR_META]?: EntityMetaJSON;
   [ATTR_RELATION_SOURCE]?: EID.EID;
   [ATTR_RELATION_TARGET]?: EID.EID;
+  [ATTR_KIND]?: EntityKind.Event;
+  [ATTR_TIMESTAMP]?: number;
 
   /**
    * Application-specific properties.
@@ -109,7 +113,10 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   invariant(EntityId.isValid(obj.id), 'Invalid object model: invalid id');
   invariant(obj[TypeId] === undefined || typeof obj[TypeId] === 'string', 'Invalid object model: invalid type');
   invariant(
-    obj[KindId] === EntityKind.Object || obj[KindId] === EntityKind.Relation || obj[KindId] === EntityKind.Type,
+    obj[KindId] === EntityKind.Object ||
+      obj[KindId] === EntityKind.Relation ||
+      obj[KindId] === EntityKind.Type ||
+      obj[KindId] === EntityKind.Event,
     'Invalid object model: invalid entity kind',
   );
 
