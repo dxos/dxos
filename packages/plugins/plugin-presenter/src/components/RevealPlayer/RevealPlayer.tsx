@@ -202,7 +202,12 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
 
       setPlayer({ deck, markdown, highlight, slides, renderedContent: content });
 
+      // Reveal re-lays out only on window resize; a plank or companion resizes without one.
+      const resizeObserver = new ResizeObserver(() => deck.layout());
+      resizeObserver.observe(deckDivRef.current!);
+
       return () => {
+        resizeObserver.disconnect();
         try {
           deck.destroy();
         } catch {

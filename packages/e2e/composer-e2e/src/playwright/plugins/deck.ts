@@ -16,6 +16,11 @@ export class DeckManager {
     return new PlankManager(this._page.getByTestId('deck.plank').nth(nth));
   }
 
+  /** The deck's planks; hidden while a plank is shown fullscreen. */
+  viewport(): Locator {
+    return this._page.getByTestId('deck.viewport');
+  }
+
   async closeAll(): Promise<void> {
     const planks = await this._page.getByTestId('deck.plank').all();
     // Iterate in reverse to avoid re-indexing.

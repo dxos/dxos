@@ -25,7 +25,9 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
     <Panel.Root role={role} classNames='relative'>
       <Panel.Content asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
-          {content !== undefined && <RevealPlayer fullscreen={fullscreen} content={content} />}
+          {content !== undefined && (
+            <RevealPlayer data-testid='presenter.deck' fullscreen={fullscreen} content={content} />
+          )}
         </PresentationShell>
       </Panel.Content>
     </Panel.Root>
