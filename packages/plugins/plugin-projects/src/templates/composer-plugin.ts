@@ -40,6 +40,7 @@ const DXOS_PACKAGES = [
   'echo',
   'echo-react',
   'react-ui',
+  'react-ui-attention',
   'react-ui-form',
   'react-ui-geo',
   'plugin-map',
