@@ -9,7 +9,14 @@ import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { type ConfigEnv, type PluginOption, type Rollup, defineConfig, searchForWorkspaceRoot } from 'vite';
+import {
+  type ConfigEnv,
+  type PluginOption,
+  type Rollup,
+  defaultClientConditions,
+  defineConfig,
+  searchForWorkspaceRoot,
+} from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -48,6 +55,8 @@ const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugi
 // Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
+// The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
+const isTauriBuild = isTrue(process.env.DX_TAURI) || Boolean(process.env.TAURI_ENV_PLATFORM);
 
 // Vite's full-bundle dev mode: a Rolldown dev build serves the client graph instead of the
 // per-module transform pipeline, reusing `build.rolldownOptions` verbatim and running no dep
@@ -435,6 +444,7 @@ export default defineConfig((env) => ({
     ],
   },
   resolve: {
+    conditions: isTauriBuild ? ['tauri', ...defaultClientConditions] : undefined,
     // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
     // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's

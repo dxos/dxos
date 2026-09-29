@@ -19,11 +19,9 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const SandboxLayer = AppCapability.layerSpec(() => import('./sandbox-service.ts'), { name: 'SandboxLayer' });
-// Browser builds only (the desktop webview); Node and Bun run local sandboxes in-process. The helper
-// spawns on first use, so activating with the app costs nothing.
 export const LocalLauncher = Capability.lazyModule(
   'LocalLauncher',
-  { provides: [SandboxCapabilities.LocalLauncher], activatesOn: ActivationEvents.Startup, environments: [] },
+  { provides: [SandboxCapabilities.LocalLauncher], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },
   () => import('./local-launcher.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));

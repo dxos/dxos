@@ -47,7 +47,7 @@ export const Client = Capability.lazyModule(
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
     ],
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./client.ts'),
 );
@@ -89,7 +89,7 @@ export const Migrations = Capability.lazyModule(
     // client initialization to have completed — the same point it ran at when the startup pass
     // awaited initialize.
     activatesOn: ClientEvents.Initialized,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./migrations.ts'),
 );
@@ -123,7 +123,7 @@ export const SchemaDefs = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
     provides: [ClientCapabilities.SchemaRegistered],
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./schema-defs.ts'),
 );

@@ -16,7 +16,7 @@ import { PresenterCapabilities } from '#types';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
