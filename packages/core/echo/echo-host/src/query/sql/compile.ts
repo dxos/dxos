@@ -770,7 +770,7 @@ export class SqlPlanCompiler {
           sql`${project(sql`t`)} FROM ${wsRef} w
             JOIN reverseRef r ON r.targetDXN = 'echo:///' || w.objectId
             JOIN objectMeta t ON t.recordId = r.recordId
-            WHERE ${pathCondition}
+            WHERE ${pathCondition} AND t.entityKind != 'event'
             GROUP BY t.recordId`,
         );
       }

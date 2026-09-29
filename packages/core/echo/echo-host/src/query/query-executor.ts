@@ -1533,7 +1533,10 @@ export class QueryExecutor extends Resource {
           }
           case 'incoming': {
             const beginIndexQuery = performance.now();
-            const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
+            // An event may hold a ref, but it is reached only through an event traversal.
+            const metas = (await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property)).filter(
+              (meta) => meta.entityKind !== EntityKind.Event,
+            );
             trace.indexHits += metas.length;
             trace.indexQueryTime += performance.now() - beginIndexQuery;
 

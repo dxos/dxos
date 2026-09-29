@@ -159,6 +159,10 @@ describe.each(['sql', 'memory'] as const)('object events (%s executor)', (queryE
 
     const [comment] = await db.query(Query.events(doc, Commented)).run();
     expect((await comment.author?.load())?.name).toEqual('author');
+
+    // The event's ref does not make it a referrer of the author.
+    const referrers = await db.query(Query.select(Filter.id(author.id)).referencedBy()).run();
+    expect(referrers.some((entity) => Event.isEvent(entity))).toBe(false);
   });
 
   test('pending events are visible before flush', async ({ expect }) => {

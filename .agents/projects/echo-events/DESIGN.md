@@ -155,8 +155,10 @@ recognised by `@relationSource`.
   (`_getEventFeedHandleIfAvailable`), which gives it one identity with appended events, and never
   gets a parent. Without a feed service it decodes on its own and still records its owner.
 
-**Space export/import.** Export enumerates `getAllFeedsForSpace`, which returns object event feeds
-because they are ordinary feed-store feeds. No round-trip test exists yet (follow-up).
+**Space export/import.** Export walks `Feed.Feed` objects for their item feeds, then asks the
+feed-store (`getAllFeedsForSpace`) for every `data`-namespace feed whose id is an exported object's
+id and not already exported — an object's event feed — and exports it the same way. Import already
+accepts any feed id. `client-e2e/src/spaces.test.ts` covers the round trip.
 
 **EDGE.** Nothing changed, since the replicator carries `feedId` on each block and syncs per
 namespace. Whether `dxos/edge` assumes every `feedId` names a Feed object (backend queries,
@@ -179,10 +181,10 @@ Query.select(Filter.type(Task)).events(Notification);
   relation query is a type error.
 - The optional argument is a `Type.Event`. Further filters chain as usual:
   `.events(Viewed).select({ by: 'alice' })` filters the events, not their owners.
-- **`Query.events(obj, type)` is sugar** for `Query.select(Filter.id(obj.id)).events(type)`, which
-  keeps a single execution path; `db.query` scopes it to the database as it does any unscoped query.
-  The anchor is selected from the space's documents, so an object that is itself a feed item can
-  hold events but `Query.events` does not find them (see [Implementation notes](#implementation-notes)).
+- **`Query.events(obj, type)` is sugar** for `Query.select(Filter.id(obj.id)).events(type)`, scoped
+  to the object's database with its feeds included, which keeps a single execution path and finds
+  the events of an owner that is itself a feed item. A traversal (`query.events()`) anchors on
+  whatever its query selects, so reaching feed-item owners there takes `{ includeFeeds: true }`.
 
 ### AST
 
@@ -216,8 +218,10 @@ Behaviour:
   `deleted: 'include'`.
 - **Anchors do not need to be local.** The client working-set executor has no case for the traversal
   and returns no result, so the index query source answers, as it does for feed-scoped queries.
-- **Order.** Results come back in index order, which is append order for one writer. No explicit
-  ordering step is added; `orderBy` overrides it.
+- **Order.** The default is the natural order every query uses, which sorts by object id. Event ids
+  come from a monotonic ULID factory, so this is creation order (`Event.make`) within one writer —
+  the same convention feed items follow. It departs from append order only when events are appended
+  in a different order than they were made, or across writers; `orderBy` overrides it.
 - **Read-your-writes and reactivity.** Unflushed events show up in reactive results through the
   owner's event feed handle, and a subscription re-fires on append (tested locally; replicated
   appends are not tested).
@@ -228,8 +232,10 @@ Events never leak into other query paths:
 
 - Every select step drops events — `entityKind != 'event'` in the SQL select scope and in
   reverse-reference lookups, and a post-filter in the in-memory executor. So
-  `Query.select(Filter.everything())`, with or without `{ includeFeeds: true }`, `referencedBy`,
-  and a feed-scoped select never return events.
+  `Query.select(Filter.everything())`, with or without `{ includeFeeds: true }`, and a feed-scoped
+  select never return events.
+- Incoming-reference traversal (`query.referencedBy()`) drops event referrers in both executors, so
+  an event's ref never makes it a referrer of its target.
 - `children()` excludes events (`EntityMetaIndex.queryChildren` and the SQL hierarchy join), since an
   object's events share its id as their queue id.
 - `Query.from(feed)` on a `Feed.Feed` never returns events, because the ids differ.
@@ -247,8 +253,10 @@ query simply returns no events, so no rejection was added.
 | `echo-host`       | `src/query/query-planner.test.ts`                | `event-traversal` plans to select → `EventTraversal` → event filter.                                                                                                                                                                                |
 | `echo-client-e2e` | `src/events.test.ts` (10 cases × both executors) | Append/query, type filters, traversal, per-object isolation, isolation from object/feed/children queries, refs, pending events before flush, reload persistence, input validation, deleted owners.                                                  |
 
-Not covered yet (follow-ups): two-peer replication through EDGE, space export/import round trip, a
-`dxos/edge` workerd test, and a resume-by-cursor traversal.
+| `client-e2e` | `src/spaces.test.ts` | Space export/import (JSON) keeps an object's events. |
+
+Not covered yet (follow-ups): two-peer replication through EDGE, a `dxos/edge` workerd test, and a
+resume-by-cursor traversal.
 
 ## Implementation notes
 
@@ -266,9 +274,9 @@ Where the implementation departs from the spec above, and why:
    reference from every event to its owner.
 4. **No `Type.makeEventFromJsonSchema`.** Static event types cover user-defined types. `db.addType`
    of a static event type persists it with the event kind.
-5. **Owners that are feed items.** `Obj.appendEvents` accepts any object in a database, including
-   an object that is itself a feed item, but `Query.events` selects its anchor from the space's
-   documents and so does not find such an owner's events.
+5. **Default order is creation order, not append order.** Queries sort by object id by default, and
+   feed items already follow that; giving events a position-based default would fork natural
+   ordering for one entity kind. Monotonic ids make it creation order within a writer.
 
 ## Decisions
 
