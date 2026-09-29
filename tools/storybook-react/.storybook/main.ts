@@ -418,7 +418,16 @@ export const createConfig = ({
                   return;
                 }
                 try {
-                  const response = await globalThis.fetch(feedUrl);
+                  // Forwards the browser's own headers, as composer-app's `rssProxyUpstreamHeaders` does: feed
+                  // hosts' WAFs reject Node's defaults (`User-Agent: node`, `Accept-Language: *`) as automated.
+                  const response = await globalThis.fetch(feedUrl, {
+                    headers: {
+                      'Accept':
+                        'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.8',
+                      'Accept-Language': req.headers['accept-language'] || 'en-US,en;q=0.9',
+                      ...(req.headers['user-agent'] && { 'User-Agent': req.headers['user-agent'] }),
+                    },
+                  });
                   const contentType = response.headers.get('content-type');
                   if (contentType) {
                     res.setHeader('content-type', contentType);

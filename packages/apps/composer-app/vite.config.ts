@@ -26,6 +26,7 @@ import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
+import { rssProxyUpstreamHeaders } from './src/util/rss-proxy.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
@@ -489,7 +490,12 @@ export default defineConfig((env) => ({
             return;
           }
           try {
-            const response = await globalThis.fetch(feedUrl);
+            const response = await globalThis.fetch(feedUrl, {
+              headers: rssProxyUpstreamHeaders({
+                userAgent: req.headers['user-agent'],
+                acceptLanguage: req.headers['accept-language'],
+              }),
+            });
             const contentType = response.headers.get('content-type');
             if (contentType) {
               res.setHeader('content-type', contentType);

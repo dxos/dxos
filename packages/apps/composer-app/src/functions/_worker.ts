@@ -8,6 +8,7 @@
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
+import { rssProxyUpstreamHeaders } from '../util/rss-proxy.ts';
 
 type Env = {
   ASSETS: Fetcher;
@@ -150,9 +151,19 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     // Forward the original method so HEAD probes don't download the full body upstream.
     const upstream = await fetch(parsedFeedUrl.toString(), {
       method: request.method,
-      headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' },
+      headers: rssProxyUpstreamHeaders({
+        userAgent: request.headers.get('User-Agent'),
+        acceptLanguage: request.headers.get('Accept-Language'),
+      }),
       signal: controller.signal,
     });
+    if (!upstream.ok) {
+      // Surfaces origin rejections in `wrangler tail composer`. The query is dropped: private feeds put tokens there.
+      console.warn('rss proxy: upstream responded non-2xx', {
+        url: `${parsedFeedUrl.origin}${parsedFeedUrl.pathname}`,
+        status: upstream.status,
+      });
+    }
 
     const contentLength = Number(upstream.headers.get('content-length') ?? 0);
     if (contentLength > RSS_MAX_BODY_SIZE) {
