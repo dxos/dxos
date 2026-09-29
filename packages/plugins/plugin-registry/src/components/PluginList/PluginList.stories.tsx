@@ -5,11 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import '@dxos/react-ui/next/theme.css';
 import * as PluginNS from '@dxos/app-framework/Plugin';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { ScrollArea } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
@@ -54,11 +55,11 @@ const DefaultStory = () => {
   };
 
   return (
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport>
+    <Next.Panel.Root>
+      <Next.Panel.Content>
         <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+      </Next.Panel.Content>
+    </Next.Panel.Root>
   );
 };
 

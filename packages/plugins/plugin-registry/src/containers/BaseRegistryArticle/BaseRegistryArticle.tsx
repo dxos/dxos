@@ -6,6 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+// Loaded only through the lazy registry containers, so Next's CSS stays out of the boot graph.
+import '@dxos/react-ui/next/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -13,8 +15,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import { EffectEx } from '@dxos/effect';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
@@ -137,48 +139,40 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Field.Root>
-              <Field.Label srOnly>{t('filter.label')}</Field.Label>
-              <Field.Input
-                placeholder={t('filter.placeholder')}
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Field.Root>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              {filtered.length > 0 ? (
-                <PluginList
-                  plugins={filtered}
-                  enabled={enabled}
-                  installed={installed}
-                  installing={installing}
-                  updating={updating}
-                  updateAvailableIds={updateAvailableIds}
-                  extraTagsById={extraTagsById}
-                  failuresById={failuresById}
-                  deviceOnlyIds={deviceOnlyIds}
-                  onClick={handleClick}
-                  readOnly={settingsSync === undefined}
-                  onChange={handleChange}
-                  onInstall={onInstall}
-                  onUpdate={onUpdate}
-                  hasSettings={hasSettings}
-                  onSettings={handleSettings}
-                />
-              ) : (
-                empty
-              )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-      </Panel.Root>
+      <Next.Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Next.Panel.Toolbar>
+          <Next.Input
+            aria-label={t('filter.label')}
+            placeholder={t('filter.placeholder')}
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          />
+        </Next.Panel.Toolbar>
+        <Next.Panel.Content>
+          {filtered.length > 0 ? (
+            <PluginList
+              plugins={filtered}
+              enabled={enabled}
+              installed={installed}
+              installing={installing}
+              updating={updating}
+              updateAvailableIds={updateAvailableIds}
+              extraTagsById={extraTagsById}
+              failuresById={failuresById}
+              deviceOnlyIds={deviceOnlyIds}
+              onClick={handleClick}
+              readOnly={settingsSync === undefined}
+              onChange={handleChange}
+              onInstall={onInstall}
+              onUpdate={onUpdate}
+              hasSettings={hasSettings}
+              onSettings={handleSettings}
+            />
+          ) : (
+            empty
+          )}
+        </Next.Panel.Content>
+      </Next.Panel.Root>
     );
   },
 );

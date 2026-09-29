@@ -58,9 +58,10 @@ export type UseReorderListOptions<T> = {
   /**
    * The native drag preview: `'clone'` snapshots the row itself into a detached container, a
    * renderer draws something else for the item. Either replaces the browser's own image, which for
-   * a row in a scrolling column can take the preceding siblings along.
+   * a row in a scrolling column can take the preceding siblings along. The renderer also receives the dragged row, so a
+   * portalled preview can copy its scope (e.g. `Next.DragPreview source`).
    */
-  dragPreview?: 'clone' | ((item: T) => ReactNode);
+  dragPreview?: 'clone' | ((item: T, source: HTMLElement) => ReactNode);
 };
 
 export type ReorderActive<T> = { id: string; item: T; container: HTMLElement } | null;
@@ -80,6 +81,11 @@ export type ReorderListController<T> = {
     refs: { row: HTMLElement; handle: HTMLElement },
     onItemState: (state: ReorderItemState) => void,
   ) => () => void;
+  /**
+   * Bind the list element as a drop target that accepts this list's rows but drops nothing, so the gaps between rows keep
+   * the drag's move cursor instead of falling through to whatever lies beneath. Returns a cleanup function.
+   */
+  bindList: (element: HTMLElement) => () => void;
 };
 
 export type UseReorderListReturn<T> = {
@@ -229,7 +235,7 @@ export const useReorderList = <T>({
                       let root: Root | undefined;
                       if (typeof preview === 'function') {
                         root = createRoot(container);
-                        const element = preview(current.item);
+                        const element = preview(current.item, source.element);
                         flushSync(() => root?.render(element));
                       } else {
                         container.appendChild(source.element.cloneNode(true));
@@ -280,6 +286,14 @@ export const useReorderList = <T>({
           }),
         );
       },
+      bindList: (element) =>
+        dropTargetForElements({
+          element,
+          canDrop: ({ source }) =>
+            canDropRef.current ? canDropRef.current({ source }) : source.data[REORDER_LIST_KEY] === listId,
+          // No `id`, so the monitor's lookup finds no index and a drop in a gap is a no-op.
+          getData: () => ({ [REORDER_LIST_KEY]: listId }),
+        }),
     }),
     [listId, axis, findIndex],
   );

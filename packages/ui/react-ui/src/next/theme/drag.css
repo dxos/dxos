@@ -23,6 +23,16 @@
     bottom: calc(var(--nx-drop-indicator-width) / -2);
   }
 
+  /* A row (a Container, or a Collapsible holding a row and its detail) must contain its indicator; position moves nothing. */
+  :is(.nx-grid, .nx-collapsible):has(> .nx-drop-indicator) {
+    position: relative;
+  }
+
+  /* The source row stays in place, dimmed, while its preview is dragged. */
+  :is(.nx-grid, .nx-collapsible)[data-dragging] {
+    opacity: 0.5;
+  }
+
   .nx-drag-preview {
     display: flex;
     align-items: center;
