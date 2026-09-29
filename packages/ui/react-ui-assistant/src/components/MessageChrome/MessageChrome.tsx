@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useLayoutEffect, useRef, useState } from 'react';
 
 import {
   Icon,
@@ -204,6 +204,76 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
 };
 
 //
+// Collapse
+//
+
+/** A prompt taller than this is clipped until expanded — a pasted log must not take over the thread. */
+const COLLAPSED_HEIGHT = 240;
+
+/**
+ * Clips a long prompt to a fixed height behind a show-more toggle.
+ *
+ * Overflow is measured in the layout phase, after the block's editor has mounted (child layout
+ * effects run first), so the row reaches the virtualizer at its final height and is measured once.
+ */
+const CollapsiblePrompt = ({ message, children }: PropsWithChildren<{ message: Message.Message }>) => {
+  const { t } = useTranslation(translationKey);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [overflows, setOverflows] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  useLayoutEffect(() => {
+    const content = contentRef.current;
+    if (!content) {
+      return;
+    }
+
+    const update = () => setOverflows(content.scrollHeight > COLLAPSED_HEIGHT);
+    update();
+    // A prompt can still change after mount (a queued edit, a late widget paint).
+    const observer = new ResizeObserver(update);
+    for (const child of Array.from(content.children)) {
+      observer.observe(child);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  const collapsed = overflows && !expanded;
+  const lines = promptText(message).split('\n').length;
+
+  return (
+    <>
+      <div
+        ref={contentRef}
+        className={mx(collapsed && 'overflow-hidden mask-b-from-[calc(100%-4rem)] mask-b-to-100%')}
+        style={collapsed ? { maxHeight: COLLAPSED_HEIGHT } : undefined}
+        data-testid='chat.prompt.content'
+      >
+        {children}
+      </div>
+      {overflows && (
+        <button
+          type='button'
+          className='flex items-center gap-1 pt-1 text-xs text-description hover:text-base-text'
+          aria-expanded={expanded}
+          data-testid='chat.prompt.toggle'
+          onClick={() => setExpanded((expanded) => !expanded)}
+        >
+          <Icon icon={expanded ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size={3} />
+          {expanded ? t('show-less.label') : t('show-more.label', { count: lines })}
+        </button>
+      )}
+    </>
+  );
+};
+
+/** The reader's own words: the prompt's non-synthetic text. */
+const promptText = (message: Message.Message): string =>
+  message.blocks
+    .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+    .join('\n\n');
+
+//
 // Chrome
 //
 
@@ -244,7 +314,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
                 userHue ? getStyles(userHue).border : 'border-accent-bg',
               )}
             >
-              {children}
+              <CollapsiblePrompt message={message}>{children}</CollapsiblePrompt>
             </div>
             <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
           </div>
