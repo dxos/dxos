@@ -25,6 +25,11 @@ therefore costs the full 60 s. Observed triggers:
 Upstream asks (filed): progress-anchored deadlines / per-round re-ask, always-fail-on-removal, an
 abort API, message-level acks. Until then, everything downstream is worked around.
 
+A round used to wait for **every** peer, so one slow peer cost every round the full timeout even
+after another peer had delivered. The patch now asks each peer with `syncWithPeer` and settles the
+round 250 ms after a peer answers with what the document needs (§4). Heal retries still call
+`syncWithAllPeers`.
+
 ## 2. O(N²) bulk sync — the cliff
 
 Per-document ingest cost on the DO grows **linearly with the number of docs already in the space**
@@ -77,6 +82,15 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   and `AutomergeHost` uses it to re-drive only the denied rounds.
 - **`lastSyncGeneration` is stamped at round _start_, not enqueue** — a round queued behind the gate
   across a reconnect must count against the generation it actually runs under.
+- **A round does not wait for its slowest peer**: `#syncWithConnectedPeers` settles
+  `LATE_PEER_GRACE_MS` (250 ms) after a peer's success brings data, or finds the document already
+  holding some; a request still pending then runs on, and `#applyLatePeerResult` loads its data when
+  it lands. Before any data exists, an empty success (a peer without the document) does not count,
+  or the first load reports the document `unavailable`. Requests to one peer are capped by
+  `MAX_IN_FLIGHT_PEER_SYNCS`, and a round joins a request still waiting under that cap rather than
+  queueing another. Found from a mesh peer: `MeshReplicatorConnection` awaits each `sendSyncMessage`
+  RPC, so its link carries one message per round trip (~10/s), and once it connected every round
+  waited on it and a space's initial sync fell from about 100 rounds a second to nearly none.
 
 Why the gate is a patch and not `SubductionPolicy`: policy hooks can only allow/deny (a deny is a
 _failure_ with heal-backoff, not queueing), fire mid-round after resources are committed, carry no

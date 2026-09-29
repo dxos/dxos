@@ -22,7 +22,12 @@ import { type ExpectStatic, onTestFinished } from 'vitest';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { isNonNullable } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
+import {
+  TestAdapter,
+  type TestConnectionStateProvider,
+  type TestTransportOptions,
+  createTestSqliteStorageAdapter,
+} from '../testing/index.ts';
 import { type AutomergeHost } from './automerge-host.ts';
 
 export const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
@@ -176,6 +181,8 @@ export type ConnectedRepoOptions = {
   onMessageByConnection?: Record<number, (message: Message) => void>;
   /** Per-connection transport gates, keyed by index into `connections`; overrides `connectionStateProvider`. */
   connectionStateProviderByConnection?: Record<number, TestConnectionStateProvider>;
+  /** Per-connection transport behavior, keyed by index into `connections`. */
+  transportByConnection?: Record<number, TestTransportOptions>;
   subductionTimeouts?: NonNullable<ConstructorParameters<typeof Repo>[0]>['subductionTimeouts'];
 };
 
@@ -196,6 +203,7 @@ export const createRepoTopology = async <Peers extends string[], Peer extends st
     return TestAdapter.createPair(
       args.options?.connectionStateProviderByConnection?.[idx] ?? args.options?.connectionStateProvider,
       handler,
+      args.options?.transportByConnection?.[idx],
     ) as [TestAdapter, TestAdapter];
   });
   const repos = args.peers.map((peerId, peerIndex) => {
