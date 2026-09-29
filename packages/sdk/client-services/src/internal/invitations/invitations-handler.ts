@@ -458,13 +458,16 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
               });
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'swarm' } });
+              const firstAdmission = admittedBy === undefined;
               admittedBy = 'peer';
               guardedState.complete({
                 ...guardedState.current,
                 ...result,
                 state: Invitation_State.SUCCESS,
               });
-              _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
+              if (firstAdmission) {
+                _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
+              }
               log('guest invitation handler opened');
             } catch (err: any) {
               if (err instanceof TimeoutError) {
@@ -500,9 +503,13 @@ export class InvitationsHandler {
         const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
         metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'edge' } });
+        // A delegated invitation can also be admitted by a peer in the same run; report the join once.
+        const firstAdmission = admittedBy === undefined;
         admittedBy = 'edge';
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation_State.SUCCESS });
-        _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
+        if (firstAdmission) {
+          _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
+        }
       },
     });
     edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);
