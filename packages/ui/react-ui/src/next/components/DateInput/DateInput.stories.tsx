@@ -14,7 +14,7 @@ import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../stories.tsx';
-import { GEOMETRY, byTestId, controlSize, expectAnchoredBelow, expectScoped, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { type FieldRootProps } from '../Field/index.ts';
 
 type ValueFieldProps = Next.DateInputProps & { label: string; testId: string; fieldProps?: FieldRootProps };
@@ -104,6 +104,29 @@ const realType = async (text: string) => {
   await keyboard.keyboard(text);
 };
 
+/** The open calendar of the DateInput with this test id, once it is positioned. */
+const openCalendar = async (root: HTMLElement, testId: string) => {
+  await userEvent.click(within(byTestId(root, testId)).getByRole('button', { name: 'Pick a date' }));
+  const calendar = await waitFor(() => byTestId(root.ownerDocument.body, `${testId}-calendar`));
+  await waitFor(() => expect(calendar).toBeVisible());
+  return calendar;
+};
+
+/**
+ * Waits until the calendar hangs 0–3px below the row with its end at the row's (and so its trigger's) end, and returns
+ * its width.
+ */
+const expectEndAnchored = async (row: HTMLElement, calendar: HTMLElement) => {
+  await waitFor(async () => {
+    const rowRect = row.getBoundingClientRect();
+    const rect = calendar.getBoundingClientRect();
+    const where = `calendar ${JSON.stringify(rect)}, row ${JSON.stringify(rowRect)}`;
+    await expect(rect.top - rowRect.bottom >= 0 && rect.top - rowRect.bottom <= 3, `gap: ${where}`).toBe(true);
+    await expect(Math.abs(rect.right - rowRect.right) <= 1, `end: ${where}`).toBe(true);
+  });
+  return calendar.getBoundingClientRect().width;
+};
+
 const segmentTypes = (group: HTMLElement) =>
   within(group)
     .getAllByRole('spinbutton')
@@ -112,8 +135,9 @@ const segmentTypes = (group: HTMLElement) =>
 /**
  * The row is a control at every size, as wide as an Input; segments are spinbuttons named by the Field label and
  * ordered by the locale; typing digits fills and advances segments, ArrowUp/Down step one, and the field reports the
- * native value format. The trailing trigger opens the calendar anchored below the row, a day click sets the date and
- * min/max disable days outside the window. Read-only, invalid and disabled come from `Field.Root`.
+ * native value format. The trailing trigger opens the calendar below the row, ending at the trigger, at its own width
+ * (seven square block-sized days) whatever the field's width; a day click sets the date and min/max disable days
+ * outside the window. Read-only, invalid and disabled come from `Field.Root`.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -193,12 +217,38 @@ export const Test: Story = {
     // A time has no calendar.
     await expect(within(byTestId(md, 'time-md')).queryByRole('button')).toBeNull();
 
-    // The calendar opens below the row; min/max disable days outside the window; a day click sets the date.
+    // At every size the calendar keeps its own width, seven square block-sized days plus its padding, ending under
+    // the trigger; narrowing the field leaves that width unchanged.
+    for (const size of SIZES) {
+      const row = byTestId(canvasElement, `date-${size}`);
+      const block = GEOMETRY[size].block;
+      let calendar = await openCalendar(canvasElement, `date-${size}`);
+      const style = getComputedStyle(calendar);
+      const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const width = await expectEndAnchored(row, calendar);
+      await expect(width, `${size} calendar width`).toBeCloseTo(7 * block + padding, 0);
+      await expect(width, `${size} calendar narrower than the field`).toBeLessThan(row.getBoundingClientRect().width);
+      for (const cell of calendar.querySelectorAll<HTMLElement>('[data-part="table-cell-trigger"][data-view="day"]')) {
+        const rect = cell.getBoundingClientRect();
+        await expect(rect.width, `${size} day width`).toBeCloseTo(block, 0);
+        await expect(rect.height, `${size} day height`).toBeCloseTo(block, 0);
+      }
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(row.ownerDocument.querySelector(`[data-testid="date-${size}-calendar"]`)).toBeNull());
+
+      // Narrower, but with room for the calendar at its end, so the placement need not shift it.
+      row.style.width = `${width + block}px`;
+      calendar = await openCalendar(canvasElement, `date-${size}`);
+      await expect(await expectEndAnchored(row, calendar), `${size} width follows no field`).toBeCloseTo(width, 0);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(row.ownerDocument.querySelector(`[data-testid="date-${size}-calendar"]`)).toBeNull());
+      row.style.width = '';
+    }
+
+    // min/max disable days outside the window; a day click sets the date.
     const windowRow = byTestId(md, 'window-md');
-    await userEvent.click(within(windowRow).getByRole('button', { name: 'Pick a date' }));
-    const calendar = await waitFor(() => byTestId(canvasElement.ownerDocument.body, 'window-md-calendar'));
-    await waitFor(() => expect(calendar).toBeVisible());
-    await expectAnchoredBelow(windowRow, calendar);
+    const calendar = await openCalendar(md, 'window-md');
+    await expectEndAnchored(windowRow, calendar);
     const day = (date: string, root = calendar) => {
       const cell = root.querySelector<HTMLElement>(`[data-part="table-cell-trigger"][data-value="${date}"]`);
       if (!cell) {
@@ -217,8 +267,12 @@ export const Test: Story = {
     );
 
     // A date-time keeps its time when the calendar picks a day; the calendar is left open for inspection.
-    await userEvent.click(within(byTestId(md, 'datetime-md')).getByRole('button', { name: 'Pick a date' }));
-    const datetimeCalendar = await waitFor(() => byTestId(canvasElement.ownerDocument.body, 'datetime-md-calendar'));
+    const datetimeCalendar = await openCalendar(md, 'datetime-md');
+    const datetimeStyle = getComputedStyle(datetimeCalendar);
+    await expect(await expectEndAnchored(byTestId(md, 'datetime-md'), datetimeCalendar)).toBeCloseTo(
+      7 * GEOMETRY.md.block + parseFloat(datetimeStyle.paddingLeft) + parseFloat(datetimeStyle.paddingRight),
+      0,
+    );
     await userEvent.click(day('2026-09-03', datetimeCalendar));
     await waitFor(() => expect(value('datetime')).toHaveTextContent('2026-09-03T10:30'));
     await userEvent.click(within(byTestId(md, 'datetime-md')).getByRole('button', { name: 'Pick a date' }));

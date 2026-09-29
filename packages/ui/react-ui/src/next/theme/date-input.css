@@ -54,7 +54,14 @@
     color: var(--color-error-text);
   }
 
+  /*
+   * The calendar keeps its own square-ish shape rather than the anchor's width: seven block-sized day columns plus the
+   * padding, whatever the field's width, so every view (day, month, year) shares that width.
+   */
   .nx-date-calendar {
+    box-sizing: content-box;
+    width: calc(7 * var(--nx-block-size));
+    min-width: 0;
     padding: var(--nx-gap-size);
   }
   .nx-date-calendar-view[hidden] {
@@ -63,18 +70,19 @@
   .nx-date-calendar-header {
     display: flex;
     align-items: center;
-    gap: var(--nx-control-inset);
   }
   .nx-date-calendar-title {
     flex: 1;
-    width: auto;
+    min-width: 0;
   }
   .nx-date-calendar-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
   }
   .nx-date-calendar-table th {
     height: var(--nx-block-size);
+    padding: 0;
     font-weight: normal;
     color: var(--color-description);
   }
@@ -83,17 +91,17 @@
     text-align: center;
   }
 
-  /* A control-sized cell, so a day is as tall as a button at the popup's size. */
+  /* A day is a block-sized square; month and year cells share a row's width four to a row at the same height. */
   .nx-date-calendar-cell {
     display: grid;
     place-items: center;
-    min-width: var(--nx-control-size);
-    height: var(--nx-control-size);
-    margin: var(--nx-control-inset);
-    padding-inline: var(--nx-gap-size);
+    height: var(--nx-block-size);
     border-radius: var(--radius-sm, 0.25rem);
     font-variant-numeric: tabular-nums;
     cursor: pointer;
+  }
+  .nx-date-calendar-cell[data-view='day'] {
+    width: var(--nx-block-size);
   }
   .nx-date-calendar-cell:hover:not([data-disabled]) {
     background: var(--color-hover-surface);

@@ -162,8 +162,8 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
       max: max && toCalendarDate(max),
       disabled: dateInput.disabled,
       readOnly: readOnly ?? field?.readOnly,
-      // Ark's 8px default reads as detached from the control.
-      positioning: { placement: 'bottom-start', gutter: 2 },
+      // The calendar ends under its trigger at its own width; Ark's 8px gutter reads as detached.
+      positioning: { placement: 'bottom-end', gutter: 2 },
     });
 
     const segments = (
