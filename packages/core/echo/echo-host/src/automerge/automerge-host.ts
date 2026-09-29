@@ -233,6 +233,8 @@ export class AutomergeHost extends Resource {
   });
 
   private _repo!: Repo;
+  /** Changes the collection diff has confirmed present per document; see {@link _hasLocalChange}. */
+  private readonly _confirmedChanges = new Map<DocumentId, Set<string>>();
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
 
@@ -948,6 +950,7 @@ export class AutomergeHost extends Resource {
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
     // it would re-create — and re-announce — the query this call deletes.
     this._leases.forget(documentId);
+    this._confirmedChanges.delete(documentId);
 
     // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
     // row could never be found again.
@@ -1492,23 +1495,32 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Answers from resident documents only: loading one to diff heads would fault in every document
-   * of a collection on each poll.
+   * Whether the local replica holds a change, for the collection diff. A resident document answers
+   * directly and records each change it confirms: a change never leaves a document, so the record
+   * still answers once the document is evicted, and loading it on every poll is avoided. An evicted
+   * document with an unconfirmed change reports it missing, which faults the document in to check.
    */
   private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean | undefined {
-    if (!this._repo || getHandleState(this._repo, documentId) !== 'ready') {
+    if (this._confirmedChanges.get(documentId)?.has(changeHash)) {
+      return true;
+    }
+    // Heads come from any peer and are only validated as strings; a malformed one is unanswerable,
+    // and reporting it missing would fault the document in on every poll.
+    if (!CHANGE_HASH_PATTERN.test(changeHash)) {
       return undefined;
+    }
+    if (!this._repo || getHandleState(this._repo, documentId) !== 'ready') {
+      return false;
     }
     const doc = this._repo.getHandle(documentId)?.doc();
     if (!doc) {
-      return undefined;
+      return false;
     }
-    try {
-      return changeIsPresentInDoc(doc, changeHash);
-    } catch {
-      // A remote head is only validated as a string, and the lookup throws on one that is not a hash.
-      return undefined;
+    const present = changeIsPresentInDoc(doc, changeHash);
+    if (present) {
+      defaultMap(this._confirmedChanges, documentId, () => new Set<string>()).add(changeHash);
     }
+    return present;
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1828,6 +1840,9 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
     lease.on('change', onChange);
   });
 };
+
+/** A hex-encoded change hash, the only form `getChangeByHash` accepts. */
+const CHANGE_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
 const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
   return !!getBackend(doc).getChangeByHash(changeHash);

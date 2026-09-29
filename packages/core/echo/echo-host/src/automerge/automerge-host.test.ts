@@ -399,6 +399,54 @@ describe('AutomergeHost', () => {
     expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(0);
   });
 
+  // EDGE soak: a peer that never received a fragment had evicted the document, and EDGE advertised the
+  // stale tip beside the new head, so the overlap alone read as converged and nothing fetched it.
+  test('an evicted document is different until an overlapping remote head is confirmed', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({
+      runtime,
+      useSubduction: true,
+      residency: { evictionDelay: 0, minResidentDocuments: 0 },
+    });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    const [ancestorHead] = A.getHeads(handle.doc());
+    handle.change((doc: any) => {
+      doc.value = 2;
+    });
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
+    const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+    const synchronizer = (host as any)._collectionSynchronizer;
+    const peerId = 'test-peer' as PeerId;
+    const differentDocuments = async () =>
+      (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
+
+    // Resident: the ancestor is checked against the document and confirmed.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, {
+      documents: { [documentId]: [localHead, ancestorHead] },
+    });
+    expect(await differentDocuments()).toEqual(0);
+
+    handle[Symbol.dispose]();
+    await waitForEviction(expect, host, documentId);
+
+    // Evicted: the confirmed ancestor still counts as present, an unconfirmed head does not.
+    expect(await differentDocuments()).toEqual(0);
+    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
+    expect(await differentDocuments()).toEqual(1);
+  });
+
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
   // so an evicted diverged document must not re-arm it on every diff pass.
   test('a diverged evicted document does not kick the share policy', async () => {

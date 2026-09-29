@@ -431,6 +431,43 @@ describe('CollectionSynchronizer', () => {
       expect(updates).toEqual([edgePeerId, edgePeerId, edgePeerId]);
     });
 
+    // EDGE soak: the dedupe compared states with the overlap rule, so a peer's new head beside a shared
+    // one read as "unchanged" and the new state was never recorded.
+    test('a remote state that adds a head beside a shared one is not deduped', async ({ expect }) => {
+      const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
+      const collectionId = 'collection-test';
+      const [shared] = localHeads;
+      const [ancestor] = TEST_HEADS[2];
+      const [added] = TEST_HEADS[1];
+
+      const peer = await new CollectionSynchronizer({
+        queryCollectionState: () => {},
+        sendCollectionState: () => {},
+        shouldSyncCollection: () => true,
+        hasLocalChange: (_documentId, head) => head === ancestor,
+      }).open();
+      onTestFinished(async () => {
+        await peer.close();
+      });
+      peer.onConnectionOpen(edgePeerId);
+      peer.setLocalCollectionState(collectionId, {
+        documents: { [documentId]: [shared] } as Record<DocumentId, A.Heads>,
+      });
+      await Promise.resolve();
+
+      peer.onRemoteStateReceived(collectionId, edgePeerId, {
+        documents: { [documentId]: [shared, ancestor] } as Record<DocumentId, A.Heads>,
+      });
+      peer.onRemoteStateReceived(collectionId, edgePeerId, {
+        documents: { [documentId]: [shared, added] } as Record<DocumentId, A.Heads>,
+      });
+
+      expect(peer.getRemoteCollectionStates(collectionId).get(edgePeerId)?.documents[documentId]).toEqual([
+        shared,
+        added,
+      ]);
+    });
+
     test('a disjoint head set is different, and stays different when re-diffed', ({ expect }) => {
       const local = { documents: { [documentId]: localHeads } as Record<DocumentId, A.Heads> };
       const remote = { documents: { [documentId]: TEST_HEADS[1] } as Record<DocumentId, A.Heads> };

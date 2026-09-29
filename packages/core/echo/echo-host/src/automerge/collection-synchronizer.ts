@@ -450,8 +450,26 @@ type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
-export const isCollectionStateEqual = (local: CollectionState, remote: CollectionState): boolean =>
-  isDiffEmpty(diffCollectionState(local, remote));
+/**
+ * Whether two states name the same heads for the same documents. Exact rather than the diff's overlap
+ * rule: the dedupe relies on it, and a head added beside a shared one is a change it must not drop.
+ */
+export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean => {
+  const leftDocuments = Record.filter(left.documents, (heads) => heads.length > 0);
+  const rightDocuments = Record.filter(right.documents, (heads) => heads.length > 0);
+  const documentIds = Record.keys(leftDocuments);
+  if (documentIds.length !== Record.keys(rightDocuments).length) {
+    return false;
+  }
+  return documentIds.every((documentId) => {
+    const rightHeads = rightDocuments[documentId];
+    if (!rightHeads) {
+      return false;
+    }
+    const leftHeads = new Set(leftDocuments[documentId]);
+    return rightHeads.length === leftHeads.size && rightHeads.every((head) => leftHeads.has(head));
+  });
+};
 
 /**
  * Strip entries whose heads array is empty before sending a CollectionState
