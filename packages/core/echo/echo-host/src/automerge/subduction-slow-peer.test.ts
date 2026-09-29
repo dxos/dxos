@@ -3,11 +3,22 @@
 //
 
 import * as A from '@automerge/automerge';
-import { type AutomergeUrl, type Repo, initSubduction, parseAutomergeUrl } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type Repo,
+  type SubductionPolicy,
+  initSubduction,
+  parseAutomergeUrl,
+} from '@automerge/automerge-repo';
 import { type ExpectStatic, beforeAll, describe, test } from 'vitest';
 
 import { type TestConnectionStateProvider, type TestTransportOptions } from '../testing/index.ts';
-import { connectAdapters, createRepoTopology, waitForSubductionSave } from './subduction-test-utils.ts';
+import {
+  connectAdapters,
+  createCountingPolicy,
+  createRepoTopology,
+  waitForSubductionSave,
+} from './subduction-test-utils.ts';
 
 // Long enough that a round held to its deadline cannot pass the assertions below.
 const ROUND_DEADLINE_MS = 30_000;
@@ -22,10 +33,14 @@ const createReader = async ({
   edgeTransport,
   secondLink,
   secondTransport,
+  policies,
+  healInitialDelayMs = 100,
 }: {
   edgeTransport?: TestTransportOptions;
   secondLink?: TestConnectionStateProvider;
   secondTransport?: TestTransportOptions;
+  policies?: Record<string, SubductionPolicy>;
+  healInitialDelayMs?: number;
 }) => {
   const transportByConnection: Record<number, TestTransportOptions> = {};
   if (edgeTransport) {
@@ -43,7 +58,8 @@ const createReader = async ({
     options: {
       connectionStateProviderByConnection: secondLink ? { 1: secondLink } : {},
       transportByConnection,
-      subductionTimeouts: { syncMs: ROUND_DEADLINE_MS, healInitialDelayMs: 100 },
+      subductionPolicies: policies,
+      subductionTimeouts: { syncMs: ROUND_DEADLINE_MS, healInitialDelayMs },
     },
   });
   const [reader, edge, second] = repos;
@@ -127,5 +143,77 @@ describe('Subduction sync with a slow peer', () => {
     }
     expect(states).not.toContain('unavailable');
     expect((await reader.find<Doc>(url)).doc()?.value).toBe(0);
+  });
+  test('heal retries do not hold round slots while a connected peer never answers', async ({ expect }) => {
+    let refuse = true;
+    let secondLink: 'on' | 'off' = 'on';
+    const refusing = () =>
+      createCountingPolicy({
+        authorizeFetch: async () => {
+          if (refuse) {
+            throw new Error('fetch refused');
+          }
+        },
+      });
+    const edgePolicy = refusing();
+    const secondPolicy = refusing();
+    // The heal delay leaves time to change the peers between the failed first rounds and the retries.
+    const { reader, edge, second, connect } = await createReader({
+      secondLink: () => secondLink,
+      policies: { edge: edgePolicy.policy, second: secondPolicy.policy },
+      healInitialDelayMs: 2_000,
+    });
+    // More documents than MAX_IN_FLIGHT_DOC_SYNCS, so their heal retries alone can take every round slot.
+    const failing = await storeOnly([edge, second], 120);
+    const [late] = await storeOnly([edge], 1);
+    await connect(expect);
+
+    // Both peers refuse, so every first round fails at once and schedules a heal retry.
+    const progresses = failing.map((url) => reader.findWithProgress<Doc>(url));
+    await expect
+      .poll(() => progresses.filter((progress) => progress.peek().state === 'unavailable').length, {
+        timeout: WITHIN_MS,
+      })
+      .toBe(failing.length);
+    const refusals = edgePolicy.counters.authorizeFetch;
+    refuse = false;
+    secondLink = 'off';
+    // The retries have started once `edge` is asked again.
+    await expect
+      .poll(() => edgePolicy.counters.authorizeFetch - refusals, { timeout: WITHIN_MS })
+      .toBeGreaterThanOrEqual(100);
+
+    const progress = reader.findWithProgress<Doc>(late);
+    await expect.poll(() => progress.peek().state, { timeout: WITHIN_MS }).toBe('ready');
+    expect((await reader.find<Doc>(late)).doc()?.value).toBe(0);
+  }, 60_000);
+  test('a heal retry still asks the peers for an evicted document', async ({ expect }) => {
+    let refuse = true;
+    let secondLink: 'on' | 'off' = 'on';
+    const refusing = () =>
+      createCountingPolicy({
+        authorizeFetch: async () => {
+          if (refuse) {
+            throw new Error('fetch refused');
+          }
+        },
+      });
+    const edgePolicy = refusing();
+    const { reader, edge, second, connect } = await createReader({
+      secondLink: () => secondLink,
+      policies: { edge: edgePolicy.policy, second: refusing().policy },
+      healInitialDelayMs: 2_000,
+    });
+    const [url] = await storeOnly([edge, second], 1);
+    await connect(expect);
+
+    const progress = reader.findWithProgress<Doc>(url);
+    await expect.poll(() => progress.peek().state, { timeout: WITHIN_MS }).toBe('unavailable');
+    // Evicted while its heal retry waits: with no handle left, the retry syncs the stored tree.
+    await reader.removeFromCache(parseAutomergeUrl(url).documentId);
+    const asked = edgePolicy.counters.authorizeFetch;
+    refuse = false;
+    secondLink = 'off';
+    await expect.poll(() => edgePolicy.counters.authorizeFetch - asked, { timeout: WITHIN_MS }).toBeGreaterThan(0);
   });
 });

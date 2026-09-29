@@ -27,8 +27,8 @@ abort API, message-level acks. Until then, everything downstream is worked aroun
 
 A round used to wait for **every** peer, so one slow peer cost every round the full timeout even
 after another peer had delivered. The patch now asks each peer with `syncWithPeer` and settles the
-round 250 ms after a peer answers with what the document needs (§4). Heal retries still call
-`syncWithAllPeers`.
+round 250 ms after a peer answers with what the document needs (§4). Heal retries run the same
+round, so nothing in the patch calls `syncWithAllPeers`.
 
 ## 2. O(N²) bulk sync — the cliff
 
@@ -101,6 +101,11 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   queueing another. Found from a mesh peer: `MeshReplicatorConnection` awaits each `sendSyncMessage`
   RPC, so its link carries one message per round trip (~10/s), and once it connected every round
   waited on it and a space's initial sync fell from about 100 rounds a second to nearly none.
+- **Heal retries use the same round**: `SyncScheduler` runs `SubductionSource#syncHealRound`, not
+  `syncWithAllPeers`. A retry waiting on a silent peer used to hold its gate slot until the deadline,
+  so a wave of retries took every slot and stalled every other document's round. A peer still
+  answering when the round settles is not counted as failed, so the retry stops once another peer
+  has succeeded instead of re-asking the slow peer until the heal budget runs out.
 
 Why the gate is a patch and not `SubductionPolicy`: policy hooks can only allow/deny (a deny is a
 _failure_ with heal-backoff, not queueing), fire mid-round after resources are committed, carry no
