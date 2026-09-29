@@ -132,6 +132,8 @@ declare global {
     VITE_DX_STARTUP_TIMEOUT?: string;
     /** Log per-plugin activation in the boot loader — see `verboseStatus` below. */
     VITE_DX_BOOT_VERBOSE?: string;
+    /** `memory` keeps the database out of OPFS; see `workers/dedicated-worker.ts`. */
+    VITE_DX_STORAGE?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).

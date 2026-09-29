@@ -40,6 +40,14 @@ middleware, not by the developer.
 2. Enable the **Coding (Dev)** plugin in Composer's settings (it is registered only in dev/labs
    builds and is off by default), then enable the **Coding (Dev)** skill in the conversation.
 
+## In the desktop app
+
+The desktop app has no vite server, so the two tools have no host there. Its **Composer Plugin** project
+template switches to a desktop variant instead (`desktopVariant` in `src/templates/composer-plugin.ts`): the
+agent works in a local sandbox through plugin-sandbox's Sandbox skill, builds against the toolchain of the
+source tree a dev build was bundled from (`VITE_DX_SOURCE_ROOT`, which the sandbox may read), and offers the
+URL that the skill's Publish Files serves the build at. See `PLUGIN.mdl` QA-3.
+
 ## Packaging
 
 | Entry                                  | Realm   | Contents                                              |
