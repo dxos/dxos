@@ -20,6 +20,7 @@ import { type MemorySigner, SedimentreeId } from '@automerge/automerge-subductio
 import { type ExpectStatic, onTestFinished } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -471,12 +472,17 @@ export const createCountingPolicy = (
  * Implemented here rather than imported so a future upstream refactor of
  * `helpers.js` cannot silently change the test's encoding assumptions.
  */
-export const documentIdToSedimentreeIdString = (documentId: DocumentId): string => {
-  const docIdBytes = documentIdToBinary(documentId)!;
+export const documentIdToSedimentreeId = (documentId: DocumentId): SedimentreeId => {
+  const docIdBytes = documentIdToBinary(documentId);
+  invariant(docIdBytes, `not a document id: ${documentId}`);
   const padded = new Uint8Array(32);
   padded.set(docIdBytes.subarray(0, 32));
-  return SedimentreeId.fromBytes(padded).toString();
+  return SedimentreeId.fromBytes(padded);
 };
+
+/** {@link documentIdToSedimentreeId} in the string form `SedimentreeId.toString()` produces. */
+export const documentIdToSedimentreeIdString = (documentId: DocumentId): string =>
+  documentIdToSedimentreeId(documentId).toString();
 
 /**
  * Build a per-sedimentree gate keyed by an allow-set of `SedimentreeId`

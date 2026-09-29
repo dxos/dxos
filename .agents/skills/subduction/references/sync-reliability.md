@@ -97,8 +97,10 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   holding some; a request still pending then runs on, and `#applyLatePeerResult` loads its data when
   it lands. Before any data exists, an empty success (a peer without the document) does not count,
   or the first load reports the document `unavailable`. Requests to one peer are capped by
-  `MAX_IN_FLIGHT_PEER_SYNCS`, and a round joins a request still waiting under that cap rather than
-  queueing another. Found from a mesh peer: `MeshReplicatorConnection` awaits each `sendSyncMessage`
+  `MAX_IN_FLIGHT_PEER_SYNCS`, and a round joins a request not yet started rather than queueing
+  another. A document's request to a peer starts only once its previous one to that peer has
+  settled: rounds settle without the slow peer, so each edit's round would otherwise add a request to
+  the ones it has not answered, and a document edited over a slow link piled up to the cap. Found from a mesh peer: `MeshReplicatorConnection` awaits each `sendSyncMessage`
   RPC, so its link carries one message per round trip (~10/s), and once it connected every round
   waited on it and a space's initial sync fell from about 100 rounds a second to nearly none.
 - **Heal retries use the same round**: `SyncScheduler` runs `SubductionSource#syncHealRound`, not

@@ -606,7 +606,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..835a3d33bedf7ad32db0ef3339095ba2
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c817dcc56 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..03d5eb4c51d0e466aa0be9c3b3966d4219d080c1 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -13,8 +13,8 @@ import { WebSocketEndpoint, } from "./websocket-endpoint.js";
@@ -736,12 +736,14 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
              subduction: this.#subduction,
              log: this.#log,
              onSyncDataReceived: async (sedimentreeId, subduction) => {
-@@ -392,9 +457,15 @@ export class SubductionSource {
+@@ -392,9 +457,17 @@ export class SubductionSource {
              hasUntransformedBlobs: false,
              retryTransformAfterSync: false,
              transformRetryScheduled: false,
-+            // Requests waiting for a slot in a peer's gate, keyed by peer id (DXOS patch).
++            // Requests not yet started, keyed by peer id (DXOS patch).
 +            waitingPeerSyncs: new Map(),
++            // The latest request to each peer, until it settles, keyed by peer id (DXOS patch).
++            latestPeerSyncs: new Map(),
 +            // A late peer's data landed while the first load was reading storage (DXOS patch).
 +            reloadAfterFirstLoad: false,
          });
@@ -753,7 +755,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
          throttledSave();
          // Subscribe to ephemeral messages for this sedimentree
          void (async () => {
-@@ -424,10 +495,17 @@ export class SubductionSource {
+@@ -424,10 +497,17 @@ export class SubductionSource {
                      this.#storage.listFragmentIds(sid),
                  ]);
                  for (const c of commitIds) {
@@ -773,7 +775,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
                  }
                  if (entry.persistedCommitHashes.size > 0 ||
                      entry.persistedFragmentHashes.size > 0) {
-@@ -457,7 +535,21 @@ export class SubductionSource {
+@@ -457,7 +537,21 @@ export class SubductionSource {
          })();
          this.#scheduleRecompute(this.#entries.get(sidStr));
      }
@@ -796,7 +798,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
      shareConfigChanged() {
          for (const entry of this.#entries.values()) {
              // A share-config change can flip a previously-denied fetch to
-@@ -589,13 +681,18 @@ export class SubductionSource {
+@@ -589,13 +683,18 @@ export class SubductionSource {
       * True when `entry` should open a sync round now: never synced, or it
       * previously synced / found no peers and the connection generation has since
       * advanced (a reconnect — server subscriptions are per-connection, so a
@@ -817,7 +819,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
              entry.lastSyncGeneration !== this.#connectionGeneration());
      }
      #recomputeEntry(entry) {
-@@ -604,7 +701,7 @@ export class SubductionSource {
+@@ -604,7 +703,7 @@ export class SubductionSource {
          // scheduled just before `#shuttingDown` was set could otherwise resume
          // mid-teardown (it iterates with `await maybeYield()`) and kick a
          // `#doSync` for an entry the quiesce worker pool is also about to sync,
@@ -826,7 +828,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
          if (this.#shuttingDown)
              return;
          switch (entry.syncState) {
-@@ -647,12 +744,27 @@ export class SubductionSource {
+@@ -647,12 +746,27 @@ export class SubductionSource {
      async #doSync(entry, timeoutMs) {
          const { sedimentreeId } = entry;
          const sid = sedimentreeId.toString().slice(0, 8);
@@ -855,7 +857,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
              const subduction = await this.#subduction;
              // Flush any pending throttled save and wait for in-progress saves
              // to complete. This ensures that all locally-known commits have
-@@ -662,8 +774,28 @@ export class SubductionSource {
+@@ -662,8 +776,28 @@ export class SubductionSource {
              entry.flushSave.flush();
              await entry.saveSettled;
              this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
@@ -886,7 +888,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
              const anySuccess = results.some(r => r.success);
              this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
              // Check if any data was received from peers
-@@ -702,6 +834,7 @@ export class SubductionSource {
+@@ -702,6 +836,7 @@ export class SubductionSource {
                  entry.lastSyncResult = "succeeded";
                  this.#scheduler.resetHealState(sedimentreeId.toString());
              }
@@ -894,7 +896,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
          }
          catch (e) {
              this.#log.error(`doSync THREW for ${sid}:`, e);
-@@ -709,6 +842,10 @@ export class SubductionSource {
+@@ -709,6 +844,10 @@ export class SubductionSource {
              this.#scheduler.scheduleHealSync(sedimentreeId);
          }
          finally {
@@ -905,7 +907,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -730,6 +867,185 @@ export class SubductionSource {
+@@ -730,6 +869,198 @@ export class SubductionSource {
              this.#scheduleRecompute(entry);
          }
      }
@@ -1012,7 +1014,10 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
 +    }
 +    /**
 +     * DXOS patch: one `syncWithPeer` request under the peer's gate. A request reads the document's
-+     * state when it starts, so a round joins one still waiting for a slot instead of queueing another.
++     * state when it starts, so a round joins one not yet started instead of queueing another. A
++     * request starts once the document's previous one to that peer has settled: rounds no longer
++     * wait for a slow peer, and without this each round would add a request to the ones it has not
++     * answered.
 +     */
 +    #requestPeerSync(entry, subduction, peerId, timeoutMs) {
 +        const key = peerId.toString();
@@ -1028,28 +1033,38 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
 +            if (this.#entries.get(entry.sedimentreeId.toString()) !== entry)
 +                return noAnswer();
 +            return subduction.syncWithPeer(peerId, entry.sedimentreeId, true, timeoutMs);
++        }, entry.latestPeerSyncs.get(key));
++        entry.latestPeerSyncs.set(key, request.result);
++        void request.result.then(() => {
++            if (entry.latestPeerSyncs.get(key) === request.result)
++                entry.latestPeerSyncs.delete(key);
 +        });
 +        if (!request.started)
 +            entry.waitingPeerSyncs.set(key, request);
 +        return request.result;
 +    }
-+    /** DXOS patch: runs a request to one peer under that peer's gate, tracked for shutdown's drain. */
-+    #queuePeerSync(peerId, request) {
++    /**
++     * DXOS patch: runs a request to one peer under that peer's gate, once `after` has settled when
++     * given, tracked for shutdown's drain.
++     */
++    #queuePeerSync(peerId, request, after) {
 +        const key = peerId.toString();
-+        let lane = this.#peerSyncLanes.get(key);
-+        if (lane === undefined) {
-+            lane = { gate: semaphore(MAX_IN_FLIGHT_PEER_SYNCS), requests: 0 };
-+            this.#peerSyncLanes.set(key, lane);
-+        }
-+        lane.requests++;
-+        const result = lane.gate(request)
++        const run = () => {
++            let lane = this.#peerSyncLanes.get(key);
++            if (lane === undefined) {
++                lane = { gate: semaphore(MAX_IN_FLIGHT_PEER_SYNCS), requests: 0 };
++                this.#peerSyncLanes.set(key, lane);
++            }
++            lane.requests++;
++            return lane.gate(request).finally(() => {
++                // A peer's id changes when it restarts (an EDGE replicator mints one per start), so idle lanes go.
++                if (--lane.requests === 0 && this.#peerSyncLanes.get(key) === lane)
++                    this.#peerSyncLanes.delete(key);
++            });
++        };
++        const result = (after === undefined ? run() : after.then(run))
 +            .catch(error => noAnswer([error]))
-+            .finally(() => {
-+            this.#outstandingPeerSyncs.delete(result);
-+            // A peer's id changes when it restarts (an EDGE replicator mints one per start), so idle lanes go.
-+            if (--lane.requests === 0 && this.#peerSyncLanes.get(key) === lane)
-+                this.#peerSyncLanes.delete(key);
-+        });
++            .finally(() => this.#outstandingPeerSyncs.delete(result));
 +        this.#outstandingPeerSyncs.add(result);
 +        return result;
 +    }
@@ -1091,7 +1106,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
      /**
       * Pair each stored blob with the commit or fragment id it belongs to.
       */
-@@ -758,7 +1074,7 @@ export class SubductionSource {
+@@ -758,7 +1089,7 @@ export class SubductionSource {
       * handle via `Automerge.loadIncremental`. If new data was loaded, signal
       * the query so it can transition to "ready".
       *
@@ -1100,7 +1115,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
       * data, making handle updates immediate.
       */
      async #loadBlobsIntoHandle(entry, subduction) {
-@@ -875,6 +1191,10 @@ export class SubductionSource {
+@@ -875,6 +1206,10 @@ export class SubductionSource {
          }
          finally {
              entry.blobLoadInFlight = false;
@@ -1111,7 +1126,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
              this.#scheduleRecompute(entry);
          }
      }
-@@ -1026,7 +1346,10 @@ export class SubductionSource {
+@@ -1026,7 +1361,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
@@ -1123,7 +1138,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
-@@ -1297,6 +1620,28 @@ export class SubductionSource {
+@@ -1297,6 +1635,28 @@ export class SubductionSource {
      isHealing(sedimentreeId) {
          return this.#scheduler.isHealing(sedimentreeId);
      }
@@ -1152,7 +1167,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9cd281fa533dc265849220ee7d208b9c
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -1478,12 +1823,28 @@ export class SubductionSource {
+@@ -1478,12 +1838,28 @@ export class SubductionSource {
          catch (e) {
              this.#log.debug("error disconnecting subduction transports: %O", e);
          }

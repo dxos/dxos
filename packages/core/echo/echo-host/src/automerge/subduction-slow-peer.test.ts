@@ -17,6 +17,7 @@ import {
   connectAdapters,
   createCountingPolicy,
   createRepoTopology,
+  documentIdToSedimentreeId,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
 
@@ -144,6 +145,71 @@ describe('Subduction sync with a slow peer', () => {
     expect(states).not.toContain('unavailable');
     expect((await reader.find<Doc>(url)).doc()?.value).toBe(0);
   });
+
+  test('a peer that never answers is sent one request per document at a time', async ({ expect }) => {
+    let secondLink: 'on' | 'off' = 'on';
+    const { reader, edge, connect } = await createReader({ secondLink: () => secondLink });
+    await connect(expect);
+    const subduction = await reader.subduction;
+    const syncWithPeer = subduction.syncWithPeer.bind(subduction);
+    const inFlight = new Map<string, number>();
+    let started = 0;
+    let mostInFlight = 0;
+    subduction.syncWithPeer = async (peerId, sedimentreeId, subscribe, timeoutMs) => {
+      const key = `${peerId.toString()}:${sedimentreeId.toString()}`;
+      const count = (inFlight.get(key) ?? 0) + 1;
+      inFlight.set(key, count);
+      mostInFlight = Math.max(mostInFlight, count);
+      started++;
+      try {
+        return await syncWithPeer(peerId, sedimentreeId, subscribe, timeoutMs);
+      } finally {
+        inFlight.set(key, (inFlight.get(key) ?? 1) - 1);
+      }
+    };
+
+    const handle = reader.create<Doc>();
+    await expect.poll(() => reader.hasPendingSubductionSync(handle.documentId), { timeout: WITHIN_MS }).toBe(false);
+    secondLink = 'off';
+    for (let value = 0; value < 5; value++) {
+      const startedBefore = started;
+      handle.change((doc) => {
+        doc.value = value;
+      });
+      // Each edit's round settles on `edge`'s answer while `second` has not answered.
+      await expect.poll(() => started, { timeout: WITHIN_MS }).toBeGreaterThan(startedBefore);
+      await expect.poll(() => reader.hasPendingSubductionSync(handle.documentId), { timeout: WITHIN_MS }).toBe(false);
+    }
+
+    const copy = await edge.find<Doc>(handle.url);
+    await expect.poll(() => copy.doc()?.value, { timeout: WITHIN_MS }).toBe(4);
+    expect(mostInFlight).toBe(1);
+  });
+
+  test('a slow peer gets the edits made while its earlier request was running', async ({ expect }) => {
+    const { reader, second, connect } = await createReader({ secondTransport: { serialRoundTripMs: 200 } });
+    await connect(expect);
+    const handle = reader.create<Doc>();
+    for (let value = 0; value < 5; value++) {
+      handle.change((doc) => {
+        doc.value = value;
+      });
+      await expect.poll(() => reader.hasPendingSubductionSync(handle.documentId), { timeout: WITHIN_MS }).toBe(false);
+    }
+
+    // Read `second`'s store directly: loading the document there would pull the edits from `reader`.
+    const stored = await second.subduction;
+    const sedimentreeId = documentIdToSedimentreeId(handle.documentId);
+    const storedValue = async () => {
+      let doc = A.init<Doc>();
+      for (const blob of await stored.getBlobs(sedimentreeId)) {
+        doc = A.loadIncremental(doc, blob);
+      }
+      return doc.value;
+    };
+    await expect.poll(storedValue, { timeout: WITHIN_MS }).toBe(4);
+  });
+
   test('heal retries do not hold round slots while a connected peer never answers', async ({ expect }) => {
     let refuse = true;
     let secondLink: 'on' | 'off' = 'on';
@@ -187,6 +253,7 @@ describe('Subduction sync with a slow peer', () => {
     await expect.poll(() => progress.peek().state, { timeout: WITHIN_MS }).toBe('ready');
     expect((await reader.find<Doc>(late)).doc()?.value).toBe(0);
   }, 60_000);
+
   test('a heal retry still asks the peers for an evicted document', async ({ expect }) => {
     let refuse = true;
     let secondLink: 'on' | 'off' = 'on';
