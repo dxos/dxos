@@ -685,6 +685,8 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
           environment: { space: db.spaceId },
+          // A trigger fires on its own, so what it writes is not a person's action.
+          origin: 'system',
           traceMeta: { trigger: Ref.make(trigger) },
         });
 

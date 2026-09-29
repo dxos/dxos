@@ -13,7 +13,7 @@ import { Toast } from '@dxos/react-ui';
 
 import { ThemePlugin } from '#plugin';
 
-// jsdom does not implement window.matchMedia, which the theme reads for the system preference.
+// Pins the system preference the theme reads.
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,

@@ -232,4 +232,5 @@ export const trace = {
   spanStart,
   spanEnd,
   metrics: TRACE_PROCESSOR.remoteMetrics,
+  events: TRACE_PROCESSOR.remoteEvents,
 };

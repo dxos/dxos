@@ -11969,9 +11969,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-observability':
-        specifier: workspace:*
-        version: link:../plugin-observability
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -14068,6 +14065,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -15990,9 +15990,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-observability':
-        specifier: workspace:*
-        version: link:../plugin-observability
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings
@@ -18492,6 +18489,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -18559,9 +18559,6 @@ importers:
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -19401,6 +19398,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
