@@ -235,10 +235,12 @@ const pluginToolchain = (): string => {
       .filter((file) => existsSync(file));
     return manifest ? JSON.parse(readFileSync(manifest, 'utf8')).version : '';
   };
-  return JSON.stringify({
-    commit,
-    versions: Object.fromEntries(PLUGIN_SHARED_PACKAGES.map((name) => [name, version(name)])),
-  });
+  const versions = Object.fromEntries(PLUGIN_SHARED_PACKAGES.map((name) => [name, version(name)]));
+  // A template pinned to an unknown version would install whatever is latest, not what the host shares.
+  if (Object.values(versions).some((value) => !value)) {
+    return '';
+  }
+  return JSON.stringify({ commit, versions });
 };
 
 /**
