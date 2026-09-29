@@ -32,14 +32,12 @@ export const EVENTS = {
  */
 export const DRAFT_WINDOW = Duration.seconds(30);
 
-/** Origins that are someone's activity; `integration` and `system` writes are not. */
-const ACTIVITY_ORIGINS = new Set(['user', 'agent']);
-
 type TraceEvent = { name: string; attributes: EventAttributes };
 
 /**
- * Reports ECHO's trace events as product events: user-facing objects and every relation a user or agent adds or
- * removes, types they persist, and items they append to feeds. An add that is removed within the draft window
+ * Reports ECHO's trace events as product events: user-facing objects and every relation added or removed, types
+ * persisted, and items appended to feeds. Every write is reported with its `origin` (`user`, `system` or `unknown`),
+ * so a dashboard separates people's actions from the rest. An add that is removed within the draft window
  * reports neither. Events arrive only while registered; ECHO does not replay them.
  */
 export const listen = (
@@ -66,14 +64,6 @@ export const listen = (
       Stream.runForEach(({ name, attributes }) =>
         Effect.gen(function* () {
           const { spaceId, objectId, typename, relation, userType, origin } = attributes;
-          if (typeof origin !== 'string' || !ACTIVITY_ORIGINS.has(origin)) {
-            // A draft cancelled by system code still must not be reported.
-            if (name === 'echo.object.remove' && typeof objectId === 'string') {
-              yield* FiberMap.remove(pending, objectId);
-            }
-            return;
-          }
-
           switch (name) {
             case 'echo.object.add': {
               if (typeof objectId !== 'string' || (relation !== true && userType !== true)) {
@@ -120,8 +110,8 @@ export const listen = (
   });
 
 /**
- * Reports what users and agents write in this realm's spaces, however it was written: from a dialog, an agent
- * tool call, or a raw `db.add` in a view.
+ * Reports what is written in this realm's spaces, however it was written: from a dialog, an agent, a sync, or a raw
+ * `db.add` in a view.
  */
 export const provider: Observability.DataProvider = Effect.fn(function* (observability) {
   const scope = yield* Scope.make();

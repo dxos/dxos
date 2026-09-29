@@ -139,7 +139,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
             guid: post.guid,
           }),
         );
-        yield* Feed.append(echoFeed, postObjects).pipe(Effect.provideService(Database.Origin, 'integration'));
+        yield* Feed.append(echoFeed, postObjects).pipe(Effect.provideService(Database.Origin, 'system'));
 
         // Advance cursor to the newest post.
         const newestGuid = posts[0]?.guid;

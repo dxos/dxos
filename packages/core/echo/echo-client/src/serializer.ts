@@ -89,9 +89,9 @@ export class Serializer {
     });
     // Type entities must be persisted via `addType` (clones/forks + conflict check); `add` rejects them.
     if (Type.isType(obj)) {
-      await database.addType(obj, { origin: 'integration' });
+      await database.addType(obj, { origin: 'system' });
     } else {
-      database.add(obj, { origin: 'integration' });
+      database.add(obj, { origin: 'system' });
     }
   }
 }

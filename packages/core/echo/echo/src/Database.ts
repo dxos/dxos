@@ -56,16 +56,17 @@ export type GetObjectByIdOptions = {
 export type ObjectPlacement = 'root-doc' | 'linked-doc';
 
 /**
- * Who a write is attributed to, reported with ECHO's trace events. `system` writes (seeded content,
- * migrations, cleanup) are not user activity. When no origin is given, an object with foreign keys is
- * attributed to an `integration` and anything else to the `user`.
+ * Whether a write was a person's own action, reported with ECHO's trace events. `system` is everything a person
+ * did not directly do: agents, syncs and imports, seeded content, migrations and automation. When no origin is
+ * given, an object with foreign keys was written by a sync or import (`system`) and anything else is `unknown`:
+ * a write path that still needs attributing.
  */
-export type Origin = 'user' | 'agent' | 'integration' | 'system';
+export type Origin = 'user' | 'system' | 'unknown';
 
 /**
  * The {@link Origin} the Effect wrappers ({@link add}, {@link remove}, {@link addType}, {@link appendToFeed})
- * attribute their writes to. Provided once around a unit of work, e.g. `system` around seeding code or
- * `agent` around an agent's operations, rather than at every write.
+ * attribute their writes to. Provided once around a unit of work, e.g. `system` around seeding code or an
+ * agent's operations, rather than at every write.
  */
 export const Origin: Context.Reference<Origin | undefined> = Context.Reference<Origin | undefined>(
   '@dxos/echo/Database/Origin',

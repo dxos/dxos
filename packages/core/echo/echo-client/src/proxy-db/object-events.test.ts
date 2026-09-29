@@ -45,7 +45,7 @@ describe('ECHO trace events', () => {
     await builder.close();
   });
 
-  test('an add reports the object once, attributed to the user', async ({ expect }) => {
+  test('an add reports the object once, as unknown when nobody attributed it', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Person, Internal] });
     const events = recordEvents();
 
@@ -61,7 +61,7 @@ describe('ECHO trace events', () => {
           typename: Obj.getTypename(person),
           relation: false,
           userType: true,
-          origin: 'user',
+          origin: 'unknown',
         },
       },
       {
@@ -72,13 +72,13 @@ describe('ECHO trace events', () => {
           typename: Obj.getTypename(internal),
           relation: false,
           userType: false,
-          origin: 'user',
+          origin: 'unknown',
         },
       },
     ]);
   });
 
-  test('an object with foreign keys is attributed to an integration unless the caller says otherwise', async ({
+  test('an object with foreign keys is attributed to the system unless the caller says otherwise', async ({
     expect,
   }) => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
@@ -89,7 +89,7 @@ describe('ECHO trace events', () => {
     const imported = db.add(synced());
     const typed = db.add(synced(), { origin: 'user' });
 
-    expect(events.about(imported, typed).map(({ attributes }) => attributes.origin)).toEqual(['integration', 'user']);
+    expect(events.about(imported, typed).map(({ attributes }) => attributes.origin)).toEqual(['system', 'user']);
   });
 
   test('the Effect API attributes writes to the provided Database.Origin', async ({ expect }) => {
@@ -101,12 +101,12 @@ describe('ECHO trace events', () => {
         const person = yield* Database.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
         yield* Database.remove(person);
         return person;
-      }).pipe(Effect.provideService(Database.Origin, 'agent'), Effect.provide(Database.layer(db))),
+      }).pipe(Effect.provideService(Database.Origin, 'user'), Effect.provide(Database.layer(db))),
     );
 
     expect(events.about(person).map(({ name, attributes }) => [name, attributes.origin])).toEqual([
-      ['echo.object.add', 'agent'],
-      ['echo.object.remove', 'agent'],
+      ['echo.object.add', 'user'],
+      ['echo.object.remove', 'user'],
     ]);
   });
 
@@ -161,7 +161,7 @@ describe('ECHO trace events', () => {
     expect(events.all().filter(({ name }) => name === 'echo.type.add')).toEqual([
       {
         name: 'echo.type.add',
-        attributes: { spaceId: db.spaceId, typename: 'com.example.type.task', version: '0.1.0', origin: 'user' },
+        attributes: { spaceId: db.spaceId, typename: 'com.example.type.task', version: '0.1.0', origin: 'unknown' },
       },
     ]);
   });
@@ -174,14 +174,14 @@ describe('ECHO trace events', () => {
 
     const ada = Obj.make(TestSchema.Person, { name: 'Ada' });
     const grace = Obj.make(TestSchema.Person, { name: 'Grace' });
-    await db.appendToFeed(feed, [ada], { origin: 'agent' });
+    await db.appendToFeed(feed, [ada], { origin: 'system' });
     db.add(grace, { to: feed });
 
     expect(
       events.about(ada, grace).map(({ name, attributes }) => [name, attributes.feedId, attributes.origin]),
     ).toEqual([
-      ['echo.feed.append', feed.id, 'agent'],
-      ['echo.feed.append', feed.id, 'user'],
+      ['echo.feed.append', feed.id, 'system'],
+      ['echo.feed.append', feed.id, 'unknown'],
     ]);
   });
 });

@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof IbkrOperation.ImportPortfolioReport>
         const fetchedAt = new Date().toISOString();
         const feed = yield* getOrCreatePortfolioFeed;
         yield* Feed.append(feed, [Obj.make(Ibkr.Report, { xml, fetchedAt })]).pipe(
-          Effect.provideService(Database.Origin, 'integration'),
+          Effect.provideService(Database.Origin, 'system'),
         );
         return {
           fetchedAt,

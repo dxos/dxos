@@ -584,7 +584,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: this.spaceId,
       typename,
       version,
-      origin: opts?.origin ?? 'user',
+      origin: opts?.origin ?? 'unknown',
     });
     return persisted;
   }
@@ -1217,7 +1217,7 @@ const isUserFacing = (type: Type.AnyEntity): boolean =>
 
 /** The caller's origin, or else a guess: foreign keys mean a sync or import wrote the entity. */
 const resolveOrigin = (entity: Entity.Unknown, origin?: Database.Origin): Database.Origin =>
-  origin ?? (Entity.getMeta(entity).keys.length > 0 ? 'integration' : 'user');
+  origin ?? (Entity.getMeta(entity).keys.length > 0 ? 'system' : 'unknown');
 
 // TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: Type.AnyEntity) => {

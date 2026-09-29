@@ -121,7 +121,7 @@ const syncBinding = ({ client, binding }: { client: Client; binding: Cursor.Exte
       return Subscription.makePost({ source: feedRef, ...input });
     });
     yield* EchoFeed.append(echoFeed, postObjects).pipe(
-      Effect.provideService(Database.Origin, 'integration'),
+      Effect.provideService(Database.Origin, 'system'),
       Effect.provide(Database.layer(space.db)),
     );
 

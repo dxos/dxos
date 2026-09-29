@@ -802,5 +802,5 @@ export const runMailSync = (
     return { newMessages: stats.newMessages };
   }).pipe(
     // Synced mail is the provider's content, not something the user wrote.
-    Effect.provideService(Database.Origin, 'integration'),
+    Effect.provideService(Database.Origin, 'system'),
   );
