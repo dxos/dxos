@@ -9,6 +9,7 @@ import {
   type DocumentId,
   type Message,
   type PeerId,
+  type StorageKey,
   type SubductionPolicy,
   generateAutomergeUrl,
   initSubduction,
@@ -53,6 +54,41 @@ describe('AutomergeRepo with Subduction', () => {
 
     const progress = host.findWithProgress(url);
     expect(progress.peek().state).to.equal('loading');
+  });
+
+  // EDGE soak: a document faulted in while the EDGE socket was down finished its sync round with no
+  // peers and stayed on its older copy, although the newer commit was already in Subduction storage.
+  test('a document opened with no peers applies what Subduction already stored', async () => {
+    const storage = await createSqliteAdapter();
+    let url: AutomergeUrl | undefined;
+
+    {
+      const repo = createRepo({ network: [], storage }, { registerCleanup: false });
+      const handle = repo.create<{ value: number }>({ value: 1 });
+      url = handle.url;
+      await repo.flush();
+      const documentId = parseAutomergeUrl(url).documentId;
+      const olderCopy = await storage.loadRange([documentId]);
+
+      handle.change((doc) => {
+        doc.value = 2;
+      });
+      await repo.flush();
+      await waitForSubductionSave([repo]);
+      await shutdownRepo(repo);
+
+      // The repo's own copy goes back to the first version; only Subduction storage holds the second.
+      await storage.open();
+      await storage.removeRange([documentId]);
+      await storage.saveBatch(
+        olderCopy.flatMap(({ key, data }) => (data ? [[key, data] as [StorageKey, Uint8Array]] : [])),
+      );
+    }
+
+    const repo = createRepo({ network: [], storage });
+    const handle = await repo.find<{ value: number }>(url);
+    await handle.whenReady(['ready']);
+    await expect.poll(() => handle.doc()?.value, { timeout: 5_000 }).toEqual(2);
   });
 
   test('documents on disk go to ready state', async () => {

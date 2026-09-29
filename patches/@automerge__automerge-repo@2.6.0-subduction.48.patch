@@ -573,7 +573,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..68e270576182ff9a5e337d35e9177490
       */
      resync(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45d63c02a3 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..acc26191fa349334cb3fe2ae8c74cf299b3a0292 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -717,7 +717,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
      shareConfigChanged() {
          for (const entry of this.#entries.values()) {
              // A share-config change can flip a previously-denied fetch to
-@@ -589,13 +648,18 @@ export class SubductionSource {
+@@ -589,15 +648,25 @@ export class SubductionSource {
       * True when `entry` should open a sync round now: never synced, or it
       * previously synced / found no peers and the connection generation has since
       * advanced (a reconnect — server subscriptions are per-connection, so a
@@ -737,8 +737,28 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
 +            entry.lastSyncResult === "all-failed") &&
              entry.lastSyncGeneration !== this.#connectionGeneration());
      }
++    /** Whether an initializing entry's next step is loading its stored blobs into the handle. */
++    #loadsStoredBlobs(entry) {
++        return (entry.lastSyncResult === "succeeded" ||
++            (entry.lastSyncResult !== null && Automerge.getHeads(entry.handle.fullDoc()).length > 0));
++    }
      #recomputeEntry(entry) {
-@@ -647,12 +711,27 @@ export class SubductionSource {
+         // No new background syncs once shutting down: `shutdown()`'s quiesce
+         // round is the sole sync initiator from that point. A recompute walk
+@@ -609,8 +678,10 @@ export class SubductionSource {
+             return;
+         switch (entry.syncState) {
+             case "initializing": {
+-                // After a successful sync, batch-load blobs into the handle
+-                if (entry.lastSyncResult === "succeeded" && !entry.blobLoadInFlight) {
++                // After a successful sync, batch-load blobs into the handle. DXOS patch: also after an
++                // unsuccessful round when the handle already holds a copy from disk — local Subduction
++                // storage can be ahead of it, and nothing else would ever apply what it holds.
++                if (this.#loadsStoredBlobs(entry) && !entry.blobLoadInFlight) {
+                     entry.blobLoadInFlight = true;
+                     void this.#loadBlobsAndTransition(entry);
+                     return;
+@@ -647,12 +718,27 @@ export class SubductionSource {
      async #doSync(entry, timeoutMs) {
          const { sedimentreeId } = entry;
          const sid = sedimentreeId.toString().slice(0, 8);
@@ -767,7 +787,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
              const subduction = await this.#subduction;
              // Flush any pending throttled save and wait for in-progress saves
              // to complete. This ensures that all locally-known commits have
-@@ -662,7 +741,28 @@ export class SubductionSource {
+@@ -662,7 +748,28 @@ export class SubductionSource {
              entry.flushSave.flush();
              await entry.saveSettled;
              this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
@@ -797,7 +817,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
              const results = peerResultMap.entries();
              const anySuccess = results.some(r => r.success);
              this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
-@@ -702,6 +802,7 @@ export class SubductionSource {
+@@ -702,6 +809,7 @@ export class SubductionSource {
                  entry.lastSyncResult = "succeeded";
                  this.#scheduler.resetHealState(sedimentreeId.toString());
              }
@@ -805,7 +825,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
          }
          catch (e) {
              this.#log.error(`doSync THREW for ${sid}:`, e);
-@@ -709,6 +810,10 @@ export class SubductionSource {
+@@ -709,6 +817,10 @@ export class SubductionSource {
              this.#scheduler.scheduleHealSync(sedimentreeId);
          }
          finally {
@@ -816,7 +836,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -1026,7 +1131,10 @@ export class SubductionSource {
+@@ -1026,7 +1138,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
@@ -828,7 +848,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
-@@ -1297,6 +1405,28 @@ export class SubductionSource {
+@@ -1297,6 +1412,27 @@ export class SubductionSource {
      isHealing(sedimentreeId) {
          return this.#scheduler.isHealing(sedimentreeId);
      }
@@ -844,8 +864,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
 +            return false;
 +        // The load after a successful round, running or due on the next recompute,
 +        // reads local storage only.
-+        if (entry.blobLoadInFlight ||
-+            (entry.syncState === "initializing" && entry.lastSyncResult === "succeeded"))
++        if (entry.blobLoadInFlight || (entry.syncState === "initializing" && this.#loadsStoredBlobs(entry)))
 +            return true;
 +        // A round with no peer to reach brings nothing in.
 +        if (!this.isConnected())
@@ -857,7 +876,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -1321,6 +1451,11 @@ export class SubductionSource {
+@@ -1321,6 +1457,11 @@ export class SubductionSource {
              return;
          this.#scheduler.resetHealState(sid);
          entry.lastSyncResult = null;
