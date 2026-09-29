@@ -103,6 +103,26 @@ describe('dx-plugin gen', () => {
     );
   });
 
+  it('carries a local type a carried local refers to', () => {
+    withPlugin(
+      {
+        'package.json': PACKAGE_JSON,
+        'src/capabilities/index.ts': [
+          "import * as Capability from '@dxos/app-framework/Capability';",
+          '',
+          'type Payload = { kind: string };',
+          "const isPayload = (data: unknown): data is Payload => typeof data === 'object';",
+          "export const Headless = Capability.inlineModule('Headless', { environments: ['node'] }, () => isPayload);",
+          '',
+        ].join('\n'),
+      },
+      (dir) => {
+        generate(dir);
+        expect(read(dir, 'node')).toContain('type Payload = { kind: string };');
+      },
+    );
+  });
+
   it('resolves a member re-exported from another file', () => {
     withPlugin(
       {
