@@ -147,7 +147,7 @@ ${IDS}`,
     },
     {
       title: 'Offer the plugin to load',
-      description: `Publish the sandbox's \`dist\` directory with Publish Files, then emit a \`plugin-url-prompt\` surface carrying the URL it returns followed by \`manifest.json\`, and the name "World Clock". Do not load it yourself: loading runs new code in this app, so it is the reader's click.`,
+      description: `Publish the sandbox's \`dist\` directory with Publish Files, then emit a \`plugin-url-prompt\` surface carrying the URL it returns followed by \`manifest.json\`, and the name "World Clock". Do not load it yourself: loading runs new code in this app, so it is the reader's click. Do not open the URL either: it is not an object, and opening it navigates the reader away from this chat and its prompt.`,
       estimate: 'xs',
     },
   ],
