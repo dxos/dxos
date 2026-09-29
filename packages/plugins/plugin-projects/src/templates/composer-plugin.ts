@@ -142,7 +142,7 @@ ${IDS}`,
     {
       title: 'Install, typecheck and build',
       description:
-        'Run `bunx @pnpm/exe@10 install`, then `bun run --bun tsc -p tsconfig.json` (vite does not typecheck), then `bun run --bun vite build`. Then `cat dist/manifest.json`: a build that exited zero is not evidence that it wrote the manifest.',
+        'Run `bunx @pnpm/exe@10 install` with a `timeout` of 900000 (it downloads a thousand packages), then `bun run --bun tsc -p tsconfig.json` (vite does not typecheck), then `bun run --bun vite build`. Then `cat dist/manifest.json`: a build that exited zero is not evidence that it wrote the manifest.',
       estimate: 'xs',
     },
     {

@@ -27,7 +27,8 @@ macOS) via `@carderne/sandbox-runtime`:
 - **Limits**: per-command CPU time, writable memory (Linux only) and file size, plus the wall-clock
   `timeout`, which kills the command's whole process group.
 - **Environment**: the host's environment is not inherited; only `PATH`, `HOME`, `TMPDIR`, `LANG`,
-  `WORKSPACE` and the operation's `env` are set.
+  `WORKSPACE` and the operation's `env` are set, plus the helper's own `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE`
+  (and read access to the bundles they name), so installs work behind a TLS-inspecting proxy.
 
 ## Extensions
 

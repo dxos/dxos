@@ -21,6 +21,9 @@ const DESKTOP_PATH = ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin',
 
 const MIN_TOKEN_LENGTH = 32;
 
+/** Certificate bundles the host is configured to trust, which node and OpenSSL-based tools read from these. */
+const TRUST_ENV = ['NODE_EXTRA_CA_CERTS', 'SSL_CERT_FILE'];
+
 /**
  * Puts the bun runtime the helper was compiled with on the commands' `PATH` as `bun` and `bunx`, so a
  * sandbox can install and build JavaScript on a machine with no node or bun of its own. `BUN_BE_BUN`
@@ -72,7 +75,14 @@ export const runSidecar = async ({ input, output, env }: SidecarOptions): Promis
   ].join(':');
   // The wrappers sit beside the sandboxes, under the home directory the sandbox cannot otherwise read.
   const allowRead = bunDir ? [bunDir, process.execPath] : [];
-  const backend = new LocalSandboxBackend({ root, path, allowRead });
+  // Behind a TLS-inspecting proxy the host trusts an extra authority; without it every install in a sandbox fails.
+  const trust = Object.fromEntries(TRUST_ENV.flatMap((name) => (env[name] ? [[name, env[name]] as const] : [])));
+  const backend = new LocalSandboxBackend({
+    root,
+    path,
+    allowRead: [...allowRead, ...Object.values(trust)],
+    env: trust,
+  });
   const server = await serve({ backend, token });
   output.write(`${JSON.stringify({ port: server.port })}\n`);
 

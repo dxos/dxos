@@ -32,6 +32,8 @@ export type LocalSandboxOptions = {
   denyRead?: readonly string[];
   /** Host paths re-exposed beneath a denied one. */
   allowRead?: readonly string[];
+  /** Variables every command starts with; a request's own `env` overrides them. */
+  env?: Record<string, string>;
   /** Bytes kept of each of stdout and stderr; the rest is dropped. */
   maxOutputBytes?: number;
 };
@@ -377,7 +379,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
   #run(entry: SandboxEntry, request: ExecRequest, cwd: string): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const exports = yield* Effect.try({
-        try: () => envExports(request.env ?? {}),
+        try: () => envExports({ ...this.#options.env, ...request.env }),
         catch: (cause) => new SandboxService.SandboxError({ message: errorMessage(cause), cause }),
       });
       const result = yield* this.#runScript(entry, [...exports, `cd ${shellQuote(cwd)} || exit 1`, request.command], {
