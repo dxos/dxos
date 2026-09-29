@@ -47,6 +47,8 @@ import {
   Menu as NextMenu,
   NumberInput as NextNumberInput,
   type NumberInputProps as NextNumberInputProps,
+  Panel as NextPanel,
+  type PanelRootProps as NextPanelRootProps,
   PasswordInput as NextPasswordInput,
   type PasswordInputProps as NextPasswordInputProps,
   PinInput as NextPinInput,
@@ -151,6 +153,8 @@ export namespace Next {
   export const Toggle = NextToggle;
   export type ToggleProps = NextToggleProps;
   export const ToggleGroup = NextToggleGroup;
+  export const Panel = NextPanel;
+  export type PanelRootProps = NextPanelRootProps;
   export const Separator = NextSeparator;
   export type SeparatorProps = NextSeparatorProps;
 }

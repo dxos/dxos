@@ -4,22 +4,22 @@
  */
 
 @layer dx-components {
-  :is(.nx-grid, .nx-popup, .nx-dialog)[data-surface='sunken'] {
+  :is(.nx-panel, .nx-grid, .nx-popup, .nx-dialog)[data-surface='sunken'] {
     --nx-level: 0;
   }
-  :is(.nx-grid, .nx-popup, .nx-dialog)[data-surface='chrome'] {
+  :is(.nx-panel, .nx-grid, .nx-popup, .nx-dialog)[data-surface='chrome'] {
     --nx-level: 1;
   }
-  :is(.nx-grid, .nx-popup, .nx-dialog)[data-surface='base'] {
+  :is(.nx-panel, .nx-grid, .nx-popup, .nx-dialog)[data-surface='base'] {
     --nx-level: 2;
   }
-  :is(.nx-grid, .nx-popup, .nx-dialog)[data-surface='raised'] {
+  :is(.nx-panel, .nx-grid, .nx-popup, .nx-dialog)[data-surface='raised'] {
     --nx-level: 3;
   }
-  :is(.nx-grid, .nx-popup, .nx-dialog)[data-surface='overlay'] {
+  :is(.nx-panel, .nx-grid, .nx-popup, .nx-dialog)[data-surface='overlay'] {
     --nx-level: 4;
   }
-  :is(.nx-grid, .nx-popup, .nx-dialog)[data-surface='popup'] {
+  :is(.nx-panel, .nx-grid, .nx-popup, .nx-dialog)[data-surface='popup'] {
     --nx-level: 5;
   }
 

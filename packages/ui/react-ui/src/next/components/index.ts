@@ -21,6 +21,7 @@ export * from './Input/index.ts';
 export * from './Label/index.ts';
 export * from './Menu/index.ts';
 export * from './NumberInput/index.ts';
+export * from './Panel/index.ts';
 export * from './PasswordInput/index.ts';
 export * from './PinInput/index.ts';
 export * from './Popover/index.ts';

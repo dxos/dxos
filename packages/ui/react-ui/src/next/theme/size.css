@@ -21,6 +21,7 @@
 
   :is(
     .nx-scope,
+    .nx-panel,
     .nx-grid,
     .nx-scroll-root,
     .nx-toolbar,
@@ -43,6 +44,7 @@
 
   :is(
     .nx-scope,
+    .nx-panel,
     .nx-grid,
     .nx-scroll-root,
     .nx-toolbar,
@@ -65,6 +67,7 @@
 
   :is(
     .nx-scope,
+    .nx-panel,
     .nx-grid,
     .nx-scroll-root,
     .nx-toolbar,
@@ -87,6 +90,7 @@
 
   :is(
     .nx-scope,
+    .nx-panel,
     .nx-grid,
     .nx-scroll-root,
     .nx-toolbar,
@@ -109,6 +113,7 @@
 
   :is(
     .nx-scope,
+    .nx-panel,
     .nx-grid,
     .nx-scroll-root,
     .nx-toolbar,

@@ -109,4 +109,8 @@ export const recipes = {
   tag: () => 'nx-tag',
   separator: () => 'nx-separator',
   toggleGroup: () => 'nx-toggle-group',
+  panel: () => 'nx-panel',
+  panelToolbar: () => 'nx-panel-toolbar',
+  panelContent: () => 'nx-panel-content',
+  panelStatusbar: () => 'nx-panel-statusbar',
 } as const;

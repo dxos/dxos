@@ -519,6 +519,14 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     what `Field.Label` points at, so each marks the part to focus (`LABEL_TARGET_ATTRIBUTE`: the first editable
     segment, the first cell) and `Field.Label` focuses it, found beside the field's control element (a DOM lookup, no
     context). Covered by the DateInput and PinInput `Test`s. Range/multiple date selection stays deferred.
+56. **`Next.Panel`** (Phase 4 decision 1). `Root` is a flex column that fills its parent (`width`/`height: 100%`), sets
+    `data-size` and a `level` (`base` by default, an absolute rung) and is the pane's query container. `Toolbar` is a
+    `Next.Toolbar.Root` and `Statusbar` a block-tall row in label text and `--color-description`, both on ui-theme's
+    `bar` aspect, which steps off the panel's level like the current Panel's toolbar. `Content` grows between them: a
+    composed ScrollArea around a `rail` Container (`gutter`, `columns`, `gap`, `layout` pass through), whose frame
+    drops its own inline-size containment so the Container collapses against the panel, as the toolbar and statusbar
+    do. Panel `Test` covers the stacking, size reaching controls and rails, the overlay thumb in the end gutter and
+    the collapse of a narrowed panel.
 
 ## Phase 3: react-ui-form port
 
