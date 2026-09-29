@@ -9,9 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { SpaceOperation } from '#types';
-
-import { notifyTypeAdded } from './notify-type-added.ts';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(
   Operation.withHandler(
@@ -45,7 +43,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
       const capabilities = yield* Effect.serviceOption(Capability.Service);
       const notified = Option.isSome(plugins) && Option.isSome(capabilities);
       if (notified) {
-        yield* notifyTypeAdded(
+        yield* SpaceCapabilities.notifyTypeAdded(
           { plugins: plugins.value, capabilities: capabilities.value },
           { db, type, show: input.show },
         );

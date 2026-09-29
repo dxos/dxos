@@ -14,8 +14,6 @@ import { Organization, Person, Task } from '@dxos/types';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { notifyTypeAdded } from '../operations/notify-type-added.ts';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Held for the Type entry: the dialog creates through `AddType`, whose process cannot see them.
@@ -53,7 +51,10 @@ export default Capability.makeModule(
                 { spaceId: options.db.spaceId },
               );
               if (!result.notified) {
-                yield* notifyTypeAdded({ plugins, capabilities }, { db: options.db, type: result.object });
+                yield* SpaceCapabilities.notifyTypeAdded(
+                  { plugins, capabilities },
+                  { db: options.db, type: result.object },
+                );
               }
               return {
                 id: result.id,
