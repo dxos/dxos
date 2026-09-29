@@ -136,9 +136,6 @@
       "path": "packages/common/diagram/tsconfig.json"
     },
     {
-      "path": "packages/experimental/collection-sync/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
