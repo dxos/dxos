@@ -44,6 +44,9 @@ import {
   Label as NextLabel,
   type LabelProps as NextLabelProps,
   type Level as NextLevel,
+  Listbox as NextListbox,
+  type ListboxOption as NextListboxOption,
+  type ListboxSelectionMode as NextListboxSelectionMode,
   Menu as NextMenu,
   NumberInput as NextNumberInput,
   type NumberInputProps as NextNumberInputProps,
@@ -153,6 +156,9 @@ export namespace Next {
   export const Toggle = NextToggle;
   export type ToggleProps = NextToggleProps;
   export const ToggleGroup = NextToggleGroup;
+  export const Listbox = NextListbox;
+  export type ListboxOption = NextListboxOption;
+  export type ListboxSelectionMode = NextListboxSelectionMode;
   export const Panel = NextPanel;
   export type PanelRootProps = NextPanelRootProps;
   export const Separator = NextSeparator;

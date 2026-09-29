@@ -113,4 +113,11 @@ export const recipes = {
   panelToolbar: () => 'nx-panel-toolbar',
   panelContent: () => 'nx-panel-content',
   panelStatusbar: () => 'nx-panel-statusbar',
+  listbox: () => 'nx-listbox',
+  listboxScroll: () => 'nx-listbox-scroll',
+  listboxContent: () => 'nx-listbox-content',
+  listboxItem: () => 'nx-listbox-item',
+  listboxItemContent: () => 'nx-listbox-item-content',
+  listboxItemTrailing: () => 'nx-listbox-item-trailing',
+  listboxItemIndicator: () => 'nx-listbox-item-indicator',
 } as const;

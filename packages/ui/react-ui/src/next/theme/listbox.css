@@ -1,0 +1,90 @@
+/*
+ * Listbox: a scrolling stack of row Containers. Rows take ui-theme's state tokens as the current react-ui-list rows do
+ * (`dx-hover`, `dx-selected`, `dx-current`): hover and the keyboard highlight step off the surface, selection and
+ * "current" take the current surface; the focus ring is drawn on the highlighted row while the listbox has focus.
+ */
+
+@layer dx-components {
+  .nx-listbox {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    max-height: 100%;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+
+  .nx-scroll-root.nx-listbox-scroll {
+    flex: 1 1 auto;
+  }
+
+  .nx-listbox-content:focus {
+    outline: none;
+  }
+
+  .nx-listbox-item {
+    border-radius: var(--radius-sm, 0.25rem);
+    cursor: default;
+  }
+  .nx-listbox-item[data-scope='listbox'][role='option'] {
+    cursor: pointer;
+  }
+  .nx-listbox-item[role='option']:hover,
+  .nx-listbox-item[data-highlighted] {
+    background: var(--color-hover-surface);
+  }
+  .nx-listbox-item[aria-selected='true'] {
+    background: var(--color-selected-surface);
+  }
+  .nx-listbox-item[aria-selected='true']:hover {
+    background: var(--color-selected-surface-hover);
+  }
+  .nx-listbox-item[aria-current='true'] {
+    background: var(--color-current-surface);
+  }
+  .nx-listbox-content:focus-visible > .nx-listbox-item[data-highlighted] {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+  .nx-listbox-item[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* Label over description: together they take one block plus a line, not a block each. */
+  .nx-listbox-item-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .nx-listbox-item-content > .nx-typography:not(:only-child):first-child {
+    padding-block-end: 0;
+  }
+  .nx-listbox-item-content > .nx-typography + .nx-typography {
+    padding-block-start: 0;
+  }
+  .nx-listbox-item-content:only-child,
+  .nx-listbox-item > .nx-block + .nx-listbox-item-content {
+    padding-inline-end: var(--nx-gap-size);
+  }
+  .nx-listbox-item > .nx-listbox-item-content:first-child {
+    padding-inline-start: var(--nx-gap-size);
+  }
+
+  .nx-listbox-item-trailing {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    justify-self: end;
+  }
+  .nx-listbox-item-trailing > .nx-button[data-square] {
+    margin: var(--nx-control-inset);
+  }
+
+  .nx-listbox-item-indicator {
+    display: grid;
+    place-items: center;
+    width: var(--nx-block-size);
+    height: var(--nx-block-size);
+  }
+}

@@ -538,6 +538,18 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     its fallback. Tooltip now follows its trigger too, so a label tooltip reads at the row's size rather than always
     `sm`. The stories dropped their `size={size}` props; each popup's `Test` asserts an inherited size and one explicit
     override (`expectPopupSize` in `testing.ts`), and Menu asserts every Sub level inherits.
+58. **`Next.Listbox`** is Ark `listbox` over a flat `ListboxOption` list (`value`, `label`, `disabled`):
+    `selectionMode` `single` (default) or `multiple`, controlled or not (`value: string[]`), `deselectable`,
+    `disabled`, `loopFocus`; keyboard navigation, typeahead and `aria-selected`/`aria-activedescendant` are zag's.
+    `selectionMode='none'` renders a plain `list` of `listitem`s with no focus or keyboard contract (decision 9). The
+    Content is the viewport of a thin ScrollArea and carries Container's attributes (`containerAttributes`, now shared
+    with `Container`) rather than rendering a Container under `asChild`, which would replace its `listbox` scope
+    (finding 10) — and zag scrolls the highlight into view only when the listbox element itself overflows (as 49).
+    An Item is a row Container with its own template (block-sized icon cell, label over an optional description, a
+    trailing cell for actions or the `ItemIndicator`), like `Card.Row` (46). Rows use ui-theme's state tokens as
+    `dx-hover`/`dx-selected`/`dx-current` do: hover and highlight `--color-hover-surface`, selected
+    `--color-selected-surface`, `current` (`aria-current`) `--color-current-surface`; the focus ring is drawn on the
+    highlighted row while the listbox has focus. Groups are not exposed yet (no caller in react-ui-list needs them).
 
 ## Phase 3: react-ui-form port
 
