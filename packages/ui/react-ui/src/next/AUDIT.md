@@ -461,13 +461,13 @@ reach parity. Numbered once across the section so a reply can cite a number.
 
 ### Settled
 
-| Topic                   | Decision                                                                                                 | Where                        |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Topic                   | Decision                                                                                                   | Where                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | Pane host (gap 1)       | `Next.Panel` (`Root`, `Toolbar`, `Content`, `Statusbar`) sets `data-size`/level and is the query container | DESIGN.md Phase 4 decision 1 |
-| Popup size (gap 2)      | a popup copies `data-size` from its trigger's nearest sized ancestor on open; `size` still wins           | Phase 4 decision 2           |
-| List primitives (gap 4) | `Next.Listbox` on Ark listbox; `DragHandle`, `DropIndicator`, `DragPreview` with keyboard moves           | Phase 4 decision 5           |
-| Drag and drop           | stays on pragmatic-drag-and-drop; plugins keep `onMove`, `canDrop`, `getDropKind`                         | Phase 4 decision 5           |
-| i18n (2.10)             | Next parts translate their default labels through `@dxos/react-ui` translations                           | follow-ups 51, 54            |
+| Popup size (gap 2)      | a popup copies `data-size` from its trigger's nearest sized ancestor on open; `size` still wins            | Phase 4 decision 2           |
+| List primitives (gap 4) | `Next.Listbox` on Ark listbox; `DragHandle`, `DropIndicator`, `DragPreview` with keyboard moves            | Phase 4 decision 5           |
+| Drag and drop           | stays on pragmatic-drag-and-drop; plugins keep `onMove`, `canDrop`, `getDropKind`                          | Phase 4 decision 5           |
+| i18n (2.10)             | Next parts translate their default labels through `@dxos/react-ui` translations                            | follow-ups 51, 54            |
 
 ### Deferred, with a recommendation
 
@@ -515,16 +515,16 @@ reach parity. Numbered once across the section so a reply can cite a number.
 
 ### Milestone status
 
-| #   | Milestone                     | Status                                                                              |
-| --- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| #   | Milestone                     | Status                                                                                                             |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | 1   | Foundations                   | pane host, popup size, Group stretch done; child span (point 7), required marker (point 8), depth-5 benchmark open |
-| 2   | Next.Listbox                  | done                                                                                |
-| 3   | `react-ui-list/next` scaffold | in progress (plugin-registry pilot)                                                 |
-| 4   | OrderedList next              | DragHandle, DropIndicator, DragPreview done; OrderedList in progress with milestone 3         |
-| 5   | Combobox trigger mode         | blocked on point 9                                                                        |
-| 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                             |
-| 7   | Settings layout               | blocked on point 1                                                                        |
-| 8   | Arrays and layout templates   | needs milestones 4, 6, 7                                                                       |
-| 9   | Ref and lookup fields         | needs milestones 5, 6                                                                          |
-| 10  | Higher-level form components  | needs milestones 7–9, point 10                                                                   |
-| 11  | Tree next                     | blocked on points 2, 3                                                                     |
+| 2   | Next.Listbox                  | done                                                                                                               |
+| 3   | `react-ui-list/next` scaffold | in progress (plugin-registry pilot)                                                                                |
+| 4   | OrderedList next              | DragHandle, DropIndicator, DragPreview done; OrderedList in progress with milestone 3                              |
+| 5   | Combobox trigger mode         | blocked on point 9                                                                                                 |
+| 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                                                     |
+| 7   | Settings layout               | blocked on point 1                                                                                                 |
+| 8   | Arrays and layout templates   | needs milestones 4, 6, 7                                                                                           |
+| 9   | Ref and lookup fields         | needs milestones 5, 6                                                                                              |
+| 10  | Higher-level form components  | needs milestones 7–9, point 10                                                                                     |
+| 11  | Tree next                     | blocked on points 2, 3                                                                                             |
