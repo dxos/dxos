@@ -19,13 +19,13 @@
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
         "tauri": "./src/capabilities/gen/tauri.ts",
-        "default": "./src/capabilities/gen/default.ts"
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
       "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#local-backend": {
       "source": {

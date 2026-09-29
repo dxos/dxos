@@ -16,20 +16,20 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [MapCapabilities.MarkerProvider],
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 // Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
 // `useMemo`/`useQuery`/`useObject` in its own body.
 export const MarkerProvider = Capability.lazyModule(
   'MarkerProvider',
-  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: ['browser', 'tauri'] },
   () => import('./marker-provider.tsx'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
