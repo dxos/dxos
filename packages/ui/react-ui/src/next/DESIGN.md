@@ -211,11 +211,11 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 24. **Textarea** is Ark `Field.Textarea` with Input's control styling: at least 3 `rows` (the default), first-line
     padding matching a single-line control, `resize: vertical`, and optional `autoResize` (Ark's `autoresize`, which
     measures from `height: auto`, so `rows` stays the minimum).
-25. **DateInput** is a native `date | time | datetime-local` input (Ark `Field.Input`, so Field wiring applies) inside
-    a control-styled row with a trailing calendar/clock Icon; the platform picker button is transparent and stretched
-    over the Icon so clicking it still opens the native picker (Chromium/WebKit; Firefox keeps its own button). The
-    focus ring and disabled dimming are drawn on the row from the input's state (`:has`). `data-testid` goes to the
-    row, the ref to the input.
+25. ~~**DateInput**~~ (superseded by 54: segmented zag entry with an Ark calendar) was a native
+    `date | time | datetime-local` input (Ark `Field.Input`, so Field wiring applies) inside a control-styled row with
+    a trailing calendar/clock Icon; the platform picker button is transparent and stretched over the Icon so clicking
+    it still opens the native picker (Chromium/WebKit; Firefox keeps its own button). The focus ring and disabled
+    dimming are drawn on the row from the input's state (`:has`). `data-testid` goes to the row, the ref to the input.
 26. **Popover** is Ark Popover, portalled like Menu (explicit `size`, `level='popup'`, 2px gutter, mounted only while
     open), padded by `--nx-gap-size`; Header/Title/Description/CloseTrigger mirror Dialog. `CloseTrigger asChild`
     closes through the popover api rather than zag's close-trigger props, whose `aria-label="close"` would rename a
@@ -473,6 +473,46 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     the popup unfocused, so Escape missed it) and later ones run in the next animation frame, which is the same frame
     for a scroll-driven update and one frame later for a resize. Select `Test` fails on any loop error
     (`watchResizeObserverLoop` in `testing.ts`) and checks the popup still widens with its trigger.
+
+54. **Field parity: every current `Field.*` part has a Next equivalent** (supersedes 25). All behaviour is zag's, so
+    decision 3 needs no exception.
+    - **`Next.DateInput`** replaces the native input and keeps its API: `type` `date | time | datetime-local` and the
+      native value strings, which are also the current `Field.Date/Time/DateTime` formats (`YYYY-MM-DD`, `HH:mm`,
+      `YYYY-MM-DDTHH:mm`, plus `:ss` at `granularity='second'`), controlled or not, with `min`/`max`, `hourCycle`,
+      `locale`, `name`. Entry is zag `date-input` (Ark 5.39, zag 1.43.3): one `spinbutton` per segment, ordered by
+      locale, typed digit by digit with auto-advance, stepped with ArrowUp/Down, PageUp/Down, Home/End. zag's formatter
+      always includes the date, so `time` passes its own `DateFormatter` and the segments it yields, over a fixed
+      base date. The native input goes rather than staying as a light option: two date APIs would overlap, and the
+      segmented one is a single format in every browser (the AUDIT gap). `react-aria-components` stays only in the
+      current `Field`.
+    - **Calendar.** `date` and `datetime-local` wrap the row in Ark `DatePicker` sharing the value: the row is its
+      `Control` (floating-ui's anchor, so no virtual anchor as the current `PickerWrapper` needed), the trailing
+      trigger is `DatePicker.Trigger asChild` over a ghost icon-only Button (the `Field.TriggerIcon` role), and the
+      portalled Content (`level='popup'`, explicit `size`, finding 9) holds zag's day, month and year tables. The
+      calendar keeps its own, roughly square shape rather than the anchor's width (`.nx-popup`'s `--reference-width`
+      minimum is dropped): seven block-sized square days plus its padding at every size, placed `bottom-end` so it
+      ends under the trigger. `min`/`max` disable days; picking a day keeps a date-time's time. `picker={false}` drops
+      it; `time` has none.
+    - **Field wiring.** Ark's date input ignores the field context, so DateInput passes the field's label id to zag
+      (the segment group is `aria-labelledby` it), the field's control id to the hidden input, and the description,
+      invalid, disabled, read-only and required state itself. PinInput names its cells' `group` the same way; Ark's
+      NumberInput and PasswordInput read the field themselves.
+    - **`Next.PinInput`** is Ark `pin-input` with a string value: `length` (6), `mask`, `otp` (one-time-code autofill),
+      `type`, `onValueComplete`; each cell is a `--nx-control-size` square. **`Next.NumberInput`** is Ark
+      `number-input` in the control row with trailing decrement/increment Buttons (`stepper={false}` hides them);
+      **`Next.PasswordInput`** is Ark `password-input` with an eye toggle whose label follows the state
+      (`ignorePasswordManagers` is Input's `noAutoFill`). Stepper and toggle labels are English props, since
+      translations belong to another change (AUDIT 2.10).
+    - **The control row is shared, not a new part.** Input's adorned row (`.nx-input-row`: adornments, outline ring,
+      disabled dimming, a trailing icon-only Button inset to fit) now also hosts DateInput, NumberInput and
+      PasswordInput; a popup trigger is a Button in its `end` slot. A frame for third-party editors stays with AUDIT
+      milestone 10.
+    - **`Field.Block`** needs no part: Checkbox and Switch already occupy a block cell (19), so they take the row an
+      input would; `Next.Block` remains for icons. **Root** takes Ark's `asChild`, `required` and `readOnly`; the
+      current Label shows no required marker, so none is added (Phase 4 milestone 1). **Textarea** gains
+      `variant='subdued'`.
+    - **Tests.** zag reads segment and PIN digits from React's `onBeforeInput`, which only trusted key presses raise, so
+      those stories type with the runner's real keyboard (`vitest/browser`) and PinInput also clicks with it.
 
 ## Phase 3: react-ui-form port
 

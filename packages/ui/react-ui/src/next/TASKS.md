@@ -103,6 +103,7 @@ with Phase 4 milestone 5).
 - [ ] **Image dominant colour** — decide whether to move the current `Image`'s sampler to a shared utility and adopt it, given decision 11 (DESIGN.md follow-up 47).
 - [x] **Tooltip after a press** — a click then Space left a Toggle's Tooltip suppressed; the press now ends at the next focus, key or hover (DESIGN.md follow-up 48); Toggle `Test` covers it.
 - [x] **SystemButton** — `Next.SystemButton.*` ports every `SystemIconButton` preset on Button/Toggle with translated default labels (DESIGN.md follow-up 51).
+- [x] **Field and date/time** — every current `Field.*` part: segmented `DateInput` (zag `date-input`) with an Ark `DatePicker` calendar replacing the native input, `PinInput`, `NumberInput`, `PasswordInput`, Textarea `variant`; `Field.Block`/`TriggerIcon` mapped; Field story shows every field type (DESIGN.md follow-up 54).
 - [ ] **Toolbar action binding** — `useMenuActions` (`ActionIconButton`, `Toolbar.Menu`) on Next Menu; Phase 4 with react-ui-menu.
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
