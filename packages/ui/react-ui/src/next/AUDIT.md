@@ -513,14 +513,43 @@ reach parity. Numbered once across the section so a reply can cite a number.
 13. **Image dominant colour** (TASKS Parity). Move the sampler to a shared utility and adopt it in `Next.Image`,
     or leave it out per decision 11. Recommendation: leave it out until a list or card consumer asks.
 
+### Open from the react-ui-list pilot
+
+14. **Nested scrolling.** `Next.Listbox.Content` is always its own ScrollArea, so inside `Next.Panel.Content` there
+    are two scroll frames and the inner one never scrolls. Options: (1) a Listbox mode that renders its content
+    without a ScrollArea, (2) keep it and have hosts not scroll. Recommendation: 1.
+15. **List rows on the panel's rails.** `gutter='inherit'` cannot reach through the Listbox's ScrollArea, so rows use
+    an `inset` gutter and miss the panel's rails. Recommendation: follows from 14; with no inner ScrollArea, rows
+    inherit.
+16. **DetailItem layout.** A row Container centres every cell, so the detail row is a Collapsible root holding its
+    own row. Options: (1) keep that, (2) a top-aligned Container row option. Recommendation: 1.
+17. **Drop-target styling.** Rows showing a drop indicator are positioned by a generic `:has(> .nx-drop-indicator)`
+    rule. Options: (1) keep it, (2) an explicit `data-drop-target` attribute. Recommendation: 1.
+18. **Title in a disclosure row.** `Collapsible.Trigger` draws its label in the description colour. Options: (1) a
+    title variant on the trigger, (2) accept it. Recommendation: 1.
+19. **OrderedList keyboard grammar.** Options: (1) roving focus between rows, as the current `navigationMode`,
+    (2) a tab stop per control, as now. Recommendation: 1, which needs a roving-focus part outside Toolbar.
+20. **Shared row states.** Hover and selected styles apply only to `.nx-listbox-item`. Recommendation: one row-state
+    rule that OrderedList rows share.
+21. **List chrome labels.** "Drag to rearrange" and "Delete" come from app-level `osTranslations`. Recommendation:
+    move them to react-ui translations (2.10).
+22. **Story helpers for other packages.** `@dxos/react-ui/next/testing` exports `withSizes`, `SIZE_ARG_TYPES` and
+    `SizeArgs`; `GEOMETRY`, `byTestId` and the rest of `testing.ts` stay internal because they import
+    `storybook/test`. Recommendation: move `testing.ts` under `testing/` too and export it once a second package
+    needs geometry assertions.
+23. **Plugin list look.** The pilot swapped 14rem cards for list rows and lost the per-plugin icon hue.
+    Options: (1) Listbox items take an icon hue, (2) rows as Next Cards. Recommendation: 1.
+24. **Default drag preview.** Without `dragPreview`, the browser snapshots the row. Recommendation: a default
+    `Next.DragPreview` chip labelled via a `getLabel` prop.
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
 | --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | 1   | Foundations                   | pane host, popup size, Group stretch done; child span (point 7), required marker (point 8), depth-5 benchmark open |
 | 2   | Next.Listbox                  | done                                                                                                               |
-| 3   | `react-ui-list/next` scaffold | in progress (plugin-registry pilot)                                                                                |
-| 4   | OrderedList next              | DragHandle, DropIndicator, DragPreview done; OrderedList in progress with milestone 3                              |
+| 3   | `react-ui-list/next` scaffold | done: `./next` entry, Listbox, plugin-registry pilot (open: points 14, 15, 23)                                     |
+| 4   | OrderedList next              | done: OrderedList on Container/Collapsible rows; plugin-sheet `RangeList` pilot open (points 16–20, 24)            |
 | 5   | Combobox trigger mode         | blocked on point 9                                                                                                 |
 | 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                                                     |
 | 7   | Settings layout               | blocked on point 1                                                                                                 |
