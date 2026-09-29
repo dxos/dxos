@@ -2,4 +2,4 @@
 '@dxos/echo': patch
 ---
 
-Peers joining or editing a space through EDGE no longer stall: a feed block pushed ahead of the metadata reply no longer leaves a gap that blocks feed admission, and a commit EDGE advertises alongside a stale head is now detected as missing and reapplied from local storage.
+Peers syncing through EDGE no longer end up permanently behind on a document. Feed admission no longer stalls when EDGE pushes a block ahead of its metadata reply. A commit that arrives while the document is evicted, or that EDGE advertises beside a stale head, is now applied instead of sitting unapplied in local Subduction storage.

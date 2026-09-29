@@ -10,25 +10,26 @@ Sandbox plugin for DXOS Composer providing isolated shell environments.
 
 The operations run against `SandboxService.Service`, which the plugin contributes to the process
 runtime as an application-affinity `LayerSpec`. Sandboxes run on EDGE's sandbox-service unless the
-plugin's **Backend** setting is `local` (`DX_SANDBOX_BACKEND=local|edge` overrides it under Node or
-Bun). Local sandboxes are processes confined by the OS sandbox (bubblewrap on Linux, Seatbelt on
+plugin's **Backend** setting is `local`, its default in the desktop app (`DX_SANDBOX_BACKEND=local|edge`
+overrides it under Node or Bun). Local sandboxes are processes confined by the OS sandbox (bubblewrap on Linux, Seatbelt on
 macOS) via `@carderne/sandbox-runtime`:
 
 - **Where they run**: in-process under Node or Bun. In the desktop app, whose webview cannot spawn
   processes, the plugin starts `dx-sandbox` (this package's `compile-sidecar` output) and the
-  webview reaches it on a loopback port with a per-launch token passed over stdin.
+  webview reaches it on a loopback port with a per-launch token passed over stdin. The launcher is
+  annotated `environments: ['tauri']`, so only the Tauri (desktop and iOS) bundles carry it.
 - **Filesystem**: each sandbox is `$DX_SANDBOX_ROOT/<id>/` (default `~/.local/state/dxos/sandboxes`).
   Commands write only its `workspace/` (their cwd and `$HOME`) and `tmp/`; the user's home directory
   and other sandboxes are unreadable. `/workspace/…` paths in file operations map onto `workspace/`.
-- **Network**: only package registries and GitHub (`DEFAULT_ALLOWED_DOMAINS`) are reachable.
+- **Network**: only package registries, pkg.pr.new and GitHub (`DEFAULT_ALLOWED_DOMAINS`) are reachable.
+- **Toolchain**: in the desktop app, commands find `bun` and `bunx` first on their `PATH`. They are the helper
+  itself, a `bun build --compile` executable run with `BUN_BE_BUN=1`, so a sandbox installs and builds
+  JavaScript on a machine with no node or bun of its own.
 - **Limits**: per-command CPU time, writable memory (Linux only) and file size, plus the wall-clock
   `timeout`, which kills the command's whole process group.
 - **Environment**: the host's environment is not inherited; only `PATH`, `HOME`, `TMPDIR`, `LANG`,
-  `WORKSPACE` and the operation's `env` are set.
-- **Dev builds**: a desktop app bundled with `DX_ENVIRONMENT=dev` passes the source tree it was built
-  from to the helper as `DX_SANDBOX_ALLOW_READ`, so commands may read its `node_modules`, `packages` and `docs`
-  (not `.secrets/`, `.git/` or `.claude/` at its root) even under the home directory —
-  how plugin-computer's Composer Plugin template builds against Composer's own toolchain there.
+  `WORKSPACE` and the operation's `env` are set, plus the helper's own `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE`
+  (and read access to the bundles they name), so installs work behind a TLS-inspecting proxy.
 
 ## Extensions
 

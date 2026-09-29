@@ -42,11 +42,9 @@ middleware, not by the developer.
 
 ## In the desktop app
 
-The desktop app has no vite server, so the two tools have no host there. Its **Composer Plugin** project
-template switches to a desktop variant instead (`desktopVariant` in `src/templates/composer-plugin.ts`): the
-agent works in a local sandbox through plugin-sandbox's Sandbox skill, builds against the toolchain of the
-source tree a dev build was bundled from (`VITE_DX_SOURCE_ROOT`, which the sandbox may read), and offers the
-URL that the skill's Publish Files serves the build at. See `PLUGIN.mdl` QA-3.
+The desktop app has no vite server, so the two tools have no host there, and this plugin offers its
+**Composer Plugin** project template only in a browser. The desktop app gets plugin-projects' own version of
+it, which builds in a local sandbox from public sources instead (plugin-projects' `PLUGIN.mdl` QA-1).
 
 ## Packaging
 
