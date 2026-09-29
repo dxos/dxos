@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { useThemeContext } from '@dxos/react-ui';
+import { Grid, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -47,16 +47,27 @@ export const Default: Story = {
 
 const REVEAL_SCROLL_ACTIVATION_WIDTH = 435;
 
+/** Each column of the narrow story, so its deck sits below Reveal's scroll-view width. */
+const NARROW_COLUMN_WIDTH = 320;
+
+const element = (root: HTMLElement, selector: string): HTMLElement => {
+  const found = root.querySelector(selector);
+  if (!(found instanceof HTMLElement)) {
+    throw new Error(`No element matches ${selector}`);
+  }
+  return found;
+};
+
 const typeAtLineEnd = async (canvasElement: HTMLElement, line: string, text: string) => {
   const index = Array.from(canvasElement.querySelectorAll('.cm-line')).findIndex((element) =>
     element.textContent?.startsWith(line),
   );
   await expect(index).toBeGreaterThanOrEqual(0);
-  await userEvent.click(canvasElement.querySelector<HTMLElement>('.cm-content')!);
+  await userEvent.click(element(canvasElement, '.cm-content'));
   await userEvent.keyboard(`${index > 0 ? `{ArrowDown>${index}/}` : ''}{End}${text}`);
 };
 
-const EditorStory = (props: RevealProps) => {
+const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: string }) => {
   const { themeMode } = useThemeContext();
   const [content, setContent] = useState(props.content);
   const extensions = useMemo(
@@ -65,14 +76,14 @@ const EditorStory = (props: RevealProps) => {
   );
 
   return (
-    <div className='grid grid-cols-2 dx-fill'>
+    <Grid cols={[columnWidth ?? 'minmax(0, 1fr)', columnWidth ?? 'minmax(0, 1fr)']}>
       <div className='overflow-y-auto border-e border-separator'>
         <Editor.Root extensions={extensions}>
           <Editor.View classNames='p-4' value={content} onChange={setContent} />
         </Editor.Root>
       </div>
       <RevealPlayer {...props} fullscreen={false} content={content} />
-    </div>
+    </Grid>
   );
 };
 
@@ -105,14 +116,13 @@ export const TestEditor: Story = {
   play: async ({ canvasElement }) => {
     const headings = () =>
       Array.from(canvasElement.querySelectorAll('.slides section h1')).map((heading) => heading.textContent);
-    const present = () => canvasElement.querySelector<HTMLElement>('.slides section.present');
-    const next = () => canvasElement.querySelector<HTMLElement>('.controls .navigate-right');
+    const present = () => canvasElement.querySelector('.slides section.present');
+    const next = () => element(canvasElement, '.controls .navigate-right');
 
     await waitFor(() => expect(headings()).toEqual(['Alpha', 'Beta']));
-    await expect(next()).not.toBeNull();
-    await userEvent.click(next()!);
+    await userEvent.click(next());
     await waitFor(() => expect(present()?.querySelector('h1')?.textContent).toBe('Beta'));
-    await userEvent.click(next()!);
+    await userEvent.click(next());
     await waitFor(() => expect(present()?.querySelectorAll('.fragment.visible')).toHaveLength(1));
     await expect(present()?.querySelector('pre.code-wrapper .hljs-ln')).not.toBeNull();
 
@@ -127,27 +137,20 @@ export const TestEditor: Story = {
 };
 
 export const TestEditorNarrow: Story = {
-  render: (args) => (
-    <div className='w-[640px] h-full'>
-      <EditorStory {...args} />
-    </div>
-  ),
+  render: (args) => <EditorStory {...args} columnWidth={`${NARROW_COLUMN_WIDTH}px`} />,
   args: {
     content: ['# Alpha', '# Beta\n\n- step <!-- .element: class="fragment" -->'].join('\n\n---\n\n'),
   },
   play: async ({ canvasElement }) => {
     const headings = () =>
       Array.from(canvasElement.querySelectorAll('.slides section h1')).map((heading) => heading.textContent);
-    const present = () => canvasElement.querySelector<HTMLElement>('.slides section.present');
-    const next = () => canvasElement.querySelector<HTMLElement>('.controls .navigate-right');
+    const present = () => canvasElement.querySelector('.slides section.present');
+    const next = () => element(canvasElement, '.controls .navigate-right');
 
     await waitFor(() => expect(headings()).toEqual(['Alpha', 'Beta']));
-    await expect(canvasElement.querySelector<HTMLElement>('.reveal')!.offsetWidth).toBeLessThan(
-      REVEAL_SCROLL_ACTIVATION_WIDTH,
-    );
-    await expect(next()).not.toBeNull();
-    await userEvent.click(next()!);
-    await userEvent.click(next()!);
+    await expect(element(canvasElement, '.reveal').offsetWidth).toBeLessThan(REVEAL_SCROLL_ACTIVATION_WIDTH);
+    await userEvent.click(next());
+    await userEvent.click(next());
     await waitFor(() => expect(present()?.querySelectorAll('.fragment.visible')).toHaveLength(1));
 
     await typeAtLineEnd(canvasElement, '# Alpha', ' edited');

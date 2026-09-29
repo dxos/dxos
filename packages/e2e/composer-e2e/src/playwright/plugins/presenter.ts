@@ -9,11 +9,11 @@ const PLUGIN_ID = 'org.dxos.plugin.presenter';
 export const Presenter = {
   /** The presenter is off by default. */
   enable: async (page: Page) => {
-    const { rejected } = await page.evaluate(
-      async (ids) =>
-        (await globalThis.composer!.invoke!('org.dxos.operation.registry.enablePlugins', { ids })) as {
-          rejected: unknown[];
-        },
+    const rejected = await page.evaluate(
+      async (ids) => {
+        const result = await globalThis.composer?.invoke?.('org.dxos.operation.registry.enablePlugins', { ids });
+        return typeof result === 'object' && result !== null && 'rejected' in result ? result.rejected : result;
+      },
       [PLUGIN_ID],
     );
     expect(rejected, 'the presenter plugin must be in the bundle under test').toEqual([]);

@@ -117,6 +117,67 @@ const updateSlides = async (player: Player, content: string) => {
   deck.slide(h, v, f);
 };
 
+/** Builds a Markdown deck on `element`, seeded with `content`, and waits for it to be ready. */
+const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: string): Promise<Player> => {
+  // Required for syntax highlighting.
+  hljs.registerLanguage('typescript', typescript);
+
+  const markdown = RevealMarkdown();
+  const highlight = RevealHighlight();
+  if (!isHighlightPlugin(highlight)) {
+    throw new Error('reveal.js highlight plugin does not expose highlightBlock');
+  }
+
+  setMarkdown(slides, content);
+
+  // https://revealjs.com/react
+  // https://revealjs.com/config
+  // https://github.com/hakimel/reveal.js
+  // TODO(burdon): Fragments and scroll view steps 2 at a time (safe mode?)
+  const deck = new Reveal(element, {
+    progress: false,
+    transition: 'none',
+    slideNumber: false,
+    embedded: true,
+    // Narrow decks scale like wide ones; scroll view would wrap the sections that edits replace.
+    scrollActivationWidth: 0,
+
+    // Disable autoplay to prevent errors in headless environments (e.g., CI).
+    autoPlayMedia: false,
+
+    // TODO(burdon): Speaker view requires server to serve popout window.
+    // https://revealjs.com/speaker-view
+    showNotes: false,
+
+    // width: 1600,
+    // height: 900,
+    margin: 0.1,
+    // center: false,
+    // minScale: 0.1,
+    // maxScale: 1.4,
+
+    // https://revealjs.com/markdown
+    // TODO(burdon): Requires server to serve popout window.
+    plugins: [() => markdown, () => highlight],
+
+    // See https://marked.js.org/using_advanced#options
+    markdown: {
+      gfm: true,
+      smartypants: true,
+      highlight: (code, language) => {
+        if (language) {
+          return hljs.highlight(code, { language }).value;
+        }
+
+        return hljs.highlightAuto(code).value;
+      },
+    },
+  });
+
+  await deck.initialize();
+  return { deck, markdown, highlight, slides, renderedContent: content };
+};
+
 export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
   ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
@@ -130,63 +191,14 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
     }, [player, content]);
 
     useAsyncEffect(async (controller) => {
-      // Required for syntax highlighting.
-      hljs.registerLanguage('typescript', typescript);
-
-      const markdown = RevealMarkdown();
-      const highlight = RevealHighlight();
-      if (!isHighlightPlugin(highlight)) {
-        throw new Error('reveal.js highlight plugin does not expose highlightBlock');
+      const element = deckDivRef.current;
+      const slides = slidesRef.current;
+      if (!element || !slides) {
+        return;
       }
 
-      const slides = slidesRef.current!;
-      setMarkdown(slides, content);
-
-      // https://revealjs.com/react
-      // https://revealjs.com/config
-      // https://github.com/hakimel/reveal.js
-      // TODO(burdon): Fragments and scroll view steps 2 at a time (safe mode?)
-      const deck = new Reveal(deckDivRef.current!, {
-        progress: false,
-        transition: 'none',
-        slideNumber: false,
-        embedded: true,
-        // Narrow decks scale like wide ones; scroll view would wrap the sections that edits replace.
-        scrollActivationWidth: 0,
-
-        // Disable autoplay to prevent errors in headless environments (e.g., CI).
-        autoPlayMedia: false,
-
-        // TODO(burdon): Speaker view requires server to serve popout window.
-        // https://revealjs.com/speaker-view
-        showNotes: false,
-
-        // width: 1600,
-        // height: 900,
-        margin: 0.1,
-        // center: false,
-        // minScale: 0.1,
-        // maxScale: 1.4,
-
-        // https://revealjs.com/markdown
-        // TODO(burdon): Requires server to serve popout window.
-        plugins: [() => markdown, () => highlight],
-
-        // See https://marked.js.org/using_advanced#options
-        markdown: {
-          gfm: true,
-          smartypants: true,
-          highlight: (code, language) => {
-            if (language) {
-              return hljs.highlight(code, { language }).value;
-            }
-
-            return hljs.highlightAuto(code).value;
-          },
-        },
-      });
-
-      await deck.initialize();
+      const player = await createPlayer(element, slides, content);
+      const { deck } = player;
       if (controller.signal.aborted) {
         deck.destroy();
         return;
@@ -200,11 +212,11 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         onExit?.();
       });
 
-      setPlayer({ deck, markdown, highlight, slides, renderedContent: content });
+      setPlayer(player);
 
       // Reveal re-lays out only on window resize; a plank or companion resizes without one.
       const resizeObserver = new ResizeObserver(() => deck.layout());
-      resizeObserver.observe(deckDivRef.current!);
+      resizeObserver.observe(element);
 
       return () => {
         resizeObserver.disconnect();
