@@ -65,8 +65,9 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
       }
 
       // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
-      const block = query?.startsWith('@') ?? false;
-      const text = block ? query!.slice(1) : (query ?? '');
+      const raw = query ?? '';
+      const block = raw.startsWith('@');
+      const text = block ? raw.slice(1) : raw;
       const name = text.toLowerCase();
 
       return Effect.gen(function* () {

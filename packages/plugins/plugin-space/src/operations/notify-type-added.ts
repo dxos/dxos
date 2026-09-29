@@ -14,15 +14,14 @@ import { SpaceCapabilities, SpaceEvents } from '#types';
  * Tells the plugins a type was added (plugin-table makes a table for it). Activation first, since it is
  * what makes a lazy module contribute its `OnTypeAdded` callback.
  */
-export const notifyTypeAdded = (
+export const notifyTypeAdded = Effect.fnUntraced(function* (
   managers: { plugins: PluginManager.PluginManager; capabilities: CapabilityManager.CapabilityManager },
   params: { db: Database.Database; type: Type.AnyEntity; show?: boolean },
-) =>
-  Effect.gen(function* () {
-    yield* managers.plugins.activate(SpaceEvents.TypeAdded);
-    const callbacks = managers.capabilities.getAll(SpaceCapabilities.OnTypeAdded);
-    yield* Effect.all(
-      callbacks.map((callback) => callback(params)),
-      { concurrency: 'unbounded' },
-    );
-  });
+) {
+  yield* managers.plugins.activate(SpaceEvents.TypeAdded);
+  const callbacks = managers.capabilities.getAll(SpaceCapabilities.OnTypeAdded);
+  yield* Effect.all(
+    callbacks.map((callback) => callback(params)),
+    { concurrency: 'unbounded' },
+  );
+});
