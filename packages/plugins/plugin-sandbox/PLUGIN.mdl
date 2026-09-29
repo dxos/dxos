@@ -25,6 +25,10 @@ macOS) via `@carderne/sandbox-runtime`:
   `timeout`, which kills the command's whole process group.
 - **Environment**: the host's environment is not inherited; only `PATH`, `HOME`, `TMPDIR`, `LANG`,
   `WORKSPACE` and the operation's `env` are set.
+- **Dev builds**: a desktop app bundled with `DX_ENVIRONMENT=dev` passes the source tree it was built
+  from to the helper as `DX_SANDBOX_ALLOW_READ`, so commands may read its `node_modules`, `packages` and `docs`
+  (not `.secrets/`, `.git/` or `.claude/` at its root) even under the home directory —
+  how plugin-computer's Composer Plugin template builds against Composer's own toolchain there.
 
 ## Extensions
 
@@ -104,6 +108,25 @@ op downloadFile
     objectId: string     # ECHO object URI of the File
   effects: [sandbox:read, echo:write]
 ```
+
+```mdl
+op publishFiles
+  key: org.dxos.operation.sandbox.publishFiles
+  desc: Serves a directory of a local sandbox read-only over HTTP on this machine and returns its base URL.
+  input:
+    sandbox: Ref<Sandbox>
+    path: string         # directory, relative to the workspace or under /workspace
+  output:
+    url: string          # ends in "/"; empty when it failed
+    error?: string       # set iff url is empty
+  effects: [sandbox:read, sandbox:serve]
+```
+
+Only the desktop app's helper publishes: it serves the directory at `http://localhost:<port>/files/<key>/`
+without the bearer token, since a module loader cannot send one, so the 128-bit key minted per call is the
+credential. Paths that climb out of the directory, and symlinks out of the workspace, answer 404; files are served
+`nosniff` under `Content-Security-Policy: sandbox`, and keys are forgotten when the helper exits.
+Under the EDGE backend, or in-process under Node, the output carries the reason instead.
 
 ## QA
 

@@ -34,6 +34,11 @@ export interface Backend {
   ): Effect.Effect<{ bytes: Uint8Array; type: string }, SandboxError>;
   writeFile(spaceId: string, sandboxId: string, path: string, content: Uint8Array): Effect.Effect<void, SandboxError>;
   listFiles(spaceId: string, sandboxId: string, path: string): Effect.Effect<readonly FileEntry[], SandboxError>;
+  /**
+   * Serves a directory of the sandbox read-only over HTTP on this machine and answers its base URL,
+   * ending in `/`. Only the desktop app's helper can; absent on every other backend.
+   */
+  publish?(spaceId: string, sandboxId: string, path: string): Effect.Effect<string, SandboxError>;
 }
 
 /** The sandbox backend, contributed to the process runtime by the plugin's layer spec. */

@@ -144,6 +144,29 @@ describe('EdgeClient', () => {
     expect(messageSourceLog.map((m) => m.peerKey)).toStrictEqual([oldIdentity.peerKey, newIdentity.peerKey]);
   });
 
+  // EDGE's router writes to a device's newest open socket. After a router reset in production, an attempt
+  // the client had given up on was admitted after its retry, and took every reply until the page reloaded.
+  test('a connect attempt that timed out does not keep its socket for a late admission', async () => {
+    const admitFirstAttempt = new Trigger();
+    const { endpoint, cleanup, sendMessage, openConnectionCount, admittedAttempts } = await createTestEdgeWsServer(
+      wsServerPort++,
+      { admitConnectionAttempt: (attempt) => (attempt === 1 ? admitFirstAttempt.wait() : Promise.resolve()) },
+    );
+    onTestFinished(cleanup);
+
+    const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: endpoint, timeout: 200 });
+    const received: (string | undefined)[] = [];
+    client.onMessage((message) => received.push(protocol.getPayload(message, TextMessageSchema).message));
+    await openAndClose(client);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
+
+    admitFirstAttempt.wake();
+    await expect.poll(() => admittedAttempts()).toContain(1);
+    await sendMessage(textMessage('to the newest socket'));
+    await expect.poll(() => received).toEqual(['to the newest socket']);
+    expect(openConnectionCount()).toBe(1);
+  });
+
   test.skipIf(!process.env.EDGE_ENDPOINT)('connect to local edge server', async () => {
     // const identity = await createEphemeralEdgeIdentity();
 
