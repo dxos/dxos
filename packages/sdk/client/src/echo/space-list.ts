@@ -266,9 +266,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async create(meta?: SpaceProperties, options?: CreateSpaceOptions): Promise<Space> {
-    const space = await this._createSpaceInternal(this._ctx, meta, options);
-    trace.events.emit(ClientTraceEvents.spaceCreate, { spaceId: space.id, origin: options?.origin ?? 'unknown' });
-    return space;
+    return this._createSpaceInternal(this._ctx, meta, options);
   }
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
@@ -291,6 +289,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));
     });
     const spaceProxy = this._findProxy(space);
+    // Reported once the service has created the space, so a failure while initializing it below still counts.
+    trace.events.emit(ClientTraceEvents.spaceCreate, { spaceId: spaceProxy.id, origin: options?.origin ?? 'unknown' });
 
     await cancelWithContext(ctx, spaceProxy._databaseInitialized.wait());
     spaceProxy.db.add(Obj.make(SpaceProperties, meta ?? {}), { placeIn: 'root-doc' });
