@@ -151,6 +151,88 @@ describe('dx-plugin gen', () => {
     );
   });
 
+  it('adds a tauri-only module on top of the default barrel and removes it from default', () => {
+    withPlugin(
+      {
+        'package.json': PACKAGE_JSON,
+        'src/capabilities/index.ts': [
+          "import * as Capability from '@dxos/app-framework/Capability';",
+          '',
+          "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
+          "export const BrowserOnly = Capability.lazyModule('BrowserOnly', { environments: [] }, () => import('./ui'));",
+          "export const Launcher = Capability.lazyModule('Launcher', { environments: ['tauri'] }, () => import('./launcher'));",
+          '',
+        ].join('\n'),
+      },
+      (dir) => {
+        const result = generate(dir);
+        expect(result.environments).toEqual(['node', 'tauri']);
+
+        const tauri = read(dir, 'tauri');
+        expect(tauri).toContain("import('../launcher')");
+        expect(tauri).toContain("Capability.lazyModule('BrowserOnly'");
+        expect(tauri).toContain("Capability.lazyModule('Headless'");
+
+        const fallback = read(dir, 'default');
+        expect(fallback).toContain("Capability.lazyModule('BrowserOnly'");
+        expect(fallback).toContain('export const Launcher = undefined;');
+
+        expect(read(dir, 'node')).toContain('export const Launcher = undefined;');
+
+        const entry = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).imports['#capabilities'];
+        expect(entry.source).toEqual({
+          node: './src/capabilities/gen/node.ts',
+          tauri: './src/capabilities/gen/tauri.ts',
+          default: './src/capabilities/gen/default.ts',
+        });
+        expect(entry.tauri).toEqual('./dist/lib/capabilities.tauri.mjs');
+        expect(entry.default).toEqual('./dist/lib/capabilities.mjs');
+      },
+    );
+  });
+
+  it('points default back at the canonical barrel once no module is additive-only', () => {
+    withPlugin(
+      {
+        'package.json': JSON.stringify({
+          name: '@dxos/plugin-fixture',
+          imports: {
+            '#capabilities': {
+              source: {
+                node: './src/capabilities/gen/node.ts',
+                tauri: './src/capabilities/gen/tauri.ts',
+                default: './src/capabilities/gen/default.ts',
+              },
+              types: './dist/types/src/capabilities/index.d.ts',
+              node: './dist/lib/capabilities.node.mjs',
+              tauri: './dist/lib/capabilities.tauri.mjs',
+              default: './dist/lib/capabilities.mjs',
+            },
+          },
+        }),
+        'src/capabilities/index.ts': [
+          "import * as Capability from '@dxos/app-framework/Capability';",
+          '',
+          "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
+          '',
+        ].join('\n'),
+        'src/capabilities/gen/default.ts': '',
+        'src/capabilities/gen/tauri.ts': '',
+      },
+      (dir) => {
+        generate(dir);
+        const entry = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).imports['#capabilities'];
+        expect(entry.source).toEqual({
+          node: './src/capabilities/gen/node.ts',
+          default: './src/capabilities/index.ts',
+        });
+        expect(entry.tauri).toBeUndefined();
+        expect(fs.existsSync(path.join(dir, 'src/capabilities/gen/default.ts'))).toBe(false);
+        expect(fs.existsSync(path.join(dir, 'src/capabilities/gen/tauri.ts'))).toBe(false);
+      },
+    );
+  });
+
   it('rejects a computed environments value instead of guessing', () => {
     withPlugin(
       {

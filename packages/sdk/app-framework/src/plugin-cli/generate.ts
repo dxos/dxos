@@ -24,6 +24,15 @@ export type GenerateResult = {
 const findFirst = (dir: string, names: string[]): string | null =>
   names.map((name) => path.join(dir, name)).find((candidate) => fs.existsSync(candidate)) ?? null;
 
+export const ADDITIVE_CONDITIONS: readonly string[] = ['tauri'];
+
+const GENERATED_DEFAULT_SOURCE = './src/capabilities/gen/default.ts';
+
+const additiveOnly = (member: BarrelMember): boolean =>
+  member.environments !== null &&
+  member.environments.length > 0 &&
+  member.environments.every((env) => ADDITIVE_CONDITIONS.includes(env));
+
 /**
  * Generates the per-condition capability barrels for one plugin package:
  * `src/capabilities/gen/<env>.ts` for every condition named by an `environments` annotation in
@@ -47,17 +56,31 @@ export const generate = (pluginDir: string): GenerateResult => {
 
   const genDir = path.join(capabilitiesDir, 'gen');
   const result: GenerateResult = { pluginDir, environments, files: [] };
+  const canonicalSource = `./${path.relative(pluginDir, indexPath).split(path.sep).join('/')}`;
+  fs.rmSync(genDir, { recursive: true, force: true });
   if (environments.length === 0) {
     // Still sync: dropping the last annotation has to retract the conditions too, or package.json
     // keeps pointing `#capabilities` at gen files that are no longer produced.
-    fs.rmSync(genDir, { recursive: true, force: true });
-    syncPackageImports(pluginDir, environments);
+    syncPackageImports(pluginDir, environments, { canonicalSource, generatedDefault: false });
     return result;
   }
   fs.mkdirSync(genDir, { recursive: true });
 
-  for (const env of environments) {
-    const carries = (member: BarrelMember) => member.environments === null || member.environments.includes(env);
+  const inDefault = (member: BarrelMember) => !additiveOnly(member);
+  const browserPlus = (env: string) => (member: BarrelMember) =>
+    inDefault(member) || (member.environments?.includes(env) ?? false);
+  const headlessSubset = (env: string) => (member: BarrelMember) =>
+    member.environments === null || member.environments.includes(env);
+  const generatedDefault = moduleMembers.some(additiveOnly);
+  const variants: Array<{ env: string; carries: (member: BarrelMember) => boolean }> = environments.map((env) => ({
+    env,
+    carries: ADDITIVE_CONDITIONS.includes(env) ? browserPlus(env) : headlessSubset(env),
+  }));
+  if (generatedDefault) {
+    variants.push({ env: 'default', carries: inDefault });
+  }
+
+  for (const { env, carries } of variants) {
     const modules = moduleMembers.filter(carries);
     const included = [...valueMembers, ...modules];
     const stubbed = moduleMembers.filter((member) => !carries(member));
@@ -73,7 +96,7 @@ export const generate = (pluginDir: string): GenerateResult => {
     });
   }
 
-  syncPackageImports(pluginDir, environments);
+  syncPackageImports(pluginDir, environments, { canonicalSource, generatedDefault });
   return result;
 };
 
@@ -241,12 +264,19 @@ const conditionDist = (defaultDist: string, env: string): string => {
   return path.posix.basename(defaultDist) === 'index.mjs' ? `${dir}/gen/${env}.mjs` : `${dir}/capabilities.${env}.mjs`;
 };
 
+const withoutStaleGeneratedDefault = (source: string, canonicalSource: string): string =>
+  source === GENERATED_DEFAULT_SOURCE ? canonicalSource : source;
+
 /**
  * Rewrites the `#capabilities` entry of the plugin's package.json so each generated environment
  * resolves the generated barrel (source condition) and its built counterpart (dist condition).
  * Key order is load-bearing: `source` first, env conditions before `default`.
  */
-const syncPackageImports = (pluginDir: string, environments: string[]): void => {
+const syncPackageImports = (
+  pluginDir: string,
+  environments: string[],
+  { canonicalSource, generatedDefault }: { canonicalSource: string; generatedDefault: boolean },
+): void => {
   const pkgPath = path.join(pluginDir, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const existing = pkg.imports?.['#capabilities'];
@@ -270,8 +300,11 @@ const syncPackageImports = (pluginDir: string, environments: string[]): void => 
     return rank(a) - rank(b) || a.localeCompare(b);
   });
 
-  const defaultSource =
-    typeof existing?.source === 'string' ? existing.source : (existingSource.default ?? './src/capabilities/index.ts');
+  const existingDefault =
+    typeof existing?.source === 'string' ? existing.source : (existingSource.default ?? canonicalSource);
+  const defaultSource = generatedDefault
+    ? GENERATED_DEFAULT_SOURCE
+    : withoutStaleGeneratedDefault(existingDefault, canonicalSource);
   const source: Record<string, string> = {};
   for (const env of envOrder) {
     source[env] = `./src/capabilities/gen/${env}.ts`;
