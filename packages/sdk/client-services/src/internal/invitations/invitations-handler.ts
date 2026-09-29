@@ -9,7 +9,12 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
-import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
+import {
+  INVITATION_EVENTS,
+  INVITATION_TIMEOUT,
+  getExpirationTime,
+  invitationEventAttributes,
+} from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
@@ -198,6 +203,7 @@ export class InvitationsHandler {
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation_State.SUCCESS);
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
+              _trace.events.emit(INVITATION_EVENTS.admit, invitationEventAttributes(guardedState.current));
               log('host invitation handler opened');
               admitted = true;
               topology.retire(remotePeerId);
@@ -458,6 +464,7 @@ export class InvitationsHandler {
                 ...result,
                 state: Invitation_State.SUCCESS,
               });
+              _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
               log('guest invitation handler opened');
             } catch (err: any) {
               if (err instanceof TimeoutError) {
@@ -495,6 +502,7 @@ export class InvitationsHandler {
         metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'edge' } });
         admittedBy = 'edge';
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation_State.SUCCESS });
+        _trace.events.emit(INVITATION_EVENTS.accept, invitationEventAttributes(guardedState.current));
       },
     });
     edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);

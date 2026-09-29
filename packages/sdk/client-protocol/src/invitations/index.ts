@@ -3,4 +3,5 @@
 //
 
 export * from './encoder.ts';
+export * from './events.ts';
 export * from './invitations.ts';
