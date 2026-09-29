@@ -8,7 +8,6 @@
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
-import { rssProxyUpstreamHeaders } from '../util/rss-proxy.ts';
 
 type Env = {
   ASSETS: Fetcher;
@@ -145,16 +144,18 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     return new Response('Invalid url protocol', { status: 400 });
   }
 
+  const userAgent = request.headers.get('User-Agent');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RSS_FETCH_TIMEOUT_MS);
   try {
     // Forward the original method so HEAD probes don't download the full body upstream.
     const upstream = await fetch(parsedFeedUrl.toString(), {
       method: request.method,
-      headers: rssProxyUpstreamHeaders({
-        userAgent: request.headers.get('User-Agent'),
-        acceptLanguage: request.headers.get('Accept-Language'),
-      }),
+      headers: {
+        Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+        // Feed hosts' WAFs reject a request with no User-Agent (The Guardian answers 406), and a Worker's fetch adds none.
+        ...(userAgent ? { 'User-Agent': userAgent } : {}),
+      },
       signal: controller.signal,
     });
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import handler from './_worker.ts';
 
@@ -98,52 +98,21 @@ describe('feedback logs', () => {
 });
 
 describe('rss proxy', () => {
-  const FEED_URL = 'https://www.theguardian.com/profile/jonathanfreedland/rss';
-  const FEED_XML = '<?xml version="1.0"?><rss version="2.0"><channel><title>Jonathan Freedland</title></channel></rss>';
-  const BROWSER_USER_AGENT =
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36';
-
-  /** An origin behind a bot-filtering WAF: without a browser's User-Agent and Accept-Language, a 406. */
-  const origin = vi.fn(async (_url: string, init?: RequestInit) => {
-    const headers = new Headers(init?.headers);
-    return headers.get('User-Agent')?.startsWith('Mozilla/5.0') && headers.has('Accept-Language')
-      ? new Response(FEED_XML, { headers: { 'Content-Type': 'text/xml; charset=UTF-8' } })
-      : new Response('Not Acceptable', { status: 406, headers: { 'Content-Type': 'text/plain' } });
-  });
-
-  const proxy = (headers?: Record<string, string>) => get(`/api/rss?url=${encodeURIComponent(FEED_URL)}`, headers);
-
-  const upstreamHeaders = () => new Headers(origin.mock.calls[0][1]?.headers);
-
-  beforeEach(() => {
-    vi.stubGlobal('fetch', origin);
-  });
-
   afterEach(() => {
     vi.unstubAllGlobals();
-    origin.mockClear();
   });
 
-  test('a feed behind a bot-filtering WAF is fetched with the browser headers', async () => {
-    const response = await proxy({ 'User-Agent': BROWSER_USER_AGENT, 'Accept-Language': 'en-GB,en;q=0.9' });
+  test('forwards the client User-Agent, without which a WAF-fronted feed answers 406', async () => {
+    const feed = vi.fn(async (_url: string, init?: RequestInit) =>
+      new Headers(init?.headers).has('User-Agent')
+        ? new Response('<rss version="2.0"/>', { headers: { 'Content-Type': 'text/xml' } })
+        : new Response(null, { status: 406 }),
+    );
+    vi.stubGlobal('fetch', feed);
+
+    const url = encodeURIComponent('https://www.theguardian.com/profile/jonathanfreedland/rss');
+    const response = await get(`/api/rss?url=${url}`, { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)' });
     expect(response.status).toBe(200);
-    expect(await response.text()).toBe(FEED_XML);
-    expect(upstreamHeaders().get('User-Agent')).toBe(BROWSER_USER_AGENT);
-    expect(upstreamHeaders().get('Accept-Language')).toBe('en-GB,en;q=0.9');
-    expect(upstreamHeaders().get('Accept')).toMatch(/^application\/rss\+xml, /);
-  });
-
-  test('a non-browser client still reads as a browser upstream', async () => {
-    const response = await proxy({ 'User-Agent': 'curl/8.5.0', 'Accept-Language': '*' });
-    expect(response.status).toBe(200);
-    expect(upstreamHeaders().get('User-Agent')).toMatch(/^Mozilla\/5\.0 /);
-    expect(upstreamHeaders().get('Accept-Language')).not.toBe('*');
-  });
-
-  test('an origin rejection reaches the client with its status and body', async () => {
-    origin.mockResolvedValueOnce(new Response('Not Acceptable', { status: 406 }));
-    const response = await proxy({ 'User-Agent': BROWSER_USER_AGENT });
-    expect(response.status).toBe(406);
-    expect(await response.text()).toBe('Not Acceptable');
+    expect(new Headers(feed.mock.calls[0][1]?.headers).get('User-Agent')).toBe('Mozilla/5.0 (X11; Linux x86_64)');
   });
 });

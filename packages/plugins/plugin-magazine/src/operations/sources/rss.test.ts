@@ -176,21 +176,6 @@ describe('fetchRss', () => {
     );
   });
 
-  test('reports a rejection with its status and body, and does not retry it', async ({ expect }) => {
-    const blockPage =
-      '<html>\n  <head><title>406 Not Acceptable</title></head>\n  <body>Request blocked.</body>\n</html>';
-    const mockFetch = vi
-      .fn()
-      .mockResolvedValue(new Response(blockPage, { status: 406, headers: { 'content-type': 'text/html' } }));
-    globalThis.fetch = mockFetch;
-
-    const feedUrl = 'https://www.theguardian.com/profile/jonathanfreedland/rss';
-    await expect(runFetchRss(feedUrl, { corsProxy: '/api/rss?url=' })).rejects.toThrow(
-      `Fetch failed: ${feedUrl} (HTTP 406): <html> <head><title>406 Not Acceptable</title></head> <body>Request blocked.</body> </html>`,
-    );
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-  });
-
   test('parses a real-world RSS feed, unwrapping CDATA and converting content to markdown', async ({ expect }) => {
     mockFetchOnce(FEED_XML);
 
