@@ -138,6 +138,37 @@ const assignmentLens = Lens.make('org.dxos.test.foldForward.assignment.lens', As
 });
 const assignmentMigration = Migration.fromLens(assignmentLens);
 
+class ListV1 extends Type.makeObject<ListV1>(DXN.make('org.dxos.test.foldForward.List', '0.1.0'))(
+  Schema.Struct({
+    labels: Schema.Array(Schema.String),
+    address: Schema.Struct({ city: Schema.String, zip: Schema.String }),
+  }),
+) {}
+
+class ListV2 extends Type.makeObject<ListV2>(DXN.make('org.dxos.test.foldForward.List', '0.2.0'))(
+  Schema.Struct({
+    tags: Schema.Array(Schema.String),
+    location: Schema.Struct({ city: Schema.String, zip: Schema.String }),
+  }),
+) {}
+
+/** Renames a list and a map. */
+const listMigration = Migration.define({
+  from: ListV1,
+  to: ListV2,
+  transform: (from) => ({ tags: [...from.labels], location: { ...from.address } }),
+});
+
+/** An old client's push onto a retired list, made on the raw document as its replicated change lands. */
+const latePush = (object: Obj.Unknown, key: string, value: string): void => {
+  const core = getObjectCore(object);
+  core.change((doc) => {
+    const list = getDeep(doc, [...core.mountPath, DATA_NAMESPACE, key]);
+    invariant(Array.isArray(list));
+    list.push(value);
+  });
+};
+
 class ProfileV1 extends Type.makeObject<ProfileV1>(DXN.make('org.dxos.test.foldForward.Profile', '0.1.0'))(
   Schema.Struct({ fullName: Schema.String, nickname: Schema.optional(Schema.String) }),
 ) {}
@@ -391,8 +422,8 @@ describe('fold-forward: retired scalar properties', () => {
   });
 });
 
-describe('fold-forward: string fields fold whole-value', () => {
-  test('a late write to a renamed string folds whole-value; a concurrent direct edit presents', async () => {
+describe('fold-forward: text, lists and maps fold as edits inside the value', () => {
+  test('a late text splice folds as a splice; a concurrent direct splice to the target survives', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([NoteV1, NoteV2]);
 
@@ -400,18 +431,76 @@ describe('fold-forward: string fields fold whole-value', () => {
     await db.flush();
     await db.runMigrations([noteMigration]);
 
-    Obj.update(note, (note) => {
-      Obj.setValue(note, ['content'], 'Hi world');
-    });
+    updateText(note, ['content'], 'Hello world!');
     await db.flush();
-    updateText(note, ['body'], 'Hello brave new world');
+    updateText(note, ['body'], 'Hello brave world');
     await db.flush();
     await db.foldForward([noteMigration]);
 
-    const conflict = Obj.getConflict(note, 'content');
-    invariant(conflict, 'expected a conflict between the direct edit and the fold');
-    expect(conflict.presented).to.eq('Hi world');
-    expect(conflict.alternatives.find((alternative) => alternative.fold)?.value).to.eq('Hello brave new world');
+    expect(Obj.getValue(note, ['content'])).to.eq('Hello brave world!');
+    expect(Obj.getConflict(note, 'content')).to.eq(undefined);
+  });
+
+  test('a late list insert folds as an insert once; a concurrent direct insert survives', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ListV1, ListV2]);
+
+    const item = db.add(Obj.make(ListV1, { labels: ['a'], address: { city: 'Paris', zip: '1' } }));
+    await db.flush();
+    await db.runMigrations([listMigration]);
+
+    Obj.update(item, (item) => {
+      Obj.setValue(item, ['tags', 1], 'direct');
+    });
+    await db.flush();
+    latePush(item, 'labels', 'late');
+    await db.flush();
+    await db.foldForward([listMigration]);
+    expect(Obj.getValue(item, ['tags'])).to.have.members(['a', 'direct', 'late']);
+
+    const core = getObjectCore(item);
+    const historyLength = A.getHistory(core.getDoc()).length;
+    await db.foldForward([listMigration]);
+    expect(A.getHistory(core.getDoc())).to.have.length(historyLength);
+
+    latePush(item, 'labels', 'later');
+    await db.flush();
+    await db.foldForward([listMigration]);
+    expect(Obj.getValue(item, ['tags'])).to.have.members(['a', 'direct', 'late', 'later']);
+  });
+
+  test('a late write to a map key folds that key alone; a direct edit to a sibling key survives', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ListV1, ListV2]);
+
+    const item = db.add(Obj.make(ListV1, { labels: [], address: { city: 'Paris', zip: '1' } }));
+    await db.flush();
+    await db.runMigrations([listMigration]);
+
+    Obj.update(item, (item) => {
+      Obj.setValue(item, ['location', 'zip'], '2');
+    });
+    await db.flush();
+    getObjectCore(item).setDecoded(['data', 'address', 'city'], 'Lyon');
+    await db.flush();
+    await db.foldForward([listMigration]);
+
+    expect(Obj.getValue(item, ['location'])).to.deep.eq({ city: 'Lyon', zip: '2' });
+  });
+
+  test('a late write that replaces a retired list folds whole-value', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ListV1, ListV2]);
+
+    const item = db.add(Obj.make(ListV1, { labels: ['a', 'b'], address: { city: 'Paris', zip: '1' } }));
+    await db.flush();
+    await db.runMigrations([listMigration]);
+
+    getObjectCore(item).setDecoded(['data', 'labels'], ['z']);
+    await db.flush();
+    await db.foldForward([listMigration]);
+
+    expect(Obj.getValue(item, ['tags'])).to.deep.eq(['z']);
   });
 
   test('a late write to another key leaves an untouched renamed string intact', async () => {

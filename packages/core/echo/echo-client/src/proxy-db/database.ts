@@ -935,6 +935,17 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         );
       }
 
+      // An old client keeps writing a kept key in its old meaning, straight into the new field, where
+      // fold-forward cannot tell the two apart; a changed meaning needs a new name.
+      const reinterpreted = [...computeGuardedDataWrites(core, output ?? {}).keys()].filter(
+        (key) => core.getRaw([DATA_NAMESPACE, key]) !== undefined,
+      );
+      if (reinterpreted.length > 0) {
+        throw new Error(
+          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: transform changes the value of kept properties [${reinterpreted.join(', ')}] on object ${object.id}; write a changed value under a new property name`,
+        );
+      }
+
       const stepKey = this.#applyObjectMigration(object, migration, output ?? {}, metaPatch);
       const postMigrationType = Obj.getTypeURI(object);
       invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());

@@ -517,6 +517,55 @@ export class ObjectCore {
   }
 
   /**
+   * Writes one fold change forked at exactly `heads`, under an actor derived from `actorSeed` alone,
+   * with time fixed at `0`. Every peer that folds the same input from the same `heads` with the same
+   * `actorSeed` therefore authors a byte-identical change, which Automerge merges as one, so a list
+   * insert or text splice folded independently on several peers is applied once.
+   *
+   * @param heads The exact fork point; must be ancestors of the current document.
+   * @param mutate Given the document draft as it stood at `heads` and this object's mount path.
+   * @param options.message Deterministic change message; a `fold:` prefix marks it as a fold.
+   * @param options.actorSeed Identifies the fold's content; seeds a single-use actor.
+   * @returns The heads immediately after the fold's own change, or `undefined` if it changed nothing.
+   */
+  foldChangeAt(
+    heads: Heads,
+    mutate: (draft: unknown, mountPath: readonly (string | number)[]) => void,
+    options: { message: string; actorSeed: string },
+  ): Heads | undefined {
+    // Prevent recursive change calls.
+    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+
+    const actorId = bytesToHex(sha256(utf8ToBytes(`${options.actorSeed}:fold-change`))).slice(0, 32);
+    const fold = <T>(doc: AutomergeDoc<T>) => {
+      invariant(A.hasHeads(doc, heads), 'foldChangeAt: heads are not an ancestor of the current document');
+      const clone = A.clone(A.view(doc, heads), actorId);
+      return A.changeAt(clone, heads, { message: options.message, time: 0 }, (draft) => mutate(draft, this.mountPath));
+    };
+
+    if (this.doc) {
+      const { newDoc: folded, newHeads } = fold(this.doc);
+      if (!newHeads) {
+        return undefined;
+      }
+      this.doc = A.merge(this.doc, folded);
+      // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
+      this.notifyUpdate();
+      return newHeads;
+    }
+
+    const docHandle = this.docHandle;
+    invariant(docHandle, 'foldChangeAt: object has no document to fold on');
+    const { newDoc: folded, newHeads } = fold(docHandle.doc());
+    if (!newHeads) {
+      return undefined;
+    }
+    // No manual notification: the DB already processes the `change` event `update` emits.
+    this.#writeAndRefresh(() => docHandle.update((current) => A.merge(current, folded)));
+    return newHeads;
+  }
+
+  /**
    * This peer's derived fold actor for `doc`, narrowed to `scope`, and the heads to fork
    * {@link foldAt}'s change from: `heads` plus every earlier fold in the scope ({@link priorFoldChanges}),
    * so a fold always supersedes the scope's previous folds while every other change made after `heads`

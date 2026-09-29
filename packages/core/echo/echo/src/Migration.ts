@@ -169,9 +169,12 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
  * by a peer that was offline) is carried forward by fold-forward, which re-runs `transform` on the
  * object's current data. `onMigration` effects may run once per peer.
  *
- * Migrations move fields as whole values, and fold-forward writes a late old-shape value the same way.
- * Do not rename or transform a rich-text field (a string edited character by character): replacing it
- * drops concurrent character edits. Keep rich text in a `Ref<Text>` object, which no migration copies.
+ * A property kept under the same name must keep its value: the runner rejects a transform that changes
+ * one, since an old client keeps writing it in its old meaning. Write a changed value under a new name.
+ *
+ * Fold-forward mirrors the late write: one that sets an old property outright replaces the target value,
+ * while one that edits inside it (a map key, a list insert, a text splice) edits inside the target, so a
+ * concurrent direct edit elsewhere in the same map, list or text survives. Text marks are not carried.
  *
  * @example
  * ```ts
@@ -243,9 +246,9 @@ export type FromLensOptions = {
  * incompatible-type) mapping always fails, and the lens's `GetPut` law is re-checked against every
  * object right before its transform output is computed.
  *
- * Migrations move fields as whole values, and fold-forward writes a late old-shape value the same way.
- * Do not rename or transform a rich-text field (a string edited character by character): replacing it
- * drops concurrent character edits. Keep rich text in a `Ref<Text>` object, which no migration copies.
+ * Fold-forward mirrors the late write: one that sets an old property outright replaces the target value,
+ * while one that edits inside it (a map key, a list insert, a text splice) edits inside the target, so a
+ * concurrent direct edit elsewhere in the same map, list or text survives. Text marks are not carried.
  *
  * @example
  * ```ts

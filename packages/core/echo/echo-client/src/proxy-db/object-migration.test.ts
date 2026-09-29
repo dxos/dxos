@@ -401,6 +401,43 @@ test('Migration.fromLens: a law-violating lens throws before writing', async () 
   expect(A.getHeads(core.getDoc())).to.deep.eq(preHeads);
 });
 
+test('a transform that changes a kept property value is rejected before writing', async () => {
+  const PriceV1 = Type.makeObject(DXN.make('com.example.type.migrationPrice', '0.1.0'))(
+    Schema.Struct({ label: Schema.String, price: Schema.Number }),
+  );
+  const PriceV2 = Type.makeObject(DXN.make('com.example.type.migrationPrice', '0.2.0'))(
+    Schema.Struct({ label: Schema.String, price: Schema.Number }),
+  );
+  const PriceV3 = Type.makeObject(DXN.make('com.example.type.migrationPrice', '0.3.0'))(
+    Schema.Struct({ label: Schema.String, priceDollars: Schema.Number }),
+  );
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([PriceV1, PriceV2, PriceV3]);
+
+  const item = db.add(Obj.make(PriceV1, { label: 'Tea', price: 500 }));
+  await db.flush();
+  const core = getObjectCore(item);
+  const preHeads = A.getHeads(core.getDoc());
+
+  const reinterpret = defineObjectMigration({
+    from: PriceV1,
+    to: PriceV2,
+    transform: (from) => ({ label: from.label, price: from.price / 100 }),
+  });
+  await expect(db.runMigrations([reinterpret])).rejects.toThrow(/kept properties \[price\]/);
+  expect(Obj.getTypeURI(item)?.toString()).to.eq(DXN.make('com.example.type.migrationPrice', '0.1.0'));
+  expect(A.getHeads(core.getDoc())).to.deep.eq(preHeads);
+
+  // The same conversion under a new name retires `price`, so late writes to it fold forward.
+  const renamed = defineObjectMigration({
+    from: PriceV1,
+    to: PriceV3,
+    transform: (from) => ({ label: from.label, priceDollars: from.price / 100 }),
+  });
+  await db.runMigrations([renamed]);
+  expect(Obj.getValue(item, ['priceDollars'])).to.eq(5);
+});
+
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
 // test('view migration', async () => {
 //   const { db, graph } = await builder.createDatabase();

@@ -6,8 +6,10 @@ import { next as A, type Doc as AutomergeDoc, type Heads, type Patch } from '@au
 import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
-import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import { MetaId } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { EntityId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getDeep, setDeep } from '@dxos/util';
@@ -21,6 +23,7 @@ import {
   encodedValuesEqual,
   getDecodedDataWithRefs,
   isRecord,
+  mapRefsToEncodedReferences,
   removedOutputKeys,
 } from './encoded-value.ts';
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
@@ -151,6 +154,243 @@ const recomputeMigrationOutput = (
   return { data, meta: isRecord(meta) ? meta : {} };
 };
 
+/** Each change's deps, by change hash. */
+type ChangeGraph = Map<string, readonly string[]>;
+
+/** `hashes` and every change they depend on. */
+const ancestorsOf = (graph: ChangeGraph, hashes: Iterable<string>): Set<string> => {
+  const seen = new Set<string>();
+  const stack = [...hashes];
+  for (let hash = stack.pop(); hash !== undefined; hash = stack.pop()) {
+    if (!seen.has(hash)) {
+      seen.add(hash);
+      stack.push(...(graph.get(hash) ?? []));
+    }
+  }
+  return seen;
+};
+
+/** The heads `hashes` span: each one no other of them depends on, sorted so equal sets compare equal. */
+const frontierOf = (graph: ChangeGraph, hashes: Iterable<string>): Heads => {
+  const unique = [...new Set(hashes)];
+  const covered = ancestorsOf(
+    graph,
+    unique.flatMap((hash) => graph.get(hash) ?? []),
+  );
+  return unique.filter((hash) => !covered.has(hash)).sort();
+};
+
+/** Keys whose value differs between two outputs, including keys `next` clears. */
+const movedOutputKeys = (
+  core: ObjectCore,
+  previous: Record<string, unknown>,
+  next: Record<string, unknown>,
+): string[] => [
+  ...new Set([...Object.keys(changedOutputEntries(core, previous, next)), ...removedOutputKeys(previous, next)]),
+];
+
+/** A record that is a map in the document, not an encoded reference. */
+const isMapValue = (value: unknown): value is Record<string, unknown> =>
+  isRecord(value) && !isEncodedReference(value) && !(value instanceof A.RawString) && !(value instanceof Uint8Array);
+
+/** Lists longer than this pair their differing middles by position instead of by a quadratic LCS. */
+const LIST_DIFF_LIMIT = 250_000;
+
+/** Index pairs of the longest common subsequence of `from` and `to`, by encoded value. */
+const commonSubsequence = (from: readonly unknown[], to: readonly unknown[]): [number, number][] => {
+  const rows = from.length;
+  const columns = to.length;
+  if (rows * columns > LIST_DIFF_LIMIT) {
+    return [];
+  }
+  const lengths = Array.from({ length: rows + 1 }, () => new Array<number>(columns + 1).fill(0));
+  for (let row = rows - 1; row >= 0; row--) {
+    for (let column = columns - 1; column >= 0; column--) {
+      lengths[row][column] = encodedValuesEqual(from[row], to[column])
+        ? lengths[row + 1][column + 1] + 1
+        : Math.max(lengths[row + 1][column], lengths[row][column + 1]);
+    }
+  }
+  const pairs: [number, number][] = [];
+  for (let row = 0, column = 0; row < rows && column < columns;) {
+    if (encodedValuesEqual(from[row], to[column])) {
+      pairs.push([row, column]);
+      row++;
+      column++;
+    } else if (lengths[row + 1][column] >= lengths[row][column + 1]) {
+      row++;
+    } else {
+      column++;
+    }
+  }
+  return pairs;
+};
+
+/**
+ * Edits the value at `path` in `draft` from `from` (its value there) into `to`, as nested edits rather
+ * than one replacement: a map is updated key by key, a list by inserts and deletes around the elements
+ * the two share, and a string by a text diff. A concurrent direct edit elsewhere in the same map, list
+ * or text therefore survives the merge.
+ */
+const applyStructuralEdit = (draft: unknown, path: readonly (string | number)[], from: unknown, to: unknown): void => {
+  if (encodedValuesEqual(from, to)) {
+    return;
+  }
+  if (typeof from === 'string' && typeof to === 'string') {
+    invariant(typeof draft === 'object' && draft !== null, 'fold draft is not a document');
+    A.updateText(draft, [...path], to);
+    return;
+  }
+  if (isMapValue(from) && isMapValue(to)) {
+    const map = getDeep(draft, [...path]);
+    invariant(isRecord(map), 'fold target is not a map');
+    for (const key of Object.keys(from)) {
+      if (!Object.hasOwn(to, key)) {
+        delete map[key];
+      }
+    }
+    for (const [key, value] of Object.entries(to)) {
+      applyStructuralEdit(draft, [...path, key], from[key], value);
+    }
+    return;
+  }
+  if (Array.isArray(from) && Array.isArray(to)) {
+    const list = getDeep(draft, [...path]);
+    invariant(Array.isArray(list), 'fold target is not a list');
+    // Shift from an index in `from` to the same element's index in the list being edited.
+    let shift = 0;
+    let fromIndex = 0;
+    let toIndex = 0;
+    for (const [fromMatch, toMatch] of [...commonSubsequence(from, to), [from.length, to.length]]) {
+      const paired = Math.min(fromMatch - fromIndex, toMatch - toIndex);
+      for (let offset = 0; offset < paired; offset++) {
+        applyStructuralEdit(
+          draft,
+          [...path, fromIndex + offset + shift],
+          from[fromIndex + offset],
+          to[toIndex + offset],
+        );
+      }
+      const removed = fromMatch - fromIndex - paired;
+      const inserted = to.slice(toIndex + paired, toMatch);
+      list.splice(fromIndex + paired + shift, removed, ...inserted);
+      shift += inserted.length - removed;
+      fromIndex = fromMatch + 1;
+      toIndex = toMatch + 1;
+    }
+    return;
+  }
+  setDeep(draft, [...path], to);
+};
+
+/**
+ * Folds each late change to a retired property as a change of its own, forked at the migration plus
+ * the folds of that change's own late ancestors. Every input — the fork, the source snapshots before
+ * and after the change, and so the edit — is a function of the source history alone, so peers that
+ * receive the late changes in any order author byte-identical folds (`ObjectCore.foldChangeAt`), and a
+ * list insert or text splice lands once. A change that edits inside a retired value is folded as edits
+ * inside the target ({@link applyStructuralEdit}), so a direct edit elsewhere in the same value stays;
+ * one that sets it outright is folded whole, and conflicts with a direct edit to the target.
+ */
+const foldLateChanges = (
+  db: Database.Database,
+  migration: Migration.ObjectMigration,
+  step: Migration.MigrationStep,
+  stepKey: string,
+  object: Obj.Unknown,
+  postMigrationHeads: Heads,
+  base: Heads,
+): void => {
+  const core = getObjectCore(object);
+  const mountPath = core.mountPath;
+  const retired = new Set(step.retired);
+  const scope = `${object.id}:${stepKey}`;
+  const messagePrefix = `${foldMessage(step.from, step.to)} [${scope}] `;
+  // An old client writes a kept property directly; folding its write as well would apply it twice.
+  const kept = new Set(
+    [
+      ...SchemaEx.getProperties(migration.fromSchema.ast).map((property) => String(property.name)),
+      ...Object.keys(getDecodedDataWithRefs(db, core, [...step.preHeads])),
+    ].filter((key) => !retired.has(key)),
+  );
+
+  const doc = core.getDoc();
+  const graph: ChangeGraph = new Map();
+  const foldOf = new Map<string, string>();
+  for (const change of A.getChangesMetaSince(doc, [])) {
+    graph.set(change.hash, change.deps);
+    if (change.message?.startsWith(messagePrefix)) {
+      foldOf.set(change.message.slice(messagePrefix.length), change.hash);
+    }
+  }
+
+  for (const change of A.getChangesMetaSince(doc, base)) {
+    if (foldOf.has(change.hash) || change.message?.startsWith(messagePrefix)) {
+      continue;
+    }
+    const before = frontierOf(graph, [...postMigrationHeads, ...change.deps]);
+    const after = frontierOf(graph, [...postMigrationHeads, change.hash]);
+    const writes = lateRetiredWrites(core.getDoc(), mountPath, before, after, retired);
+    if (writes.size === 0) {
+      continue;
+    }
+    // A late change that sets a retired property outright replaces it, as a property set does; one that
+    // edits inside it (a list insert, a text splice) is folded as edits inside the target the same way.
+    const replaces = [...writes.values()].some((patches) =>
+      patches.some((patch) => patch.path.length === mountPath.length + 2),
+    );
+
+    const previous = recomputeMigrationOutput(migration, object.id, getDecodedDataWithRefs(db, core, before));
+    const next = recomputeMigrationOutput(migration, object.id, getDecodedDataWithRefs(db, core, after));
+    const dataKeys = movedOutputKeys(core, previous.data, next.data).filter((key) => !kept.has(key));
+    const metaKeys = movedOutputKeys(core, previous.meta, next.meta);
+    if (dataKeys.length === 0 && metaKeys.length === 0) {
+      continue;
+    }
+
+    const lateAncestors = ancestorsOf(graph, change.deps);
+    const fork = frontierOf(graph, [
+      ...postMigrationHeads,
+      ...[...foldOf].filter(([late]) => lateAncestors.has(late)).map(([, fold]) => fold),
+    ]);
+    const atFork: unknown = getDeep(A.view(core.getDoc(), fork), [...mountPath]);
+    const nextData = mapRefsToEncodedReferences(next.data);
+    const nextMeta = mapRefsToEncodedReferences(next.meta);
+    const edits = [
+      ...dataKeys.map((key) => ({ path: [DATA_NAMESPACE, key], value: nextData[key] })),
+      ...metaKeys.map((key) => ({ path: [META_NAMESPACE, key], value: nextMeta[key] })),
+    ].map(({ path, value }) => ({ path, value: value === undefined ? undefined : core.encode(value) }));
+
+    const heads = core.foldChangeAt(
+      fork,
+      (draft, mountPath) => {
+        for (const { path, value } of edits) {
+          const fullPath = [...mountPath, ...path];
+          if (value === undefined) {
+            const parent = getDeep(draft, fullPath.slice(0, -1));
+            if (isRecord(parent)) {
+              delete parent[String(fullPath.at(-1))];
+            }
+          } else if (!replaces && path[0] === DATA_NAMESPACE) {
+            applyStructuralEdit(draft, fullPath, getDeep(atFork, path), value);
+          } else {
+            setDeep(draft, fullPath, value);
+          }
+        }
+      },
+      {
+        message: `${messagePrefix}${change.hash}`,
+        actorSeed: JSON.stringify({ scope, late: change.hash, fork, replaces, edits }),
+      },
+    );
+    if (heads) {
+      const [fold] = heads;
+      graph.set(fold, fork);
+      foldOf.set(change.hash, fold);
+    }
+  }
+};
+
 /**
  * Folds one migration STEP forward if a retired property changed since that step's own checkpoint.
  * Never throws: a bad step is logged and left for the next pass rather than aborting the object's
@@ -208,65 +448,27 @@ const foldStep = (
     return;
   }
 
-  // Only keys the late writes moved are folded: `before` is the current data with just the retired
-  // keys taken back to the checkpoint, so a direct edit to a target key never counts as moved.
-  let output: Record<string, unknown> = {};
-  let deletions: string[] = [];
-  let metaWrites = new Map<string, unknown>();
   if (lateWrites.size > 0) {
-    const current = getDecodedDataWithRefs(db, core, currentHeads);
-    const atBase = getDecodedDataWithRefs(db, core, base);
-    const before = { ...current };
-    for (const key of retired) {
-      if (Object.hasOwn(atBase, key)) {
-        before[key] = atBase[key];
-      } else {
-        delete before[key];
-      }
-    }
-    const previous = recomputeMigrationOutput(migration, object.id, before);
-    const next = recomputeMigrationOutput(migration, object.id, current);
-    output = changedOutputEntries(core, previous.data, next.data);
-    // A late clear of an old field clears what the migration derived from it.
-    deletions = removedOutputKeys(previous.data, next.data).filter(
-      (key) => core.getRaw([DATA_NAMESPACE, key]) !== undefined,
-    );
-    // A migration's meta patch (e.g. a registry key moved into meta) folds the same way.
-    metaWrites = computeGuardedDataWrites(core, changedOutputEntries(core, previous.meta, next.meta), META_NAMESPACE);
+    foldLateChanges(db, migration, step, stepKey, object, postMigrationHeads, base);
   }
 
-  const dataWrites = new Map<string, unknown>();
-  for (const [key, value] of computeGuardedDataWrites(core, output)) {
-    dataWrites.set(key, value);
-  }
-
-  // An overlay write is never part of `snapshot` (it lives in meta, not data), so it is folded from
-  // the object's CURRENT overlay value directly, whole-value, into the SAME `dataWrites` batch —
-  // one `foldAt` change per step regardless of how many of its properties fell behind.
+  // An overlay write is never part of the transform's input (it lives in meta, not data), so it is
+  // folded from the object's CURRENT overlay value directly, whole-value, in one change per step.
+  const overlayWrites = new Map<string, unknown>();
   if (migration.lens) {
     for (const property of overlayLateWrites) {
-      if (dataWrites.has(property)) {
-        continue;
-      }
       const value = Lens.getOverlay(object, migration.lens.id, property);
       for (const [key, encoded] of computeGuardedDataWrites(core, { [property]: value })) {
-        dataWrites.set(key, encoded);
+        overlayWrites.set(key, encoded);
       }
     }
   }
-
-  if (dataWrites.size > 0 || deletions.length > 0 || metaWrites.size > 0) {
+  if (overlayWrites.size > 0) {
     core.foldAt(
       postMigrationHeads,
-      (data, meta) => {
-        for (const [key, value] of dataWrites) {
+      (data) => {
+        for (const [key, value] of overlayWrites) {
           data[key] = value;
-        }
-        for (const key of deletions) {
-          delete data[key];
-        }
-        for (const [key, value] of metaWrites) {
-          Reflect.set(meta, key, value);
         }
       },
       // Scoped to this object AND this step: a shared actor across steps (or objects) could otherwise
