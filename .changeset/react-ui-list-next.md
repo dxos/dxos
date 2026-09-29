@@ -1,13 +1,19 @@
 ---
-'@dxos/react-ui-list': minor
 '@dxos/react-ui': minor
+'@dxos/react-ui-list': minor
 '@dxos/plugin-registry': patch
 ---
 
-`@dxos/react-ui-list/next` is a new entry with `Listbox` and `OrderedList` built on `@dxos/react-ui/next`. Listbox keeps
-the current opt-in, single, id-keyed selection over `Next.Listbox`. OrderedList rows are Container rows or Collapsible
-master-detail rows; `DragHandle` drags with the pointer (pragmatic-drag-and-drop, via `useReorderList`) and moves its
-row from the keyboard, with `Next.DropIndicator` and a `Next.DragPreview` chip at the row's size. `useReorderList`'s
-`dragPreview` renderer now also receives the dragged row element, and its rows declare the drag a move (`effectAllowed`), so the browser no longer flickers its copy cursor over the source row. The package also builds its `./util` entry, which it
-declared but never emitted. `@dxos/react-ui` adds a `./next/testing` entry (`withSizes`, `SIZE_ARG_TYPES`) for Next
-stories in other packages, and its Next theme positions a row showing a drop indicator and dims a dragged row. The plugin registry's list is the first surface on it: rows in a `Next.Panel` under a filter toolbar.
+`@dxos/react-ui/next` gains `Next.Panel` (a sized plank host with toolbar, scrolling content and statusbar),
+`Next.Listbox`, and drag-and-drop parts (`DragHandle` with keyboard moves, `DropIndicator`, `DragPreview`). Popups
+(Menu, Select, Combobox, Popover, Tooltip, Dialog, the date calendar) now open at the size of their trigger's nearest
+sized ancestor unless given a `size`. Fixes: buttons keep their label on one line; `AlertDialog` and popups resolve
+elements in their own root node (shadow roots, other documents); calendar navigation is labelled per view; a
+horizontal `ScrollArea` no longer reserves a vertical gutter. A `./next/testing` entry exports the Next story helpers.
+
+`@dxos/react-ui-list/next` is a new entry with `Listbox` and `OrderedList` built on those parts: Container or
+Collapsible master-detail rows that reorder by pointer (pragmatic-drag-and-drop via `useReorderList`) or keyboard.
+`useReorderList`'s `dragPreview` renderer also receives the dragged row, and reorder drags declare a move so the
+browser's copy cursor no longer flickers. The package now emits its declared `./util` entry.
+
+The plugin registry's list is the first surface on Next: rows in a `Next.Panel` under a filter toolbar.
