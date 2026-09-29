@@ -528,6 +528,9 @@ export const AddType = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     object: Type.getSchema(Type.Type),
+    notified: Schema.optional(Schema.Boolean).annotate({
+      description: 'Whether the plugins were told the type was added (which makes a table for it).',
+    }),
   }),
 }).pipe(Operation.mutation('write'));
 

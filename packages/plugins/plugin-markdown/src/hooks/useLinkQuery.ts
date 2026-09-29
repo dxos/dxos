@@ -66,7 +66,8 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
 
       // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
       const block = query?.startsWith('@') ?? false;
-      const name = (block ? query!.slice(1) : (query ?? '')).toLowerCase();
+      const text = block ? query!.slice(1) : (query ?? '');
+      const name = text.toLowerCase();
 
       return Effect.gen(function* () {
         const [results, containing] = yield* Effect.all(
@@ -109,7 +110,8 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
               target,
               // Keep the deck where it is: the link is inserted back into the editor the user is in.
               navigable: false,
-              defaults: name ? { name } : undefined,
+              // As typed: the lowercased copy is only for matching.
+              defaults: text ? { name: text } : undefined,
             }).then(({ data }) => {
               const object = data?.target;
               if (object) {
