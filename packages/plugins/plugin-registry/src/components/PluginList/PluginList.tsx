@@ -49,7 +49,7 @@ export const PluginList = ({
   );
   return (
     <Listbox.Root items={items}>
-      <Listbox.Content aria-label='plugins'>
+      <Listbox.Content aria-label='plugins' scroll={false}>
         {plugins.map((plugin) => (
           <PluginItem
             key={plugin.meta.profile.key}

@@ -515,10 +515,11 @@ reach parity. Numbered once across the section so a reply can cite a number.
 
 ### Open from the react-ui-list pilot
 
-14. **Nested scrolling.** `Next.Listbox.Content` is always its own ScrollArea, so inside `Next.Panel.Content` there
+14. **Nested scrolling.** Decided (1): `Listbox.Content scroll={false}` drops its ScrollArea; the plugin-registry
+    pilot uses it. `Next.Listbox.Content` is always its own ScrollArea, so inside `Next.Panel.Content` there
     are two scroll frames and the inner one never scrolls. Options: (1) a Listbox mode that renders its content
     without a ScrollArea, (2) keep it and have hosts not scroll. Recommendation: 1.
-15. **List rows on the panel's rails.** `gutter='inherit'` cannot reach through the Listbox's ScrollArea, so rows use
+15. **List rows on the panel's rails.** Decided with 14: without a ScrollArea the rows default to `gutter='inherit'`. `gutter='inherit'` cannot reach through the Listbox's ScrollArea, so rows use
     an `inset` gutter and miss the panel's rails. Recommendation: follows from 14; with no inner ScrollArea, rows
     inherit.
 16. **DetailItem layout.** A row Container centres every cell, so the detail row is a Collapsible root holding its

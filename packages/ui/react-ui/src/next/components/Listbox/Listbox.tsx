@@ -151,14 +151,20 @@ ListboxLabel.displayName = 'Next.Listbox.Label';
 
 type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
-  Pick<ContainerProps, 'gutter' | 'gap'>;
+  Pick<ContainerProps, 'gutter' | 'gap'> & {
+    /**
+     * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (`Panel.Content`):
+     * the rows then inherit the host's rails (`gutter='inherit'` by default).
+     */
+    scroll?: boolean;
+  };
 
 /**
  * Ark's content as a composable part carrying Container's attributes, so the ScrollArea viewport slot merges onto it
  * (a plain Ark part gets the dev warning wrapper) and it stays the listbox element: zag scrolls the highlighted item
  * into view only when the listbox itself overflows.
  */
-const ListboxViewport = composable<HTMLDivElement, ContainerProps>(
+const ListboxViewport = composable<HTMLDivElement, ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'>>(
   ({ gutter, gap, children, ...props }, forwardedRef) => {
     const selectable = useContext(SelectableContext);
     const { style, ...attributes } = containerAttributes({ gutter, gap });
@@ -187,15 +193,41 @@ const ListboxViewport = composable<HTMLDivElement, ContainerProps>(
  * is a stack Container (`inset` gutter by default), so the thumb sits in its end gutter.
  */
 const ListboxContent = forwardRef<HTMLDivElement, ListboxContentProps>(
-  ({ classNames, mode, width, native, gutter = 'inset', gap, children, ...props }, forwardedRef) => (
-    <ScrollArea.Root mode={mode} width={width} native={native} classNames={recipes.listboxScroll()}>
-      <ScrollArea.Viewport asChild>
-        <ListboxViewport {...props} gutter={gutter} gap={gap} classNames={classNames} ref={forwardedRef}>
-          {children}
-        </ListboxViewport>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  ),
+  ({ classNames, mode, width, native, scroll = true, gutter, gap, onKeyDown, children, ...props }, forwardedRef) =>
+    scroll ? (
+      <ScrollArea.Root mode={mode} width={width} native={native} classNames={recipes.listboxScroll()}>
+        <ScrollArea.Viewport asChild>
+          <ListboxViewport
+            {...props}
+            onKeyDown={onKeyDown}
+            gutter={gutter ?? 'inset'}
+            gap={gap}
+            classNames={classNames}
+            ref={forwardedRef}
+          >
+            {children}
+          </ListboxViewport>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    ) : (
+      <ListboxViewport
+        {...props}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          // zag scrolls the highlighted row into view only when the listbox itself overflows; here the host scrolls.
+          const content = event.currentTarget;
+          requestAnimationFrame(() =>
+            content.querySelector('[data-highlighted]')?.scrollIntoView({ block: 'nearest' }),
+          );
+        }}
+        gutter={gutter ?? 'inherit'}
+        gap={gap}
+        classNames={classNames}
+        ref={forwardedRef}
+      >
+        {children}
+      </ListboxViewport>
+    ),
 );
 
 ListboxContent.displayName = 'Next.Listbox.Content';

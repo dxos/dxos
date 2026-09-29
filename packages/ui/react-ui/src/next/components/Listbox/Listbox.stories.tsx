@@ -88,6 +88,20 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </Next.Listbox.Content>
         </Next.Listbox.Root>
       </div>
+      <div data-place='full' className='h-40'>
+        <Next.Panel.Root size={size}>
+          <Next.Panel.Content data-testid={`panel-${size}`}>
+            <Next.Typography data-testid={`panel-heading-${size}`}>In a panel</Next.Typography>
+            <Next.Listbox.Root items={LONG}>
+              <Next.Listbox.Content aria-label='In panel' scroll={false}>
+                {LONG.map((item) => (
+                  <Next.Listbox.Item key={item.value} item={item} />
+                ))}
+              </Next.Listbox.Content>
+            </Next.Listbox.Root>
+          </Next.Panel.Content>
+        </Next.Panel.Root>
+      </div>
       <Next.Listbox.Root items={RECENT} selectionMode='none'>
         <Next.Listbox.Content aria-label='Recent' data-testid={`recent-${size}`}>
           {RECENT.map((item) => (
@@ -189,6 +203,28 @@ export const Test: Story = {
       const viewRect = long.getBoundingClientRect();
       await expect(long.scrollTop).toBeGreaterThan(0);
       await expect(itemRect.bottom).toBeLessThanOrEqual(viewRect.bottom + 0.5);
+    });
+
+    // In a scrolling Panel with `scroll={false}`: no ScrollArea of its own, rows on the panel's rails, and the panel
+    // scrolls to keep the highlight in view.
+    const inPanel = md.getByRole('listbox', { name: 'In panel' });
+    await expect(inPanel.closest('.nx-listbox')?.querySelector('.nx-scroll-root')).toBeNull();
+    const firstRow = within(inPanel).getByRole('option', { name: 'Item 1' });
+    await expect(firstRow.getBoundingClientRect().left).toBeCloseTo(
+      byTestId(canvasElement, 'panel-heading-md').getBoundingClientRect().left,
+      0,
+    );
+    // The test id names the Panel.Content frame; its viewport is what scrolls.
+    const panel =
+      byTestId(canvasElement, 'panel-md').querySelector<HTMLElement>(':scope > .nx-scroll-viewport') ??
+      byTestId(canvasElement, 'panel-md');
+    inPanel.focus();
+    await userEvent.keyboard('{End}');
+    await waitFor(async () => {
+      const item = within(inPanel).getByRole('option', { name: 'Item 40' });
+      await expect(item).toHaveAttribute('data-highlighted');
+      await expect(panel.scrollTop).toBeGreaterThan(0);
+      await expect(item.getBoundingClientRect().bottom).toBeLessThanOrEqual(panel.getBoundingClientRect().bottom + 0.5);
     });
 
     // A plain list: no listbox semantics, and a current row.

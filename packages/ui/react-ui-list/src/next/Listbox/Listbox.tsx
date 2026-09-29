@@ -98,8 +98,8 @@ const ListboxItem: ForwardRefExoticComponent<ListboxItemProps & RefAttributes<HT
 ListboxItem.displayName = 'Listbox.Item';
 
 /**
- * Selectable or plain list on Next parts. `Content` is itself the scrolling viewport (a thin ScrollArea), so there is no
- * separate `Viewport`; `ItemContent` is folded into Item's `icon`, `description` and `trailing`. Annotated so the
+ * Selectable or plain list on Next parts. `Content` is itself the scrolling viewport (a thin ScrollArea; `scroll={false}`
+ * inside a host that scrolls, such as `Panel.Content`), so there is no separate `Viewport`; `ItemContent` is folded into Item's `icon`, `description` and `trailing`. Annotated so the
  * declaration names Next's parts through `Next` rather than react-ui's internal modules.
  */
 export const Listbox: {

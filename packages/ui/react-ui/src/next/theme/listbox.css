@@ -19,6 +19,17 @@
     flex: 1 1 auto;
   }
 
+  /* Content without its own ScrollArea: the Root passes its host's rails through to the rows, as ScrollArea.Root does. */
+  .nx-listbox:has(> .nx-grid[data-gutter='inherit']) {
+    grid-column: full;
+    display: grid;
+    grid-template-columns: subgrid;
+    max-height: none;
+  }
+  .nx-listbox:has(> .nx-grid[data-gutter='inherit']) > :not(.nx-grid) {
+    grid-column: content;
+  }
+
   .nx-listbox-content:focus {
     outline: none;
   }
