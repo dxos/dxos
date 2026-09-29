@@ -6,17 +6,17 @@ import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 import { getPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { SpaceId } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { createStorage } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { openAndClose } from '@dxos/test-utils';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
@@ -191,6 +191,54 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => feedLength()).toEqual(1);
   });
 
+  // EDGE soak: a block broadcast to the joiner ahead of its metadata reply left the feed with a hole the
+  // length comparison could not see, so its admission credentials were never read.
+  test('fetches the blocks below a block pushed ahead of the metadata reply', async () => {
+    const source = await createNewFeed();
+    for (const _ of range(3)) {
+      await source.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
+    }
+    const blockAt = async (index: number) => {
+      const data = await source.get(index, { valueEncoding: 'binary' });
+      const proof = await source.proof(index);
+      return { index, data, nodes: proof.nodes, signature: proof.signature };
+    };
+
+    const replica = await openReplica(source.key);
+    const port = await getPort({ host: 'localhost', port: 7300, portRange: [7300, 7399] });
+    const admitConnection = new Trigger();
+    const { cleanup, endpoint, sendResponseMessage } = await createTestEdgeWsServer(port, {
+      admitConnection,
+      payloadDecoder: decodeCbor,
+      messageHandler: async (message: any, request) => {
+        if (message.type === 'get-metadata') {
+          // The push lands before the reply, as a broadcast racing the joiner's handshake does.
+          sendResponseMessage(
+            request,
+            encodeCbor({ type: 'data', feedKey: message.feedKey, blocks: [await blockAt(2)] }),
+          );
+          await waitForCondition({ condition: () => replica.has(2) });
+          return encodeCbor({ type: 'metadata', feedKey: message.feedKey, length: source.length });
+        }
+        if (message.type === 'request') {
+          const blocks = await Promise.all(
+            range(message.range.to - message.range.from, (offset) => blockAt(message.range.from + offset)),
+          );
+          return encodeCbor({ type: 'data', feedKey: message.feedKey, blocks });
+        }
+      },
+    });
+    onTestFinished(cleanup);
+
+    const { messenger } = await createClient(endpoint);
+    const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
+    await replicator.addHypercore(replica);
+    await openAndClose(replicator);
+    admitConnection.wake();
+
+    await expect.poll(() => range(3).every((index) => replica.has(index))).toBe(true);
+  });
+
   const createEdge = async () => {
     const port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
     let lastBlockIndex = -1;
@@ -249,6 +297,19 @@ describe('EdgeFeedReplicator', () => {
     });
     onTestFinished(() => hypercoreStore.close());
     return hypercoreStore.openHypercore(await keyring.createKey(), { writable: true });
+  };
+
+  const openReplica = async (key: PublicKey) => {
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
+        // RAM rather than the default on-disk root, which the source feed already writes to.
+        root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        signer: new Keyring(),
+        hypercore: { valueEncoding },
+      }),
+    });
+    onTestFinished(() => hypercoreStore.close());
+    return hypercoreStore.openHypercore(key, { writable: false, sparse: true });
   };
 
   const updateIdentity = async (messenger: EdgeClient) => {

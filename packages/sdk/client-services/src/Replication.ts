@@ -194,16 +194,19 @@ export class EdgeFeedReplicator extends Resource {
 
           this._remoteLength.set(feedKey, message.length);
 
-          const logMeta = { localLength: feed.length, remoteLength: message.length, feedKey };
-          if (message.length > feed.length) {
+          // A block pushed ahead of this reply is stored sparsely and advances `feed.length` past the
+          // blocks before it, so the length alone can report nothing missing while the feed has a gap.
+          const firstMissing = findFirstMissing(feed, message.length);
+          const logMeta = { localLength: feed.length, remoteLength: message.length, firstMissing, feedKey };
+          if (firstMissing < message.length) {
             log('requesting missing blocks', logMeta);
 
             await this._sendMessage(this._connectionCtx!, {
               type: 'request',
               feedKey: feedKey.toHex(),
-              range: { from: feed.length, to: message.length },
+              range: { from: firstMissing, to: message.length },
             });
-          } else if (message.length < feed.length) {
+          } else if (message.length < feed.length && feed.has(message.length, feed.length)) {
             log('pushing blocks to remote', logMeta);
 
             await this._pushBlocks(this._connectionCtx!, feed, message.length, feed.length);
@@ -223,6 +226,7 @@ export class EdgeFeedReplicator extends Resource {
           }
 
           await this._integrateBlocks(feed, message.blocks);
+          await this._requestGapBelow(feed, message.blocks);
           break;
         }
 
@@ -277,6 +281,22 @@ export class EdgeFeedReplicator extends Resource {
     }
   }
 
+  /**
+   * Requests the blocks missing below the highest one just received, since a push only ever carries
+   * the newest blocks and nothing else would fetch the ones before them.
+   */
+  private async _requestGapBelow(feed: HypercoreWrapper<any>, blocks: FeedBlock[]): Promise<void> {
+    if (!this._connectionCtx || blocks.length === 0) {
+      return;
+    }
+    const to = Math.max(...blocks.map((block) => block.index)) + 1;
+    const from = findFirstMissing(feed, to);
+    if (from < to) {
+      log('requesting blocks missing below a pushed block', { feedKey: feed.key, from, to });
+      await this._sendMessage(this._connectionCtx, { type: 'request', feedKey: feed.key.toHex(), range: { from, to } });
+    }
+  }
+
   private async _pushBlocksIfNeeded(feed: HypercoreWrapper<any>): Promise<void> {
     using _ = await this._getPushMutex(feed.key).acquire();
 
@@ -286,7 +306,8 @@ export class EdgeFeedReplicator extends Resource {
     }
 
     const remoteLength = this._remoteLength.get(feed.key)!;
-    if (remoteLength < feed.length) {
+    // A sparse put also emits `append`; pushing past a hole would await `feed.get` on a block that never arrives.
+    if (remoteLength < feed.length && feed.has(remoteLength, feed.length)) {
       await this._pushBlocks(this._connectionCtx!, feed, remoteLength, feed.length);
     }
   }
@@ -309,6 +330,16 @@ export class EdgeFeedReplicator extends Resource {
     return connectionCtx;
   }
 }
+
+/** Index of the first block in `[0, to)` the feed does not hold, or `to` when it holds them all. */
+const findFirstMissing = (feed: HypercoreWrapper<any>, to: number): number => {
+  for (let index = 0; index < to; index++) {
+    if (!feed.has(index)) {
+      return index;
+    }
+  }
+  return to;
+};
 
 // hypercore requires buffers
 const bufferizeBlock = (block: FeedBlock) => ({
