@@ -13,7 +13,7 @@ import { getLocalSandboxBackend } from '#local-backend';
 
 import * as SandboxCapabilities from '../types/SandboxCapabilities.ts';
 import * as SandboxService from '../types/SandboxService.ts';
-import type * as Settings from '../types/Settings.ts';
+import * as Settings from '../types/Settings.ts';
 import { makeEdgeBackend } from './edge-backend.ts';
 
 /** Environment variable selecting the backend under Node or Bun; it overrides the plugin setting. */
@@ -67,7 +67,7 @@ export const layerFromCapabilities: Layer.Layer<SandboxService.Service, never, C
       };
       return selecting({
         edge,
-        preference: () => envPreference() ?? setting() ?? 'edge',
+        preference: () => envPreference() ?? setting() ?? Settings.defaultBackend(),
         launcher: () => capabilities.getAll(SandboxCapabilities.LocalLauncher)[0],
       });
     }),
