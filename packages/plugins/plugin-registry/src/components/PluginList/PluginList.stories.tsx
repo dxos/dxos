@@ -39,7 +39,7 @@ const DefaultStory = () => {
             key: DXN.make('org.dxos.plugin.test'),
             name: `${random.commerce.productName()}`,
             description: random.lorem.sentences(Math.ceil(Math.random() * 3)),
-            tags: random.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
+            tags: random.helpers.uniqueArray([...RegistryTagType.literals], Math.floor(Math.random() * 3)),
             icon: { key: random.helpers.arrayElement(icons), hue: getHashHue(random.string.uuid()) },
             homePage: random.datatype.boolean({ probability: 0.5 }) ? random.internet.url() : undefined,
             source: random.internet.url(),
