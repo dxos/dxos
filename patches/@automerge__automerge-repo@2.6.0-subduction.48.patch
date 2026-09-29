@@ -1053,3 +1053,35 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..556ea37d7707df353b8e0aeeccc6edcb
      /** Drain in-flight bridge operations, bounded by a deadline. */
      async #awaitStorageIdle() {
          let timer;
+diff --git a/dist/subduction/storage.d.ts b/dist/subduction/storage.d.ts
+index 8d260aa38e6de498e56efff9747149696c150d0c..480cabdb6687a5d8b22b1af7c63b88aa90ef364d 100644
+--- a/dist/subduction/storage.d.ts
++++ b/dist/subduction/storage.d.ts
+@@ -129,6 +129,7 @@ export declare class SubductionStorageBridge implements SedimentreeStorage {
+     saveSedimentreeId(sedimentreeId: SedimentreeId): Promise<void>;
+     deleteSedimentreeId(sedimentreeId: SedimentreeId): Promise<void>;
+     loadAllSedimentreeIds(): Promise<SedimentreeId[]>;
++    containsSedimentreeId(sedimentreeId: SedimentreeId): Promise<boolean>;
+     saveCommit(sedimentreeId: SedimentreeId, commitId: CommitId, signedCommit: SignedLooseCommit, blob: Uint8Array): Promise<void>;
+     loadCommit(sedimentreeId: SedimentreeId, commitId: CommitId): Promise<CommitWithBlob | null>;
+     /**
+diff --git a/dist/subduction/storage.js b/dist/subduction/storage.js
+index 37f9cc727f7ab1d24118879efadc4bb44f90e827..7c3f51b53a8df1512ee45f69c6a7c0d4e024da8c 100644
+--- a/dist/subduction/storage.js
++++ b/dist/subduction/storage.js
+@@ -243,6 +243,15 @@ export class SubductionStorageBridge {
+                 .map(chunk => SedimentreeId.fromBytes(hexToBytes(chunk.key[2])));
+         });
+     }
++    /**
++     * DXOS patch: single-key existence check. Subduction calls it on its hydration hot path when
++     * the storage provides it, and otherwise lists every id via `loadAllSedimentreeIds`, once per
++     * sync round of a document not stored yet: a fresh device pulling N documents did O(N²) work.
++     */
++    async containsSedimentreeId(sedimentreeId) {
++        const key = [this.prefix, IDS_PREFIX, sedimentreeId.toString()];
++        return this.guarded("containsSedimentreeId", false, async () => (await this.adapter.load(key)) !== undefined);
++    }
+     // ==================== Commits (compound storage with blob) ====================
+     async saveCommit(sedimentreeId, commitId, signedCommit, blob) {
+         // Encode the signed commit to bytes

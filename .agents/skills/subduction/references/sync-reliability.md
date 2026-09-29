@@ -45,6 +45,16 @@ round times out, heal retries re-run the same over-budget work, and sync **freez
 35–75 s, 3000+ = wall. Mitigations at our layer: raise/adapt `syncMs`; coalesce more frames per WASM
 ingest. Real fix is upstream (per-ingest work independent of collection size).
 
+**One cause, found and fixed: the storage had no `containsSedimentreeId`.** Subduction checks
+whether a sedimentree is stored on its hydration hot path, and a storage without that method answers
+by listing every stored id through `loadAllSedimentreeIds`. That listing ran once per sync round of a
+document not stored yet, so a device pulling N documents it had never stored listed ids N times. The
+client bridge (automerge-repo patch) and the EDGE DO storage (`DurableObjectSedimentreeStorage`)
+both answer with one key lookup now, pinned by `subduction-id-lookup.test.ts` here and by the
+db-service `DurableObjectSedimentreeStorage id lookup` test. A Node client pulling a real space of
+about 1,300 documents from EDGE dev went from 36–40 s to 26–28 s. The EDGE side matters for
+documents pushed to it that it has never stored.
+
 ## 3. Connection replacement: **do not drain — close/evict immediately**
 
 Verified by A/B (`dropConnection` probe, both sides): immediate close recovers a replaced connection
