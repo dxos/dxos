@@ -4,9 +4,9 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { Ref } from '@dxos/echo';
-import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
-import { deepMapValues } from '@dxos/util';
+import { type Database, Ref } from '@dxos/echo';
+import { DATA_NAMESPACE, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { deepMapValues, getDeep } from '@dxos/util';
 
 import { type ObjectCore } from '../core-db/object-core.ts';
 
@@ -65,6 +65,49 @@ export const mapRefsToEncodedReferences = (output: Record<string, unknown>): Rec
     }
     return recurse(value);
   });
+
+/**
+ * `core`'s decoded data body as of `heads`, with every stored reference resolved to a `Ref`, so a
+ * transform, lens or `absorb` recomputed during fold-forward reads the same value shapes it read at
+ * migration time.
+ */
+export const getDecodedDataWithRefs = (
+  db: Database.Database,
+  core: ObjectCore,
+  heads: A.Heads,
+): Record<string, unknown> => {
+  const data = core.decode(getDeep(A.view(core.getDoc(), heads), [...core.mountPath, DATA_NAMESPACE]));
+  if (!isRecord(data)) {
+    return {};
+  }
+  return deepMapValues(data, (value, recurse) => {
+    if (isEncodedReference(value)) {
+      return db.makeRef(EncodedReference.toURI(value));
+    }
+    if (value instanceof Uint8Array) {
+      return value;
+    }
+    return recurse(value);
+  });
+};
+
+/**
+ * The entries of `after` whose encoded value differs from the same key in `before`: the keys a
+ * recomputed migration output actually moved between two snapshots of its source.
+ */
+export const changedOutputEntries = (
+  core: ObjectCore,
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+): Record<string, unknown> => {
+  const encodedBefore = mapRefsToEncodedReferences(before);
+  const encodedAfter = mapRefsToEncodedReferences(after);
+  return Object.fromEntries(
+    Object.entries(after).filter(
+      ([key]) => !encodedValuesEqual(core.encode(encodedAfter[key]), core.encode(encodedBefore[key])),
+    ),
+  );
+};
 
 /**
  * The data keys of `output` whose encoded value actually differs from `core`'s current document —

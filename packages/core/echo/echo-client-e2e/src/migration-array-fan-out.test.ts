@@ -286,6 +286,46 @@ describe('migration array fan-out: fold-forward for late writes to the kept sour
     expect(writesSince(child, preSecondPassHeads)).to.deep.eq([]);
   });
 
+  test('a late element edit made after the pass read its checkpoint heads is folded by the next pass', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });
+    await using db = await peer.createDatabase();
+
+    const { parent, child } = await splitSingleElementParent(db, 'alpha');
+    const renameElement = (name: string) =>
+      Obj.update(parent, (parent) => {
+        const items = Obj.getValue(parent, ['items']);
+        invariant(Array.isArray(items), 'expected the source array to remain');
+        items[0].name = name;
+      });
+
+    let duringToChild: (() => void) | undefined;
+    const hookedMigration = Migration.defineArrayFanOut({
+      from: ArrayFanParentV1,
+      to: ArrayFanParentV2,
+      property: 'items',
+      elementId: 'id',
+      child: ArrayFanChildDoc,
+      toChild: (element) => {
+        const result = toChild(element);
+        duringToChild?.();
+        return result;
+      },
+    });
+
+    renameElement('alpha-renamed');
+    await db.flush();
+    duringToChild = () => {
+      duringToChild = undefined;
+      renameElement('alpha-again');
+    };
+    await db.foldForward([hookedMigration]);
+    expect(child.name).toBe('alpha-renamed');
+
+    await db.foldForward([hookedMigration]);
+    expect(child.name).toBe('alpha-again');
+  });
+
   test('(b) a concurrent direct edit to the child conflicts with a late element edit; the direct edit is presented', async () => {
     await using builder = await new EchoTestBuilder().open();
     const peer = await builder.createPeer({ types: [ArrayFanParentV1, ArrayFanParentV2, ArrayFanChildDoc] });

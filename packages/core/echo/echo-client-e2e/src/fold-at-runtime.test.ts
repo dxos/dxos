@@ -115,7 +115,7 @@ describe('foldAt across a real partition/heal', () => {
     invariant(fold1, 'expected the fold among the alternatives');
     invariant(direct1, 'expected the direct edit among the alternatives');
     expect(fold1.value).to.eq('late');
-    expect(fold1.message).to.eq(foldMessage);
+    expect(fold1.message).to.eq(`${foldMessage} [${obj1.id}]`);
     expect(direct1.value).to.eq('direct');
   });
 
@@ -165,7 +165,9 @@ describe('foldAt across a real partition/heal', () => {
     // is not a signal replication actually completed both ways -- poll on the fold change COUNT
     // instead, which only reaches 2 once each peer's document holds both changes.
     const foldChangesOn = (obj: typeof obj1): number =>
-      A.getChangesMetaSince(getObjectCore(obj).getDoc(), []).filter((change) => change.message === foldMessage).length;
+      A.getChangesMetaSince(getObjectCore(obj).getDoc(), []).filter(
+        (change) => change.message === `${foldMessage} [${obj1.id}]`,
+      ).length;
     await expect
       .poll(async () => {
         await syncAll(db1, db2);
@@ -182,7 +184,7 @@ describe('foldAt across a real partition/heal', () => {
 
     const foldActors = new Set(
       A.getChangesMetaSince(getObjectCore(obj1).getDoc(), [])
-        .filter((change) => change.message === foldMessage)
+        .filter((change) => change.message === `${foldMessage} [${obj1.id}]`)
         .map((change) => change.actor),
     );
     // Two peers, two DIFFERENT derived fold actors -- never the same one, and never a fresh random one.

@@ -270,15 +270,8 @@ describe('fold-forward across a real partition, peer B a genuinely old client', 
     expect(conflict1.presented).to.eq('Amazing Grace');
     expect(conflict2.presented).to.eq('Amazing Grace');
 
-    // The conflict set is the SAME replicated Automerge state on both peers, but it is THREE
-    // alternatives, not two: `ObjectCore.foldAt` mints a FRESH random actor on every call (the
-    // DECIDED policy dropped the shared sentinel actor specifically because its safety depended on
-    // every peer's fold being byte-identical, which cannot be guaranteed as a caller contract), so
-    // peer A's and peer B's independent folds are two DIFFERENT changes under two different actors,
-    // even though both recomputed the identical value from the same replicated document. Automerge
-    // therefore keeps them as two distinct (duplicate-valued) fold alternatives alongside the one
-    // direct edit — a real cost of "each peer folds under its own actor", worth calling out for a
-    // conflict-review UI, which should collapse same-valued fold alternatives for display.
+    // Three alternatives, not two: each peer folds under its own derived actor, so peer A's and peer
+    // B's folds are distinct changes carrying the same value, kept beside the one direct edit.
     expect(conflict1.alternatives).to.have.length(3);
     const normalize = (conflict: Obj.Conflict) =>
       [...conflict.alternatives].sort((a, b) => a.actor.localeCompare(b.actor));

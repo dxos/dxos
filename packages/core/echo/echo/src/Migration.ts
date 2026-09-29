@@ -76,6 +76,7 @@ type DefineObjectMigrationOptions<From extends MigrationSchemaInput, To extends 
    *
    * NOTE: Database mutations performed in this callback are not guaranteed to be idempotent.
    *       If multiple peers run the migration separately, the effects may be applied multiple times.
+   *       Must not call `db.runMigrations` or `db.foldForward`: the running pass holds their lock.
    */
   onMigration?: (params: OnMigrateProps<From, To>) => Promise<void>;
 };
@@ -152,9 +153,9 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
  *
  * The runner applies each object's transform output as minimal writes in one change, keeps source
  * properties the output omits (recorded as retired in {@link MigrationMarkerAnnotation}), and
- * resumes safely after a partial run. Not yet handled: a write made in the old shape after an
- * object migrated (e.g. by a peer that was offline) stays on the retired property and is not
- * carried forward, and `onMigration` effects may run once per peer.
+ * resumes safely after a partial run. A write made in the old shape after an object migrated (e.g.
+ * by a peer that was offline) is carried forward by fold-forward, which re-runs `transform` on the
+ * object's current data. `onMigration` effects may run once per peer.
  *
  * @example
  * ```ts
@@ -358,11 +359,7 @@ export type CollisionPolicy =
  * Definition of a fan-in: absorbs every live object of `fromType` into the parent `parentOf` names,
  * via `absorb`, then tombstones the child. Constructed by {@link defineFanIn}.
  *
- * `toType`/`toSchema` are accepted and validated for symmetry with {@link define}/{@link fromLens}
- * (a fan-in that also wants to demote the child to a lighter schema before tombstoning it), but the
- * runner does not yet perform that type switch — deferred, since a tombstoned object is already
- * excluded from every default query regardless of its type, so the switch buys nothing operationally
- * yet; the fields are here so a caller can start declaring the intended shape now.
+ * A declared `to` switches the child's type in the same change that tombstones it.
  */
 export interface FanInMigration extends Migration {
   readonly kind: 'fanIn';
@@ -485,10 +482,8 @@ export const FanInMarkerSchema = Schema.Struct({
    * child's value newly colliding with the parent's" (still subject to `collision`) — collapsing the
    * two would freeze a `parent-wins` fan-in's very first absorption forever, since every later child
    * edit would then compare against a parent value that only exists because THIS child put it there.
-   * Absent on a marker written before this field existed — see {@link FanInMigration}'s fold-forward
-   * runner, which falls back to running `collision` for every key on such a marker.
    */
-  fromChild: Schema.optional(Schema.Array(Schema.String)),
+  fromChild: Schema.Array(Schema.String),
   /**
    * Child heads through which a fold-forward pass has already re-absorbed late writes. Absent until
    * the first late write folds; advanced in place (never a whole-annotation replace) so a concurrent
@@ -684,24 +679,11 @@ export const ArrayFanOutMarkerSchema = Schema.Struct({
  */
 export type ArrayFanOutMarker = Schema.Schema.Type<typeof ArrayFanOutMarkerSchema>;
 
-/** Current marker shape: every fanned-out property's own marker, keyed by property name. */
+/** Every fanned-out property's own marker, keyed by property name. */
 const ArrayFanOutMarkerMapSchema = Schema.Record(Schema.String, ArrayFanOutMarkerSchema);
 
-/**
- * A marker written before per-property keying: one property's marker fields directly at the top level,
- * with no property-keyed wrapper. Distinguished from {@link ArrayFanOutMarkerMapSchema} by shape alone
- * (neither has a tag) — the same technique {@link MigrationMarkerSchema} uses for its own chained-vs-bare
- * shapes — which is unambiguous here too: a legacy marker's own fields (`migration`, a string; `preHeads`,
- * a string array; ...) never validate as a `Record<string, ArrayFanOutMarker>`, whose values must
- * themselves be whole marker structs.
- */
-const ArrayFanOutMarkerValueSchema = Schema.Union([ArrayFanOutMarkerMapSchema, ArrayFanOutMarkerSchema]);
-
-/**
- * Value of {@link ArrayFanOutMarkerAnnotation}. Read it through {@link getArrayFanOutMarkers}, never by
- * shape, so a legacy single-property marker and a property-keyed one are handled alike.
- */
-export type ArrayFanOutMarkerValue = Schema.Schema.Type<typeof ArrayFanOutMarkerValueSchema>;
+/** Value of {@link ArrayFanOutMarkerAnnotation}. */
+export type ArrayFanOutMarkerValue = Schema.Schema.Type<typeof ArrayFanOutMarkerMapSchema>;
 
 /**
  * Per-parent marker map left in `EntityMeta.annotations` by the array-fan-out runner, so a fold-forward
@@ -713,29 +695,8 @@ export type ArrayFanOutMarkerValue = Schema.Schema.Type<typeof ArrayFanOutMarker
  */
 export const ArrayFanOutMarkerAnnotation = Annotation.make<ArrayFanOutMarkerValue>({
   id: 'org.dxos.annotation.arrayFanOutMarker',
-  schema: ArrayFanOutMarkerValueSchema,
+  schema: ArrayFanOutMarkerMapSchema,
 });
-
-/**
- * Type-guards a decoded {@link ArrayFanOutMarkerValue} to the pre-keying bare-marker shape. A plain
- * `'migration' in value` check does not narrow here — Effect's `Schema.Record` branch has an index
- * signature, which structurally admits a `migration` key too, so `value.property` would still read as
- * `ArrayFanOutMarker | string` afterwards; a real type predicate (never a cast to a branded type) is
- * what TypeScript actually narrows on. Widening to a plain shape to read one optional field is the same
- * idiom {@link isMigration} already uses for its own tag check.
- */
-const isBareArrayFanOutMarker = (value: ArrayFanOutMarkerValue): value is ArrayFanOutMarker => {
-  const candidate = value as { migration?: unknown };
-  return typeof candidate.migration === 'string';
-};
-
-/**
- * Normalizes a decoded {@link ArrayFanOutMarkerValue} to its per-property map: a pre-keying marker
- * decodes as a bare {@link ArrayFanOutMarker} (no property-keyed wrapper), which is exactly as valid a
- * length-1 map as one written by the current runner.
- */
-export const getArrayFanOutMarkers = (value: ArrayFanOutMarkerValue): Readonly<Record<string, ArrayFanOutMarker>> =>
-  isBareArrayFanOutMarker(value) ? { [value.property]: value } : value;
 
 /**
  * The convergence key {@link defineArrayFanOut}'s runner mints for one element's child, and the
@@ -921,10 +882,9 @@ export const MigrationStepSchema = Schema.Struct({
   foldedAt: Schema.optional(Schema.Array(Schema.String)),
   /**
    * Per-retired-property TARGET-side fork frontier for a text splice replay (a `fromLens` rename of a
-   * string property), keyed by the retired source property. Distinct from {@link foldedAt}: this is
-   * where the NEXT replay forks the target's own change from, which must advance to the heads the
-   * PREVIOUS replay's `changeAt` returned (never back to the migration heads) or later offsets overrun
-   * — see M0-REPORT.md design item 9. Absent until the first text fold for that property.
+   * string property), keyed by the retired source property: the heads of the change that last wrote
+   * the target text, where the next replay forks from so its offsets line up. Absent until the first
+   * text fold for that property.
    */
   textFrontier: Schema.optional(Schema.Record(Schema.String, Schema.Array(Schema.String))),
 });
@@ -932,25 +892,16 @@ export const MigrationStepSchema = Schema.Struct({
 /**
  * One step of a migration marker's chain: everything the runner recorded when an object crossed one
  * `from -> to` boundary. Exported so the runner can encode a single new step without re-encoding the
- * whole marker (`#applyObjectMigration` appends a step in place; see {@link getSteps}).
+ * whole marker (`#applyObjectMigration` appends a step in place).
  */
 export type MigrationStep = Schema.Schema.Type<typeof MigrationStepSchema>;
 
-/** The current, chained marker shape: every step the object has been migrated through, oldest first. */
-const MigrationMarkerStepsSchema = Schema.Struct({ steps: Schema.Array(MigrationStepSchema) });
-
-/**
- * A marker written before chained migrations: exactly one step's fields at the top level, with no
- * `steps` wrapper. Distinguished from {@link MigrationMarkerStepsSchema} by shape alone (neither has a
- * tag), which is unambiguous since a `steps` array and a `from`/`to` pair never both validate the same
- * object.
- */
-const MigrationMarkerSchema = Schema.Union([MigrationMarkerStepsSchema, MigrationStepSchema]);
+/** Every step the object has been migrated through, oldest first. */
+const MigrationMarkerSchema = Schema.Struct({ steps: Schema.Array(MigrationStepSchema) });
 
 /**
  * Value of {@link MigrationMarkerAnnotation}: recorded on an object by the runner immediately after
- * it applies an object migration's single change. Read it through {@link getSteps}, never by shape,
- * so a legacy single-step marker and a chained one are handled alike.
+ * it applies an object migration's single change.
  */
 export type MigrationMarker = Schema.Schema.Type<typeof MigrationMarkerSchema>;
 
@@ -963,11 +914,3 @@ export const MigrationMarkerAnnotation = Annotation.make<MigrationMarker>({
   id: 'org.dxos.annotation.migrationMarker',
   schema: MigrationMarkerSchema,
 });
-
-/**
- * Normalizes a decoded {@link MigrationMarker} to its steps, oldest first: a pre-chaining marker
- * decodes as a bare {@link MigrationStep} (no `steps` field), which is exactly as valid a length-1
- * chain as one written by the current runner.
- */
-export const getSteps = (marker: MigrationMarker): readonly MigrationStep[] =>
-  'steps' in marker ? marker.steps : [marker];

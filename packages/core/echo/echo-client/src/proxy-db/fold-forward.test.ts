@@ -7,8 +7,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Annotation, DXN, Lens, Migration, Obj, Type } from '@dxos/echo';
+import { sleep } from '@dxos/async';
+import { Annotation, DXN, Lens, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { setDeep } from '@dxos/util';
 
 import { EchoTestBuilder, getObjectCore } from '../testing/index.ts';
 import { updateText } from '../text.ts';
@@ -91,6 +94,25 @@ class NoteV2 extends Type.makeObject<NoteV2>(DXN.make('org.dxos.test.foldForward
 const noteLens = Lens.make('org.dxos.test.foldForward.note.lens', NoteV1, NoteV2, { content: 'body' });
 const noteMigration = Migration.fromLens(noteLens);
 
+class DocV1 extends Type.makeObject<DocV1>(DXN.make('org.dxos.test.foldForward.Doc', '0.1.0'))(
+  Schema.Struct({ title: Schema.String, body: Schema.optional(Schema.String) }),
+) {}
+
+class DocV2 extends Type.makeObject<DocV2>(DXN.make('org.dxos.test.foldForward.Doc', '0.2.0'))(
+  Schema.Struct({ name: Schema.String, content: Schema.optional(Schema.String) }),
+) {}
+
+const docLens = Lens.make('org.dxos.test.foldForward.doc.lens', DocV1, DocV2, { name: 'title', content: 'body' });
+const docMigration = Migration.fromLens(docLens);
+
+class DerivedV1 extends Type.makeObject<DerivedV1>(DXN.make('org.dxos.test.foldForward.Derived', '0.1.0'))(
+  Schema.Struct({ fullName: Schema.String }),
+) {}
+
+class DerivedV2 extends Type.makeObject<DerivedV2>(DXN.make('org.dxos.test.foldForward.Derived', '0.2.0'))(
+  Schema.Struct({ name: Schema.String, derived: Schema.optional(Schema.String) }),
+) {}
+
 class TaskV1 extends Type.makeObject<TaskV1>(DXN.make('org.dxos.test.foldForward.Task', '0.1.0'))(
   Schema.Struct({ title: Schema.String }),
 ) {}
@@ -102,6 +124,20 @@ class TaskV2 extends Type.makeObject<TaskV2>(DXN.make('org.dxos.test.foldForward
 /** `priority` has no source counterpart, so the lens stores it as an overlay (`Lens.coverage(lens).overlaid`). */
 const taskLens = Lens.make('org.dxos.test.foldForward.task.lens', TaskV1, TaskV2, {});
 const taskMigration = Migration.fromLens(taskLens);
+
+class AssignmentV1 extends Type.makeObject<AssignmentV1>(DXN.make('org.dxos.test.foldForward.Assignment', '0.1.0'))(
+  Schema.Struct({ title: Schema.String, owner: Schema.optional(Ref.Ref(ContactV2)) }),
+) {}
+
+class AssignmentV2 extends Type.makeObject<AssignmentV2>(DXN.make('org.dxos.test.foldForward.Assignment', '0.2.0'))(
+  Schema.Struct({ name: Schema.String, owner: Schema.optional(Ref.Ref(ContactV2)) }),
+) {}
+
+/** Renames `title` and carries the `owner` ref through unchanged. */
+const assignmentLens = Lens.make('org.dxos.test.foldForward.assignment.lens', AssignmentV1, AssignmentV2, {
+  name: 'title',
+});
+const assignmentMigration = Migration.fromLens(assignmentLens);
 
 let builder: EchoTestBuilder;
 
@@ -173,6 +209,100 @@ describe('fold-forward: retired scalar properties', () => {
     } finally {
       unwatch();
     }
+  });
+
+  test('a watch pass still pending at cleanup never runs', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([contactMigration]);
+    const unwatch = db.watchFoldForward(() => [contactMigration], { debounceMs: 500 });
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');
+    await db.flush();
+    unwatch();
+
+    await sleep(800);
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace');
+  });
+
+  test('a late write that lands while a pass awaits its transform is folded by the next pass', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    let duringTransform: (() => void) | undefined;
+    const migration = Migration.define({
+      from: ContactV1,
+      to: ContactV2,
+      transform: async (from) => {
+        const name = from.fullName;
+        duringTransform?.();
+        return { name };
+      },
+    });
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([migration]);
+
+    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');
+    await db.flush();
+    duringTransform = () => {
+      duringTransform = undefined;
+      getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada King');
+    };
+    await db.foldForward([migration]);
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada Lovelace-Byron');
+
+    await db.foldForward([migration]);
+    expect(Obj.getValue(contact, ['name'])).to.eq('Ada King');
+  });
+
+  test('a key whose inputs the late write did not change is not refolded', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([DerivedV1, DerivedV2]);
+
+    // Stands in for a transform that reads state outside the object, e.g. a query over other objects.
+    let external = 'at migration';
+    const migration = Migration.define({
+      from: DerivedV1,
+      to: DerivedV2,
+      transform: async (from) => ({ name: from.fullName, derived: external }),
+    });
+
+    const object = db.add(Obj.make(DerivedV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await db.runMigrations([migration]);
+
+    external = 'later';
+    getObjectCore(object).setDecoded(['data', 'fullName'], 'Ada King');
+    await db.flush();
+    await db.foldForward([migration]);
+
+    expect(Obj.getValue(object, ['name'])).to.eq('Ada King');
+    expect(Obj.getValue(object, ['derived'])).to.eq('at migration');
+  });
+
+  test('overlapping runMigrations calls migrate an object once', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV1, ContactV2]);
+
+    const slowMigration = Migration.define({
+      from: ContactV1,
+      to: ContactV2,
+      transform: async (from) => {
+        await sleep(10);
+        return { name: from.fullName };
+      },
+    });
+
+    const contact = db.add(Obj.make(ContactV1, { fullName: 'Ada Lovelace' }));
+    await db.flush();
+    await Promise.all([db.runMigrations([slowMigration]), db.runMigrations([slowMigration])]);
+
+    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
+    expect(marker.steps).to.have.length(1);
   });
 
   test('a concurrent direct edit to the target creates a real conflict; Obj.getConflict presents the direct edit', async () => {
@@ -275,6 +405,99 @@ describe('fold-forward: text (fromLens identity rename)', () => {
     expect(content).to.include('Hi'); // still not reverted.
     // The first fold's insertion appears exactly once — a re-fork bug would duplicate it.
     expect(content?.split('brave new').length).to.eq(2);
+  });
+  test('a late write to another key leaves text typed into an untouched renamed target intact', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([DocV1, DocV2]);
+
+    const doc = db.add(Obj.make(DocV1, { title: 'Draft', body: 'Hello world' }));
+    await db.flush();
+    await db.runMigrations([docMigration]);
+
+    updateText(doc, ['content'], 'Hello brave world');
+    await db.flush();
+    getObjectCore(doc).setDecoded(['data', 'title'], 'Final');
+    await db.flush();
+    await db.foldForward([docMigration]);
+
+    expect(Obj.getValue(doc, ['name'])).to.eq('Final');
+    expect(Obj.getValue(doc, ['content'])).to.eq('Hello brave world');
+  });
+
+  test('a text fold whose target no longer matches its source falls back to a whole-value fold and re-anchors', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([NoteV1, NoteV2]);
+
+    const note = db.add(Obj.make(NoteV1, { body: 'Hello world' }));
+    await db.flush();
+    await db.runMigrations([noteMigration]);
+    updateText(note, ['content'], 'Hi world');
+    await db.flush();
+
+    // Points the text frontier at heads where the target does not exist yet, so the replay's
+    // offsets cannot apply.
+    const core = getObjectCore(note);
+    const [step] = Option.getOrThrow(Annotation.get(note, Migration.MigrationMarkerAnnotation)).steps;
+    core.change((doc) => {
+      setDeep(
+        doc,
+        [...core.mountPath, 'meta', 'annotations', Migration.MigrationMarkerAnnotation.key, 'steps', 0, 'textFrontier'],
+        { body: [...step.preHeads] },
+      );
+    });
+    await db.flush();
+
+    updateText(note, ['body'], 'Hello brave new world');
+    await db.flush();
+    await db.foldForward([noteMigration]);
+    expect(Obj.getValue(note, ['content'])).to.eq('Hello brave new world');
+
+    // The frontier now points at the folded text, so the next splice replays char-wise again.
+    updateText(note, ['body'], 'Hello brave new wonderful world');
+    await db.flush();
+    await db.foldForward([noteMigration]);
+    expect(Obj.getValue(note, ['content'])).to.eq('Hello brave new wonderful world');
+  });
+
+  test('a splice after a whole-value late write replays into the folded text, not the replaced one', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([NoteV1, NoteV2]);
+
+    const note = db.add(Obj.make(NoteV1, { body: 'Hello world' }));
+    await db.flush();
+    await db.runMigrations([noteMigration]);
+
+    // An old client replaces the whole value, which folds whole-value.
+    getObjectCore(note).setDecoded(['data', 'body'], 'Goodbye world');
+    await db.flush();
+    await db.foldForward([noteMigration]);
+    expect(Obj.getValue(note, ['content'])).to.eq('Goodbye world');
+
+    // Then it types into that text; the splice must land in the text the fold wrote.
+    updateText(note, ['body'], 'Goodbye cruel world');
+    await db.flush();
+    await db.foldForward([noteMigration]);
+    expect(Obj.getValue(note, ['content'])).to.eq('Goodbye cruel world');
+  });
+});
+
+describe('fold-forward: references', () => {
+  test('a lens fold over a source with a ref property folds the late write and keeps the ref intact', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([ContactV2, AssignmentV1, AssignmentV2]);
+
+    const owner = db.add(Obj.make(ContactV2, { name: 'Ada' }));
+    const assignment = db.add(Obj.make(AssignmentV1, { title: 'Draft', owner: Ref.make(owner) }));
+    await db.flush();
+    await db.runMigrations([assignmentMigration]);
+    expect(Obj.getValue(assignment, ['name'])).to.eq('Draft');
+
+    getObjectCore(assignment).setDecoded(['data', 'title'], 'Final');
+    await db.flush();
+    await db.foldForward([assignmentMigration]);
+
+    expect(Obj.getValue(assignment, ['name'])).to.eq('Final');
+    expect(getObjectCore(assignment).getRaw([DATA_NAMESPACE, 'owner'])).to.deep.eq({ '/': Ref.make(owner).uri });
   });
 });
 
@@ -396,7 +619,7 @@ describe('fold-forward: safety', () => {
     // (M0-REPORT.md design item 1: "never fold on foreign heads") must skip it, not throw or diff
     // against "everything is new".
     const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
-    const [step] = Migration.getSteps(marker);
+    const [step] = marker.steps;
     Obj.update(contact, (contact) => {
       Annotation.set(contact, Migration.MigrationMarkerAnnotation, {
         steps: [{ ...step, preHeads: ['0'.repeat(64)] }],
@@ -427,7 +650,7 @@ describe('fold-forward: chained migrations', () => {
     expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada Lovelace');
 
     const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
-    expect(Migration.getSteps(marker)).to.have.length(2);
+    expect(marker.steps).to.have.length(2);
 
     // A late `@1`-shaped write from an old client that never saw either migration, straight on the raw core.
     getObjectCore(contact).setDecoded(['data', 'fullName'], 'Ada Lovelace-Byron');
@@ -443,31 +666,6 @@ describe('fold-forward: chained migrations', () => {
     await db.foldForward([contactMigration, contactMigration23]);
     expect(A.getHistory(core.getDoc())).to.have.length(historyLength);
     expect(Obj.getValue(contact, ['displayName'])).to.eq('Ada Lovelace-Byron');
-  });
-
-  test('an old single-step marker, written directly in its pre-chaining shape, is still folded', async () => {
-    const { db, graph } = await builder.createDatabase();
-    graph.registry.add([ContactV1, ContactV2]);
-
-    const contact = db.add(Obj.make(ContactV1, { fullName: 'Grace Hopper' }));
-    await db.flush();
-    await db.runMigrations([contactMigration]);
-
-    // Downgrade the marker to its pre-chaining (flat, no `steps` wrapper) shape -- simulating an object
-    // migrated before chained migrations existed.
-    const marker = Option.getOrThrow(Annotation.get(contact, Migration.MigrationMarkerAnnotation));
-    const [step] = Migration.getSteps(marker);
-    Obj.update(contact, (contact) => {
-      Annotation.set(contact, Migration.MigrationMarkerAnnotation, step);
-    });
-    await db.flush();
-
-    getObjectCore(contact).setDecoded(['data', 'fullName'], 'Grace Brewster Murray Hopper');
-    await db.flush();
-    expect(Obj.getValue(contact, ['name'])).to.eq('Grace Hopper'); // not yet folded.
-
-    await db.foldForward([contactMigration]);
-    expect(Obj.getValue(contact, ['name'])).to.eq('Grace Brewster Murray Hopper');
   });
 });
 

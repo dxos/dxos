@@ -36,6 +36,17 @@ for the first time can still race (both record the same migration); equal-valued
 are reported as no conflict by design; the ref-dedup test builds the merged state on one peer rather than via
 two replicating peers.
 
+Converge (review-and-fix loop, 2026-09-29, stopped at round 3 on thrash): fixed ref encoding in folds, fan-in
+discovery with `to` and marker ownership, fold ordering across reloads, serialized migration/fold passes,
+checkpoints at the heads a pass read, folding only keys a late write changed, and removed the unreleased legacy
+marker shapes. Open design decisions: (1) inline text across peers — two peers replaying the same late splices
+duplicate them, and a baseline mismatch falls back to a whole-value fold that drops concurrent direct edits;
+(2) refold scope for `define` migrations — the extra "before" recompute runs `ctx.ensure`/`ctx.assign` against
+stale data, direct edits count as moved keys, a write landing during the migration's own await is never folded,
+and fan-in/array folds do not narrow to moved keys; (3) fan-in ownership — two fan-ins from the same type with
+different parents can fold each other's children. Also: spaces joined mid-session are migrated and watched on
+the next activation; the array fan-out ref-dedup e2e test is flaky under load (idempotence check, not root-caused).
+
 ## Where things live
 
 | Piece                                                                | Package                                                            |

@@ -80,7 +80,7 @@ describe('ObjectCore.foldAt', () => {
     invariant(fold, 'expected the fold among the alternatives');
     expect(direct.value).to.eq('direct');
     expect(fold.value).to.eq('late');
-    expect(fold.message).to.eq(foldMessage);
+    expect(fold.message).to.eq(`${foldMessage} [${person.id}]`);
   });
 
   test('a fold with no concurrent edit simply lands -- no conflict', async () => {
@@ -170,7 +170,7 @@ describe('ObjectCore.foldAt', () => {
     expect(actorsAfterStep1.size).to.eq(actorsBefore.size + 2);
   });
 
-  test('folding survives a peer restart: a fresh ObjectCore/db over the same document derives its own actor with no merge error', async () => {
+  test('a fold after a peer restart supersedes the pre-restart fold in the same scope', async () => {
     const { db, peer } = await builder.createDatabase({ types: [Person] });
 
     const person = db.add(Obj.make(Person, { fullName: 'original' }));
@@ -192,9 +192,8 @@ describe('ObjectCore.foldAt', () => {
     const [person2] = await db2.query(Filter.id(person.id)).run();
     invariant(person2, 'expected the object to survive the reload');
 
-    // The restarted session's own fold, forked from the SAME recorded heads under a BRAND NEW derived
-    // actor (this peer's local actor id is fresh-random per load): concurrent with the pre-restart
-    // fold, exactly like two peers folding independently -- never a merge error.
+    // The restarted session derives a new fold actor, but still forks after the pre-restart fold, so
+    // the newer value is not left to an actor-id tie-break against the stale one.
     expect(() =>
       getObjectCore(person2).foldAt(heads, (data) => (data.name = 'late-after-restart'), {
         message: 'fold: fullName -> name',
@@ -203,13 +202,7 @@ describe('ObjectCore.foldAt', () => {
     ).not.toThrow();
     await db2.flush();
 
-    // Well-formed either way: both folds are legitimately concurrent, so Automerge keeps both as
-    // conflict alternatives rather than the restart silently losing one.
-    const conflict = Obj.getConflict(person2, 'name');
-    invariant(conflict, 'expected both folds to surface as alternatives');
-    expect(conflict.alternatives.map((alternative) => alternative.value).sort()).to.deep.eq([
-      'late-after-restart',
-      'late-before-restart',
-    ]);
+    expect(person2.name).to.eq('late-after-restart');
+    expect(Obj.getConflict(person2, 'name')).toBeUndefined();
   });
 });

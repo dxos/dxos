@@ -33,6 +33,10 @@ const absorbStreet = (parent: Obj.Unknown, child: FanInChildDoc): Record<string,
   employerName: child.street,
 });
 
+class FanInOtherChildDoc extends Type.makeObject<FanInOtherChildDoc>(
+  DXN.make('org.dxos.test.migration.fanin.OtherChild', '0.1.0'),
+)(Schema.Struct({ city: Schema.optional(Schema.String), parent: Schema.optional(Ref.Ref(FanInParentDoc)) })) {}
+
 /** The type an absorbed {@link FanInChildDoc} switches to before being tombstoned, in the type-switch tests below. */
 class FanInChildTombstoneDoc extends Type.makeObject<FanInChildTombstoneDoc>(
   DXN.make('org.dxos.test.migration.fanin.ChildTombstone', '0.1.0'),
@@ -196,6 +200,75 @@ describe('migration fan-in: type switch on absorption', () => {
     const marker = Annotation.get(child, Migration.FanInMarkerAnnotation);
     invariant(Option.isSome(marker), 'expected a fan-in marker on the absorbed child');
     expect(marker.value.parentId).toBe(parent.id);
+  });
+
+  test('a late write to a type-switched child still folds into the parent', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({ types: [FanInParentDoc, FanInChildDoc, FanInChildTombstoneDoc] });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(FanInParentDoc, {}));
+    const child = db.add(Obj.make(FanInChildDoc, { street: '1 Infinite Loop' }));
+    Obj.update(child, (child) => {
+      child.parent = Ref.make(parent);
+    });
+    await db.flush();
+
+    const migration = Migration.defineFanIn({
+      from: FanInChildDoc,
+      to: FanInChildTombstoneDoc,
+      parentOf: (child) => child.parent,
+      absorb: absorbStreet,
+      collision: 'child-wins',
+      removal: 'tombstone',
+    });
+    await db.runMigrations([migration]);
+
+    getObjectCore(child).setDecoded(['data', 'street'], '2 Late Loop');
+    await db.flush();
+    await db.foldForward([migration]);
+
+    expect(parent.employerName).toBe('2 Late Loop');
+  });
+
+  test('two fan-ins sharing a "to" type each fold only the children they absorbed', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const peer = await builder.createPeer({
+      types: [FanInParentDoc, FanInChildDoc, FanInOtherChildDoc, FanInChildTombstoneDoc],
+    });
+    await using db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(FanInParentDoc, {}));
+    const other = db.add(Obj.make(FanInOtherChildDoc, { city: 'Paris' }));
+    Obj.update(other, (other) => {
+      other.parent = Ref.make(parent);
+    });
+    await db.flush();
+
+    const streetFanIn = Migration.defineFanIn({
+      from: FanInChildDoc,
+      to: FanInChildTombstoneDoc,
+      parentOf: (child) => child.parent,
+      absorb: absorbStreet,
+      collision: 'child-wins',
+      removal: 'tombstone',
+    });
+    const cityFanIn = Migration.defineFanIn({
+      from: FanInOtherChildDoc,
+      to: FanInChildTombstoneDoc,
+      parentOf: (child) => child.parent,
+      absorb: (_parent, child) => ({ employerName: child.city }),
+      collision: 'child-wins',
+      removal: 'tombstone',
+    });
+    await db.runMigrations([streetFanIn, cityFanIn]);
+    expect(parent.employerName).toBe('Paris');
+
+    getObjectCore(other).setDecoded(['data', 'city'], 'Lyon');
+    await db.flush();
+    await db.foldForward([streetFanIn, cityFanIn]);
+
+    expect(parent.employerName).toBe('Lyon');
   });
 });
 
@@ -503,8 +576,10 @@ describe('migration fan-in: fold-forward across a real partition, peer B a genui
         await db1.updateIndexes();
         await db2.updateIndexes();
 
+        // Heads replication does not guarantee peer A's client already holds the write.
+        await expect.poll(() => getObjectCore(child).getDecoded(['data', 'street'])).toBe('Old Client St');
         // Not yet folded: the late write replicated onto the tombstoned child, the parent is untouched.
-        await expect.poll(() => parent.employerName).toBe('123 Main St');
+        expect(parent.employerName).toBe('123 Main St');
 
         await db1.foldForward([migration]);
         expect(parent.employerName).toBe('Old Client St');

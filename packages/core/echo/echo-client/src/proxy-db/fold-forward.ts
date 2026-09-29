@@ -17,12 +17,12 @@ import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { setDeep } from '@dxos/util';
+import { getDeep, setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, type ObjectCore } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { computeGuardedDataWrites, encodedValuesEqual, isRecord } from './encoded-value.ts';
-import { resolvePatch } from './fan-in.ts';
+import { changedOutputEntries, computeGuardedDataWrites, getDecodedDataWithRefs, isRecord } from './encoded-value.ts';
+import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
 import {
   type ConvergenceKeyCache,
   createObjectMigrationContext,
@@ -37,7 +37,7 @@ import {
 // document at any time via the migration marker (`Migration.MigrationMarkerAnnotation`), so no
 // separate durable intent is kept: each step's own `foldedAt`/`textFrontier` checkpoint is enough to
 // make a re-run cheap and a crash between writes harmless (every fold is value-compare guarded). A
-// marker holds a CHAIN of steps (`Migration.getSteps`), one per `from -> to` boundary the object has
+// marker holds a CHAIN of steps, one per `from -> to` boundary the object has
 // crossed, so a late write in the object's ORIGINAL shape still folds all the way to its current type
 // even after several migrations — see {@link foldObject}.
 //
@@ -294,10 +294,31 @@ const foldStep = async (
     return;
   }
 
+  // Only keys the late writes actually moved are folded: a transform may read more than the object's
+  // own data (other objects, a text target the user is typing into), and re-deriving a key whose
+  // inputs did not change would overwrite the value the migration or a direct edit put there.
+  // These are the only awaits: everything after them runs synchronously, so no other pass or
+  // replicated change can land between the text replay, the fold and the checkpoint.
+  let output: Record<string, unknown> = {};
+  if (lateWrites.size > 0) {
+    const { id: _idBefore, ...before } = await recomputeMigrationOutput(
+      db,
+      migration,
+      object.id,
+      getDecodedDataWithRefs(db, core, base),
+    );
+    const { id: _idAfter, ...after } = await recomputeMigrationOutput(
+      db,
+      migration,
+      object.id,
+      getDecodedDataWithRefs(db, core, currentHeads),
+    );
+    output = changedOutputEntries(core, before, after);
+  }
+
   // Text-identity-rename properties whose late writes are pure splice/del sequences replay
-  // character-wise instead of a whole-value fold (M0-REPORT.md design item 9); everything else —
-  // including a whole-value overwrite of a text property from a non-collaborative old client, or an
-  // opaque `define` migration — folds through the generic recompute-and-compare pass below.
+  // character-wise, since a whole-value fold would swap the text object out from under concurrent
+  // direct edits to it (M0-REPORT.md design item 9); everything else folds whole-value below.
   const textFrontier: Record<string, readonly string[]> = { ...step.textFrontier };
   const textTargets = new Set<string>();
   for (const [retiredKey, patches] of lateWrites) {
@@ -305,14 +326,18 @@ const foldStep = async (
     if (!targetProperty || !patches.every(isTextPatch)) {
       continue;
     }
-    const targetValue = Obj.getValue(object, [targetProperty]);
-    const sourceValue = core.getDecoded(['data', retiredKey]);
-    if (typeof targetValue !== 'string' || typeof sourceValue !== 'string') {
-      continue;
-    }
     const forkHeads: Heads = textFrontier[retiredKey] ? [...textFrontier[retiredKey]] : postMigrationHeads;
     if (!A.hasHeads(doc, forkHeads)) {
       log.warn('foldForward: skipping text fold with a foreign frontier', { object: object.id, property: retiredKey });
+      continue;
+    }
+    // Offsets are relative to the source text at `base`, so they only apply to a target that still
+    // holds exactly that text at the fork point.
+    const sourceAtBase = getDeep(A.view(doc, base), [...mountPath, DATA_NAMESPACE, retiredKey]);
+    const targetAtFork = getDeep(A.view(doc, forkHeads), [...mountPath, DATA_NAMESPACE, targetProperty]);
+    if (typeof sourceAtBase !== 'string' || sourceAtBase !== targetAtFork) {
+      // Falls back to the whole-value fold below, which re-anchors the frontier; concurrent direct
+      // edits inside the replaced text object are lost (a known limit).
       continue;
     }
     const accessor = core.getDocAccessor([targetProperty]);
@@ -326,18 +351,9 @@ const foldStep = async (
   }
 
   const dataWrites = new Map<string, unknown>();
-  if (lateWrites.size > 0) {
-    const snapshot = core.getDecoded(['data']);
-    invariant(isRecord(snapshot), 'foldForward: expected an object body at the data path');
-    const output = await recomputeMigrationOutput(db, migration, object.id, snapshot);
-    for (const [key, value] of Object.entries(output)) {
-      if (key === 'id' || value === undefined || textTargets.has(key)) {
-        continue;
-      }
-      const encoded = core.encode(value);
-      if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, key]))) {
-        dataWrites.set(key, encoded);
-      }
+  for (const [key, value] of computeGuardedDataWrites(core, output)) {
+    if (!textTargets.has(key)) {
+      dataWrites.set(key, value);
     }
   }
 
@@ -350,18 +366,14 @@ const foldStep = async (
         continue;
       }
       const value = Lens.getOverlay(object, migration.lens.id, property);
-      if (value === undefined) {
-        continue;
-      }
-      const encoded = core.encode(value);
-      if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, property]))) {
-        dataWrites.set(property, encoded);
+      for (const [key, encoded] of computeGuardedDataWrites(core, { [property]: value })) {
+        dataWrites.set(key, encoded);
       }
     }
   }
 
   if (dataWrites.size > 0) {
-    core.foldAt(
+    const foldHeads = core.foldAt(
       postMigrationHeads,
       (data) => {
         for (const [key, value] of dataWrites) {
@@ -373,11 +385,18 @@ const foldStep = async (
       // steps, and so wrongly inherit that edit as an ancestor instead of staying concurrent with it.
       { message: foldMessage(step.from, step.to), scope: `${object.id}:${stepIndex}` },
     );
+    // A whole-value fold replaces a renamed text target's object, so later splices fork from it.
+    for (const retiredKey of lateWrites.keys()) {
+      const targetProperty = identityRenameTarget(migration.lens, retiredKey);
+      if (foldHeads && targetProperty && dataWrites.has(targetProperty)) {
+        textFrontier[retiredKey] = foldHeads;
+      }
+    }
   }
 
-  // Ordinary (non-fold) write: this is the runner's own bookkeeping, never user data, so the live
-  // actor and current heads are exactly right — a crash before this lands just re-diffs a wider,
-  // value-compared (harmless) range on the next pass. Written directly at `steps[stepIndex]`, never
+  // Ordinary (non-fold) write: this is the runner's own bookkeeping, never user data. Checkpoints the
+  // heads the diff above read, so a write that replicated in during the awaits is diffed next pass;
+  // a crash before this lands just re-diffs a wider, value-compared (harmless) range. Written directly at `steps[stepIndex]`, never
   // as a whole-marker (or whole-step) replace, so a sibling step's own checkpoint — or one a
   // concurrent peer is writing to a DIFFERENT step of the same marker — is never disturbed.
   const stepPath = [
@@ -388,7 +407,7 @@ const foldStep = async (
     'steps',
     stepIndex,
   ];
-  const foldedAt = core.encode([...A.getHeads(core.getDoc())]);
+  const foldedAt = core.encode([...currentHeads]);
   const encodedTextFrontier = core.encode(textFrontier);
   core.change((doc) => {
     setDeep(doc, [...stepPath, 'foldedAt'], foldedAt);
@@ -414,7 +433,7 @@ const foldObject = async (
     return;
   }
 
-  const steps = Migration.getSteps(markerOption.value);
+  const steps = markerOption.value.steps;
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     const step = steps[stepIndex];
     const migration = migrations.find(
@@ -487,19 +506,14 @@ const hasLateChildWrites = (
  * policy would compare against a parent value that only exists because this SAME child put it there,
  * which is exactly what froze a `parent-wins` fan-in's absorption forever before this existed. A key NOT
  * in `fromChild` is still subject to `collision`, same as the initial absorption (`fan-in.ts#resolvePatch`).
- * `fromChild: undefined` — a marker written before this field existed — falls back to the old, uniform
- * behavior: every changed key goes through `collision` against the parent's current value.
  */
 const resolveFoldPatch = (
   parent: Obj.Unknown,
   patch: Record<string, unknown>,
   collision: Migration.CollisionPolicy,
-  fromChild: ReadonlySet<string> | undefined,
+  fromChild: ReadonlySet<string>,
 ): Record<string, unknown> => {
   const policyResolved = resolvePatch(parent, patch, collision).values;
-  if (!fromChild) {
-    return policyResolved;
-  }
   const resolved = { ...policyResolved };
   for (const key of fromChild) {
     if (Object.hasOwn(patch, key)) {
@@ -565,11 +579,8 @@ const foldFanInChild = async (
     return;
   }
 
-  const snapshot = core.getDecoded(['data']);
-  invariant(isRecord(snapshot), 'foldForward: expected an object body at a fan-in child data path');
-  const patch = migration.absorb(parent, { id: child.id, ...snapshot });
-  const fromChild = marker.fromChild ? new Set(marker.fromChild) : undefined;
-  const resolved = resolveFoldPatch(parent, patch, migration.collision, fromChild);
+  const patch = migration.absorb(parent, { id: child.id, ...getDecodedDataWithRefs(db, core, currentHeads) });
+  const resolved = resolveFoldPatch(parent, patch, migration.collision, new Set(marker.fromChild));
   const dataWrites = computeGuardedDataWrites(parentCore, resolved);
 
   if (dataWrites.size > 0) {
@@ -605,8 +616,9 @@ const foldFanInMigration = async (
   processed: Set<string>,
   options: FoldForwardOptions,
 ): Promise<void> => {
+  // An absorb with a declared `to` switches the child's type in the same change.
   const children: Obj.Unknown[] = await db
-    .query(Query.select(Filter.type(migration.fromType)).options({ deleted: 'include' }))
+    .query(Query.select(Filter.type(migration.toType ?? migration.fromType)).options({ deleted: 'include' }))
     .run();
   for (const child of children) {
     if (options.objectIds && !options.objectIds.has(child.id)) {
@@ -618,6 +630,12 @@ const foldFanInMigration = async (
     const markerOption = Annotation.get(child, Migration.FanInMarkerAnnotation);
     if (Option.isNone(markerOption)) {
       continue; // Not yet absorbed -- `runFanInMigration` handles a still-live child, not this pass.
+    }
+    // Several fan-ins may share a `to` type; only the one that absorbed the child may fold it.
+    if (
+      markerOption.value.migration !== fanInAbsorbMessage(migration.fromType.toString(), markerOption.value.parentId)
+    ) {
+      continue;
     }
     processed.add(child.id);
     try {
@@ -880,7 +898,7 @@ const foldArrayFanOutElement = async (
  * element is simply absent from the current array and so never visited here — its child is neither
  * deleted nor folded, left exactly as {@link findOrphanedChildren} expects to find (and report) it.
  * `marker` is THIS migration's own property's marker, already picked out of the parent's per-property
- * map by the caller — see {@link Migration.getArrayFanOutMarkers}.
+ * map by the caller.
  */
 const foldArrayFanOutParent = async (
   db: Database.Database,
@@ -941,7 +959,7 @@ const foldArrayFanOutParent = async (
       Migration.ArrayFanOutMarkerAnnotation.key,
       marker.property,
     ];
-    const foldedAt = core.encode([...A.getHeads(core.getDoc())]);
+    const foldedAt = core.encode([...currentHeads]);
     core.change((doc) => {
       setDeep(doc, [...markerPath, 'foldedAt'], foldedAt);
     });
@@ -959,8 +977,8 @@ const foldArrayFanOutParent = async (
  * keeps its identity (never tombstoned), just a new type. Tracks visited parents in a set local to THIS
  * migration (not the caller's shared `processed`): two different `ArrayFanOutMigration`s can share a
  * `toType` while fanning out two DIFFERENT properties of the same parent, each under its own marker key
- * (see {@link Migration.getArrayFanOutMarkers}), and each must still get its own fold pass over that
- * parent.
+ * (see {@link Migration.ArrayFanOutMarkerAnnotation}), and each must still get its own fold pass over
+ * that parent.
  */
 const foldArrayFanOutMigration = async (
   db: Database.Database,
@@ -981,7 +999,7 @@ const foldArrayFanOutMigration = async (
     if (Option.isNone(markerMapOption)) {
       continue; // Not yet split -- `runArrayFanOutMigration` handles a still-live `from` parent, not this pass.
     }
-    const marker = Migration.getArrayFanOutMarkers(markerMapOption.value)[migration.property];
+    const marker = markerMapOption.value[migration.property];
     if (!marker) {
       continue; // A marker exists for a DIFFERENT property of this parent, not this migration's.
     }

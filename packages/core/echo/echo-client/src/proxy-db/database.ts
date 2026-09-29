@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, debounce, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, Mutex, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
@@ -81,7 +81,7 @@ import {
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { runArrayFanOutMigration, runStampElementIdsMigration } from './array-fan-out.ts';
-import { encodedValuesEqual, mapRefsToEncodedReferences } from './encoded-value.ts';
+import { computeGuardedDataWrites, encodedValuesEqual } from './encoded-value.ts';
 import { runFanInMigration } from './fan-in.ts';
 import { type FoldForwardOptions, foldForwardMigrations } from './fold-forward.ts';
 import { createObjectMigrationContext } from './migration-context.ts';
@@ -343,6 +343,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Disposals of handles retired by a service swap. A disposal that lost writes is kept until {@link flush} raises it.
    */
   readonly #retiredFeeds = new Set<Promise<void>>();
+  /** Serializes migration and fold-forward passes, which read a checkpoint and write it back. */
+  readonly #migrationLock = new Mutex();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -797,6 +799,41 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async runMigrations(migrations: Migration.Migration[]): Promise<void> {
+    await this.#migrationLock.executeSynchronized(() => this.#runMigrations(migrations));
+  }
+
+  async foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void> {
+    await this.#migrationLock.executeSynchronized(() => this.#foldForward(migrations, options));
+  }
+
+  watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn {
+    // Only objects that changed since the last pass can have gained a late write.
+    let changed = new Set<string>();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const pass = () => {
+      timer = undefined;
+      const objectIds = changed;
+      changed = new Set();
+      void this.foldForward(getMigrations(), { objectIds }).catch((err) => {
+        if (!(err instanceof RpcClosedError)) {
+          log.catch(err);
+        }
+      });
+    };
+    const unsubscribe = this._entityManager._updateEvent.on((event) => {
+      for (const { id } of event.itemsUpdated) {
+        changed.add(id);
+      }
+      clearTimeout(timer);
+      timer = setTimeout(pass, options?.debounceMs ?? FOLD_FORWARD_DEBOUNCE_MS);
+    });
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }
+
+  async #runMigrations(migrations: Migration.Migration[]): Promise<void> {
     // Validated up front so a batch containing an unrecognized migration cannot leave the
     // preceding ones half-applied.
     for (const migration of migrations) {
@@ -823,32 +860,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.flush();
 
     // A peer may already hold late old-shape writes to objects this run just migrated.
-    await this.foldForward(migrations);
+    await this.#foldForward(migrations);
   }
 
-  async foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void> {
+  async #foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void> {
     await foldForwardMigrations(this, migrations, options);
     await this._entityManager.flush();
-  }
-
-  watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn {
-    // Only objects that changed since the last pass can have gained a late write.
-    let changed = new Set<string>();
-    const pass = debounce(() => {
-      const objectIds = changed;
-      changed = new Set();
-      void this.foldForward(getMigrations(), { objectIds }).catch((err) => {
-        if (!(err instanceof RpcClosedError)) {
-          log.catch(err);
-        }
-      });
-    }, options?.debounceMs ?? FOLD_FORWARD_DEBOUNCE_MS);
-    return this._entityManager._updateEvent.on((event) => {
-      for (const { id } of event.itemsUpdated) {
-        changed.add(id);
-      }
-      pass();
-    });
   }
 
   async #runObjectMigration(migration: Migration.ObjectMigration): Promise<void> {
@@ -922,20 +939,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const mountPath = core.mountPath;
     const preHeads = A.getHeads(core.getDoc());
 
-    const mappedOutput = mapRefsToEncodedReferences(output);
-
-    // `core.encode`'s own object-valued branch drops `undefined` entries (they never reach the
-    // document) rather than writing `null`; matched here since each key is now encoded on its own.
-    const dataWrites = new Map<string, unknown>();
-    for (const [key, value] of Object.entries(mappedOutput)) {
-      if (value === undefined) {
-        continue;
-      }
-      const encoded = core.encode(value);
-      if (!encodedValuesEqual(encoded, core.getRaw([DATA_NAMESPACE, key]))) {
-        dataWrites.set(key, encoded);
-      }
-    }
+    const dataWrites = computeGuardedDataWrites(core, output);
 
     const metaWrites = new Map<string, unknown>();
     for (const [key, value] of Object.entries(metaPatch ?? {})) {
@@ -956,14 +960,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         to: toType,
         preHeads: [...preHeads],
         retired: Object.keys(core.getRaw([DATA_NAMESPACE]) ?? {})
-          .filter((key) => !Object.hasOwn(mappedOutput, key))
+          .filter((key) => !Object.hasOwn(output, key))
           .sort(),
       }),
     );
-    // The number of steps already recorded (0 for a first-ever migration), read through the same
-    // legacy-aware normalization fold-forward uses — a pre-chaining marker's own fields count as step 0.
     const existingStepCount = Annotation.get(object, Migration.MigrationMarkerAnnotation).pipe(
-      Option.map((marker) => Migration.getSteps(marker).length),
+      Option.map((marker) => marker.steps.length),
       Option.getOrElse(() => 0),
     );
     const typeRef = EncodedReference.fromURI(migration.toType);
@@ -978,12 +980,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         }
 
         const markerPath = [...mountPath, META_NAMESPACE, 'annotations', Migration.MigrationMarkerAnnotation.key];
-        const rawMarker = getDeep<{ steps?: unknown }>(doc, markerPath);
-        if (rawMarker === undefined) {
+        if (getDeep(doc, markerPath) === undefined) {
           setDeep(doc, markerPath, { steps: [] });
-        } else if (!Array.isArray(rawMarker.steps)) {
-          // A legacy (pre-chaining) marker: its own fields become step 0, so nothing it recorded is lost.
-          setDeep(doc, markerPath, { steps: [rawMarker] });
         }
         // Written by index, never as a whole-marker replace: a concurrent peer's own step, appended at
         // a DIFFERENT index of the same array, must survive alongside this one (Automerge keeps both

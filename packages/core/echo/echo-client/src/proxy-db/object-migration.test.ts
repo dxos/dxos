@@ -187,7 +187,7 @@ test('chained migrations', async () => {
   // Both hops are kept, oldest first: an object migrated `@1 -> @2 -> @3` carries both steps, not just
   // the latest one, so a late `@1`-shaped write can still be folded all the way forward.
   const marker = Option.getOrThrow(Annotation.get(objects[0], Migration.MigrationMarkerAnnotation));
-  const steps = Migration.getSteps(marker);
+  const steps = marker.steps;
   expect(steps).to.have.length(2);
   expect(steps[0].from).to.eq(migrationV2.fromType.toString());
   expect(steps[0].to).to.eq(migrationV2.toType.toString());
@@ -278,7 +278,7 @@ test('retires a field the transform drops instead of deleting it, and marks the 
   expect(Obj.getTypeURI(note)?.toString()).to.eq(DXN.make('com.example.type.migrationNote', '0.2.0'));
 
   const marker = Option.getOrThrow(Annotation.get(note, Migration.MigrationMarkerAnnotation));
-  const [step] = Migration.getSteps(marker);
+  const [step] = marker.steps;
   expect(step.from).to.eq(noteMigration.fromType.toString());
   expect(step.to).to.eq(noteMigration.toType.toString());
   expect(step.preHeads).to.deep.eq(preHeads);
