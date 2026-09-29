@@ -96,13 +96,20 @@ tasks:
       - target: bundle
         env:
           DX_PWA: 'false'
-  # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
+  # The bundle the native apps embed: the web bundle plus the `tauri` package condition, which admits
+  # modules that only work inside the Tauri shell. Its own target for the same hashing reason as
+  # `bundle-e2e`.
+  bundle-tauri:
+    extends: bundle
+    env:
+      DX_TAURI: 'true'
+  # Native (Tauri) builds embed the bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
   # frontend + macOS ollama runtime are hoisted to task deps here (no moon-in-moon). Locally
-  # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
-  # prebuilt artifact, runtime fetched directly — to keep moon out of the native job.
+  # `moon run composer-app:tauri-build` builds them first; CI builds `bundle-tauri` and then runs
+  # `tauri build` bare, with the runtime fetched directly.
   tauri-build:
     deps:
-      - bundle
+      - bundle-tauri
       - fetch-ollama
       - stage-sandbox-helper
   # iOS counterpart of `tauri-build`; no ollama (its runtime is desktop-only). Embeds the
@@ -116,6 +123,7 @@ tasks:
       - target: bundle
         env:
           DX_PLUGIN_SET: production
+          DX_TAURI: 'true'
   # Both native dev loops run this app's `vite dev` through `beforeDevCommand`, so they need exactly
   # `serve`'s narrowed dependency set rather than the `tauri` tag's whole-graph `^:build` — extended
   # so the three inner loops cannot drift.

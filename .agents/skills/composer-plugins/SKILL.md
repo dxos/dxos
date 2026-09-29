@@ -646,6 +646,19 @@ pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
 See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
 `plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
 
+### Tauri-only modules
+
+A module that only works inside the Tauri shell (spawning a helper process, native plugins) is
+annotated `environments: ['tauri']` in the canonical barrel. `tauri` is additive, unlike `node` and
+`workerd`: `dx-plugin gen` gives it a barrel with every browser module plus the annotated ones, and
+generates `gen/default.ts` without them, pointing `#capabilities.default` there so the web bundle
+never carries them. Only composer-app's native bundles resolve `tauri` (`bundle-tauri`, or
+`tauri dev` via `TAURI_ENV_PLATFORM`). A plugin with such a module must not list `capabilities` as
+an explicit `entry` in `vite.config.ts`: an explicit entry overrides the derived one and would build
+the canonical barrel as the `default` dist.
+
+See: `plugin-sandbox/src/capabilities/index.ts` (`LocalLauncher`), `app-framework/src/plugin-cli/generate.ts`
+
 ## React Surface
 
 Surfaces are contributed via `Capability.contribute(Capabilities.ReactSurface, [...])` with `Surface.create()`.

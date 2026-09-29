@@ -518,6 +518,9 @@ for (const manifest of globSync(
     ...pathResolvedEntry(dir),
     ...moonReferencedEntry(dir),
     ...ROOT_REFERENCED.filter((path) => path.startsWith(`${dir}/`)).map((path) => path.slice(dir.length + 1)),
+    // The canonical capability barrel: `dx-plugin gen` slices it into `gen/<condition>.ts` rather than
+    // importing it, so once `#capabilities.default` resolves a generated barrel nothing imports it.
+    'src/capabilities/index.{ts,tsx}',
   ];
 
   workspaces[dir] = {
