@@ -2,14 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  next as A,
-  type Doc as AutomergeDoc,
-  type DelPatch,
-  type Heads,
-  type Patch,
-  type SpliceTextPatch,
-} from '@automerge/automerge';
+import { next as A, type Doc as AutomergeDoc, type Heads, type Patch } from '@automerge/automerge';
 import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
@@ -17,7 +10,7 @@ import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { getDeep, setDeep } from '@dxos/util';
+import { setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, type ObjectCore } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
@@ -35,7 +28,7 @@ import {
 // Phase C; `.agents/projects/lenses/M0-REPORT.md` design items 1, 6, 9). A migrated object is
 // "behind" when a retired property was written to after its step's migration — derivable from the
 // document at any time via the migration marker (`Migration.MigrationMarkerAnnotation`), so no
-// separate durable intent is kept: each step's own `foldedAt`/`textFrontier` checkpoint is enough to
+// separate durable intent is kept: each step's own `foldedAt` checkpoint is enough to
 // make a re-run cheap and a crash between writes harmless (every fold is value-compare guarded). A
 // marker holds a CHAIN of steps, one per `from -> to` boundary the object has
 // crossed, so a late write in the object's ORIGINAL shape still folds all the way to its current type
@@ -144,55 +137,6 @@ const lateOverlayWrites = (
     }
   }
   return properties;
-};
-
-type TextPatch = SpliceTextPatch | DelPatch;
-
-const isTextPatch = (patch: Patch): patch is TextPatch => patch.action === 'splice' || patch.action === 'del';
-
-/**
- * Replays sequential splice/del patches onto `path` inside a `changeAt` callback. Each patch's
- * trailing path element is a character offset already relative to the state left by the PREVIOUS
- * patch in the list, so applying them unmodified, in order, reproduces the source edit exactly (see
- * `migration-bench/text.test.ts`'s `replayTextPatches`, the pattern this re-derives for production).
- */
-const replayTextPatches = (
-  doc: AutomergeDoc<unknown>,
-  path: (string | number)[],
-  patches: readonly TextPatch[],
-): void => {
-  for (const patch of patches) {
-    const offset = patch.path.at(-1);
-    invariant(typeof offset === 'number', 'foldForward: expected a text patch path to end in a character offset');
-    if (patch.action === 'splice') {
-      A.splice(doc, path, offset, 0, patch.value);
-    } else {
-      A.splice(doc, path, offset, patch.length ?? 1);
-    }
-  }
-};
-
-/**
- * Whether a lens plan entry is a bare rename: reads exactly one source property and returns it
- * unchanged. Checked behaviorally (probing `get` with a sentinel) rather than by entry `kind`/`origin`,
- * so both an explicit `Lens.from` rename and an automatic same-name mapping qualify alike — either is
- * a shape a character-wise text replay can stand in for; a `Lens.from(prop, codec)` conversion or a
- * `Derived` computation is not, and falls back to the generic whole-value fold below.
- */
-const isIdentityRename = (entry: Lens.Plan['entries'][number]): boolean => {
-  if (entry.from.length !== 1) {
-    return false;
-  }
-  const probe = Symbol('fold-forward-identity-probe');
-  return entry.get({ [entry.from[0]]: probe }) === probe;
-};
-
-/** The lens's target property a retired source property renames to, if the mapping is a bare rename. */
-const identityRenameTarget = (lens: Lens.Any | undefined, retiredKey: string): string | undefined => {
-  const entry = lens?.plan?.entries.find(
-    (candidate) => candidate.from.length === 1 && candidate.from[0] === retiredKey,
-  );
-  return entry && isIdentityRename(entry) ? entry.property : undefined;
 };
 
 /**
@@ -316,45 +260,9 @@ const foldStep = async (
     output = changedOutputEntries(core, before, after);
   }
 
-  // Text-identity-rename properties whose late writes are pure splice/del sequences replay
-  // character-wise, since a whole-value fold would swap the text object out from under concurrent
-  // direct edits to it (M0-REPORT.md design item 9); everything else folds whole-value below.
-  const textFrontier: Record<string, readonly string[]> = { ...step.textFrontier };
-  const textTargets = new Set<string>();
-  for (const [retiredKey, patches] of lateWrites) {
-    const targetProperty = identityRenameTarget(migration.lens, retiredKey);
-    if (!targetProperty || !patches.every(isTextPatch)) {
-      continue;
-    }
-    const forkHeads: Heads = textFrontier[retiredKey] ? [...textFrontier[retiredKey]] : postMigrationHeads;
-    if (!A.hasHeads(doc, forkHeads)) {
-      log.warn('foldForward: skipping text fold with a foreign frontier', { object: object.id, property: retiredKey });
-      continue;
-    }
-    // Offsets are relative to the source text at `base`, so they only apply to a target that still
-    // holds exactly that text at the fork point.
-    const sourceAtBase = getDeep(A.view(doc, base), [...mountPath, DATA_NAMESPACE, retiredKey]);
-    const targetAtFork = getDeep(A.view(doc, forkHeads), [...mountPath, DATA_NAMESPACE, targetProperty]);
-    if (typeof sourceAtBase !== 'string' || sourceAtBase !== targetAtFork) {
-      // Falls back to the whole-value fold below, which re-anchors the frontier; concurrent direct
-      // edits inside the replaced text object are lost (a known limit).
-      continue;
-    }
-    const accessor = core.getDocAccessor([targetProperty]);
-    const newForkHeads = accessor.handle.changeAt(forkHeads, (draft: AutomergeDoc<unknown>) =>
-      replayTextPatches(draft, accessor.path.slice(), patches),
-    );
-    if (newForkHeads) {
-      textFrontier[retiredKey] = newForkHeads;
-      textTargets.add(targetProperty);
-    }
-  }
-
   const dataWrites = new Map<string, unknown>();
   for (const [key, value] of computeGuardedDataWrites(core, output)) {
-    if (!textTargets.has(key)) {
-      dataWrites.set(key, value);
-    }
+    dataWrites.set(key, value);
   }
 
   // An overlay write is never part of `snapshot` (it lives in meta, not data), so it is folded from
@@ -373,7 +281,7 @@ const foldStep = async (
   }
 
   if (dataWrites.size > 0) {
-    const foldHeads = core.foldAt(
+    core.foldAt(
       postMigrationHeads,
       (data) => {
         for (const [key, value] of dataWrites) {
@@ -385,13 +293,6 @@ const foldStep = async (
       // steps, and so wrongly inherit that edit as an ancestor instead of staying concurrent with it.
       { message: foldMessage(step.from, step.to), scope: `${object.id}:${stepIndex}` },
     );
-    // A whole-value fold replaces a renamed text target's object, so later splices fork from it.
-    for (const retiredKey of lateWrites.keys()) {
-      const targetProperty = identityRenameTarget(migration.lens, retiredKey);
-      if (foldHeads && targetProperty && dataWrites.has(targetProperty)) {
-        textFrontier[retiredKey] = foldHeads;
-      }
-    }
   }
 
   // Ordinary (non-fold) write: this is the runner's own bookkeeping, never user data. Checkpoints the
@@ -408,10 +309,8 @@ const foldStep = async (
     stepIndex,
   ];
   const foldedAt = core.encode([...currentHeads]);
-  const encodedTextFrontier = core.encode(textFrontier);
   core.change((doc) => {
     setDeep(doc, [...stepPath, 'foldedAt'], foldedAt);
-    setDeep(doc, [...stepPath, 'textFrontier'], encodedTextFrontier);
   });
 };
 

@@ -47,6 +47,26 @@ and fan-in/array folds do not narrow to moved keys; (3) fan-in ownership — two
 different parents can fold each other's children. Also: spaces joined mid-session are migrated and watched on
 the next activation; the array fan-out ref-dedup e2e test is flaky under load (idempotence check, not root-caused).
 
+## Constraining the known limits (decided 2026-09-29)
+
+Make the API unable to express the cases that thrashed in converge, instead of patching each one:
+
+1. **Field-only folds.** Every fold is a whole-value field write; char-wise text replay is removed from
+   fold-forward and the convergence-key merger. Documented: do not migrate rich-text fields — keep them in a
+   `Ref<Text>` object, which no migration duplicates.
+2. **`define` split.** `transform` is synchronous and pure over the object's own data (no `db`, no context);
+   cross-object work (`ensure`, `assign`, queries) moves to `onMigration`, which fold never re-runs. Fold
+   recomputes `before` from the current snapshot with only the retired keys at their checkpoint values.
+3. **Fan-in.** `defineFanIn` requires a stable `id`, recorded in the marker; fold claims a child only by that id.
+   `absorb(child)` is pure over the child; fold writes only keys whose absorb output moved.
+4. **Array fan-out.** `toProperty` is a `Record<elementId, Ref<Child>>`; the split writes each child's `order`;
+   ref dedup is removed; fold visits only elements that moved.
+5. **Discovery and markers.** Fold-forward finds objects by their markers, not by type; each migration step
+   gets its own annotation key, so two peers' concurrent first migrations cannot race on a shared container.
+6. **Read heads.** Fan-in and array fan-out author their change at the heads they read; object migrations no
+   longer await between reading and writing.
+7. **Spaces.** plugin-client migrates and watches each space once it is ready, including spaces joined later.
+
 ## Where things live
 
 | Piece                                                                | Package                                                            |

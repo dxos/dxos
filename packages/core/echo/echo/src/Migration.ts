@@ -157,6 +157,10 @@ export const isObjectMigration = (migration: Migration): migration is ObjectMigr
  * by a peer that was offline) is carried forward by fold-forward, which re-runs `transform` on the
  * object's current data. `onMigration` effects may run once per peer.
  *
+ * Migrations move fields as whole values, and fold-forward writes a late old-shape value the same way.
+ * Do not rename or transform a rich-text field (a string edited character by character): replacing it
+ * drops concurrent character edits. Keep rich text in a `Ref<Text>` object, which no migration copies.
+ *
  * @example
  * ```ts
  * const migration = Migration.define({
@@ -221,6 +225,10 @@ export type FromLensOptions = {
  * a dropped source property fails unless it is named in `allowDropped`, a suspicious (same-name,
  * incompatible-type) mapping always fails, and the lens's `GetPut` law is re-checked against every
  * object right before its transform output is computed.
+ *
+ * Migrations move fields as whole values, and fold-forward writes a late old-shape value the same way.
+ * Do not rename or transform a rich-text field (a string edited character by character): replacing it
+ * drops concurrent character edits. Keep rich text in a `Ref<Text>` object, which no migration copies.
  *
  * @example
  * ```ts
@@ -880,13 +888,6 @@ export const MigrationStepSchema = Schema.Struct({
    * range on the next pass.
    */
   foldedAt: Schema.optional(Schema.Array(Schema.String)),
-  /**
-   * Per-retired-property TARGET-side fork frontier for a text splice replay (a `fromLens` rename of a
-   * string property), keyed by the retired source property: the heads of the change that last wrote
-   * the target text, where the next replay forks from so its offsets line up. Absent until the first
-   * text fold for that property.
-   */
-  textFrontier: Schema.optional(Schema.Record(Schema.String, Schema.Array(Schema.String))),
 });
 
 /**

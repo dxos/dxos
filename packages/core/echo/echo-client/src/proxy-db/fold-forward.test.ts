@@ -11,7 +11,6 @@ import { sleep } from '@dxos/async';
 import { Annotation, DXN, Lens, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { setDeep } from '@dxos/util';
 
 import { EchoTestBuilder, getObjectCore } from '../testing/index.ts';
 import { updateText } from '../text.ts';
@@ -90,7 +89,7 @@ class NoteV2 extends Type.makeObject<NoteV2>(DXN.make('org.dxos.test.foldForward
   Schema.Struct({ content: Schema.optional(Schema.String) }),
 ) {}
 
-/** A bare rename (`content` <- `body`): the one shape `fromLens` folds character-wise instead of whole-value. */
+/** A bare rename (`content` <- `body`) of a string property. */
 const noteLens = Lens.make('org.dxos.test.foldForward.note.lens', NoteV1, NoteV2, { content: 'body' });
 const noteMigration = Migration.fromLens(noteLens);
 
@@ -348,37 +347,8 @@ describe('fold-forward: retired scalar properties', () => {
   });
 });
 
-describe('fold-forward: text (fromLens identity rename)', () => {
-  test('a late source splice merges character-wise with a concurrent target edit', async () => {
-    const { db, graph } = await builder.createDatabase();
-    graph.registry.add([NoteV1, NoteV2]);
-
-    const note = db.add(Obj.make(NoteV1, { body: 'Hello world' }));
-    await db.flush();
-    await db.runMigrations([noteMigration]);
-    // `note`'s compile-time type is still `NoteV1` — `Obj.getValue` reads `content` without a cast.
-    expect(Obj.getValue(note, ['content'])).to.eq('Hello world');
-
-    // A direct edit through the new schema, in a disjoint region of the original text.
-    updateText(note, ['content'], 'Hi world');
-    await db.flush();
-
-    // A late old-schema splice edit to the retired `body` key.
-    updateText(note, ['body'], 'Hello brave new world');
-    await db.flush();
-    expect(Obj.getValue(note, ['content'])).to.eq('Hi world'); // not yet folded.
-
-    await db.foldForward([noteMigration]);
-
-    // Both edit streams survive, character-wise — neither clobbers the other.
-    const content = Obj.getValue(note, ['content']);
-    expect(content).to.include('Hi');
-    expect(content).to.include('brave new');
-    expect(content).to.not.include('Hello');
-    expect(content?.endsWith('world')).to.eq(true);
-  });
-
-  test('two successive late text edits fold correctly via the advancing target frontier', async () => {
+describe('fold-forward: string fields fold whole-value', () => {
+  test('a late write to a renamed string folds whole-value; a concurrent direct edit presents', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([NoteV1, NoteV2]);
 
@@ -386,27 +356,21 @@ describe('fold-forward: text (fromLens identity rename)', () => {
     await db.flush();
     await db.runMigrations([noteMigration]);
 
-    updateText(note, ['content'], 'Hi world');
+    Obj.update(note, (note) => {
+      Obj.setValue(note, ['content'], 'Hi world');
+    });
     await db.flush();
     updateText(note, ['body'], 'Hello brave new world');
     await db.flush();
     await db.foldForward([noteMigration]);
-    expect(Obj.getValue(note, ['content'])).to.include('brave new');
 
-    // A second late edit on the source: diffing from the ADVANCED checkpoint must name only the new
-    // edit, and the replay must fork from the frontier the FIRST replay returned — re-forking from the
-    // original migration heads would overrun offsets (M0-REPORT.md design item 9).
-    updateText(note, ['body'], 'Hello brave new wonderful world');
-    await db.flush();
-    await db.foldForward([noteMigration]);
-
-    const content = Obj.getValue(note, ['content']);
-    expect(content).to.include('wonderful');
-    expect(content).to.include('Hi'); // still not reverted.
-    // The first fold's insertion appears exactly once — a re-fork bug would duplicate it.
-    expect(content?.split('brave new').length).to.eq(2);
+    const conflict = Obj.getConflict(note, 'content');
+    invariant(conflict, 'expected a conflict between the direct edit and the fold');
+    expect(conflict.presented).to.eq('Hi world');
+    expect(conflict.alternatives.find((alternative) => alternative.fold)?.value).to.eq('Hello brave new world');
   });
-  test('a late write to another key leaves text typed into an untouched renamed target intact', async () => {
+
+  test('a late write to another key leaves an untouched renamed string intact', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([DocV1, DocV2]);
 
@@ -422,62 +386,6 @@ describe('fold-forward: text (fromLens identity rename)', () => {
 
     expect(Obj.getValue(doc, ['name'])).to.eq('Final');
     expect(Obj.getValue(doc, ['content'])).to.eq('Hello brave world');
-  });
-
-  test('a text fold whose target no longer matches its source falls back to a whole-value fold and re-anchors', async () => {
-    const { db, graph } = await builder.createDatabase();
-    graph.registry.add([NoteV1, NoteV2]);
-
-    const note = db.add(Obj.make(NoteV1, { body: 'Hello world' }));
-    await db.flush();
-    await db.runMigrations([noteMigration]);
-    updateText(note, ['content'], 'Hi world');
-    await db.flush();
-
-    // Points the text frontier at heads where the target does not exist yet, so the replay's
-    // offsets cannot apply.
-    const core = getObjectCore(note);
-    const [step] = Option.getOrThrow(Annotation.get(note, Migration.MigrationMarkerAnnotation)).steps;
-    core.change((doc) => {
-      setDeep(
-        doc,
-        [...core.mountPath, 'meta', 'annotations', Migration.MigrationMarkerAnnotation.key, 'steps', 0, 'textFrontier'],
-        { body: [...step.preHeads] },
-      );
-    });
-    await db.flush();
-
-    updateText(note, ['body'], 'Hello brave new world');
-    await db.flush();
-    await db.foldForward([noteMigration]);
-    expect(Obj.getValue(note, ['content'])).to.eq('Hello brave new world');
-
-    // The frontier now points at the folded text, so the next splice replays char-wise again.
-    updateText(note, ['body'], 'Hello brave new wonderful world');
-    await db.flush();
-    await db.foldForward([noteMigration]);
-    expect(Obj.getValue(note, ['content'])).to.eq('Hello brave new wonderful world');
-  });
-
-  test('a splice after a whole-value late write replays into the folded text, not the replaced one', async () => {
-    const { db, graph } = await builder.createDatabase();
-    graph.registry.add([NoteV1, NoteV2]);
-
-    const note = db.add(Obj.make(NoteV1, { body: 'Hello world' }));
-    await db.flush();
-    await db.runMigrations([noteMigration]);
-
-    // An old client replaces the whole value, which folds whole-value.
-    getObjectCore(note).setDecoded(['data', 'body'], 'Goodbye world');
-    await db.flush();
-    await db.foldForward([noteMigration]);
-    expect(Obj.getValue(note, ['content'])).to.eq('Goodbye world');
-
-    // Then it types into that text; the splice must land in the text the fold wrote.
-    updateText(note, ['body'], 'Goodbye cruel world');
-    await db.flush();
-    await db.foldForward([noteMigration]);
-    expect(Obj.getValue(note, ['content'])).to.eq('Goodbye cruel world');
   });
 });
 

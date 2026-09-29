@@ -443,16 +443,15 @@ export class ConvergenceKeyMerger {
    * post-creation edits. Replaying those at the winner's own creation heads lands them concurrent
    * with whatever the winner itself wrote since its own creation — a clean fast-forward when the
    * winner never touched the field, a real Automerge register conflict (`A.getConflicts`) when it
-   * did, on every peer identically. Text fields replay their splice/del patches character-wise
-   * (`text.test.ts` Ta1/Tb1) instead of the whole-value copy scalar fields get, and only when both
-   * copies' creation-time text agrees — a divergent baseline misaligns every offset and corrupts the
-   * winner (Tb2), so a mismatch is skipped and logged rather than risked.
+   * did, on every peer identically. Every field, text included, replays as a whole-value copy: hosts
+   * merge independently, and two identical value writes converge where two identical splices would
+   * insert the text twice.
    *
    * The change `message` doubles as the idempotence marker (no new persisted field): a loser already
    * tagged `merge-replay: <loserId>` in the winner's own history has nothing left to do, so a retried
    * pass — the crash window between this write's flush and the loser's tombstone, the only way
    * `#mergeCandidates` can see the same live candidate twice — is a genuine no-op rather than a
-   * duplicated conflict alternative or, for text, a duplicated splice.
+   * duplicated conflict alternative.
    */
   #replayLoserEdits(
     winner: GroupMember,
@@ -480,7 +479,7 @@ export class ConvergenceKeyMerger {
     }
 
     const prefix = ['objects', loser.objectId, 'data'];
-    const fieldPatches = new Map<string, A.Patch[]>();
+    const editedFields = new Set<string>();
     for (const patch of A.diff(loserDoc, loserCreationHeads, loserCurrentHeads)) {
       if (patch.path.length <= prefix.length || !prefix.every((key, index) => patch.path[index] === key)) {
         continue;
@@ -489,48 +488,13 @@ export class ConvergenceKeyMerger {
       if (field === PROPERTY_ID) {
         continue;
       }
-      const forField = fieldPatches.get(field) ?? [];
-      forField.push(patch);
-      fieldPatches.set(field, forField);
+      editedFields.add(field);
     }
-    if (fieldPatches.size === 0) {
+    if (editedFields.size === 0) {
       return;
     }
 
     const loserData = loser.entity.data ?? {};
-    const scalarFields: string[] = [];
-    const textPatchesByField = new Map<string, (A.SpliceTextPatch | A.DelPatch)[]>();
-    for (const [field, patches] of fieldPatches) {
-      // A whole-value reassignment recreates the text container (a `put` recreating an empty one,
-      // even for a scalar register write — `text.test.ts` Ta0) before any splice, so a field is a
-      // genuine incremental text edit — safe for character-wise replay — only when EVERY patch since
-      // the loser's creation is a splice/del; one `put` anywhere means "replaced", not "edited", and
-      // the field is replayed as a whole-value scalar copy like today's flat merge.
-      const isPureTextEdit =
-        patches.length > 0 && patches.every((patch) => patch.action === 'splice' || patch.action === 'del');
-      if (!isPureTextEdit) {
-        scalarFields.push(field);
-        continue;
-      }
-      const textPatches = patches.filter(
-        (patch): patch is A.SpliceTextPatch | A.DelPatch => patch.action === 'splice' || patch.action === 'del',
-      );
-      const winnerBaseline = _valueAt(winner.handle.doc(), winner.objectId, field, winnerCreationHeads);
-      const loserBaseline = _valueAt(loserDoc, loser.objectId, field, loserCreationHeads);
-      if (typeof winnerBaseline === 'string' && winnerBaseline === loserBaseline) {
-        textPatchesByField.set(field, textPatches);
-      } else {
-        log.debug('skipping text replay across mismatched creation baselines', {
-          convergenceKey,
-          loserId: loser.objectId,
-          field,
-        });
-      }
-    }
-    if (scalarFields.length === 0 && textPatchesByField.size === 0) {
-      return;
-    }
-
     winner.handle.changeAt(
       encodeHeads(winnerCreationHeads),
       (doc: DatabaseDirectory) => {
@@ -541,26 +505,12 @@ export class ConvergenceKeyMerger {
         if (entity.data === undefined) {
           entity.data = {};
         }
-        for (const field of scalarFields) {
+        for (const field of editedFields) {
           const value = loserData[field];
           if (value === undefined) {
             delete entity.data[field];
           } else {
             entity.data[field] = _clone(value);
-          }
-        }
-        for (const [field, textPatches] of textPatchesByField) {
-          const path = ['objects', winner.objectId, 'data', field];
-          for (const patch of textPatches) {
-            const offset = patch.path.at(-1);
-            if (typeof offset !== 'number') {
-              continue;
-            }
-            if (patch.action === 'splice') {
-              A.splice(doc, path, offset, 0, patch.value);
-            } else {
-              A.splice(doc, path, offset, patch.length ?? 1);
-            }
           }
         }
       },
@@ -843,12 +793,6 @@ export const deriveCreationHeads = (doc: A.Doc<DatabaseDirectory>, objectId: Ent
     }
   }
   return undefined;
-};
-
-/** The value of `objectId`'s `field` as of `heads`, read from a historical view (never the live proxy). */
-const _valueAt = (doc: A.Doc<DatabaseDirectory>, objectId: EntityId, field: string, heads: string[]): unknown => {
-  const view = A.view(doc, heads);
-  return view.objects?.[objectId]?.data?.[field];
 };
 
 /** Set-equality of two head frontiers, order-independent — heads are unordered by construction. */

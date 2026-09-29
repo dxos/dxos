@@ -785,44 +785,20 @@ describe('ConvergenceKeyMerger creation-heads replay', () => {
     expect(['winner value', 'loser value']).toContain(winner?.data.note);
   });
 
-  test('text replay with equal creation baselines merges both edit streams character-wise', async ({ expect }) => {
+  test('a text field both copies edited replays whole-value, never splicing the loser text in twice', async ({
+    expect,
+  }) => {
     const fixture = setup([
       [ID_A, makeEntity(KEY, { body: 'Hello world' })],
       [ID_B, makeEntity(KEY, { body: 'Hello world' })],
     ]);
-    spliceText(fixture, ID_A, 'body', 5, 0, '!!!'); // winner: 'Hello!!! world'
-    spliceText(fixture, ID_B, 'body', 0, 0, '>>>'); // loser: '>>>Hello world'
+    spliceText(fixture, ID_B, 'body', 0, 0, '>>>');
 
     expect(
       await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
     ).toBe(true);
 
-    const body = entityOf(fixture, ID_A)?.data.body;
-    expect(body).toContain('!!!'); // the winner's own edit is not reverted by the replay.
-    expect(body).toContain('>>>'); // the loser's edit landed.
-    expect(body?.startsWith('>>>')).toBe(true);
-  });
-
-  test('text replay is skipped when the two copies` creation text differs, keeping the loser readable', async ({
-    expect,
-  }) => {
-    // Simulates fan-out duplicates minted from different source states (`text.test.ts` Tb2):
-    // positions computed against one baseline are meaningless against a different one, so a
-    // mismatch must be detected and skipped rather than risk a misaligned splice.
-    const fixture = setup([
-      [ID_A, makeEntity(KEY, { body: 'Report A' })],
-      [ID_B, makeEntity(KEY, { body: 'Report B' })],
-    ]);
-    spliceText(fixture, ID_B, 'body', 8, 0, ' — extra');
-
-    expect(
-      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
-    ).toBe(true);
-
-    // Winner keeps its own (flat-merge) value untouched — no misaligned splice was attempted.
-    expect(entityOf(fixture, ID_A)?.data.body).toBe('Report A');
-    // The loser's own edit stays fully readable on its tombstone.
-    expect(entityOf(fixture, ID_B)?.data.body).toBe('Report B — extra');
+    expect(String(entityOf(fixture, ID_A)?.data.body)).toBe('>>>Hello world');
   });
 
   test('a retried merge (crash between the replay flush and the loser tombstone) does not replay twice', async ({
