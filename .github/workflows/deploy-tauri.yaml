@@ -17,8 +17,6 @@ on:
         type: string
         default: ''
       version:
-        # Computed once by deploy-apps' `version` job so the web bundle, the desktop bundle built here and
-        # the native builds report the same version. The iOS bundle is not stamped. Required — there is no sensible local fallback.
         description: Version to build.
         type: string
         required: true
@@ -248,8 +246,6 @@ jobs:
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
-      # Stamp the version BEFORE the bundle: `runtime.app.build.version` is read out of package.json at
-      # vite build time, as in deploy-apps.yml's build-bundle.
       - name: Stamp the Composer version
         run: |
           jq --arg version "$VERSION" '.version = $version' packages/apps/composer-app/package.json > version.tmp
@@ -257,9 +253,6 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
 
-      # Not the web bundle deploy-apps.yml builds: `DX_TAURI` resolves the `tauri` condition, which carries
-      # modules annotated `environments: ['tauri']` (plugin-sandbox's local sandbox launcher). Built through
-      # bundle-env.mjs so it gets the web bundle's environment (PostHog ids, LOG_FILTER).
       - name: Build Composer bundle
         run: .github/workflows/scripts/bundle-env.mjs "$ENVIRONMENT" composer
         env:
@@ -313,9 +306,8 @@ jobs:
             packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
 
       - name: Build Tauri app
-        # `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds the out/composer built
-        # above and only does the native compile (+ the desktop ollama sidecar).
-        run: (cd packages/apps/composer-app && pnpm exec tauri build)
+        run: pnpm exec tauri build
+        working-directory: ./packages/apps/composer-app
         env:
           # The following environment variables are only set when building on macOS runners (depot-macos-latest).
           # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
@@ -486,9 +478,6 @@ jobs:
           ./scripts/ios-init.sh
         working-directory: ./packages/apps/composer-app
 
-      # Built here rather than reused from deploy-apps.yml: like the desktop job, iOS needs the `tauri`
-      # package condition, and it ships the curated production set — `tauri-ios-build` carries both
-      # `DX_PLUGIN_SET=production` and `DX_TAURI` on its `bundle` dep. iOS needs no ollama sidecar.
       - name: Build Tauri app for iOS
         run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:

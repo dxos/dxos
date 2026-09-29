@@ -19,8 +19,6 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const SandboxLayer = AppCapability.layerSpec(() => import('./sandbox-service.ts'), { name: 'SandboxLayer' });
-// Only the Tauri webview can reach the helper; the web bundle never carries it, and Node and Bun run
-// local sandboxes in-process. The helper spawns on first use, so activating with the app costs nothing.
 export const LocalLauncher = Capability.lazyModule(
   'LocalLauncher',
   { provides: [SandboxCapabilities.LocalLauncher], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },

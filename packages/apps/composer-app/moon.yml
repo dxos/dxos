@@ -96,14 +96,8 @@ tasks:
       - target: bundle
         env:
           DX_PWA: 'false'
-  # Native (Tauri) builds embed the bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
-  # frontend + macOS ollama runtime are hoisted to task deps here (no moon-in-moon). Locally
-  # `moon run composer-app:tauri-build` builds them first; CI builds `bundle` with `DX_TAURI` and then
-  # runs `tauri build` bare, with the runtime fetched directly.
   tauri-build:
     deps:
-      # `DX_TAURI` resolves the `tauri` package condition, which admits modules that only work inside
-      # the Tauri shell. It rides the dep because the bundle is what resolves it.
       - target: bundle
         env:
           DX_TAURI: 'true'

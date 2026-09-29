@@ -24,15 +24,10 @@ export type GenerateResult = {
 const findFirst = (dir: string, names: string[]): string | null =>
   names.map((name) => path.join(dir, name)).find((candidate) => fs.existsSync(candidate)) ?? null;
 
-/**
- * Conditions whose runtime is the browser plus more, rather than a headless subset of it. Their
- * barrel carries everything the `default` barrel does plus the modules annotated for them, and a
- * module annotated only for such conditions is dropped from `default`, so the web bundle never
- * reaches it. `tauri` is the desktop and iOS webview, which alone can drive the Tauri shell.
- */
 export const ADDITIVE_CONDITIONS: readonly string[] = ['tauri'];
 
-/** A module annotated only for additive conditions stays out of the `default` barrel. */
+const GENERATED_DEFAULT_SOURCE = './src/capabilities/gen/default.ts';
+
 const additiveOnly = (member: BarrelMember): boolean =>
   member.environments !== null &&
   member.environments.length > 0 &&
@@ -41,9 +36,7 @@ const additiveOnly = (member: BarrelMember): boolean =>
 /**
  * Generates the per-condition capability barrels for one plugin package:
  * `src/capabilities/gen/<env>.ts` for every condition named by an `environments` annotation in
- * the canonical barrel, plus the matching `#capabilities` condition map in package.json. When a
- * module is annotated only for {@link ADDITIVE_CONDITIONS}, `gen/default.ts` is generated too and
- * `default` resolves it instead of the canonical barrel.
+ * the canonical barrel, plus the matching `#capabilities` condition map in package.json.
  *
  * A plugin whose modules name no conditions generates nothing and keeps an unconditioned
  * `#capabilities`: the canonical barrel IS the `default` condition, so there is no variant to
@@ -64,24 +57,24 @@ export const generate = (pluginDir: string): GenerateResult => {
   const genDir = path.join(capabilitiesDir, 'gen');
   const result: GenerateResult = { pluginDir, environments, files: [] };
   const canonicalSource = `./${path.relative(pluginDir, indexPath).split(path.sep).join('/')}`;
+  fs.rmSync(genDir, { recursive: true, force: true });
   if (environments.length === 0) {
     // Still sync: dropping the last annotation has to retract the conditions too, or package.json
     // keeps pointing `#capabilities` at gen files that are no longer produced.
-    fs.rmSync(genDir, { recursive: true, force: true });
     syncPackageImports(pluginDir, environments, { canonicalSource, generatedDefault: false });
     return result;
   }
-  // Recreated rather than topped up, so a barrel for a condition no module names any more is not left behind.
-  fs.rmSync(genDir, { recursive: true, force: true });
   fs.mkdirSync(genDir, { recursive: true });
 
   const inDefault = (member: BarrelMember) => !additiveOnly(member);
+  const browserPlus = (env: string) => (member: BarrelMember) =>
+    inDefault(member) || (member.environments?.includes(env) ?? false);
+  const headlessSubset = (env: string) => (member: BarrelMember) =>
+    member.environments === null || member.environments.includes(env);
   const generatedDefault = moduleMembers.some(additiveOnly);
   const variants: Array<{ env: string; carries: (member: BarrelMember) => boolean }> = environments.map((env) => ({
     env,
-    carries: ADDITIVE_CONDITIONS.includes(env)
-      ? (member) => inDefault(member) || (member.environments?.includes(env) ?? false)
-      : (member) => member.environments === null || member.environments.includes(env),
+    carries: ADDITIVE_CONDITIONS.includes(env) ? browserPlus(env) : headlessSubset(env),
   }));
   if (generatedDefault) {
     variants.push({ env: 'default', carries: inDefault });
@@ -271,6 +264,9 @@ const conditionDist = (defaultDist: string, env: string): string => {
   return path.posix.basename(defaultDist) === 'index.mjs' ? `${dir}/gen/${env}.mjs` : `${dir}/capabilities.${env}.mjs`;
 };
 
+const withoutStaleGeneratedDefault = (source: string, canonicalSource: string): string =>
+  source === GENERATED_DEFAULT_SOURCE ? canonicalSource : source;
+
 /**
  * Rewrites the `#capabilities` entry of the plugin's package.json so each generated environment
  * resolves the generated barrel (source condition) and its built counterpart (dist condition).
@@ -293,7 +289,6 @@ const syncPackageImports = (
   if (environments.length === 0 && !hasConditions) {
     return;
   }
-  const generatedDefaultSource = './src/capabilities/gen/default.ts';
 
   // Conditions resolve in map order; workerd before node before default matches the runtimes' own
   // condition lists (wrangler never resolves `node`). Conditions outside that pair are ordered
@@ -307,12 +302,9 @@ const syncPackageImports = (
 
   const existingDefault =
     typeof existing?.source === 'string' ? existing.source : (existingSource.default ?? canonicalSource);
-  // A `default` that pointed at the generated barrel falls back to the canonical one once no module needs it.
   const defaultSource = generatedDefault
-    ? generatedDefaultSource
-    : existingDefault === generatedDefaultSource
-      ? canonicalSource
-      : existingDefault;
+    ? GENERATED_DEFAULT_SOURCE
+    : withoutStaleGeneratedDefault(existingDefault, canonicalSource);
   const source: Record<string, string> = {};
   for (const env of envOrder) {
     source[env] = `./src/capabilities/gen/${env}.ts`;

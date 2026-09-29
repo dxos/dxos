@@ -152,8 +152,6 @@ describe('dx-plugin gen', () => {
   });
 
   it('adds a tauri-only module on top of the default barrel and removes it from default', () => {
-    // `tauri` is the browser plus the Tauri shell, so its barrel must keep every browser module;
-    // slicing it like `node` would stub the plugin's UI out of the desktop app.
     withPlugin(
       {
         'package.json': PACKAGE_JSON,
@@ -218,7 +216,6 @@ describe('dx-plugin gen', () => {
           "export const Headless = Capability.lazyModule('Headless', { environments: ['node'] }, () => import('./headless'));",
           '',
         ].join('\n'),
-        // Left over from when a module was tauri-only.
         'src/capabilities/gen/default.ts': '',
         'src/capabilities/gen/tauri.ts': '',
       },

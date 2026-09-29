@@ -54,9 +54,7 @@ const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugi
 // Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
-// Desktop and iOS builds resolve the `tauri` package condition, so modules that only work inside the
-// Tauri shell (spawning helper processes) never enter the web bundle. The Tauri CLI sets
-// `TAURI_ENV_PLATFORM` for `beforeDevCommand`; `DX_TAURI` covers bundles built ahead of `tauri build`.
+// The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
 const isTauriBuild = isTrue(process.env.DX_TAURI) || Boolean(process.env.TAURI_ENV_PLATFORM);
 
 // Vite's full-bundle dev mode: a Rolldown dev build serves the client graph instead of the
