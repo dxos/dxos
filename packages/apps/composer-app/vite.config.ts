@@ -204,9 +204,16 @@ export default defineConfig((env) => ({
     // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
-    __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
-    __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
+    '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
+    // The tree a desktop dev build's agent builds plugins against (plugin-computer's Composer Plugin template, via
+    // plugin-sandbox); only the desktop app reads it, and it is a path on the building machine, so dev builds only.
+    'import.meta.env.VITE_DX_SOURCE_ROOT': JSON.stringify(
+      env.command === 'serve' || process.env.DX_ENVIRONMENT === 'dev' || isTrue(process.env.DX_DEV)
+        ? path.resolve(dirname, '../../..')
+        : '',
+    ),
   },
   server: {
     host: true,
