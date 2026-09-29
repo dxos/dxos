@@ -174,11 +174,17 @@ Tasks nest to any depth: a root task sits in the task set, and each sub-task sit
 When a task is stuck on a decision only the user can make, ask it on the task rather than
 guessing: an assumption the ledger then carries as fact costs more than the round trip.
 
-- `tasks-ask-question { task: {"/": "echo:///<task-id>"}, question, context?, options?, actor?, spaceId }`
+- **Ask only what you genuinely cannot decide.** If the answer is in the prompt, the space or the
+  code, use it and carry on: a question costs the user a round trip, and the task stays `blocked`
+  until they answer.
+- `tasks-ask-question { task: {"/": "echo:///<task-id>"}, question, context?, options?, actor?, remoteSession?, spaceId }`
   files the question in the task's `history` and sets the task to `blocked`. Put what you are
   stuck on in `context`, offer the likely answers in `options` (`{ title, description? }` — the
-  user may still type their own), and pass your own actor as `actor` (see "Assignee" above). It
-  returns the question's `questionId`.
+  user may still type their own, so never phrase the list as exhaustive, and never pick an answer
+  yourself), and pass your own actor as `actor` (see "Assignee" above). A coding-agent session
+  passes `remoteSession: { "sessionId": "<the harness session id>" }` instead: the blocked task is
+  assigned to that session and the question is recorded as asked by it, as `tasks-update` does.
+  It returns the question's `questionId`.
 - One open question per task: a second call while the first is unanswered is refused. Ask
   everything you need in one question.
 - The user answers in Composer, on the task. Nothing wakes you: read the answer back with
@@ -233,6 +239,12 @@ invisible to the space unless it reports itself. Keep a session object for your 
   notice you have drifted from what you were asked to do.
 - To assign a task to yourself, find the session object with `tasks-list-sessions { sessionId }`
   and use it as the assignee's `subject` (see "Assignee").
+- **Name the session after the work once you pick up a task.** Pass `title` — the task's title,
+  or the root task's when you claim a tree — on `tasks-record-session` and in `remoteSession` on
+  `tasks-update`, so Composer lists the run by what it is doing rather than by a bare harness id. A
+  `remoteSession` with no `title` names a still-untitled session after the task it claims; a
+  session that already has a title keeps it. If your harness can rename its own session (a
+  session-title tool), give it the same name.
 - **When you stop**, record once more with `state: "finished"` (or `"failed"`) so the session is not
   left looking like it is still running.
 

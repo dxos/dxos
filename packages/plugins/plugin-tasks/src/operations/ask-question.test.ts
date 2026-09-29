@@ -8,9 +8,9 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Filter, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Milestone, Task, TaskSet } from '@dxos/types';
+import { Milestone, RemoteSession, Task, TaskSet } from '@dxos/types';
 
 import answerQuestion from './answer-question.ts';
 import askQuestion from './ask-question.ts';
@@ -18,7 +18,7 @@ import createTask from './create-task.ts';
 
 const TestLayer = Layer.provideMerge(
   Trace.writerLayerNoop,
-  TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+  TestDatabaseLayer({ types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet] }),
 );
 
 const setup = Effect.gen(function* () {
@@ -60,6 +60,49 @@ describe('ask-question', () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
       expect(Task.getQuestions(task.history)).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('assigns the blocked task to the asking session and records the question as its', () =>
+    Effect.gen(function* () {
+      const task = yield* setup;
+
+      const { questionId } = yield* askQuestion.handler({
+        task: Ref.make(task),
+        question: 'Which domain?',
+        remoteSession: { sessionId: 'session_ask', title: 'Renewals' },
+      });
+
+      const [session, ...rest] = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
+      expect(rest).toEqual([]);
+      expect(RemoteSession.getSessionId(session)).toBe('session_ask');
+      expect(session.title).toBe('Renewals');
+      expect(task.status).toBe('blocked');
+      expect(task.assignee?.role).toBe('assistant');
+      expect(Task.refEntityId(task.assignee?.subject)).toBe(session.id);
+      // The asker is the session too, so the question names which run is waiting on the answer.
+      const [pending] = Task.getPendingQuestions(task.history);
+      expect(pending.id).toBe(questionId);
+      expect(Task.refEntityId(pending.actor?.subject)).toBe(session.id);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('leaves the assignee alone when the question is refused', () =>
+    Effect.gen(function* () {
+      const task = yield* setup;
+      yield* askQuestion.handler({ task: Ref.make(task), question: 'Which domain?' });
+
+      const exit = yield* Effect.exit(
+        askQuestion.handler({
+          task: Ref.make(task),
+          question: 'Asking again?',
+          remoteSession: { sessionId: 'session_ask' },
+        }),
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(task.assignee).toBeUndefined();
+      expect(yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
