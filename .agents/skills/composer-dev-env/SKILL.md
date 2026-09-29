@@ -79,3 +79,30 @@ A bundle path containing `.local-pack` means the deployed worker was built with
 `pnpm link-packages` from a local dxos checkout; a version skew there is the usual culprit.
 The fix is redeploying the dev worker from a consistent build — that touches the shared dev
 environment, so confirm with the user first.
+
+## Troubleshooting: an operation fails with `Query execution failed (queryCount=N)`
+
+The message drops the cause. `wrangler tail` shows it, but only for requests made while the tail
+is connected, so start it and then repeat the call:
+
+```bash
+cd ../edge/packages/services/operation-service && npx wrangler tail operation-service --format json
+```
+
+Look for the `query failed` log line and its `error` field. `QueryError: Query too complex` means
+db-service's planner cannot run that query shape. The `child-of` query that `Task.collectTree`
+issues broke `tasks.update` (starting or claiming a task) and `tasks.addArtifact` (attaching a
+pull request) until dxos/edge#1192.
+
+## Dev is deployed by hand, and deploys overwrite each other
+
+No workflow deploys dev: every dev worker is whatever was last deployed from someone's checkout. A
+fix that worked an hour ago can disappear when someone deploys a branch without it. Before
+concluding that a fix does not work, check that it is still live:
+
+```bash
+npx wrangler deployments list --name db-service   # likewise operation-service, mcp-space-service
+```
+
+Deploy from a checkout of edge with `moon run <service>:deploy -- --env dev`, after merging
+edge's `main` into your branch so the deploy rolls nobody's landed change back.
