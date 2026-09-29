@@ -229,6 +229,7 @@ export class AutomergeHost extends Resource {
     queryCollectionState: this._queryCollectionState.bind(this),
     sendCollectionState: this._sendCollectionState.bind(this),
     shouldSyncCollection: this._shouldSyncCollection.bind(this),
+    hasLocalChange: this._hasLocalChange.bind(this),
   });
 
   private _repo!: Repo;
@@ -1422,7 +1423,10 @@ export class AutomergeHost extends Resource {
       // edge orphans (sedimentrees the edge still knows about but the local
       // root no longer references) don't inflate counts or appear unsynced.
       const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(localState, state) : state;
-      const diff = diffCollectionStateForPeer(localState, state, { isEdgePeer });
+      const diff = diffCollectionStateForPeer(localState, state, {
+        isEdgePeer,
+        hasLocalChange: this._hasLocalChange.bind(this),
+      });
       result.peers!.push({
         peerId,
         missingOnRemote: diff.missingOnRemote.length,
@@ -1478,6 +1482,18 @@ export class AutomergeHost extends Resource {
     }
   }
 
+  /**
+   * Answers from resident documents only: loading one to diff heads would fault in every document
+   * of a collection on each poll.
+   */
+  private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean | undefined {
+    if (!this._repo || getHandleState(this._repo, documentId) !== 'ready') {
+      return undefined;
+    }
+    const doc = this._repo.getHandle(documentId)?.doc();
+    return doc ? changeIsPresentInDoc(doc, changeHash) : undefined;
+  }
+
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
     this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);
   }
@@ -1530,6 +1546,7 @@ export class AutomergeHost extends Resource {
 
     const { different, missingOnLocal, missingOnRemote } = diffCollectionStateForPeer(localState, remoteState, {
       isEdgePeer: isEdgePeerId(peerId),
+      hasLocalChange: this._hasLocalChange.bind(this),
     });
 
     const syncKey = `${collectionId}:${peerId}`;

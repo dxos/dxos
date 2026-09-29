@@ -495,7 +495,7 @@ index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f2
      };
      /** Send a tagged frame over the adapter. */
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..835a3d33bedf7ad32db0ef3339095ba26dd9ce0c 100644
+index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..68e270576182ff9a5e337d35e91774907150d0ff 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
@@ -562,8 +562,18 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..835a3d33bedf7ad32db0ef3339095ba2
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
+@@ -147,6 +173,9 @@ export declare class SubductionSource implements DocumentSource {
+      *      {@link SubductionSource.#needsOutboundSync} re-opens a round, then
+      *   3. schedule a recompute walk to act on it.
+      *
++     * DXOS patch: a running entry also reapplies every locally stored blob to
++     * its handle, since the peer may already have delivered what the handle lacks.
++     *
+      * No-op for unknown or not-yet-attached documents.
+      */
+     resync(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..9ecf98a45a215e189d8d162769209adec5b26ce8 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..0fbd6c66dc71acbbe4c50d31bd888f45d63c02a3 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -41,12 +41,27 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
@@ -847,3 +857,15 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..9ecf98a45a215e189d8d162769209ade
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
+@@ -1321,6 +1451,11 @@ export class SubductionSource {
+             return;
+         this.#scheduler.resetHealState(sid);
+         entry.lastSyncResult = null;
++        // DXOS patch: a round that finds nothing new never reloads storage, so a fragment already
++        // persisted locally but dropped before reaching the handle would stay out of the doc forever.
++        if (entry.syncState === "running") {
++            void this.#reloadBlobs(entry);
++        }
+         this.#scheduleRecompute(entry);
+     }
+     // ── Flush ───────────────────────────────────────────────────────────
