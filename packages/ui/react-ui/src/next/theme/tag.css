@@ -121,4 +121,21 @@
   .nx-icon[data-hue] {
     color: var(--nx-hue-fg);
   }
+
+  /* After the hue rule, so a valence wins when both are set. */
+  .nx-icon[data-valence='neutral'] {
+    color: var(--color-neutral-text);
+  }
+  .nx-icon[data-valence='info'] {
+    color: var(--color-info-text);
+  }
+  .nx-icon[data-valence='success'] {
+    color: var(--color-success-text);
+  }
+  .nx-icon[data-valence='warning'] {
+    color: var(--color-warning-text);
+  }
+  .nx-icon[data-valence='error'] {
+    color: var(--color-error-text);
+  }
 }

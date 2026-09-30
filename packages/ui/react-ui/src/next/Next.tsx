@@ -39,7 +39,9 @@ import {
   type GroupProps as NextGroupProps,
   type Gutter as NextGutter,
   Icon as NextIcon,
+  type IconHue as NextIconHue,
   type IconProps as NextIconProps,
+  type IconValence as NextIconValence,
   Image as NextImage,
   type ImageProps as NextImageProps,
   Input as NextInput,
@@ -101,7 +103,9 @@ export namespace Next {
   export const Toolbar = NextToolbar;
   export type ToolbarRootProps = NextToolbarRootProps;
   export const Icon = NextIcon;
+  export type IconHue = NextIconHue;
   export type IconProps = NextIconProps;
+  export type IconValence = NextIconValence;
   export const Typography = NextTypography;
   export type TypographyProps = NextTypographyProps;
   export const Group = NextGroup;
