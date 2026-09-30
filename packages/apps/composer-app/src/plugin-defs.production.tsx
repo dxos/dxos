@@ -4,6 +4,7 @@
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
@@ -25,6 +26,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins({ ...config, externalPlugins: false }),
   // `Agent` and `Sequence` are unfinished, so the curated set does not offer creating them.
   AssistantPlugin.make({ experimentalTypes: false }),
+  // Owns the `Drawing` type that tldraw renders; tldraw alone contributes only a variant.
+  IllustratorPlugin.make(),
   MarkdownPlugin.make(),
   ProjectsPlugin.make(),
   ReviewPlugin.make(),
