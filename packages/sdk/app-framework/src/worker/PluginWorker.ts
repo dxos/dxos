@@ -40,8 +40,9 @@ export type RunOptions = {
   /** Runs once the tab's config arrives, before any plugin loads: the place for process-wide setup such as telemetry. */
   onBeforeStart?: (config: Config) => Effect.Effect<void>;
   /**
-   * Runs once the stack is ready and every {@link WorkerEvents.StackReady} subscriber has finished, before any
-   * session is admitted. A failure is logged: it must not keep the worker from serving its tabs.
+   * Runs once the stack is ready and every {@link WorkerEvents.StackReady} subscriber has finished, alongside
+   * session admission rather than ahead of it, for the worker's lifetime. A failure is logged: neither its
+   * duration nor its outcome may keep the worker from serving its tabs.
    */
   onStart?: (stack: LayerStack.LayerStack) => Effect.Effect<void, unknown>;
 };
@@ -130,7 +131,10 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
         yield* stack.init().pipe(Effect.orDie, Scope.provide(stackScope));
         yield* Hook.emit(WorkerEvents.StackReady, { stack }).pipe(provideHooks);
         if (onStart) {
-          yield* onStart(stack).pipe(Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))));
+          yield* onStart(stack).pipe(
+            Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
+            Effect.forkScoped,
+          );
         }
         log('plugin-worker: ready');
 
