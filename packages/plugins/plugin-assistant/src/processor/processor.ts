@@ -709,7 +709,6 @@ export class AiChatProcessor {
   }
 }
 
-/** The processor's observable state: what a chat reads to render, as opposed to what it calls to act. */
 export type AiChatProcessorState = Pick<
   AiChatProcessor,
   'streaming' | 'active' | 'messages' | 'error' | 'mcpErrors' | 'activity'
@@ -724,9 +723,5 @@ const idleProcessorState: AiChatProcessorState = {
   activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),
 };
 
-/**
- * The processor's state, or an idle one while it is still opening: the thread renders from the feed
- * and needs the processor only for in-flight turns, so a chat need not wait for it to paint.
- */
 export const getProcessorState = (processor: AiChatProcessor | undefined): AiChatProcessorState =>
   processor ?? idleProcessorState;

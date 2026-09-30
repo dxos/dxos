@@ -42,6 +42,9 @@ import {
   TriggerStatusSurface,
 } from './AssistantSurfaces.tsx';
 
+const isUnprovisionedAssistantCompanion = (data: { subject?: unknown; variant?: unknown }) =>
+  data.subject == null && data.variant === ASSISTANT_COMPANION_VARIANT;
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -94,14 +97,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionChat',
-        // Also matches the assistant companion before its chat exists: the provisioner creates it in the
-        // background, and rendering the shell meanwhile keeps the toolbar and prompt from popping in.
         filter: Surface.makeFilter(
           AppSurface.Article,
           (data) =>
             Obj.isObject(data.companionTo) &&
-            (Obj.instanceOf(Chat.Chat, data.subject) ||
-              (data.subject == null && data.variant === ASSISTANT_COMPANION_VARIANT)),
+            (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({

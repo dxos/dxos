@@ -25,7 +25,6 @@ import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
   Omit<AppSurface.ObjectSectionProps<ChatType.Chat>, 'subject'> & {
-    /** Undefined while a companion's chat is still being provisioned; the shell renders without it. */
     subject?: ChatType.Chat;
     companionTo?: Obj.Unknown;
   },
@@ -102,8 +101,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       }
     }, [processor, attendableId, atomRegistry, stateAtom]);
 
-    // Rendered before the processor exists: the thread reads the feed directly, and the processor
-    // (whose session loads every bound skill and object first) only adds in-flight turns.
     return (
       <ChatComponent.Root
         chat={chat}
@@ -154,7 +151,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
-                  // A companion opens alongside its host document, where the reader is about to type.
                   autoFocus={!companionTo}
                   attendableId={attendableId}
                   companionTo={companionTo}

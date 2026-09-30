@@ -156,13 +156,6 @@ const ChatRoot = ({
 
   useEffect(() => {
     return event.on((ev) => {
-      // The prompt holds its text until the processor is ready, so only a widget or task row can
-      // get here first; its request has nowhere to go yet.
-      if (!processor && (ev.type === 'submit' || ev.type === 'report' || ev.type === 'retry')) {
-        log.warn('chat event before processor is ready', { type: ev.type });
-        return;
-      }
-
       switch (ev.type) {
         case 'toggle-debug': {
           setDebug((debug) => {
@@ -176,6 +169,35 @@ const ChatRoot = ({
           break;
         }
 
+        case 'rewind': {
+          // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
+          // composer so it can be revised. Recorded on the feed rather than the chat because the
+          // continuation is appended by the agent's process, which resolves the feed and never sees the
+          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
+          const rewind = feed && resolveRewind(messages, ev.id);
+          if (rewind) {
+            Obj.update(feed, (feed) => {
+              feed.rewindFrom = rewind.rewindFrom;
+            });
+            event.emit({ type: 'update-prompt', text: rewind.text });
+          }
+          break;
+        }
+      }
+
+      onEvent?.(ev);
+    });
+    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
+    // them the handler would keep resolving rewinds against whatever was mounted first.
+  }, [event, dump, onEvent, feed, messages]);
+
+  useEffect(() => {
+    if (!processor) {
+      return;
+    }
+
+    return event.on((ev) => {
+      switch (ev.type) {
         case 'submit': {
           const text = ev.text.trim();
           if (text.length) {
@@ -223,7 +245,7 @@ const ChatRoot = ({
                 if (result.followUp) {
                   // Some effects run on the supervisor loop (delegation spawns post-turn), so the
                   // command wakes the conversation with a short synthetic prompt.
-                  void processor?.request({ message: result.followUp });
+                  void processor.request({ message: result.followUp });
                 }
               })()
                 .catch((error) => {
@@ -243,7 +265,7 @@ const ChatRoot = ({
             // cancel the running turn to start its own, whereas the agent's queue is feed state that
             // it drains in order once the current turn settles.
             void Promise.resolve(onSubmit?.(text)).then(() =>
-              active ? processor?.enqueue({ message: text, context }) : processor?.request({ message: text, context }),
+              active ? processor.enqueue({ message: text, context }) : processor.request({ message: text, context }),
             );
           }
           break;
@@ -256,37 +278,22 @@ const ChatRoot = ({
             // content is synthetic — nobody typed it.
             void Promise.resolve(onSubmit?.(text)).then(() =>
               active
-                ? processor?.enqueue({ message: text, disposition: 'synthetic' })
-                : processor?.request({ message: text, disposition: 'synthetic' }),
+                ? processor.enqueue({ message: text, disposition: 'synthetic' })
+                : processor.request({ message: text, disposition: 'synthetic' }),
             );
-          }
-          break;
-        }
-
-        case 'rewind': {
-          // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
-          // composer so it can be revised. Recorded on the feed rather than the chat because the
-          // continuation is appended by the agent's process, which resolves the feed and never sees the
-          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
-          const rewind = feed && resolveRewind(messages, ev.id);
-          if (rewind) {
-            Obj.update(feed, (feed) => {
-              feed.rewindFrom = rewind.rewindFrom;
-            });
-            event.emit({ type: 'update-prompt', text: rewind.text });
           }
           break;
         }
 
         case 'retry': {
           if (!streaming) {
-            void processor?.retry();
+            void processor.retry();
           }
           break;
         }
 
         case 'cancel': {
-          void processor?.cancel();
+          void processor.cancel();
           if (streaming) {
             if (lastPrompt.current) {
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
@@ -295,12 +302,8 @@ const ChatRoot = ({
           break;
         }
       }
-
-      onEvent?.(ev);
     });
-    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
-    // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, active, onEvent, onSubmit, getContext, feed, messages, chat, db]);
+  }, [event, processor, streaming, active, onSubmit, getContext, invokePromise, chat, db, feed]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.

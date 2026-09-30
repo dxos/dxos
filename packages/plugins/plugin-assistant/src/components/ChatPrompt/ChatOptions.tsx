@@ -42,7 +42,6 @@ const styles = {
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
   chat?: ChatModule.Chat;
-  /** Undefined until the chat's session has opened; both controls render disabled until then. */
   context?: AiContext.Binder;
   registry?: Registry.Registry;
 };

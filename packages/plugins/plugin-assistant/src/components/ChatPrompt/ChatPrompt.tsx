@@ -62,7 +62,6 @@ export type ChatPromptProps = Merge<
      */
     nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
-    /** Focus the editor on mount. */
     autoFocus?: boolean;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
@@ -146,10 +145,6 @@ export const ChatPrompt = ({
     [],
   );
 
-  // There is something to send, whether or not a turn is running: a prompt submitted mid-turn is
-  // queued behind it rather than dropped, so text and a processor to take it are the only
-  // preconditions. `ChatActions` reads this to decide which affordance the primary control offers
-  // (Send with text, Stop without).
   const canSend = hasText && processor != null;
 
   const extensions = useMemo(
@@ -159,19 +154,15 @@ export const ChatPrompt = ({
 
   // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
   // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
-  // Returning false before the processor is ready leaves the text in the editor, so Enter pressed
-  // while the chat is still opening loses nothing. Read through a ref: a new callback would rebuild
-  // the editor's extensions when the processor arrives.
-  const processorRef = useDynamicRef(processor);
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!processorRef.current) {
+      if (!processor) {
         return false;
       }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event, processorRef],
+    [event, processor],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
@@ -222,7 +213,6 @@ export const ChatPrompt = ({
 
       {db && settings && (
         <div className='flex items-center overflow-hidden p-1.5'>
-          {/* Disabled until the session has opened: both controls edit the processor's context binder. */}
           <ChatOptions
             db={db}
             chat={chat}
