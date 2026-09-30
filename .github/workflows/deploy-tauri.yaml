@@ -364,7 +364,7 @@ jobs:
       # The web deploy is a sibling job that ships independently, so a red run here reads as "the release
       # failed" when only the desktop half did — announce which half, as build_tauri_ios already does.
       - name: Notify Discord on desktop build failure
-        if: failure() || cancelled()
+        if: failure() && !cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           REF_NAME: ${{ inputs.environment }}
@@ -514,7 +514,7 @@ jobs:
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Notify Discord on iOS build failure
-        if: failure() || cancelled()
+        if: failure() && !cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           REF_NAME: ${{ inputs.environment }}
