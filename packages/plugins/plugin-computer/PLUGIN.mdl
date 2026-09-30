@@ -8,8 +8,9 @@ Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash 
 multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
 that runs a shell script under a configured root. Nothing is mounted outside a vite server.
 
-It also contributes the **Composer Plugin** project template: a project whose agent uses these tools to
-build a TypeScript Composer plugin on this machine and offer it back to load (QA-2).
+In a browser it also contributes the browser version of plugin-projects' **Composer Plugin** project template:
+a project whose agent uses these tools to build a TypeScript Composer plugin on this machine and offer it back
+to load (QA-2). The desktop app has no vite server, so it offers plugin-projects' own version instead.
 
 ## Extensions
 

@@ -242,12 +242,14 @@ export const append = (
 ): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) =>
-      Effect.promise(() => {
-        if (options?.parent !== undefined && items.length > 0) {
-          setParent(items[0], options.parent);
-        }
-        return db.appendToFeed(feed, items);
-      }),
+      Effect.flatMap(Database.Origin, (origin) =>
+        Effect.promise(() => {
+          if (options?.parent !== undefined && items.length > 0) {
+            setParent(items[0], options.parent);
+          }
+          return db.appendToFeed(feed, items, { origin });
+        }),
+      ),
     ),
   ).pipe(Effect.withSpan('Feed.append'), Database.withSpaceId);
 

@@ -43,9 +43,6 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../plugin-client"
     },
     {

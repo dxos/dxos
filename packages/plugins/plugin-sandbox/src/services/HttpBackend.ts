@@ -74,5 +74,9 @@ export const make = (url: string, token: string): SandboxService.Backend => {
       call('list', { spaceId, sandboxId, path }, Schema.Struct({ entries: Schema.Array(FileEntry) })).pipe(
         Effect.map(({ entries }) => entries),
       ),
+    publish: (spaceId, sandboxId, path) =>
+      call('publish', { spaceId, sandboxId, path }, Schema.Struct({ path: Schema.String })).pipe(
+        Effect.map(({ path: served }) => `${url.replace(/\/$/, '')}${served}`),
+      ),
   };
 };

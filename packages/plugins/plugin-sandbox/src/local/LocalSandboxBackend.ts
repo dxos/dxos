@@ -32,15 +32,22 @@ export type LocalSandboxOptions = {
   denyRead?: readonly string[];
   /** Host paths re-exposed beneath a denied one. */
   allowRead?: readonly string[];
+  /** Variables every command starts with; a request's own `env` overrides them. */
+  env?: Record<string, string>;
   /** Bytes kept of each of stdout and stderr; the rest is dropped. */
   maxOutputBytes?: number;
 };
+
+/** Where sandboxes live when no root is given. */
+export const defaultSandboxRoot = (): string => join(homedir(), '.local', 'state', 'dxos', 'sandboxes');
 
 export const DEFAULT_LIMITS: ResourceLimits = { cpuSeconds: 600, memoryMiB: 4096, fileSizeMiB: 1024 };
 
 /** Package registries and source hosts, so a sandbox can install what it builds with. */
 export const DEFAULT_ALLOWED_DOMAINS: readonly string[] = [
   'registry.npmjs.org',
+  // Per-commit `@dxos/*` builds, which a plugin pins to the commit its host was built from.
+  'pkg.pr.new',
   'pypi.org',
   'files.pythonhosted.org',
   'github.com',
@@ -106,8 +113,14 @@ export class LocalSandboxBackend implements SandboxService.Backend {
 
   constructor(options: LocalSandboxOptions = {}) {
     this.#options = options;
-    this.#root = options.root ?? join(homedir(), '.local', 'state', 'dxos', 'sandboxes');
-    this.#hostEnv = { PATH: options.path ?? DEFAULT_PATH, LANG: 'C.UTF-8' };
+    this.#root = options.root ?? defaultSandboxRoot();
+    this.#hostEnv = {
+      PATH: options.path ?? DEFAULT_PATH,
+      LANG: 'C.UTF-8',
+      // The runtime's in-sandbox proxy listeners are socat, which opens an IPv6 socket by default and dies on a
+      // kernel without IPv6 (containers), leaving every command offline; they only ever serve localhost.
+      ...(platform() === 'linux' ? { SOCAT_DEFAULT_LISTEN_IP: '4' } : {}),
+    };
   }
 
   get root(): string {
@@ -145,7 +158,11 @@ export class LocalSandboxBackend implements SandboxService.Backend {
       const result = yield* this.#transfer(entry, `read ${path}`, [
         `f=${shellQuote(target)}`,
         '[ -f "$f" ] || { echo "not a file" >&2; exit 2; }',
-        'exec cat -- "$f"',
+        // The path check above is lexical; a symlink in the workspace can still name any file the sandbox may
+        // read, and a read here leaves the sandbox (a download into ECHO, a published URL).
+        `w=$(realpath -e -- ${shellQuote(entry.workspaceDir)}) && r=$(realpath -e -- "$f") || exit 2`,
+        'case "$r" in "$w"/*) ;; *) echo "outside the sandbox workspace" >&2; exit 2 ;; esac',
+        'exec cat -- "$r"',
       ]);
       const bytes = new Uint8Array(result.stdout.bytes());
       return { bytes, type: sniffMimeType(bytes) };
@@ -362,7 +379,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
   #run(entry: SandboxEntry, request: ExecRequest, cwd: string): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
       const exports = yield* Effect.try({
-        try: () => envExports(request.env ?? {}),
+        try: () => envExports({ ...this.#options.env, ...request.env }),
         catch: (cause) => new SandboxService.SandboxError({ message: errorMessage(cause), cause }),
       });
       const result = yield* this.#runScript(entry, [...exports, `cd ${shellQuote(cwd)} || exit 1`, request.command], {
@@ -401,6 +418,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
       const script = join(entry.tmpDir, `.exec-${randomUUID()}.sh`);
       const body = [
         ...limitsPrelude(this.#options.limits ?? DEFAULT_LIMITS, platform()),
+        ...proxyPrelude(platform()),
         ...sandboxExports(entry),
         ...lines,
         '',
@@ -592,6 +610,13 @@ export const toolchainDirs = (home: string, entries: readonly string[]): string[
   }
   return [...dirs];
 };
+
+/**
+ * On Linux the runtime starts its in-sandbox proxy listener in the background just before the script, so a
+ * command that connects at once can find nothing listening; wait up to two seconds for it.
+ */
+const proxyPrelude = (os: NodeJS.Platform): string[] =>
+  os === 'linux' ? ['for _ in $(seq 40); do (: </dev/tcp/127.0.0.1/3128) 2>/dev/null && break; sleep 0.05; done'] : [];
 
 const parseListing = (listing: string): FileEntry[] =>
   listing

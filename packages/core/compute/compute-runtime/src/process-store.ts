@@ -57,6 +57,8 @@ export const PersistedProcess = Schema.Struct({
     conversation: Schema.optional(Schema.String),
   }),
   parentId: Schema.NullOr(Process.ID),
+  // Who the process's writes are attributed to (`Database.Origin`); absent on records written before it existed.
+  origin: Schema.optional(Schema.Literals(['user', 'system', 'unknown'])),
   state: Schema.Enum(Process.State),
   alarmDueAt: Schema.NullOr(Schema.Number),
   events: Schema.Array(PersistedEvent),

@@ -645,7 +645,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   share(options?: Partial<Invitation>) {
     this._throwIfNotInitialized();
     log('create invitation', options);
-    return this._invitationsProxy.share({ ...options, spaceKey: fromPublicKey(this.key) });
+    return this._invitationsProxy.share({ ...options, spaceKey: fromPublicKey(this.key), spaceId: this.id });
   }
 
   async admitContact(contact: Contact, role: SpaceMember_Role = SpaceMember_Role.EDITOR): Promise<void> {
