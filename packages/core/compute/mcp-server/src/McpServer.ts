@@ -58,8 +58,33 @@ export type InvokeRequest = {
   readonly spaceId?: string;
 };
 
+/**
+ * Where a session's loaded skills are recorded, which is what {@link invoke} checks an operation's
+ * owners against. Host-supplied because a host whose requests land on different processes (EDGE's
+ * isolates) needs storage they share; a failure to read or write is the host's to absorb.
+ */
+export type SkillLedger = {
+  /** Prompt names of the skills loaded so far. */
+  readonly loaded: Effect.Effect<ReadonlySet<string>>;
+  readonly record: (name: string) => Effect.Effect<void>;
+};
+
+/** A ledger in this process's memory — right for a host that serves one session per process (stdio). */
+export const memorySkillLedger = (): SkillLedger => {
+  const loaded = new Set<string>();
+  return {
+    loaded: Effect.sync(() => loaded),
+    record: (name) =>
+      Effect.sync(() => {
+        loaded.add(name);
+      }),
+  };
+};
+
 export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
+  /** Omitted, the surface keeps one {@link memorySkillLedger} for as long as it is built. */
+  readonly skillLedger?: SkillLedger;
   /**
    * Spaces this session may address. No member is a default: a call that names none is refused.
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
@@ -255,25 +280,17 @@ export type SkillListing = {
   instructions?: string;
 };
 
-/**
- * Prompt names of the skills a session has loaded — what {@link invoke} checks an operation's
- * owners against, since an operation's workflow lives in its skill rather than its description.
- */
-export type LoadedSkills = Set<string>;
-
 /** A prompt-name collision throws as a defect; inside a request it is the call's failure instead. */
 const catchCollision = <A>(effect: Effect.Effect<A, ToolFailure>): Effect.Effect<A, ToolFailure> =>
   Effect.catchDefect(effect, (defect) => Effect.fail(failure('operation_failed', String(defect))));
 
 /**
  * Resolves a skill by prompt name (or full registry key) to the body `loadSkill` returns; with no
- * name, lists them all. A skill that resolves is recorded in `loadedSkills`, which unlocks its
- * operations for {@link invoke}; a listing records nothing, since it carries no instructions.
+ * name, lists them all.
  */
 export const loadSkillByName = (
   registry: Registry.Registry,
   skill: string | undefined,
-  loadedSkills?: LoadedSkills,
 ): Effect.Effect<SkillListing, ToolFailure> =>
   catchCollision(
     viewInternal.mcpSkills(registry).pipe(
@@ -299,9 +316,23 @@ export const loadSkillByName = (
             ),
           );
         }
-        loadedSkills?.add(match.promptName);
         return Effect.succeed<SkillListing>({ skills: [summarize(match)], instructions: match.instructions });
       }),
+    ),
+  );
+
+/**
+ * Answers one `loadSkill` call, recording a loaded skill in the ledger so its operations unlock. A
+ * listing records nothing, since it carries no instructions.
+ */
+export const loadSkill = (
+  registry: Registry.Registry,
+  ledger: SkillLedger,
+  skill: string | undefined,
+): Effect.Effect<SkillListing, ToolFailure> =>
+  loadSkillByName(registry, skill).pipe(
+    Effect.tap(({ skills, instructions }) =>
+      instructions === undefined || skills.length === 0 ? Effect.void : ledger.record(skills[0].name),
     ),
   );
 
@@ -473,6 +504,15 @@ export const invoke = (
     }),
   );
 
+/** Answers one `invokeOperation` call against the skills the ledger has recorded. */
+export const invokeWithLedger = (
+  registry: Registry.Registry,
+  host: HostShape,
+  ledger: SkillLedger,
+  request: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
+): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+  ledger.loaded.pipe(Effect.flatMap((loaded) => invoke(registry, host, request, loaded)));
+
 /**
  * Runs an operation on behalf of a host's own tool, without the skill check {@link invoke} applies.
  *
@@ -604,12 +644,11 @@ const surfaceLayer: Layer.Layer<never, never, Registry.Service | Host> = McpServ
       Effect.gen(function* () {
         const registry = yield* Registry.Service;
         const host = yield* Host;
-        // One per built surface, which is one per session for stdio and per cached identity handler on EDGE.
-        const loadedSkills: LoadedSkills = new Set();
+        const ledger = host.skillLedger ?? memorySkillLedger();
         return ServerToolkit.of({
           queryOperations: (query) => queryOperations(registry, query),
-          invokeOperation: (request) => invoke(registry, host, request, loadedSkills),
-          loadSkill: ({ skill }) => loadSkillByName(registry, skill, loadedSkills),
+          invokeOperation: (request) => invokeWithLedger(registry, host, ledger, request),
+          loadSkill: ({ skill }) => loadSkill(registry, ledger, skill),
         });
       }),
     ),

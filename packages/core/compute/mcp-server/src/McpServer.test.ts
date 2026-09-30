@@ -159,12 +159,13 @@ describe('McpServer', () => {
 
     test('loading the skill unlocks its operations, and a listing unlocks nothing', async ({ expect }) => {
       const registry = testRegistry();
-      const loadedSkills: McpServer.LoadedSkills = new Set();
-      await EffectEx.runPromise(McpServer.loadSkillByName(registry, undefined, loadedSkills));
-      expect(loadedSkills.size).to.equal(0);
+      const ledger = McpServer.memorySkillLedger();
+      await EffectEx.runPromise(McpServer.loadSkill(registry, ledger, undefined));
+      expect((await EffectEx.runPromise(ledger.loaded)).size).to.equal(0);
 
       // By registry key as well as prompt name: both resolve, and the ledger holds the prompt name.
-      await EffectEx.runPromise(McpServer.loadSkillByName(registry, 'org.dxos.skill.codeProject', loadedSkills));
+      await EffectEx.runPromise(McpServer.loadSkill(registry, ledger, 'org.dxos.skill.codeProject'));
+      const loadedSkills = await EffectEx.runPromise(ledger.loaded);
       expect([...loadedSkills]).to.deep.equal(['codeProject']);
       const { invocations, result } = runInvoke(
         { input: { title: 'x' }, spaceId: SPACE_A },
@@ -589,15 +590,15 @@ describe('McpServer', () => {
       expect(operations.map((row) => row.key)).to.deep.equal([KEY]);
       expect(operations[0].hints.mutation).to.equal('write');
 
-      const loadedSkills: McpServer.LoadedSkills = new Set();
+      const ledger = McpServer.memorySkillLedger();
       const listing = successOf(
-        await EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(registry, 'codeProject', loadedSkills))),
+        await EffectEx.runPromise(Effect.result(McpServer.loadSkill(registry, ledger, 'codeProject'))),
       );
       expect(listing.instructions).to.equal('Bind a space first.');
 
       const { host, invocations } = testHost();
       await EffectEx.runPromise(
-        McpServer.invoke(registry, host, { key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }, loadedSkills),
+        McpServer.invokeWithLedger(registry, host, ledger, { key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }),
       );
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }]);
     });

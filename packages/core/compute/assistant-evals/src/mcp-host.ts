@@ -90,7 +90,7 @@ export const startMcpHost = ({
 }: StartMcpHostOptions): Effect.Effect<McpHost, never, Scope.Scope> =>
   Effect.gen(function* () {
     // Host-wide rather than per `connect`, which runs per request: the eval's agent is one session.
-    const loadedSkills: McpServer.LoadedSkills = new Set();
+    const ledger = McpServer.memorySkillLedger();
     const connect = async () => {
       const server = new Server({ name: McpServer.identity.name, version: VERSION }, { capabilities: { tools: {} } });
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -99,7 +99,7 @@ export const startMcpHost = ({
       server.setRequestHandler(CallToolRequestSchema, async (request) =>
         dispatch(
           registry(),
-          loadedSkills,
+          ledger,
           skills,
           spaceIds,
           context,
@@ -211,7 +211,7 @@ type ToolResponse = {
 /** Runs one tool call through the server's own dispatch, in the caller's runtime context. */
 const dispatch = async (
   registry: Registry.Registry,
-  loadedSkills: McpServer.LoadedSkills,
+  ledger: McpServer.SkillLedger,
   skills: readonly Skill.Definition[],
   spaceIds: readonly SpaceId[] | undefined,
   context: () => Context.Context<Operation.Service>,
@@ -242,12 +242,17 @@ const dispatch = async (
       case McpServer.QueryOperations.name:
         return yield* McpServer.queryOperations(registry, args);
       case McpServer.LoadSkill.name:
-        return yield* McpServer.loadSkillByName(registry, args.skill as string | undefined, loadedSkills);
+        return yield* McpServer.loadSkill(registry, ledger, args.skill as string | undefined);
       case McpServer.InvokeOperation.name: {
         // Built per call, because the invoker it closes over is the harness's — which exists only
         // once the eval's harness has booted.
         const host = yield* McpServer.host({ skills, spaceIds });
-        return yield* McpServer.invoke(registry, host, args as Parameters<typeof McpServer.invoke>[2], loadedSkills);
+        return yield* McpServer.invokeWithLedger(
+          registry,
+          host,
+          ledger,
+          args as Parameters<typeof McpServer.invoke>[2],
+        );
       }
       default:
         return yield* Effect.fail(McpServer.failure('invalid_request', `Unknown tool: ${name}`));
