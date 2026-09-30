@@ -42,7 +42,7 @@ import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
+import { AiUsageQuotaError, type ProcessorRequestContext, getProcessorState } from '../../processor/index.ts';
 import {
   ChatStatus,
   ChatActivity as NaturalChatActivity,
@@ -95,8 +95,9 @@ const ChatRoot = ({
   const [debug, setDebug] = useState(debugProp ?? false);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
   const { invokePromise } = useOperationInvoker();
-  const streaming = useAtomValue(processor.streaming);
-  const active = useAtomValue(processor.active);
+  const processorState = getProcessorState(processor);
+  const streaming = useAtomValue(processorState.streaming);
+  const active = useAtomValue(processorState.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
   // A slash command runs outside the processor, so `streaming` does not cover it.
@@ -125,7 +126,7 @@ const ChatRoot = ({
     db,
     feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
   );
-  const pendingMessages = useAtomValue(processor.messages);
+  const pendingMessages = useAtomValue(processorState.messages);
   const { messages, queued } = useMemo(
     () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
     [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
@@ -146,7 +147,7 @@ const ChatRoot = ({
   const dump = useDebug({ processor });
 
   // Surface processor failures (e.g., AI service unavailable) to subscribers via the event bus.
-  const error = useAtomValue(processor.error);
+  const error = useAtomValue(processorState.error);
   useEffect(() => {
     if (Option.isSome(error)) {
       event.emit({ type: 'error', error: error.value });
@@ -155,6 +156,13 @@ const ChatRoot = ({
 
   useEffect(() => {
     return event.on((ev) => {
+      // The prompt holds its text until the processor is ready, so only a widget or task row can
+      // get here first; its request has nowhere to go yet.
+      if (!processor && (ev.type === 'submit' || ev.type === 'report' || ev.type === 'retry')) {
+        log.warn('chat event before processor is ready', { type: ev.type });
+        return;
+      }
+
       switch (ev.type) {
         case 'toggle-debug': {
           setDebug((debug) => {
@@ -215,7 +223,7 @@ const ChatRoot = ({
                 if (result.followUp) {
                   // Some effects run on the supervisor loop (delegation spawns post-turn), so the
                   // command wakes the conversation with a short synthetic prompt.
-                  void processor.request({ message: result.followUp });
+                  void processor?.request({ message: result.followUp });
                 }
               })()
                 .catch((error) => {
@@ -235,7 +243,7 @@ const ChatRoot = ({
             // cancel the running turn to start its own, whereas the agent's queue is feed state that
             // it drains in order once the current turn settles.
             void Promise.resolve(onSubmit?.(text)).then(() =>
-              active ? processor.enqueue({ message: text, context }) : processor.request({ message: text, context }),
+              active ? processor?.enqueue({ message: text, context }) : processor?.request({ message: text, context }),
             );
           }
           break;
@@ -248,8 +256,8 @@ const ChatRoot = ({
             // content is synthetic — nobody typed it.
             void Promise.resolve(onSubmit?.(text)).then(() =>
               active
-                ? processor.enqueue({ message: text, disposition: 'synthetic' })
-                : processor.request({ message: text, disposition: 'synthetic' }),
+                ? processor?.enqueue({ message: text, disposition: 'synthetic' })
+                : processor?.request({ message: text, disposition: 'synthetic' }),
             );
           }
           break;
@@ -272,13 +280,13 @@ const ChatRoot = ({
 
         case 'retry': {
           if (!streaming) {
-            void processor.retry();
+            void processor?.retry();
           }
           break;
         }
 
         case 'cancel': {
-          void processor.cancel();
+          void processor?.cancel();
           if (streaming) {
             if (lastPrompt.current) {
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
@@ -518,7 +526,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
   // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
   // and range table have no equivalent left.
   const model = useFeedModel(messages, { stops: 'prompt' });
-  const streaming = useAtomValue(processor.streaming);
+  const streaming = useAtomValue(getProcessorState(processor).streaming);
   useEffect(() => {
     const last = messages[messages.length - 1];
     model.setStreaming(streaming && last?.sender.role === 'assistant' ? last.id : undefined);
@@ -940,7 +948,7 @@ const CHAT_ACTIVITY_NAME = 'Chat.Activity';
  */
 const ChatActivity = ({ classNames }: ThemedClassName) => {
   const { processor, alarms } = useChatContext(CHAT_ACTIVITY_NAME);
-  const activity = useAtomValue(processor.activity);
+  const activity = useAtomValue(getProcessorState(processor).activity);
 
   // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
   // wait in front of the reader.

@@ -31,7 +31,7 @@ import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
-import { type AiChatProcessor } from '../../processor/index.ts';
+import { type AiChatProcessor, getProcessorState } from '../../processor/index.ts';
 import { type ChatEvent } from '../Chat/index.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 import { ChatMcpErrors } from './ChatMcpErrors.tsx';
@@ -46,7 +46,8 @@ export type ChatPromptProps = Merge<
     expandable?: boolean;
     db?: Database.Database;
     chat?: Chat.Chat;
-    processor: AiChatProcessor;
+    /** Undefined while the processor is still opening: the prompt takes text but holds it until then. */
+    processor?: AiChatProcessor;
     event: Event<ChatEvent>;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;
@@ -89,9 +90,10 @@ export const ChatPrompt = ({
   companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
-  const streaming = useAtomValue(processor.streaming);
-  const active = useAtomValue(processor.active);
+  const processorState = getProcessorState(processor);
+  const error = useAtomValue(processorState.error).pipe(Option.getOrUndefined);
+  const streaming = useAtomValue(processorState.streaming);
+  const active = useAtomValue(processorState.active);
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -145,9 +147,10 @@ export const ChatPrompt = ({
   );
 
   // There is something to send, whether or not a turn is running: a prompt submitted mid-turn is
-  // queued behind it rather than dropped, so text is the only precondition. `ChatActions` reads this
-  // to decide which affordance the primary control offers (Send with text, Stop without).
-  const canSend = hasText;
+  // queued behind it rather than dropped, so text and a processor to take it are the only
+  // preconditions. `ChatActions` reads this to decide which affordance the primary control offers
+  // (Send with text, Stop without).
+  const canSend = hasText && processor != null;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
@@ -156,12 +159,19 @@ export const ChatPrompt = ({
 
   // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
   // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
+  // Returning false before the processor is ready leaves the text in the editor, so Enter pressed
+  // while the chat is still opening loses nothing. Read through a ref: a new callback would rebuild
+  // the editor's extensions when the processor arrives.
+  const processorRef = useDynamicRef(processor);
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
+      if (!processorRef.current) {
+        return false;
+      }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event],
+    [event, processorRef],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
@@ -194,7 +204,7 @@ export const ChatPrompt = ({
         classNames,
       )}
     >
-      <ChatMcpErrors processor={processor} />
+      {processor && <ChatMcpErrors processor={processor} />}
 
       <div className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
@@ -212,18 +222,21 @@ export const ChatPrompt = ({
 
       {db && settings && (
         <div className='flex items-center overflow-hidden p-1.5'>
-          <ChatOptions
-            db={db}
-            chat={chat}
-            registry={processor.registry}
-            context={processor.context}
-            preset={preset}
-            presets={presets}
-            onPresetChange={onPresetChange}
-          />
+          {/* Both edit the processor's context binder, which exists once the session has opened. */}
+          {processor && (
+            <ChatOptions
+              db={db}
+              chat={chat}
+              registry={processor.registry}
+              context={processor.context}
+              preset={preset}
+              presets={presets}
+              onPresetChange={onPresetChange}
+            />
+          )}
 
           <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
-            <ChatReferences db={db} context={processor.context} />
+            {processor && <ChatReferences db={db} context={processor.context} />}
           </div>
 
           <ChatActions
