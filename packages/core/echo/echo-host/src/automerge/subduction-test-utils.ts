@@ -17,12 +17,13 @@ import {
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, SedimentreeId } from '@automerge/automerge-subduction';
-import { onTestFinished } from 'vitest';
+import { type ExpectStatic, onTestFinished } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { isNonNullable } from '@dxos/util';
 
 import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
+import { type AutomergeHost } from './automerge-host.ts';
 
 export const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 export const SUBDUCTION_SERVICE_NAME = 'test-subduction-service';
@@ -49,6 +50,22 @@ export const SYNC_WINDOW_MS = 15_000;
  * assertion. Every other negative assertion waits for the refusal itself; see {@link createDenyGate}.
  */
 export const NO_TRAFFIC_WINDOW_MS = 500;
+
+/**
+ * Drains until the document is evicted: eviction waits out a sync round still pending on it, so one
+ * forced drain can leave it resident.
+ */
+export const waitForEviction = async (expect: ExpectStatic, host: AutomergeHost, documentId: DocumentId) => {
+  await expect
+    .poll(
+      async () => {
+        await host.drainEvictions();
+        return host.loadedDocumentIds.includes(documentId);
+      },
+      { timeout: SYNC_WINDOW_MS },
+    )
+    .toBe(false);
+};
 
 // Subduction control-plane message type, sent by `NetworkAdapterTransport` from
 // `@automerge/automerge-repo/dist/subduction/network.js`. Not exported from the

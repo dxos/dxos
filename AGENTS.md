@@ -196,10 +196,15 @@ writes wedge the other, which is how a debugging session ends up chasing its own
   you are editing, restart it against yours (`moon run storybook-react:serve` from your
   worktree) rather than adding a second server. Say so in your reply — you are moving a
   window the user may be looking at.
-- **Unresponsive is usually not dead.** The server stalls for a minute or two whenever a
-  file under `packages/` is written (a chokidar fsevents pathology — see
-  `tools/storybook-react/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
-  concluding anything. If it is still down, run `diagnose.sh` to capture the cause BEFORE
+- **Restart with `moon run storybook-react:serve-nodeps`** when the worktree is already
+  built. `serve` first runs every `:build` it depends on, and if another moon run (e.g.
+  `composer-app:bundle`) is building the same packages, both rewrite the same `dist/types`
+  and the builds fail with TS7016. Use `serve` only on a fresh worktree.
+- **A stale module is not a hung server.** If `/@fs/<file>` still serves old code but
+  `index.json` answers fast, the file watch was lost, not the server; the `dxos:rearm-watch`
+  plugin in `.storybook/main.ts` exists for exactly this, so suspect a regression there.
+- **Unresponsive is usually not dead.** Wait ~3 minutes before concluding anything. If it
+  is still down, run `tools/storybook-react/diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.
 - **Never `pkill -f storybook`.** Kill by the PID you own, established via
   `lsof -ti :9009 -sTCP:LISTEN`, and only after the wait above.
