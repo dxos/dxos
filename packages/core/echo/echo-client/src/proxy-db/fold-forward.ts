@@ -194,26 +194,28 @@ const movedOutputKeys = (
 const isEditableValue = (value: unknown): boolean =>
   typeof value === 'string' || Array.isArray(value) || isMapValue(value);
 
-/** What {@link foldLateChanges} leaves to the per-pass whole-value fold. */
+/** What {@link foldLateChanges} leaves to the per-pass fold. */
 type WholeValueFolds = {
-  /** Output keys some late change moved by replacing a source value, or that are not maps, lists or text. */
+  /** Scalar output keys a late change moved: folded per pass from the merged current data. */
   keys: Set<string>;
   /** Whether any late change touched a retired key: the migration's meta output is folded per pass. */
   touched: boolean;
-  /** Set when a late change could not be classified; every moved key is then folded whole. */
+  /** Set when a late change's output could not be computed; every moved scalar key is then folded per pass. */
   all: boolean;
+  /** The heads the per-pass fold forks from: the migration and every per-change fold, so it supersedes them. */
+  fork: Heads;
 };
 
 /**
- * Folds each late change's edits inside maps, lists and text as a change of its own, forked at the
+ * Folds each late change's edits to map, list and text outputs as a change of its own, forked at the
  * migration plus the folds of that change's own late ancestors. Every input — the fork, the source
  * snapshots before and after the change, and so the edit — is a function of the source history alone,
  * so peers that receive the late changes in any order author byte-identical folds
  * (`ObjectCore.foldChangeAt`), and a list insert or text splice lands once. The edit is the one the late
  * change made, placed on the target at the fork ({@link applyStructuralEdit}), so a direct edit
- * elsewhere in the same value stays. A key that depends on a source value replaced since the migration
- * (by the change or any late ancestor), or whose value is not a map, list or text, is returned for the
- * per-pass whole-value fold instead, which recomputes it from the merged current data.
+ * elsewhere in the same value stays. A map, list or text output is only ever written here, so the
+ * container a fold edits is never replaced by another channel; scalar outputs are returned for the
+ * per-pass fold, which recomputes them from the merged current data.
  */
 const foldLateChanges = (
   db: Database.Database,
@@ -231,8 +233,7 @@ const foldLateChanges = (
   const scope = `${object.id}:${stepKey}`;
   // Keyed by the migration change too: a winner that arrives later is folded onto again.
   const messagePrefix = `${foldMessage(step.from, step.to)} [${scope}] ${postMigrationHeads.join(',')} `;
-  const whole: WholeValueFolds = { keys: new Set(), touched: false, all: false };
-  const atMigration = getDecodedDataWithRefs(db, core, postMigrationHeads);
+  const whole: WholeValueFolds = { keys: new Set(), touched: false, all: false, fork: postMigrationHeads };
 
   const doc = core.getDoc();
   const graph: ChangeGraph = new Map();
@@ -247,91 +248,97 @@ const foldLateChanges = (
   for (const change of pending) {
     const before = [...postMigrationHeads, ...change.deps];
     const after = [...postMigrationHeads, change.hash];
-    if (lateRetiredWrites(core.getDoc(), mountPath, before, after, retired).size === 0) {
+    const writes = lateRetiredWrites(core.getDoc(), mountPath, before, after, retired);
+    if (writes.size === 0) {
       continue;
     }
     whole.touched = true;
 
-    try {
-      const beforeData = getDecodedDataWithRefs(db, core, before);
-      const afterData = getDecodedDataWithRefs(db, core, after);
-      const previous = recomputeMigrationOutput(migration, object.id, beforeData, source);
-      const next = recomputeMigrationOutput(migration, object.id, afterData, source);
-      // An old client writes a kept property directly; folding its write as well would apply it twice.
-      const moved = movedOutputKeys(core, previous.data, next.data).filter((key) => !kept.has(key));
+    // The transform sees every intermediate state an old client wrote, which need not be valid. A state
+    // it rejects after the change leaves the change to a later one; one it rejects before the change is
+    // replaced by the target at the fork, so the later change carries everything not yet folded.
+    const output = (heads: Heads) => {
+      try {
+        return recomputeMigrationOutput(migration, object.id, getDecodedDataWithRefs(db, core, heads), source);
+      } catch (err) {
+        log.warn('foldForward: transform rejected an intermediate state', { object: object.id, stepKey, err });
+        whole.all = true;
+        return undefined;
+      }
+    };
+    const next = output(after);
+    if (!next) {
+      continue;
+    }
+    const previous = output(before);
+    // Strings the change set outright: a target that copies one is set outright too, as a property set
+    // replaces its value, so a direct edit to it conflicts instead of merging character by character.
+    const afterData = getDecodedDataWithRefs(db, core, after);
+    const setStrings = [...writes]
+      .filter(
+        ([key, patches]) =>
+          typeof afterData[key] === 'string' && patches.some((patch) => patch.path.length === mountPath.length + 2),
+      )
+      .map(([key]) => afterData[key]);
 
-      // A source value replaced since the migration (by this change or a late ancestor) shows as a put at
-      // the key itself. An output that depends on one was put whole by the per-pass fold, which replaced
-      // the target value an edit inside it would land in, so it stays whole.
-      const replaced = [...lateRetiredWrites(core.getDoc(), mountPath, postMigrationHeads, after, retired)]
-        .filter(([, patches]) => patches.some((patch) => patch.path.length === mountPath.length + 2))
-        .map(([key]) => key);
-      const reverted = { ...afterData };
-      for (const key of replaced) {
-        if (Object.hasOwn(atMigration, key)) {
-          reverted[key] = atMigration[key];
-        } else {
-          delete reverted[key];
-        }
-      }
-      const dependsOnReplaced = new Set(
-        movedOutputKeys(core, next.data, recomputeMigrationOutput(migration, object.id, reverted, source).data),
-      );
-      const structural: string[] = [];
-      for (const key of moved) {
-        if (dependsOnReplaced.has(key) || !isEditableValue(previous.data[key]) || !isEditableValue(next.data[key])) {
-          whole.keys.add(key);
-        } else {
-          structural.push(key);
-        }
-      }
-      if (structural.length === 0 || foldOf.has(change.hash)) {
+    const lateAncestors = ancestorsOf(graph, change.deps);
+    const fork = frontierOf(graph, [
+      ...postMigrationHeads,
+      ...[...foldOf].filter(([late]) => lateAncestors.has(late)).map(([, fold]) => fold),
+    ]);
+    const atFork: unknown = getDeep(A.view(core.getDoc(), fork), [...mountPath, DATA_NAMESPACE]);
+    const encodedNext = mapRefsToEncodedReferences(next.data);
+    const encodedPrevious = previous && mapRefsToEncodedReferences(previous.data);
+    const keys = previous ? movedOutputKeys(core, previous.data, next.data) : Object.keys(next.data);
+    const edits: { key: string; previous: unknown; next: unknown; set: boolean }[] = [];
+    // An old client writes a kept property directly; folding its write as well would apply it twice.
+    for (const key of keys.filter((key) => !kept.has(key))) {
+      const from = encodedPrevious ? core.encode(encodedPrevious[key]) : getDeep(atFork, [key]);
+      const to = encodedNext[key] === undefined ? undefined : core.encode(encodedNext[key]);
+      if (encodedValuesEqual(from, to)) {
         continue;
       }
-
-      const lateAncestors = ancestorsOf(graph, change.deps);
-      const fork = frontierOf(graph, [
-        ...postMigrationHeads,
-        ...[...foldOf].filter(([late]) => lateAncestors.has(late)).map(([, fold]) => fold),
-      ]);
-      const atFork: unknown = getDeep(A.view(core.getDoc(), fork), [...mountPath, DATA_NAMESPACE]);
-      const encodedPrevious = mapRefsToEncodedReferences(previous.data);
-      const encodedNext = mapRefsToEncodedReferences(next.data);
-      const edits = structural.map((key) => ({
-        key,
-        previous: core.encode(encodedPrevious[key]),
-        next: core.encode(encodedNext[key]),
-      }));
-      const heads = core.foldChangeAt(
-        fork,
-        (draft, mountPath) => {
-          for (const { key, previous, next } of edits) {
-            applyStructuralEdit(draft, [...mountPath, DATA_NAMESPACE, key], previous, next, getDeep(atFork, [key]));
-          }
-        },
-        {
-          message: `${messagePrefix}${change.hash}`,
-          actorSeed: JSON.stringify({ scope, late: change.hash, fork, edits }),
-        },
-      );
-      if (heads) {
-        const [fold] = heads;
-        graph.set(fold, fork);
-        foldOf.set(change.hash, fold);
+      if (isEditableValue(from) || isEditableValue(to)) {
+        const set = typeof to === 'string' && setStrings.some((value) => value === to);
+        edits.push({ key, previous: from, next: to, set });
+      } else {
+        whole.keys.add(key);
       }
-    } catch (err) {
-      // The transform sees every intermediate state an old client wrote, which need not be valid; the
-      // per-pass fold then carries the current state instead.
-      log.warn('foldForward: could not fold a late change on its own', { object: object.id, stepKey, err });
-      whole.all = true;
+    }
+    if (edits.length === 0 || foldOf.has(change.hash)) {
+      continue;
+    }
+
+    const heads = core.foldChangeAt(
+      fork,
+      (draft, mountPath) => {
+        for (const { key, previous, next, set } of edits) {
+          const path = [...mountPath, DATA_NAMESPACE, key];
+          if (set) {
+            setDeep(draft, path, next);
+          } else {
+            applyStructuralEdit(draft, path, previous, next, getDeep(atFork, [key]));
+          }
+        }
+      },
+      {
+        message: `${messagePrefix}${change.hash}`,
+        actorSeed: JSON.stringify({ scope, late: change.hash, fork, edits }),
+      },
+    );
+    if (heads) {
+      const [fold] = heads;
+      graph.set(fold, fork);
+      foldOf.set(change.hash, fold);
     }
   }
+  whole.fork = frontierOf(graph, [...postMigrationHeads, ...foldOf.values()]);
   return whole;
 };
 
 /**
- * Folds the keys {@link foldLateChanges} left whole, plus the migration's meta output, from the merged
- * current data: the current snapshot against the same snapshot with only the retired keys at the
+ * Folds the scalar keys {@link foldLateChanges} left to it, plus the migration's meta output, from the
+ * merged current data: the current snapshot against the same snapshot with only the retired keys at the
  * checkpoint. One change per pass, concurrent with direct edits.
  */
 const foldWholeValues = (
@@ -355,9 +362,16 @@ const foldWholeValues = (
     }
   }
   const source = stepSource(db, core, step);
-  const included = (key: string) => !source.kept.has(key) && (whole.all || whole.keys.has(key));
   const previous = recomputeMigrationOutput(migration, object.id, before, source);
   const next = recomputeMigrationOutput(migration, object.id, current, source);
+  const encodedPrevious = mapRefsToEncodedReferences(previous.data);
+  const encodedNext = mapRefsToEncodedReferences(next.data);
+  // Maps, lists and text are only ever folded per change, so the container they edit stays in place.
+  const included = (key: string) =>
+    !source.kept.has(key) &&
+    !isEditableValue(core.encode(encodedPrevious[key])) &&
+    !isEditableValue(core.encode(encodedNext[key])) &&
+    (whole.all || whole.keys.has(key));
   const output = Object.fromEntries(
     Object.entries(changedOutputEntries(core, previous.data, next.data)).filter(([key]) => included(key)),
   );
@@ -477,7 +491,7 @@ const foldStep = (
 
   if (dataWrites.size > 0 || deletions.length > 0 || metaWrites.size > 0) {
     core.foldAt(
-      postMigrationHeads,
+      whole.fork,
       (data, meta) => {
         for (const [key, value] of dataWrites) {
           data[key] = value;
@@ -496,8 +510,10 @@ const foldStep = (
     );
   }
 
-  // The heads this pass read, so a write that lands during the pass is still ahead of the checkpoint.
-  return currentHeads;
+  // Checkpointed only past a late write: a direct edit alone is no work, and checkpointing past it on
+  // every peer would add a change per edit. The heads are the ones this pass read, so a write that lands
+  // during the pass is still ahead of the checkpoint.
+  return whole.touched || overlayLateWrites.size > 0 ? currentHeads : undefined;
 };
 
 /**

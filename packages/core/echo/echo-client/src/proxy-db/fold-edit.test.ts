@@ -33,6 +33,12 @@ describe('applyStructuralEdit', () => {
     expect(result).to.deep.eq(['a', 'z', 'x']);
   });
 
+  test('two inserts that fall back to one anchor keep their source order', () => {
+    const base = A.from<Doc>({ list: ['a', 'b'] }, '0c'.repeat(16));
+    const result = foldBesideDirectEdit(base, { previous: ['a', 'x', 'b'], next: ['a', 'p', 'x', 'q', 'b'] }, () => {});
+    expect(result).to.deep.eq(['a', 'p', 'q', 'b']);
+  });
+
   test('a front insert into a long list writes the insert alone', () => {
     const items = Array.from({ length: 600 }, (_, index) => `item ${index}`);
     const base = A.from<Doc>({ list: items }, '0c'.repeat(16));

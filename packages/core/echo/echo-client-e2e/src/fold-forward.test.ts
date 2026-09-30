@@ -281,17 +281,14 @@ describe('fold-forward across a real partition, peer B a genuinely old client', 
     await db1.foldForward([personMigration]);
     await db2.foldForward([personMigration]);
     await heal();
-    // Two independent concurrent forks (one per peer, both off `postMigrationHeads`) can take more
-    // than one `syncAll` round to fully reconcile both ways: `waitUntilHeadsReplicated` targets each
-    // side's heads as captured at call time, which is stale the instant the OTHER side's own fold is
-    // still in flight — polling (as every cross-peer read in this suite does) rather than a fixed
-    // round count is what actually waits for both peers to see all three alternatives.
+    // `waitUntilHeadsReplicated` targets each side's heads as captured at call time, so poll until both
+    // peers hold both sides' folds.
     await expect
       .poll(async () => {
         await syncAll(db1, db2);
-        return [Obj.getConflict(obj1, 'name')?.alternatives.length, Obj.getConflict(obj2, 'name')?.alternatives.length];
+        return headsOf(obj1).join() === headsOf(obj2).join();
       })
-      .toEqual([3, 3]);
+      .toBe(true);
 
     const conflict1 = Obj.getConflict(obj1, 'name');
     const conflict2 = Obj.getConflict(obj2, 'name');
@@ -303,18 +300,16 @@ describe('fold-forward across a real partition, peer B a genuinely old client', 
     expect(conflict1.presented).to.eq('Amazing Grace');
     expect(conflict2.presented).to.eq('Amazing Grace');
 
-    // Three alternatives, not two: each peer folds under its own derived actor, so peer A's and peer
-    // B's folds are distinct changes carrying the same value, kept beside the one direct edit.
-    expect(conflict1.alternatives).to.have.length(3);
+    // Two alternatives: both peers folded the same late write into one byte-identical change.
+    expect(conflict1.alternatives).to.have.length(2);
     const normalize = (conflict: Obj.Conflict) =>
       [...conflict.alternatives].sort((a, b) => a.actor.localeCompare(b.actor));
     expect(normalize(conflict1)).to.deep.eq(normalize(conflict2));
     const folds = conflict1.alternatives.filter((alternative) => alternative.fold);
     const direct = conflict1.alternatives.find((alternative) => !alternative.fold);
-    expect(folds).to.have.length(2);
+    expect(folds).to.have.length(1);
     invariant(direct, 'expected the direct edit among the alternatives');
-    expect(folds.every((fold) => fold.value === 'Grace Murray Hopper')).to.eq(true);
-    expect(new Set(folds.map((fold) => fold.actor)).size).to.eq(2); // two distinct actors, one per peer.
+    expect(folds[0].value).to.eq('Grace Murray Hopper');
     expect(direct.value).to.eq('Amazing Grace');
 
     // Re-running on both, again independently, performs no further writes — value-compare guards a

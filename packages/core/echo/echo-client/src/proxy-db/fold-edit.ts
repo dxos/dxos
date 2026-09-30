@@ -6,6 +6,7 @@ import { next as A, type Heads } from '@automerge/automerge';
 
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { encodedValuesEqual, isRecord } from './encoded-value.ts';
@@ -51,9 +52,14 @@ const LIST_DIFF_LIMIT = 250_000;
 /**
  * Index pairs of a longest common subsequence of `from` and `to`, by encoded value: the common prefix and
  * suffix, plus an LCS of the middle when it is small enough, so a single insert or delete is exact at
- * any length.
+ * any length. A middle too large to diff is left unmatched, or with `positional` paired by position,
+ * for locating elements that are expected to correspond.
  */
-const commonSubsequence = (from: readonly unknown[], to: readonly unknown[]): [number, number][] => {
+const commonSubsequence = (
+  from: readonly unknown[],
+  to: readonly unknown[],
+  { positional = false }: { positional?: boolean } = {},
+): [number, number][] => {
   let prefix = 0;
   while (prefix < from.length && prefix < to.length && encodedValuesEqual(from[prefix], to[prefix])) {
     prefix++;
@@ -69,7 +75,14 @@ const commonSubsequence = (from: readonly unknown[], to: readonly unknown[]): [n
   const pairs: [number, number][] = Array.from({ length: prefix }, (_, index) => [index, index]);
   const rows = from.length - prefix - suffix;
   const columns = to.length - prefix - suffix;
-  if (rows * columns <= LIST_DIFF_LIMIT) {
+  if (rows * columns > LIST_DIFF_LIMIT) {
+    log.warn('fold: list middle too large to diff', { rows, columns, positional });
+    if (positional) {
+      for (let offset = 0; offset < Math.min(rows, columns); offset++) {
+        pairs.push([prefix + offset, prefix + offset]);
+      }
+    }
+  } else {
     const lengths = Array.from({ length: rows + 1 }, () => new Array<number>(columns + 1).fill(0));
     for (let row = rows - 1; row >= 0; row--) {
       for (let column = columns - 1; column >= 0; column--) {
@@ -108,7 +121,7 @@ type ListEdit =
  * it is, and one already gone is skipped.
  */
 const rebaseListEdit = (previous: readonly unknown[], next: readonly unknown[], current: readonly unknown[]) => {
-  const located = new Map(commonSubsequence(previous, current));
+  const located = new Map(commonSubsequence(previous, current, { positional: true }));
   /** Where an insert after `previous[index]` goes in `current`: after the nearest located element at or before it. */
   const insertIndex = (index: number): number => {
     for (let candidate = index; candidate >= 0; candidate--) {
@@ -144,7 +157,14 @@ const rebaseListEdit = (previous: readonly unknown[], next: readonly unknown[], 
     }
     const values = next.slice(nextIndex + paired, nextMatch);
     if (values.length > 0) {
-      edits.push({ kind: 'insert', index: insertIndex(previousIndex + paired - 1), values });
+      const index = insertIndex(previousIndex + paired - 1);
+      // Inserts that fall back to one anchor are one splice, in source order.
+      const last = edits.at(-1);
+      if (last?.kind === 'insert' && last.index === index) {
+        last.values.push(...values);
+      } else {
+        edits.push({ kind: 'insert', index, values });
+      }
     }
     previousIndex = previousMatch + 1;
     nextIndex = nextMatch + 1;
@@ -158,8 +178,9 @@ const rebaseListEdit = (previous: readonly unknown[], next: readonly unknown[], 
  * Applies the edit a late change made, from `previous` to `next`, to the value at `path` in `draft`,
  * whose value there is `current`, as nested edits rather than one replacement: a map key by key (only
  * keys the change moved), a list by inserts, deletes and element edits placed on `current`'s elements,
- * and a string by a text diff to `next`. A concurrent direct edit elsewhere in the same map, list or text
- * therefore survives the merge. Anything else, or a value whose kind changed, is written whole.
+ * and text as a text diff (placed on `current`'s characters when it differs from `previous`). A concurrent
+ * direct edit elsewhere in the same map, list or text therefore survives the merge. A cleared value is
+ * deleted; anything else, or a value whose kind changed, is written whole.
  */
 export const applyStructuralEdit = (
   draft: unknown,
@@ -171,9 +192,34 @@ export const applyStructuralEdit = (
   if (encodedValuesEqual(previous, next)) {
     return;
   }
+  if (next === undefined) {
+    const parent = getDeep(draft, path.slice(0, -1));
+    if (isRecord(parent)) {
+      delete parent[String(path.at(-1))];
+    }
+    return;
+  }
   if (typeof current === 'string' && typeof next === 'string') {
     invariant(typeof draft === 'object' && draft !== null, 'fold draft is not a document');
-    A.updateText(draft, [...path], next);
+    if (typeof previous !== 'string' || previous === current) {
+      A.updateText(draft, [...path], next);
+      return;
+    }
+    // The target text differs from the late change's source (concurrent folds ordered it differently), so
+    // the change's own edit is placed on it character by character, as a list edit is.
+    for (const edit of rebaseListEdit(previous.split(''), next.split(''), current.split(''))) {
+      switch (edit.kind) {
+        case 'update':
+          A.splice(draft, [...path], edit.index, 1, String(edit.next));
+          break;
+        case 'delete':
+          A.splice(draft, [...path], edit.index, 1);
+          break;
+        case 'insert':
+          A.splice(draft, [...path], edit.index, 0, edit.values.join(''));
+          break;
+      }
+    }
     return;
   }
   if (isMapValue(previous) && isMapValue(next) && isMapValue(current)) {

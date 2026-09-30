@@ -69,16 +69,20 @@ Make the API unable to express the cases that thrashed in converge, instead of p
 
 Follow-up (2026-09-29), superseding item 1:
 
-8. **Per-change structural folds.** A late change's edits inside a map, list or text are folded as a
-   change of their own, forked at the winning migration change plus the folds of that change's late
-   ancestors, under an actor derived from the fold's ops (`ObjectCore.foldChangeAt`), and placed on the
-   target where its elements are (`fold-edit.ts`). Peers that fold the same late change, in any order and
-   at any time, author one byte-identical change. Keys a late change moved by replacing a source value
-   (in it or an ancestor), scalar keys, meta, and anything a change fails to classify are folded per pass
-   from the merged current data, as before. The transform is recomputed on the step's source properties
-   only. Every change that writes the object is classified, never the net diff, and one checkpoint change
-   per object records each step at the heads its pass read. Rich-text fields may be migrated again; marks
-   are not carried. Fan-in and array fan-out folds remain whole-value per key.
+8. **One fold channel per target key.** A map, list or text target is only ever written per change and
+   never replaced: each late change is folded as the edits it made to the transform's output (map keys,
+   list inserts and deletes rebased onto the target's elements, text splices), as its own change forked
+   at the winning migration change plus the folds of its late ancestors, under an actor derived from the
+   fold's ops (`ObjectCore.foldChangeAt`, `fold-edit.ts`). A source value set outright still folds as
+   edits, except that a string target copying a source string that was set outright is set outright.
+   Scalar targets and meta are folded per pass from the merged current data, forked over every per-change
+   fold. A transform that rejects the state before a change diffs from the target at the fork instead;
+   one that rejects the state after a change leaves it to a later change. The transform is recomputed on
+   the step's source properties only. A step checkpoints only past a late write. Rounds 2 and 3 of the
+   converge loop found that letting both channels write one key loses writes whenever a whole put
+   replaces the container a per-change fold edits; `RESEARCH-ARRAY-FOLDS.md` reaches the same design
+   from Cambria, panproto, Automerge and edit-lens prior art. Fan-in and array fan-out folds remain
+   whole-value per key.
 9. **Kept keys keep their value.** The runner rejects a transform that changes the value of a property it
    keeps under the same name: an old client keeps writing it in its old meaning, where fold-forward cannot
    tell the two apart. A changed meaning takes a new name.
