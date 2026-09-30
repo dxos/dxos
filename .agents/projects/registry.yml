@@ -14,8 +14,8 @@ projects:
     summary: 'Composer dedicated worker as a plugin host: base worker (app-framework) provides hook bus, RPC router and a LayerStack built from Capabilities.LayerSpec contributed by worker plugin modules loaded by URL; plugin-client contributes client services.'
     tasks: .agents/projects/worker-plugins/TASKS.md
     design: .agents/projects/worker-plugins/DESIGN.md
-    prs: []
-    resume: 'Just started.'
+    prs: [13538]
+    resume: 'PR #13538 open: base worker (@dxos/app-framework/worker), plugin-client worker plugin, Composer switched (observability as a worker plugin). Dev boot verified; CI e2e runs the production bundle. NEXT: green CI, then the TASKS.md follow-ups.'
   - name: architecture-rules
     status: active
     user: dmaretskyi
