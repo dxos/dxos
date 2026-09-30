@@ -141,6 +141,14 @@ export const expectScrollingPopup = async (popup: HTMLElement, steps: number) =>
     await expect(popup.scrollTop, `scrolled: ${where}`).toBeGreaterThan(0);
     await expect(itemRect.top >= viewRect.top - 0.5 && itemRect.bottom <= viewRect.bottom + 0.5, where).toBe(true);
   });
+  // The overlay thumb sits inside the viewport's inset focus ring, never over it.
+  const thumb = popupFrame(popup).querySelector<HTMLElement>('[data-scroll-thumb="vertical"]');
+  await expect(thumb, 'vertical thumb').not.toBeNull();
+  const ring = parseFloat(getComputedStyle(popup).getPropertyValue('--nx-focus-ring-width'));
+  await expect(ring, 'focus ring width').toBeGreaterThan(0);
+  await expect(thumb?.getBoundingClientRect().right ?? Infinity, 'thumb inside ring').toBeLessThanOrEqual(
+    popup.getBoundingClientRect().right - ring + 0.5,
+  );
 };
 
 /** Hovers with a real pointer (the storybook runner's Playwright), since synthetic events never apply `:hover`. */

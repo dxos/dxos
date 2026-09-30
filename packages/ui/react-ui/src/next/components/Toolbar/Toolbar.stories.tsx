@@ -34,7 +34,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Toolbar.Separator data-testid={`separator-${size}`} />
       <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
       <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
-      <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
+      <Next.Select.Root items={OPTIONS}>
         <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Next.Select.Content>
           {OPTIONS.map((item) => (

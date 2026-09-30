@@ -181,11 +181,13 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
       {vertical.visible && (
         <div
           className={mx(appearance('vertical'), visibility)}
+          data-scroll-thumb='vertical'
           style={{
             width: density.size,
             height: vertical.length,
             top: vertical.offset,
-            insetInlineEnd: 0,
+            // A host that draws an inset ring at its edge (a focused popup) sets this so the thumb clears the ring.
+            insetInlineEnd: 'var(--scroll-thumb-inset, 0px)',
           }}
           onPointerDown={handlePointerDown('vertical')}
           onPointerMove={handlePointerMove('vertical')}
@@ -197,6 +199,7 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
       {horizontal.visible && (
         <div
           className={mx(appearance('horizontal'), visibility)}
+          data-scroll-thumb='horizontal'
           style={{
             height: density.size,
             width: horizontal.length,

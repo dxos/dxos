@@ -45,7 +45,7 @@ const ProfileForm = () => (
       <Next.Input type='email' placeholder='ada@example.com' />
     </Next.Field.Root>
     <Next.Field.Root data-testid='role'>
-      <Next.Select.Root items={ROLES} positioning={{ sameWidth: true }}>
+      <Next.Select.Root items={ROLES}>
         <Next.Field.Header>
           <Next.Select.Label>Role</Next.Select.Label>
         </Next.Field.Header>

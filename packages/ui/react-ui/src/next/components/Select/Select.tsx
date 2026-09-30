@@ -35,13 +35,22 @@ export type SelectOption = {
 // Root
 //
 
-type SelectRootProps = ThemedClassName<Omit<SelectPrimitive.RootProps<SelectOption>, 'collection'>> & {
+/** Ark's positioning less `sameWidth`; an interface, so declarations name it rather than expanding floating-ui's types. */
+interface SelectPositioning extends Omit<
+  NonNullable<SelectPrimitive.RootProps<SelectOption>['positioning']>,
+  'sameWidth'
+> {}
+
+type SelectRootProps = ThemedClassName<Omit<SelectPrimitive.RootProps<SelectOption>, 'collection' | 'positioning'>> & {
   items: SelectOption[];
+  /** Ark's positioning, less `sameWidth`: the popup is always at least the trigger's width and grows to its options. */
+  positioning?: SelectPositioning;
 };
 
 /**
  * Ark select over a flat option list (grouped in the popup with `ItemGroup`); the root takes no box so its trigger is
- * laid out as the parent's child. `multiple` keeps the popup open while choosing.
+ * laid out as the parent's child. `multiple` keeps the popup open while choosing. The popup is at least as wide as
+ * the trigger and grows to fit its widest option, up to the viewport's width.
  */
 const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(
   (
@@ -98,17 +107,26 @@ SelectLabel.displayName = 'Next.Select.Label';
 // Trigger
 //
 
+/** How wide the trigger is: `fill` takes its cell's width; `options` fits the widest option (or the placeholder). */
+type SelectTriggerFit = 'fill' | 'options';
+
 type SelectTriggerProps = ThemedClassName<Omit<SelectPrimitive.TriggerProps, 'children'>> & {
   placeholder?: string;
   /** Options are still arriving (an async lookup): a spinner replaces the caret and the trigger is `aria-busy`. */
   loading?: boolean;
+  /**
+   * `fill` (default) stretches the trigger across its cell. `options` sizes it to the widest option's icon and label
+   * (or the placeholder, if wider), so choosing a different option never changes its width: the labels are laid out,
+   * hidden, in the value's cell, which CSS sizes without measuring.
+   */
+  fit?: SelectTriggerFit;
 };
 
 /** Shows the chosen option (its icon when exactly one is chosen; `multiple` lists the labels) and a caret. */
 const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
-  ({ classNames, placeholder, loading, ...props }, forwardedRef) => {
+  ({ classNames, placeholder, loading, fit = 'fill', ...props }, forwardedRef) => {
     const toolbarItem = useToolbarItem(props.disabled);
-    const { selectedItems } = useSelectContext();
+    const { selectedItems, collection } = useSelectContext();
     const selected = selectedItems.length === 1 ? selectedItems[0] : undefined;
     return (
       <SelectPrimitive.Trigger
@@ -119,11 +137,23 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           props.onFocus?.(event);
           toolbarItem?.onFocus();
         }}
+        data-fit={fit === 'fill' ? undefined : fit}
         className={mx(recipes.selectTrigger(), classNames)}
         ref={forwardedRef}
       >
         {selected?.icon && <Icon icon={selected.icon} hue={selected.iconHue} />}
         <SelectPrimitive.ValueText placeholder={placeholder} />
+        {fit === 'options' && (
+          <span aria-hidden data-scope='select' data-part='value-sizer' className={recipes.selectValueSizer()}>
+            {placeholder && <span>{placeholder}</span>}
+            {collection.items.map((item) => (
+              <span key={item.value}>
+                {item.icon && <Icon icon={item.icon} />}
+                {item.label}
+              </span>
+            ))}
+          </span>
+        )}
         <SelectPrimitive.Indicator>
           {loading ? <Icon icon='ph--spinner-gap--regular' data-spin='' /> : <Icon icon='ph--caret-up-down--regular' />}
         </SelectPrimitive.Indicator>
@@ -337,7 +367,9 @@ export type {
   SelectItemProps,
   SelectItemTextProps,
   SelectLabelProps,
+  SelectPositioning,
   SelectRootProps,
   SelectSeparatorProps,
+  SelectTriggerFit,
   SelectTriggerProps,
 };

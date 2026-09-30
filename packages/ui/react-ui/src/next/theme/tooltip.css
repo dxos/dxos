@@ -11,7 +11,9 @@
     color: var(--color-inverse-fg);
     min-width: 0;
     max-width: 20rem;
-    padding: var(--nx-gap-size);
+    /* A single line reads as a chip: one control inset above and below, the gap either side. */
+    padding-block: var(--nx-control-inset);
+    padding-inline: var(--nx-gap-size);
     overflow-wrap: break-word;
   }
 

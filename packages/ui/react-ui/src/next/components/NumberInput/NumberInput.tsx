@@ -51,9 +51,9 @@ export type NumberInputProps = ThemedClassName<
 
 /**
  * Ark number input in a control row: a text input that parses and formats by locale, steps by `step` with ArrowUp/Down
- * (and PageUp/Down), clamps to `min`/`max` on blur, with trailing decrement and increment buttons. Inside a
- * `Field.Root` the input takes the field's id, label, description and state. `data-testid` goes to the row, the ref to
- * the input.
+ * (and PageUp/Down), clamps to `min`/`max` on blur, with trailing decrement and increment buttons (`compact`, so the
+ * pair abuts). Inside a `Field.Root` the input takes the field's id, label, description and state. `data-testid` goes
+ * to the row, the ref to the input.
  */
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   (
@@ -97,6 +97,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                   icon='ph--minus--regular'
                   label={decrementLabel ?? t('number-input.decrement.label')}
                   iconOnly
+                  compact
                   variant='ghost'
                   showTooltip={false}
                 />
@@ -106,6 +107,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                   icon='ph--plus--regular'
                   label={incrementLabel ?? t('number-input.increment.label')}
                   iconOnly
+                  compact
                   variant='ghost'
                   showTooltip={false}
                 />

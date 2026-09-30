@@ -12,7 +12,7 @@ import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Block } from '../Block/index.ts';
 import { Button, type ButtonProps } from '../Button/index.ts';
-import { Container } from '../Container/index.ts';
+import { Container, type Gutter, containerAttributes } from '../Container/index.ts';
 import { Group } from '../Group/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Image, type ImageProps } from '../Image/index.ts';
@@ -31,16 +31,23 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   border?: boolean;
   /** Marks the chosen card of a set (`data-selected`, `aria-current`). */
   selected?: boolean;
+  /**
+   * Container's gutter, which also places a Header's and Row's leading and trailing cells: `rail` (default) puts them
+   * in the gutters, one gap inside the border, so every text starts at the content edge; any other width (`md` was the
+   * earlier card) keeps them in the content track beside the text.
+   */
+  gutter?: Exclude<Gutter, 'inherit'>;
 };
 
 /**
- * A `gutter='md'` Container one level above its host (`level='+1'`), so Header, Body and Footer share one content
- * edge. The child div wins the `asChild` merge, so the part keeps the card scope. With `onClick` the card is a button
- * (Enter and Space activate it); nested actions and menus stop their clicks reaching it.
+ * A gutter Container one level above its host (`level='+1'`), so Header, Body and Footer share one content edge; with
+ * `gutter='rail'` a Header's or Row's leading and trailing cells sit in its rails. The child div wins the `asChild` merge, so
+ * the part keeps the card scope. With `onClick` the card is a button (Enter and Space activate it); nested actions and
+ * menus stop their clicks reaching it.
  */
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ classNames, border = true, selected, onClick, onKeyDown, ...props }, forwardedRef) => (
-    <Container asChild gutter='md' level='+1'>
+  ({ classNames, border = true, selected, gutter = 'rail', onClick, onKeyDown, ...props }, forwardedRef) => (
+    <Container asChild gutter={gutter} level='+1'>
       <div
         {...props}
         {...clickableProps(onClick, onKeyDown)}
@@ -77,7 +84,10 @@ CardPoster.displayName = 'Next.Card.Poster';
 
 type CardHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-/** A block row holding the Title and optional trailing Blocks or icon-only Buttons. */
+/**
+ * A block row across the card's rails holding the Title: a Block or icon-only Button before the Title fills the start
+ * rail, and the last one after it the end rail, so the Title starts at the content edge.
+ */
 const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(({ classNames, ...props }, forwardedRef) => (
   <div
     {...props}
@@ -201,45 +211,56 @@ CardSection.displayName = 'Next.Card.Section';
 //
 
 type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  /** Leading icon, in a block-sized cell, so the text of every row with an icon starts at the same x. */
+  /** Leading icon, in a Block in the card's start rail, so row text starts at the content edge with or without one. */
   icon?: string;
-  /** Trailing content (a Tag, a count, an action), kept whole while the text truncates. */
+  /**
+   * Trailing content (a Tag, a count, an action), kept whole while the text truncates; it ends in the card's end rail,
+   * which an icon-only action fills, and a wider one extends back into the content track.
+   */
   trailing?: ReactNode;
   /** The chosen row of a set (`aria-current`). */
   current?: boolean;
 };
 
 /**
- * A block-tall row of icon, text and trailing content. With `onClick` the row is a button (Enter and Space activate
+ * A block-tall row: an inheriting Container (subgrid), so the icon lands in the card's start rail, the text in its
+ * content track and the trailing content in its end rail. With `onClick` the row is a button (Enter and Space activate
  * it), as the current `Card.Action` row was.
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ classNames, icon, trailing, current, onClick, onKeyDown, children, ...props }, forwardedRef) => (
-    <div
-      {...props}
-      {...clickableProps(onClick, onKeyDown)}
-      aria-current={current ? 'true' : undefined}
-      data-scope='card'
-      data-part='row'
-      data-icon={icon ? '' : undefined}
-      className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
-      ref={forwardedRef}
-    >
-      {icon && (
-        <Block>
-          <Icon icon={icon} />
-        </Block>
-      )}
-      <div data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
-        {children}
-      </div>
-      {trailing != null && (
-        <div data-scope='card' data-part='row-trailing' className={recipes.cardRowTrailing()}>
-          {trailing}
+  ({ classNames, style, icon, trailing, current, onClick, onKeyDown, children, ...props }, forwardedRef) => {
+    const { style: containerStyle, ...attributes } = containerAttributes({});
+    return (
+      <div
+        {...props}
+        {...attributes}
+        {...clickableProps(onClick, onKeyDown)}
+        style={{ ...containerStyle, ...style }}
+        aria-current={current ? 'true' : undefined}
+        data-scope='card'
+        data-part='row'
+        data-trailing={trailing != null ? '' : undefined}
+        className={mx(recipes.container(), recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
+        ref={forwardedRef}
+      >
+        {icon && (
+          <Block rail='start'>
+            <Icon icon={icon} />
+          </Block>
+        )}
+        <div data-scope='card' data-part='row-main' className={recipes.cardRowMain()}>
+          <div data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
+            {children}
+          </div>
+          {trailing != null && (
+            <div data-scope='card' data-part='row-trailing' className={recipes.cardRowTrailing()}>
+              {trailing}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  ),
+      </div>
+    );
+  },
 );
 
 CardRow.displayName = 'Next.Card.Row';
@@ -298,33 +319,41 @@ type CardLinkProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'a'>, 'childr
   href: string;
 };
 
-/** A row linking out: link icon, label and an external-link icon; opens in a new tab like the current `Card.Link`. */
+/**
+ * A row linking out, laid out like a Row: the link icon in the start rail, the label, and an external-link icon in the
+ * end rail; opens in a new tab like the current `Card.Link`.
+ */
 const CardLink = forwardRef<HTMLAnchorElement, CardLinkProps>(
-  ({ classNames, label, target = '_blank', rel = 'noreferrer', onClick, ...props }, forwardedRef) => (
-    <a
-      {...props}
-      target={target}
-      rel={rel}
-      onClick={(event) => {
-        stopPropagation(event);
-        onClick?.(event);
-      }}
-      data-scope='card'
-      data-part='link'
-      className={mx(recipes.cardRow(), recipes.cardLink(), classNames)}
-      ref={forwardedRef}
-    >
-      <Block>
-        <Icon icon='ph--link--regular' />
-      </Block>
-      <span data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
-        {label}
-      </span>
-      <Block>
-        <Icon icon='ph--arrow-square-out--regular' />
-      </Block>
-    </a>
-  ),
+  ({ classNames, style, label, target = '_blank', rel = 'noreferrer', onClick, ...props }, forwardedRef) => {
+    const { style: containerStyle, ...attributes } = containerAttributes({});
+    return (
+      <a
+        {...props}
+        {...attributes}
+        style={{ ...containerStyle, ...style }}
+        target={target}
+        rel={rel}
+        onClick={(event) => {
+          stopPropagation(event);
+          onClick?.(event);
+        }}
+        data-scope='card'
+        data-part='link'
+        className={mx(recipes.container(), recipes.cardRow(), recipes.cardLink(), classNames)}
+        ref={forwardedRef}
+      >
+        <Block rail='start'>
+          <Icon icon='ph--link--regular' />
+        </Block>
+        <span data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
+          {label}
+        </span>
+        <Block rail='end'>
+          <Icon icon='ph--arrow-square-out--regular' />
+        </Block>
+      </a>
+    );
+  },
 );
 
 CardLink.displayName = 'Next.Card.Link';

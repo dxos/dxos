@@ -34,7 +34,7 @@ const SizeSection = ({ size }: { size: Size }) => (
       <Next.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
       <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
       <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
-      <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
+      <Next.Select.Root items={OPTIONS}>
         <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Next.Select.Content data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (

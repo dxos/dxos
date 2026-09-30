@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
+import { GEOMETRY, byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const LONG =
@@ -75,7 +75,8 @@ export const Default: Story = {};
 /**
  * Keyboard focus shows the tooltip, linked to its trigger; tabbing straight to the next trigger swaps tooltips and the
  * second stays open past the open delay; tabbing off a trigger still closes its tooltip, although the close is deferred
- * by a task; hovering shows it after the delay, and long text wraps within the 20rem cap. The tooltip takes its trigger row's size unless given its own. `Tooltip.Trigger content`
+ * by a task; hovering shows it after the delay, and long text wraps within the 20rem cap. One line is a compact chip,
+ * shorter than the block. The tooltip takes its trigger row's size unless given its own. `Tooltip.Trigger content`
  * brings its own Root and Content, on `side`. A TextTooltip ellipsizes its text and shows it in full on hover only
  * while it is truncated. The tooltip and its arrow use the inverted surface, not the popup level. The story ends open.
  */
@@ -103,6 +104,10 @@ export const Test: Story = {
     await expect(getComputedStyle(content).color).toBe(tokenColour(content, 'color', '--color-inverse-fg'));
     await expect(fill).not.toBe(tokenColour(content, 'background-color', '--dx-surface-popup'));
     await expectArrow(save, content);
+    // A one-line chip: its line plus one control inset above and below, shorter than the block.
+    const chip = content.getBoundingClientRect().height;
+    await expect(chip).toBeCloseTo(parseFloat(getComputedStyle(content).lineHeight) + 2 * GEOMETRY.xs.inset, 0);
+    await expect(chip).toBeLessThan(GEOMETRY.xs.block);
 
     await userEvent.tab();
     await expect(publish).toHaveFocus();
@@ -127,6 +132,7 @@ export const Test: Story = {
         side.getBoundingClientRect().right,
       ),
     );
+    await expect(body.getByRole('tooltip').getBoundingClientRect().height).toBeLessThan(GEOMETRY.md.block);
     await userEvent.unhover(side);
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 

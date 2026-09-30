@@ -39,6 +39,13 @@ const ICON_OPTIONS: Next.SelectOption[] = [
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
+/** Labels of very different widths, for the `fit='options'` trigger. */
+const DENSITY: Next.SelectOption[] = [
+  { value: 'xs', label: 'XS' },
+  { value: 'comfortable', label: 'Comfortable spacing' },
+  { value: 'md', label: 'Medium' },
+];
+
 /** Enough options to overflow the popup's 20rem cap at every size. */
 const LONG: Next.SelectOption[] = Array.from({ length: 30 }, (_, index) => ({
   value: `option-${index + 1}`,
@@ -57,12 +64,12 @@ const VEGETABLES: Next.SelectOption[] = [
 
 /**
  * A plain select, one whose options have leading icons, then a grouped select with hued icons and custom item content,
- * a `multiple` select and a loading one; `Select.Content` inherits its trigger row's size, except the grouped one, `lg` at every size.
+ * a `multiple` select and a loading one, then a `fit='options'` trigger as wide as its widest option; `Select.Content` inherits its trigger row's size, except the grouped one, `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
+      <Next.Select.Root items={OPTIONS}>
         <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Next.Select.Content data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (
@@ -73,7 +80,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
           ))}
         </Next.Select.Content>
       </Next.Select.Root>
-      <Next.Select.Root items={ICON_OPTIONS} positioning={{ sameWidth: true }}>
+      <Next.Select.Root items={ICON_OPTIONS}>
         <Next.Select.Trigger placeholder='View' aria-label='View' />
         <Next.Select.Content>
           {ICON_OPTIONS.map((item) => (
@@ -130,6 +137,16 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         <Next.Select.Content />
       </Next.Select.Root>
     </Next.Toolbar.Root>
+    <Next.Toolbar.Root>
+      <Next.Select.Root items={DENSITY}>
+        <Next.Select.Trigger fit='options' placeholder='Density' aria-label='Density' data-testid={`fit-${size}`} />
+        <Next.Select.Content>
+          {DENSITY.map((item) => (
+            <Next.Select.Item key={item.value} item={item} />
+          ))}
+        </Next.Select.Content>
+      </Next.Select.Root>
+    </Next.Toolbar.Root>
   </>
 );
 
@@ -154,7 +171,9 @@ export const Default: Story = {};
  * choosing; a decorative Separator spans the popup between options. Grouped options sit in labelled `group`s, a
  * `hue` colours an option's icon, and an Item's children replace its whole row, composed from parts. A `multiple` select stays open
  * while choosing and lists every choice; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the
- * highlight in view; a `loading` trigger is busy and spins in place of its caret. A listbox takes its trigger row's size unless given its own. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
+ * highlight in view; a `loading` trigger is busy and spins in place of its caret. A popup is at least its trigger's
+ * width and grows to fit its widest option; a `fit='options'` trigger keeps the widest option's width whatever is
+ * chosen. A listbox takes its trigger row's size unless given its own. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
  */
 export const Test: Story = {
@@ -292,8 +311,37 @@ export const Test: Story = {
     const spinner = lookup.querySelector<SVGElement>('[data-spin]');
     await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');
 
+    // `fit='options'`: as wide as the widest option, whichever is chosen.
+    for (const size of SIZES) {
+      const fit = byTestId(canvasElement, `fit-${size}`);
+      const width = fit.getBoundingClientRect().width;
+      const value = fit.querySelector<HTMLElement>('[data-part="value-text"]');
+      const widest = Math.max(
+        ...Array.from(fit.querySelectorAll<HTMLElement>('[data-part="value-sizer"] > *')).map(
+          (label) => label.scrollWidth,
+        ),
+      );
+      await expect(value?.getBoundingClientRect().width ?? 0, `fit-${size} value`).toBeGreaterThanOrEqual(widest - 0.5);
+      if (size === 'md') {
+        for (const { label } of DENSITY) {
+          await userEvent.click(fit);
+          await userEvent.click(await body.findByRole('option', { name: label }));
+          await waitFor(() => expect(value).toHaveTextContent(label));
+          await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
+          await expect(fit.getBoundingClientRect().width, `fit-md with ${label}`).toBeCloseTo(width, 0);
+        }
+      }
+    }
+
+    // The popup is at least the trigger's width and fits its widest option unclipped.
     await userEvent.click(view);
     const views = await body.findByRole('listbox');
+    await expect(popupFrame(views).getBoundingClientRect().width).toBeGreaterThanOrEqual(
+      view.getBoundingClientRect().width - 0.5,
+    );
+    for (const text of views.querySelectorAll<HTMLElement>('[data-part="item-text"]')) {
+      await expect(text.scrollWidth, `${text.textContent} unclipped`).toBeLessThanOrEqual(text.clientWidth);
+    }
     for (const option of within(views).getAllByRole('option')) {
       const icon = option.querySelector<SVGElement>('.nx-icon');
       await expect(icon?.getBoundingClientRect().width).toBeCloseTo(16, 0);

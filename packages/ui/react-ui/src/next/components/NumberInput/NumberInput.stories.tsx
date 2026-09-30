@@ -65,7 +65,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The row is a control as wide as an Input at every size, with the stepper buttons inset at its end; the Field label
+ * The row is a control as wide as an Input at every size, with the compact stepper buttons abutting, inset at its end; the Field label
  * names the input (`spinbutton`). The buttons and ArrowUp/Down step by `step` and stop at `max`/`min`; typing past
  * `max` clamps on blur.
  */
@@ -86,6 +86,20 @@ export const Test: Story = {
         rect.right - GEOMETRY[size].inset,
         0,
       );
+      // Compact steppers: the pair abuts, each narrower than a block cell.
+      const decrement = within(row).getByRole('button', { name: 'Decrement' });
+      await expect(decrement, `${size} decrement compact`).toHaveAttribute('data-compact');
+      await expect(increment.getBoundingClientRect().left, `${size} stepper gap`).toBeCloseTo(
+        decrement.getBoundingClientRect().right,
+        0,
+      );
+      for (const button of [decrement, increment]) {
+        await expect(button.getBoundingClientRect().width, `${size} stepper width`).toBeLessThan(GEOMETRY[size].block);
+        await expect(button.getBoundingClientRect().width).toBeCloseTo(
+          GEOMETRY[size].icon + 2 * GEOMETRY[size].inset,
+          0,
+        );
+      }
     }
     await expectScoped(canvasElement);
 
@@ -95,6 +109,7 @@ export const Test: Story = {
     const input = canvas.getByRole('spinbutton', { name: 'Quantity' });
     await expect(input).toHaveAccessibleDescription('Between 0 and 10: 8');
     await expect(input).toHaveAttribute('aria-valuemax', '10');
+    await expect(getComputedStyle(input).fontVariantNumeric).toContain('tabular-nums');
 
     const row = byTestId(md, 'number-md');
     await userEvent.click(within(row).getByRole('button', { name: 'Increment' }));

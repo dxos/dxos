@@ -42,7 +42,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Field.Root>
 
       <Next.Field.Root data-testid='role'>
-        <Next.Select.Root items={ROLES} positioning={{ sameWidth: true }}>
+        <Next.Select.Root items={ROLES}>
           <Next.Field.Header>
             <Next.Select.Label>Role</Next.Select.Label>
             <Next.Block data-testid='role-lock'>
