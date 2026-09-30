@@ -128,6 +128,18 @@ const runSession = (
 
     const responses = new Map<number, Response>();
     let buffer = '';
+    // One request in flight at a time: the server handles requests concurrently, so a request that
+    // depends on an earlier one (an invoke after its `loadSkill`) could otherwise overtake it.
+    let next = 0;
+    const writeNext = () => {
+      while (next < requests.length) {
+        const request = requests[next++] as { id?: number };
+        child.stdin.write(`${JSON.stringify(request)}\n`);
+        if (request.id !== undefined && awaitedIds.includes(request.id)) {
+          return;
+        }
+      }
+    };
     const finish = (error?: Error) => {
       clearTimeout(timer);
       child.kill('SIGKILL');
@@ -158,13 +170,16 @@ const runSession = (
       }
       if (awaitedIds.every((id) => responses.has(id))) {
         finish();
+        return;
+      }
+      const inFlight = (requests[next - 1] as { id?: number } | undefined)?.id;
+      if (inFlight === undefined || responses.has(inFlight)) {
+        writeNext();
       }
     });
     child.on('error', finish);
 
-    for (const request of requests) {
-      child.stdin.write(`${JSON.stringify(request)}\n`);
-    }
+    writeNext();
   });
 
 /** `responses` holds a fixed, known set of request ids, so a missing one is a broken session. */
