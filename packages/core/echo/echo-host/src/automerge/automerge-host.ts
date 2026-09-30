@@ -233,14 +233,16 @@ export class AutomergeHost extends Resource {
   });
 
   private _repo!: Repo;
-  /** Changes the collection diff has confirmed present per document; see {@link _hasLocalChange}. */
+  /**
+   * Changes the collection diff has confirmed present per document; see {@link _hasLocalChange}. Only heads a
+   * peer advertises beside a document's own land here, a few per document, capped per document and pruned
+   * with it by {@link removeDocument}; the absent map below is bounded the same way.
+   */
   private readonly _confirmedChanges = new Map<DocumentId, Set<string>>();
 
   /** When the collection diff last found each change absent from a resident document. */
   private readonly _absentChanges = new Map<DocumentId, Map<string, number>>();
 
-  /** Documents garbage-collected by {@link removeDocument}, which a later push must not revive. */
-  private readonly _removedDocuments = new Set<DocumentId>();
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
 
@@ -446,7 +448,9 @@ export class AutomergeHost extends Resource {
       // in runs the load that applies it, and keeps it resident until that load has landed.
       Event.wrap<{ documentId: DocumentId }>(this._repo, 'subduction-detached-data').on(this._ctx, ({ documentId }) => {
         // Storage migrations write while the host is still opening; a document's first load applies those.
-        if (this.isOpen && !this._removedDocuments.has(documentId)) {
+        // Garbage collection removes documents that left every collection, so the collections decide
+        // which pushes are worth a load, across restarts too.
+        if (this.isOpen && this._isInLocalCollection(documentId)) {
           this._absentChanges.delete(documentId);
           this._leaseUntilSettled(documentId);
         }
@@ -959,7 +963,6 @@ export class AutomergeHost extends Resource {
     this._leases.forget(documentId);
     this._confirmedChanges.delete(documentId);
     this._absentChanges.delete(documentId);
-    this._removedDocuments.add(documentId);
 
     // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
     // row could never be found again.
@@ -1323,6 +1326,15 @@ export class AutomergeHost extends Resource {
    * Falls back to the document's own embedded space key (loaded handle) / the root-doc lookup for
    * a doc not yet linked into any local collection (e.g. inbound during initial sync).
    */
+  private _isInLocalCollection(documentId: DocumentId): boolean {
+    return this._collectionSynchronizer
+      .getRegisteredCollectionIds()
+      .some(
+        (collectionId) =>
+          documentId in (this._collectionSynchronizer.getLocalCollectionState(collectionId)?.documents ?? {}),
+      );
+  }
+
   async getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null> {
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);

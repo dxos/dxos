@@ -157,6 +157,8 @@ describe('AutomergeHost with Subduction', () => {
       await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
       await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
 
+      // Only documents a local collection lists are loaded for a push, as a space's documents are.
+      await host2.updateLocalCollectionState('test-collection', [documentId]);
       const mirrored = await host2.loadDoc<any>(Context.default(), documentId);
       invariant(mirrored);
       await waitForDoc(mirrored, (doc) => doc?.text === 'first');

@@ -488,35 +488,39 @@ describe('AutomergeHost', () => {
   });
 
   // Garbage collection deletes the document; a peer's later push must not bring it back.
-  test('data stored for a removed document does not fault it back in', async () => {
+  test('data stored for a document no collection references does not fault it in, across a restart', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
-    const host = new AutomergeHost({
-      runtime,
-      useSubduction: true,
-      residency: { evictionDelay: 0, minResidentDocuments: 0 },
-    });
+    const residency = { evictionDelay: 0, minResidentDocuments: 0 };
+    const collectionId = 'test-collection';
+
+    const before = new AutomergeHost({ runtime, useSubduction: true, residency });
+    await before.open();
+    const removed = await before.createDoc<any>({ value: 1 });
+    const kept = await before.createDoc<any>({ value: 2 });
+    await before.flush(Context.default());
+    removed[Symbol.dispose]();
+    kept[Symbol.dispose]();
+    // Garbage collection removes documents that left the space, so no collection lists them.
+    await before.updateLocalCollectionState(collectionId, [kept.documentId]);
+    await before.removeDocument(removed.documentId);
+    await before.close();
+
+    const host = new AutomergeHost({ runtime, useSubduction: true, residency });
     await host.open();
     onTestFinished(async () => {
       if (host.isOpen) {
         await host.close();
       }
     });
+    await host.updateLocalCollectionState(collectionId, [kept.documentId]);
 
-    const removed = await host.createDoc<any>({ value: 1 });
-    const evicted = await host.createDoc<any>({ value: 2 });
-    await host.flush(Context.default());
-    removed[Symbol.dispose]();
-    evicted[Symbol.dispose]();
-    await host.removeDocument(removed.documentId);
-    await waitForEviction(expect, host, evicted.documentId);
-
-    // The listener runs synchronously, so the evicted document faulting back in shows the event was
-    // handled, and the removed one staying out shows it was refused rather than not yet reached.
+    // The listener runs synchronously, so the kept document faulting in shows the event was handled,
+    // and the removed one staying out shows it was refused rather than not yet reached.
     const repo = (host as any)._repo;
     repo.emit('subduction-detached-data', { documentId: removed.documentId });
-    repo.emit('subduction-detached-data', { documentId: evicted.documentId });
-    expect(host.loadedDocumentIds).toContain(evicted.documentId);
+    repo.emit('subduction-detached-data', { documentId: kept.documentId });
+    expect(host.loadedDocumentIds).toContain(kept.documentId);
     expect(host.loadedDocumentIds).not.toContain(removed.documentId);
   });
 
