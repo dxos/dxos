@@ -167,6 +167,14 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     void refreshStatus();
   }, [refreshStatus]);
 
+  // Opening the pull request is the moment its stored fields are worth refreshing: a sync of the
+  // whole repository may be days old, and an imported pull request is never synced at all.
+  useEffect(() => {
+    void invokePromise(GitHubOperation.SyncPullRequest, { pullRequest: pullRequestRef }, { spaceId }).then(
+      ({ error }) => error && log.warn('pull request sync failed', { error }),
+    );
+  }, [invokePromise, pullRequestRef, spaceId]);
+
   const toast = useCallback(
     (id: string, title: string, success: boolean, description?: string) =>
       invokePromise(LayoutOperation.AddToast, {
