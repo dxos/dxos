@@ -306,6 +306,47 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    is again terminal rather than slow, and it is not the writer being partitioned, since client 0
    also wrote documents that did arrive.
 
+   **Fifth reproduction — and what the deployment was doing at the time.** Depot run `vc1ckclwkp`
+   (2026-09-25 02:00 UTC, seed `soak-519005411520831-1`), 458 commands in, the checkpoint over space
+   `BLY24RACL6ZSQS2NAFGV4D6JUNNPRO3MJ`:
+
+   ```
+   command 458 Checkpoint() failed: peers disagree on space 1:
+     client 0 = [… ["s1-d24",[],        …] …]
+     client 1 = [… ["s1-d24",[""],      …] …]
+   ```
+
+   Command 453 — five commands earlier — was `EditText(client 1, space 1, document 24)`, and client
+   1's own diagnostics name the document, the connection and the direction:
+
+   ```
+   AutomergeHost#0 collection sync not converging {
+     collectionId: 'space:BLY24RACL6ZSQS2NAFGV4D6JUNNPRO3MJ:2hKqiLPhMjcVCLRFEUHEBjFZFPCp',
+     peerId: 'subduction-replicator:BLY24RACL6ZSQS2NAFGV4D6JUNNPRO3MJ-da51ee45-…',
+     passes: 36, different: [ '3a7mY21KoyrLvzUGPnFNqsQzTAuf' ],
+     localHeads:  { '3a7m…': [ 'b3f674c2…' ] },
+     remoteHeads: { '3a7m…': [ '6931…', 'a622…' ] },
+   }
+   ```
+
+   One local head against the peer's two: the client holds a commit whose dependencies are exactly
+   what EDGE has, so this is a push that never landed, not a merge that cannot be made.
+
+   SigNoz supplies the other half. Over the same window `db-service` logged
+   `subduction: outbound send failed` (`sendMessage timed out after 10000ms`, `_flushOutboundBatches`)
+   20 times for this space, four of them on connection `da51ee45-…` — the peer in the log above —
+   clustered at 02:11 and 02:12, which is when the edit needed to cross. EDGE drops a batch whose
+   send times out by design and leaves the client's heal to re-drive it
+   (`subduction-automerge-replicator.ts`, "a settled failure is final").
+
+   The client's heal did not re-drive it, because it could not: `_handleCollectionSync` issued one
+   resync per observed head pair, and a lost round moves neither side's heads, so the pair stayed
+   suppressed for the checkpoint's whole 90 s budget. The retry window added in
+   `automerge-host.ts` (`DIVERGED_RESYNC_RETRY_MS`, doubling to a minute) is what closes that gap.
+
+   The same run's `join-latency` job was green (5.8 s median accept-to-synced over 5 joiners), so
+   the deployment was healthy in the ordinary path.
+
 7. **`POST /db/spaces/:id/notarization` 500s on the local stack** while `GET` on the same path
    succeeds. Seen on every run; the delegated join still completes, so it is not blocking. Not
    filed — needs a look at the local stack's own logs first.
