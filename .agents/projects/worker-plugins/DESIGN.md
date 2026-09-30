@@ -36,7 +36,7 @@ same unit of contribution a tab uses.
 ## Decisions
 
 - **D1 — plugins by URL (2b).** The tab lists worker plugin URLs in config
-  (`runtime.client.worker_plugins`, a new proto field); Composer produces them with `?module-url`
+  (proto field `runtime.client.worker_plugins`, generated JS name `runtime.client.workerPlugins`); Composer produces them with `?module-url`
   (`@dxos/vite-plugin-module-url`). A plugin that fails to load fails `init`: the worker cannot
   serve a tab without its services.
 - **D2 — base lives in app-framework.** It needs `PluginManager`; app-framework may depend on
@@ -60,6 +60,13 @@ same unit of contribution a tab uses.
   `globalThis` singletons (`@dxos/log`) survive that; anything else must be set up in the bundle that
   uses it — so Composer's client plugin entry (`workers/client-plugin.ts`) initializes the slim
   automerge/subduction wasm itself before re-exporting `@dxos/plugin-client/worker`.
+- **Open (blocks D6 in production).** Per-bundle state is not enough: in a production build the
+  worker's first RPC reply fails with `DataCloneError: Symbol() could not be cloned`, because the
+  plugin bundles carry their own copies of `effect` and `@dxos/rpc` and the base router cannot
+  handle values built by another copy. Dev mode is unaffected (one module graph). Choices:
+  1. compile the worker plugins into the worker entry, keeping URL loading for external plugins;
+  2. a worker shared-module registry so URL-loaded bundles import `effect`/`@dxos/*` from the base;
+  3. option 1 now, the registry as a follow-up.
 
 ## Risks
 

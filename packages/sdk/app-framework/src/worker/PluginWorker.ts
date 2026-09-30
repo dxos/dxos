@@ -131,7 +131,11 @@ export const run = ({ storageLockKey, plugins: builtIn = [] }: RunOptions): void
             yield* Effect.addFinalizer(() =>
               Effect.gen(function* () {
                 sessions--;
-                yield* Hook.emit(WorkerEvents.SessionClosed, { clientId, isOwner }).pipe(provideHooks);
+                // A failing subscriber must not skip the shutdown check below.
+                yield* Hook.emit(WorkerEvents.SessionClosed, { clientId, isOwner }).pipe(
+                  provideHooks,
+                  Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
+                );
                 if (sessions === 0) {
                   requestShutdown();
                 }
