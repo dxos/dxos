@@ -103,6 +103,10 @@ model PluginRelease {
   // `PENDING` (upload in progress / failed, retryable) | `PUBLISHED` | `YANKED`.
   state           String   @default("PENDING")
 
+  // Upload lease: only the request holding an unexpired lease may write this release's R2 prefix.
+  leaseId         String?
+  leaseExpiresAt  DateTime?
+
   // sha256-<base64> of manifest.json as stored, computed by the server.
   manifestHash    String?
   dependenciesJSON String  @default("{}")
@@ -126,9 +130,14 @@ identical in shape to an AT Protocol release. Composer's `UrlLoader` sees no dif
   `ctx.var.userIdentity` set by `edgeAuth`, never from the request body (the compute-service rule).
 - **The claim covers the AT Protocol path too.** `POST /upload` inserts or checks the same `Plugin`
   row (`source = ATPROTO`) before writing R2. This closes gap 2 for both paths and is the one
-  behavior change to an existing route. Existing R2 prefixes are backfilled into `Plugin` rows by a
-  one-off script (the owner for pre-existing keys is taken from the matching verified `plugin.profile`
-  author where one exists, otherwise `realm:dxos`).
+  behavior change to an existing route.
+- **Backfill existing prefixes before enforcing.** Keys already in R2 have no owner row, so the
+  `/upload` check ships in two steps. First a report-only scan lists every `modules/<key>/` prefix
+  with the `plugin.profile` records (verified or not) whose releases point at it. Keys with exactly
+  one plausible publisher get that owner; first-party keys get `realm:dxos`; ambiguous or unmatched
+  keys are left **unclaimed**, not assigned to `realm:dxos`, so the next upload by the actual
+  publisher claims them. Only then is the check turned
+  on. `POST /admin/plugins/:key/owner` reassigns a key when a publisher reports a wrong claim.
 - **Reserved prefixes.** Keys under `org.dxos.` / `dxos.` can only be claimed with the admin key
   (owner `realm:dxos`), mirroring `/admin/functions`. The loader already rejects ids that collide with
   builtin plugins (`UrlLoader.make`); this stops them at the registry as well.
@@ -149,9 +158,14 @@ edgeAuth(() => ({
 
 - **Identity (VP).** The logged-in `dx` client signs a presentation (`EdgeHttpClient` `auth: true`).
 - **API token.** `Authorization: Bearer dx-api01-…`, minted in the hub console; this is the sandbox
-  path. Requires adding the `HUB_SERVICE` service binding (entrypoint `HubServiceEntrypoint`) to every
-  registry-service env, and setting `NONCE_AUDIENCE` so edge-minted challenges verify
-  (`docs/audits/hub-service-keypair.md:121`).
+  path. A token publishes only if it carries the `registry:publish` scope. Tokens are unscoped today
+  (`api-tokens/DESIGN.md` §9), and an unscoped token that can publish lets whoever holds it ship code
+  into other users' Composer, so this feature adds the nullable `scopes` column the token design
+  reserved, mints tokens with an explicit scope list, and makes `verifyApiToken` return it. Publishing
+  rejects a token without the scope with `403 insufficient_scope`; VP publishes need no scope.
+  Token verification requires adding the `HUB_SERVICE` service binding (entrypoint
+  `HubServiceEntrypoint`) to every registry-service env, and setting `NONCE_AUDIENCE` so edge-minted
+  challenges verify (`docs/audits/hub-service-keypair.md:121`).
 - **Admin key.** Only for `realm:dxos` keys; it may not claim or publish third-party keys.
 - `failOpen: false` because publishing ships code into other users' browsers: a hub outage must refuse
   the publish, not skip the suspended-account check.
@@ -168,6 +182,7 @@ All under the existing `/registry` mount (edge `api.ts` forwards to `REGISTRY_SE
 | `GET /plugins/mine`                      | read  | The caller's plugins with every release and state, including hidden and yanked (the catalog omits those).     |
 | `GET /plugins`                           | none  | Existing catalog, now merging direct plugins (below).                                                         |
 | `POST /admin/plugins/:key/status`        | admin | Moderation: `BLOCKED` removes a plugin from the catalog regardless of source.                                 |
+| `POST /admin/plugins/:key/owner`         | admin | Reassign a key's owner, for a backfill claim a publisher disputes.                                            |
 
 `PUT …/releases/:version` handling, in order:
 
@@ -179,11 +194,18 @@ All under the existing `/registry` mount (edge `api.ts` forwards to `REGISTRY_SE
 3. Claim or check ownership in one D1 batch: upsert `Plugin` (insert if absent; else require
    `ownerUri === caller`), insert `PluginRelease` as `PENDING`. An existing `PUBLISHED` or `YANKED`
    release → `409`; an existing `PENDING` one is a retry of a failed upload and proceeds.
-4. Write every file to R2, then `manifest.json` last, so a partially written prefix never has a
+4. Acquire the upload lease with one conditional `UPDATE` that sets `leaseId` and
+   `leaseExpiresAt = now + 5m` only where `state = 'PENDING'` and the current lease is absent or
+   expired. Zero rows changed → `409 upload_in_progress`.
+   R2 keeps the last write to a key, so without the lease two concurrent retries of one version could
+   interleave and pair one request's manifest with the other's assets.
+5. Write every file to R2, then `manifest.json` last, so a partially written prefix never has a
    manifest the loader could fetch.
-5. Compute `manifestHash` over the stored manifest bytes; set `state = PUBLISHED`, store the hash,
-   `dependenciesJSON` and the profile from the manifest, in one batch.
-6. Return `{ key, version, moduleUrl, manifestHash }`.
+6. Compute `manifestHash` over the stored manifest bytes; set `state = PUBLISHED`, store the hash,
+   `dependenciesJSON` and the profile from the manifest, and clear the lease, in one batch guarded by
+   `leaseId = ?` so a request whose lease expired cannot publish. On failure clear the lease and
+   leave the release `PENDING`.
+7. Return `{ key, version, moduleUrl, manifestHash }`.
 
 Multipart rather than the JSON-with-base64 body `/upload` uses: it avoids the 33% inflation and
 matches `uploadFunction`. The current `/upload` stays for the AT Protocol path.
@@ -197,7 +219,9 @@ The dev and local re-upload exemption of `/upload` applies here too (`state` may
 `PUBLISHED` release and `status = ACTIVE`. For direct entries the `PluginView` is:
 
 - `uri`: `https://<edge>/registry/plugins/<key>` (not an `at://` URI).
-- `did`: the owner's `did:halo:…`; `handle`: the owner's account display name, if the hub has one.
+- `did`: the owner's identity URI (`did:halo:…`, or `realm:dxos` for first-party plugins), so the
+  `PluginViewSchema.did` doc comment widens from "publisher DID" accordingly.
+- `handle`: the owner's account display name, if the hub has one.
 - `releases`: `PUBLISHED` releases newest-first, each carrying the server `manifestHash`.
 - `labels`: `['direct']`, plus `'verified'` only if an admin has verified the owner.
 
@@ -214,10 +238,13 @@ properties:
   stored in a `Publisher(did, verifiedAt, verifiedBy)` table). Unifying it with `publisher.verification`
   records is a follow-on.
 
-If a direct key and an AT Protocol `(did, key)` pair collide, the D1 claim decides who may host
-bundles under `modules/<key>/`; the catalog still lists AT Protocol entries by `(did, key)` as today,
-so a PDS record pointing at another owner's hosted bundle is at most a duplicate listing, not a way to
-publish code under someone else's key.
+**One catalog entry per key.** Composer addresses plugins by key alone
+(`EdgeRegistryPluginProvider.getPlugin` / `listVersions` take the first entry whose `profile.key`
+matches), so the catalog must not emit two entries for one key. The D1 claim decides which survives:
+a key claimed `DIRECT` emits only the direct entry and drops AT Protocol entries for it; a key claimed
+`ATPROTO` emits only the AT Protocol entry whose releases point at that key's hosted prefix; an
+unclaimed key keeps today's indexer output. The indexer can still hold several `(did, key)` records;
+the merge step is where uniqueness is enforced.
 
 ### Client and CLI (dxos repo)
 
@@ -225,7 +252,9 @@ publish code under someone else's key.
 { key, version, files: { path, data: Uint8Array }[] })`, `updatePluginProfile`, `yankPluginRelease`,
   `listOwnedPlugins`. Request/response schemas go next to the existing ones in
   `core/protocols/src/edge/registry.ts`. The existing `apiKey` option already sends
-  `Authorization: Bearer …`, so an API token works with no new client auth code.
+  `Authorization: Bearer …`, so an API token works with no new client auth code. `BaseHttpClient` does
+  not check the scheme today, so it gains a guard: with `apiKey` set, refuse any base URL that is not
+  `https:` (loopback hosts excepted, for `wrangler dev`) rather than send the token in cleartext.
 - **`dx registry publish`** (`plugin-registry/src/commands/registry/publish.ts`): add
   `--target direct|atproto`. `direct` runs the existing build + manifest steps, then a single
   `publishPluginRelease`, and skips PDS session resolution entirely. Default to `direct` for
@@ -239,15 +268,10 @@ publish code under someone else's key.
 
 ## Open questions
 
-1. **API token scope.** Tokens are unscoped today (`api-tokens/DESIGN.md` §9), so a token handed to a
-   sandbox can publish code that runs in other users' Composer. Should this feature be the first user
-   of a `registry:publish` scope, blocking on the scopes column, or ship unscoped with a per-token
-   publish opt-in? Recommendation: add the nullable `scopes` column and require `registry:publish` for
-   token-authenticated publishes; VP publishes need no scope.
-2. **Identity deletion.** compute-service deletes an identity's functions on account deletion. Deleting
+1. **Identity deletion.** compute-service deletes an identity's functions on account deletion. Deleting
    published plugins would break every installed copy; the proposal is to set `status = HIDDEN` and
    transfer ownership to `realm:dxos` instead. Confirm.
-3. **Verification default.** Is "unverified behind a toggle" acceptable, or should direct plugins be
+2. **Verification default.** Is "unverified behind a toggle" acceptable, or should direct plugins be
    invisible in Composer until verified (the AT Protocol behavior)?
 
 ## Implementation plan
@@ -256,12 +280,13 @@ Order matters: the dxos schema change must publish before edge can consume it.
 
 1. **dxos — protocols**: request/response schemas and `PluginView.source`; `EdgeHttpClient` methods.
 2. **edge — foundations**: D1 database + Prisma schema + migration, `HUB_SERVICE` binding,
-   `NONCE_AUDIENCE`, `pnpm check:bindings` green in every env.
-3. **edge — ownership on `/upload`**: claim-or-check before writing R2, plus the backfill script for
-   existing prefixes. Independently valuable; ships first.
+   `NONCE_AUDIENCE`, `pnpm check:bindings` green in every env; `ApiToken.scopes` column, scoped minting,
+   and `scopes` in the `verifyApiToken` result (hub-service).
+3. **edge — ownership on `/upload`**: the report-only prefix scan, then the backfill, then
+   claim-or-check before writing R2. Independently valuable; ships first.
 4. **edge — direct publish routes** and catalog merge, with `*.workerd.test.ts` coverage alongside
-   `registry-upload.workerd.test.ts` (claim, foreign-owner 403, re-publish 409, pending retry, yank,
-   API-token auth).
+   `registry-upload.workerd.test.ts` (claim, foreign-owner 403, re-publish 409, pending retry, concurrent
+   upload 409, yank, unscoped-token 403, API-token auth).
 5. **dxos — CLI**: `--target direct`, token auth, `yank` / `list --mine`; update
    `docs/composer/publishing-plugins.md` (also fix its stale `package.*` NSIDs and `outdir` field).
 6. **dxos — Composer**: `direct` / unverified badges and toggle in `plugin-registry`; client-side
