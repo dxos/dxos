@@ -8,9 +8,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { translations } from '#translations';
+
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
 import { expectAnchoredBelow } from './testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs } from './testing/stories.tsx';
 
 const ROLES: Next.SelectOption[] = [
   { value: 'owner', label: 'Owner' },
@@ -19,8 +22,8 @@ const ROLES: Next.SelectOption[] = [
 ];
 
 /** A basic form: each Field stacks its label above the control (decision 13). */
-const DefaultStory = () => (
-  <div className='nx-scope @container w-[30rem] border border-separator' data-size='md'>
+const DefaultStory = ({ size = 'md' }: SizeArgs) => (
+  <div className='nx-scope @container w-[30rem] border border-separator' data-size={size}>
     <Next.Container gutter='rail' level='base'>
       <Next.Field.Root data-testid='name'>
         <Next.Field.Header>
@@ -39,7 +42,7 @@ const DefaultStory = () => (
       </Next.Field.Root>
 
       <Next.Field.Root data-testid='role'>
-        <Next.Select.Root items={ROLES} positioning={{ sameWidth: true }}>
+        <Next.Select.Root items={ROLES}>
           <Next.Field.Header>
             <Next.Select.Label>Role</Next.Select.Label>
             <Next.Block data-testid='role-lock'>
@@ -69,10 +72,8 @@ const DefaultStory = () => (
       </Next.Field.Root>
 
       <Next.Group justify='end' data-testid='actions'>
-        <Next.Button>Cancel</Next.Button>
-        <Next.Button type='submit' variant='primary'>
-          Save
-        </Next.Button>
+        <Next.SystemButton.Cancel iconOnly={false} />
+        <Next.SystemButton.Save iconOnly={false} type='submit' />
       </Next.Group>
     </Next.Container>
   </div>
@@ -81,9 +82,11 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-core/next/form',
   render: DefaultStory,
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   decorators: [withTheme()],
-  parameters: { layout: 'centered' },
-} satisfies Meta;
+  parameters: { layout: 'centered', translations },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 

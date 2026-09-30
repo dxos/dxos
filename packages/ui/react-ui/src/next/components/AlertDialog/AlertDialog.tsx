@@ -3,6 +3,7 @@
 //
 
 import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialog';
+import { useEnvironmentContext } from '@ark-ui/react/environment';
 import React, { forwardRef, useId } from 'react';
 
 import { Button, type ButtonProps } from '../Button/index.ts';
@@ -20,6 +21,12 @@ type AlertDialogRootProps = Omit<DialogRootProps, 'role'>;
  */
 const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps) => {
   const id = useId();
+  const { getRootNode } = useEnvironmentContext();
+  // The same root zag resolves the dialog in, so a dialog portalled into a shadow root or another document still finds them.
+  const byId = (elementId: string): HTMLElement | null => {
+    const root = getRootNode();
+    return 'getElementById' in root ? root.getElementById(elementId) : null;
+  };
   const contentId = ids?.content ?? `nx-alert-dialog-${id}-content`;
   const cancelId = ids?.closeTrigger ?? `nx-alert-dialog-${id}-cancel`;
   return (
@@ -29,9 +36,7 @@ const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps
       ids={{ ...ids, content: contentId, closeTrigger: cancelId }}
       initialFocusEl={
         initialFocusEl ??
-        (() =>
-          document.getElementById(contentId)?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`) ??
-          document.getElementById(cancelId))
+        (() => byId(contentId)?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`) ?? byId(cancelId))
       }
     />
   );

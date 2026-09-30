@@ -8,22 +8,93 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { translations } from '#translations';
+
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
 
 /**
+ * Every current `Field` part as a Next field (DESIGN.md follow-up 54): text, textarea, the segmented date, time and
+ * date-time with the calendar trigger, PIN, number, password, and a checkbox and switch in block cells (the current
+ * `Field.Block`). A `required` field (its label marked automatically, then with the mark placed by hand), a `readOnly`
+ * one and an `asChild` root close it.
+ */
+const EveryField = ({ size }: SizeArgs) => (
+  <>
+    <Next.Field.Root>
+      <Next.Field.Label>Name</Next.Field.Label>
+      <Next.Input data-testid={`every-input-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Bio</Next.Field.Label>
+      <Next.Textarea />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Birthday</Next.Field.Label>
+      <Next.DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Wake up</Next.Field.Label>
+      <Next.DateInput type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Meeting</Next.Field.Label>
+      <Next.DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Code</Next.Field.Label>
+      <Next.PinInput length={4} data-testid={`every-pin-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Age</Next.Field.Label>
+      <Next.NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Field.Label>Password</Next.Field.Label>
+      <Next.PasswordInput data-testid={`every-password-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root>
+      <Next.Switch label='Notifications' data-testid={`every-switch-${size}`} />
+    </Next.Field.Root>
+    <Next.Field.Root required>
+      <Next.Field.Label data-testid={`required-label-${size}`}>Handle</Next.Field.Label>
+      <Next.Input />
+    </Next.Field.Root>
+    <Next.Field.Root required>
+      <Next.Field.Label data-testid={`placed-label-${size}`}>
+        <Next.Field.RequiredIndicator>required</Next.Field.RequiredIndicator> Alias
+      </Next.Field.Label>
+      <Next.Input />
+    </Next.Field.Root>
+    <Next.Field.Root readOnly>
+      <Next.Field.Label>Id</Next.Field.Label>
+      <Next.Input defaultValue='abc-123' />
+    </Next.Field.Root>
+    <Next.Field.Root asChild data-testid={`every-as-child-${size}`}>
+      <section>
+        <Next.Field.Label>Nickname</Next.Field.Label>
+        <Next.Input />
+      </section>
+    </Next.Field.Root>
+  </>
+);
+
+/**
  * A labelled field with helper text, the same header-with-action field valid and invalid, a field per validation
- * valence, and one with a visually hidden label.
+ * valence, one with a visually hidden label, then every field type.
  */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Next.Field.Root data-testid={`field-${size}`}>
-      <Next.Field.Label>Email {size}</Next.Field.Label>
+      <Next.Field.Label>Email</Next.Field.Label>
       <Next.Input data-testid={`field-input-${size}`} />
       <Next.Field.HelperText>We never share it.</Next.Field.HelperText>
     </Next.Field.Root>
@@ -47,18 +118,21 @@ const DefaultStory = ({ size }: SizeArgs) => (
     ))}
     <Next.Field.Root>
       <Next.Field.Label srOnly data-testid={`hidden-label-${size}`}>
-        Filter {size}
+        Filter
       </Next.Field.Label>
       <Next.Input placeholder='Filter' />
     </Next.Field.Root>
+    <EveryField size={size} />
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/field',
+  title: 'ui/react-ui-core/next/components/Field',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
-  parameters: { layout: 'centered' },
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered', translations },
 } satisfies Meta<SizeArgs>;
 
 export default meta;
@@ -75,6 +149,7 @@ export const Default: Story = {};
  * names its control.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const input = byTestId(canvasElement, `field-input-${size}`);
@@ -84,7 +159,7 @@ export const Test: Story = {
     }
 
     const canvas = within(sizeRow(canvasElement, 'md'));
-    const input = canvas.getByRole('textbox', { name: 'Email md' });
+    const input = canvas.getByRole('textbox', { name: 'Email' });
     await expect(input).toBe(byTestId(canvasElement, 'field-input-md'));
     await expect(input).toHaveAccessibleDescription('We never share it.');
     await expect(byTestId(canvasElement, 'field-md').dataset.scope).toBe('field');
@@ -118,8 +193,54 @@ export const Test: Story = {
       }
     }
     await expect(tones.size).toBe(VALENCES.length);
-    await expect(canvas.getByRole('textbox', { name: 'Filter md' })).toBeInTheDocument();
+    await expect(canvas.getByRole('textbox', { name: 'Filter' })).toBeInTheDocument();
     await expect(byTestId(canvasElement, 'hidden-label-md').getBoundingClientRect().width).toBeLessThanOrEqual(1);
+
+    // Every field type is named by its Field label; a checkbox or switch takes a block like the current `Field.Block`.
+    for (const size of SIZES) {
+      for (const part of ['input', 'date', 'time', 'number', 'password']) {
+        const control = byTestId(canvasElement, `every-${part}-${size}`);
+        await expect(control.getBoundingClientRect().height, `${part} ${size}`).toBeCloseTo(controlSize(size), 0);
+      }
+      for (const part of ['checkbox', 'switch']) {
+        const control = byTestId(canvasElement, `every-${part}-${size}`);
+        await expect(control.getBoundingClientRect().height, `${part} ${size}`).toBeCloseTo(GEOMETRY[size].block, 0);
+      }
+    }
+    await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
+    await expect(canvas.getByRole('textbox', { name: 'Bio' }).tagName).toBe('TEXTAREA');
+    await expect(canvas.getByRole('group', { name: 'Birthday' })).toBeInTheDocument();
+    await expect(
+      within(byTestId(canvasElement, 'every-date-md')).getByRole('button', { name: 'Pick a date' }),
+    ).toBeVisible();
+    await expect(canvas.getByRole('group', { name: 'Wake up' })).toBeInTheDocument();
+    await expect(canvas.getByRole('group', { name: 'Meeting' })).toBeInTheDocument();
+    await expect(within(canvas.getByRole('group', { name: 'Code' })).getAllByRole('textbox')).toHaveLength(4);
+    await expect(canvas.getByRole('spinbutton', { name: 'Age' })).toHaveValue('30');
+    await expect(canvas.getByLabelText('Password')).toHaveAttribute('type', 'password');
+    await expect(canvas.getByRole('checkbox', { name: 'Subscribe' })).toBeInTheDocument();
+    await expect(canvas.getByRole('switch', { name: 'Notifications' })).toBeInTheDocument();
+    await expect(canvas.getByRole('textbox', { name: 'Handle' })).toBeRequired();
+    // A required root's label ends with Ark's mark on its own, kept out of the name; one placed in the label replaces it.
+    const marks = byTestId(canvasElement, 'required-label-md').querySelectorAll('[data-part="required-indicator"]');
+    await expect(marks).toHaveLength(1);
+    await expect(marks[0]).toHaveTextContent('*');
+    await expect(marks[0]).toHaveAttribute('aria-hidden', 'true');
+    await expect(
+      canvas
+        .getByRole('textbox', { name: 'Id' })
+        .closest('.nx-field')
+        ?.querySelector('[data-part="required-indicator"]'),
+    ).toBeNull();
+    const placed = byTestId(canvasElement, 'placed-label-md').querySelectorAll('[data-part="required-indicator"]');
+    await expect(placed).toHaveLength(1);
+    await expect(placed[0]).toHaveTextContent('required');
+    await expect(canvas.getByRole('textbox', { name: 'Alias' })).toBeRequired();
+    await expect(canvas.getByRole('textbox', { name: 'Id' })).toHaveAttribute('readonly');
+    const asChild = byTestId(canvasElement, 'every-as-child-md');
+    await expect(asChild.tagName).toBe('SECTION');
+    await expect(asChild).toHaveClass('nx-field');
+    await expect(within(asChild).getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
 
     const clear = website.getByRole('button', { name: 'Clear website' });
     await userEvent.hover(clear);
