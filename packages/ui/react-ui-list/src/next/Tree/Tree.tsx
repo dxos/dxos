@@ -36,7 +36,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { flushSync } from 'react-dom';
 
 import { raise } from '@dxos/debug';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -73,7 +72,8 @@ type TreeContextValue = {
 // Behaviour only (drop policy, walk), never size or level (Next decision 3).
 const TreeContext = createContext<TreeContextValue | null>(null);
 
-const useTreeContext = (consumer: string) => useContext(TreeContext) ?? raise(new Error(`${consumer} outside Tree.Root`));
+const useTreeContext = (consumer: string) =>
+  useContext(TreeContext) ?? raise(new Error(`${consumer} outside Tree.Root`));
 
 //
 // Root
@@ -171,7 +171,12 @@ const TreeRoot = <T extends { id: string }>({
           return;
         }
         const targetData = target.data as TreeData;
-        onDropRef.current?.({ instruction, source: source.data as TreeData, target: targetData, item: targetData.item });
+        onDropRef.current?.({
+          instruction,
+          source: source.data as TreeData,
+          target: targetData,
+          item: targetData.item,
+        });
       },
     });
   }, [draggable, id]);
@@ -272,6 +277,7 @@ const TreeContent = ({ children: renderRow = (node) => <TreeItem node={node} /> 
   const { rows } = walk;
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const blockRef = useRef(NOMINAL_BLOCK);
+  const pendingFocusRef = useRef<string | null>(null);
   const windowed = virtualize === 'window';
   const [range, setRange] = useState({ first: 0, last: windowed ? 2 * OVERSCAN : rows.length - 1 });
 
@@ -315,15 +321,27 @@ const TreeContent = ({ children: renderRow = (node) => <TreeItem node={node} /> 
       } else if (top + block > viewport.scrollTop + viewport.clientHeight) {
         viewport.scrollTop = top + block - viewport.clientHeight;
       }
-      // Mounted before zag's next-frame `focus()`, which would otherwise find no element.
-      flushSync(update);
+      // zag focuses the row a frame after asking for it; when the window has not committed by then the row claims
+      // focus itself as it mounts (below).
+      pendingFocusRef.current = rows[index]?.value ?? null;
+      update();
     };
     return () => {
       observer.disconnect();
       viewport.removeEventListener('scroll', update);
       scrollToIndexRef.current = null;
     };
-  }, [windowed, update, scrollToIndexRef]);
+  }, [windowed, update, scrollToIndexRef, rows]);
+
+  // No dependency array: whichever commit mounts the pending row is the one that must focus it.
+  useLayoutEffect(() => {
+    const value = pendingFocusRef.current;
+    const row = value && viewportRef.current?.querySelector<HTMLElement>(`[data-value="${CSS.escape(value)}"]`);
+    if (row) {
+      pendingFocusRef.current = null;
+      row.focus();
+    }
+  });
 
   const first = windowed ? Math.min(range.first, Math.max(0, rows.length - 1)) : 0;
   const last = windowed ? Math.min(range.last, rows.length - 1) : rows.length - 1;
@@ -337,7 +355,9 @@ const TreeContent = ({ children: renderRow = (node) => <TreeItem node={node} /> 
           {rows.slice(first, last + 1).map((node) => (
             <Fragment key={node.value}>{renderRow(node)}</Fragment>
           ))}
-          {windowed && last < rows.length - 1 && <div role='none' style={{ height: (rows.length - 1 - last) * block }} />}
+          {windowed && last < rows.length - 1 && (
+            <div role='none' style={{ height: (rows.length - 1 - last) * block }} />
+          )}
         </TreeContentElement>
       </Next.ScrollArea.Viewport>
     </Next.ScrollArea.Root>
@@ -448,7 +468,7 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
     'data-drop': drag.instruction?.type === 'make-child' ? 'inside' : undefined,
     'data-testid': props.testId,
     style,
-    className: 'nx-grid nx-tree-item',
+    'className': 'nx-grid nx-tree-item',
   };
 
   const label = toLocalizedString(props.label, t);

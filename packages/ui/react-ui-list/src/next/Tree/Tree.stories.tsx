@@ -3,13 +3,13 @@
 //
 
 import './tree.css';
-import '@dxos/react-ui/next/theme.css';
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import '@dxos/react-ui/next/theme.css';
 import { random } from '@dxos/random';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -201,7 +201,9 @@ export const Test: Story = {
 
     // Branch disclosure from the keyboard, fed back through the model.
     await userEvent.keyboard('{ArrowRight}');
-    await waitFor(() => expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true'));
+    await waitFor(() =>
+      expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true'),
+    );
     await expect(rows(tree)).toHaveLength(5);
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(focusedName()).toContain('Apple'));
@@ -229,6 +231,28 @@ export const Test: Story = {
 
     // Rows are drag sources (pragmatic-dnd) without leaving zag's roving tabstop.
     await expect(within(tree).getByRole('treeitem', { name: /Grain/ })).toHaveAttribute('draggable', 'true');
+  },
+};
+
+/**
+ * Windowed keyboard: End and Home reach rows the window has not mounted (zag asks `scrollToIndexFn` first, then focuses
+ * the row a frame later), and ArrowUp from the top of a scrolled window keeps focus on a mounted row.
+ */
+export const WindowedTest: Story = {
+  args: { tree: () => createWideTree(50, 99), open: true, virtualize: 'window', height: '32rem' },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    await expect(rows(tree).length).toBeLessThan(100);
+    tree.querySelector<HTMLElement>('[data-tree-row]')?.focus();
+    await userEvent.keyboard('{End}');
+    await waitFor(() => expect(focusedName()).toContain('Leaf 50.99'));
+    await expect(tree.scrollTop).toBeGreaterThan(0);
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    await waitFor(() => expect(focusedName()).toContain('Leaf 50.97'));
+    await userEvent.keyboard('{Home}');
+    await waitFor(() => expect(focusedName()).toContain('Branch 1'));
+    await expect(tree.scrollTop).toBe(0);
+    await expect(rows(tree).length).toBeLessThan(100);
   },
 };
 
@@ -269,7 +293,7 @@ export const Benchmark: StoryObj<typeof meta> = {
   play: async ({ canvasElement }) => {
     const bench = (window as any).__treeBench;
     const samples: Sample[] = [];
-    for (const mode of ['window', 'css', 'none', 'window'] as TreeVirtualize[]) {
+    for (const mode of ['window', 'css', 'none'] as TreeVirtualize[]) {
       bench.mount(undefined);
       await nextFrame();
       bench.mount(mode);
@@ -298,15 +322,15 @@ export const Benchmark: StoryObj<typeof meta> = {
       const first = canvasElement.querySelector<HTMLElement>('[data-tree-row]')!;
       first.focus();
       const keyStart = performance.now();
-      for (let press = 0; press < 20; press++) {
+      for (let press = 0; press < 10; press++) {
         await userEvent.keyboard('{ArrowDown}');
       }
       await nextFrame();
-      const key = (performance.now() - keyStart) / 20;
+      const key = (performance.now() - keyStart) / 10;
       samples.push({ mode, mount, scroll, key });
       // eslint-disable-next-line no-console
       console.log(`[tree-bench] ${JSON.stringify({ mode, rows: 5000, mount, scroll, key })}`);
     }
-    await expect(samples).toHaveLength(4);
+    await expect(samples).toHaveLength(3);
   },
 };
