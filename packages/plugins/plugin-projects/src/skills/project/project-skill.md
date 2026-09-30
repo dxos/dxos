@@ -336,7 +336,11 @@ spaceId }`. Report the new project id.
 1. **At task start** — `space-query-objects { typename: 'org.dxos.type.project' }`, then `projects-get` + `tasks-list` (project ref
    and `spaceId` on both, `includeSubtasks: true` on `tasks-list`) to reload state; create the project if none exists for this stream.
 2. **As you work** — update task status in the **same turn** the work completes. Never leave
-   statuses stale, and never batch-update everything at the end.
+   statuses stale, and never batch-update everything at the end. **Keeping the ledger current is
+   your job, not a request: never ask the user for permission before updating a task** — status,
+   assignee, description, sub-tasks, artifacts, or a follow-up task. Make the update and mention
+   it in your reply if it matters. The ledger is the user's view of your work, so a stale one is
+   the failure; an update they would word differently is cheap for them to change.
 3. **When parking a task** — leave a one-line note in its `description` (what's blocked, what's
    next) so it's resumable.
 4. **When you finish a task, move it to `review` if there is something for someone to review,
@@ -368,6 +372,7 @@ spaceId }`. Report the new project id.
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.    |
 | Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.    |
 | Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.        |
+| Asking "should I mark this done?" / "want me to update the task?"  | Just update it: the ledger is yours to keep current; say what changed if it matters.          |
 | Marking a task `done` while its PR is still open                   | Set `review` with the PR attached; `done` once it has merged.                                 |
 | Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.      |
 | Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.                |
