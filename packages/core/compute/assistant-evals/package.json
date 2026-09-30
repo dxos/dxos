@@ -50,6 +50,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@dxos/mcp-server": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",

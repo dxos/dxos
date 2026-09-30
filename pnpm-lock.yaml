@@ -4493,6 +4493,9 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../link
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/mcp-client':
         specifier: workspace:*
         version: link:../mcp-client
@@ -4631,6 +4634,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../mcp-client
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols

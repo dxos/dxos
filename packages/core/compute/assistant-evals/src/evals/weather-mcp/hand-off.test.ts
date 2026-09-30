@@ -49,6 +49,18 @@ describe('evaluateHandOff', () => {
     expect(evaluateHandOff([read, forecast(20)], { server: WORKER_URL }).configured).toBe(false);
   });
 
+  test('the Skill Manager connect tool configures the server it names', ({ expect }) => {
+    expect(evaluateHandOff([connect(SERVER, 10), forecast(20)], { server: WORKER_URL })).toEqual({
+      configured: true,
+      called: true,
+      calledAfterConfiguring: true,
+    });
+    // A connect that failed its probe saved nothing.
+    expect(evaluateHandOff([connect(SERVER, 10, 'challenge'), forecast(20)], { server: WORKER_URL }).configured).toBe(
+      false,
+    );
+  });
+
   test('the server is whatever the caller names', ({ expect }) => {
     const local = evaluateHandOff([configure('http://127.0.0.1:43210/', 10), forecast(20)], {
       server: /127\.0\.0\.1/,
@@ -83,6 +95,17 @@ const configure = (url: string, at: number, error?: string): ToolInvocation => (
   operationKey: 'dxn:org.dxos.operation.space.updateObject',
   input: JSON.stringify({ properties: { mcpServers: [{ name: 'weather', url, protocol: 'http' }] } }),
   result: {},
+  error,
+  calledAt: at,
+  resultAt: at + 1,
+});
+
+/** A configuring write through the Skill Manager's connect tool. */
+const connect = (url: string, at: number, error?: string): ToolInvocation => ({
+  name: 'connect_mcp_server',
+  operationKey: 'dxn:org.dxos.operation.assistantToolkit.connectMcpServer',
+  input: JSON.stringify({ skill: 'org.dxos.skill.weatherMcp', server: { name: 'weather', url, protocol: 'http' } }),
+  result: { tools: ['get_weather'] },
   error,
   calledAt: at,
   resultAt: at + 1,

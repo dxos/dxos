@@ -132,6 +132,11 @@ const usage = (traces) => ({
   llmCalls: traces.length,
   inputTokens: sum(traces, (trace) => trace.inputTokens),
   outputTokens: sum(traces, (trace) => trace.outputTokens),
+  cacheReadTokens: sum(traces, (trace) => trace.output?.cacheReadTokens),
+  // Undefined when any call went unpriced, so a partial sum never reads as the run's cost.
+  costUsd: traces.every((trace) => typeof trace.output?.costUsd === 'number')
+    ? sum(traces, (trace) => trace.output.costUsd)
+    : undefined,
 });
 
 /**
@@ -166,6 +171,7 @@ export const toEvents = (report, experiment) =>
         evalFile: file,
         evalVariant: evaluation.variantName ?? undefined,
         evalTrial: result.trialIndex,
+        evalCostUsd: usage(result.traces).costUsd,
       };
       // The generations carry their own start times; the root is dated at the first one, and the
       // result's storage time stands in when nothing was generated.
@@ -180,6 +186,7 @@ export const toEvents = (report, experiment) =>
                 $ai_trace_id: target.traceId,
                 $ai_trace_name: evaluation.name,
                 $ai_latency: result.duration / 1000,
+                $ai_total_cost_usd: item.evalCostUsd,
                 $ai_input_state: { input: result.input },
                 $ai_output_state: {
                   output: result.output,
@@ -222,6 +229,8 @@ const seconds = (millis) => `${(millis / 1000).toFixed(1)}s`;
 
 const tokens = (count = 0) => (count >= 10_000 ? `${Math.round(count / 1000)}k` : String(count));
 
+const dollars = (cost) => (cost === undefined ? '–' : `$${cost.toFixed(2)}`);
+
 /** One row per eval, for the job summary; a failed scorer is named so the row explains itself. */
 export const toSummary = (report) => {
   const rows = report.evals.map((evaluation) => {
@@ -232,20 +241,27 @@ export const toSummary = (report) => {
     const status = evaluation.status === 'success' ? '✅' : '❌';
     // evalite's reporter hardcodes each eval's duration to zero; the results carry the real one.
     const duration = sum(evaluation.results, (result) => result.duration);
-    const { models, inputTokens, outputTokens } = usage(evaluation.results.flatMap((result) => result.traces));
-    return `| ${status} | ${evaluation.name} | \`${file}\` | ${percent(evaluation.averageScore)} | ${seconds(duration)} | ${models} | ${tokens(inputTokens)} / ${tokens(outputTokens)} | ${failed.join(', ')} |`;
+    const { models, inputTokens, outputTokens, cacheReadTokens, costUsd } = usage(
+      evaluation.results.flatMap((result) => result.traces),
+    );
+    return {
+      costUsd,
+      row: `| ${status} | ${evaluation.name} | \`${file}\` | ${percent(evaluation.averageScore)} | ${seconds(duration)} | ${models} | ${tokens(inputTokens)} / ${tokens(cacheReadTokens)} / ${tokens(outputTokens)} | ${dollars(costUsd)} | ${failed.join(', ')} |`,
+    };
   });
+  const costs = rows.map(({ costUsd }) => costUsd);
+  const totalCost = costs.every((cost) => cost !== undefined) ? sum(costs, (cost) => cost) : undefined;
   const allScores = report.evals.flatMap((evaluation) =>
     evaluation.results.flatMap((result) => result.scores.map((score) => score.score)),
   );
   return [
     `## Assistant evals`,
     '',
-    `${report.evals.length} evals, mean score ${percent(mean(allScores))}, ${report.evals.filter((evaluation) => evaluation.status !== 'success').length} failed.`,
+    `${report.evals.length} evals, mean score ${percent(mean(allScores))}, ${report.evals.filter((evaluation) => evaluation.status !== 'success').length} failed, cost ${dollars(totalCost)}.`,
     '',
-    '| | Eval | File | Score | Duration | Models | Tokens in / out | Scorers below 100% |',
-    '| :-: | :-- | :-- | --: | --: | :-- | --: | :-- |',
-    ...rows,
+    '| | Eval | File | Score | Duration | Models | Tokens in / cached / out | Cost | Scorers below 100% |',
+    '| :-: | :-- | :-- | --: | --: | :-- | --: | --: | :-- |',
+    ...rows.map(({ row }) => row),
     '',
   ].join('\n');
 };
