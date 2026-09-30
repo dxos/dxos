@@ -32,6 +32,60 @@
     width: calc(var(--nx-icon-size) * 0.75);
     height: calc(var(--nx-icon-size) * 0.75);
   }
+
+  /*
+   * Clickable: the root (`onClick` alone) or a trigger filling the pill up to the delete trigger (with `onDelete`) is a
+   * button that keeps the pill's look, shifting brightness on hover like a hued Button, with the shared inset ring.
+   */
+  .nx-tag-clickable,
+  .nx-tag-trigger {
+    margin: 0;
+    border: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .nx-tag-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: inherit;
+    align-self: stretch;
+    min-width: 0;
+    margin-inline-start: calc(-1 * var(--nx-gap-size));
+    padding-block: 0;
+    padding-inline: var(--nx-gap-size) 0;
+    border-radius: inherit;
+    background: transparent;
+  }
+  .nx-tag-clickable:hover:not(:disabled),
+  .nx-tag:has(> .nx-tag-trigger:hover) {
+    filter: brightness(0.94);
+  }
+  :where(.dark) :is(.nx-tag-clickable:hover:not(:disabled), .nx-tag:has(> .nx-tag-trigger:hover)) {
+    filter: brightness(1.12);
+  }
+
+  /* Delete trigger: the tag's small icon in an inset square, ending one inset from the pill's end. */
+  .nx-tag:has(> .nx-tag-delete-trigger) {
+    padding-inline-end: var(--nx-control-inset);
+  }
+  .nx-tag-delete-trigger {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: calc(var(--nx-icon-size) * 0.75 + 2 * var(--nx-control-inset));
+    height: calc(var(--nx-icon-size) * 0.75 + 2 * var(--nx-control-inset));
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: calc(var(--radius-sm, 0.25rem) - 1px);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .nx-tag-delete-trigger:hover {
+    background: color-mix(in srgb, currentColor 15%, transparent);
+  }
   :is(.nx-tag, .nx-button, .nx-icon)[data-hue='red'] {
     --nx-hue-bg: var(--color-red-surface);
     --nx-hue-fg: var(--color-red-fg);

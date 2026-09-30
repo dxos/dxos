@@ -68,6 +68,7 @@ export const translations = [
         'number-input.decrement.label': 'Decrement',
         'password-input.show.label': 'Show password',
         'password-input.hide.label': 'Hide password',
+        'tag.delete.label': 'Remove {{label}}',
 
         'drag-handle.role.label': 'drag handle',
         'drag-handle.grabbed.message': 'Grabbed. Press the arrow keys to move, Space to drop.',
