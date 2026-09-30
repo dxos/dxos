@@ -23,7 +23,7 @@ export type SyncRow = {
 };
 
 // TODO(wittjosiah): Factor out (copied from plugin-space).
-const getSpaceDisplayName = (space: Space): string => {
+export const getSpaceDisplayName = (space: Space): string => {
   const name = space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
   return name && name.length > 0 ? name : 'New space';
 };
