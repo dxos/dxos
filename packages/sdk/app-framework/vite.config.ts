@@ -27,6 +27,7 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'testing/react': 'src/testing/react.tsx',
     'ui': 'src/ui/index.ts',
+    'worker': 'src/worker/index.ts',
     'core/capability-manager': 'src/core/capability-manager.ts',
     'plugin-process-manager/history/history-tracker': 'src/plugin-process-manager/history/history-tracker.ts',
     'core/plugin-asset-cache': 'src/core/plugin-asset-cache.ts',
@@ -37,5 +38,13 @@ export default defineConfig({
     'plugin-process-manager/history/undo-registry': 'src/plugin-process-manager/history/undo-registry.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'jsdom' }, storybook: true },
+  test: {
+    node: { environment: 'jsdom' },
+    // Only suites that need a real Worker; the rest are jsdom-safe and stay in the node project.
+    browser: {
+      browsers: ['chromium'],
+      include: ['**/src/**/*.browser.test.ts'],
+    },
+    storybook: true,
+  },
 });

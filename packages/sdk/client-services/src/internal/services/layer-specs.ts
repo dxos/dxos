@@ -822,7 +822,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   ...(subductionEnabled(options) ? [EdgeSubductionReplicatorSpec, EdgeSubductionReplicatorRegistrationSpec] : []),
   FeedSyncerSpec,
 
-  RpcRouterSpec,
+  ...(options.externalRouter ? [] : [RpcRouterSpec]),
   SystemServiceSpec,
   SystemServiceRegistrationSpec,
   IdentityServiceSpec,

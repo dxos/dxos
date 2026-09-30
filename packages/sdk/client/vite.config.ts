@@ -19,6 +19,7 @@ export default defineConfig({
     'services/dedicated/dedicated-worker': 'src/services/dedicated/dedicated-worker.ts',
     'services/dedicated/coordinator-worker-entrypoint': 'src/services/dedicated/coordinator-worker-entrypoint.ts',
     'worker/opfs-worker': 'src/worker/opfs-worker.ts',
+    'lock-key': 'src/lock-key.ts',
   },
   test: { node: true, browser: 'chromium' },
 });

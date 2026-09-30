@@ -11,6 +11,7 @@ import { ResolverFactory } from 'oxc-resolver';
 import { visualizer } from 'rollup-plugin-visualizer';
 import {
   type ConfigEnv,
+  type Plugin,
   type PluginOption,
   type Rollup,
   defaultClientConditions,
@@ -26,11 +27,10 @@ import wasm from 'vite-plugin-wasm';
 import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import { isNonNullable } from '@dxos/util';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
-import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
+import { type ModuleUrlEnvironment, ModuleUrlPlugin, type ModuleUrlPluginOptions } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
@@ -168,9 +168,40 @@ const NODE_BUILTIN_STUBS = {
   os: ['networkInterfaces'],
 } as const;
 
+/**
+ * The dedicated worker and the plugins it loads by URL, built as one graph so the worker holds one
+ * instance of every module they share (`effect`'s identities, the RPC router).
+ */
+const WORKER_ENVIRONMENT: ModuleUrlEnvironment = {
+  name: 'worker',
+  entries: ['src/workers/dedicated-worker.ts', 'src/workers/client-plugin.ts'],
+};
+
+/**
+ * Keeps plugins out of the worker environment, which builds with `sharedPlugins` alone, as a nested
+ * worker build does with `worker.plugins`.
+ */
+const clientOnly = async (plugins: PluginOption[]): Promise<Plugin[]> => {
+  const flatten = async (option: PluginOption): Promise<Plugin[]> => {
+    const resolved = await option;
+    if (!resolved) {
+      return [];
+    }
+    return Array.isArray(resolved) ? (await Promise.all(resolved.map(flatten))).flat() : [resolved];
+  };
+
+  const resolved = await flatten(plugins);
+  for (const plugin of resolved) {
+    const applies = plugin.applyToEnvironment;
+    plugin.applyToEnvironment = (environment) =>
+      environment.name !== WORKER_ENVIRONMENT.name && (applies ? applies(environment) : true);
+  }
+  return resolved;
+};
+
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
-const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
+const sharedPlugins = (env: ConfigEnv, moduleUrl: ModuleUrlPluginOptions = {}): PluginOption[] => [
   // Resolve `@dxos/*` (and matching `#*` subpath imports) via the `source`
   // condition rather than the published `dist/`. This is required at both
   // `serve` and `build` time so Vite-specific constructs survive into the
@@ -199,7 +230,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   // `?module-url` imports: compiled module URLs handed to a worker to `import()`.
-  ModuleUrlPlugin(),
+  ModuleUrlPlugin(moduleUrl),
   wasm(),
   // sourcemaps(),
 ];
@@ -493,290 +524,291 @@ export default defineConfig((env) => ({
     plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
-    traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
-    ShutdownPlugin(),
-    ...sharedPlugins(env),
-
-    // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
-    // a deployed Composer has no vite server, and needs the standalone managed process instead.
-    // Turns are confined to DX_AGENT_CWD (default: the workspace root); the host refuses any
-    // requested directory outside it.
-    {
-      name: 'dx-agent-claude',
-      apply: 'serve',
-      // Imported dynamically so only `serve` pays for it: a static import would load the agent SDK
-      // whenever this config is evaluated, including every `vite build` and `vite preview`.
-      configureServer: async (server) => {
-        const { Middleware } = await import('@dxos/agent-claude');
-        server.middlewares.use(Middleware.make({ cwd: process.env.DX_AGENT_CWD ?? rootDir }));
-      },
-    },
-
-    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
-    // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
-    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
-
-    // RSS proxy middleware for CORS-free feed fetching.
-    {
-      name: 'rss-proxy',
-      configureServer(server) {
-        server.middlewares.use('/api/rss', async (req, res) => {
-          if (!req.url) {
-            res.statusCode = 400;
-            res.end('Missing request URL');
-            return;
-          }
-          const url = new URL(req.url, `http://${req.headers.host}`);
-          const feedUrl = url.searchParams.get('url');
-          if (!feedUrl) {
-            res.statusCode = 400;
-            res.end('Missing url parameter');
-            return;
-          }
-          try {
-            const response = await globalThis.fetch(feedUrl);
-            const contentType = response.headers.get('content-type');
-            if (contentType) {
-              res.setHeader('content-type', contentType);
-            }
-            res.statusCode = response.status;
-            res.end(await response.text());
-          } catch (error) {
-            res.statusCode = 502;
-            res.end(String(error));
-          }
-        });
-      },
-    },
-
-    // Dev-only: publish the debug-port session id for an agent that cannot read this process's env.
-    debugPortSidecarPlugin(debugPortSession, rootDir),
-
-    // Dev-only: serve forensics test profile for recovery import testing.
-    {
-      name: 'recovery-test-fixture',
-      configureServer(server) {
-        const fixturePath =
-          process.env.COMPOSER_TEST_DXPROFILE ??
-          '/tmp/composer-forensics/main.composer.space-test/main.composer.space.dxprofile';
-        server.middlewares.use('/test-fixtures/main.composer.space.dxprofile', (req, res) => {
-          if (!existsSync(fixturePath)) {
-            res.statusCode = 404;
-            res.end(`Test profile not found at ${fixturePath}`);
-            return;
-          }
-          res.setHeader('Content-Type', 'application/octet-stream');
-          createReadStream(fixturePath).pipe(res);
-        });
-      },
-    },
-
-    // Handle .md?raw imports.
-    {
-      name: 'raw-md-loader',
-      load(id: string) {
-        if (id.endsWith('.md?raw')) {
-          const filePath = id.replace(/\?raw$/, '');
-          const content = readFileSync(filePath, 'utf-8');
-          return `export default ${JSON.stringify(content)}`;
-        }
-      },
-    },
-
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && inspect(),
-
-    // env.command === 'serve' && devtoolsJson(),
-
-    // Solid JSX transform for Solid packages.
-    // Must be placed before React plugin to process Solid files first.
-    solid({
-      include: [
-        '**/solid-ui-geo/**',
-        '**/plugin-map-solid/**',
-        '**/effect-atom-solid/**',
-        '**/web-context-solid/**',
-        '**/echo-solid/**',
-        '**/node_modules/solid-js/**',
-        '**/node_modules/solid-element/**',
-        '**/node_modules/@solid-primitives/**',
-      ],
-    }),
-
-    react(),
-
-    isBundledDev && reactRefreshPreamble(react.preambleCode),
-
-    // Emit a `<script type="importmap">` into the production HTML mapping shared
-    // bare specifiers (`react`, `effect`, `@dxos/client`, etc.) to dedicated chunk
-    // URLs the host serves. Two consumers:
-    //   1. **Third-party plugins (primary)** — remote plugin bundles externalize
-    //      these specifiers via `composerPlugin`'s `isSharedPackage`; the import
-    //      map is what lets a plugin loaded from a third-party origin call
-    //      `import 'react'` and get the host's React instance instead of bundling
-    //      a duplicate copy. Singleton-correct hooks, contexts, and ECHO state
-    //      depend on this.
-    //   2. **In-browser console use** — once the importmap is registered, the
-    //      DevTools console can `await import('@dxos/client')` and reach the
-    //      host's instance for ad-hoc inspection / scripting.
-    //
-    // Currently `apply: 'build'`-gated; the dev-mode path is a TODO documented
-    // on the plugin definition (it raced with Vite's optimize-deps and produced
-    // a chunk-content drift + partial-batch crash cascade).
-    importMapPlugin(),
-    boot.plugin,
-
-    // Hand the boot loader the Composer brand mark so the visual identity
-    // is established before any JS bundle parses. The SVG carries its own
-    // brand-palette fills (no `currentColor` reliance) and ships as ~2 KB of
-    // inline markup. Wrapped in try/catch so an asset rename or move only
-    // loses the brand mark — the loader still renders the bar + status
-    // without it.
-    bootLoaderPlugin({
-      // A prerelease bundle and the dev server recolour the released mark; production shows it as is.
-      markFilter: bootMarkFilter(channelVariant(env.command)),
-      markSvg: (() => {
-        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
-        try {
-          return readFileSync(markPath, 'utf8');
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.warn(`bootLoaderPlugin: composer brand mark not found at ${markPath}; running without mark.`, error);
-          return undefined;
-        }
-      })(),
-    }),
-
-    channelFaviconPlugin(dirname, channelVariant(env.command)),
-
-    VitePWA({
-      // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
-      // No PWA in dev to make it easier to ensure the latest version is being used.
-      // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
-      // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
-      // NOTE: Check cached resources (on CF, and in the PWA).
-      // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
-      selfDestroying: process.env.DX_PWA === 'false',
-      // injectManifest mode: bundle a custom service worker (src/sw.ts) so we can intercept
-      // fetches for third-party plugin assets and serve them from a dedicated cache when
-      // offline. The host shell still gets the same Workbox-managed precache.
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
-      injectManifest: {
-        maximumFileSizeToCacheInBytes: 30000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
-        // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
-        // manifest entries alone would add one install-time request per file, slowing every
-        // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
-        // so any icon the app has rendered once stays available offline.
-        globIgnores: ['**/phosphor/**'],
-      },
-      includeAssets: ['favicon.ico'],
-      manifest: {
-        name: 'DXOS Composer',
-        short_name: 'Composer',
-        description: 'DXOS Composer',
-        theme_color: '#003E70',
-        icons: [
-          {
-            src: 'pwa-64x64.png',
-            sizes: '64x64',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: 'maskable-icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
-        ],
-      },
-    }),
-
-    isTrue(process.env.DX_STATS) && [
-      visualizer({
-        emitFile: true,
-        filename: 'stats.html',
-      }),
-
-      // https://www.bundle-buddy.com/rollup
+    clientOnly([traceBootLeak(path.resolve(dirname, 'src/main.tsx')), ShutdownPlugin()]),
+    ...sharedPlugins(env, { environment: WORKER_ENVIRONMENT }),
+    clientOnly([
+      // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
+      // a deployed Composer has no vite server, and needs the standalone managed process instead.
+      // Turns are confined to DX_AGENT_CWD (default: the workspace root); the host refuses any
+      // requested directory outside it.
       {
-        name: 'bundle-buddy',
-        buildEnd() {
-          const deps: { source: string; target: string }[] = [];
-          // @ts-ignore
-          for (const id of this.getModuleIds()) {
-            // @ts-ignore
-            const m = this.getModuleInfo(id);
-            if (m != null && !m.isExternal) {
-              for (const target of m.importedIds) {
-                deps.push({ source: m.id, target });
-              }
-            }
-          }
-
-          const outDir = path.join(dirname, 'out');
-          if (!existsSync(outDir)) {
-            mkdirSync(outDir);
-          }
-          writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        name: 'dx-agent-claude',
+        apply: 'serve',
+        // Imported dynamically so only `serve` pays for it: a static import would load the agent SDK
+        // whenever this config is evaluated, including every `vite build` and `vite preview`.
+        configureServer: async (server) => {
+          const { Middleware } = await import('@dxos/agent-claude');
+          server.middlewares.use(Middleware.make({ cwd: process.env.DX_AGENT_CWD ?? rootDir }));
         },
       },
-    ],
 
-    //
-    // DXOS plugins
-    //
+      // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+      // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
+      import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
 
-    ConfigPlugin({
-      root: dirname,
-    }),
-
-    IconsPlugin({
-      // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
-      symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
-      assetPath: (iconSet, name, variant) => {
-        switch (iconSet) {
-          case 'dx':
-            return `${dxosIcons}/${name}.svg`;
-          case 'px':
-            return `${extendedIcons}/${name}.svg`;
-          default:
-            return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
-        }
+      // RSS proxy middleware for CORS-free feed fetching.
+      {
+        name: 'rss-proxy',
+        configureServer(server) {
+          server.middlewares.use('/api/rss', async (req, res) => {
+            if (!req.url) {
+              res.statusCode = 400;
+              res.end('Missing request URL');
+              return;
+            }
+            const url = new URL(req.url, `http://${req.headers.host}`);
+            const feedUrl = url.searchParams.get('url');
+            if (!feedUrl) {
+              res.statusCode = 400;
+              res.end('Missing url parameter');
+              return;
+            }
+            try {
+              const response = await globalThis.fetch(feedUrl);
+              const contentType = response.headers.get('content-type');
+              if (contentType) {
+                res.setHeader('content-type', contentType);
+              }
+              res.statusCode = response.status;
+              res.end(await response.text());
+            } catch (error) {
+              res.statusCode = 502;
+              res.end(String(error));
+            }
+          });
+        },
       },
-      spriteFile: 'icons.svg',
-      contentPaths: [
-        path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
-        path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
-        path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
-      ],
-      // Keeps every `PxIcons` entry in the sprite so the app paints without a round trip.
-      scanPaths: [path.join(rootDir, '/packages/ui/ui-icons/src/index.ts')],
-      // Serves both catalogs so `@dxos/react-ui`'s resolver can fetch a glyph the scanner never saw.
-      assets: [
-        { route: '/phosphor', dir: phosphorIconsCore },
-        { route: '/px-icons', dir: extendedIcons },
-      ],
-      // verbose: true,
-    }),
 
-    ThemePlugin({}),
-  ]
-    .filter(isNonNullable)
-    .flat(), // Plugins
+      // Dev-only: publish the debug-port session id for an agent that cannot read this process's env.
+      debugPortSidecarPlugin(debugPortSession, rootDir),
+
+      // Dev-only: serve forensics test profile for recovery import testing.
+      {
+        name: 'recovery-test-fixture',
+        configureServer(server) {
+          const fixturePath =
+            process.env.COMPOSER_TEST_DXPROFILE ??
+            '/tmp/composer-forensics/main.composer.space-test/main.composer.space.dxprofile';
+          server.middlewares.use('/test-fixtures/main.composer.space.dxprofile', (req, res) => {
+            if (!existsSync(fixturePath)) {
+              res.statusCode = 404;
+              res.end(`Test profile not found at ${fixturePath}`);
+              return;
+            }
+            res.setHeader('Content-Type', 'application/octet-stream');
+            createReadStream(fixturePath).pipe(res);
+          });
+        },
+      },
+
+      // Handle .md?raw imports.
+      {
+        name: 'raw-md-loader',
+        load(id: string) {
+          if (id.endsWith('.md?raw')) {
+            const filePath = id.replace(/\?raw$/, '');
+            const content = readFileSync(filePath, 'utf-8');
+            return `export default ${JSON.stringify(content)}`;
+          }
+        },
+      },
+
+      // https://github.com/antfu-collective/vite-plugin-inspect#readme
+      // Open: http://localhost:5173/__inspect
+      isTrue(process.env.DX_INSPECT) && inspect(),
+
+      // env.command === 'serve' && devtoolsJson(),
+
+      // Solid JSX transform for Solid packages.
+      // Must be placed before React plugin to process Solid files first.
+      solid({
+        include: [
+          '**/solid-ui-geo/**',
+          '**/plugin-map-solid/**',
+          '**/effect-atom-solid/**',
+          '**/web-context-solid/**',
+          '**/echo-solid/**',
+          '**/node_modules/solid-js/**',
+          '**/node_modules/solid-element/**',
+          '**/node_modules/@solid-primitives/**',
+        ],
+      }),
+
+      react(),
+
+      isBundledDev && reactRefreshPreamble(react.preambleCode),
+
+      // Emit a `<script type="importmap">` into the production HTML mapping shared
+      // bare specifiers (`react`, `effect`, `@dxos/client`, etc.) to dedicated chunk
+      // URLs the host serves. Two consumers:
+      //   1. **Third-party plugins (primary)** — remote plugin bundles externalize
+      //      these specifiers via `composerPlugin`'s `isSharedPackage`; the import
+      //      map is what lets a plugin loaded from a third-party origin call
+      //      `import 'react'` and get the host's React instance instead of bundling
+      //      a duplicate copy. Singleton-correct hooks, contexts, and ECHO state
+      //      depend on this.
+      //   2. **In-browser console use** — once the importmap is registered, the
+      //      DevTools console can `await import('@dxos/client')` and reach the
+      //      host's instance for ad-hoc inspection / scripting.
+      //
+      // Currently `apply: 'build'`-gated; the dev-mode path is a TODO documented
+      // on the plugin definition (it raced with Vite's optimize-deps and produced
+      // a chunk-content drift + partial-batch crash cascade).
+      importMapPlugin(),
+      boot.plugin,
+
+      // Hand the boot loader the Composer brand mark so the visual identity
+      // is established before any JS bundle parses. The SVG carries its own
+      // brand-palette fills (no `currentColor` reliance) and ships as ~2 KB of
+      // inline markup. Wrapped in try/catch so an asset rename or move only
+      // loses the brand mark — the loader still renders the bar + status
+      // without it.
+      bootLoaderPlugin({
+        // A prerelease bundle and the dev server recolour the released mark; production shows it as is.
+        markFilter: bootMarkFilter(channelVariant(env.command)),
+        markSvg: (() => {
+          const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
+          try {
+            return readFileSync(markPath, 'utf8');
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `bootLoaderPlugin: composer brand mark not found at ${markPath}; running without mark.`,
+              error,
+            );
+            return undefined;
+          }
+        })(),
+      }),
+
+      channelFaviconPlugin(dirname, channelVariant(env.command)),
+
+      VitePWA({
+        // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
+        // No PWA in dev to make it easier to ensure the latest version is being used.
+        // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
+        // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
+        // NOTE: Check cached resources (on CF, and in the PWA).
+        // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
+        selfDestroying: process.env.DX_PWA === 'false',
+        // injectManifest mode: bundle a custom service worker (src/sw.ts) so we can intercept
+        // fetches for third-party plugin assets and serve them from a dedicated cache when
+        // offline. The host shell still gets the same Workbox-managed precache.
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
+        injectManifest: {
+          maximumFileSizeToCacheInBytes: 30000000,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+          // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
+          // manifest entries alone would add one install-time request per file, slowing every
+          // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
+          // so any icon the app has rendered once stays available offline.
+          globIgnores: ['**/phosphor/**'],
+        },
+        includeAssets: ['favicon.ico'],
+        manifest: {
+          name: 'DXOS Composer',
+          short_name: 'Composer',
+          description: 'DXOS Composer',
+          theme_color: '#003E70',
+          icons: [
+            {
+              src: 'pwa-64x64.png',
+              sizes: '64x64',
+              type: 'image/png',
+            },
+            {
+              src: 'pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+            },
+            {
+              src: 'maskable-icon-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
+      }),
+
+      isTrue(process.env.DX_STATS) && [
+        visualizer({
+          emitFile: true,
+          filename: 'stats.html',
+        }),
+
+        // https://www.bundle-buddy.com/rollup
+        {
+          name: 'bundle-buddy',
+          buildEnd() {
+            const deps: { source: string; target: string }[] = [];
+            // @ts-ignore
+            for (const id of this.getModuleIds()) {
+              // @ts-ignore
+              const m = this.getModuleInfo(id);
+              if (m != null && !m.isExternal) {
+                for (const target of m.importedIds) {
+                  deps.push({ source: m.id, target });
+                }
+              }
+            }
+
+            const outDir = path.join(dirname, 'out');
+            if (!existsSync(outDir)) {
+              mkdirSync(outDir);
+            }
+            writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+          },
+        },
+      ],
+
+      //
+      // DXOS plugins
+      //
+
+      ConfigPlugin({
+        root: dirname,
+      }),
+
+      IconsPlugin({
+        // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+        symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
+        assetPath: (iconSet, name, variant) => {
+          switch (iconSet) {
+            case 'dx':
+              return `${dxosIcons}/${name}.svg`;
+            case 'px':
+              return `${extendedIcons}/${name}.svg`;
+            default:
+              return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+          }
+        },
+        spriteFile: 'icons.svg',
+        contentPaths: [
+          path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+          path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+          path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
+        ],
+        // Keeps every `PxIcons` entry in the sprite so the app paints without a round trip.
+        scanPaths: [path.join(rootDir, '/packages/ui/ui-icons/src/index.ts')],
+        // Serves both catalogs so `@dxos/react-ui`'s resolver can fetch a glyph the scanner never saw.
+        assets: [
+          { route: '/phosphor', dir: phosphorIconsCore },
+          { route: '/px-icons', dir: extendedIcons },
+        ],
+        // verbose: true,
+      }),
+
+      ThemePlugin({}),
+    ]),
+  ],
 
   ...createTestConfig({ dirname, node: true, storybook: true }),
 }));

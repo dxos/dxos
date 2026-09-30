@@ -92,6 +92,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./worker": {
+      "source": "./src/worker/index.ts",
+      "types": "./dist/types/src/worker/index.d.ts",
+      "import": "./dist/lib/worker.mjs"
+    },
     "./Account": {
       "source": "./src/types/Account.ts",
       "types": "./dist/types/src/types/Account.d.ts",
@@ -197,6 +202,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -204,6 +210,7 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/shell": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "yaml": "catalog:"
