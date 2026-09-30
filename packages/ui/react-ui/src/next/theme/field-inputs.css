@@ -1,0 +1,34 @@
+/*
+ * PinInput, NumberInput and PasswordInput: Ark roots that only carry context, around a control row (number, password)
+ * or a run of control-sized cells (pin); the rows reuse Input's `.nx-input-row` (ring, adornments, disabled).
+ */
+
+@layer dx-components {
+  .nx-control-root {
+    display: contents;
+  }
+  :is(.nx-field, .nx-grid[data-layout='stack']) > .nx-control-root > :is(.nx-control, .nx-pin-input) {
+    margin-block: var(--nx-control-inset);
+  }
+
+  /* Cells are control-sized squares a gap apart, so a code reads at the same scale as any control of its size. */
+  .nx-pin-input {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    height: var(--nx-control-size);
+  }
+  .nx-pin-input-cell {
+    width: var(--nx-control-size);
+    padding-inline: 0;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Tabular figures, like PinInput's cells and DateInput's segments, so the digits keep their width as the value steps. */
+  .nx-number-input > .nx-input-field {
+    font-variant-numeric: tabular-nums;
+  }
+  .nx-pin-input-cell:disabled {
+    opacity: 0.5;
+  }
+}

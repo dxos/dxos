@@ -99,6 +99,10 @@ describe('startMcpHost', () => {
         // The handlers are what the MCP client built, so calling one drives a real request over
         // the transport — the same path a model's tool call takes.
         const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
+        // The skill first: the host refuses its operations to a session that has not loaded it.
+        yield* Stream.runDrain(
+          yield* handlers.handle('loadSkill', { skill: 'tasks' }).pipe(Effect.provide(toolkit.layer)),
+        );
         const results = yield* handlers
           .handle('invokeOperation', { key: KEY, input: { title: 'Ship' }, spaceId: SPACE })
           .pipe(Effect.provide(toolkit.layer));
@@ -128,6 +132,7 @@ describe('startMcpHost', () => {
             url,
             probes: [
               { tool: 'queryOperations', args: { query: 'task' } },
+              { tool: 'loadSkill', args: { skill: 'tasks' } },
               { tool: 'invokeOperation', args: { key: KEY, input: { title: 'Ship' }, spaceId: SPACE } },
             ],
             iterations: 2,
@@ -135,9 +140,9 @@ describe('startMcpHost', () => {
           }),
         );
 
-        // Two probes at two timed iterations each, and the warm-up excluded — the shape of the
+        // Three probes at two timed iterations each, and the warm-up excluded — the shape of the
         // report is the contract; the numbers themselves are whatever the machine gives.
-        expect(report.samples.length).to.equal(4);
+        expect(report.samples.length).to.equal(6);
         expect(report.stats['*'].errors).to.equal(0);
         expect(report.stats.queryOperations.count).to.equal(2);
         // Keyed by the operation, not by the tool: every verb goes through `invokeOperation`, so a

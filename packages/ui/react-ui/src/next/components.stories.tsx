@@ -14,6 +14,7 @@ import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
 import { type Size, SIZES } from './sizes.ts';
 import { byTestId } from './testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs } from './testing/stories.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
@@ -29,13 +30,13 @@ const SizeSection = ({ size }: { size: Size }) => (
       <Next.Block>
         <Next.Icon icon='ph--circle--regular' />
       </Next.Block>
-      <Next.Button icon='ph--plus--regular' label={`Add ${size}`} iconOnly data-testid={`add-${size}`} />
-      <Next.Button icon='ph--minus--regular' label={`Remove ${size}`} iconOnly data-testid={`remove-${size}`} />
+      <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Next.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
       <Next.Button data-testid={`button-${size}`}>Save</Next.Button>
-      <Next.Input placeholder='Search' aria-label={`Search ${size}`} data-testid={`input-${size}`} />
-      <Next.Select.Root items={OPTIONS} positioning={{ sameWidth: true }}>
-        <Next.Select.Trigger placeholder='Color' aria-label={`Color ${size}`} data-testid={`select-${size}`} />
-        <Next.Select.Content size={size} data-testid={`listbox-${size}`}>
+      <Next.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
+      <Next.Select.Root items={OPTIONS}>
+        <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
+        <Next.Select.Content data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (
             <Next.Select.Item key={item.value} item={item} />
           ))}
@@ -52,16 +53,16 @@ const SizeSection = ({ size }: { size: Size }) => (
       </Next.Label>
       <Next.Input id={`name-${size}`} data-testid={`row-input-${size}`} />
       <Next.Block rail='end'>
-        <Next.Icon icon='ph--x--regular' label={`Clear ${size}`} />
+        <Next.Icon icon='ph--x--regular' label='Clear' />
       </Next.Block>
     </Next.Container>
 
     <Next.Container>
-      <Next.Checkbox label={`Subscribe ${size}`} defaultChecked data-testid={`checkbox-${size}`} />
+      <Next.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
     </Next.Container>
 
     <Next.Field.Root data-testid={`field-${size}`}>
-      <Next.Field.Label>Email {size}</Next.Field.Label>
+      <Next.Field.Label>Email</Next.Field.Label>
       <Next.Input data-testid={`field-input-${size}`} />
       <Next.Field.HelperText>We never share it.</Next.Field.HelperText>
     </Next.Field.Root>
@@ -83,9 +84,10 @@ const SizeSection = ({ size }: { size: Size }) => (
   </Next.Container>
 );
 
-const DefaultStory = () => (
+/** Every size by default; pick one in the properties panel by turning `allSizes` off. */
+const DefaultStory = ({ size = 'md', allSizes = true }: SizeArgs) => (
   <div className='nx-scope @container flex flex-col gap-4 w-[40rem]' data-size='md'>
-    {SIZES.map((size) => (
+    {(allSizes ? SIZES : [size]).map((size) => (
       <SizeSection key={size} size={size} />
     ))}
   </div>
@@ -94,9 +96,11 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-core/next/components',
   render: DefaultStory,
+  args: { size: 'md', allSizes: true },
+  argTypes: { ...SIZE_ARG_TYPES, allSizes: { control: 'boolean' } },
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -202,7 +206,10 @@ const FocusRingsStory = () => (
       <Next.Field.Root>
         <Next.Combobox.Root items={OPTIONS}>
           <Next.Combobox.Label>Combobox</Next.Combobox.Label>
-          <Next.Combobox.Input placeholder='Search' />
+          <Next.Combobox.Control>
+            <Next.Combobox.Input placeholder='Search' />
+            <Next.Combobox.Trigger />
+          </Next.Combobox.Control>
           <Next.Combobox.Content size='md' />
         </Next.Combobox.Root>
       </Next.Field.Root>
@@ -223,9 +230,9 @@ const FocusRingsStory = () => (
   </div>
 );
 
-/** Colours a focused part and its immediate relatives paint for focus. */
+/** Colours a focused part, its immediate relatives and the control row hosting it (DateInput's segments) paint for focus. */
 const focusPaint = (element: Element) =>
-  [element, element.parentElement, ...(element.parentElement?.children ?? [])]
+  [element, element.parentElement, ...(element.parentElement?.children ?? []), element.closest('.nx-control')]
     .filter((node): node is Element => node instanceof Element)
     .map((node) => {
       const style = getComputedStyle(node);

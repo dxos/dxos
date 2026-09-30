@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { type Size } from './sizes.ts';
 
@@ -33,12 +33,28 @@ export const centreY = (rect: DOMRect) => rect.top + rect.height / 2;
 
 export const centreX = (rect: DOMRect) => rect.left + rect.width / 2;
 
-/** A popup's arrow part, if it renders one. */
-const arrowOf = (popup: HTMLElement) => popup.querySelector<HTMLElement>('[data-part="arrow"]');
+/**
+ * The surface a popup is painted on: the popup itself, or the ScrollArea frame of a scrolling popup (Menu, Select,
+ * Combobox), whose viewport is the Ark content.
+ */
+export const popupFrame = (popup: HTMLElement) => popup.closest<HTMLElement>('.nx-popup') ?? popup;
+
+/**
+ * Asserts a popup renders at `size` (Phase 4 decision 2): its surface carries the `data-size` and resolves that size's
+ * block, so its rows take that size's metrics.
+ */
+export const expectPopupSize = async (popup: HTMLElement, size: Size) => {
+  const frame = popupFrame(popup);
+  await expect(frame).toHaveAttribute('data-size', size);
+  await expect(getComputedStyle(frame).getPropertyValue('--nx-block-size')).toBe(`${GEOMETRY[size].block / 16}rem`);
+};
+
+/** A popup's arrow part, if it renders one; a scrolling popup draws it in its frame, outside the clipping viewport. */
+const arrowOf = (popup: HTMLElement) => popupFrame(popup).querySelector<HTMLElement>('[data-part="arrow"]');
 
 /** The popup's box grown by its arrow, whose outer edge is the popup's edge facing the anchor. */
 const withArrow = (popup: HTMLElement) => {
-  const rect = popup.getBoundingClientRect();
+  const rect = popupFrame(popup).getBoundingClientRect();
   const arrow = arrowOf(popup)?.getBoundingClientRect();
   return {
     top: Math.min(rect.top, arrow?.top ?? rect.top),
@@ -82,10 +98,10 @@ export const expectArrow = async (anchor: HTMLElement, popup: HTMLElement) => {
   const arrow = arrowOf(popup);
   await expect(arrow, 'arrow').not.toBeNull();
   const tip = arrow?.querySelector<HTMLElement>('[data-part="arrow-tip"]');
-  await expect(tip && getComputedStyle(tip).backgroundColor).toBe(getComputedStyle(popup).backgroundColor);
+  await expect(tip && getComputedStyle(tip).backgroundColor).toBe(getComputedStyle(popupFrame(popup)).backgroundColor);
   await waitFor(async () => {
     const anchorRect = anchor.getBoundingClientRect();
-    const popupRect = popup.getBoundingClientRect();
+    const popupRect = popupFrame(popup).getBoundingClientRect();
     const arrowRect = arrow?.getBoundingClientRect() ?? popupRect;
     const below = popupRect.top >= anchorRect.bottom;
     const tipGap = below ? arrowRect.top - anchorRect.bottom : anchorRect.top - arrowRect.bottom;
@@ -103,16 +119,97 @@ export const expectArrow = async (anchor: HTMLElement, popup: HTMLElement) => {
   });
 };
 
+/**
+ * Asserts a long popup scrolls in a Next ScrollArea (DESIGN.md follow-up 49): its viewport (the Ark content) overflows,
+ * shows no native bar, and keeps the highlighted item in view while ArrowDown walks `steps` items past the fold.
+ */
+export const expectScrollingPopup = async (popup: HTMLElement, steps: number) => {
+  await expect(popup).toHaveClass('nx-scroll-viewport');
+  // A direct child: a dev slot-warning wrapper in between would break the frame's child rules.
+  await expect(popup.parentElement).toBe(popupFrame(popup));
+  await expect(popup.scrollHeight, 'popup overflows').toBeGreaterThan(popup.clientHeight);
+  await expect(getComputedStyle(popup).scrollbarWidth, 'no native scrollbar').toBe('none');
+  for (let step = 0; step < steps; step++) {
+    await userEvent.keyboard('{ArrowDown}');
+  }
+  await waitFor(async () => {
+    const item = popup.querySelector<HTMLElement>('[data-highlighted]');
+    await expect(item, 'highlighted item').not.toBeNull();
+    const itemRect = item?.getBoundingClientRect() ?? new DOMRect();
+    const viewRect = popup.getBoundingClientRect();
+    const where = `item ${JSON.stringify(itemRect)}, viewport ${JSON.stringify(viewRect)}`;
+    await expect(popup.scrollTop, `scrolled: ${where}`).toBeGreaterThan(0);
+    await expect(itemRect.top >= viewRect.top - 0.5 && itemRect.bottom <= viewRect.bottom + 0.5, where).toBe(true);
+  });
+  await expectThumbReserve(popup);
+};
+
+/**
+ * Asserts an overflowing popup's overlay thumb sits inside the viewport's inset focus ring, and that the popup reserves
+ * the thumb's strip so no item (nor its last part, e.g. a shortcut) reaches the thumb.
+ */
+export const expectThumbReserve = async (popup: HTMLElement) => {
+  await waitFor(async () => {
+    const thumb = popupFrame(popup).querySelector<HTMLElement>('[data-scroll-thumb="vertical"]');
+    await expect(thumb, 'vertical thumb').not.toBeNull();
+    await expect(popupFrame(popup)).toHaveAttribute('data-overflow-y');
+    const thumbRect = thumb?.getBoundingClientRect() ?? new DOMRect();
+    const ring = parseFloat(getComputedStyle(popup).getPropertyValue('--nx-focus-ring-width'));
+    await expect(ring, 'focus ring width').toBeGreaterThan(0);
+    await expect(thumbRect.right, 'thumb inside ring').toBeLessThanOrEqual(
+      popup.getBoundingClientRect().right - ring + 0.5,
+    );
+    const items = popup.querySelectorAll<HTMLElement>('[role="option"], [role^="menuitem"]');
+    await expect(items.length, 'items').toBeGreaterThan(0);
+    for (const item of items) {
+      for (const part of [item, item.lastElementChild]) {
+        await expect(part?.getBoundingClientRect().right ?? Infinity, 'item clears the thumb').toBeLessThanOrEqual(
+          thumbRect.left + 0.5,
+        );
+      }
+    }
+  });
+};
+
+/** Asserts a popup that fits shows no thumb and reserves no strip for one. */
+export const expectNonScrollingPopup = async (popup: HTMLElement) => {
+  await expect(popup.scrollHeight, 'popup fits').toBeLessThanOrEqual(popup.clientHeight);
+  await expect(popupFrame(popup)).not.toHaveAttribute('data-overflow-y');
+  await expect(popupFrame(popup).querySelector('[data-scroll-thumb]')).toBeNull();
+  await expect(getComputedStyle(popup).paddingRight, 'no reserve').toBe('0px');
+};
+
 /** Hovers with a real pointer (the storybook runner's Playwright), since synthetic events never apply `:hover`. */
 export const realHover = async (element: HTMLElement) => {
-  const { userEvent } = await import('@vitest/browser/context');
-  await userEvent.hover(element);
+  const { userEvent: pointer } = await import('vitest/browser');
+  await pointer.hover(element);
 };
 
 /** Moves the real pointer off `element` (to the page's top-left corner), so `pointerleave` and `:hover` follow. */
 export const realUnhover = async (element: HTMLElement) => {
-  const { userEvent } = await import('@vitest/browser/context');
-  await userEvent.unhover(element);
+  const { userEvent: pointer } = await import('vitest/browser');
+  await pointer.unhover(element);
+};
+
+/**
+ * Records "ResizeObserver loop" errors from now until the returned check runs, which fails if any arrived; the browser
+ * reports them as window `error` events, which the runner logs without failing the test.
+ */
+export const watchResizeObserverLoop = (root: HTMLElement) => {
+  const view = root.ownerDocument.defaultView ?? window;
+  const messages: string[] = [];
+  const listener = (event: ErrorEvent) => {
+    if (event.message.includes('ResizeObserver loop')) {
+      messages.push(event.message);
+    }
+  };
+  view.addEventListener('error', listener);
+  return async () => {
+    // A loop is reported at the end of the frame that caused it.
+    await new Promise((resolve) => view.requestAnimationFrame(() => view.requestAnimationFrame(resolve)));
+    view.removeEventListener('error', listener);
+    await expect(messages, 'ResizeObserver loop errors').toEqual([]);
+  };
 };
 
 /** Every themed part carries Ark's scope/part attributes (decision 10). */

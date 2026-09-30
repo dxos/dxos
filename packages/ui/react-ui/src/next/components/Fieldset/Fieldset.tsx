@@ -15,26 +15,26 @@ import { type Size } from '../../sizes.ts';
 // Root
 //
 
-type FieldSetRootProps = ThemedClassName<FieldsetPrimitive.RootProps>;
+type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps>;
 
 /** A `<fieldset>` stacking its Fields with the container gap; `disabled` and `invalid` reach every child Field. */
-const FieldSetRoot = forwardRef<HTMLFieldSetElement, FieldSetRootProps>(({ classNames, ...props }, forwardedRef) => (
+const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(({ classNames, ...props }, forwardedRef) => (
   <FieldsetPrimitive.Root {...props} className={mx(recipes.fieldsetRoot(), classNames)} ref={forwardedRef} />
 ));
 
-FieldSetRoot.displayName = 'Next.FieldSet.Root';
+FieldsetRoot.displayName = 'Next.Fieldset.Root';
 
 //
 // Legend
 //
 
-type FieldSetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
+type FieldsetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
   /** The row's own size; `sm` by default so it reads like a Field's label row. */
   size?: Size;
 };
 
 /** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or icon-only Buttons. */
-const FieldSetLegend = forwardRef<HTMLLegendElement, FieldSetLegendProps>(
+const FieldsetLegend = forwardRef<HTMLLegendElement, FieldsetLegendProps>(
   ({ classNames, size = 'sm', ...props }, forwardedRef) => (
     <FieldsetPrimitive.Legend
       {...props}
@@ -45,42 +45,42 @@ const FieldSetLegend = forwardRef<HTMLLegendElement, FieldSetLegendProps>(
   ),
 );
 
-FieldSetLegend.displayName = 'Next.FieldSet.Legend';
+FieldsetLegend.displayName = 'Next.Fieldset.Legend';
 
 //
 // HelperText
 //
 
-type FieldSetHelperTextProps = ThemedClassName<FieldsetPrimitive.HelperTextProps>;
+type FieldsetHelperTextProps = ThemedClassName<FieldsetPrimitive.HelperTextProps>;
 
-const FieldSetHelperText = forwardRef<HTMLSpanElement, FieldSetHelperTextProps>(
+const FieldsetHelperText = forwardRef<HTMLSpanElement, FieldsetHelperTextProps>(
   ({ classNames, ...props }, forwardedRef) => (
     <FieldsetPrimitive.HelperText {...props} className={mx(recipes.fieldHelper(), classNames)} ref={forwardedRef} />
   ),
 );
 
-FieldSetHelperText.displayName = 'Next.FieldSet.HelperText';
+FieldsetHelperText.displayName = 'Next.Fieldset.HelperText';
 
 //
 // ErrorText
 //
 
-type FieldSetErrorTextProps = ThemedClassName<FieldsetPrimitive.ErrorTextProps>;
+type FieldsetErrorTextProps = ThemedClassName<FieldsetPrimitive.ErrorTextProps>;
 
 /** Rendered only while the root is `invalid`. */
-const FieldSetErrorText = forwardRef<HTMLSpanElement, FieldSetErrorTextProps>(
+const FieldsetErrorText = forwardRef<HTMLSpanElement, FieldsetErrorTextProps>(
   ({ classNames, ...props }, forwardedRef) => (
     <FieldsetPrimitive.ErrorText {...props} className={mx(recipes.fieldError(), classNames)} ref={forwardedRef} />
   ),
 );
 
-FieldSetErrorText.displayName = 'Next.FieldSet.ErrorText';
+FieldsetErrorText.displayName = 'Next.Fieldset.ErrorText';
 
-export const FieldSet = {
-  Root: FieldSetRoot,
-  Legend: FieldSetLegend,
-  HelperText: FieldSetHelperText,
-  ErrorText: FieldSetErrorText,
+export const Fieldset = {
+  Root: FieldsetRoot,
+  Legend: FieldsetLegend,
+  HelperText: FieldsetHelperText,
+  ErrorText: FieldsetErrorText,
 };
 
-export type { FieldSetErrorTextProps, FieldSetHelperTextProps, FieldSetLegendProps, FieldSetRootProps };
+export type { FieldsetErrorTextProps, FieldsetHelperTextProps, FieldsetLegendProps, FieldsetRootProps };
