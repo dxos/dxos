@@ -85,7 +85,7 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 
 ## Parity
 
-Close the "Missing in Next" gaps of [AUDIT.md](./AUDIT.md) §1 for the existing components (Combobox's major gaps stay
+Close the "Missing in Next" gaps of [AUDIT.md](./AUDIT.md) §1 for the existing components (Combobox's major gaps closed
 with Phase 4 milestone 5).
 
 ### Tasks
@@ -119,7 +119,8 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 - [x] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
 - [x] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
   - Done: DragHandle (keyboard moves), DropIndicator, DragPreview, OrderedList. Open: plugin-sheet `RangeList` pilot; AUDIT.md §6 points 16–20, 24.
-- [ ] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
+- [x] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
+  - Done on `Next.Combobox` (AUDIT §4.1 maps the list Combobox/Picker APIs). Open: the ObjectPicker story on it, with milestone 9.
 - [ ] **6. `react-ui-form/next` core** — parts, scalar renderers, `fieldMap`/`fieldProvider`/`createSelectField`; pilot plugin-thread `ChannelCreatePanel`.
 - [ ] **7. Settings layout** — needs a decision (AUDIT.md §3.2); pilot plugin-pwa, plugin-excalidraw, plugin-settings.
 - [ ] **8. Arrays and layout templates** — ArrayField, SelectOptionField, `Form.Layout`; pilot plugin-pipeline `PipelineProperties`.

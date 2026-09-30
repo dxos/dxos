@@ -70,6 +70,11 @@ export const translations = [
         'password-input.hide.label': 'Hide password',
         'tag.delete.label': 'Remove {{label}}',
 
+        'combobox.search.label': 'Search',
+        'combobox.empty.label': 'No results',
+        'combobox.loading.label': 'Loading…',
+        'combobox.create.label': 'Create “{{query}}”',
+
         'drag-handle.role.label': 'drag handle',
         'drag-handle.grabbed.message': 'Grabbed. Press the arrow keys to move, Space to drop.',
         'drag-handle.moved-up.message': 'Moved up.',

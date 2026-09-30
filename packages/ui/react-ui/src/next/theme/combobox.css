@@ -1,6 +1,6 @@
 /*
- * Combobox: a control-sized row holding a text input and a trailing caret trigger; its listbox reuses Select's popup
- * and item rules.
+ * Combobox: a control-sized row holding a text input and a trailing caret trigger, or Select's trigger button with the
+ * input in the popup; its listbox reuses Select's popup and item rules.
  */
 
 @layer dx-components {
@@ -60,11 +60,70 @@
     background: var(--color-hover-surface);
   }
 
+  /* The empty state and the loading row. */
   .nx-combobox-empty {
     display: flex;
     align-items: center;
+    gap: var(--nx-gap-size);
     height: var(--nx-block-size);
     padding-inline: var(--nx-gap-size);
+    color: var(--color-description);
+  }
+
+  /* The popup's search field stays above the options as they scroll, which the viewport's scroll padding keeps clear. */
+  .nx-combobox-search {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: var(--nx-block-size);
+    padding-inline: var(--nx-gap-size);
+    border: none;
+    border-block-end: 1px solid var(--color-separator);
+    border-radius: 0;
+    outline: none;
+    background: var(--surface-bg);
+    font: inherit;
+    color: inherit;
+  }
+  .nx-scroll-viewport:has(> .nx-combobox-search) {
+    scroll-padding-block-start: var(--nx-block-size);
+  }
+
+  /*
+   * A row with a description is a grid: the icon cell, the text over its description in the growing column, then the
+   * indicator; it grows by the description's line.
+   */
+  .nx-combobox-item:has(> .nx-combobox-item-description) {
+    --nx-combobox-text-column: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: var(--nx-gap-size);
+    align-items: center;
+    height: auto;
+    min-height: var(--nx-block-size);
+    padding-block: calc((var(--nx-block-size) - var(--nx-line-height)) / 2);
+  }
+  .nx-combobox-item:has(> .nx-combobox-item-description):has(> .nx-icon:first-child) {
+    --nx-combobox-text-column: 2;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .nx-combobox-item:has(> .nx-combobox-item-description) > * {
+    grid-row: 1 / -1;
+  }
+  .nx-combobox-item:has(> .nx-combobox-item-description) > [data-part='item-text'] {
+    grid-row: 1;
+    grid-column: var(--nx-combobox-text-column);
+  }
+  .nx-combobox-item > .nx-combobox-item-description {
+    grid-row: 2;
+    grid-column: var(--nx-combobox-text-column);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--color-description);
   }
 }

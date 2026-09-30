@@ -637,7 +637,7 @@ audit" (points 25–39, all accepted as recommended except where these rules say
    and compose it from parts (`ItemIcon`, `ItemText`, `ItemDescription`, `ItemIndicator`, any trailing control). No
    `icon`/`description`/`trailing` props, so each thing has one way to do it and `children` means the same in
    Listbox, Select, Combobox and Menu. `ItemDescription` exists only where the option type carries a description
-   (Listbox), since popup rows are one block tall; Menu adds `ItemShortcut`, which Ark lacks (rule 8), and its items
+   (Listbox, and Combobox, whose rows grow by a line for it; other popup rows are one block tall); Menu adds `ItemShortcut`, which Ark lacks (rule 8), and its items
    take `item` data (`MenuOption`) like the list composites'.
 8. **Ark names first.** A part Ark has takes Ark's name (`CloseTrigger`, `ItemIndicator`, `RadioItemGroup`,
    `TriggerItem`, `Fieldset`), so our `data-part`s and Ark's docs agree; DXOS names are only for parts Ark lacks
