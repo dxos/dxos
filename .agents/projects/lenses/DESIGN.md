@@ -1248,6 +1248,9 @@ returns each object at the newest version the reader knows.
 - **Designation.** A derived root records the digest of the lens keys from its origin; a device whose
   lenses give a different digest does not translate. Lenses with the same definition have the same key,
   so builds that agree need no designation.
+- **Branches carry every version** (decision 4, as built). `BranchRecord.versions[memberId][version]` beside
+  `members`; a branch opened before an upgrade gains the new versions from the runner, derived from the
+  object's origin, so they share main's roots and merge back without duplicating translated edits.
 - **A query's result type is part of the query.** A selection returns rows of the version its type filter
   names; a query naming several versions of one type returns each object once, at the newest named; one
   naming no version returns the newest the reader knows. The host resolves this over the query's own matches

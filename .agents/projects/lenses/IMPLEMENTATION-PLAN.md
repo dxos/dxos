@@ -83,9 +83,16 @@ does not read as a version binding (one per object and version, typed at that ve
 also returned by `db.version(obj, Type)`. A reference resolves to the version its schema declares, and a
 query traversing it returns that version.
 
+Branches (item 2, 2026-09-30): a branch of a versioned object carries every version. `BranchRecord.versions`
+holds each member's version documents beside `members`, which keeps naming the version released apps
+read. `createBranch` forks every version at matching points (`imageHeads` maps a past frontier across
+versions); the runner derives versions a branch lacks, from the object's origin, so a branch opened before
+an upgrade gains them with main's roots; translation runs within each branch; switching reads the
+branch's newest known version; merge and sync pair each version with main's. Released hosts replicate
+only `members`, so a branch's other versions reach peers on hosts that know `versions`.
+
 Not yet done:
 
-- Branches of versioned objects (decision 4 in DESIGN.md §12.5).
 - `getDocumentHeads` and `waitUntilHeadsReplicated` cover linked documents only, not version documents
   (branch documents have the same gap).
 - Deriving a version for an object with a long history translates every edit since creation.
