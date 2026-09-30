@@ -42,12 +42,17 @@ import { raise } from '@dxos/debug';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Next, type Size } from '@dxos/react-ui/next';
 
-import { type TreeData, isTreeDataFor } from '../../components/Tree/tree-data.ts';
+import { type TreeData, isTreeData, isTreeDataFor } from '../../components/Tree/tree-data.ts';
 import { type TreeModel } from '../../components/Tree/TreeContext.ts';
 import { type DropKind } from '../../components/Tree/TreeDropIndicator.tsx';
 import { type TreeNode, type TreeWalk, createCollection, createTreeWalkAtom } from './tree-collection.ts';
 
 /** `window` mounts only the rows in view; `css` mounts every row with `content-visibility: auto`. */
+/** Each indent guide's column, as a typed custom property rather than a cast of `style`. */
+const guideStyle = (level: number): CSSProperties & Record<'--nx-tree-guide-level', string> => ({
+  '--nx-tree-guide-level': String(level),
+});
+
 export type TreeVirtualize = 'none' | 'css' | 'window';
 
 /** A disclosure in flight: the rows under `path` fade in (`open`) or conceal before the close commits. */
@@ -152,7 +157,8 @@ const TreeRoot = <T extends { id: string }>({
 
   const setOpen = useCallback(
     (node: TreeNode<T>, open: boolean) => {
-      const commit = () => onOpenChange?.({ item: node.item, path: node.path, open });
+      const { item } = node;
+      const commit = () => item && onOpenChange?.({ item, path: node.path, open });
       const pending = pendingRef.current;
       const previous = pending.get(node.value);
       if (previous) {
@@ -217,11 +223,11 @@ const TreeRoot = <T extends { id: string }>({
       const previous = new Set(walk.selected);
       for (const value of selectedValue) {
         const node = previous.has(value) ? undefined : walk.byValue.get(value);
-        node && onSelect?.({ item: node.item, path: node.path, current: true });
+        node?.item && onSelect?.({ item: node.item, path: node.path, current: true });
       }
       for (const value of walk.selected) {
         const node = next.has(value) ? undefined : walk.byValue.get(value);
-        node && onSelect?.({ item: node.item, path: node.path, current: false });
+        node?.item && onSelect?.({ item: node.item, path: node.path, current: false });
       }
     },
     [walk, onSelect],
@@ -242,10 +248,13 @@ const TreeRoot = <T extends { id: string }>({
         if (!target || !instruction || instruction.type === 'instruction-blocked') {
           return;
         }
-        const targetData = target.data as TreeData;
+        const { data: targetData } = target;
+        if (!isTreeData(targetData) || !isTreeData(source.data)) {
+          return;
+        }
         onDropRef.current?.({
           instruction,
-          source: source.data as TreeData,
+          source: source.data,
           target: targetData,
           item: targetData.item,
         });
@@ -516,8 +525,8 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
         onDrag: ({ self, source }) => {
           const desired = extractInstruction(self.data);
           const kind =
-            desired && desired.type !== 'instruction-blocked'
-              ? (getDropKind?.({ instruction: desired, source: source.data as TreeData, target: data }) ?? 'move')
+            desired && desired.type !== 'instruction-blocked' && isTreeData(source.data)
+              ? (getDropKind?.({ instruction: desired, source: source.data, target: data }) ?? 'move')
               : 'move';
           const instruction: Instruction | null =
             kind === 'reject' && desired && desired.type !== 'instruction-blocked'
@@ -584,12 +593,7 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
       )}
       {indentGuides &&
         Array.from({ length: depth - 1 }, (_, level) => (
-          <span
-            key={level}
-            aria-hidden='true'
-            className='nx-tree-indent-guide'
-            style={{ '--nx-tree-guide-level': String(level) } as CSSProperties}
-          />
+          <span key={level} aria-hidden='true' className='nx-tree-indent-guide' style={guideStyle(level)} />
         ))}
       <TreeDropLine instruction={drag.instruction} />
     </>

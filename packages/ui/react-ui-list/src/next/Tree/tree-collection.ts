@@ -16,7 +16,8 @@ export type TreeNode<T extends { id: string } = any> = {
   path: string[];
   /** 1-based depth, which is what zag reports as `aria-level`. */
   depth: number;
-  item: T;
+  /** Absent only on the synthetic root, which zag needs but never renders. */
+  item?: T;
   props: TreeItemDataProps;
   branch: boolean;
   open: boolean;
@@ -102,7 +103,6 @@ export const createTreeWalkAtom = <T extends { id: string }>(
       value: Path.create(...rootPath),
       path: rootPath,
       depth: 0,
-      item: { id: rootId ?? '' } as T,
       props: { id: rootId ?? '', label: '' },
       branch: true,
       open: true,

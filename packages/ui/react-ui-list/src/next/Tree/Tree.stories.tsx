@@ -182,7 +182,7 @@ export const Large: Story = {
 };
 
 const rows = (tree: HTMLElement) => within(tree).getAllByRole('treeitem');
-const focusedName = () => (document.activeElement as HTMLElement | null)?.textContent;
+const focusedName = () => document.activeElement?.textContent;
 
 /**
  * Records, per row label, each disclosure phase (with the animation it resolves to) as the row is inserted or
@@ -384,6 +384,12 @@ export const WindowedTest: Story = {
 
 type Sample = { mode: TreeVirtualize; mount: number; scroll: { mean: number; p95: number; max: number }; key: number };
 
+// Shared by the Benchmark story's component and its play function, which run in the same module.
+const bench: { mount: (mode: TreeVirtualize | undefined) => void; start: () => number } = {
+  mount: () => {},
+  start: () => 0,
+};
+
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
 /** Mounts the 5,000-row tree in one mode per run and records mount-to-paint time. */
@@ -391,7 +397,6 @@ const BenchmarkStory = () => {
   const [mode, setMode] = useState<TreeVirtualize | undefined>();
   const startRef = useRef(0);
   useLayoutEffect(() => {
-    const bench = (window as any).__treeBench ?? ((window as any).__treeBench = {});
     bench.mount = (next: TreeVirtualize | undefined) => {
       startRef.current = performance.now();
       setMode(next);
@@ -413,9 +418,9 @@ export const Benchmark: StoryObj<typeof meta> = {
   tags: ['!test'],
   render: () => <BenchmarkStory />,
   play: async ({ canvasElement }) => {
-    const bench = (window as any).__treeBench;
     const samples: Sample[] = [];
-    for (const mode of ['window', 'css', 'none'] as TreeVirtualize[]) {
+    const modes: TreeVirtualize[] = ['window', 'css', 'none'];
+    for (const mode of modes) {
       bench.mount(undefined);
       await nextFrame();
       bench.mount(mode);
