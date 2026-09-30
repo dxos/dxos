@@ -10,7 +10,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -29,7 +29,15 @@ const SPACE_READY_TIMEOUT = Duration.seconds(10);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication, template }) {
+    Effect.fnUntraced(function* ({
+      name,
+      hue: hue_,
+      icon: icon_,
+      private: isPrivate,
+      edgeReplication,
+      template,
+      origin: origin_,
+    }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
       // Resolved before the space exists: the form is uncontrolled, so it keeps the template's id,
@@ -48,7 +56,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       const icon = icon_ ?? getTemplateIcon(match) ?? iconValues[Math.floor(Math.random() * iconValues.length)];
 
       // The invoker attributes the operation (`user` from the app's UI), and the client cannot read Effect context.
-      const origin = yield* Database.Origin;
+      const origin = origin_ ?? (yield* Database.Origin);
       const space = yield* Effect.promise(() =>
         client.spaces.create(
           {
@@ -75,7 +83,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         Effect.timeoutOrElse({ duration: SPACE_READY_TIMEOUT, orElse: () => Effect.fail(new SpaceNotReadyError()) }),
       );
 
-      const collection = Obj.make(Collection.Collection, { objects: [] });
+      const collection = AppAnnotation.addRootCollection(space.db);
       Obj.update(space.properties, (properties) => {
         Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
         if (match) {
