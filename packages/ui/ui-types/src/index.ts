@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './anchor-hover.ts';
 export * from './anchor.ts';
 export * from './axis.ts';
 export * from './density.ts';
