@@ -5,6 +5,76 @@ into shippable phases. Supersedes the M1/M2 task lists in [TASKS.md](./TASKS.md)
 disagree (those predate the research). Every phase ships on its own and leaves the system strictly
 better than before._
 
+## Direction (decided 2026-09-30): version documents
+
+Supersedes in-place migration as the way to support peers on older versions. Everything below this
+section describes the in-place work, which remains the source of the pieces carried over.
+
+**Why.** In-place migration keeps both shapes in one document. Old peers lose the object (the type
+switches) and never see new-shape edits; every broadening of what a migration can express surfaced a
+new conflict case (three converge rounds, one thrash), because old and new shapes share containers.
+Keeping each version in its own document removes the shared containers, and with them most of the
+machinery: retired properties, the type switch, the kept-key rule, the two fold channels, the
+checkpoint rules and replaying a losing concurrent migration. It is one body of work with the rest of
+the migrations effort, not a separate project.
+
+**Model.**
+
+- One logical object (one id), one Automerge document per schema version. Each document holds one shape.
+- Phase 1 (the plan): every version, everywhere. A device holds a document for every version in its
+  lens chain, created up front for every object (including objects created after an upgrade, derived
+  back through the chain so older peers see them), plus newer versions it received but cannot read.
+  Creating versions only when some device reports needing them was considered and rejected for now: it
+  needs a space-level record of which versions are in use, with its own failure modes.
+- Future, not planned: devices drop versions older than the one they use; EDGE keeps every version and
+  translates between any pair, indefinitely. Nothing in the translation rules depends on which documents
+  a device holds, so this changes storage policy, not the rules.
+
+**Translation rules** (prototype: `echo-client/src/proxy-db/version-documents/`, item 12 below).
+
+1. A version document's root is derived from the object's origin root through the lens chain, authored
+   with a content-derived actor and time 0, so every device creates the same root. A device then edits
+   under its own actor.
+2. Only original edits are translated, never translations, each directly from the document it was made
+   in through the composed lens chain. Cost per edit: one translation per other version held.
+3. A translation forks at the target's images of the edit's ancestors (waiting until they exist; an
+   ancestor that moves nothing in the target is transparent) and is authored with an actor derived from
+   its ops (`sharedChangeAt`), so every device that translates an edit writes the same bytes.
+4. A device translates only with the lens build the space designates for a version pair.
+
+Every device that holds two versions translates between them. Redundant work, identical bytes, so no
+election or server is needed for correctness in phase 1.
+
+**Lenses are code and data, like types.** They start as code; data lenses (objects in the graph, as
+schema objects are) follow, which lets a lens be designated, identified by content hash, and run by a peer
+that does not have the app's code. Declarative lenses are the ones data can express.
+
+**Migration steps, each shipped only once its cases converge under test.**
+
+1. Declarative lenses: rename, add with a default, remove with a backward default. All reversible;
+   every translation is a field-level edit. Old and new peers both keep working.
+2. Lists, maps and text inside those lenses: element-wise list mapping and text through renames, using
+   the rebasing in `fold-edit.ts`.
+3. Opaque one-way transforms (concatenation, splitting a field): forward only; older peers keep the
+   object read-only.
+4. Multi-object migrations (fan-out, fan-in, array split) on convergence keys.
+
+**Carried over from the in-place work:** per-edit translation and list/text rebasing (`fold-edit.ts`),
+byte-identical authoring (`ObjectCore.sharedChangeAt`), originals-only folding and ancestor-image forks,
+convergence keys and the convergence-key merger, `Lens` (compose, invert, path finding), and the lessons
+in the converge ledgers below.
+
+**Open questions.**
+
+- The space directory maps an object id to one document, and apps released before version documents
+  only follow that entry. It must keep pointing at the version those apps read; newer versions hang off
+  a field they ignore.
+- Deterministic document ids for version documents (import with a chosen id in automerge-repo).
+- Indexing and queries: `Filter.type` already matches a version document by its type; `Filter.id` and
+  references must resolve to the version the reader understands, with several documents per id.
+- Where the designated lens build is recorded, and how a peer learns lenses for versions it does not know.
+- Fate of the in-place runner: kept for step 3 (opaque one-way transforms), or retired.
+
 ## Status (2026-09-27): all phases implemented on this branch
 
 | Phase  | Commit                                         | What landed                                                                                                                      |
@@ -105,7 +175,7 @@ Follow-up (2026-09-29), superseding item 1:
     device reports it understands the new version, with an app-release cutoff for devices that never
     return. Migrations with no reverse mapping switch the type at once, as today.
 
-12. **Direction: version documents (prototype).** Keep every version (partial replication later trims it
+12. **Version documents (prototype; see "Direction" at the top).** Keep every version (partial replication later trims it
     per device): one logical object, one Automerge document per schema version. A device keeps the latest
     version it understands plus newer ones it cannot read yet, and translates edits between the version
     documents it holds. Rules, all deterministic so any number of devices can translate without
