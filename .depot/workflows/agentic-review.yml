@@ -2,8 +2,9 @@ name: Agentic Review
 
 # Advisory: checks that the PR carries a finalized agentic review (`.agents/reviews/<sha>/`) with
 # every issue resolved or ignored, and that no more than 20% of the PR changed since. The review
-# itself is run by an author or agent (`bun .agents/skills/agentic-review/scripts/fast.ts`); this
-# job only reads committed files. A separate workflow so it is never a required `Check` job — keep
+# itself is run by an author or agent (`bun .agents/skills/agentic-review/scripts/fast.ts`, System
+# One only — a review this check prompts never runs the subagent workflow); this job only reads
+# committed files. A separate workflow so it is never a required `Check` job — keep
 # it out of branch protection, since it is meant to prompt a review, not block a merge.
 
 on:
