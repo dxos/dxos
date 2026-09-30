@@ -214,6 +214,13 @@ describe('EdgeFeedReplicator', () => {
       return {
         replica,
         append,
+        /** Stores blocks in the replica directly, as a previous connection would have. */
+        store: async (indices: number[]) => {
+          for (const index of indices) {
+            const data = await source.get(index, { valueEncoding: 'binary' });
+            await replica.putBuffer(index, Buffer.from(data), await source.proof(index), null);
+          }
+        },
         feedKey: source.key.toHex(),
         blockAt,
         blocksIn: ({ from, to }: BlockRange) => Promise.all(range(to - from, (offset) => blockAt(from + offset))),
@@ -546,6 +553,56 @@ describe('EdgeFeedReplicator', () => {
 
       // Only the metadata reply's scan reaches block 0; each push scans from where the last scan stopped.
       expect(has.mock.calls.filter(([index]) => index === 0)).toHaveLength(1);
+    });
+
+    test('a push finishing after newer blocks arrive does not send them back', async () => {
+      const { replica, append, store, feedKey, blockAt, holds } = await setupFeeds(5);
+      // The replica already holds blocks EDGE reports it lacks, as after EDGE lost them.
+      await store(range(5));
+      // Three more, so blocks 5–7 extend the replica with no hole and are eligible to be pushed back.
+      for (const _ of range(3)) {
+        await append();
+      }
+
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        return undefined;
+      });
+      const { messenger } = await createClient(edge.endpoint);
+      // Hold the client's first push open, so EDGE's newer blocks land while it is in flight.
+      const pushing = new Trigger();
+      const release = new Trigger();
+      // `createClient` already spies on `send`, so the original comes from the class.
+      const send = EdgeClient.prototype.send.bind(messenger);
+      let held = false;
+      vi.spyOn(messenger, 'send').mockImplementation(async (ctx, message) => {
+        const payload = message.payload && decodeCbor(message.payload.value);
+        if (payload?.type === 'data' && !held) {
+          held = true;
+          pushing.wake();
+          await release.wait();
+        }
+        return send(ctx, message);
+      });
+      const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
+      await replicator.addHypercore(replica);
+      await openAndClose(replicator);
+      edge.admitConnection.wake();
+
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      await pushing.wait();
+      edge.send({ type: 'data', feedKey, blocks: await Promise.all([5, 6, 7].map((index) => blockAt(index))) });
+      await holds([5, 6, 7]);
+      release.wake();
+
+      expect(await edge.next()).toMatchObject({ type: 'data', blocks: [{ index: 3 }, { index: 4 }] });
+      // The next message is the request this push causes, not blocks 5–7 pushed back.
+      await append();
+      await append();
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(9)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 8, to: 10 } });
     });
   });
 

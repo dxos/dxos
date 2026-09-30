@@ -271,7 +271,8 @@ export class EdgeFeedReplicator extends Resource {
       feedKey: feed.key.toHex(),
       blocks,
     });
-    this._remoteLength.set(feed.key, to);
+    // Monotonic: blocks EDGE pushed while this send was in flight have already raised it past `to`.
+    this._remoteLength.set(feed.key, Math.max(this._remoteLength.get(feed.key) ?? 0, to));
   }
 
   private async _integrateBlocks(feed: HypercoreWrapper<any>, blocks: FeedBlock[]): Promise<void> {
