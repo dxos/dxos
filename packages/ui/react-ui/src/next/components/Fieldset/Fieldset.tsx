@@ -3,7 +3,7 @@
 //
 
 import { Fieldset as FieldsetPrimitive } from '@ark-ui/react/fieldset';
-import React, { forwardRef } from 'react';
+import React, { createContext, forwardRef, useContext } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -26,18 +26,43 @@ type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
   level?: Level;
 };
 
-/** A `<fieldset>` stacking its Fields with the container gap; `disabled` and `invalid` reach every child Field. */
+// Whether the enclosing Root is a grid set, whose legend must be an ordinary grid item rather than a rendered legend.
+const GridContext = createContext(false);
+
+/**
+ * A `<fieldset>` stacking its Fields with the container gap; `disabled` and `invalid` reach every child Field. A grid
+ * set (`gutter='inherit'`) is a `group` element instead, since a `<fieldset>` lays its children out in an anonymous
+ * box that cannot be a subgrid; it is named by its Legend, and `disabled` reaches its Fields through Ark's context.
+ */
 const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(
-  ({ classNames, gutter, level, style, ...props }, forwardedRef) => {
-    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter, level }) : { style: undefined };
+  ({ classNames, gutter, level, style, children, ...props }, forwardedRef) => {
+    if (!gutter) {
+      return (
+        <FieldsetPrimitive.Root
+          {...props}
+          style={style}
+          className={mx(recipes.fieldsetRoot(), classNames)}
+          ref={forwardedRef}
+        >
+          {children}
+        </FieldsetPrimitive.Root>
+      );
+    }
+
+    const { style: gridStyle, ...grid } = containerAttributes({ gutter, level });
     return (
-      <FieldsetPrimitive.Root
-        {...props}
-        {...grid}
-        style={gridStyle ? { ...gridStyle, ...style } : style}
-        className={mx(recipes.fieldsetRoot(), gutter && recipes.container(), classNames)}
-        ref={forwardedRef}
-      />
+      <GridContext.Provider value>
+        <FieldsetPrimitive.Root
+          {...props}
+          {...grid}
+          asChild
+          style={{ ...gridStyle, ...style }}
+          className={mx(recipes.fieldsetRoot(), recipes.container(), classNames)}
+          ref={forwardedRef}
+        >
+          <div role='group'>{children}</div>
+        </FieldsetPrimitive.Root>
+      </GridContext.Provider>
     );
   },
 );
@@ -55,14 +80,20 @@ type FieldsetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
 
 /** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or icon-only Buttons. */
 const FieldsetLegend = forwardRef<HTMLLegendElement, FieldsetLegendProps>(
-  ({ classNames, size = 'sm', ...props }, forwardedRef) => (
-    <FieldsetPrimitive.Legend
-      {...props}
-      data-size={size}
-      className={mx(recipes.fieldsetLegend(), classNames)}
-      ref={forwardedRef}
-    />
-  ),
+  ({ classNames, size = 'sm', children, ...props }, forwardedRef) => {
+    const grid = useContext(GridContext);
+    return (
+      <FieldsetPrimitive.Legend
+        {...props}
+        asChild={grid}
+        data-size={size}
+        className={mx(recipes.fieldsetLegend(), classNames)}
+        ref={forwardedRef}
+      >
+        {grid ? <div>{children}</div> : children}
+      </FieldsetPrimitive.Legend>
+    );
+  },
 );
 
 FieldsetLegend.displayName = 'Next.Fieldset.Legend';

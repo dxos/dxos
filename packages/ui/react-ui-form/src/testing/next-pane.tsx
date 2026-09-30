@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import '@dxos/react-ui/next/theme.css';
-
 import { type Decorator } from '@storybook/react-vite';
 import React from 'react';
 
+import '@dxos/react-ui/next/theme.css';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { translations as formTranslations } from '../translations.ts';
+import { translations as formTranslations } from '#translations';
 
 /** Args of every `src/next` story: the pane's box, which is what a Next form collapses against. */
 export type PaneArgs = {

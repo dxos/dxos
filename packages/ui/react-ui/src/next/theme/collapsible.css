@@ -43,6 +43,10 @@
   .nx-collapsible-content {
     overflow: hidden;
   }
+  /* A grid content (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
+  .nx-collapsible-content.nx-grid {
+    row-gap: inherit;
+  }
   .nx-collapsible-content[data-state='open'] {
     animation: nx-collapsible-open 150ms ease-out;
   }

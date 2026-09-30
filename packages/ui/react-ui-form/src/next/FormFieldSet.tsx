@@ -11,22 +11,23 @@ import { useFormContext } from '../hooks/index.ts';
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
 export type FormFieldSetProps = PropsWithChildren<{
-  label?: string;
+  'label'?: string;
   /** Plain text under the legend (the current FieldSet renders markdown; see SPIKE.md). */
-  description?: string;
+  'description'?: string;
   /** The legend is a disclosure that folds the body. */
-  collapsible?: boolean;
-  defaultOpen?: boolean;
+  'collapsible'?: boolean;
+  'defaultOpen'?: boolean;
   /** Controls acting on the group, at the end of its legend row. */
-  actions?: ReactNode;
+  'actions'?: ReactNode;
   /** A nested object's group: one surface rung above its host. Set by the dispatcher, never read from context. */
-  nested?: boolean;
+  'nested'?: boolean;
   'data-testid'?: string;
 }>;
 
 /**
- * A `<fieldset>` that is a subgrid of the enclosing grid (`gutter='inherit'`), so fields at any depth keep the form's
- * rails and tracks; a collapsible set folds a Collapsible Content that is itself a subgrid.
+ * A grid `Fieldset` (`gutter='inherit'`): a `group` named by its legend that is a subgrid of the enclosing grid, so
+ * fields at any depth keep the form's rails and tracks; a collapsible set folds a Collapsible Content that is itself a
+ * subgrid.
  */
 export const FormFieldSet = ({
   children,

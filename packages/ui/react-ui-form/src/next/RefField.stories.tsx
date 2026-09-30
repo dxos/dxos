@@ -82,13 +82,13 @@ export const Test: Story = {
     await expect(input).toHaveValue('Initech');
 
     // 4. The popup took the row's size from the panel (Phase 4 decision 2).
-    await userEvent.click(canvas.getByRole('button', { name: /open/i }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Toggle suggestions' }));
     const popup = (await body.findByRole('listbox')).closest('[data-size]');
     await expect(popup).toHaveAttribute('data-size', 'sm');
     await userEvent.keyboard('{Escape}');
 
     // 5. The clear trigger unsets the reference.
-    await userEvent.click(canvas.getByRole('button', { name: /clear/i }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Clear value' }));
     await waitFor(() => expect(canvas.getByTestId('values')).not.toHaveTextContent('echo://'));
   },
 };

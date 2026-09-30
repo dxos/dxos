@@ -12,9 +12,10 @@ import { Field } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { type FormFieldMap } from '#types';
+
 import { Form as CurrentForm } from '../components/Form/Form.tsx';
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
-import { type FormFieldMap } from '../types.ts';
 import { Form } from './Form.tsx';
 
 const SpaceFormSchema = Schema.Struct({

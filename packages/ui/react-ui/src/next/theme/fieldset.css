@@ -16,9 +16,9 @@
     flex-direction: column;
     gap: var(--nx-gap-size);
   }
-  /* A grid set (`gutter='inherit'`) keeps the container's row gap for its fields. */
+  /* A grid set (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
   .nx-fieldset.nx-grid {
-    row-gap: var(--nx-gap-size);
+    row-gap: inherit;
   }
   .nx-fieldset > .nx-control {
     margin-block: var(--nx-control-inset);

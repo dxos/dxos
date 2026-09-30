@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-
 import { describe, expect, test } from 'vitest';
 
 const ROOT = import.meta.dirname;

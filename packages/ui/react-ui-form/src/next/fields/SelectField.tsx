@@ -31,8 +31,7 @@ export const SelectField = ({
   onBlur,
 }: SelectFieldProps) => {
   const items = useMemo<Next.SelectOption[]>(
-    () =>
-      options.map(({ value, label, icon }) => ({ value: String(value), label: label ?? String(value), icon })),
+    () => options.map(({ value, label, icon }) => ({ value: String(value), label: label ?? String(value), icon })),
     [options],
   );
   const value = getValue();

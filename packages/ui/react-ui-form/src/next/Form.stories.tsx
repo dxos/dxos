@@ -10,8 +10,8 @@ import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
-import { Form } from './Form.tsx';
 import { createSelectField } from './fields/index.ts';
+import { Form } from './Form.tsx';
 import { SCALAR_VALUES, ScalarSchema, type ScalarValues } from './testing.ts';
 
 const fieldMap = { model: createSelectField({ options: ['opus', 'sonnet', 'haiku'] }) };

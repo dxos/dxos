@@ -9,8 +9,8 @@ import { Annotation, Ref } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
 import { OrderedList } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -55,7 +55,8 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
   const handleAdd = useCallback(() => {
     let value: unknown;
     try {
-      value = elementType && SchemaEx.isNestedType(elementType) ? defaultObject(elementType) : getDefaultValue(elementType);
+      value =
+        elementType && SchemaEx.isNestedType(elementType) ? defaultObject(elementType) : getDefaultValue(elementType);
     } catch (err) {
       log.catch(err);
       return;
@@ -150,6 +151,8 @@ const defaultObject = (typeNode: SchemaAST.AST): Record<string, unknown> => {
     ? SchemaEx.getDiscriminatedType(baseNode, {})
     : SchemaEx.findNode(typeNode, SchemaAST.isObjects);
   return typeLiteral
-    ? Object.fromEntries(getFormProperties(typeLiteral).map((prop) => [prop.name, SchemaAST.getDefaultAnnotation(prop.type)]))
+    ? Object.fromEntries(
+        getFormProperties(typeLiteral).map((prop) => [prop.name, SchemaAST.getDefaultAnnotation(prop.type)]),
+      )
     : {};
 };

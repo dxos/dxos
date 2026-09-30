@@ -13,9 +13,10 @@ import { Organization } from '../testing/schema.ts';
 export const ScalarSchema = Schema.Struct({
   name: Schema.String.pipe(Schema.check(Schema.isMinLength(1))).annotate({ title: 'Name' }),
   age: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween({ minimum: 0, maximum: 150 }))).annotate(
-      { title: 'Age' },
-    ),
+    Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 0, maximum: 150 })),
+    ).annotate({ title: 'Age' }),
   ),
   active: Schema.optional(Schema.Boolean.annotate({ title: 'Active' })),
   status: Schema.optional(Schema.Literals(['active', 'inactive', 'archived']).annotate({ title: 'Status' })),
@@ -41,7 +42,7 @@ export const SCALAR_VALUES: ScalarValues = {
 };
 
 /** A struct nested `depth` levels, `fields` text properties at each level; the depth-5 benchmark's shape. */
-export const makeNestedSchema = (depth: number, fields: number): Schema.Struct<any> => {
+export const makeNestedSchema = (depth: number, fields: number): Schema.Codec<any, any, never, never> => {
   const leaves = Object.fromEntries(
     Array.from({ length: fields }, (_, index) => [
       `field${index}`,
@@ -102,5 +103,12 @@ export const SyncSettingsSchema = Schema.Struct({
   interval: Schema.optional(
     Schema.Number.annotate({ title: 'Interval', description: 'Seconds between background syncs.' }),
   ),
-  wifiOnly: Schema.optional(Schema.Boolean.annotate({ title: 'Wi-Fi only', description: 'Pause sync on metered networks.' })),
+  wifiOnly: Schema.optional(
+    Schema.Boolean.annotate({ title: 'Wi-Fi only', description: 'Pause sync on metered networks.' }),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
+
+/** Both settings sections in one form; each section renders its own properties with `include`. */
+export const SettingsSchema = Schema.Struct({ ...EditorSettingsSchema.fields, ...SyncSettingsSchema.fields });
+
+export type SettingsValues = Schema.Schema.Type<typeof SettingsSchema>;

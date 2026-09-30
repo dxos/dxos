@@ -60,10 +60,7 @@ const BenchmarkStory = ({ fields = 83 }: StoryArgs) => {
     void hostRef.current?.getBoundingClientRect();
     void hostRef.current?.ownerDocument.body.offsetHeight;
     const laidOut = performance.now();
-    setTimings((previous) => [
-      ...previous,
-      { impl, mount: mounted - startRef.current, layout: laidOut - mounted },
-    ]);
+    setTimings((previous) => [...previous, { impl, mount: mounted - startRef.current, layout: laidOut - mounted }]);
   }, [impl]);
 
   const mount = (next: Impl | undefined) => {
@@ -140,8 +137,8 @@ export const Test: Story = {
       await expect(box.right).toBeCloseTo(top.right, 0);
     }
 
-    // 4. Each nested group is a fieldset (a `group` named by its legend) whose grid is a subgrid.
-    const groups = canvasElement.querySelectorAll<HTMLFieldSetElement>('fieldset');
+    // 4. Each nested group is a Fieldset (a `group` named by its legend) whose grid is a subgrid.
+    const groups = canvas.getAllByRole('group', { name: /^Level / });
     await expect(groups).toHaveLength(DEPTH);
     const rootColumns = getComputedStyle(canvasElement.querySelector('[role="form"]')!).gridTemplateColumns;
     for (const group of groups) {
@@ -151,8 +148,8 @@ export const Test: Story = {
     await expect(canvas.getByRole('group', { name: `Level ${DEPTH}` })).toBeInTheDocument();
 
     // 5. Legends start on the content track, like labels.
-    const label = canvas.getByText('Field 1', { selector: 'label' }).getBoundingClientRect();
-    for (const trigger of canvasElement.querySelectorAll('fieldset > legend button')) {
+    const label = canvas.getAllByText('Field 1', { selector: 'label' })[0].getBoundingClientRect();
+    for (const trigger of canvasElement.querySelectorAll('[data-scope="fieldset"][data-part="legend"] button')) {
       await expect(trigger.getBoundingClientRect().left).toBeCloseTo(label.left, 0);
     }
 

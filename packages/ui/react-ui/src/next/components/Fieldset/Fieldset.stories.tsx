@@ -71,6 +71,32 @@ const DefaultStory = () => (
       <Next.Checkbox label='Share usage data' />
     </Next.Fieldset.Root>
 
+    {/* Grid sets: subgrids of the enclosing Container at any depth, the inner one folding a subgrid Collapsible. */}
+    <Next.Fieldset.Root gutter='inherit' level='+1' data-testid='address'>
+      <Next.Fieldset.Legend>Address</Next.Fieldset.Legend>
+      <Next.Field.Root data-testid='street'>
+        <Next.Field.Header>
+          <Next.Field.Label>Street</Next.Field.Label>
+        </Next.Field.Header>
+        <Next.Input />
+      </Next.Field.Root>
+      <Next.Collapsible.Root asChild defaultOpen>
+        <Next.Fieldset.Root gutter='inherit' level='+1' disabled data-testid='geo'>
+          <Next.Fieldset.Legend>
+            <Next.Collapsible.Trigger>Coordinates</Next.Collapsible.Trigger>
+          </Next.Fieldset.Legend>
+          <Next.Collapsible.Content gutter='inherit'>
+            <Next.Field.Root data-testid='latitude'>
+              <Next.Field.Header>
+                <Next.Field.Label>Latitude</Next.Field.Label>
+              </Next.Field.Header>
+              <Next.Input />
+            </Next.Field.Root>
+          </Next.Collapsible.Content>
+        </Next.Fieldset.Root>
+      </Next.Collapsible.Root>
+    </Next.Fieldset.Root>
+
     <Next.Group justify='end'>
       <Next.Button>Cancel</Next.Button>
       <Next.Button type='submit' variant='primary'>
@@ -162,6 +188,25 @@ export const Test: Story = {
     }
     await expect(canvas.getByRole('checkbox', { name: 'Share usage data' })).toBeDisabled();
     await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeEnabled();
+
+    // A grid set is a `group` element (a `<fieldset>` cannot be a subgrid) whose fields keep the content track at any
+    // depth, a nested set's Collapsible Content included; its legend is a grid item on the content track too.
+    const address = canvas.getByRole('group', { name: 'Address' });
+    await expect(address.tagName).toBe('DIV');
+    await expect(address).toHaveAttribute('data-surface', '+1');
+    await expect(getComputedStyle(address).display).toBe('grid');
+    for (const field of ['street', 'latitude']) {
+      const control = bounds(canvasElement, `[data-testid="${field}"] .nx-input`);
+      await expect(control.left).toBeCloseTo(input.left, 0);
+      await expect(control.right).toBeCloseTo(input.right, 0);
+    }
+    await expect(bounds(canvasElement, '[data-testid="address"] > [data-part="legend"]').left).toBeCloseTo(
+      label.left,
+      0,
+    );
+    // Disabled reaches a grid set's fields through Ark's context rather than the native fieldset.
+    await expect(canvas.getByRole('textbox', { name: 'Latitude' })).toBeDisabled();
+    await expect(canvas.getByRole('textbox', { name: 'Street' })).toBeEnabled();
 
     await expect(canvas.getByText('Complete your account.')).toBeVisible();
     await expect(canvas.getByRole('group', { name: 'Account' })).toHaveAttribute('data-invalid');

@@ -13,7 +13,7 @@ import { translationKey } from '#translations';
 import { Form as CurrentForm, type FormRootProps } from '../components/Form/Form.tsx';
 import { useFormContext, useKeyHandler } from '../hooks/index.ts';
 import { FormField } from './FormField.tsx';
-import { FormFields } from './FormFields.tsx';
+import { FormFields } from './FormFieldDispatch.tsx';
 import { FormFieldSet } from './FormFieldSet.tsx';
 
 /** The settings variant's two tracks (AUDIT §3.2 option 1): label and description, then the control. */

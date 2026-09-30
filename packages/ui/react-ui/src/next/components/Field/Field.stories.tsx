@@ -123,6 +123,23 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Next.Input placeholder='Filter' />
     </Next.Field.Root>
     <EveryField size={size} />
+    {/* Row fields (Phase 4 decision 3): bordered subgrid rows of the Container's two tracks. */}
+    <Next.Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
+      {['Theme', 'Language'].map((name) => (
+        <Next.Field.Root key={name} layout='row' level='+1' data-testid={`row-${name.toLowerCase()}-${size}`}>
+          <Next.Field.Header>
+            <Next.Field.Label>{name}</Next.Field.Label>
+          </Next.Field.Header>
+          <Next.Field.HelperText>The app's {name.toLowerCase()}.</Next.Field.HelperText>
+          <Next.Input />
+        </Next.Field.Root>
+      ))}
+    </Next.Container>
+    {/* A row with its own columns spaces them by its gap. */}
+    <Next.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+      <Next.Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
+      <Next.Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
+    </Next.Container>
   </>
 );
 
@@ -241,6 +258,28 @@ export const Test: Story = {
     await expect(asChild.tagName).toBe('SECTION');
     await expect(asChild).toHaveClass('nx-field');
     await expect(within(asChild).getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
+
+    // Row fields share the Container's tracks: header and helper before the `control` line, the control after it.
+    const rows = ['theme', 'language'].map((name) => {
+      const row = byTestId(canvasElement, `row-${name}-md`);
+      return {
+        row,
+        label: row.querySelector('label')!.getBoundingClientRect(),
+        helper: row.querySelector('[data-part="helper-text"]')!.getBoundingClientRect(),
+        input: row.querySelector('.nx-input')!.getBoundingClientRect(),
+      };
+    });
+    for (const { row, label, helper, input } of rows) {
+      await expect(input.left).toBeCloseTo(rows[0].input.left, 0);
+      await expect(label.right).toBeLessThanOrEqual(input.left);
+      await expect(helper.top).toBeGreaterThanOrEqual(label.bottom - 0.5);
+      await expect(row).toHaveAttribute('data-surface', '+1');
+      await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
+    }
+    await expect(canvas.getByRole('textbox', { name: 'Theme' })).toBeInTheDocument();
+    const first = byTestId(canvasElement, 'pair-first-md').getBoundingClientRect();
+    const second = byTestId(canvasElement, 'pair-second-md').getBoundingClientRect();
+    await expect(second.left - first.right).toBeCloseTo(4, 0);
 
     const clear = website.getByRole('button', { name: 'Clear website' });
     await userEvent.hover(clear);
