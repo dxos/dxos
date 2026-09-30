@@ -516,6 +516,37 @@ describe('EdgeFeedReplicator', () => {
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 4, to: 6 } });
       await holds([4, 5]);
     });
+
+    test('a caught-up feed is not rescanned from its first block on every push', async () => {
+      const { replica, append, feedKey, blockAt, blocksIn, holds } = await setupFeeds(48);
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 48 };
+        }
+        if (message.type === 'request') {
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+        }
+      });
+      const { messenger } = await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 48 } });
+      await holds(range(48));
+
+      // Caught up on the new connection, so its metadata reply requests nothing.
+      const has = vi.spyOn(replica, 'has');
+      await updateIdentity(messenger);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      for (const _ of range(3)) {
+        await append();
+      }
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(48)] });
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(50)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 49, to: 51 } });
+      await holds([49, 50]);
+
+      // Only the metadata reply's scan reaches block 0; each push scans from where the last scan stopped.
+      expect(has.mock.calls.filter(([index]) => index === 0)).toHaveLength(1);
+    });
   });
 
   const createEdge = async () => {

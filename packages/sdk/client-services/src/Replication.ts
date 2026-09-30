@@ -47,7 +47,7 @@ export class EdgeFeedReplicator extends Resource {
    */
   private _pushMutex = new ComplexMap<PublicKey, Mutex>(PublicKey.hash);
 
-  /** Every missing block below this has been requested on this connection, so it is not requested again. */
+  /** Every block below this is held or requested on this connection, so it is neither scanned nor requested again. */
   private _requestedUpTo = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
   constructor({ messenger, spaceId }: EdgeFeedReplicatorProps) {
@@ -202,7 +202,9 @@ export class EdgeFeedReplicator extends Resource {
 
           // A block pushed ahead of this reply is stored sparsely and advances `feed.length` past the
           // blocks before it, so the length alone can report nothing missing while the feed has a gap.
-          const firstMissing = findFirstMissing(feed, this._requestedUpTo.get(feedKey) ?? 0, message.length);
+          const requestedUpTo = this._requestedUpTo.get(feedKey) ?? 0;
+          const firstMissing = findFirstMissing(feed, requestedUpTo, message.length);
+          this._requestedUpTo.set(feedKey, Math.max(requestedUpTo, firstMissing));
           const logMeta = { localLength: feed.length, remoteLength, firstMissing, feedKey };
           if (firstMissing < message.length) {
             log('requesting missing blocks', logMeta);
@@ -298,7 +300,9 @@ export class EdgeFeedReplicator extends Resource {
     if (!this._connectionCtx) {
       return;
     }
-    const from = findFirstMissing(feed, this._requestedUpTo.get(feed.key) ?? 0, to);
+    const requestedUpTo = this._requestedUpTo.get(feed.key) ?? 0;
+    const from = findFirstMissing(feed, requestedUpTo, to);
+    this._requestedUpTo.set(feed.key, Math.max(requestedUpTo, from));
     if (from < to) {
       log('requesting blocks missing below a pushed block', { feedKey: feed.key, from, to });
       this._requestedUpTo.set(feed.key, to);
