@@ -487,7 +487,7 @@ describe('fold-forward: retired scalar properties', () => {
   });
 });
 
-describe('ObjectCore.foldChangeAt', () => {
+describe('ObjectCore.sharedChangeAt', () => {
   test('the same fold authored twice is one change; a fold with other ops under the same seed is another actor', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([ContactV2]);
@@ -497,7 +497,7 @@ describe('ObjectCore.foldChangeAt', () => {
     const core = getObjectCore(contact);
     const heads = A.getHeads(core.getDoc());
     const fold = (name: string) =>
-      core.foldChangeAt(
+      core.sharedChangeAt(
         heads,
         (draft, mountPath) => {
           setDeep(draft, [...mountPath, DATA_NAMESPACE, 'name'], name);

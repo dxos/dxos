@@ -1011,7 +1011,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    *
    * Every `ObjectCore` helper (`setDecoded`, `setType`, ...) opens its own `change`, so nesting them
    * here would produce several changes; every write below instead goes straight onto the doc at
-   * `core.mountPath`, inside one `core.change` call.
+   * `core.mountPath`, inside one `core.sharedChangeAt` call.
    */
   #applyObjectMigration(
     object: Obj.Unknown,
@@ -1064,19 +1064,22 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     ).slice(0, 32)}`;
     const typeRef = EncodedReference.fromURI(migration.toType);
 
-    core.change(
-      (doc) => {
+    // Authored identically by every peer that migrates from the same heads, so they share one change
+    // and one set of target containers, and a direct edit inside them made on either peer survives.
+    core.sharedChangeAt(
+      preHeads,
+      (draft, mountPath) => {
         for (const [key, value] of dataWrites) {
-          setDeep(doc, [...mountPath, DATA_NAMESPACE, key], value);
+          setDeep(draft, [...mountPath, DATA_NAMESPACE, key], value);
         }
         for (const [key, value] of metaWrites) {
-          setDeep(doc, [...mountPath, META_NAMESPACE, key], value);
+          setDeep(draft, [...mountPath, META_NAMESPACE, key], value);
         }
 
-        setDeep(doc, [...mountPath, META_NAMESPACE, 'annotations', stepKey], newStep);
-        setDeep(doc, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
+        setDeep(draft, [...mountPath, META_NAMESPACE, 'annotations', stepKey], newStep);
+        setDeep(draft, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
       },
-      { message: `migration: ${fromType} -> ${toType}` },
+      { message: `migration: ${fromType} -> ${toType}`, actorSeed: stepKey },
     );
     return stepKey;
   }

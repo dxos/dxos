@@ -84,7 +84,7 @@ const updatedAtCache = new WeakMap<AutomergeDoc<unknown>, { heads: string; updat
 const deriveFoldActorId = (localActorId: string, documentId: string, scope: string): A.ActorId =>
   bytesToHex(sha256(utf8ToBytes(`${localActorId}:${documentId}:${scope}:fold`))).slice(0, 32);
 
-/** The throwaway actor `foldChangeAt` authors a probe under, to derive the real actor from its ops. */
+/** The throwaway actor `sharedChangeAt` authors a probe under, to derive the real actor from its ops. */
 const FOLD_PROBE_ACTOR = '00000000000000000000000000000000';
 
 /** The change message `foldAt` stores: the caller's message tagged with its scope, so any session can find the scope's earlier folds. */
@@ -520,19 +520,19 @@ export class ObjectCore {
   }
 
   /**
-   * Writes one fold change forked at exactly `heads`, under an actor derived from `actorSeed` and the
-   * change's own ops, with time fixed at `0`. Every peer that folds the same input from the same `heads`
-   * therefore authors a byte-identical change, which Automerge merges as one, so a list insert or text
-   * splice folded independently on several peers is applied once. Each such change adds one actor to
-   * the document.
+   * Writes one change forked at exactly `heads`, under an actor derived from `actorSeed` and the change's
+   * own ops, with time fixed at `0`. Every peer that makes the same edit from the same `heads` therefore
+   * authors a byte-identical change, which Automerge merges as one: a list insert or text splice folded
+   * on several peers is applied once, and a migration run on several peers creates one set of target
+   * containers. Each such change adds one actor to the document.
    *
    * @param heads The exact fork point; must be ancestors of the current document.
    * @param mutate Given the document draft as it stood at `heads` and this object's mount path.
-   * @param options.message Deterministic change message; a `fold:` prefix marks it as a fold.
-   * @param options.actorSeed Identifies the fold's content; seeds a single-use actor.
-   * @returns The heads immediately after the fold's own change, or `undefined` if it changed nothing.
+   * @param options.message Deterministic change message.
+   * @param options.actorSeed Identifies the change's content; seeds a single-use actor.
+   * @returns The heads immediately after the change, or `undefined` if it changed nothing.
    */
-  foldChangeAt(
+  sharedChangeAt(
     heads: Heads,
     mutate: (draft: unknown, mountPath: readonly (string | number)[]) => void,
     options: { message: string; actorSeed: string },
@@ -541,7 +541,7 @@ export class ObjectCore {
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
     const fold = <T>(doc: AutomergeDoc<T>) => {
-      invariant(A.hasHeads(doc, heads), 'foldChangeAt: heads are not an ancestor of the current document');
+      invariant(A.hasHeads(doc, heads), 'sharedChangeAt: heads are not an ancestor of the current document');
       const view = A.view(doc, heads);
       const author = (actorId: A.ActorId) =>
         A.changeAt(A.clone(view, actorId), heads, { message: options.message, time: 0 }, (draft) =>
@@ -570,7 +570,7 @@ export class ObjectCore {
     }
 
     const docHandle = this.docHandle;
-    invariant(docHandle, 'foldChangeAt: object has no document to fold on');
+    invariant(docHandle, 'sharedChangeAt: object has no document to fold on');
     const { newDoc: folded, newHeads } = fold(docHandle.doc());
     if (!newHeads) {
       return undefined;

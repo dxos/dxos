@@ -211,7 +211,7 @@ type WholeValueFolds = {
  * migration plus the folds of that change's own late ancestors. Every input — the fork, the source
  * snapshots before and after the change, and so the edit — is a function of the source history alone,
  * so peers that receive the late changes in any order author byte-identical folds
- * (`ObjectCore.foldChangeAt`), and a list insert or text splice lands once. The edit is the one the late
+ * (`ObjectCore.sharedChangeAt`), and a list insert or text splice lands once. The edit is the one the late
  * change made, placed on the target at the fork ({@link applyStructuralEdit}), so a direct edit
  * elsewhere in the same value stays. A map, list or text output is only ever written here, so the
  * container a fold edits is never replaced by another channel; scalar outputs are returned for the
@@ -309,7 +309,7 @@ const foldLateChanges = (
       continue;
     }
 
-    const heads = core.foldChangeAt(
+    const heads = core.sharedChangeAt(
       fork,
       (draft, mountPath) => {
         for (const { key, previous, next, set } of edits) {

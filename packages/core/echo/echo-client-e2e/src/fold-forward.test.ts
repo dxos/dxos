@@ -384,6 +384,125 @@ describe('fold-forward of list edits across a real partition', () => {
 });
 
 describe('fold-forward when two peers migrate from the same heads', () => {
+  test('direct edits each peer makes inside the new list after migrating both survive', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    // Not `await using`: the network must close after the builder.
+    const builder = await new EchoTestBuilder().open();
+    const pair = await createPartitionedPair(builder, [TagsV1, TagsV2]);
+    try {
+      const { peer1, peer2, partition, heal, syncAll } = pair;
+      await using db1 = await peer1.createDatabase(spaceKey);
+      const obj1 = db1.add(Obj.make(TagsV1, { labels: ['a'] }));
+      await db1.flush();
+      const rootUrl = db1.rootUrl;
+      invariant(rootUrl, 'root url');
+      await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+      await syncAll(db1, db2);
+      let found: TagsV1 | undefined;
+      await expect
+        .poll(async () => {
+          [found] = await db2.query(Filter.id(obj1.id)).run();
+          return found;
+        })
+        .toBeDefined();
+      invariant(found, 'expected the replicated object');
+      const obj2 = found;
+
+      await partition();
+      await db1.runMigrations([tagsMigration]);
+      await db2.runMigrations([tagsMigration]);
+      Obj.update(obj1, (obj1) => {
+        Obj.setValue(obj1, ['tags', 1], 'one');
+      });
+      Obj.update(obj2, (obj2) => {
+        Obj.setValue(obj2, ['tags', 1], 'two');
+      });
+      await db1.flush();
+      await db2.flush();
+
+      await heal();
+      await expect
+        .poll(async () => {
+          await syncAll(db1, db2);
+          return headsOf(obj1).join() === headsOf(obj2).join();
+        })
+        .toBe(true);
+      await db1.foldForward([tagsMigration]);
+      await db2.foldForward([tagsMigration]);
+
+      expect(Obj.getValue(obj1, ['tags'])).to.have.members(['a', 'one', 'two']);
+      expect(Obj.getValue(obj2, ['tags'])).to.deep.eq(Obj.getValue(obj1, ['tags']));
+    } finally {
+      await builder.close();
+      await pair.network.close();
+    }
+  });
+
+  // Expected to fail until migrations merge like duplicate objects: from different heads each peer's
+  // migration creates its own list, and edits inside the one Automerge does not show are lost.
+  test.fails('peers that migrate from different heads keep the direct edits each made inside the new list', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    // Not `await using`: the network must close after the builder.
+    const builder = await new EchoTestBuilder().open();
+    const pair = await createPartitionedPair(builder, [TagsV1, TagsV2]);
+    try {
+      const { peer1, peer2, partition, heal, syncAll } = pair;
+      await using db1 = await peer1.createDatabase(spaceKey);
+      const obj1 = db1.add(Obj.make(TagsV1, { labels: ['a'] }));
+      await db1.flush();
+      const rootUrl = db1.rootUrl;
+      invariant(rootUrl, 'root url');
+      await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+      await syncAll(db1, db2);
+      let found: TagsV1 | undefined;
+      await expect
+        .poll(async () => {
+          [found] = await db2.query(Filter.id(obj1.id)).run();
+          return found;
+        })
+        .toBeDefined();
+      invariant(found, 'expected the replicated object');
+      const obj2 = found;
+
+      await partition();
+      // Peer 1 edits before migrating, so the two migrations start from different heads.
+      Obj.update(obj1, (obj1) => {
+        obj1.labels.push('b');
+      });
+      await db1.flush();
+      await db1.runMigrations([tagsMigration]);
+      await db2.runMigrations([tagsMigration]);
+      Obj.update(obj1, (obj1) => {
+        Obj.setValue(obj1, ['tags', 2], 'one');
+      });
+      Obj.update(obj2, (obj2) => {
+        Obj.setValue(obj2, ['tags', 1], 'two');
+      });
+      await db1.flush();
+      await db2.flush();
+
+      await heal();
+      const converge = async () => {
+        await expect
+          .poll(async () => {
+            await syncAll(db1, db2);
+            return headsOf(obj1).join() === headsOf(obj2).join();
+          })
+          .toBe(true);
+      };
+      await converge();
+      await db1.foldForward([tagsMigration]);
+      await db2.foldForward([tagsMigration]);
+      await converge();
+
+      expect(Obj.getValue(obj1, ['tags'])).to.have.members(['a', 'b', 'one', 'two']);
+      expect(Obj.getValue(obj2, ['tags'])).to.deep.eq(Obj.getValue(obj1, ['tags']));
+    } finally {
+      await builder.close();
+      await pair.network.close();
+    }
+  });
+
   test('each peer folds its late insert onto its own migration, and both inserts survive onto the winner', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     // Not `await using`: the network must close after the builder.

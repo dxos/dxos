@@ -73,7 +73,7 @@ Follow-up (2026-09-29), superseding item 1:
    never replaced: each late change is folded as the edits it made to the transform's output (map keys,
    list inserts and deletes rebased onto the target's elements, text splices), as its own change forked
    at the winning migration change plus the folds of its late ancestors, under an actor derived from the
-   fold's ops (`ObjectCore.foldChangeAt`, `fold-edit.ts`). A source value set outright still folds as
+   fold's ops (`ObjectCore.sharedChangeAt`, `fold-edit.ts`). A source value set outright still folds as
    edits, except that a string target copying a source string that was set outright is set outright.
    Scalar targets and meta are folded per pass from the merged current data, forked over every per-change
    fold. A transform that rejects the state before a change diffs from the target at the fork instead;
@@ -86,6 +86,17 @@ Follow-up (2026-09-29), superseding item 1:
 9. **Kept keys keep their value.** The runner rejects a transform that changes the value of a property it
    keeps under the same name: an old client keeps writing it in its old meaning, where fold-forward cannot
    tell the two apart. A changed meaning takes a new name.
+
+10. **Concurrent migrations of one object.** Objects a migration creates (`ensure`, array fan-out
+    children, fan-in parents) carry convergence keys and converge through the convergence-key merger
+    (`migration-concurrent.test.ts`, `migration-fan-out.test.ts`). Target properties inside the migrated
+    object do not: each migration change creates its own lists, maps and text. Peers that migrate from the
+    same heads now author one shared change (`ObjectCore.sharedChangeAt`), so they share the containers.
+    Peers that migrate from different heads still lose direct edits made inside the containers Automerge
+    does not show (`test.fails` in `fold-forward.test.ts`). Proposed fix, by analogy with the merger: the
+    migration change whose containers are visible wins deterministically, only the winning step folds late
+    writes, and direct edits made inside a losing migration's containers are replayed onto the winner's per
+    change, with the same shared-change machinery.
 
 ## Where things live
 
