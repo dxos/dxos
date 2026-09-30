@@ -7,7 +7,8 @@ import * as Scope from 'effect/Scope';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { WorkerCapabilities, WorkerEvents } from '@dxos/app-framework/worker';
+import * as WorkerCapabilities from '@dxos/app-framework/WorkerCapabilities';
+import * as WorkerEvents from '@dxos/app-framework/WorkerEvents';
 import { makeRtcServiceClientOverProtocol } from '@dxos/client-protocol';
 import { Events, ServiceStack, SqliteStorage, WorkerRuntime } from '@dxos/client-services';
 import { Hook } from '@dxos/effect';
@@ -15,20 +16,12 @@ import { log } from '@dxos/log';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
-/**
- * Hosts the client services in the worker: contributes their layer specs (over the worker's
- * router, so every tab reaches them) and drives the stack through the worker's hooks — open on
- * `StackReady`, WebRTC through the tab that owns the worker, and the reset chain.
- */
-export const ClientServices = Capability.inlineModule(
-  'ClientServices',
-  {
-    activatesOn: WorkerEvents.Startup,
-    requires: [WorkerCapabilities.Host],
-    provides: [Capabilities.LayerSpec],
-  },
+// Hosts the client services in the worker: contributes their layer specs (over the worker's router,
+// so every tab reaches them) and drives the stack through the worker's hooks — open on `StackReady`,
+// WebRTC through the tab that owns the worker, and the reset chain.
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const host = yield* Capability.get(WorkerCapabilities.Host);
+    const host = yield* WorkerCapabilities.Host;
     const { config } = host;
     const scope = yield* Effect.scope;
 

@@ -16,8 +16,8 @@ import initSubductionWasm from './subduction-wasm.js';
 const memoizeInit = (init: () => Promise<unknown>): (() => Promise<void>) => {
   let initialized: Promise<void> | undefined;
   return () => {
-    // Before the first instantiation, and this is the realm's earliest wasm: the dedicated worker's
-    // client plugin awaits this as it loads, ahead of the stack that opens SQLite, so one call here
+    // Before the first instantiation, and this is the realm's earliest wasm: the dedicated worker
+    // awaits this in `onBeforeStart`, ahead of the runtime that opens SQLite, so one call here
     // counts automerge, subduction and SQLite's wasm alike. Reordering that would leave SQLite's
     // linear memory uncounted, which shows up as a drop in the probe's `instances`.
     installWasmMemoryProbe();

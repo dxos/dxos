@@ -5,14 +5,14 @@ Design: [`./DESIGN.md`](./DESIGN.md). Branch `dm/zen-hawking-92843m`.
 ## Phase 1 — base worker
 
 - [x] `runtime.client.worker_plugins` proto field.
-- [x] `@dxos/app-framework/worker`: `PluginWorker.run`, `WorkerEvents`, `WorkerCapabilities`.
+- [x] `@dxos/app-framework/{PluginWorker,WorkerEvents,WorkerCapabilities}`.
 - [x] Browser test: toy plugin by URL contributes a LayerSpec + RPC group; tab calls it.
 
 ## Phase 2 — client services as a plugin
 
 - [x] `clientServiceSpecs({ externalRouter })`; worker helpers (`WorkerRuntime.openStack`, `SqliteSpec`,
       `workerStackOptions`, `probeOpfs`) shared with `makeWorkerRuntime`.
-- [x] `@dxos/plugin-client/worker` plugin module.
+- [x] `ClientPlugin`'s `WorkerServices` module (the same plugin as the tab's; activates only on the worker's event).
 
 ## Phase 3 — Composer
 

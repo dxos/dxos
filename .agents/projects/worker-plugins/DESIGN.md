@@ -6,7 +6,7 @@ same unit of contribution a tab uses.
 
 ## Shape
 
-- **Base worker** — `@dxos/app-framework/worker` (`PluginWorker.run`), on top of
+- **Base worker** — `@dxos/app-framework/PluginWorker` (`PluginWorker.run`; events and the host capability are `./WorkerEvents` and `./WorkerCapabilities`), on top of
   `@dxos/worker-framework/Worker`. It provides, and nothing else:
   - the hook bus: one `Hook.Controller` for the worker's life;
   - the RPC router: one `RpcRouter`, attached to every tab session's forward port;
@@ -16,9 +16,12 @@ same unit of contribution a tab uses.
 - **Worker plugins** are ordinary `Plugin.define(...).pipe(Plugin.addModule(...), Plugin.make)`
   plugins. Their modules activate on `WorkerEvents.Startup` and reach the base through the
   `WorkerCapabilities.Host` capability (hooks, router, config, shutdown, stack teardown).
-- **plugin-client** ships `@dxos/plugin-client/worker`: a worker plugin whose module contributes
-  the client-services `LayerSpec`s (plus SQLite) and subscribes to the base's hooks for the
-  client-specific wiring (stack open, WebRTC through the owner tab, delayed networking, reset).
+- **plugin-client** adds a `WorkerServices` module to `ClientPlugin` itself — one plugin, with a
+  module only the worker activates (its event, `WorkerEvents.Startup`, is never fired in a tab, and the
+  tab's events are never fired in the worker). It contributes the client-services `LayerSpec`s (plus
+  SQLite) and subscribes to the base's hooks for the client-specific wiring (stack open, WebRTC
+  through the owner tab, delayed networking, reset). Composer's worker plugin URL is
+  `ClientPlugin.make({})`.
 
 ## Lifecycle
 

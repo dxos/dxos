@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PluginWorker } from '../index.ts';
+import * as PluginWorker from '../PluginWorker.ts';
 
 PluginWorker.run({ storageLockKey: 'app-framework/test/plugin-worker-storage' });

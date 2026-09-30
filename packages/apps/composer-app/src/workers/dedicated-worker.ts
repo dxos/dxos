@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { PluginWorker } from '@dxos/app-framework/worker';
+import * as PluginWorker from '@dxos/app-framework/PluginWorker';
 import { IdentityContract } from '@dxos/client-services';
 import { STORAGE_LOCK_KEY } from '@dxos/client/lock-key';
 import { log } from '@dxos/log';
@@ -13,6 +13,7 @@ import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityC
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { isTauri } from '@dxos/util';
 
+import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util/index.ts';
 
 // This worker hosts echo and can saturate its own loop, so the log sink runs in a nested
@@ -36,11 +37,14 @@ let observability: ReturnType<typeof initializeObservability> | undefined;
 PluginWorker.run({
   storageLockKey: STORAGE_LOCK_KEY,
   onBeforeStart: (config) =>
-    Effect.sync(() => {
+    Effect.gen(function* () {
       observability = initializeObservability(config, isTauri(), logStore, undefined, {
         post: (message) => observabilityWorker.postMessage(message),
       });
       observability.catch((err) => log.catch(err));
+      // The stack this worker builds hosts echo; automerge is slim-resolved and must be
+      // initialized before it runs (see util/automerge-wasm.ts).
+      yield* Effect.promise(() => initEchoHostWasm());
     }),
   onStart: (stack) =>
     Effect.gen(function* () {

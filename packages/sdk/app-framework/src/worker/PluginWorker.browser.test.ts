@@ -4,7 +4,7 @@
 
 // Also loaded in the page so the dep optimizer discovers the worker's graph before the worker
 // starts: found later, the optimizer reloads mid-test and takes the worker down with it.
-import './index.ts';
+import './PluginWorker.ts';
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';

@@ -92,11 +92,6 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./worker": {
-      "source": "./src/worker/index.ts",
-      "types": "./dist/types/src/worker/index.d.ts",
-      "import": "./dist/lib/worker.mjs"
-    },
     "./Account": {
       "source": "./src/types/Account.ts",
       "types": "./dist/types/src/types/Account.d.ts",

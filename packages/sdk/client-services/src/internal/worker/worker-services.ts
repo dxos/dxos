@@ -26,7 +26,7 @@ import * as Events from '../../Events.ts';
 import { type ClientServicesStackOptions, enableNetworking } from '../services/index.ts';
 
 // What any worker hosting the client services does, whichever host runs it: `makeWorkerRuntime`,
-// or a worker plugin under `@dxos/app-framework/worker`.
+// or a worker plugin under `@dxos/app-framework/PluginWorker`.
 
 /**
  * Grace period between "worker booted" and the first edge dial. wa-sqlite runs in-process on this

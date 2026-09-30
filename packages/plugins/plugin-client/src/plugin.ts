@@ -24,6 +24,7 @@ import {
   SpaceReplicationProgress,
   TraceProgress,
   Translations,
+  WorkerServices,
 } from '#capabilities';
 import { meta } from '#meta';
 import { ClientOptions } from '#types';
@@ -53,6 +54,9 @@ export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(met
   // module definition for its activation gating.
   Plugin.addModule(TraceProgress),
   Plugin.addModule(Translations),
+).pipe(
+  // Served from the dedicated worker; see the module definition. A second `pipe`, since one takes 20 steps at most.
+  Plugin.addModule(WorkerServices),
   Plugin.make,
 );
 

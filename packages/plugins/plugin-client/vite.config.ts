@@ -25,7 +25,6 @@ export default defineConfig({
     CliLogin: 'src/types/CliLogin.ts',
     PasskeyError: 'src/types/PasskeyError.ts',
     types: 'src/types/index.ts',
-    worker: 'src/worker/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },
