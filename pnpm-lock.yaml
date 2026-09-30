@@ -172,8 +172,8 @@ catalogs:
       specifier: 4.0.0-rc.117
       version: 4.0.0-rc.117
     '@effect/language-service':
-      specifier: ^0.86.4
-      version: 0.86.4
+      specifier: ^0.87.2
+      version: 0.87.3
     '@effect/opentelemetry':
       specifier: 4.0.0-rc.117
       version: 4.0.0-rc.117
@@ -1759,7 +1759,7 @@ importers:
         version: link:tools/vite-plugin-module-url
       '@effect/language-service':
         specifier: 'catalog:'
-        version: 0.86.4
+        version: 0.87.3
       '@effect/tsgo':
         specifier: 'catalog:'
         version: 0.36.5
@@ -27110,8 +27110,8 @@ packages:
       react: ~19.2.7
       scheduler: '>=0.25.0 <0.28.0'
 
-  '@effect/language-service@0.86.4':
-    resolution: {integrity: sha512-XzAPsbwCdm0gRh0E8wJu3wXECb00QraE3LnbObA4RgHn8u2TEbwAjmBadRnwSgOIElfzZjbsRqNR706/V54hDg==}
+  '@effect/language-service@0.87.3':
+    resolution: {integrity: sha512-g1OmRBZF5chbW9QMNoirPo5Bb4zzU2HfP88tR7/VSZEUxHJ1/qVb8AQ0kUh2ggctLH1I715yCwP4gkw56PTjpQ==}
     hasBin: true
 
   '@effect/opentelemetry@4.0.0-rc.117':
@@ -48476,7 +48476,7 @@ snapshots:
       react: 19.2.7
       scheduler: 0.27.0
 
-  '@effect/language-service@0.86.4': {}
+  '@effect/language-service@0.87.3': {}
 
   '@effect/opentelemetry@4.0.0-rc.117(@opentelemetry/api-logs@0.221.0)(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.221.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@4.0.0-rc.117)':
     dependencies:
