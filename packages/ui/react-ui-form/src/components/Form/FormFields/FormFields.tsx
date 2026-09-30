@@ -136,7 +136,7 @@ export const FormFields = ({
 
 FormFields.displayName = FORM_FIELDS_NAME;
 
-type UseFormFieldsPropertiesParams = Pick<
+export type UseFormFieldsPropertiesParams = Pick<
   FormFieldsProps<any>,
   'schema' | 'include' | 'exclude' | 'filter' | 'projection' | 'sort'
 > & {
@@ -146,7 +146,7 @@ type UseFormFieldsPropertiesParams = Pick<
 /**
  * Resolves ordered schema properties for a walk (projection order, include/exclude, filter, sort).
  */
-const useFormFieldsProperties = ({
+export const useFormFieldsProperties = ({
   schema,
   include,
   exclude,

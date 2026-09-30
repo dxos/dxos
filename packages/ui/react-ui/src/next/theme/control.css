@@ -288,6 +288,39 @@
   .nx-field > .nx-control {
     margin-block: var(--nx-control-inset);
   }
+
+  /*
+   * A row field (Phase 4 decision 3) is a subgrid row of its parent's `columns`: stacked below the pane's collapse
+   * width; above it the header and helper text fill the tracks before the interior `control` line and the control the
+   * tracks after it, centred against both.
+   */
+  .nx-field[data-layout='row'] {
+    display: grid;
+    grid-column: content;
+    grid-template-columns: subgrid;
+    align-items: center;
+  }
+  .nx-field[data-layout='row'] > * {
+    grid-column: content;
+  }
+  .nx-field[data-layout='row'][data-surface] {
+    padding: var(--nx-gap-size);
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+  @container (width >= 24rem) {
+    .nx-field[data-layout='row'] > * {
+      grid-column: control / content-end;
+      grid-row: 1 / span 2;
+    }
+    .nx-field[data-layout='row'] > :is(.nx-field-header, .nx-field-helper) {
+      grid-column: content-start / control;
+      grid-row: auto;
+    }
+    .nx-field[data-layout='row'] > .nx-field-error {
+      grid-row: auto;
+    }
+  }
   /* The label row is a small block row (size sm by default), so trailing icons and icon buttons fit at its end. */
   .nx-field-header {
     display: flex;

@@ -10,17 +10,37 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { type Level, containerAttributes } from '../Container/index.ts';
 
 //
 // Root
 //
 
-type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps>;
+type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
+  /**
+   * `inherit` makes the set a subgrid of the enclosing Container, as an inheriting Container is, so nested sets keep
+   * the parent's rails and tracks at any depth; without it the set is a flex stack of its own.
+   */
+  gutter?: 'inherit';
+  /** A rung for the set's surface, as on Container; only applies with `gutter='inherit'`. */
+  level?: Level;
+};
 
 /** A `<fieldset>` stacking its Fields with the container gap; `disabled` and `invalid` reach every child Field. */
-const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(({ classNames, ...props }, forwardedRef) => (
-  <FieldsetPrimitive.Root {...props} className={mx(recipes.fieldsetRoot(), classNames)} ref={forwardedRef} />
-));
+const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(
+  ({ classNames, gutter, level, style, ...props }, forwardedRef) => {
+    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter, level }) : { style: undefined };
+    return (
+      <FieldsetPrimitive.Root
+        {...props}
+        {...grid}
+        style={gridStyle ? { ...gridStyle, ...style } : style}
+        className={mx(recipes.fieldsetRoot(), gutter && recipes.container(), classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 FieldsetRoot.displayName = 'Next.Fieldset.Root';
 

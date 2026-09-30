@@ -74,6 +74,16 @@
   .nx-grid[data-gap='lg'] {
     row-gap: 0.75rem;
   }
+  /* A row with its own columns and no gutter tracks shares no parent's tracks, so its gap spaces the columns too. */
+  .nx-grid[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='sm'] {
+    column-gap: 0.25rem;
+  }
+  .nx-grid[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='md'] {
+    column-gap: 0.5rem;
+  }
+  .nx-grid[data-gutter='inherit'][data-columns][data-layout='row'][data-gap='lg'] {
+    column-gap: 0.75rem;
+  }
 
   /* A row is at least one block tall so controls centre in it. */
   .nx-grid[data-layout='row'] {

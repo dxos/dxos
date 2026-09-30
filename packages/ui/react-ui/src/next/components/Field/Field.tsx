@@ -11,6 +11,7 @@ import { type MessageValence, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { type Level } from '../Container/index.ts';
 
 //
 // Root
@@ -25,11 +26,19 @@ type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps> & {
    * ErrorText shows and the control reports `aria-invalid`.
    */
   validationValence?: FieldValence;
+  /**
+   * `stack` (default) puts the label above the control (decision 13). `row` joins the parent's `columns` as a subgrid
+   * row (Phase 4 decision 3): the Header and HelperText take the tracks before the parent's interior `control` line,
+   * every other child the tracks after it; below the pane's collapse width the row stacks.
+   */
+  layout?: 'stack' | 'row';
+  /** A surface rung for a `row` field, which then draws a separator border around itself (a settings card row). */
+  level?: Level;
 };
 
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
 const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
-  ({ classNames, invalid, validationValence, ...props }, forwardedRef) => {
+  ({ classNames, invalid, validationValence, layout, level, ...props }, forwardedRef) => {
     // Ark inherits only `disabled` from an enclosing Fieldset; an invalid set marks its fields invalid too.
     const fieldset = useFieldsetContext();
     return (
@@ -37,6 +46,8 @@ const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
         {...props}
         invalid={invalid ?? (validationValence === 'error' || fieldset?.invalid)}
         data-valence={validationValence === 'neutral' ? undefined : validationValence}
+        data-layout={layout === 'row' ? layout : undefined}
+        data-surface={layout === 'row' ? level : undefined}
         className={mx(recipes.field(), classNames)}
         ref={forwardedRef}
       />

@@ -79,16 +79,16 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
     const ref = useComposedRefs(forwardedRef, localRef);
     const { className, style, ...rest } = composableProps(props, { classNames: recipes.container() });
 
-    // Subgrid only reaches the parent's tracks from a direct child.
+    // Subgrid only reaches the parent's tracks from a direct child; own `columns` start a fresh template, so any parent will do.
     useEffect(() => {
-      if (process.env.NODE_ENV === 'production' || gutter !== 'inherit') {
+      if (process.env.NODE_ENV === 'production' || gutter !== 'inherit' || columns) {
         return;
       }
       const parent = localRef.current?.parentElement;
       if (parent && !parent.matches('.nx-grid, .nx-scroll-root')) {
         log.warn('inheriting Container is not a direct child of a Container', { parent: parent.className });
       }
-    }, [gutter]);
+    }, [gutter, columns]);
 
     const { style: columnsStyle, ...attributes } = containerAttributes({
       size,

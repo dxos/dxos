@@ -3,7 +3,7 @@
  */
 
 @layer dx-components {
-  .nx-collapsible {
+  .nx-collapsible:not(.nx-grid) {
     display: flex;
     flex-direction: column;
     min-width: 0;

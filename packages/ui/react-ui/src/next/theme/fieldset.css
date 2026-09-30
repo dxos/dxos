@@ -5,14 +5,20 @@
 
 @layer dx-components {
   .nx-fieldset {
-    display: flex;
-    flex-direction: column;
-    gap: var(--nx-gap-size);
     /* The UA's fieldset box (border, padding, margin, min-content width) would break the content track. */
     min-inline-size: 0;
     margin: 0;
     padding: 0;
     border: none;
+  }
+  .nx-fieldset:not(.nx-grid) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-gap-size);
+  }
+  /* A grid set (`gutter='inherit'`) keeps the container's row gap for its fields. */
+  .nx-fieldset.nx-grid {
+    row-gap: var(--nx-gap-size);
   }
   .nx-fieldset > .nx-control {
     margin-block: var(--nx-control-inset);

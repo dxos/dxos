@@ -26,7 +26,7 @@ import { presentationFor } from '../../presentation.tsx';
  */
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone. */
-const isoToLocalDateTime = (value: string | undefined): string => {
+export const isoToLocalDateTime = (value: string | undefined): string => {
   if (!value) {
     return '';
   }
@@ -38,7 +38,7 @@ const isoToLocalDateTime = (value: string | undefined): string => {
 };
 
 /** `YYYY-MM-DDTHH:mm` (local) → ISO 8601 with timezone. */
-const localDateTimeToIso = (value: string): string | undefined => {
+export const localDateTimeToIso = (value: string): string | undefined => {
   if (!value) {
     return undefined;
   }
