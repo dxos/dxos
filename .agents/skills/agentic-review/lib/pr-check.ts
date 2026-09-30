@@ -7,11 +7,11 @@
 // Drift is LOC(changes since the review) / LOC(the PR's diff), both counted without merge
 // commits, lockfiles, generated files, or the review store itself.
 
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { commitTimestamp, git, isAncestor } from './git.ts';
-import { RESOLUTION_FILE, type ResolutionEntry, parseResolutionEntries } from './resolution.ts';
+import { type ResolutionEntry } from './resolution.ts';
+import { readIndexEntries } from './review-doc.ts';
 import { REVIEWS_DIR, readReview } from './store.ts';
 
 /** Largest fraction of the PR's diff that may have changed since the newest review. */
@@ -99,9 +99,12 @@ export type PrReview = {
   error?: string;
 };
 
-/** Review stores whose REVIEW.md this PR's diff from `base` adds or changes. */
+/**
+ * Review stores whose REVIEW.md this PR's diff from `base` adds; a store already on the base
+ * reviews other work, so editing it (a status flip, a format migration) does not make it this PR's.
+ */
 export const findPrReviews = (base: string, root: string): PrReview[] => {
-  const changed = git(['diff', '--name-only', '--diff-filter=AM', base, 'HEAD', '--', REVIEWS_DIR], { cwd: root });
+  const changed = git(['diff', '--name-only', '--diff-filter=A', base, 'HEAD', '--', REVIEWS_DIR], { cwd: root });
   const slugs = changed
     .split(/\r?\n/)
     .filter((path) => path.startsWith(`${REVIEWS_DIR}/`) && path.endsWith('/REVIEW.md'))
@@ -113,9 +116,8 @@ export const findPrReviews = (base: string, root: string): PrReview[] => {
     const commit = typeof review?.data.commit === 'string' ? review.data.commit : null;
     const mode = typeof review?.data.mode === 'string' ? review.data.mode : null;
     const finalized = String(review?.data.isFinalized) === 'true';
-    const resolutionPath = join(dir, RESOLUTION_FILE);
     try {
-      const entries = existsSync(resolutionPath) ? parseResolutionEntries(readFileSync(resolutionPath, 'utf8')) : [];
+      const entries = readIndexEntries(dir, review?.body ?? '');
       return { slug, commit, mode, finalized, entries };
     } catch (error) {
       return {
@@ -180,7 +182,7 @@ export const checkPr = ({
       fail(`review \`${review.slug}\` is not finalized — run \`finalize.ts --slug=${review.slug}\`.`);
     }
     if (review.error) {
-      fail(`review \`${review.slug}\` has an unreadable ${RESOLUTION_FILE}: ${review.error}`);
+      fail(`review \`${review.slug}\` has an unreadable index: ${review.error}`);
     }
     for (const entry of review.entries) {
       if (entry.status === 'unresolved') {
@@ -190,7 +192,7 @@ export const checkPr = ({
   }
   if (result.unresolved.length > 0) {
     fail(
-      `${result.unresolved.length} issue(s) are still \`unresolved\` — fix each, or mark it \`resolved\`/\`ignored\` in ${RESOLUTION_FILE}.`,
+      `${result.unresolved.length} issue(s) are still \`unresolved\` — fix each, or mark it \`resolved\`/\`ignored\` in its REVIEW.md index.`,
     );
   }
 
@@ -247,7 +249,7 @@ export const renderPrCheck = (check: PrCheck): string => {
       '',
       '### To fix',
       '',
-      'Run the fast review (Jev only, no subagents), commit the store it writes, then work its RESOLUTION.md:',
+      'Run the fast review (Jev only, no subagents), commit the store it writes, then work the \`## Index\` of its REVIEW.md:',
       '',
       '```sh',
       FAST_COMMAND,

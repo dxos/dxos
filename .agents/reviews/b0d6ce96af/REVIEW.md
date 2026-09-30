@@ -10,4 +10,26 @@ rules: [avoid-full-collection-scans, barrel-imports-not-internal-paths, batch-qu
 reviewId: b0d6ce96af
 ---
 
-<!-- no diagnostics: clean -->
+_Clean: no issues._
+
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+<!-- no issues -->
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `235317a2551a1e41c1dc4fb08096382689422834`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 0 violations written to fragments, 20 uncertain, 24 clean, 0 unanswered
+
+```text
+requests: 24 (16 verdicts re-asked with context the model requested)
+estimated input tokens: 170118
+billed input tokens: 164785 (cost $0.0069)
+measured chars per token: 3.10
+```

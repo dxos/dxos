@@ -12,6 +12,15 @@ reviewId: 0cf9fb2a
 
 _0 error(s), 2 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 0cf9fb2a-1 - resolved - prefer-branded-types-over-raw-primitives - packages/devtools/devtools/src/hooks/useIndexerRows.ts:21:3
+- 0cf9fb2a-2 - resolved - dont-leak-internal-api-through-public-surface - packages/devtools/devtools/src/hooks/useSyncRows.ts:26:14
+
+## Issues
+
 # WARN 0cf9fb2a-1 prefer-branded-types-over-raw-primitives `packages/devtools/devtools/src/hooks/useIndexerRows.ts:21:3`
 
 `IndexerRow.spaceId` is typed `string` although the value is always `space.id` (a `SpaceId`), which widens the branded type back to a raw string. Type it as `SpaceId` (from `@dxos/keys`), per `prefer-branded-types-over-raw-primitives`, and give the fixtures real `SpaceId` values.

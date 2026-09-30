@@ -12,6 +12,20 @@ reviewId: 33dc23e6ea
 
 _3 error(s), 4 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 33dc23e6ea-1 - resolved - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:92
+- 33dc23e6ea-2 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:884
+- 33dc23e6ea-3 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:245
+- 33dc23e6ea-4 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:353
+- 33dc23e6ea-5 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.ts:476
+- 33dc23e6ea-6 - ignored - error-messages-carry-context - packages/core/echo/echo-host/src/automerge/automerge-host.ts:984
+- 33dc23e6ea-7 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-host/src/automerge/automerge-host.ts:1680
+
+## Issues
+
 # ERROR 33dc23e6ea-1 no-casts `packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:92`
 
 System One judges this a likely violation of `no-casts` (No casts to silence the type-checker), p=0.98. The likeliest place is lines 92-115 (`expect(loaded.doc()!.text).toEqual('second');`, location confidence 0.42). This is a single-shot classifier: confirm against the rule before acting.
@@ -39,3 +53,19 @@ System One judges this a likely violation of `error-messages-carry-context` (An 
 # WARN 33dc23e6ea-7 use-context-scoped-cancellation `packages/core/echo/echo-host/src/automerge/automerge-host.ts:1680`
 
 System One judges this a likely violation of `use-context-scoped-cancellation` (Schedule timeouts through the ctx-aware scheduler), p=0.81. The likeliest place is lines 1680-1703 (`private _leaseUntilSettled(documentId: DocumentId): void {`, location confidence 0.85). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `a68b20cc367810b16f6ef72a39ab7fe8eb36956a`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 7 violations written to fragments, 112 uncertain, 49 clean, 0 unanswered
+
+```text
+requests: 144 (65 verdicts re-asked with context the model requested)
+estimated input tokens: 2544233
+billed input tokens: 2538496 (cost $0.1066)
+measured chars per token: 3.01
+```

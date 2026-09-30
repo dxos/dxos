@@ -12,6 +12,17 @@ reviewId: a0fc1146
 
 _0 error(s), 4 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- a0fc1146-1 - resolved - diff-scoped-to-pr-purpose - packages/apps/composer-app/vite.config.ts:198:1
+- a0fc1146-2 - resolved - reuse-existing-mechanism - packages/plugins/plugin-computer/src/templates/composer-plugin.ts:24
+- a0fc1146-3 - resolved - name-for-general-behavior - packages/plugins/plugin-projects/src/templates/composer-plugin.ts:22
+- a0fc1146-4 - resolved - dont-leak-internal-api-through-public-surface - packages/plugins/plugin-projects/src/templates/index.ts:11
+
+## Issues
+
 # WARN a0fc1146-1 diff-scoped-to-pr-purpose `packages/apps/composer-app/vite.config.ts:198:1`
 
 The new `PLUGIN_SHARED_PACKAGES` constant and `pluginToolchain` helper were inserted between the existing `/** https://vitejs.dev/config */` JSDoc and `export default defineConfig(...)`, detaching that comment from the config it documents and leaving it attached to the new constant. Move the new block above the `/** https://vitejs.dev/config */` comment so it stays directly above `defineConfig` (diff-scoped-to-pr-purpose).
