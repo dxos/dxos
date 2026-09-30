@@ -387,7 +387,7 @@ describe('AutomergeHost', () => {
     const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
     const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
 
-    const synchronizer = (host as any)._collectionSynchronizer;
+    const synchronizer = host['_collectionSynchronizer'];
     const peerId = 'test-peer' as PeerId;
     synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
     expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(1);
@@ -426,7 +426,7 @@ describe('AutomergeHost', () => {
     await host.updateLocalCollectionState(collectionId, [documentId]);
     const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
     const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
-    const synchronizer = (host as any)._collectionSynchronizer;
+    const synchronizer = host['_collectionSynchronizer'];
     const peerId = 'test-peer' as PeerId;
     const differentDocuments = async () =>
       (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
@@ -469,7 +469,7 @@ describe('AutomergeHost', () => {
     await host.updateLocalCollectionState(collectionId, [documentId]);
     const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
     const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
-    const synchronizer = (host as any)._collectionSynchronizer;
+    const synchronizer = host['_collectionSynchronizer'];
     const peerId = 'test-peer' as PeerId;
     const differentDocuments = async () =>
       (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
@@ -517,7 +517,7 @@ describe('AutomergeHost', () => {
 
     // The listener runs synchronously, so the kept document faulting in shows the event was handled,
     // and the removed one staying out shows it was refused rather than not yet reached.
-    const repo = (host as any)._repo;
+    const repo = host['_repo'];
     repo.emit('subduction-detached-data', { documentId: removed.documentId });
     repo.emit('subduction-detached-data', { documentId: kept.documentId });
     expect(host.loadedDocumentIds).toContain(kept.documentId);

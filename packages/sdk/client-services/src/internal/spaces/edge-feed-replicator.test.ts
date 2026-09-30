@@ -196,7 +196,6 @@ describe('EdgeFeedReplicator', () => {
 
   describe('gaps in a replica', () => {
     type BlockRange = { from: number; to: number };
-    type ClientMessage = { type: string; feedKey: string; range?: BlockRange; blocks?: FeedBlock[] };
 
     /** A source feed of `length` blocks and an empty sparse replica of it. */
     const setupFeeds = async (length: number) => {
@@ -234,8 +233,8 @@ describe('EdgeFeedReplicator', () => {
      * An EDGE whose replies the test scripts. Every message the client sends is queued, so a test awaits the
      * next one instead of polling for state.
      */
-    const createScriptedEdge = async (reply: (message: ClientMessage) => Promise<ProtocolMessage | undefined>) => {
-      const received: ClientMessage[] = [];
+    const createScriptedEdge = async (reply: (message: ProtocolMessage) => Promise<ProtocolMessage | undefined>) => {
+      const received: ProtocolMessage[] = [];
       const arrived = new Event();
       let cursor = 0;
       let address: Message | undefined;
@@ -244,7 +243,7 @@ describe('EdgeFeedReplicator', () => {
       const { cleanup, endpoint, sendResponseMessage } = await createTestEdgeWsServer(port, {
         admitConnection,
         payloadDecoder: decodeCbor,
-        messageHandler: async (message: ClientMessage, request) => {
+        messageHandler: async (message: ProtocolMessage, request) => {
           address = request;
           received.push(message);
           arrived.emit();
@@ -259,7 +258,7 @@ describe('EdgeFeedReplicator', () => {
         admitConnection,
         received,
         /** The next message the client sends. */
-        next: async (): Promise<ClientMessage> => {
+        next: async (): Promise<ProtocolMessage> => {
           while (cursor === received.length) {
             await arrived.waitForCount(1);
           }
@@ -293,7 +292,7 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: 3 };
         }
         if (message.type === 'request') {
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -308,7 +307,7 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: 2 };
         }
         if (message.type === 'request') {
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -336,7 +335,7 @@ describe('EdgeFeedReplicator', () => {
             }
             await holds([3, 4]);
           }
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -379,7 +378,7 @@ describe('EdgeFeedReplicator', () => {
         }
         if (message.type === 'request') {
           // EDGE collects a reply's blocks concurrently, so their order is arbitrary.
-          return { type: 'data', feedKey, blocks: (await blocksIn(message.range!)).reverse() };
+          return { type: 'data', feedKey, blocks: (await blocksIn(message.range)).reverse() };
         }
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -401,7 +400,7 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: ++metadataReplies === 1 ? 3 : 5 };
         }
         if (message.type === 'request') {
-          const blocks = await blocksIn(message.range!);
+          const blocks = await blocksIn(message.range);
           // EDGE leaves out blocks it cannot find: block 1 of the first reply.
           return {
             type: 'data',
@@ -434,7 +433,7 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: 3 };
         }
         if (message.type === 'request') {
-          return { type: 'data', feedKey, blocks: requests++ === 0 ? [] : await blocksIn(message.range!) };
+          return { type: 'data', feedKey, blocks: requests++ === 0 ? [] : await blocksIn(message.range) };
         }
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -453,8 +452,8 @@ describe('EdgeFeedReplicator', () => {
         if (message.type === 'get-metadata') {
           return { type: 'metadata', feedKey, length: ++metadataReplies === 1 ? 2 : 5 };
         }
-        if (message.type === 'request' && (message.range!.from === 0 || metadataReplies > 1)) {
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+        if (message.type === 'request' && (message.range.from === 0 || metadataReplies > 1)) {
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
         // The gap request on the first connection stays unanswered, so the hole persists.
         return undefined;
@@ -482,7 +481,7 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: 3 };
         }
         if (message.type === 'request') {
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -511,7 +510,7 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: 3 };
         }
         if (message.type === 'request') {
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -531,7 +530,7 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: 48 };
         }
         if (message.type === 'request') {
-          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
       });
       const { messenger } = await startReplicator(edge.endpoint, replica, edge.admitConnection);
