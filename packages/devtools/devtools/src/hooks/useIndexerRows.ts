@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -58,9 +58,15 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
   const spaces = useSpaces({ all: true });
   const [rows, setRows] = useState<IndexerRow[]>([]);
   const [raw, setRaw] = useState<Record<string, unknown>>({});
+  // A ref, since `useSpaces` returns a new array each render and would restart polling on every update.
+  const spacesRef = useRef(spaces);
+  spacesRef.current = spaces;
+  // Bumped per fetch and on cleanup so a superseded or post-unmount fetch cannot overwrite newer rows.
+  const generationRef = useRef(0);
 
   const fetchRows = useCallback(async () => {
-    const readySpaces = spaces.filter((space) => space.state.get() === SpaceState.SPACE_READY);
+    const generation = ++generationRef.current;
+    const readySpaces = spacesRef.current.filter((space) => space.state.get() === SpaceState.SPACE_READY);
     const results = await Promise.all(
       readySpaces.map(async (space) => {
         try {
@@ -85,9 +91,12 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
         }
       }),
     );
+    if (generation !== generationRef.current) {
+      return;
+    }
     setRows(results.map(({ row }) => row));
     setRaw(Object.fromEntries(results.map((result) => [result.row.spaceId, result.raw])));
-  }, [client, spaces]);
+  }, [client]);
 
   useEffect(() => {
     const ctx = new Context();
@@ -97,6 +106,7 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
     });
     scheduleTaskInterval(ctx, fetchRows, POLL_INTERVAL);
     return () => {
+      generationRef.current++;
       void ctx.dispose();
     };
   }, [client, fetchRows]);
