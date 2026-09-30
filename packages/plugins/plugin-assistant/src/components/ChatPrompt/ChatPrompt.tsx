@@ -61,6 +61,8 @@ export type ChatPromptProps = Merge<
      */
     nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
+    /** Focus the editor on mount. */
+    autoFocus?: boolean;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
@@ -79,6 +81,7 @@ export const ChatPrompt = ({
   customActions,
   nodeId,
   placeholder,
+  autoFocus = true,
   onPresetChange,
   settings = true,
   presets,
@@ -197,7 +200,7 @@ export const ChatPrompt = ({
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
-          autoFocus
+          autoFocus={autoFocus}
           markdown
           lineWrapping
           classNames='col-span-2 pt-0.5'
