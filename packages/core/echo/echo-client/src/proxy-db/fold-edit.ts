@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A, type Heads } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
