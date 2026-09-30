@@ -9,7 +9,8 @@ import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
-import { FormRoot, type FormRootProps } from '../components/Form/FormControls.tsx';
+// The current Form's modules import each other in a cycle that only resolves when `Form.tsx` is evaluated first.
+import { Form as CurrentForm, type FormRootProps } from '../components/Form/Form.tsx';
 import { useFormContext, useKeyHandler } from '../hooks/index.ts';
 import { FormField } from './FormField.tsx';
 import { FormFields } from './FormFields.tsx';
@@ -169,7 +170,7 @@ FormErrorText.displayName = 'Form.ErrorText';
 
 /** The `Form` namespace of `@dxos/react-ui-form`, rendered with `@dxos/react-ui/next`; `Root` is the shared one. */
 export const Form = {
-  Root: FormRoot,
+  Root: CurrentForm.Root,
   Viewport: FormViewport,
   Content: FormContent,
   FieldSet: FormFieldSet,
