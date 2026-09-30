@@ -78,4 +78,5 @@ Next:
   1. Fix each issue in ${REVIEWS_DIR}/${slug}/REVIEW.md, or dismiss it.
   2. Set its row in that file's \`## Index\` to \`resolved\` or \`ignored\`.
   3. Commit the store with your fixes. CI (Agentic Review) accepts the PR while less than 20% of
-     it has changed since this review; past that, run this script again.`);
+     it has changed since this review; past that, run this script again.
+Pairs Jev left uncertain stay unreviewed by design: do not spawn subagents for them.`);
