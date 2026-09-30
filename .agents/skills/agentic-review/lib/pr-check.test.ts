@@ -161,6 +161,16 @@ describe('checkPr', () => {
     expect(check.unresolved.map(({ location }) => location)).toEqual(['src/a.ts:2']);
   });
 
+  test('ignores a store from the base that the PR only edits', () => {
+    const slug = commitReview(['unresolved']);
+    const base = startFeature();
+    write(`.agents/reviews/${slug}/REVIEW.md`, '---\ncommit: x\nisFinalized: true\n---\n\n## Index\n');
+    commit('edit old store');
+    const check = checkPr({ base, root: repo });
+    expect(check.reviews).toEqual([]);
+    expect(check.problems[0]).toContain('no agentic review');
+  });
+
   test('fails once drift passes 20%', () => {
     const base = startFeature();
     commitReview([]);

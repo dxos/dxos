@@ -99,9 +99,12 @@ export type PrReview = {
   error?: string;
 };
 
-/** Review stores whose REVIEW.md this PR's diff from `base` adds or changes. */
+/**
+ * Review stores whose REVIEW.md this PR's diff from `base` adds; a store already on the base
+ * reviews other work, so editing it (a status flip, a format migration) does not make it this PR's.
+ */
 export const findPrReviews = (base: string, root: string): PrReview[] => {
-  const changed = git(['diff', '--name-only', '--diff-filter=AM', base, 'HEAD', '--', REVIEWS_DIR], { cwd: root });
+  const changed = git(['diff', '--name-only', '--diff-filter=A', base, 'HEAD', '--', REVIEWS_DIR], { cwd: root });
   const slugs = changed
     .split(/\r?\n/)
     .filter((path) => path.startsWith(`${REVIEWS_DIR}/`) && path.endsWith('/REVIEW.md'))
