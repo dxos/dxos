@@ -107,8 +107,10 @@ export const ModuleUrlPlugin = ({ environment }: ModuleUrlPluginOptions = {}): P
         copyPublicDir: false,
         manifest: false,
         ssrManifest: false,
-        // Vite's preload helper touches `document`, which a worker does not have.
+        // Vite's preload helper touches `document`, which a worker does not have: no preloads, and no
+        // per-chunk CSS, which a dynamic import would preload even then.
         modulePreload: false,
+        cssCodeSplit: false,
         rolldownOptions: {
           external: config.build?.rolldownOptions?.external,
           input: Object.fromEntries(entries.map((entry) => [entryName(entry), entry])),
