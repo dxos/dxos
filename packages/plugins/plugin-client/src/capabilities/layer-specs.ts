@@ -11,7 +11,9 @@ import { ClientService, fromClient } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import { ConfigService } from '@dxos/config';
 import { Database, Hypergraph } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +24,7 @@ import { ClientCapabilities } from '#types';
 // Capability Module
 //
 // Contributes the core client/space service layer specs:
-//   - {@link ClientService} (application affinity).
+//   - {@link ClientService}, {@link ConfigService}, {@link EdgeHttpClientService} (application affinity).
 //   - {@link Database.Service}, {@link Credential.CredentialsService} (space affinity).
 //
 // Specs are declared at module level and resolve the underlying
@@ -54,6 +56,44 @@ const ClientLayerSpec = LayerSpec.make(
         yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout }));
         return fromClient(client);
       }).pipe(Effect.orDie),
+    ),
+);
+
+/**
+ * The client's runtime config as {@link ConfigService}, so operations read config values without
+ * depending on the client.
+ */
+const ConfigLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [ConfigService],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Layer.succeed(ConfigService, client.config);
+      }),
+    ),
+);
+
+/**
+ * The client's EDGE HTTP client as {@link EdgeHttpClientService}, so operations call EDGE without
+ * depending on the client. Dies when the config names no EDGE URL.
+ */
+const EdgeHttpClientLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [EdgeHttpClientService],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Layer.succeed(EdgeHttpClientService, client.edge.http);
+      }),
     ),
 );
 
@@ -174,6 +214,8 @@ export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributeAll(Capabilities.LayerSpec, [
       ClientLayerSpec,
+      ConfigLayerSpec,
+      EdgeHttpClientLayerSpec,
       DatabaseLayerSpec,
       HypergraphLayerSpec,
       AccessTokenResolverLayerSpec,

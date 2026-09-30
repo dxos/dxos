@@ -10,7 +10,7 @@ import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Shimmer } from '@dxos/react-ui-components';
-import { type WindowController, useListModel, useWindow } from '@dxos/react-ui-virtual';
+import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -402,8 +402,8 @@ const TimelineRowView = memo(
     return (
       <div
         role='listitem'
-        data-index={index}
         data-object-id={commit.id}
+        {...windowRowProps(index, commit.id)}
         data-commit-index={row.index}
         aria-current={current ? 'true' : undefined}
         className='group/row grid gap-1 px-[2px] overflow-hidden items-center pe-2 dx-hover dx-current'

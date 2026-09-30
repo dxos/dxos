@@ -10,8 +10,17 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { DensityProvider, Icon, IconButton, ScrollArea, Tabs, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Empty, Tree } from '@dxos/react-ui-list';
+import {
+  Banner,
+  DensityProvider,
+  Icon,
+  IconButton,
+  ScrollArea,
+  Tabs,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Tree, TREE_BLOCK } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
@@ -95,7 +104,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           unavailable && (
-            <Empty
+            <Banner.Empty
               key={id}
               label={t('workspace-unavailable.description')}
               // Second grid row, so the message clears the rail exactly as the tree does, and
@@ -148,10 +157,11 @@ const L1PanelContent = ({
             rootId={item.id}
             path={path}
             draggable
-            gridTemplateColumns={`[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
+            compact
+            gridTemplateColumns={`[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
-            blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
+            getDropKind={navTreeContext.getDropKind}
             canSelect={navTreeContext.canSelect}
             onOpenChange={navTreeContext.onOpenChange}
             onSelect={navTreeContext.onSelect}

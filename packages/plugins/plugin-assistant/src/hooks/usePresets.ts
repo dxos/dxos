@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import type * as Chat from '@dxos/assistant/Chat';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -32,16 +32,15 @@ export type UsePresets = {
 
 /**
  * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}).
- * The selection is the chat's own (`Chat.model`), written back to it when the user picks; a chat that
+ * The selection is the chat's own (`Chat.session.model`), written back to it when the user picks; a chat that
  * has not selected one shows the configured per-provider model.
  */
 export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
   const { t } = useTranslation(meta.profile.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
   // same chat, and the stamp the processor writes before the first request.
-  const [modelRef] = useObject(chat, 'model');
-  // The ref carries the model's DXN as its URI; a ref to anything else is not a model selection.
-  const chatModel = modelRef ? DXN.tryMake(modelRef.uri) : undefined;
+  const [session] = useObject(chat, 'session');
+  const chatModel = session?.model;
 
   // The Ollama manager is the bundled sidecar (desktop only); its presence signals that the
   // `built-in` provider (rather than an external Ollama server) is available.
@@ -121,7 +120,7 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
       const preset = presets.find((preset) => preset.id === id);
       if (preset && chat) {
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(preset.model);
+          chat.session = { ...chat.session, model: preset.model };
         });
       }
     },

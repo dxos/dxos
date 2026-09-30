@@ -189,6 +189,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
       inspect: inspectBook,
       onImport: enrichBook,
     }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

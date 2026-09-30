@@ -21,7 +21,7 @@ import { Database, Feed, Filter, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Question, Task } from '@dxos/types';
+import { Task } from '@dxos/types';
 
 import { AssistantOperationHandlerSet } from '#operations';
 import { AssistantOperation } from '#types';
@@ -66,7 +66,7 @@ const makeCapabilityManager = () => {
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.merge(StubRunPrompt, AssistantOperationHandlerSet),
-  types: [Chat.Chat, Feed.Feed, Text.Text, Task.Task, Question.Question],
+  types: [Chat.Chat, Feed.Feed, Text.Text, Task.Task],
   tracing: 'feed',
   extraServices: Layer.sync(Capability.Service, makeCapabilityManager),
 });
@@ -76,17 +76,18 @@ const setup = Effect.gen(function* () {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
   const task = yield* Database.add(Task.make({ title: 'Draft the reply', status: 'blocked' }));
-  const question = yield* Database.add(
-    Question.make({
-      text: 'What is our refund window?',
-      options: [{ title: '30 days' }],
-      task: Ref.make(task),
-      conversation: Ref.make(chat),
-    }),
-  );
+  const question = Task.ask(task, {
+    text: 'What is our refund window?',
+    options: [{ title: '30 days' }],
+    conversation: Ref.make(chat),
+  });
   yield* Database.flush();
   return { chat, task, question };
 });
+
+/** The recorded answer to one of a task's questions. */
+const answerOf = (task: Task.Task, questionId: string): string | undefined =>
+  Task.getQuestions(task.history).find(({ question }) => question.id === questionId)?.answer?.answer;
 
 describe('AnswerQuestion', () => {
   it.effect(
@@ -97,15 +98,16 @@ describe('AnswerQuestion', () => {
         const { chat, task, question } = yield* setup;
 
         const { accepted, resumed } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
-          question,
+          task,
+          question: question.id,
           answer: '30 days',
         });
         yield* Database.flush();
 
         expect(accepted).toBe(true);
         expect(resumed).toBe(true);
-        expect(question.selectedAnswer).toBe('30 days');
-        expect(Question.isAnswered(question)).toBe(true);
+        expect(answerOf(task, question.id)).toBe('30 days');
+        expect(Task.getPendingQuestions(task.history)).toEqual([]);
 
         expect(yield* readEvents(Trace.QuestionAnswered)).toEqual([
           {
@@ -119,8 +121,8 @@ describe('AnswerQuestion', () => {
         expect(prompts).toHaveLength(1);
         expect(prompts[0].chat).toBe(chat.id);
         expect(prompts[0].disposition).toBe('synthetic');
-        // Names the task and points at the object rather than quoting the answer: the agent reads
-        // back whatever the object says now.
+        // Names the task and the question entry rather than quoting the answer: the agent reads
+        // the record back off the task.
         expect(prompts[0].prompt).toContain('Draft the reply');
         expect(prompts[0].prompt).toContain(question.id);
         expect(prompts[0].prompt).not.toContain('30 days');
@@ -142,7 +144,8 @@ describe('AnswerQuestion', () => {
         const { question, task } = yield* setup;
 
         const { accepted, resumed } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
-          question,
+          task,
+          question: question.id,
           answer: '30 days',
         });
         yield* Database.flush();
@@ -151,7 +154,7 @@ describe('AnswerQuestion', () => {
         // The reader answered; a host that cannot reach the agent must not take that back.
         expect(accepted).toBe(true);
         expect(resumed).toBe(false);
-        expect(question.selectedAnswer).toBe('30 days');
+        expect(answerOf(task, question.id)).toBe('30 days');
         expect(yield* readEvents(Trace.QuestionAnswered)).toHaveLength(1);
         // Left blocked, which is a state a person can see and retry from.
         expect(task.status).toBe('blocked');
@@ -166,14 +169,18 @@ describe('AnswerQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         prompts.length = 0;
-        const { question } = yield* setup;
+        const { task, question } = yield* setup;
 
-        yield* Operation.invoke(AssistantOperation.AnswerQuestion, { question, answer: '30 days' });
-        const second = yield* Operation.invoke(AssistantOperation.AnswerQuestion, { question, answer: '60 days' });
+        yield* Operation.invoke(AssistantOperation.AnswerQuestion, { task, question: question.id, answer: '30 days' });
+        const second = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
+          task,
+          question: question.id,
+          answer: '60 days',
+        });
         yield* Database.flush();
 
         expect(second.accepted).toBe(false);
-        expect(question.selectedAnswer).toBe('30 days');
+        expect(answerOf(task, question.id)).toBe('30 days');
         expect(prompts).toHaveLength(1);
       },
       Effect.provide(TestLayer),
@@ -186,13 +193,17 @@ describe('AnswerQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         prompts.length = 0;
-        const { question } = yield* setup;
+        const { task, question } = yield* setup;
 
-        const { accepted } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, { question, answer: '  ' });
+        const { accepted } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
+          task,
+          question: question.id,
+          answer: '  ',
+        });
         yield* Database.flush();
 
         expect(accepted).toBe(false);
-        expect(Question.isAnswered(question)).toBe(false);
+        expect(task.history?.map(({ event }) => event)).toEqual(['question']);
         expect(yield* readEvents(Trace.QuestionAnswered)).toEqual([]);
         expect(prompts).toEqual([]);
       },
@@ -206,11 +217,13 @@ describe('AnswerQuestion', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         prompts.length = 0;
-        const question = yield* Database.add(Question.make({ text: 'Which one?' }));
+        const task = yield* Database.add(Task.make({ title: 'Pick one' }));
+        const question = Task.ask(task, { text: 'Which one?' });
         yield* Database.flush();
 
         const { accepted, resumed } = yield* Operation.invoke(AssistantOperation.AnswerQuestion, {
-          question,
+          task,
+          question: question.id,
           answer: 'The first',
         });
         yield* Database.flush();
@@ -218,7 +231,7 @@ describe('AnswerQuestion', () => {
         expect(accepted).toBe(true);
         // Nothing to wake, which is not a failure — the record is the point.
         expect(resumed).toBe(false);
-        expect(question.selectedAnswer).toBe('The first');
+        expect(answerOf(task, question.id)).toBe('The first');
         expect(prompts).toEqual([]);
       },
       Effect.provide(TestLayer),

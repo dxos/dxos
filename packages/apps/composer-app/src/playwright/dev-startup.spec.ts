@@ -6,8 +6,8 @@ import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
 
-import { INITIAL_URL } from './app-manager.ts';
 import {
+  INITIAL_URL,
   appendBenchmarkRow,
   collectStartupReport,
   trackNetwork,

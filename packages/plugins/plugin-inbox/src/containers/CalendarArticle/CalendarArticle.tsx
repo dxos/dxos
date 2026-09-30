@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } 
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
@@ -115,20 +115,16 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [id, invokePromise],
   );
 
-  const handleNavigate = useCallback(
-    (eventId: string) => {
-      // Setting the current item updates `activeEvent`, which selects + scrolls the grid (effect below).
-      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: eventId } });
-      // Open the event as its own plank beside the calendar (add), never a companion.
-      void invokePromise(LayoutOperation.Open, {
-        subject: [getFeedObjectPath(id, eventId)],
-        pivotId: id,
-        disposition: 'add',
-        navigation: 'immediate',
-      });
-    },
-    [id, invokePromise],
-  );
+  // The same reading gesture as the mailbox and the task ledger: selecting the event is what drives
+  // `activeEvent` (which selects and scrolls the grid, below), and the detail opens in the event's
+  // own companion where there is room for one — the calendar contributes one companion per event —
+  // or as a plank at the `event` rung otherwise.
+  const handleNavigate = useDetailNavigation({
+    contextId: id,
+    getPath: (eventId) => getFeedObjectPath(id, eventId),
+    level: 'event',
+    companion: (eventId) => eventId,
+  });
 
   // The active event drives the grid's selection: set + scroll it once whenever the active event changes
   // (keyed on id/startDate, not a fresh Date each render, so the grid keeps its own selection between changes).

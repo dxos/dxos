@@ -11,6 +11,7 @@ import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
+import * as JsonSchema from './JsonSchema.ts';
 import * as Obj from './Obj.ts';
 import * as Ref from './Ref.ts';
 import * as Type from './Type.ts';
@@ -692,6 +693,25 @@ describe('Annotation', () => {
     });
   });
 
+  describe('UserType', () => {
+    test('reads back the tags it was set with', ({ expect }) => {
+      const plain = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set());
+      const tagged = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set({ tags: ['a', 'b'] }));
+      const untyped = Schema.Struct({ name: Schema.String });
+
+      expect(Annotation.UserType.get(plain).pipe(Option.getOrUndefined)).toEqual({});
+      expect(Annotation.UserType.get(tagged).pipe(Option.getOrUndefined)).toEqual({ tags: ['a', 'b'] });
+      expect(Option.isNone(Annotation.UserType.get(untyped))).toBe(true);
+    });
+
+    test('survives persisting the schema', ({ expect }) => {
+      const schema = Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set({ tags: ['a'] }));
+      const restored = JsonSchema.toEffectSchema(JsonSchema.toJsonSchema(schema));
+
+      expect(Annotation.UserType.get(restored).pipe(Option.getOrUndefined)).toEqual({ tags: ['a'] });
+    });
+  });
+
   describe('SetParent', () => {
     class Body extends Type.makeObject<Body>(DXN.make('com.example.type.setParentBody', '0.1.0'))(
       Schema.Struct({ text: Schema.String }),
@@ -699,9 +719,9 @@ describe('Annotation', () => {
 
     class Holder extends Type.makeObject<Holder>(DXN.make('com.example.type.setParentHolder', '0.1.0'))(
       Schema.Struct({
-        body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set(true))),
-        sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set(true)),
-        nested: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set(true)) })),
+        body: Schema.optional(Ref.Ref(Body).pipe(Annotation.SetParent.set())),
+        sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set()),
+        nested: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set()) })),
         linked: Schema.optional(Ref.Ref(Body)),
       }),
     ) {}
@@ -751,6 +771,45 @@ describe('Annotation', () => {
       });
 
       expect(Obj.getParent(section)?.id).toBe(holder.id);
+    });
+
+    describe('override: false', () => {
+      class Shelf extends Type.makeObject<Shelf>(DXN.make('com.example.type.setParentShelf', '0.1.0'))(
+        Schema.Struct({
+          items: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set({ override: false })),
+        }),
+      ) {}
+
+      test('claims a target that has no parent', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const shelf = Obj.make(Shelf, { items: [Ref.make(body)] });
+
+        expect(Obj.getParent(body)?.id).toBe(shelf.id);
+      });
+
+      test('leaves a target that already has a parent', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const parent = Obj.make(Holder, { sections: [Ref.make(body)] });
+        const shelf = Obj.make(Shelf, { items: [] });
+
+        Obj.update(shelf, (shelf) => {
+          shelf.items.push(Ref.make(body));
+        });
+
+        expect(Obj.getParent(body)?.id).toBe(parent.id);
+      });
+
+      test('a later overriding field still takes the target', ({ expect }) => {
+        const body = Obj.make(Body, { text: 'body' });
+        const shelf = Obj.make(Shelf, { items: [Ref.make(body)] });
+        const parent = Obj.make(Holder, { sections: [] });
+
+        Obj.update(parent, (parent) => {
+          parent.sections.push(Ref.make(body));
+        });
+
+        expect(Obj.getParent(body)?.id).toBe(parent.id);
+      });
     });
   });
 });

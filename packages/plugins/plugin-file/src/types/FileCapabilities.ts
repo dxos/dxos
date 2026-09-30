@@ -9,7 +9,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import { ACCEPTED_MIME } from './FileLimits.ts';
 import * as Settings from './Settings.ts';
 
 /**
@@ -38,11 +37,12 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 );
 
 export namespace FileAction {
+  /** Marks a field as a file upload, so the form renders the drop zone for it. Any type is accepted. */
   export const UploadAnnotationId = `${meta.profile.key}.annotation.upload`;
 
   export const CreateFileSchema = Schema.Struct({
     file: Schema.instanceOf(File).annotate({
-      [UploadAnnotationId]: ACCEPTED_MIME,
+      [UploadAnnotationId]: true,
     }),
   });
 

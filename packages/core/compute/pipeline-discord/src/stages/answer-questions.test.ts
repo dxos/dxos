@@ -126,27 +126,30 @@ const promptText = (prompt: Prompt.Prompt): string => {
 };
 
 const fakeAi = (answer?: string): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, {
-    // Built through `LanguageModel.make` rather than as a literal service object: the interface is
-    // branded and its methods are self-referential generics, so only the provider-level hooks can
-    // be supplied concretely. `generateObject` is derived from the text the hook returns, hence the
-    // JSON body.
-    model: () =>
-      Layer.effect(
-        LanguageModel.LanguageModel,
-        LanguageModel.make({
-          generateText: ({ prompt }) =>
-            Effect.succeed([
-              {
-                type: 'text',
-                // The query-generation prompt wants an unconstrained query; only the answer prompt
-                // carries the canned answer.
-                text: JSON.stringify(
-                  promptText(prompt).includes('Answer the question') ? (answer ? { answer } : {}) : {},
-                ),
-              },
-            ]),
-          streamText: () => Stream.empty,
-        }),
-      ),
-  });
+  Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      // Built through `LanguageModel.make` rather than as a literal service object: the interface is
+      // branded and its methods are self-referential generics, so only the provider-level hooks can
+      // be supplied concretely. `generateObject` is derived from the text the hook returns, hence the
+      // JSON body.
+      languageModel: () =>
+        Layer.effect(
+          LanguageModel.LanguageModel,
+          LanguageModel.make({
+            generateText: ({ prompt }) =>
+              Effect.succeed([
+                {
+                  type: 'text',
+                  // The query-generation prompt wants an unconstrained query; only the answer prompt
+                  // carries the canned answer.
+                  text: JSON.stringify(
+                    promptText(prompt).includes('Answer the question') ? (answer ? { answer } : {}) : {},
+                  ),
+                },
+              ]),
+            streamText: () => Stream.empty,
+          }),
+        ),
+    }),
+  );

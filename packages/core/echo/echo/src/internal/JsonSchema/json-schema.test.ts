@@ -306,6 +306,18 @@ describe('effect-to-json', () => {
     expect(jsonSchema.properties?.b).toBeDefined();
   });
 
+  test('a named recursive schema reached through two properties is one definition', () => {
+    interface Node {
+      readonly children: readonly Node[];
+    }
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      children: Schema.Array(Schema.suspend((): Schema.Codec<Node> => Node)),
+    }).annotate({ identifier: 'node' });
+
+    const jsonSchema = toJsonSchema(Schema.Struct({ first: Node, second: Node }));
+    expect(Object.keys(jsonSchema.$defs ?? {})).toEqual(['node']);
+  });
+
   test('tuple schema with description', () => {
     const schema = Schema.Struct({
       args: Schema.Tuple([

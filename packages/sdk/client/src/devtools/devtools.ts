@@ -8,7 +8,7 @@ import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 
 import { ClientRpcServer, type Halo, type Space, makeHandlersFromRpc } from '@dxos/client-protocol';
-import { type DataSpace } from '@dxos/client-services';
+import { Spaces } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { DXN, PublicKey, URI } from '@dxos/keys';
@@ -37,7 +37,7 @@ export interface DevtoolsHook {
 
   tracing: TraceProcessor;
 
-  spaces?: Accessor<Space | DataSpace>;
+  spaces?: Accessor<Space | Spaces.DataSpace>;
   feeds?: Accessor<FeedWrapper>;
   halo?: Halo;
 
@@ -248,14 +248,14 @@ export const mountDevtoolsHooks = ({ client }: MountOptions) => {
     };
 
     hook.exportProfile = async () => {
-      const { createStorageObjects, exportProfileData } = await import('@dxos/client-services');
+      const { Storage } = await import('@dxos/client-services');
 
       const storageConfig = client.config.get('runtime.client.storage') ?? create(Runtime_Client_StorageSchema, {});
 
-      const { storage } = createStorageObjects(storageConfig);
+      const { storage } = Storage.createStorageObjects(storageConfig);
 
       log.info('begin profile export', { storageConfig });
-      const archive = await exportProfileData({ storage });
+      const archive = await Storage.exportProfileData({ storage });
 
       log.info('done profile export', { storageEntries: archive.storage.length });
 
@@ -267,19 +267,19 @@ export const mountDevtoolsHooks = ({ client }: MountOptions) => {
 
       const data = await uploadFile();
 
-      const { createStorageObjects, decodeProfileArchive, importProfileData } = await import('@dxos/client-services');
+      const { Storage } = await import('@dxos/client-services');
 
       const storageConfig = client.config.get('runtime.client.storage') ?? create(Runtime_Client_StorageSchema, {});
 
       // Kill client so it doesn't interfere.
       await client.destroy().catch(() => {});
 
-      const { storage } = createStorageObjects(storageConfig);
+      const { storage } = Storage.createStorageObjects(storageConfig);
 
-      const archive = decodeProfileArchive(data);
+      const archive = Storage.decodeProfileArchive(data);
       log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });
 
-      await importProfileData({ storage }, archive);
+      await Storage.importProfileData({ storage }, archive);
 
       log.info('done profile import');
 

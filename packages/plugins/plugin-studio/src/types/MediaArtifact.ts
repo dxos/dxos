@@ -61,7 +61,7 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
     ),
     /** Owned interchangeable alternatives of the primary output; each records its own generation. */
     variants: Schema.Array(Ref.Ref(Variant.Variant)).pipe(
-      Annotation.SetParent.set(true),
+      Annotation.SetParent.set(),
       Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
@@ -75,6 +75,7 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
     // Offer "Connect" when the artifact's provider needs a credential. The connectorId is resolved
     // per-instance from the artifact's `kind` via the registered `GenerationService` providers.
     ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: resolveArtifactConnectorIds }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

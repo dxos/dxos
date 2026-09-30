@@ -24,6 +24,16 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
 // browser command set omits (`account`, `profile`).
 export const Commands = AppCapability.commands(() => import('#commands'));
+export const ClientServices = Capability.lazyModule(
+  'ClientServices',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ClientCapabilities.Config, ClientCapabilities.EdgeHttpClient, ClientCapabilities.Hypergraph],
+    // `client.config` and `client.edge` are initialized-only.
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./client-services.ts'),
+);
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -47,9 +57,35 @@ export const Client = Capability.lazyModule(
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
     ],
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./client.ts'),
+);
+export const IdentityLifecycle = Capability.lazyModule(
+  'IdentityLifecycle',
+  {
+    requires: [
+      ClientCapabilities.Client,
+      ClientCapabilities.AccountCache,
+      Capabilities.AtomRegistry,
+      Capabilities.OperationInvoker,
+      Capabilities.PluginManager,
+    ],
+    provides: [],
+    // Subscribes to `client.halo` (initialized-only).
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./identity-lifecycle.ts'),
+);
+export const InboxMonitor = Capability.lazyModule(
+  'InboxMonitor',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.OperationInvoker],
+    provides: [],
+    // Subscribes to `client.halo` and `client.spaces` (initialized-only).
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./inbox-monitor.ts'),
 );
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
@@ -63,7 +99,7 @@ export const Migrations = Capability.lazyModule(
     // client initialization to have completed — the same point it ran at when the startup pass
     // awaited initialize.
     activatesOn: ClientEvents.Initialized,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./migrations.ts'),
 );
@@ -82,7 +118,6 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',
     invitationProp = 'deviceInvitationCode',
-    onReset,
     identityTestActions,
   }: ClientOptions.ClientPluginOptions) => {
     const createInvitationUrl = (invitationCode: string) => {
@@ -90,7 +125,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
       baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
-    return { createInvitationUrl, onReset, identityTestActions };
+    return { createInvitationUrl, identityTestActions };
   },
 });
 export const SchemaDefs = Capability.lazyModule(
@@ -98,7 +133,7 @@ export const SchemaDefs = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
     provides: [ClientCapabilities.SchemaRegistered],
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./schema-defs.ts'),
 );

@@ -8,3 +8,4 @@ export * from './deepseek/index.ts';
 export * from './lmstudio/index.ts';
 export * from './ollama/index.ts';
 export * from './openai/index.ts';
+export * from './typesafe/index.ts';

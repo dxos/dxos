@@ -12,6 +12,8 @@ import { test } from 'vitest';
 
 import { SqlMigrations } from '@dxos/sql-sqlite';
 
+import activityInit from './activity/0001_init.sql?raw';
+import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
@@ -26,6 +28,7 @@ import { MIGRATIONS as TRACKER } from './tracker/index.ts';
 const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const STORES = [
+  { name: 'activity', init: activityInit, manifest: ACTIVITY },
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
   { name: 'fts', init: ftsInit, manifest: FTS },
   { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
@@ -51,6 +54,7 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'annotations',
   'contentHash',
   'convergenceKey',
   'createdAt',
@@ -61,14 +65,17 @@ const DESIRED_COLUMNS = [
   'objectId',
   'origin',
   'parent',
+  'parentId',
   'queueId',
   'queueNamespace',
   'queuePosition',
   'recordId',
   'seq',
   'source',
+  'sourceId',
   'spaceId',
   'target',
+  'targetId',
   'typeDXN',
   'updatedAt',
   'version',
@@ -104,7 +111,7 @@ describe('index-core migrations', () => {
 
 describe('objectMeta vintages', () => {
   // The three database vintages in the field. All must converge on the shape the code consumes and
-  // produces — the INSERT writes all 17 non-key columns and `SELECT *` reads them back.
+  // produces — the INSERT writes all 24 non-key columns and `SELECT *` reads them back.
   it.effect('fresh database gets the desired shape, and the column back-fill no-ops', () =>
     Effect.gen(function* () {
       expect(yield* migrateEntityMeta).toEqual(ENTITY_META_IDS);

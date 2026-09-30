@@ -15,6 +15,11 @@ export type UseSceneProjectionOptions = {
   store: SceneStore;
   atoms: SceneViewAtoms;
   createProjection?: (options: FreehandProjectionOptions) => Projection;
+  /**
+   * A host-owned projection, already obtained from this hook, used for every scene on the path: for a host
+   * that owns one scene and its side effects and shares the projection with the view.
+   */
+  projection?: Projection;
 };
 
 /**
@@ -25,12 +30,13 @@ export const useSceneProjection = ({
   store,
   atoms,
   createProjection = createFreehandProjection,
+  projection,
 }: UseSceneProjectionOptions): Projection => {
   const registry = useRegistry();
   const path = useAtomValue(atoms.path);
   const sceneId = path[path.length - 1];
   return useMemo(
-    () => withUndo(createProjection({ registry, store, sceneId }), registry, atoms.undo, sceneId),
-    [createProjection, registry, store, sceneId, atoms.undo],
+    () => projection ?? withUndo(createProjection({ registry, store, sceneId }), registry, atoms.undo, sceneId),
+    [projection, createProjection, registry, store, sceneId, atoms.undo],
   );
 };

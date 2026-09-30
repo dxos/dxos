@@ -33,12 +33,13 @@ import {
   useFeedModel,
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList } from '@dxos/react-ui-task';
+import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
+import { AssistantOperation } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
@@ -691,7 +692,8 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
 
   // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
   // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
-  const hasTasks = chat?.tasks != null;
+  const [tasks] = useObject(chat, 'tasks');
+  const hasTasks = tasks != null;
 
   // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
   // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
@@ -716,9 +718,8 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-          {/* The same surface and border as the prompt below, so the two read as one shell. Sized to
-              its rows up to five tasks plus the edit strip; only a longer list scrolls. */}
-          <ChatTaskList classNames='shrink-0 max-h-[calc(6*2rem+1px)] dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
+          {/* The same surface and border as the prompt below, so the two read as one shell. */}
+          <ChatTaskList classNames='shrink-0 dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
@@ -742,6 +743,9 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 //
 
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
+
+/** Rows the chat's checklist shows before it scrolls. */
+const CHAT_TASK_ROWS = 4;
 
 const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
@@ -829,16 +833,75 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
       getTaskActions={getTaskActions}
     >
       <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
-        <TaskList.Viewport>
+        {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
+        <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />
         </TaskList.Viewport>
-        <TaskList.Edit grid />
+        {/* What the agent is blocked on, under the list it asked about: the list itself carries no
+            questions — a row replaying them grew by a line each — but a chat is where the asking
+            happened, so the answer is given here rather than in a pane the reader has to open. */}
+        <ChatTaskQuestions tasks={tasks} />
+        <TaskList.Editor grid />
       </div>
     </TaskList.Root>
   );
 });
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
+
+/**
+ * The open questions across the chat's tasks, each with the means to answer it.
+ *
+ * Answers go through the operation rather than `Task.answer`, so the conversation that asked is
+ * resumed — which is the whole point of answering here instead of on the task.
+ */
+const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
+  const { invokePromise } = useOperationInvoker();
+  const threads = useMemo(
+    () =>
+      tasks.flatMap((task) =>
+        Task.getQuestions(task.history)
+          .filter(({ answer }) => !answer)
+          .map((thread) => ({ task, thread })),
+      ),
+    [tasks],
+  );
+
+  const handleAnswer = useCallback(
+    (task: Task.Task, questionId: string, answer: string) => {
+      const spaceId = Obj.getDatabase(task)?.spaceId;
+      if (spaceId) {
+        // The operation reports a refused write in its result, not only by rejecting, so both are checked.
+        invokePromise(AssistantOperation.AnswerQuestion, { task, question: questionId, answer }, { spaceId })
+          .then((result) => {
+            if (result.error || !result.data?.accepted) {
+              log.warn('question was not answered', { task: task.id, question: questionId, error: result.error });
+            }
+          })
+          .catch((err) => log.catch(err));
+      }
+    },
+    [invokePromise],
+  );
+
+  if (threads.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className='flex flex-col gap-2 p-2' data-testid='chat.taskQuestions'>
+      {threads.map(({ task, thread }) => (
+        <TaskQuestion
+          key={thread.question.id}
+          thread={thread}
+          onAnswer={(answer) => handleAnswer(task, thread.question.id, answer)}
+        />
+      ))}
+    </div>
+  );
+};
+
+ChatTaskQuestions.displayName = 'Chat.TaskQuestions';
 
 //
 // Queue

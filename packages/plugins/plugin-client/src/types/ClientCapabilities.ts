@@ -2,14 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 // Aliased: unwrapping the enclosing `namespace` put these in the same scope as the
 // capabilities named after them.
 import { type Client as Client$ } from '@dxos/client';
-import { type Type, type Migration as Migration$ } from '@dxos/echo';
-import { type HubHttpClient as HubHttpClient$ } from '@dxos/edge-client';
+import { type Config as Config$ } from '@dxos/config';
+import { type Type, type Hypergraph as Hypergraph$, type Migration as Migration$ } from '@dxos/echo';
+import { type EdgeHttpClient as EdgeHttpClient$, type HubHttpClient as HubHttpClient$ } from '@dxos/edge-client';
 import { type Identity as Identity$, type Space as Space$ } from '@dxos/halo';
 
 import { meta } from '#meta';
@@ -34,7 +36,33 @@ export const Migration = Capability.make<Migration$.Migration[]>()(`${meta.profi
 export const AccountCache = Capability.makeSingleton<Atom.Writable<AccountCacheType>>()(
   `${meta.profile.key}.capability.accountCache`,
 );
+/**
+ * Runs after the local identity is deleted in place, before the flow that brings in the next one.
+ * `target` names that flow — `deviceInvitation` or `recoverIdentity` — and is absent for a plain
+ * logout, which leaves the app with no identity for a contributor (e.g. onboarding) to resolve.
+ */
+export type OnIdentityDeleted = (params: { target?: string }) => Effect.Effect<void, Error>;
+export const OnIdentityDeleted = Capability.make<OnIdentityDeleted>()(
+  `${meta.profile.key}.capability.onIdentityDeleted`,
+);
 export const HubHttpClient = Capability.makeSingleton<HubHttpClient$>()(`${meta.profile.key}.capability.hubHttpClient`);
+
+/**
+ * The client's runtime configuration, for consumers that need a config value (e.g. the EDGE URL)
+ * without depending on `@dxos/client`. Contributed once the client has initialized.
+ */
+export const Config = Capability.makeSingleton<Config$>()(`${meta.profile.key}.capability.config`);
+/**
+ * The EDGE HTTP client, for consumers that call EDGE endpoints without depending on `@dxos/client`.
+ * Absent when the config names no EDGE URL.
+ */
+export const EdgeHttpClient = Capability.makeSingleton<EdgeHttpClient$>()(
+  `${meta.profile.key}.capability.edgeHttpClient`,
+);
+/** The cross-space ECHO graph, for imperative consumers that must find a space's database by id. */
+export const Hypergraph = Capability.makeSingleton<Hypergraph$.Hypergraph>()(
+  `${meta.profile.key}.capability.hypergraph`,
+);
 
 /**
  * The HALO Identity service instance, for imperative (non-React, non-Effect-layer) consumers

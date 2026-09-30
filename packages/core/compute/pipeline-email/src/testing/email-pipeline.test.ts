@@ -237,9 +237,11 @@ const logStage = (label: string): Stage.Stage<Message.Message, Message.Message> 
 
 describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', () => {
   // Model layer built ONCE so it is not rebuilt per message.
-  // `AiService.model` provides the `LanguageModel`, resolved through the local Ollama provider;
+  // `AiService.languageModel` provides the `LanguageModel`, resolved through the local Ollama provider;
   // `OllamaAiServiceLayer` provides the `AiService` it requires.
-  const modelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(Layer.provide(OllamaAiServiceLayer));
+  const modelLayer = AiService.languageModel(MODEL, { provider: Provider.ollama.id }).pipe(
+    Layer.provide(OllamaAiServiceLayer),
+  );
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves

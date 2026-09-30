@@ -208,8 +208,51 @@ describe('fillWalkthrough', () => {
 
     expect(total).to.eq(0);
     expect(textless).to.deep.eq(['new.ts']);
-    expect(filled).to.contain('renamed, mode-only or binary');
+    expect(filled).to.contain('renamed or mode-only');
     expect(filled).to.contain('new.ts');
+  });
+
+  test('names generated and binary files without rendering their hunks', () => {
+    const patch = [
+      PATCH,
+      'diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml',
+      '--- a/pnpm-lock.yaml',
+      '+++ b/pnpm-lock.yaml',
+      '@@ -1,1 +1,2 @@',
+      ' lockfileVersion: 9',
+      '+  resolution: {integrity: sha512-whatever}',
+      'diff --git a/assets/logo.png b/assets/logo.png',
+      'Binary files a/assets/logo.png and b/assets/logo.png differ',
+      '',
+    ].join('\n');
+    const { body: filled, generated, missed } = fillWalkthrough('# Change\n', patch);
+
+    expect(generated).to.deep.eq(['pnpm-lock.yaml', 'assets/logo.png']);
+    expect(filled).to.contain('Generated or binary, not shown: pnpm-lock.yaml, assets/logo.png.');
+    expect(filled).to.not.contain('sha512-whatever');
+    expect(missed.map((file) => file.path)).to.not.include('pnpm-lock.yaml');
+  });
+
+  test('drops a fence that points at a generated file rather than rendering it', () => {
+    const patch = [
+      PATCH,
+      'diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml',
+      '--- a/pnpm-lock.yaml',
+      '+++ b/pnpm-lock.yaml',
+      '@@ -1,1 +1,2 @@',
+      ' lockfileVersion: 9',
+      '+  resolution: {integrity: sha512-whatever}',
+      '',
+    ].join('\n');
+    const body = '# Change\n\nThe lockfile moved too.\n\n```diff file=pnpm-lock.yaml\n```\n';
+    const { body: filled, total } = fillWalkthrough(body, patch);
+
+    expect(filled).to.not.contain('sha512-whatever');
+    expect(filled).to.contain('The lockfile moved too.');
+    expect(filled).to.contain('Generated or binary, not shown: pnpm-lock.yaml.');
+    // The denominator drops with `missed`, or a walkthrough covering everything worth reading
+    // would report partial coverage.
+    expect(total).to.eq(3);
   });
 
   test('ends the range at a pure removal that a live hunk shares the fence with', () => {

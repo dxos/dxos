@@ -139,7 +139,9 @@ export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySp
 
 /** Props passed to a `CreateObjectEntry.customPanel`. */
 export type CreateObjectCustomPanelProps = {
-  target: Database.Database | Collection.Collection;
+  target: Database.Database | Obj.Unknown;
   initialFormValues?: Record<string, any>;
   onCreateObject: (data: Record<string, any>) => void | Promise<void>;
+  /** Abandons the create (closes the dialog); panels render it as their Cancel action. */
+  onCancel?: () => void;
 };

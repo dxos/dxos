@@ -9,8 +9,16 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
+import { type Task } from '@dxos/types';
 
-import { ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle } from '#containers';
+import {
+  MoveTaskDialog,
+  ProjectArticle,
+  ProjectArtifactsArticle,
+  ProjectChatsArticle,
+  ProjectTaskCompanion,
+} from '#containers';
+import { MOVE_TASK_DIALOG } from '#meta';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
@@ -23,6 +31,16 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Project.Project),
         component: ProjectArticle,
         props: ({ role, data }) => ({ role, ...data }),
+      }),
+      // The selected task beside the project, so reading the ledger never navigates away from it.
+      Surface.create({
+        id: 'project.taskCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'task'),
+          AppSurface.companion(AppSurface.Article, Project.Project),
+        ),
+        component: ProjectTaskCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, companionTo, attendableId }),
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
       // one is a request to see the set, not only to expand the tree.
@@ -37,6 +55,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.subject(AppSurface.Article, isArtifactsBranch),
         component: ProjectArtifactsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, project: subject.project, attendableId }),
+      }),
+      Surface.create({
+        id: MOVE_TASK_DIALOG,
+        filter: AppSurface.component<{ task: Task.Task }>(AppSurface.Dialog, MOVE_TASK_DIALOG),
+        component: MoveTaskDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
     ]),
   ),

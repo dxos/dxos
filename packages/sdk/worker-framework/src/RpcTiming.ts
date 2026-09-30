@@ -56,11 +56,59 @@ export type StatsSnapshot = {
   readonly maxServiceMs: number;
 };
 
+/**
+ * One completed call as the CALLER saw it: send to settle, across the port and back.
+ *
+ * Untagged, unlike {@link Sample}: the per-method breakdown is the server's to give, and a caller
+ * that wanted one would have to reach into the middleware's request shape for a tag the server
+ * already records.
+ */
+export type ClientSample = {
+  readonly roundTripMs: number;
+  readonly at: number;
+};
+
+/**
+ * Running totals over this realm's whole lifetime, for a reader that samples at intervals.
+ *
+ * Cumulative rather than windowed because the reader is out of process: a harness that takes two
+ * readings subtracts them and gets the interval between, and nothing has to agree in advance on
+ * where a window starts. The maxima are the exception — a max cannot be differenced — which is why
+ * the samples travel alongside.
+ */
+export type Totals = {
+  /** Dispatches this realm SERVED. */
+  calls: number;
+  queueWaitSumMs: number;
+  serviceSumMs: number;
+  queueWaitMaxMs: number;
+  serviceMaxMs: number;
+  /** Calls this realm ISSUED, counted where the client middleware runs rather than the handler. */
+  clientCalls: number;
+  roundTripSumMs: number;
+  roundTripMaxMs: number;
+};
+
 const MAX_TIMING_SAMPLES = 100;
 const timingSamples: Sample[] = [];
+const clientSamples: ClientSample[] = [];
+
+const ZERO_TOTALS: Totals = {
+  calls: 0,
+  queueWaitSumMs: 0,
+  serviceSumMs: 0,
+  queueWaitMaxMs: 0,
+  serviceMaxMs: 0,
+  clientCalls: 0,
+  roundTripSumMs: 0,
+  roundTripMaxMs: 0,
+};
+
+const totals: Totals = { ...ZERO_TOTALS };
 
 const QUEUE_WAIT_METRIC = 'dxos.rpc.queueWait.duration';
 const SERVICE_METRIC = 'dxos.rpc.service.duration';
+const ROUND_TRIP_METRIC = 'dxos.rpc.roundTrip.duration';
 // Deliberately untagged. `rpc._tag` would be the interesting breakdown, but a histogram costs a
 // series per bucket boundary, so one per method is an order of magnitude more series than the rest
 // of the fleet's metrics combined. Per-method detail stays in the log line and getStatsSnapshot.
@@ -82,9 +130,26 @@ const publishMetrics = (sample: Sample): void => {
 /** Records one completed RPC for {@link getStatsSnapshot}. */
 export const recordSample = (sample: Sample): void => {
   publishMetrics(sample);
+  totals.calls += 1;
+  totals.queueWaitSumMs += sample.queueWaitMs ?? 0;
+  totals.serviceSumMs += sample.serviceMs;
+  totals.queueWaitMaxMs = Math.max(totals.queueWaitMaxMs, sample.queueWaitMs ?? 0);
+  totals.serviceMaxMs = Math.max(totals.serviceMaxMs, sample.serviceMs);
   timingSamples.push(sample);
   if (timingSamples.length > MAX_TIMING_SAMPLES) {
     timingSamples.splice(0, timingSamples.length - MAX_TIMING_SAMPLES);
+  }
+};
+
+/** Records one completed call as the caller saw it — see {@link ClientSample}. */
+export const recordClientSample = (sample: ClientSample): void => {
+  trace.metrics.distribution(ROUND_TRIP_METRIC, sample.roundTripMs / 1_000, DURATION_META);
+  totals.clientCalls += 1;
+  totals.roundTripSumMs += sample.roundTripMs;
+  totals.roundTripMaxMs = Math.max(totals.roundTripMaxMs, sample.roundTripMs);
+  clientSamples.push(sample);
+  if (clientSamples.length > MAX_TIMING_SAMPLES) {
+    clientSamples.splice(0, clientSamples.length - MAX_TIMING_SAMPLES);
   }
 };
 
@@ -99,9 +164,39 @@ export const getStatsSnapshot = (): StatsSnapshot => {
   };
 };
 
-/** Clears collected timing samples. Intended for tests. */
+/**
+ * Global name the timings are published under, for a reader OUTSIDE the realm.
+ *
+ * The same arrangement `@dxos/sql-sqlite` publishes its VFS counters under, and for the same
+ * reason: the numbers that matter are produced in the dedicated worker, where nothing in the tab
+ * and nothing in a test process can call a module export. A measurement harness attached over CDP
+ * evaluates this name in each realm. Nothing in the app reads it.
+ */
+export const RPC_TIMING_GLOBAL = '__dxosRpcTiming';
+
+/** Everything a reader gets in one evaluation: the running totals plus the samples behind them. */
+export type Readout = Totals & {
+  readonly samples: ReadonlyArray<Sample>;
+  readonly clientSamples: ReadonlyArray<ClientSample>;
+};
+
+/** Everything this realm has recorded: the running totals, plus copies of both sample rings. */
+export const getReadout = (): Readout => ({
+  ...totals,
+  samples: [...timingSamples],
+  clientSamples: [...clientSamples],
+});
+
+// Published at module scope rather than on the first recorded call, so a realm that served no RPC
+// in an interval is distinguishable from one that was never instrumented — a zero and an absence
+// read identically from the counters alone.
+Object.assign(globalThis, { [RPC_TIMING_GLOBAL]: getReadout });
+
+/** Clears collected timing samples and totals. Intended for tests. */
 export const resetStats = (): void => {
   timingSamples.length = 0;
+  clientSamples.length = 0;
+  Object.assign(totals, ZERO_TOTALS);
 };
 
 const DEFAULT_MIN_LOG_MS = 100;
@@ -187,16 +282,28 @@ export const serverLayer = (options?: Options): Layer.Layer<Middleware> =>
   });
 
 /**
- * Client middleware: stamps {@link SENT_AT_HEADER} with `Date.now()` on every outbound RPC.
+ * Client middleware: stamps {@link SENT_AT_HEADER} with `Date.now()` on every outbound RPC, and
+ * records how long the call took to settle from here.
+ *
+ * Round trip is the caller's quantity and cannot be derived from the server's two: it adds the
+ * transport in both directions to them, so a worker reporting 2 ms of queue wait and 3 ms of
+ * service while the tab waits 400 ms says the time went somewhere neither number covers.
+ * `ensuring` rather than a success path, so a failed or interrupted call is counted too — one that
+ * fails after 30 s is the case worth seeing.
  */
 export const clientLayer = (): Layer.Layer<RpcMiddleware.ForClient<Middleware>> =>
   // Effect 4 hands the client middleware `next` rather than taking the rewritten request back.
-  RpcMiddleware.layerClient(Middleware, ({ next, request }) =>
-    next({
+  RpcMiddleware.layerClient(Middleware, ({ next, request }) => {
+    const sentAt = Date.now();
+    return next({
       ...request,
-      headers: Headers.set(request.headers, SENT_AT_HEADER, String(Date.now())),
-    }),
-  );
+      headers: Headers.set(request.headers, SENT_AT_HEADER, String(sentAt)),
+    }).pipe(
+      Effect.ensuring(
+        Effect.sync(() => recordClientSample({ roundTripMs: Math.max(0, Date.now() - sentAt), at: sentAt })),
+      ),
+    );
+  });
 
 /** Whether RPC timing middleware should be enabled for the given serve/client options bag. */
 export const isEnabled = (timing: boolean | Options | undefined): timing is boolean | Options =>

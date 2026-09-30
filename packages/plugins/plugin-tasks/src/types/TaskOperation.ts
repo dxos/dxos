@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
 // the compiler name the operation types portably (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Actor, Milestone, type Person, Task, TaskSet } from '@dxos/types';
+import { Actor, File, Milestone, type Person, Task, TaskSet } from '@dxos/types';
 
 /**
  * Linear-shaped task verbs (MILESTONE-5.md §7.2). Verbs enforce what models get wrong with raw
@@ -28,8 +28,9 @@ import { Actor, Milestone, type Person, Task, TaskSet } from '@dxos/types';
  */
 
 /**
- * Files a task into a set's `tasks` array — the membership-and-order record, which a generic object
- * create leaves untouched — and rejects a milestone or parent belonging to another set.
+ * Files a task into its set's tree — the `tasks` list for a root, its parent's `subtasks` for a
+ * sub-task, which a generic object create leaves untouched — and rejects a milestone or parent
+ * belonging to another set.
  */
 export const CreateTask = Operation.make({
   meta: {
@@ -47,7 +48,7 @@ export const CreateTask = Operation.make({
     description: Schema.optional(Schema.String),
     priority: Schema.optional(Task.Priority),
     assignee: Schema.optional(Actor.Actor),
-    /** Parent task for a sub-task; the task still joins the set's flat `tasks` array. */
+    /** Parent task for a sub-task, which is appended to its `subtasks`; omit for a root of the set. */
     parentTask: Schema.optional(Ref.Ref(Task.Task)),
     /** Milestone to file the task under; omit for the backlog. Must belong to the same task set. */
     milestone: Schema.optional(Ref.Ref(Milestone.Milestone)),
@@ -60,6 +61,15 @@ export const CreateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/** The coding-agent session a verb attributes work to, by its harness session id. */
+const RemoteSessionInput = Schema.Struct({
+  sessionId: Schema.String.annotate({ description: 'The harness session id (your own, when claiming work).' }),
+  title: Schema.optional(Schema.String),
+  repo: Schema.optional(Schema.String),
+  branch: Schema.optional(Schema.String),
+  worktree: Schema.optional(Schema.String),
+});
+
 /**
  * The only writer that may re-parent a task: a generic object update cannot reject a cycle or a
  * cross-set parent, nor move the lifecycle edge that decides what the task cascades with.
@@ -71,7 +81,9 @@ export const UpdateTask = Operation.make({
     description:
       'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field. ' +
       'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
-      'creating the session record in the space if it is not there yet.',
+      'creating the session record in the space if it is not there yet. ' +
+      'A task with sub-tasks is one unit of work landing in one PR: assigning or starting any task in a tree ' +
+      'assigns (and starts, if not yet started) its root and every sub-task too.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service, Trace.TraceService],
@@ -95,15 +107,7 @@ export const UpdateTask = Operation.make({
      * created in the task's space when this id is not recorded there yet, so an agent can claim
      * work on its first call.
      */
-    remoteSession: Schema.optional(
-      Schema.Struct({
-        sessionId: Schema.String.annotate({ description: 'The harness session id (your own, when claiming work).' }),
-        title: Schema.optional(Schema.String),
-        repo: Schema.optional(Schema.String),
-        branch: Schema.optional(Schema.String),
-        worktree: Schema.optional(Schema.String),
-      }),
-    ),
+    remoteSession: Schema.optional(RemoteSessionInput),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */
@@ -117,12 +121,88 @@ export const UpdateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Files a question on a task and blocks the task on it — the task-addressed counterpart of the chat's
+ * planning tool, for an agent that has a task ref but no conversation (one driving the MCP verbs).
+ * The question is an entry in the task's own history, so the person answering sees it on the task.
+ */
+export const AskQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.askQuestion'),
+    name: 'Ask Question',
+    description:
+      'Ask the user a question you cannot answer yourself about one task, and block the task on it. ' +
+      'The question is recorded in the task history, where the user answers it. Offer likely answers ' +
+      'in `options`; the user may still type their own. Refused while the task already has an ' +
+      'unanswered question. Pass `remoteSession` with your harness session id to assign the blocked task ' +
+      "to your session. Read the answer back later from the task's `history`: the entry with " +
+      '`event: "answer"` whose `questionId` is the id this returns.',
+    icon: 'ph--question--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    question: Schema.String.annotate({ description: 'The question, as put to the user.' }),
+    context: Schema.optional(
+      Schema.String.annotate({ description: 'Why you are asking — what you are blocked on, in a sentence or two.' }),
+    ),
+    options: Schema.optional(
+      Schema.Array(Task.AnswerOption).annotate({
+        description: 'Suggested answers. Omit when you have no plausible candidates.',
+      }),
+    ),
+    /** Who is asking; recorded on the question and on the status change it causes. */
+    actor: Schema.optional(Actor.Actor),
+    /**
+     * Assigns the blocked task to the asking coding-agent session, as `UpdateTask` does, and makes
+     * that session the asker — a session's check-in lists its open tasks by the assignee ref.
+     */
+    remoteSession: Schema.optional(RemoteSessionInput),
+  }),
+  // JSON snapshot, not a live object — see the create/update verbs above.
+  output: Schema.Struct({
+    /** Id of the question's entry in the task's history. */
+    questionId: Schema.String,
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Records a person's answer to a question in a task's history. It only writes the answer: waking a
+ * chat that asked is the assistant plugin's own `AnswerQuestion`, and an agent that asked over the
+ * MCP reads the answer back from the task.
+ */
+export const AnswerQuestion = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.answerQuestion'),
+    name: 'Answer Question',
+    description: "Answer a question in a task's history.",
+    icon: 'ph--check-circle--regular',
+    // The asker is an agent; handing it the tool to answer its own question is a footgun.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    /** Id of the question's entry in the task's history. */
+    question: Schema.String,
+    answer: Schema.String.annotate({ description: "The chosen option's title, or free-form text." }),
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Struct({
+    /** False when the answer was blank, the question is unknown, or it was already answered. */
+    accepted: Schema.Boolean,
+  }),
+}).pipe(Operation.mutation('write'));
+
 export const TaskRestorePoint = Schema.Struct({
   entries: Schema.Array(
     Schema.Struct({
       task: Type.getSchema(Task.Task),
       index: Schema.optional(Schema.Number).annotate({
-        description: "Position the task held in the set's `tasks` array; absent when it belonged to no set.",
+        description:
+          "Position the deleted task held in its parent's `subtasks` (or the set's `tasks`); absent for its " +
+          'sub-tasks, which stay listed by their own restored parents.',
       }),
     }),
   ).annotate({
@@ -131,14 +211,93 @@ export const TaskRestorePoint = Schema.Struct({
   taskSet: Schema.optional(Type.getSchema(TaskSet.TaskSet)).annotate({
     description: 'The set the tasks were filed in, when they were in one.',
   }),
+  parentTask: Schema.optional(Type.getSchema(Task.Task)).annotate({
+    description: 'The task the deleted task was a sub-task of; absent for a root.',
+  }),
 });
 
 export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
 
 /**
- * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's
- * `tasks` array is a separate membership record, so a generic delete leaves the whole subtree's
- * entries dangling behind it.
+ * Records an object the task produced — a file, a document, a sheet — on `Task.artifacts`. Its own
+ * verb because membership is compared by entity id, so adding the same object twice is a no-op,
+ * which a generic patch of the ref array cannot promise.
+ */
+export const AddArtifact = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.addArtifact'),
+    name: 'Add Task Artifact',
+    description:
+      'Attach an existing object (e.g. a File created by file.createFromUpload) to a task as an artifact ' +
+      'the task produced. Adding the same object twice is a no-op. A pull request is recorded on the ROOT ' +
+      "of the task's tree (the returned task), since all sub-tasks land in one PR; it is refused when the " +
+      'root already has a different open PR.',
+    icon: 'ph--paperclip--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    object: Ref.Ref(Obj.Unknown).annotate({ description: 'The object to attach, e.g. the File from an upload.' }),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Attaches a file to a task, which then owns it, and records the attachment in the task's history.
+ * Separate from {@link AddArtifact}: an artifact is something the task produced and belongs elsewhere.
+ */
+export const AddAttachment = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.addAttachment'),
+    name: 'Add Task Attachment',
+    description:
+      'Attach an existing File (e.g. one created by file.createFromUpload) to a task. The task takes ' +
+      'ownership, so deleting the task deletes the file. Attaching the same file twice is a no-op; a ' +
+      'file already owned by another object is rejected.',
+    icon: 'ph--paperclip--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    file: Ref.Ref(File.File),
+    /** Who attached it; recorded on the history entry. */
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Detaches a file from a task and deletes it, since the task owned it, recording the removal in the
+ * task's history.
+ */
+export const RemoveAttachment = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.removeAttachment'),
+    name: 'Remove Task Attachment',
+    description:
+      'Remove a file attached to a task, deleting the file. Removing a file that is not attached is a no-op.',
+    icon: 'ph--trash--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    file: Ref.Ref(File.File),
+    /** Who removed it; recorded on the history entry. */
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('destructive'));
+
+/**
+ * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the list
+ * that holds the task — its parent's `subtasks` or the set's `tasks` — is a separate record, so a
+ * generic delete leaves the entry dangling behind it.
  */
 export const DeleteTask = Operation.make({
   meta: {
@@ -170,8 +329,9 @@ export const RestoreTasks = Operation.make({
 }).pipe(Operation.mutation('write'));
 
 /**
- * Repositions a task within its set's `tasks` array. There is no sort key to patch — the array
- * order is the order — so ordering is unreachable from a generic object update.
+ * Repositions a task among its siblings — the set's `tasks` for a root, its parent's `subtasks`
+ * otherwise. There is no sort key to patch — list order is the order — so ordering is unreachable
+ * from a generic object update.
  *
  * Re-parenting is part of the same verb because a drop in the tree is both at once: doing it as
  * `UpdateTask` then `MoveTask` leaves a window where the task hangs at the end of its new parent
@@ -186,13 +346,13 @@ export const MoveTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.move'),
     name: 'Move Task',
-    description: 'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
+    description: 'Reposition a task among its siblings, optionally re-parenting it — list order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     taskSet: Ref.Ref(TaskSet.TaskSet),
-    /** Insert immediately before this task; omit to move to the end. */
+    /** Insert immediately before this sibling; omit to move to the end of the siblings. */
     before: Schema.optional(Ref.Ref(Task.Task)),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set (as `UpdateTask`). */
     parentTask: Schema.optional(Schema.NullOr(Ref.Ref(Task.Task))),
@@ -202,13 +362,45 @@ export const MoveTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Moves a task, with its whole sub-task tree, into another task set (e.g. another project's).
+ * `MoveTask` cannot: it only repositions within one set.
+ *
+ * - The subtree travels: descendants stay listed under the moved task, so the tree arrives intact,
+ *   while the moved task becomes a root of the target (its old parent stays behind).
+ * - `milestone` is cleared on every moved task: milestones belong to the old set, and a ref into
+ *   another set's sequence would group the task under a milestone the target cannot show.
+ * - `dependsOn` is kept in both directions: it is an execution constraint, not set membership, and
+ *   a set's readiness reads a dependency outside its task list as satisfied, so nothing is stranded.
+ */
+export const MoveTaskToSet = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.moveToSet'),
+    name: 'Move Task To Set',
+    description:
+      'Move a task and its sub-tasks into another task set (e.g. another project), clearing their milestones.',
+    icon: 'ph--arrow-square-out--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    /** The destination set; the moved task is appended to its roots, its subtree under it. */
+    taskSet: Ref.Ref(TaskSet.TaskSet),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+    /** Ids of the task and every sub-task that moved with it. */
+    moved: Schema.Array(Schema.String),
+  }),
+}).pipe(Operation.mutation('write'));
+
 /** Opaque forward cursor; currently an encoded offset, so the wire shape survives a key-cursor swap. */
 export const TaskCursor = Schema.String;
 
 /**
- * Reads a set's tasks in order, which a generic query cannot: order lives in the `tasks` array,
- * root-vs-subtask is derived from the parent refs, and a task's effective milestone is inherited up
- * the parent chain rather than stored. Also filters by an assignee's DID, email or name.
+ * Reads a set's tasks in order, which a generic query cannot: order lives in the `tasks` and
+ * `subtasks` lists (read in tree pre-order), and a task's effective milestone is inherited up the
+ * parent chain rather than stored. Also filters by an assignee's DID, email or name.
  */
 export const ListTasks = Operation.make({
   meta: {

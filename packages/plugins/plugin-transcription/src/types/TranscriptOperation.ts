@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { SpaceSchema } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
@@ -23,7 +22,7 @@ export const Create = Operation.make({
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    space: SpaceSchema,
+    db: Database.Database,
   }),
   output: Schema.Struct({
     object: Type.getSchema(Transcript.Transcript),

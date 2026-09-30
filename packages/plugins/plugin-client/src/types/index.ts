@@ -4,6 +4,7 @@
 
 export * as Account from './Account.ts';
 export * as AccountCache from './AccountCache.ts';
+export * as CliLogin from './CliLogin.ts';
 export * as ClientAction from './ClientAction.ts';
 export * as ClientCapabilities from './ClientCapabilities.ts';
 export * as ClientEvents from './ClientEvents.ts';

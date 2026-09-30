@@ -41,6 +41,11 @@ export type TestAppOptions = {
    * immediately; pass `Effect.never` to keep idle-gated modules inactive, as on a browser cold boot.
    */
   whenIdle?: Effect.Effect<void>;
+  /**
+   * Resolves an id `manager.add` is given that names none of `plugins` — a URL, as a remote plugin
+   * is added. Without it such an id fails, as an unknown plugin does.
+   */
+  pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
 };
 
 /**
@@ -120,14 +125,19 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
     autoStart = true,
     registerFrameworkCapabilities = true,
     whenIdle,
+    pluginLoader: fallbackLoader,
   } = opts;
 
-  const pluginLoader = (id: string) =>
-    Effect.sync(() => {
-      const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
+  const pluginLoader = (id: string) => {
+    const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
+    if (!plugin && fallbackLoader) {
+      return fallbackLoader(id);
+    }
+    return Effect.sync(() => {
       invariant(plugin, `Plugin not found: ${id}`);
       return { plugin };
     });
+  };
 
   const manager = PluginManager.make({ pluginLoader, plugins, enabled, whenIdle });
 

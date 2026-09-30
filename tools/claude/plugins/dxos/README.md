@@ -53,7 +53,9 @@ work for both. You can manage the plugin through the Desktop UI instead:
 
 ## Connect Composer
 
-The plugin provides the Composer MCP server. Do not add its URL manually.
+The plugin provides the Composer MCP server, so on the CLI and Desktop do not add
+its URL manually. Cloud sessions are the exception: see
+[Claude Code on the web](#claude-code-on-the-web).
 
 Create an account at [composer.space](https://composer.space), then open its
 settings and create a passkey.
@@ -69,6 +71,24 @@ sign-in in your browser.
 1. Start a new Desktop session. Click **+**, **Plugins**, **Manage plugins**,
    **DXOS Project Tracking**, **Connectors**, then select `composer`.
 2. Click **Connect** and complete the passkey sign-in in your browser.
+
+### Claude Code on the web
+
+Cloud sessions do not get the MCP servers of locally installed plugins, so the
+plugin's bundled `composer` server is not available there (and a cloud session
+could not complete the passkey sign-in anyway). Add Composer separately as a
+claude.ai connector:
+
+1. At [claude.ai/customize/connectors](https://claude.ai/customize/connectors),
+   add a custom connector named exactly `Composer` with the URL
+   `https://composer.dxos.network/mcp`, and complete the passkey sign-in.
+2. Install the plugin in each container: have the environment's setup script run
+   the repo's `.config/claude-code-setup.sh` (it calls
+   `.claude/scripts/bootstrap-plugins.sh`).
+3. Start a new session; connectors and plugins are read at session start.
+
+The session-reporting hooks target both `plugin:dxos:composer` and `Composer`;
+whichever server is not connected is skipped, so the connector name must match.
 
 ## Use Composer for project tracking
 
@@ -250,7 +270,9 @@ from any machine, without a committed file.
 
 #### The bundled connector
 
-The plugin ships the deployed server, so there is nothing to add:
+The plugin ships the deployed server, so on the CLI and Desktop there is nothing
+to add (cloud sessions need the claude.ai connector described under
+[Claude Code on the web](#claude-code-on-the-web)):
 
 ```json
 "mcpServers": { "composer": { "type": "http", "url": "https://composer.dxos.network/mcp" } }

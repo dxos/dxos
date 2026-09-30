@@ -112,6 +112,22 @@ export const crossings: CostTerm = {
   measure: ({ report }) => report.metrics.crossings,
 };
 
+/** Labels overlapping other labels or boxes; as costly as a crossing, since either hides what the reader needs. */
+export const textOverlaps: CostTerm = {
+  id: 'text-overlaps',
+  description: 'Labels overlapping another label or a box.',
+  weight: 3,
+  measure: ({ report }) => report.metrics.textOverlaps,
+};
+
+/** Connector pairs sharing a stretch of line; as costly as a crossing, since the reader cannot pair their ends. */
+export const edgeOverlaps: CostTerm = {
+  id: 'edge-overlaps',
+  description: 'Connector pairs that run along the same line.',
+  weight: 3,
+  measure: ({ report }) => report.metrics.edgeOverlaps,
+};
+
 export const bends: CostTerm = {
   id: 'bends',
   description: 'Turns taken by connectors.',
@@ -153,5 +169,5 @@ export const compactness: CostTerm = {
 
 export const DEFAULT: Objective = {
   constraints: [noHardDefects, framesApart()],
-  costs: [crossings, bends, connectorLength, unevenFrameGaps, compactness],
+  costs: [crossings, edgeOverlaps, textOverlaps, bends, connectorLength, unevenFrameGaps, compactness],
 };

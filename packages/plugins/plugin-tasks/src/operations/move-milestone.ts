@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveMilestone> = TaskO
 
       const beforeId = before ? Task.refEntityId(before) : undefined;
       Obj.update(taskSet, (taskSet) => {
-        taskSet.milestones = TaskSet.reorder(taskSet.milestones, milestone.id, beforeId);
+        TaskSet.reorderInPlace(taskSet.milestones, milestone.id, beforeId);
       });
 
       return { milestone: milestone };

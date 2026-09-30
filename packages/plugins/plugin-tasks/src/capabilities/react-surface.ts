@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Outline, RemoteSession, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
+import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import {
@@ -18,6 +18,7 @@ import {
   OutlineCard,
   QuickEntryDialog,
   RemoteSessionCard,
+  TaskArticle,
   TaskSetArticle,
 } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
@@ -29,6 +30,13 @@ import { Journal } from '#types';
  * outline's own — a project's inline outline promotes into the project's task set.
  */
 const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
+  Role.make('org.dxos.role.section');
+
+/**
+ * The section role, typed for an embedded task set: the host says where a row opens its task, since
+ * only the host knows whether it contributes a companion to open into.
+ */
+const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { detail?: 'plank' | 'companion' }>> =
   Role.make('org.dxos.role.section');
 
 export default Capability.makeModule(() =>
@@ -74,13 +82,25 @@ export default Capability.makeModule(() =>
         }),
       }),
       Surface.create({
+        // A single task's detail: the plank a row opens, reused as the reader moves down a list.
+        id: 'article.task',
+        filter: AppSurface.object(AppSurface.Article, Task.Task),
+        component: TaskArticle,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
         id: 'article.taskSet',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
-          AppSurface.object(AppSurface.Section, TaskSet.TaskSet),
-        ),
+        filter: AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
         component: TaskSetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      // Embedded in a host (the project's Tasks tab), which also says where a row opens its task:
+      // only the host knows whether it contributes a companion to open into.
+      Surface.create({
+        id: 'section.taskSet',
+        filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
+        component: TaskSetArticle,
+        props: ({ role, data: { subject, attendableId, detail } }) => ({ role, subject, attendableId, detail }),
       }),
       Surface.create({
         id: 'card.outline',

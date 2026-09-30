@@ -1,0 +1,138 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { expect, test } from '@playwright/test';
+
+import { log } from '@dxos/log';
+// TODO(wittjosiah): Importing this causes tests to fail.
+// import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
+import { Markdown, StackPlugin } from './plugins/index.ts';
+
+if (process.env.DX_PWA !== 'false') {
+  log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
+  process.exit(1);
+}
+
+test.describe('Basic tests', () => {
+  let host: AppManager;
+
+  test.beforeEach(async ({ browser }) => {
+    host = new AppManager(browser, false);
+    await host.init();
+  });
+
+  test.afterEach(async () => {
+    await host.close();
+  });
+
+  test('create identity, space is created by default', { tag: ['@QA-5'] }, async () => {
+    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
+    // First run lands on Home, and onboarding seeds the README, so it appears under Recent.
+    const plank = host.deck.plank();
+    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible();
+    await expect(plank.locator.getByText('README')).toBeVisible();
+  });
+
+  test('create space, which is displayed in tree', { tag: ['@QA-5'] }, async () => {
+    await host.createSpace();
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+  });
+
+  test('create document', { tag: ['@QA-1'] }, async () => {
+    await host.createSpace();
+    await host.createObject({ type: 'Document' });
+    // Documents are collection items; the new object is revealed under the Collections section.
+    await expect(host.getObjectLinks()).toHaveCount(1);
+
+    const plank = host.deck.plank();
+    const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
+
+    await expect(host.getObjectLinks()).toHaveCount(1);
+    await expect(textBox).toBeEditable();
+  });
+
+  // TODO(wittjosiah): Reset no longer wipes old data, upgrade path needs to be provided.
+  test.skip(
+    'error boundary is rendered on invalid storage version, reset wipes old data',
+    { tag: ['@QA-5'] },
+    async ({ browserName }) => {
+      // TODO(wittjosiah): This test seems to crash firefox and fail in webkit.
+      if (browserName !== 'chromium') {
+        test.skip();
+      }
+
+      await host.createSpace();
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+
+      await host.changeStorageVersionInMetadata(9999);
+      await expect(host.page.getByTestId('resetDialog').locator('p')).toContainText('9999');
+      await expect(host.page.getByTestId('resetDialog').locator('h2')).toHaveText('Invalid storage version');
+
+      await host.reset();
+      // Wait for identity to be re-created.
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 10_000 });
+    },
+  );
+
+  // TODO(wittjosiah): Remove? The reset button was hidden from the app.
+  test.skip('reset app', { tag: ['@QA-5'] }, async ({ browserName }) => {
+    // TODO(wittjosiah): This test seems to be flaky in webkit.
+    if (browserName === 'webkit') {
+      test.skip();
+    }
+
+    await host.openPluginRegistry();
+    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
+
+    await host.page.goto(INITIAL_URL + '?throw');
+    await host.reset();
+
+    await host.openPluginRegistry();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+  });
+
+  test.describe(() => {
+    test.skip(
+      ({ browserName }) => browserName !== 'chromium',
+      'TODO(wittjosiah): This test seems to be flaky in firefox & webkit.',
+    );
+
+    test('logout', { tag: ['@QA-5'] }, async () => {
+      await host.createSpace();
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+      const previousWorkspace = host.workspaceId;
+      const document = await host.markDocument();
+
+      await host.openUserDevices();
+      await host.logout();
+
+      // The identity is deleted in place and a fresh one boots into its own default space.
+      await host.waitForNewIdentityWorkspace(previousWorkspace);
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+      await expect(host.deck.plank().locator.getByText('README')).toBeVisible({ timeout: 30_000 });
+      await host.expectSameDocument(document);
+    });
+
+    test('recover identity', { tag: ['@QA-5'] }, async () => {
+      // Recovery re-admits the device through EDGE, which then replicates the identity's spaces back.
+      test.setTimeout(180_000);
+
+      await host.createSpace();
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+      await host.openUserSecurity();
+      const recoveryCode = await host.createRecoveryCode();
+      const document = await host.markDocument();
+
+      await host.showUserDevices();
+      await host.recoverIdentity(recoveryCode);
+
+      // The same identity comes back in place, spaces and all.
+      await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 120_000 });
+      await host.expectSameDocument(document);
+    });
+  });
+});

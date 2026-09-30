@@ -18,12 +18,12 @@ import { ProjectCapabilities, ProjectsEvents } from '#types';
 // Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
 // `LayoutOperation` actions, which mean nothing without an app shell.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 // Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
 // template and collects its name.
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
@@ -33,7 +33,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SubjectContext = Capability.lazyModule(
@@ -58,7 +58,7 @@ export const Templates = Capability.lazyModule(
 
 export const Tour = Capability.lazyModule(
   'Tour',
-  { provides: [AppCapabilities.Tour], environments: [] },
+  { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
   () => import('./tour.ts'),
 );
 

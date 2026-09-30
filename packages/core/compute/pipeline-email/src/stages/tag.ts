@@ -130,7 +130,7 @@ export const tagMessage = (
     const raw = yield* LanguageModel.generateText({
       prompt: `${TAG_PROMPT}\n\nSubject: ${subject}\n\n${body}`,
     }).pipe(
-      Effect.provide(AiService.model(resolveModel('tag', options.policy)).pipe(Layer.orDie)),
+      Effect.provide(AiService.languageModel(resolveModel('tag', options.policy)).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
       Effect.catch(() => Effect.succeed('')),

@@ -1,22 +1,27 @@
 layer: application
 language: typescript
 tags:
-  - e2e
   - tauri
   - typecheck
   - vite
   - ts-test
   - storybook
 # Inherited from the tags above and not redeclared here: `build`, `lint`, `typecheck`,
-# `check-module-structure`, `test-storybook`, and `e2e` (`.moon/tasks/tag-*.yml`). `e2e` is the
-# gated suite — production `vite preview` against `src/playwright/playwright.config.ts`; every
-# spec that config cannot host has its own `e2e-*` task below.
+# `check-module-structure` and `test-storybook` (`.moon/tasks/tag-*.yml`).
+#
+# There is deliberately no `e2e` task and no `e2e` tag: the gated behavioural suite lives in
+# `@dxos/composer-e2e` (`packages/e2e/composer-e2e`), which serves this app's `bundle-e2e` output.
+# What stays here are the harnesses that are coupled to the BUILD rather than to the behaviour —
+# `e2e-startup` and `e2e-perf` record measurements that `check-startup-budget` and the perf nightly
+# gate on, `e2e-dev` needs `vite serve`, and `e2e-welcome-focus` drives Storybook.
 tasks:
   # The production web bundle (`out/composer`), consumed by `vite preview`, the Tauri builds, and
   # the Cloudflare worker. `build:functions` emits `_worker.js` after `vite build` so it survives
   # Vite's `emptyOutDir`.
   bundle:
     script: pnpm exec vite build --configLoader native && pnpm run --silent build:functions
+    inputs:
+      - public/**/*
     options:
       # Same untracked `.env` as `serve`, so a local production bundle carries the same keys.
       envFile: .env
@@ -91,14 +96,13 @@ tasks:
       - target: bundle
         env:
           DX_PWA: 'false'
-  # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
-  # frontend + macOS ollama runtime are hoisted to task deps here (no moon-in-moon). Locally
-  # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
-  # prebuilt artifact, runtime fetched directly — to keep moon out of the native job.
   tauri-build:
     deps:
-      - bundle
+      - target: bundle
+        env:
+          DX_TAURI: 'true'
       - fetch-ollama
+      - stage-sandbox-helper
   # iOS counterpart of `tauri-build`; no ollama (its runtime is desktop-only). Embeds the
   # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
   # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
@@ -110,6 +114,7 @@ tasks:
       - target: bundle
         env:
           DX_PLUGIN_SET: production
+          DX_TAURI: 'true'
   # Both native dev loops run this app's `vite dev` through `beforeDevCommand`, so they need exactly
   # `serve`'s narrowed dependency set rather than the `tauri` tag's whole-graph `^:build` — extended
   # so the three inner loops cannot drift.
@@ -134,6 +139,16 @@ tasks:
       - scripts/fetch-ollama.mjs
     outputs:
       - src-tauri/sidecar
+  # Stages plugin-sandbox's local sandbox helper for the desktop bundle. Its own output directory,
+  # so a cache restore of `fetch-ollama`'s `src-tauri/sidecar` cannot drop it.
+  stage-sandbox-helper:
+    command: node scripts/stage-sandbox-helper.mjs --required
+    deps:
+      - plugin-sandbox:compile-sidecar
+    inputs:
+      - scripts/stage-sandbox-helper.mjs
+    outputs:
+      - src-tauri/sandbox
   # Regenerates `src/vite/optimize-deps.ts` from a cold dependency scan. Not cacheable — the point
   # is to re-derive the list from the current source graph, and it rewrites a checked-in file.
   gen-optimize-deps:

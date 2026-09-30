@@ -223,7 +223,7 @@ describe('CurateMagazine', () => {
         scripted.select([posts[0].id, posts[1].id]);
         const result = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: Ref.make(magazine) });
 
-        const curated = yield* Effect.forEach(magazine.posts, Database.load);
+        const curated = yield* Effect.forEach(magazine.posts, (post) => Database.load(post));
         expect(curated.map((post) => post.title)).toEqual([posts[0].title, posts[1].title]);
         expect(result.curated).toBe(2);
       },

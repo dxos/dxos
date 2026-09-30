@@ -5,43 +5,71 @@
 import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { EntityId } from '@dxos/echo/Key';
 
+import * as File from './File.ts';
 import * as Milestone from './Milestone.ts';
 import * as Task from './Task.ts';
 
+/** A task's change entries — the ones that carry a `description`. */
+const changes = (task: Task.Task): Task.ChangeEntry[] => (task.history ?? []).filter(Task.isChangeEntry);
+
+/** A task whose `subtasks` own `children`, so their parent edges point at it. */
+const node = (title: string, children: Task.Task[] = [], props: Partial<Obj.MakeProps<typeof Task.Task>> = {}) =>
+  Task.make({ title, subtasks: children.map((child) => Ref.make(child)), ...props });
+
 /**
- * The derived views are the whole point of the flat-array model — hierarchy, milestone grouping,
- * and progress are computed, never stored, so these assert the two can never disagree. They act on
- * a plain task list, which is why they live here rather than on a container.
+ * Milestone grouping and progress are computed, never stored, so these assert the two can never
+ * disagree. They act on a plain task list, which is why they live here rather than on a container.
  */
 describe('Task derived views', () => {
-  test('roots and sub-tasks partition the flat array', ({ expect }) => {
-    const parent = Task.make({ title: 'Parent' });
-    const child = Task.make({ title: 'Child', parentTask: Ref.make(parent) });
-    const grandchild = Task.make({ title: 'Grandchild', parentTask: Ref.make(child) });
-    const tasks = [parent, child, grandchild];
+  test("roots and sub-tasks partition the list, sub-tasks in their parent's order", ({ expect }) => {
+    const grandchild = node('Grandchild');
+    const second = node('Second');
+    const child = node('Child', [grandchild]);
+    const parent = node('Parent', [second, child]);
+    const tasks = [parent, child, grandchild, second];
 
+    expect(Task.getParentTask(child)?.id).toBe(parent.id);
     expect(Task.rootTasks(tasks).map((task) => task.title)).toEqual(['Parent']);
-    expect(Task.subTasks(tasks, parent).map((task) => task.title)).toEqual(['Child']);
+    expect(Task.subTasks(tasks, parent).map((task) => task.title)).toEqual(['Second', 'Child']);
     expect(Task.subTasks(tasks, child).map((task) => task.title)).toEqual(['Grandchild']);
+    expect(Task.orderTree(tasks, [Ref.make(parent)]).map((task) => task.title)).toEqual([
+      'Parent',
+      'Second',
+      'Child',
+      'Grandchild',
+    ]);
   });
 
   test('a task whose parent is absent reads as a root rather than vanishing', ({ expect }) => {
-    const absent = Task.make({ title: 'Absent' });
-    const orphan = Task.make({ title: 'Orphan', parentTask: Ref.make(absent) });
+    const orphan = node('Orphan');
+    node('Absent', [orphan]);
 
     expect(Task.rootTasks([orphan]).map((task) => task.title)).toEqual(['Orphan']);
+  });
+
+  test('the parent edge wins over a stale entry in another list', ({ expect }) => {
+    const child = node('Child');
+    const stale = node('Stale', [child]);
+    const owner = node('Owner', [child]);
+    // A move writes the edge itself; the stale list keeps its entry, as after a concurrent move.
+    Obj.setParent(child, owner);
+
+    expect(Task.getParentTask(child)?.id).toBe(owner.id);
+    expect(Task.subTasks([stale, owner, child], stale)).toEqual([]);
+    expect(Task.subTasks([stale, owner, child], owner).map((task) => task.title)).toEqual(['Child']);
   });
 
   test('sub-tasks inherit the nearest ancestor milestone, and an own milestone overrides', ({ expect }) => {
     const first = Milestone.make({ name: 'First' });
     const second = Milestone.make({ name: 'Second' });
-    const parent = Task.make({ title: 'Parent', milestone: Ref.make(first) });
-    const inherits = Task.make({ title: 'Inherits', parentTask: Ref.make(parent) });
-    const overrides = Task.make({ title: 'Overrides', parentTask: Ref.make(parent), milestone: Ref.make(second) });
-    const deep = Task.make({ title: 'Deep', parentTask: Ref.make(inherits) });
+    const deep = node('Deep');
+    const inherits = node('Inherits', [deep]);
+    const overrides = node('Overrides', [], { milestone: Ref.make(second) });
+    const parent = node('Parent', [inherits, overrides], { milestone: Ref.make(first) });
     const backlog = Task.make({ title: 'Backlog' });
     const tasks = [parent, inherits, overrides, deep, backlog];
 
@@ -50,14 +78,19 @@ describe('Task derived views', () => {
     expect(Task.backlogTasks(tasks).map((task) => task.title)).toEqual(['Backlog']);
   });
 
-  test('a parentTask cycle terminates instead of hanging', ({ expect }) => {
-    const first = Task.make({ title: 'First' });
-    const second = Task.make({ title: 'Second', parentTask: Ref.make(first) });
-    Obj.update(first, (first) => {
-      first.parentTask = Ref.make(second);
+  test('a parent cycle terminates instead of hanging', ({ expect }) => {
+    const second = node('Second');
+    const first = node('First', [second]);
+    Obj.update(second, (second) => {
+      second.subtasks?.push(Ref.make(first));
     });
 
     expect(Task.backlogTasks([first, second]).map((task) => task.title)).toEqual(['First', 'Second']);
+    expect(
+      Task.orderTree([first, second], [])
+        .map((task) => task.title)
+        .sort(),
+    ).toEqual(['First', 'Second']);
   });
 
   test('progress counts done over non-cancelled, so a milestone cannot disagree with its tasks', ({ expect }) => {
@@ -97,10 +130,10 @@ describe('Task derived views', () => {
   });
 
   test('subtree walks descendants within the list, and stops at what the list holds', ({ expect }) => {
-    const root = Task.make({ title: 'Root' });
-    const child = Task.make({ title: 'Child', parentTask: Ref.make(root) });
-    const grandchild = Task.make({ title: 'Grandchild', parentTask: Ref.make(child) });
-    const sibling = Task.make({ title: 'Sibling' });
+    const grandchild = node('Grandchild');
+    const child = node('Child', [grandchild]);
+    const root = node('Root', [child]);
+    const sibling = node('Sibling');
 
     expect(Task.subtree([root, child, grandchild, sibling], root).map((task) => task.title)).toEqual([
       'Root',
@@ -134,16 +167,38 @@ describe('collectSubtree', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('reaches a sub-task no list holds, since the walk goes through the reverse-ref index', () =>
+  it.effect('reaches a sub-task only its parent edge records, since that is what a delete cascades along', () =>
     Effect.gen(function* () {
       const { root } = yield* seedTree();
-      const stray = yield* Database.add(Task.make({ title: 'stray', status: 'todo', parentTask: Ref.make(root) }));
+      const stray = yield* Database.add(Task.make({ [Obj.Parent]: root, title: 'stray', status: 'todo' }));
       yield* Database.flush();
 
       const subtree = yield* Task.collectSubtree(root);
 
       expect(subtree.map((task) => task.id)).toContain(stray.id);
       expect(Task.subtree([root], root).map((task) => task.id)).toEqual([root.id]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('collectRoot', () => {
+  it.effect('walks parents up to the top of the tree', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* seedTree();
+
+      expect((yield* Task.collectRoot(grandchild)).id).toBe(root.id);
+      expect((yield* Task.collectRoot(child)).id).toBe(root.id);
+      expect((yield* Task.collectRoot(root)).id).toBe(root.id);
+      expect((yield* Task.collectTree(grandchild)).map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('reads the parent edge synchronously, so there is no load to time out and misplace a PR', () =>
+    Effect.gen(function* () {
+      const { root, grandchild } = yield* seedTree();
+
+      // No Database service and no async boundary: the walk cannot stop early on a slow load.
+      expect(Effect.runSync(Task.collectRoot(grandchild)).id).toBe(root.id);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -193,7 +248,7 @@ describe('completion', () => {
       expect(unreviewed.status).toEqual('done');
 
       // The log records the transition that happened, not the one that was asked for.
-      expect(reviewed.history?.at(-1)?.description).toEqual('Status changed from started to review.');
+      expect(changes(reviewed).at(-1)?.description).toEqual('Status changed from started to review.');
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -252,6 +307,37 @@ describe('completion', () => {
       // Idempotent: a session that files the same object twice must not double it.
       expect(task.artifacts).toHaveLength(1);
       expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('owns its attachments, once per file, until detached', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Fix the layout' }));
+      const file = yield* File.fromBytes(new Uint8Array([1, 2, 3]), { name: 'screenshot.png', type: 'image/png' });
+      yield* Database.add(file);
+      yield* Database.flush();
+
+      const entry = Task.addAttachment(task, file, { actor: { name: 'Rich', role: 'user' } });
+      expect(Task.addAttachment(task, file)).toBeUndefined();
+      yield* Database.flush();
+
+      expect(task.attachments).toHaveLength(1);
+      expect(entry?.description).toEqual('Attached "screenshot.png".');
+      expect(changes(task).map(({ description }) => description)).toEqual(['Attached "screenshot.png".']);
+      expect(changes(task)[0].actor?.name).toEqual('Rich');
+      expect(Task.refEntityId(task.attachments?.[0])).toEqual(file.id);
+      // Owned, so deleting the task deletes what was attached to it.
+      expect(Obj.getParent(file)).toBe(task);
+
+      const [ref] = task.attachments ?? [];
+      Task.removeAttachment(task, ref);
+      expect(Task.removeAttachment(task, ref)).toBeUndefined();
+      yield* Database.flush();
+      expect(task.attachments).toHaveLength(0);
+      expect(changes(task).map(({ description }) => description)).toEqual([
+        'Attached "screenshot.png".',
+        'Removed attachment "screenshot.png".',
+      ]);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -324,7 +410,51 @@ describe('mutations', () => {
 
       expect(task.assignee).toBeUndefined();
       expect(task.estimate).toBeUndefined();
-      expect(task.history?.map((entry) => entry.description)).toEqual(['Unassigned.', 'Estimate cleared.']);
+      expect(changes(task).map((entry) => entry.description)).toEqual(['Unassigned.', 'Estimate cleared.']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('edits the text without narrating it', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      // The text is edited by typing, and every blur commits: a log of "Description updated." buries
+      // the entries a reader opens the history for.
+      const entry = Task.update(task, { title: 'Draft the launch email', description: 'Send it Friday.' });
+      yield* Database.flush();
+
+      expect(entry).toBeUndefined();
+      expect(task.history).toBeUndefined();
+      expect(task.title).toEqual('Draft the launch email');
+      expect(task.description).toEqual('Send it Friday.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('narrates the work an edit changed, not the text beside it', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      const entry = Task.update(task, { title: 'Draft the launch email', status: 'started' });
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Status changed from todo to started.');
+      expect(task.history).toHaveLength(1);
+      expect(task.title).toEqual('Draft the launch email');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('records a caller that has something to say about a silent edit', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      const entry = Task.update(task, { description: 'Send it Friday.' }, { description: 'Scope agreed in standup.' });
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Scope agreed in standup.');
+      expect(task.history).toHaveLength(1);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -338,7 +468,7 @@ describe('mutations', () => {
 
       // No prior status, so the note states the value rather than inventing a transition.
       expect(task.history?.[0].event).toEqual('updated');
-      expect(task.history?.[0].description).toEqual('Status set to started.');
+      expect(changes(task)[0]?.description).toEqual('Status set to started.');
       expect(task.history?.[0].date).toEqual('2026-08-01T10:00:00.000Z');
     }).pipe(Effect.provide(testLayer())),
   );
@@ -351,7 +481,14 @@ describe('history', () => {
         Task.make({
           title: 'Draft launch email',
           status: 'todo',
-          history: [{ date: '2026-08-01T09:00:00.000Z', event: 'created', description: 'Task created.' }],
+          history: [
+            {
+              id: EntityId.random(),
+              date: '2026-08-01T09:00:00.000Z',
+              event: 'created',
+              description: 'Task created.',
+            },
+          ],
         }),
       );
       yield* Database.flush();
@@ -361,6 +498,7 @@ describe('history', () => {
       Obj.update(task, (task) => {
         task.history ??= [];
         task.history.push({
+          id: EntityId.random(),
           date: '2026-08-02T10:30:00.000Z',
           actor: { name: 'Scout', role: 'assistant' },
           event: 'updated',
@@ -371,23 +509,98 @@ describe('history', () => {
 
       expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'updated']);
       expect(task.history?.[1].actor?.name).toEqual('Scout');
-      expect(task.history?.[1].description).toEqual('Status changed from todo to done.');
+      expect(changes(task)[1]?.description).toEqual('Status changed from todo to done.');
       // The actor is optional: something the system did on its own has none.
       expect(task.history?.[0].actor).toBeUndefined();
     }).pipe(Effect.provide(testLayer())),
   );
 });
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task] });
+const testLayer = () => TestDatabaseLayer({ types: [Blob.Blob, File.File, Milestone.Milestone, Task.Task] });
 
 const seedTree = () =>
   Effect.gen(function* () {
-    const root = yield* Database.add(Task.make({ title: 'root', status: 'todo' }));
-    const child = yield* Database.add(Task.make({ title: 'child', status: 'todo', parentTask: Ref.make(root) }));
-    const grandchild = yield* Database.add(
-      Task.make({ title: 'grandchild', status: 'todo', parentTask: Ref.make(child) }),
-    );
+    const grandchild = yield* Database.add(Task.make({ title: 'grandchild', status: 'todo' }));
+    const child = yield* Database.add(node('child', [grandchild], { status: 'todo' }));
+    const root = yield* Database.add(node('root', [child], { status: 'todo' }));
     const sibling = yield* Database.add(Task.make({ title: 'sibling', status: 'todo' }));
     yield* Database.flush();
     return { root, child, grandchild, sibling };
   });
+
+describe('legacy history', () => {
+  it.effect('loads change entries logged before entries carried ids', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({
+          title: 'Draft launch email',
+          history: [{ date: '2026-08-01T09:00:00.000Z', event: 'created', description: 'Task created.' }],
+        }),
+      );
+      yield* Database.flush();
+
+      Task.setStatus(task, 'started');
+      yield* Database.flush();
+
+      expect(changes(task).map(({ event }) => event)).toEqual(['created', 'updated']);
+      expect(changes(task)[0].id).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('questions', () => {
+  it.effect('pairs an answer with the question it names', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft refund policy', status: 'started' }));
+      yield* Database.flush();
+
+      const question = Task.ask(task, {
+        text: '  What is our refund window?  ',
+        context: 'The policy needs a number.',
+        options: [{ title: '30 days' }, { title: '60 days', description: 'Matches the competition.' }],
+      });
+      expect(Task.getPendingQuestions(task.history).map(({ id }) => id)).toEqual([question.id]);
+      expect(question.text).toEqual('What is our refund window?');
+
+      const answer = Task.answer(task, question.id, ' 60 days ', { actor: { name: 'Rich' } });
+      yield* Database.flush();
+
+      expect(answer?.questionId).toEqual(question.id);
+      expect(answer?.answer).toEqual('60 days');
+      expect(task.history?.map((entry) => entry.event)).toEqual(['question', 'answer']);
+      expect(Task.getPendingQuestions(task.history)).toHaveLength(0);
+      expect(Task.getQuestions(task.history)[0].answer?.id).toEqual(answer?.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('takes an actor the task already holds as its assignee', () =>
+    Effect.gen(function* () {
+      const agent = { role: 'assistant' as const, name: 'Scout' };
+      const task = yield* Database.add(Task.make({ title: 'Draft refund policy', assignee: agent }));
+      yield* Database.flush();
+
+      // The same record as the assignee: ECHO refuses to own one record twice, so the log keeps a copy.
+      Task.ask(task, { text: 'Which one?', actor: task.assignee });
+      Task.setStatus(task, 'blocked', { actor: task.assignee });
+      yield* Database.flush();
+
+      expect(task.history?.map((entry) => entry.actor?.name)).toEqual(['Scout', 'Scout']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('refuses a blank, unknown or second answer, writing nothing', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft refund policy' }));
+      yield* Database.flush();
+
+      const question = Task.ask(task, { text: 'Which one?' });
+      expect(Task.answer(task, question.id, '   ')).toBeUndefined();
+      expect(Task.answer(task, EntityId.random(), 'Either')).toBeUndefined();
+      expect(Task.answer(task, question.id, 'The first')).toBeDefined();
+      expect(Task.answer(task, question.id, 'The second')).toBeUndefined();
+      yield* Database.flush();
+
+      expect(task.history?.map((entry) => entry.event)).toEqual(['question', 'answer']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});

@@ -6,11 +6,13 @@
 // Renders the diagram corpus (`docs/diagrams/*.mmd`) headlessly through the SVG variant, writing a
 // standalone `.svg` beside each source, and prints the Tier-1 report per diagram. With
 // `--scoreboard` it prints the Tier-2 table instead (every flowchart strategy × soft metrics).
-// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard]` (vite-node; bun cannot load elkjs).
+// Passing `.mmd` paths renders just those files instead of the corpus; `--layering down` (or a comma list of
+// `down`, `up`, `free`) restricts the candidate layerings the engine chooses among.
+// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (vite-node; bun cannot load elkjs).
 //
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -37,8 +39,19 @@ const STYLE = `
   .stroke-neutral-800 { stroke: #262626; }
   svg { --surface-bg: #ffffff; }
   .text-neutral-400 { color: #a3a3a3; }
+  .text-sky-500 { color: #0ea5e9; }
+  .text-emerald-500 { color: #10b981; }
+  .text-amber-500 { color: #f59e0b; }
+  .text-violet-500 { color: #8b5cf6; }
+  .text-orange-500 { color: #f97316; }
+  .text-rose-500 { color: #f43f5e; }
   .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
 `;
+
+const layeringArg = process.argv[process.argv.indexOf('--layering') + 1];
+const LAYERING = process.argv.includes('--layering')
+  ? layeringArg.split(',').filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value))
+  : undefined;
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
@@ -59,10 +72,19 @@ const toSvg = (objects: readonly Scene.WorldObject[]): string => {
     .replace('<defs>', `<style>${STYLE}</style><defs>`);
 };
 
-const sources = readdirSync(DIAGRAMS)
-  .filter((file) => file.endsWith('.mmd'))
-  .sort()
-  .map((file) => ({ name: basename(file, '.mmd'), source: readFileSync(join(DIAGRAMS, file), 'utf8') }));
+const files = process.argv.slice(2).filter((arg) => arg.endsWith('.mmd'));
+const paths =
+  files.length > 0
+    ? files.map((file) => resolve(file))
+    : readdirSync(DIAGRAMS)
+        .filter((file) => file.endsWith('.mmd'))
+        .sort()
+        .map((file) => join(DIAGRAMS, file));
+const sources = paths.map((path) => ({
+  name: basename(path, '.mmd'),
+  source: readFileSync(path, 'utf8'),
+  svgPath: path.replace(/\.mmd$/, '.svg'),
+}));
 
 if (process.argv.includes('--scoreboard')) {
   const rows: Record<string, Record<string, string>> = {};
@@ -81,10 +103,10 @@ if (process.argv.includes('--scoreboard')) {
   console.table(rows);
 } else {
   let failed = false;
-  for (const { name, source } of sources) {
-    const objects = objectsOf(await MermaidEngine.compile(source));
+  for (const { name, source, svgPath } of sources) {
+    const objects = objectsOf(await MermaidEngine.compile(source, LAYERING ? { layering: LAYERING } : {}));
     const report = Diagnostics.analyze(objects);
-    writeFileSync(join(DIAGRAMS, `${name}.svg`), toSvg(objects));
+    writeFileSync(svgPath, toSvg(objects));
     const { crossings, bends, nodes, connectors } = report.metrics;
     console.log(`${name}: ${nodes} nodes, ${connectors} connectors, ${crossings} crossings, ${bends} bends`);
     for (const diagnostic of report.diagnostics) {

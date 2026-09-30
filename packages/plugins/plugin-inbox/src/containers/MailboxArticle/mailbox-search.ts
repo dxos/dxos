@@ -34,6 +34,10 @@ const collectRootTagUris = (ast: QueryAST.Filter): string[] => {
   }
 };
 
+/** Whether the filter is nothing but root tag terms (`#a`, `#a #b`), which resolve wholly to ids. */
+const isTagsOnly = (ast: QueryAST.Filter): boolean =>
+  ast.type === 'tag' || (ast.type === 'and' && ast.filters.every(isTagsOnly));
+
 /** The root-level tag uris of a parsed filter — the tags {@link buildMailboxSelection} can resolve to member ids. */
 export const getFilterTagUris = (filter: Filter.Any | undefined): string[] =>
   filter ? collectRootTagUris(filter.ast) : [];
@@ -41,8 +45,8 @@ export const getFilterTagUris = (filter: Filter.Any | undefined): string[] =>
 export type MailboxSelectionOptions = {
   /**
    * Member ids for a tag uri, from the mailbox's `TagIndex` — feed messages carry no `meta.tags` of
-   * their own, so a tag term can only scope a text search by becoming an id selection. Returning
-   * undefined drops that tag term.
+   * their own, so a tag term can only select them by becoming an id selection. Returning undefined
+   * drops that tag term.
    */
   resolveTagIds?: (tagUri: string) => readonly EntityId[] | undefined;
 };
@@ -52,7 +56,8 @@ export type MailboxSelectionOptions = {
  * what qualify a thread for the list (see {@link buildThreadSemiJoin}).
  *
  * Free text composes with the message type and, via {@link MailboxSelectionOptions.resolveTagIds},
- * with the members of any root tag terms, so a term typed inside a tag view searches within it.
+ * with the members of any root tag terms, so a term typed inside a tag view searches within it; tag
+ * terms alone select their members the same way.
  * Other structural terms are still dropped from a mixed query (predicate search is tracked in
  * plugin-search TASKS.md).
  */
@@ -65,26 +70,39 @@ export const buildMailboxSelection = (
   if (filterText.trim().length === 0 || !filter) {
     return base;
   }
+  const members = resolveTagMembers(filter, options);
   const textSearch = findTextSearch(filter.ast);
   if (textSearch) {
     const text = Filter.text(textSearch.text, { type: 'full-text' });
-    const idSets = collectRootTagUris(filter.ast)
-      .map((tagUri) => options?.resolveTagIds?.(tagUri))
-      .filter(isNonNullable);
-    if (idSets.length === 0) {
-      return Filter.and(base, text);
-    }
-    // Set membership per list, not `includes`: a system tag's membership runs to the whole mailbox,
-    // and this intersects on every debounced keystroke.
-    const [first, ...rest] = idSets;
-    const memberIds = rest.reduce<readonly EntityId[]>((acc, ids) => {
-      const candidates = new Set(ids);
-      return acc.filter((id) => candidates.has(id));
-    }, first);
-    // `Filter.id()` of an empty intersection is `Filter.nothing()`: a tag with no members matches nothing.
-    return Filter.and(base, Filter.id(...memberIds), text);
+    return members ? Filter.and(base, members, text) : Filter.and(base, text);
+  }
+  // A bare `Filter.tag` never matches a feed message, so tag-only input must select by member id.
+  if (members && isTagsOnly(filter.ast)) {
+    return Filter.and(base, members);
   }
   return Filter.and(base, filter);
+};
+
+/**
+ * The id selection for the filter's root tag terms, intersected across tags, or undefined when none
+ * resolve. `Filter.id()` of an empty intersection is `Filter.nothing()`: a tag with no members matches
+ * nothing.
+ */
+const resolveTagMembers = (filter: Filter.Any, options?: MailboxSelectionOptions): Filter.Any | undefined => {
+  const idSets = collectRootTagUris(filter.ast)
+    .map((tagUri) => options?.resolveTagIds?.(tagUri))
+    .filter(isNonNullable);
+  if (idSets.length === 0) {
+    return undefined;
+  }
+  // Set membership per list, not `includes`: a system tag's membership runs to the whole mailbox,
+  // and this intersects on every debounced keystroke.
+  const [first, ...rest] = idSets;
+  const memberIds = rest.reduce<readonly EntityId[]>((acc, ids) => {
+    const candidates = new Set(ids);
+    return acc.filter((id) => candidates.has(id));
+  }, first);
+  return Filter.id(...memberIds);
 };
 
 /** The free-text term from a parsed filter (the first text-search node), or undefined. */

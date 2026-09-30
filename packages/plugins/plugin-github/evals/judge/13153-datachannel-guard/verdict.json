@@ -1,0 +1,38 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 5,
+    "trust": 5,
+    "reasons": {
+      "order": "Intro states the bug and fix, the second section explains the guard mechanism, and the third covers the regression test that proves it, a clean core-then-consequence progression.",
+      "why": "It explains that `Blob.arrayBuffer()` is the only await on the path and that the fix re-reads `duplex` after it rather than trusting the pre-await reference, giving the constraint the change satisfies.",
+      "load": "Short, precise sentences with terms introduced before use; a reviewer follows it in one pass.",
+      "trust": "Every claim, the `if (!duplex) return` re-check, the comment's own wording about the only await, and the test's dispose-then-resolve sequence, is directly visible in diff.patch, and it does not assert anything about how `duplex` gets cleared that the shown hunk does not support."
+    }
+  },
+  "B": {
+    "order": 4,
+    "why": 5,
+    "load": 4,
+    "trust": 4,
+    "reasons": {
+      "order": "Four sections move from symptom to the await's role to the fix's re-check to the test, each adding a layer rather than restating the last.",
+      "why": "It goes deepest on the constraint, noting the blob read is \"the only point in the message handler where control yields back to the event loop\" and that everything else runs synchronously against the bound `duplex`, which is the real reason a stale reference becomes a bug.",
+      "load": "The extra section and longer sentences (e.g. the synchronous-handler claim) ask more of the reader than A or C before the payoff lands.",
+      "trust": "The synchronicity claim about \"everything else in the handler\" is a reasonable but unverified generalization beyond the few lines shown in diff.patch, since the rest of the handler body is not in the diff."
+    }
+  },
+  "C": {
+    "order": 4,
+    "why": 4,
+    "load": 5,
+    "trust": 4,
+    "reasons": {
+      "order": "Intro, mechanism, then test follows the same sound core-first progression as A.",
+      "why": "It states the constraint plainly: `duplex` is closure-captured and disposal during the suspended await clears the binding the handler still holds, motivating the re-check.",
+      "load": "Concise and sequential, easy to follow in one pass.",
+      "trust": "The specific claim that disposal \"clears the binding\" describes a `dispose()` implementation that is not part of this diff (only rtc-data-channel.ts's message handler and the test are shown), so it asserts a mechanism the patch does not directly evidence."
+    }
+  }
+}

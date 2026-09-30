@@ -183,7 +183,7 @@ const summarize = Effect.fnUntraced(function* (
   });
   reportStatus({ current: 0, total: batch.length });
 
-  const modelLayer = AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
+  const modelLayer = AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
   let summarized_ = 0;
   for (const thread of batch) {
     if (signal.aborted) {
@@ -213,7 +213,9 @@ const summarize = Effect.fnUntraced(function* (
     );
     if (text.length > 0) {
       const target = Mailbox.findOrCreateAnnotations(mailbox, db);
-      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]);
+      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]).pipe(
+        Effect.provideService(Database.Origin, 'system'),
+      );
       summarized_ += 1;
     }
     reportStatus({ current: summarized_, message: stringProperty(subject, 'subject') });

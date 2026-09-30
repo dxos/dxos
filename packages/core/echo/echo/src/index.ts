@@ -8,6 +8,7 @@ export { DXN, EID, URI } from '@dxos/keys';
 export * as Aggregate from './Aggregate.ts';
 export * as Annotation from './Annotation.ts';
 export * as Blob from './Blob.ts';
+export * as Change from './Change.ts';
 export * as Database from './Database.ts';
 export * as Entity from './Entity.ts';
 export * as Error from './Error.ts';

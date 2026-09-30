@@ -16,7 +16,7 @@ import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } 
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.PluginManager,
       Capabilities.OperationInvoker,
@@ -45,7 +45,7 @@ export const InvocationListener = Capability.lazyModule(
 export const PrivacyNotice = Capability.lazyModule(
   'PrivacyNotice',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.OperationInvoker,
       Capabilities.AtomRegistry,
@@ -62,7 +62,7 @@ export const PrivacyNotice = Capability.lazyModule(
 export const PrivacyBanner = Capability.lazyModule(
   'PrivacyBanner',
   {
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
     requires: [ObservabilityCapabilities.Namespace],
     provides: [],
     activatesOn: ObservabilityEvents.IdentityCreatedEvent,
@@ -74,7 +74,7 @@ export const Commands = AppCapability.commands(() => import('#commands'));
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -83,7 +83,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -100,12 +100,12 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 });
 export const ObservabilitySettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [ObservabilityCapabilities.Settings],
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [Capabilities.AtomRegistry],
     provides: [ObservabilityCapabilities.State],
     props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),

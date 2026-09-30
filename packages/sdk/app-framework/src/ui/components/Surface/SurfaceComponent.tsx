@@ -186,7 +186,9 @@ const SurfaceContextProvider = memo(
 
     // Dev builds wrap every surface in `<dx-surface>` for DOM inspection / `window.__DX__`; the
     // `__DX_DEBUG__` flag separately gates the visual highlight overlay (see SurfaceDebug).
-    if (isSurfaceWrapperEnabled()) {
+    // A profiler provider (the devtools plugin) needs the wrapper in production too: its Surfaces card
+    // and highlight overlay read the mount registry the wrapper populates.
+    if (isSurfaceWrapperEnabled() || onProfilerRender) {
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>

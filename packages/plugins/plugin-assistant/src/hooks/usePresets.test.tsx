@@ -30,8 +30,8 @@ describe('usePresets', () => {
     <PluginManagerProvider value={pluginManager}>{children}</PluginManagerProvider>
   );
 
-  // The selection round-trips through `Chat.model`, so it only moves if the ref read back out of the
-  // object still carries its URI — the defect that left the picker showing the fallback forever.
+  // The selection round-trips through `Chat.session`, so it only moves if what is read back out of the
+  // object still carries the model — the defect that left the picker showing the fallback forever.
   test('picking a preset moves the selection', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());

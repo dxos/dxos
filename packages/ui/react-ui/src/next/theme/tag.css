@@ -1,0 +1,124 @@
+/*
+ * Tag: a small pill one control inset shorter than a control, coloured by ui-theme's per-hue role tokens. The hue
+ * rules also colour a Button with `hue` (`--nx-hue-bg`/`-fg`, read in `control.css`) and an Icon with `hue` (its
+ * foreground only, e.g. a Select option's icon).
+ */
+
+@layer dx-components {
+  .nx-tag {
+    --nx-hue-bg: var(--color-neutral-surface);
+    --nx-hue-fg: var(--color-neutral-fg);
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    flex-shrink: 0;
+    max-width: 100%;
+    height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
+    padding-inline: var(--nx-gap-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    align-self: center;
+    background: var(--nx-hue-bg);
+    color: var(--nx-hue-fg);
+  }
+  .nx-tag .nx-icon {
+    width: calc(var(--nx-icon-size) * 0.75);
+    height: calc(var(--nx-icon-size) * 0.75);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='red'] {
+    --nx-hue-bg: var(--color-red-surface);
+    --nx-hue-fg: var(--color-red-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='orange'] {
+    --nx-hue-bg: var(--color-orange-surface);
+    --nx-hue-fg: var(--color-orange-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='amber'] {
+    --nx-hue-bg: var(--color-amber-surface);
+    --nx-hue-fg: var(--color-amber-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='yellow'] {
+    --nx-hue-bg: var(--color-yellow-surface);
+    --nx-hue-fg: var(--color-yellow-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='lime'] {
+    --nx-hue-bg: var(--color-lime-surface);
+    --nx-hue-fg: var(--color-lime-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='green'] {
+    --nx-hue-bg: var(--color-green-surface);
+    --nx-hue-fg: var(--color-green-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='emerald'] {
+    --nx-hue-bg: var(--color-emerald-surface);
+    --nx-hue-fg: var(--color-emerald-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='teal'] {
+    --nx-hue-bg: var(--color-teal-surface);
+    --nx-hue-fg: var(--color-teal-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='cyan'] {
+    --nx-hue-bg: var(--color-cyan-surface);
+    --nx-hue-fg: var(--color-cyan-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='sky'] {
+    --nx-hue-bg: var(--color-sky-surface);
+    --nx-hue-fg: var(--color-sky-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='blue'] {
+    --nx-hue-bg: var(--color-blue-surface);
+    --nx-hue-fg: var(--color-blue-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='indigo'] {
+    --nx-hue-bg: var(--color-indigo-surface);
+    --nx-hue-fg: var(--color-indigo-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='violet'] {
+    --nx-hue-bg: var(--color-violet-surface);
+    --nx-hue-fg: var(--color-violet-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='purple'] {
+    --nx-hue-bg: var(--color-purple-surface);
+    --nx-hue-fg: var(--color-purple-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='fuchsia'] {
+    --nx-hue-bg: var(--color-fuchsia-surface);
+    --nx-hue-fg: var(--color-fuchsia-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='pink'] {
+    --nx-hue-bg: var(--color-pink-surface);
+    --nx-hue-fg: var(--color-pink-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='rose'] {
+    --nx-hue-bg: var(--color-rose-surface);
+    --nx-hue-fg: var(--color-rose-fg);
+  }
+  /* Valences reuse the hues the current `Tag` maps them to. */
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='info'] {
+    --nx-hue-bg: var(--color-cyan-surface);
+    --nx-hue-fg: var(--color-cyan-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='success'] {
+    --nx-hue-bg: var(--color-emerald-surface);
+    --nx-hue-fg: var(--color-emerald-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='warning'] {
+    --nx-hue-bg: var(--color-amber-surface);
+    --nx-hue-fg: var(--color-amber-fg);
+  }
+  :is(.nx-tag, .nx-button, .nx-icon)[data-hue='error'] {
+    --nx-hue-bg: var(--color-rose-surface);
+    --nx-hue-fg: var(--color-rose-fg);
+  }
+
+  .nx-icon[data-hue] {
+    color: var(--nx-hue-fg);
+  }
+}

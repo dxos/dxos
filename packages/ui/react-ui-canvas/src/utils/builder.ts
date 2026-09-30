@@ -8,7 +8,16 @@
 // fixtures, stories and tests read like a diagram description instead of a record dump.
 //
 
-import { type Endpoint, type Link, type Node, type Point, type Scene, type SceneId } from '../model/types.ts';
+import {
+  type BuiltinNode,
+  type Endpoint,
+  type Link,
+  type LinkEnds,
+  type Node,
+  type Point,
+  type Scene,
+  type SceneId,
+} from '../model/types.ts';
 import { initialKeys } from './order.ts';
 
 /** Top-left box geometry; the builder stores the centre. */
@@ -16,16 +25,22 @@ export type Box = { x: number; y: number; width: number; height: number };
 
 const center = ({ x, y, width, height }: Box): Point => ({ x: x + width / 2, y: y + height / 2 });
 
-/** `node` or `node#port`. */
+/** `node`, `node#port`, or a free end `@x,y`. */
 const endpoint = (ref: string): Endpoint => {
+  if (ref.startsWith('@')) {
+    const [x, y] = ref.slice(1).split(',').map(Number);
+    return { point: { x, y } };
+  }
   const [node, port] = ref.split('#');
   return port ? { node, port } : { node };
 };
 
+export type LinkOptions = { directed?: boolean; ends?: LinkEnds };
+
 /** `Omit` over each member of a union, not over their intersection. */
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
-type Pending = { node?: DistributiveOmit<Node, 'z'>; link?: DistributiveOmit<Link, 'z'> };
+type Pending = { node?: DistributiveOmit<BuiltinNode, 'z'>; link?: DistributiveOmit<Link, 'z'> };
 
 export class SceneBuilder {
   static create(id: SceneId, name?: string): SceneBuilder {
@@ -46,7 +61,13 @@ export class SceneBuilder {
   }
 
   ellipse(id: string, box: Box, label?: string): this {
-    return this.#node({ type: 'ellipse', id, center: center(box), rx: box.width / 2, ry: box.height / 2, label });
+    return this.#node({
+      type: 'ellipse',
+      id,
+      center: center(box),
+      size: { width: box.width, height: box.height },
+      label,
+    });
   }
 
   class(id: string, box: Box, name: string, attributes: string[] = [], methods: string[] = []): this {
@@ -62,7 +83,7 @@ export class SceneBuilder {
   }
 
   text(id: string, box: Box, text: string): this {
-    return this.#node({ type: 'text', id, center: center(box), size: { width: box.width, height: box.height }, text });
+    return this.#node({ type: 'note', id, center: center(box), size: { width: box.width, height: box.height }, text });
   }
 
   /** A portal to `scene`; its size fixes the frame the child is centred in. */
@@ -76,16 +97,21 @@ export class SceneBuilder {
     });
   }
 
-  line(id: string, from: string, to: string): this {
-    return this.#link({ type: 'line', id, source: endpoint(from), target: endpoint(to) });
+  line(id: string, from: string, to: string, options: LinkOptions = {}): this {
+    return this.#link({ type: 'line', id, source: endpoint(from), target: endpoint(to), ...options });
   }
 
-  curve(id: string, from: string, to: string): this {
-    return this.#link({ type: 'curve', id, source: endpoint(from), target: endpoint(to) });
+  curve(id: string, from: string, to: string, options: LinkOptions = {}): this {
+    return this.#link({ type: 'curve', id, source: endpoint(from), target: endpoint(to), ...options });
   }
 
-  spline(id: string, from: string, to: string, points: Point[]): this {
-    return this.#link({ type: 'spline', id, source: endpoint(from), target: endpoint(to), points });
+  spline(id: string, from: string, to: string, points: Point[], options: LinkOptions = {}): this {
+    return this.#link({ type: 'spline', id, source: endpoint(from), target: endpoint(to), points, ...options });
+  }
+
+  /** A routed link: it stores no geometry, so its path follows its ports as the nodes move. */
+  smart(id: string, from: string, to: string, options: LinkOptions = {}): this {
+    return this.#link({ type: 'smart', id, source: endpoint(from), target: endpoint(to), ...options });
   }
 
   /** Nodes and links in call order, each with its own z key. */
@@ -104,7 +130,7 @@ export class SceneBuilder {
     return { id: this.#id, name: this.#name, nodes, links };
   }
 
-  #node(node: DistributiveOmit<Node, 'z'>): this {
+  #node(node: DistributiveOmit<BuiltinNode, 'z'>): this {
     this.#elements.push({ node });
     return this;
   }

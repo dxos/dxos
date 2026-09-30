@@ -748,8 +748,13 @@ describe('Worker displacement', () => {
     // Tab 4's worker, queued behind the wedged incumbent and escalating once its grace expires.
     const successor = startBareWorker(keys.storageLockKey, { displaceGraceTimeout: 50 });
     await asyncTimeout(wedgeable.terminated, 10_000);
-    // The successor taking the lock is proof every tab has seen and settled the escalation.
     await asyncTimeout(successor.listening, 10_000);
+    // The successor's lock is causally downstream of the incumbent's tab alone; the broadcast reaches
+    // each bystander on its own schedule, so each one's verdict is awaited rather than assumed.
+    await waitForCondition({
+      condition: () => bystanders.every((bystander) => bystander.wasProbed() || bystander.wasTerminated()),
+      timeout: 10_000,
+    });
 
     for (const bystander of bystanders) {
       expect(bystander.wasTerminated()).to.be.false;
@@ -798,6 +803,53 @@ describe('Worker displacement', () => {
     const reported = entries.filter((entry) => entry.error instanceof WorkerTerminationError);
     expect(reported).toHaveLength(1);
     expect(diagnosticsOf(reported[0].error)).to.deep.contain({ issuerId: 'well-formed-issuer' });
+  }, 30_000);
+
+  test('a self-issued escalation is ignored by the tab that owns the issuing worker', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const wedgeable = createWedgeableWorkerFactory(keys.storageLockKey);
+    const { connection, connected } = makeConnection(hub, keys, undefined, { createWorker: wedgeable.createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(connected, 5_000);
+    // Wedged, so the liveness and probe checks both say "kill": only the issuer check stands between
+    // this escalation and the worker.
+    wedgeable.wedge();
+    const ownWorkerId = wedgeable.workerId();
+    invariant(ownWorkerId, 'the worker advertises its id in `ready`');
+
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const removeProcessor = log.addProcessor(processor);
+    onTestFinished(removeProcessor);
+
+    const peer = new BroadcastChannel(displaceChannelFor(keys.storageLockKey));
+    onTestFinished(() => peer.close());
+    peer.postMessage({
+      action: 'terminate',
+      issuerId: ownWorkerId,
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+    });
+    // The kill this one causes names its issuer, so a kill caused by the self-issued message above
+    // shows up with the wrong one; without it, "nothing happened" could not be told from "not yet".
+    peer.postMessage({
+      action: 'terminate',
+      issuerId: 'another-worker',
+      storageLockKey: keys.storageLockKey,
+      graceTimeout: 50,
+    });
+    await asyncTimeout(wedgeable.terminated, 10_000);
+
+    const reported = entries.filter((entry) => entry.error instanceof WorkerTerminationError);
+    expect(reported).toHaveLength(1);
+    expect(diagnosticsOf(reported[0].error)).to.deep.contain({ issuerId: 'another-worker' });
   }, 30_000);
 
   test('a wedged worker behind a handle that cannot be terminated is reported, not silently skipped', async () => {
@@ -920,9 +972,6 @@ describe('Worker displacement', () => {
  * Runs the real worker loop over a MessageChannel with no tab attached, exposing the two protocol
  * milestones the displacement handshake turns on: `listening` (this worker holds the storage lock
  * and serves) and the endpoint closing (it stood down).
- *
- * Built directly rather than through {@link createWorkerFactory}: a successor built by that factory
- * has its escalation reach only the incumbent's tab, which disarms the bystander assertions below.
  */
 const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { displaceGraceTimeout?: number } = {}) => {
   const channel = new MessageChannel();
@@ -975,6 +1024,8 @@ const createWedgeableWorkerFactory = (storageLockKey: string, { terminable = tru
       handle.wedge();
     },
     terminated: terminated.wait(),
+    /** The id the worker advertised in `ready`; undefined until it has. */
+    workerId: () => handle?.workerId,
   };
 };
 
@@ -998,6 +1049,7 @@ const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string
   });
   const ready = new Trigger();
   let terminated = false;
+  let probed = false;
 
   const createWorker = () => {
     const channel = new MessageChannel();
@@ -1017,6 +1069,7 @@ const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string
           ready.wake();
           break;
         case 'ping':
+          probed = true;
           channel.port1.postMessage({
             type: 'pong',
             nonce: message.nonce,
@@ -1049,5 +1102,7 @@ const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string
     },
     /** Whether this tab killed its own worker, which only the incumbent's tab may do. */
     wasTerminated: () => terminated,
+    /** Whether this tab probed its worker, which it does only on an escalation it could not rule out. */
+    wasProbed: () => probed,
   };
 };

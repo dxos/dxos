@@ -10,9 +10,10 @@ import { evalite } from 'evalite';
 import { Model } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { McpServer, PlanningSkill } from '@dxos/assistant-toolkit';
+import { PlanningSkill } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { EDGE_URLS } from '@dxos/config';
@@ -30,7 +31,7 @@ import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as SandboxOperation from '@dxos/plugin-sandbox/SandboxOperation';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { type Actor, File, Task } from '@dxos/types';
+import { type Actor, File, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type ToolInvocation, findObject } from '../assertions.ts';
@@ -225,21 +226,20 @@ const checklist = Scorer.shared(
     if (!taskSet) {
       return empty;
     }
-    const tasks = yield* Effect.forEach(taskSet.tasks, (ref) =>
-      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-    );
+    // The whole tree: the delegated stages are sub-tasks, which `taskSet.tasks` does not list.
+    const tasks = yield* TaskSet.loadTasks(taskSet);
     const delegated = DELEGATED_STAGES.map((title) => tasks.find((candidate) => candidate?.title === title));
     return {
       delegated,
       readerSteps: tasks.filter((candidate) => candidate?.assignee?.role === 'user'),
       later: tasks.filter((candidate) => {
-        const parentTask = candidate?.parentTask;
+        const parentTask = candidate ? Task.getParentTask(candidate) : undefined;
         return (
           parentTask !== undefined &&
           candidate?.assignee?.role !== 'assistant' &&
           candidate?.assignee?.role !== 'user' &&
           !DELEGATED_STAGES.includes(candidate?.title ?? '') &&
-          !delegated.some((stage) => stage && Task.refEntityId(parentTask) === stage.id)
+          !delegated.some((stage) => stage && parentTask.id === stage.id)
         );
       }),
     };
@@ -409,7 +409,7 @@ const task = createEvalRunner({
         return yield* Effect.fail(new EvalRunError({ message: 'The template did not produce the project.' }));
       }
       const taskSet = yield* Database.load(project.taskSet);
-      const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
+      const tasks = yield* TaskSet.loadTasks(taskSet);
       const stages = DELEGATED_STAGES.map((title) => tasks.find((task) => task.title === title)).filter(
         (stage): stage is Task.Task => stage !== undefined,
       );

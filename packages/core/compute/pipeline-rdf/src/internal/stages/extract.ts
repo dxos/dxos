@@ -237,9 +237,9 @@ const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.model(options?.model ?? DEFAULT_MODEL);
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL);
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.model(options.model ?? DEFAULT_MODEL, { provider });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider });
 };

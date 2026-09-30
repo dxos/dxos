@@ -237,8 +237,6 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Composer version: $version (env=$ENVIRONMENT)"
 
-  # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
-  # don't each rebuild it.
   build-bundle:
     needs: [plan, release, version]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.version.result == 'success' }}
@@ -286,7 +284,6 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
 
-      # Build only — the artifact is deployed by `deploy` and embedded by the tauri jobs.
       - name: Build Composer bundle
         run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV" composer
         env:
@@ -401,6 +398,11 @@ jobs:
         run: .github/workflows/scripts/deploy-env.mjs "$DEPLOY_ENV" "$DEPLOY_APP"
         env:
           NODE_ENV: production
+          # Asset retention (upload-assets.mjs) signs against R2's S3 endpoint, which needs an R2 API
+          # token rather than the Workers one — Cloudflare's REST API rate-limits far below the ~7,600
+          # objects a build uploads.
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 
       # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). Every env
       # tags each app it deployed — per-app even for `all`, so an individual redeploy (hotfix) moves only

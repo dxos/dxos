@@ -15,7 +15,7 @@ import { keyToFallback } from '@dxos/util';
 import { profileString } from '../../util/index.ts';
 
 type IdentityListItemProps = {
-  identity: Identity;
+  identity: Pick<Identity, 'identityKey' | 'profile'>;
   presence?: SpaceMember['presence'];
   onClick?: () => void;
 };

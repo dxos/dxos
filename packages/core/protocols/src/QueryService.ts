@@ -96,6 +96,11 @@ export const QueryResult = Schema.Struct({
    * serialized group key.
    */
   aggregates: Schema.optional(Schema.String),
+  /**
+   * JSON-encoded plain record for a result that is not an entity (an Automerge change selected by
+   * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
+   */
+  recordJson: Schema.optional(Schema.String),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 

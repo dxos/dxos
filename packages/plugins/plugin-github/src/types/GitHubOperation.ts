@@ -15,6 +15,7 @@ import { Database, DXN, Obj, Ref } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as PageAction from '@dxos/plugin-crx/PageAction';
 import { PullRequest } from '@dxos/types';
 
 import * as Walkthrough from './Walkthrough.ts';
@@ -124,6 +125,31 @@ export const ImportPullRequest = Operation.make({
 }).pipe(Operation.visible, Operation.mutation('write'));
 
 /**
+ * Import the pull request the browser extension is looking at, named by the page's own URL.
+ *
+ * Separate from {@link ImportPullRequest} because the extension bridge invokes every page action
+ * with the fixed `{ snapshot, target }` shape and reads an `{ id }` back. Nothing is extracted from
+ * the page: the URL in the snapshot's source names the pull request, and GitHub is the authority on
+ * everything else.
+ */
+export const ImportPullRequestFromSnapshot = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.importPullRequestFromSnapshot'),
+    name: 'Open pull request in Composer',
+    description: "Import the pull request a browser page shows, named by that page's URL.",
+    icon: 'ph--git-pull-request--regular',
+  },
+  input: Schema.Struct({
+    snapshot: PageAction.Snapshot,
+    target: Database.Database.annotate({ description: 'The database to add the pull request to.' }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String,
+  }),
+  types: [PullRequest.PullRequest],
+}).pipe(Operation.mutation('write'));
+
+/**
  * Generate a walkthrough of a pull request: one markdown document narrating the change in reading
  * order, with its diff chunks spliced in from the patch itself.
  *
@@ -156,12 +182,18 @@ export const GenerateWalkthrough = Operation.make({
   services: [Trace.TraceService, AiService.AiService],
 }).pipe(Operation.visible);
 
-/** Submit an approving review on a pull request, as the space's GitHub connection. */
+/**
+ * Submit an approving review on a pull request, as the space's GitHub connection.
+ *
+ * Falls back to a marked conversation comment where GitHub refuses the review — the author's own
+ * pull request, or a token with no review permission — so the approval is still recorded and still
+ * detectable by an agent deciding whether the pull request is good to land.
+ */
 export const SubmitPullRequestApproval = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.submitPullRequestApproval'),
     name: 'Submit Pull Request Approval',
-    description: 'Submit an approving review on a pull request.',
+    description: 'Submit an approving review on a pull request, or record the approval as a comment.',
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
@@ -170,7 +202,13 @@ export const SubmitPullRequestApproval = Operation.make({
     body: Schema.String.pipe(Schema.optional),
   }),
   output: Schema.Struct({
-    reviewId: Schema.Number,
+    /** Set where the approving review was accepted. */
+    reviewId: Schema.Number.pipe(Schema.optional),
+    /** Set instead where the approval was recorded as a comment. */
+    commentId: Schema.Number.pipe(Schema.optional),
+    url: Schema.String.pipe(Schema.optional),
+    /** Whether the approval is a comment rather than a review. */
+    commented: Schema.Boolean,
   }),
   types: [PullRequest.PullRequest],
 });
@@ -231,6 +269,23 @@ export const CheckCounts = Schema.Struct({
 });
 export interface CheckCounts extends Schema.Schema.Type<typeof CheckCounts> {}
 
+/** How one check run ended, folded to what a reader acts on; `skipped` is neither passing nor failing. */
+export const CheckOutcome = Schema.Literals(['success', 'failure', 'pending', 'skipped', 'neutral']);
+export type CheckOutcome = Schema.Schema.Type<typeof CheckOutcome>;
+
+/** One check run on the head commit, as the article lists it. */
+export const CheckRun = Schema.Struct({
+  name: Schema.String,
+  outcome: CheckOutcome,
+  /** GitHub's own `conclusion` (`timed_out`, `cancelled`, …), kept for the label when it says more than the outcome. */
+  conclusion: Schema.String.pipe(Schema.optional),
+  /** Where the run's logs live: the provider's page when it has one, else GitHub's. */
+  url: Schema.String.pipe(Schema.optional),
+  startedAt: Schema.String.pipe(Schema.optional),
+  completedAt: Schema.String.pipe(Schema.optional),
+});
+export interface CheckRun extends Schema.Schema.Type<typeof CheckRun> {}
+
 /** Read a pull request's live state and the CI outcome of its head commit from GitHub. */
 export const GetPullRequestStatus = Operation.make({
   meta: {
@@ -246,8 +301,32 @@ export const GetPullRequestStatus = Operation.make({
     state: PullRequest.State,
     title: Schema.String,
     commit: Schema.String.pipe(Schema.optional),
+    /** The live description, which may have changed since the pull request was imported. */
+    body: Schema.String.pipe(Schema.optional),
     ci: CiState,
     checks: CheckCounts,
+    runs: Schema.Array(CheckRun),
+  }),
+  types: [PullRequest.PullRequest],
+});
+
+/**
+ * Read a pull request's whole change as a unified diff, with the head commit it was taken at so a
+ * line comment on it anchors to the lines the reader saw.
+ */
+export const GetPullRequestDiff = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.getPullRequestDiff'),
+    name: 'Get Pull Request Diff',
+    description: "Read a pull request's changed files as a unified diff.",
+    icon: 'ph--git-diff--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+  }),
+  output: Schema.Struct({
+    commit: Schema.String.pipe(Schema.optional),
+    diff: Schema.String,
   }),
   types: [PullRequest.PullRequest],
 });

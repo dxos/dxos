@@ -152,3 +152,36 @@ export const RootFields: Story = {
     await expect(body?.className).toContain('border');
   },
 };
+
+/** Sections split a settings panel into titled blocks of free content, inset to the panel title's edge. */
+export const Sections: Story = {
+  render: () => (
+    <Form.Root variant='settings'>
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet label='Manage members' description='Current members and pending invitations.'>
+            <Form.FieldSet appearance='section' label='Members'>
+              <p>Alice, Bob</p>
+            </Form.FieldSet>
+            <Form.FieldSet appearance='section' label='Invitations' description='Manage invitations.'>
+              <Button>Invite</Button>
+            </Form.FieldSet>
+          </Form.FieldSet>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = canvas.getByRole('heading', { name: 'Manage members' });
+    const members = canvas.getByRole('group', { name: 'Members' });
+    // A section is named by a heading, not boxed, and its title starts where the panel title does.
+    const heading = within(members).getByRole('heading', { name: 'Members' });
+    await expect(heading.tagName).toBe('H3');
+    await expect(members.querySelector('.border')).toBeNull();
+    const textLeft = (element: HTMLElement) =>
+      element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingLeft);
+    await expect(textLeft(heading)).toBe(textLeft(panel));
+    await expect(canvas.getByRole('group', { name: 'Invitations' })).toHaveTextContent('Manage invitations.');
+  },
+};

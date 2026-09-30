@@ -8,10 +8,10 @@ import { Cdp, browserEndpoint } from './cdp.ts';
 
 /**
  * Fixed rather than ephemeral, matching `scripts/memory/measure.mjs`: the port is also how that
- * script's `ps` filter finds the browser pid, and a run is serial so there is nothing to collide
- * with.
+ * script's `ps` filter finds the browser pid. `DX_PERF_DEBUG_PORT` moves it for a machine where
+ * another worktree is measuring at the same time.
  */
-export const DEBUG_PORT = 9333;
+export const DEBUG_PORT = Number.parseInt(process.env.DX_PERF_DEBUG_PORT ?? '', 10) || 9333;
 
 export type InstrumentedBrowser = {
   browser: Browser;
@@ -40,6 +40,9 @@ export const launchInstrumentedBrowser = async (): Promise<InstrumentedBrowser> 
     ...(sandboxProxy ? { executablePath: '/opt/pw-browsers/chromium' } : {}),
     args: [
       `--remote-debugging-port=${DEBUG_PORT}`,
+      // V8 flags for an experiment (`DX_PERF_JS_FLAGS='--max-semi-space-size=1'`); a run with them is
+      // not comparable to one without.
+      ...(process.env.DX_PERF_JS_FLAGS ? [`--js-flags=${process.env.DX_PERF_JS_FLAGS}`] : []),
       ...(sandboxProxy
         ? [
             '--no-sandbox',

@@ -17,6 +17,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./LocalUpload": {
+      "source": "./src/LocalUpload.ts",
+      "types": "./dist/types/src/LocalUpload.d.ts",
+      "import": "./dist/lib/LocalUpload.mjs"
+    },
     "./McpServer": {
       "source": "./src/McpServer.ts",
       "types": "./dist/types/src/McpServer.d.ts",
@@ -33,6 +38,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

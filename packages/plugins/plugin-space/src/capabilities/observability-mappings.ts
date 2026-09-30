@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ObservabilityMapping from '@dxos/app-toolkit/ObservabilityMapping';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 import { MigrationVersionAnnotation } from '@dxos/migrations';
 
 import { SpaceOperation } from '#types';
@@ -33,40 +33,12 @@ export default Capability.makeModule(
     return [
       Capability.contribute(AppCapabilities.ObservabilityMapping, [
         ObservabilityMapping.make({
-          operation: SpaceOperation.Create,
-          event: 'space.create',
-          properties: (_input, output) => ({ spaceId: output.space.id }),
-        }),
-        ObservabilityMapping.make({
-          operation: SpaceOperation.Share,
-          event: 'space.share',
-          properties: (input) => ({ spaceId: input.space.id }),
-        }),
-        ObservabilityMapping.make({
           operation: SpaceOperation.Migrate,
           event: 'space.migrate',
           properties: (input) => ({
             spaceId: input.space.id,
             targetVersion: input.version,
             version: Annotation.get(input.space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined),
-          }),
-        }),
-        ObservabilityMapping.make({
-          operation: SpaceOperation.AddObject,
-          event: 'space.object.add',
-          properties: (_input, output) => ({
-            spaceId: Obj.getDatabase(output.object)?.spaceId,
-            objectId: output.object.id,
-            typename: Obj.getTypename(output.object),
-          }),
-        }),
-        ObservabilityMapping.make({
-          operation: SpaceOperation.AddType,
-          event: 'space.type.add',
-          properties: (_input, output) => ({
-            spaceId: Obj.getDatabase(output.object)?.spaceId,
-            objectId: output.object.id,
-            typename: Type.getTypename(output.object),
           }),
         }),
       ]),

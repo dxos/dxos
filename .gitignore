@@ -170,6 +170,11 @@ packages/sdk/observability/src/cli-observability-secrets.json
 heap-samples.ndjson
 profiles/
 
+# Memory-harness results. Both scripts hardcode their output next to themselves, so a
+# re-run overwrites whatever a previous run left; nothing reads either file.
+packages/apps/composer-app/scripts/memory/boot-census.json
+packages/apps/composer-app/scripts/memory/soak-run.json
+
 # Debug logging for require hooks
 .trace-compiled
 
@@ -189,10 +194,11 @@ build
 
 # Credentials the user hands to an agent for a task (see AGENTS.md "Handing an agent a
 # credential"). Ignored at every depth. An ignore rule is default exclusion, NOT enforcement:
-# `git add -f` still stages these, and a path already in the index stays tracked.
-.secrets
-.secrets/
-**/.secrets/
+# `git add -f` still stages these, and a path already in the index stays tracked. The contents
+# are ignored rather than the directory, so its `.gitkeep` can be tracked and the directory exists
+# in every checkout.
+**/.secrets/*
+!**/.secrets/.gitkeep
 
 # Custom git hooks
 .husky/post-applypatch

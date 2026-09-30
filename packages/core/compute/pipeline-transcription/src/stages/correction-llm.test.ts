@@ -15,14 +15,17 @@ import { correctWithLanguageModel } from './correction-llm.ts';
 
 /** Minimal `AiService` whose `generateObject` returns a fixed payload (no network). */
 const mockAiService = (object: unknown): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, {
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed({ text: '', content: [] }),
-        generateObject: () => Effect.succeed({ value: object, content: [] }),
-        streamText: () => Stream.empty,
-      } as any),
-  } as any);
+  Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      languageModel: () =>
+        Layer.succeed(LanguageModel.LanguageModel, {
+          generateText: () => Effect.succeed({ text: '', content: [] }),
+          generateObject: () => Effect.succeed({ value: object, content: [] }),
+          streamText: () => Stream.empty,
+        } as any),
+    }) as any,
+  );
 
 describe('correctWithLanguageModel', () => {
   test('maps the model output to per-block corrections', async ({ expect }) => {

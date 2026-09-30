@@ -861,6 +861,27 @@ describe('ManagerImpl', () => {
     );
 
     it.effect(
+      'a finished process is released, leaving its summary in processTree and nothing in the registry',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const monitor = yield* Process.ProcessMonitorService;
+        const registry = yield* Registry.AtomRegistry;
+
+        const handle = yield* manager.spawn(makeWaitingExecutable());
+        yield* handle.terminate();
+
+        const tree = yield* monitor.processTree;
+        expect(tree.map((info) => [info.pid, info.state])).toEqual([[handle.pid, Process.State.TERMINATED]]);
+        const attached = yield* manager.attach(handle.pid).pipe(Effect.exit);
+        expect(Exit.isFailure(attached)).toBe(true);
+
+        yield* Effect.promise(() => new Promise<void>((resolve) => setImmediate(resolve)));
+        expect(registry.getNodes().has(handle.statusAtom)).toBe(false);
+        expect(registry.get(handle.statusAtom).state).toEqual(Process.State.TERMINATED);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
       'processTree records parentPid for child processes',
       Effect.fn(function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
@@ -1357,7 +1378,34 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     output: Schema.Struct({ childSpaceId: Schema.String }),
   });
 
+  // Operation that reports the database origin its handler runs under, and one that asks a child for it.
+  const OriginOp = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.invoker.origin'), name: 'Origin' },
+    input: Schema.Void,
+    output: Schema.Struct({ origin: Schema.optional(Schema.String) }),
+  });
+  const ParentOriginOp = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.invoker.parentOrigin'), name: 'Parent origin' },
+    input: Schema.Void,
+    output: Schema.Struct({ origin: Schema.optional(Schema.String), childOrigin: Schema.optional(Schema.String) }),
+  });
+
   const inheritanceHandlers = OperationHandlerSet.make(
+    OriginOp.pipe(
+      Operation.withHandler(
+        Effect.fn(function* () {
+          return { origin: yield* Database.Origin };
+        }),
+      ),
+    ),
+    ParentOriginOp.pipe(
+      Operation.withHandler(
+        Effect.fn(function* () {
+          const child = yield* Operation.invoke(OriginOp, undefined);
+          return { origin: yield* Database.Origin, childOrigin: child.origin };
+        }),
+      ),
+    ),
     ChildOp.pipe(
       Operation.withHandler(
         Effect.fn(function* () {
@@ -1413,20 +1461,26 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     }),
   );
 
-  const InheritanceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
-    Layer.provideMerge(RemoteProcessManager.layerNoop),
-    Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-    Layer.provideMerge(SpaceAwareResolverLayer),
-    Layer.provideMerge(
-      TestDatabaseLayer({
-        types: [Organization.Organization],
-      }),
-    ),
-    Layer.provide(KeyValueStore.layerMemory),
-    Layer.provide(OperationHandlerSet.provide(inheritanceHandlers)),
-    Layer.provideMerge(Registry.layer),
-    Layer.provide(Trace.layerNoop),
+  const makeInheritanceTestLayer = (invokerLayer: typeof ProcessManager.ProcessOperationInvoker.layer) =>
+    Layer.mergeAll(invokerLayer, ProcessMonitor.layer).pipe(
+      Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+      Layer.provideMerge(RemoteProcessManager.layerNoop),
+      Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+      Layer.provideMerge(SpaceAwareResolverLayer),
+      Layer.provideMerge(
+        TestDatabaseLayer({
+          types: [Organization.Organization],
+        }),
+      ),
+      Layer.provide(KeyValueStore.layerMemory),
+      Layer.provide(OperationHandlerSet.provide(inheritanceHandlers)),
+      Layer.provideMerge(Registry.layer),
+      Layer.provide(Trace.layerNoop),
+    );
+  const InheritanceTestLayer = makeInheritanceTestLayer(ProcessManager.ProcessOperationInvoker.layer);
+  // What an app host does for its own invoker: operations it invokes are the person's actions.
+  const UserInvokerTestLayer = makeInheritanceTestLayer(
+    ProcessManager.ProcessOperationInvoker.layer.pipe(Layer.provide(Layer.succeed(Database.Origin, 'user'))),
   );
 
   it.effect(
@@ -1494,7 +1548,6 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const { db } = yield* Database.Service;
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const monitor = yield* Process.ProcessMonitorService;
-      const manager = yield* ProcessManager.Service;
 
       const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 
@@ -1505,17 +1558,47 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       );
       yield* fiber.await;
 
-      // The parent op spawns the child via Operation.invoke; locate the
-      // child's handle through the process tree and assert its environment
-      // carries both inherited fields.
       const tree = yield* monitor.processTree;
       const childInfo = tree.find((node) => node.parentPid === fiber.pid);
       if (!childInfo) {
         throw new Error('child process not present in process tree');
       }
-      const childHandle = yield* manager.attach(childInfo.pid);
-      expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
+      expect(childInfo.environment).toEqual({ space: db.spaceId, conversation });
     }, Effect.provide(InheritanceTestLayer)),
+  );
+
+  it.effect(
+    'processes serving a conversation, and their children, attribute database writes to the system',
+    Effect.fn(function* ({ expect }) {
+      const { db } = yield* Database.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
+
+      const agent = yield* invoker.invokeFiber(ParentOriginOp, undefined, {
+        environment: { space: db.spaceId, conversation },
+      });
+      const unlabeled = yield* invoker.invokeFiber(ParentOriginOp, undefined, { environment: { space: db.spaceId } });
+
+      expect(yield* agent.await.pipe(Effect.flatten)).toEqual({ origin: 'system', childOrigin: 'system' });
+      expect(yield* unlabeled.await.pipe(Effect.flatten)).toEqual({ origin: undefined, childOrigin: undefined });
+    }, Effect.provide(InheritanceTestLayer)),
+  );
+
+  it.effect(
+    'an invoker built under an origin attributes the processes it spawns, and their children, to it',
+    Effect.fn(function* ({ expect }) {
+      const { db } = yield* Database.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
+
+      const user = yield* invoker.invokeFiber(ParentOriginOp, undefined, { environment: { space: db.spaceId } });
+      const agent = yield* invoker.invokeFiber(ParentOriginOp, undefined, {
+        environment: { space: db.spaceId, conversation },
+      });
+
+      expect(yield* user.await.pipe(Effect.flatten)).toEqual({ origin: 'user', childOrigin: 'user' });
+      expect(yield* agent.await.pipe(Effect.flatten)).toEqual({ origin: 'system', childOrigin: 'system' });
+    }, Effect.provide(UserInvokerTestLayer)),
   );
 });
 
@@ -1757,6 +1840,40 @@ describe('reentrancy', () => {
       expect(firstIncarnation.aborted).toBe(false);
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'a rehydrated process keeps the origin it was spawned with',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const seen: (Database.Origin | undefined)[] = [];
+      const executable = Process.make(
+        { key: 'test.origin-rehydrate', input: Schema.Number, output: Schema.Void, services: [] },
+        () =>
+          Effect.succeed({
+            onSpawn: () => Effect.void,
+            onInput: () =>
+              Effect.gen(function* () {
+                seen.push(yield* Database.Origin);
+              }),
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+      );
+
+      const handle = yield* manager.spawn(executable, { origin: 'user' });
+      yield* handle.submitInput(1);
+      yield* handle.runToCompletion();
+
+      yield* manager.shutdown();
+      yield* manager.startup();
+      const dormant = yield* manager.list({ key: executable.key });
+      const restored = yield* dormant[0].hydrate(executable);
+      yield* restored.submitInput(2);
+      yield* restored.runToCompletion();
+
+      expect(seen).toEqual(['user', 'user']);
+    }, Effect.provide(TestLayer)),
+  );
 });
 
 describe('durability', () => {
@@ -1767,7 +1884,7 @@ describe('durability', () => {
     handlerSet: OperationHandlerSet.OperationHandlerSet;
     traceSink: Trace.Sink;
   }) =>
-    new ProcessManager.ProcessManagerImpl({
+    new ProcessManager.Impl({
       registry: deps.registry,
       kvStore: deps.kv,
       traceSink: deps.traceSink,

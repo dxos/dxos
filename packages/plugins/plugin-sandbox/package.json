@@ -18,12 +18,23 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
+    },
+    "#local-backend": {
+      "source": {
+        "node": "./src/local/index.ts",
+        "default": "./src/local/unsupported.ts"
+      },
+      "types": "./dist/types/src/local/index.d.ts",
+      "node": "./dist/lib/local-backend.node.mjs",
+      "default": "./dist/lib/local-backend.browser.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
@@ -73,6 +84,26 @@
       "source": "./src/types/SandboxOperation.ts",
       "types": "./dist/types/src/types/SandboxOperation.d.ts",
       "import": "./dist/lib/SandboxOperation.mjs"
+    },
+    "./SandboxService": {
+      "source": "./src/types/SandboxService.ts",
+      "types": "./dist/types/src/types/SandboxService.d.ts",
+      "import": "./dist/lib/SandboxService.mjs"
+    },
+    "./SandboxCapabilities": {
+      "source": "./src/types/SandboxCapabilities.ts",
+      "types": "./dist/types/src/types/SandboxCapabilities.d.ts",
+      "import": "./dist/lib/SandboxCapabilities.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./HttpBackend": {
+      "source": "./src/services/HttpBackend.ts",
+      "types": "./dist/types/src/services/HttpBackend.d.ts",
+      "import": "./dist/lib/HttpBackend.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -86,6 +117,18 @@
       ],
       "SandboxOperation": [
         "dist/types/src/types/SandboxOperation.d.ts"
+      ],
+      "SandboxService": [
+        "dist/types/src/types/SandboxService.d.ts"
+      ],
+      "SandboxCapabilities": [
+        "dist/types/src/types/SandboxCapabilities.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "HttpBackend": [
+        "dist/types/src/services/HttpBackend.d.ts"
       ]
     }
   },
@@ -96,24 +139,27 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@carderne/sandbox-runtime": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@tauri-apps/plugin-shell": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"

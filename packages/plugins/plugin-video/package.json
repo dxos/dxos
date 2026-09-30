@@ -18,12 +18,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -74,11 +76,6 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
-    "./Video": {
-      "source": "./src/types/Video.ts",
-      "types": "./dist/types/src/types/Video.d.ts",
-      "import": "./dist/lib/Video.mjs"
-    },
     "./VideoEvents": {
       "source": "./src/types/VideoEvents.ts",
       "types": "./dist/types/src/types/VideoEvents.d.ts",
@@ -98,9 +95,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Video": [
-        "dist/types/src/types/Video.d.ts"
-      ],
       "VideoEvents": [
         "dist/types/src/types/VideoEvents.d.ts"
       ],
@@ -137,6 +131,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

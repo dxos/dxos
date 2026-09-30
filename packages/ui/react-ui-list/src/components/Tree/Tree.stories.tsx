@@ -8,12 +8,12 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { raise } from '@dxos/debug';
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { Path } from '../../util/index.ts';
 import { type TestItem, createTree, updateState } from './testing.ts';
@@ -27,29 +27,93 @@ const tree = createTree();
 const groupsTree = createTree(4, 4, { groups: true });
 // Three childless nodes the story still presents as branches (a folder with nothing in it).
 const emptyTree = createTree(3, 1);
+// Flat and long, which is the shape `virtualize` is for.
+const longTree = createTree(120, 1);
+const branchTree = createTree(30, 2);
+// Windowed with everything at once: two sections inside the first branch, levels of different
+// sizes, and one item under two branches.
+const shared = createTree(1, 0);
+const featuresTree = createTree(25, 1);
+featuresTree.items[0].items = [0, 1].map(() => ({ ...createTree(10, 1), disposition: 'group', icon: undefined }));
+featuresTree.items[1].items = [shared, createTree(1, 0)];
+featuresTree.items[2].items = [shared];
 
 const DefaultStory = ({
   draggable,
   groups,
   emptyBranches,
+  unselectableBranches,
+  disabledRows,
+  selectionMode = 'single',
+  virtualize,
+  branches,
+  features,
+  indentGuides,
+  compact,
+  openDepth = 0,
+  onItemHover,
 }: {
   draggable?: boolean;
   groups?: boolean;
   /** Present childless nodes as branches, as a model does for an empty folder. */
   emptyBranches?: boolean;
+  unselectableBranches?: boolean;
+  /** Disable the first row, as a model does for one nothing can be done with yet. */
+  disabledRows?: boolean;
+  selectionMode?: 'single' | 'multiple';
+  /** Render a long list in a short scroller, windowed to what is in view. */
+  virtualize?: boolean;
+  branches?: boolean;
+  features?: boolean;
+  /** Draw a guide line down each open branch's children. */
+  indentGuides?: boolean;
+  /** Half the indent per level. */
+  compact?: boolean;
+  /** Opens this many levels down the first branch at each depth, so a story shows nesting without a click. */
+  openDepth?: number;
+  onItemHover?: (params: { item: TestItem }) => void;
 }) => {
-  const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
+  const rootTree = virtualize
+    ? features
+      ? featuresTree
+      : branches
+        ? branchTree
+        : longTree
+    : emptyBranches
+      ? emptyTree
+      : groups
+        ? groupsTree
+        : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
-  const getOrCreateStateAtom = useCallback((pathKey: string) => {
-    let atom = stateAtomsRef.current.get(pathKey);
-    if (!atom) {
-      atom = Atom.make({ open: false, current: false }).pipe(Atom.keepAlive);
-      stateAtomsRef.current.set(pathKey, atom);
+  // The first branch at each level, `openDepth` deep, keyed as the tree keys a row: its path from the tree id.
+  const initiallyOpen = useMemo(() => {
+    const keys = new Set<string>();
+    const path = [rootTree.id];
+    let item: TestItem | undefined = rootTree;
+    for (let depth = 0; depth < openDepth; depth++) {
+      item = item?.items?.find((child) => (child.items?.length ?? 0) > 0);
+      if (!item) {
+        break;
+      }
+      path.push(item.id);
+      keys.add(Path.create(...path));
     }
-    return atom;
-  }, []);
+    return keys;
+  }, [rootTree, openDepth]);
+
+  const getOrCreateStateAtom = useCallback(
+    (pathKey: string) => {
+      let atom = stateAtomsRef.current.get(pathKey);
+      if (!atom) {
+        atom = Atom.make({ open: initiallyOpen.has(pathKey), current: false }).pipe(Atom.keepAlive);
+        stateAtomsRef.current.set(pathKey, atom);
+      }
+      return atom;
+    },
+    [initiallyOpen],
+  );
 
   // Build a lookup map of all items by ID.
   const itemMap = useMemo(() => {
@@ -109,6 +173,7 @@ const DefaultStory = ({
             label: parent.name,
             icon: parent.icon,
             disposition: parent.disposition,
+            disabled: disabledRows && id === rootTree.items?.[0]?.id,
             ...(((parent.items?.length ?? 0) > 0 || emptyBranches) && {
               parentOf: parent.items!.map(({ id }) => id),
               count: parent.items!.length,
@@ -118,7 +183,7 @@ const DefaultStory = ({
           };
         }).pipe(Atom.keepAlive);
       }),
-    [itemMap, emptyBranches],
+    [itemMap, emptyBranches, disabledRows, rootTree],
   );
 
   const itemOpenFamily = useMemo(
@@ -160,14 +225,34 @@ const DefaultStory = ({
     [getOrCreateStateAtom, registry],
   );
 
-  const handleSelect = useCallback(
-    ({ path: pathProp, current }: { path: string[]; current: boolean }) => {
-      const path = Path.create(...pathProp);
-      const atom = getOrCreateStateAtom(path);
-      const prev = registry.get(atom);
-      registry.set(atom, { ...prev, current });
+  const setCurrent = useCallback(
+    (pathKey: string, current: boolean) => {
+      const atom = getOrCreateStateAtom(pathKey);
+      registry.set(atom, { ...registry.get(atom), current });
     },
     [getOrCreateStateAtom, registry],
+  );
+
+  const currentPathsRef = useRef(new Set<string>());
+  const handleSelect = useCallback(
+    ({ path: pathProp, current, meta }: { path: string[]; current: boolean; meta: boolean }) => {
+      const path = Path.create(...pathProp);
+      if (current && (selectionMode === 'single' || !meta)) {
+        currentPathsRef.current.forEach((previous) => previous !== path && setCurrent(previous, false));
+        currentPathsRef.current = new Set([path]);
+      } else if (current) {
+        currentPathsRef.current.add(path);
+      } else {
+        currentPathsRef.current.delete(path);
+      }
+      setCurrent(path, current);
+    },
+    [selectionMode, setCurrent],
+  );
+
+  const handleCanSelect = useCallback(
+    ({ item }: { item: TestItem }) => !unselectableBranches || (item.items?.length ?? 0) === 0,
+    [unselectableBranches],
   );
 
   useEffect(() => {
@@ -207,20 +292,36 @@ const DefaultStory = ({
     });
   }, [rootTree, childIdsFamily, registry]);
 
-  return (
+  const subject = (
     <Tree
       model={model}
       id={rootTree.id}
       rootId={rootTree.id}
       draggable={draggable}
+      selectionMode={selectionMode}
+      canSelect={handleCanSelect}
+      virtualize={virtualize}
+      dropAtEnd={features}
+      indentGuides={indentGuides}
+      compact={compact}
       renderColumns={() => (
         <div className='flex items-center'>
           <Icon icon='ph--circle-dashed--regular' />
         </div>
       )}
       onOpenChange={handleOpenChange}
+      onItemHover={onItemHover}
       onSelect={handleSelect}
     />
+  );
+
+  // A scroller short enough that most of the list is off screen, which is what the observer reads.
+  return virtualize ? (
+    <div data-testid='tree.scroller' className='h-[240px] overflow-y-auto'>
+      {subject}
+    </div>
+  ) : (
+    subject
   );
 };
 
@@ -242,6 +343,16 @@ export const Draggable: Story = {
   args: {
     draggable: true,
   },
+};
+
+/** Guides down each open branch, under its own chevron; each child's chevron is centred under its parent's icon. */
+export const WithIndent: Story = {
+  args: { indentGuides: true, openDepth: 2 },
+};
+
+/** Half the indent per level, as the navtree uses; the guides keep depth readable. */
+export const Compact: Story = {
+  args: { compact: true, indentGuides: true, openDepth: 2 },
 };
 
 export const WithGroups: Story = {
@@ -271,5 +382,366 @@ export const EmptyBranch: Story = {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(branch).toHaveAttribute('data-state', 'closed');
     await expect(tree.getBoundingClientRect().height).toBe(height);
+  },
+};
+
+/** A native drag fires no mouseenter, so entering a row mid-drag runs the hover prefetch instead. */
+export const DragEnterPrefetches: Story = {
+  args: { draggable: true, onItemHover: fn() },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const [source, target] = Array.from(canvasElement.querySelectorAll<HTMLElement>('[draggable="true"]'));
+    const drag = (element: HTMLElement, type: string, dataTransfer: DataTransfer) => {
+      const { x, y, width, height } = element.getBoundingClientRect();
+      element.dispatchEvent(
+        new DragEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer,
+          clientX: x + width / 2,
+          clientY: y + height / 2,
+        }),
+      );
+    };
+
+    const dataTransfer = new DataTransfer();
+    drag(source, 'dragstart', dataTransfer);
+    try {
+      drag(target, 'dragenter', dataTransfer);
+      drag(target, 'dragover', dataTransfer);
+      await waitFor(() =>
+        expect(args.onItemHover).toHaveBeenCalledWith({
+          item: expect.objectContaining({ id: target.getAttribute('data-object-id') }),
+        }),
+      );
+    } finally {
+      drag(source, 'dragend', dataTransfer);
+    }
+  },
+};
+
+export const UnselectableBranches: Story = {
+  args: { draggable: true, unselectableBranches: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [branch] = await canvas.findAllByRole('button', { expanded: false });
+
+    await userEvent.click(branch);
+    await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+    await expect(branch).not.toHaveAttribute('data-selected');
+
+    await userEvent.click(branch);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(branch.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+  },
+};
+
+export const Collapse: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const [toggle] = await canvas.findAllByTestId('treeItem.toggle');
+    const branch = toggle.closest('[data-part="branch"]')!;
+    const height = () => branch.querySelector('[data-part="branch-content"]')?.getBoundingClientRect().height ?? 0;
+
+    const chevron = () => getComputedStyle(toggle.querySelector('svg')!);
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+    await waitFor(() => expect(chevron().rotate).toBe('90deg'));
+    await expect(chevron().transitionDelay).toBe('0s');
+
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(height()).toBeGreaterThan(0);
+    await expect(chevron().transitionDelay).toBe('0.2s');
+    await waitFor(() => expect(height()).toBe(0));
+    await waitFor(() => expect(chevron().rotate).not.toBe('90deg'));
+
+    await userEvent.click(toggle);
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+    toggle.click();
+    toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(height()).toBeGreaterThan(0));
+  },
+};
+
+/** The element under `root` matching `selector`, failing the play when it is missing. */
+const queryPart = (root: Element | null, selector: string): HTMLElement =>
+  root?.querySelector<HTMLElement>(selector) ?? raise(new Error(`Missing ${selector}`));
+
+const expectBlockAlignment = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  await canvas.findByRole('tree');
+  const centre = (rect: DOMRect) => rect.left + rect.width / 2;
+  await waitFor(() => expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(2));
+  const guides = [...canvasElement.querySelectorAll<HTMLElement>('[data-part="branch-indent-guide"]')];
+  for (const guide of guides) {
+    const content = guide.parentElement;
+    // Document order puts the branch's own toggle before any in its content.
+    const toggle = queryPart(content?.closest('[data-part="branch"]') ?? null, '[data-testid="treeItem.toggle"]');
+    const child = queryPart(content, '[data-testid="treeItem.toggle"]');
+    const toggleRect = toggle.getBoundingClientRect();
+    const childRect = child.getBoundingClientRect();
+    // The guide runs under the branch's own toggle, clear of its children's, which sit a block in.
+    await expect(Math.abs(centre(guide.getBoundingClientRect()) - centre(toggleRect))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(childRect.left - toggleRect.left - toggleRect.width)).toBeLessThanOrEqual(1);
+    // A top-level item in this fixture has no icon; where there is one, the child's toggle is under it.
+    const icon = toggle.parentElement?.querySelector('[data-testid="treeItem.heading"] svg');
+    if (icon) {
+      await expect(Math.abs(centre(childRect) - centre(icon.getBoundingClientRect()))).toBeLessThanOrEqual(1);
+    }
+  }
+};
+
+/** Block alignment, measured on the open rendering `WithIndent` shows. */
+export const TestIndentGuides: Story = {
+  args: { indentGuides: true, openDepth: 2 },
+  play: async ({ canvasElement }) => expectBlockAlignment(canvasElement),
+};
+
+/** Guides are opt-in: an open tree without the prop draws none. */
+export const TestNoIndentGuides: Story = {
+  args: { openDepth: 2 },
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByRole('tree');
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelectorAll('[data-part="branch-content"] [data-testid="treeItem.toggle"]').length,
+      ).toBeGreaterThan(0),
+    );
+    await expect(canvasElement.querySelectorAll('[data-part="branch-indent-guide"]').length).toBe(0);
+  },
+};
+
+export const Selection: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const [first, second] = [rows[0], rows[1]];
+    const label = (row: HTMLElement) => row.querySelector<HTMLElement>('span[data-tooltip]')!;
+
+    await userEvent.click(label(first));
+    await expect(first).toHaveAttribute('data-selected');
+    await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.click(label(first));
+    await expect(first).toHaveAttribute('data-selected');
+    await expect(first.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.click(label(second));
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(first).not.toHaveAttribute('data-selected');
+
+    await userEvent.keyboard(' ');
+    await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+    await userEvent.keyboard('{Enter}');
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(second.closest('[data-part="branch"]')).toHaveAttribute('data-state', 'open');
+
+    await userEvent.click(label(first));
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.keyboard('{Enter}');
+    await expect(second).toHaveAttribute('data-selected');
+    await expect(first).not.toHaveAttribute('data-selected');
+  },
+};
+
+export const MultipleSelection: Story = {
+  args: { selectionMode: 'multiple' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const rows = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const selected = () =>
+      [...rows]
+        .slice(0, 4)
+        .map((row) => (row.hasAttribute('data-selected') ? 1 : 0))
+        .join('');
+    // One session, so the held modifier survives from the keyboard call into the click: the
+    // top-level `userEvent` helpers each start their own and would drop it.
+    const user = userEvent.setup();
+    const metaClick = async (row: HTMLElement) => {
+      await user.keyboard('{Meta>}');
+      await user.click(row.querySelector<HTMLElement>('span[data-tooltip]')!);
+      await user.keyboard('{/Meta}');
+    };
+
+    await userEvent.click(rows[0].querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(selected()).toBe('1000');
+
+    await metaClick(rows[1]);
+    await expect(selected()).toBe('1100');
+
+    await metaClick(rows[1]);
+    await expect(selected()).toBe('1000');
+
+    await userEvent.click(rows[2].querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(selected()).toBe('0010');
+  },
+};
+
+/** A disabled row answers nothing: it neither selects nor discloses, by pointer or by key. */
+export const DisabledRows: Story = {
+  args: { disabledRows: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole('tree');
+    const [row] = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    const branch = row.closest('[data-part="branch"]')!;
+
+    await userEvent.click(row.querySelector<HTMLElement>('span[data-tooltip]')!);
+    await expect(row).not.toHaveAttribute('data-selected');
+    await expect(branch).toHaveAttribute('data-state', 'closed');
+
+    row.focus();
+    await userEvent.keyboard(' ');
+    await expect(branch).toHaveAttribute('data-state', 'closed');
+
+    await userEvent.keyboard('{Enter}');
+    await expect(row).not.toHaveAttribute('data-selected');
+  },
+};
+
+/**
+ * A long list mounts only the rows in view, and the mounted range travels with the scroll.
+ *
+ * The scrollbar is the whole list's — the sizer carries the extent of the rows that are not
+ * mounted — so what this asserts is that the two stay consistent: a slice in the DOM, the full
+ * height under the thumb, and the slice moving rather than growing as the reader scrolls.
+ */
+export const TestWindowMountsAVisibleSlice: Story = {
+  args: { virtualize: true },
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const indices = () => rows().map((row) => Number(row.closest<HTMLElement>('[data-index]')?.dataset.index));
+
+    // Only the rows in view exist: the rest are extent in the sizer, not elements.
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await waitFor(async () => expect(rows().length).toBeLessThan(120), { timeout: 5_000 });
+
+    // The scrollbar is scaled to the whole list, not to what is mounted.
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight * 4);
+
+    const before = indices();
+    await expect(before[0]).toEqual(0);
+
+    // Scrolling moves the mounted range rather than adding to it.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(indices()[0]).toBeGreaterThan(before[0]), { timeout: 5_000 });
+    await expect(rows().length).toBeLessThan(120);
+    await expect(indices()[indices().length - 1]).toEqual(119);
+
+    scroller.scrollTo({ top: 0 });
+    await waitFor(async () => expect(indices()[0]).toEqual(0), { timeout: 5_000 });
+  },
+};
+
+export const TestWindowFlattensOpenBranches: Story = {
+  args: { virtualize: true, branches: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const indices = () => rows().map((row) => Number(row.closest<HTMLElement>('[data-index]')?.dataset.index));
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await waitFor(async () => expect(rows().length).toBeLessThan(30), { timeout: 5_000 });
+    await expect(indices().every((index) => Number.isInteger(index))).toBe(true);
+
+    const [toggle] = await canvas.findAllByTestId('treeItem.toggle');
+    await userEvent.click(toggle);
+    await waitFor(async () => expect(rows()[1]?.getAttribute('aria-level')).toEqual('2'), { timeout: 5_000 });
+    await expect(indices()[1]).toEqual(1);
+
+    await expect([rows()[0].getAttribute('aria-posinset'), rows()[0].getAttribute('aria-setsize')]).toEqual([
+      '1',
+      '30',
+    ]);
+    await expect([rows()[2].getAttribute('aria-posinset'), rows()[2].getAttribute('aria-setsize')]).toEqual([
+      '2',
+      '30',
+    ]);
+
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(indices()[indices().length - 1]).toEqual(59), { timeout: 5_000 });
+  },
+};
+
+export const TestWindowedTreeInFull: Story = {
+  args: { virtualize: true, branches: true, features: true, draggable: true },
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="tree.scroller"]')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const row = (id: string) => canvasElement.querySelector<HTMLElement>(`[data-object-id="${id}"]`);
+    const toggle = (id: string) => row(id)!.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    const focused = () => document.activeElement?.getAttribute('data-object-id');
+    const [first, second, third] = featuresTree.items;
+    const last = featuresTree.items.at(-1)!;
+    const lastChild = first.items[1].items.at(-1)!;
+
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(0), { timeout: 5_000 });
+    await expect(rows().length).toBeLessThan(25);
+
+    // The end strip is the window's last unit, after the last row.
+    scroller.scrollTo({ top: scroller.scrollHeight });
+    await waitFor(async () => expect(canvasElement.querySelector('[data-window-id="end:"]')).not.toBeNull(), {
+      timeout: 5_000,
+    });
+    const ends = Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-index]'));
+    await expect(ends.at(-1)!.dataset.windowId).toEqual('end:');
+
+    // `Home` and `End` land on rows the window had not mounted.
+    row(last.id)!.focus();
+    await userEvent.keyboard('{Home}');
+    await waitFor(async () => expect(focused()).toEqual(first.id), { timeout: 5_000 });
+    await userEvent.keyboard('{End}');
+    await waitFor(async () => expect(focused()).toEqual(last.id), { timeout: 5_000 });
+
+    // Sections are spliced out of the set a row is counted in, so the levels differ in size.
+    scroller.scrollTo({ top: 0 });
+    await waitFor(async () => expect(row(first.id)).not.toBeNull(), { timeout: 5_000 });
+    await userEvent.click(toggle(first.id));
+    const child = first.items[0].items[0].id;
+    await waitFor(async () => expect(row(child)).not.toBeNull(), { timeout: 5_000 });
+    await expect(row(child)!.getAttribute('aria-setsize')).toEqual('20');
+    await expect(row(first.id)!.closest('[role="treeitem"]')!.getAttribute('aria-setsize')).toEqual('25');
+
+    // `ArrowLeft` from a child reaches its parent after the parent has left the window.
+    await waitFor(
+      async () => {
+        scroller.scrollBy({ top: 40 });
+        await expect(row(lastChild.id)).not.toBeNull();
+        await expect(row(first.id)).toBeNull();
+      },
+      { timeout: 5_000 },
+    );
+    row(lastChild.id)!.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(async () => expect(focused()).toEqual(first.id), { timeout: 5_000 });
+    await userEvent.keyboard('{ArrowLeft}');
+    // The close commits once the children have concealed, and the window mounts what follows after it.
+    await waitFor(
+      async () => {
+        await expect(row(lastChild.id)).toBeNull();
+        await expect(row(second.id)).not.toBeNull();
+      },
+      { timeout: 5_000 },
+    );
+
+    // An item under two open branches is two rows, and the tree stays windowed.
+    await userEvent.click(toggle(second.id));
+    await userEvent.click(toggle(third.id));
+    await waitFor(
+      async () => expect(canvasElement.querySelectorAll(`[data-object-id="${shared.id}"]`)).toHaveLength(2),
+      {
+        timeout: 5_000,
+      },
+    );
+    await expect(rows().length).toBeLessThan(25);
   },
 };

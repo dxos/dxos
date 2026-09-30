@@ -11,3 +11,5 @@ app.log.*
 
 # Ollama sidecar runtime (fetched at build time via scripts/fetch-ollama.mjs).
 src-tauri/sidecar/
+# Local sandbox helper (staged at build time via scripts/stage-sandbox-helper.mjs).
+src-tauri/sandbox/

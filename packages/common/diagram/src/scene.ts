@@ -28,7 +28,8 @@ export const Color = Schema.Literals([
 ]);
 export type Color = Schema.Schema.Type<typeof Color>;
 
-export const Fill = Schema.Literals(['none', 'solid', 'pattern']);
+/** `tint` is a light wash of the element's color, for backdrops such as group frames that text sits on. */
+export const Fill = Schema.Literals(['none', 'solid', 'pattern', 'tint']);
 export type Fill = Schema.Schema.Type<typeof Fill>;
 
 export const Stroke = Schema.Literals(['sketchy', 'solid', 'dashed', 'dotted']);
@@ -55,9 +56,17 @@ const id = Schema.String.annotate({
   description: 'Stable element id, unique within the object (e.g. "left-eye"). Used to edit or delete the element.',
 });
 
+/** The closed-shape kinds {@link Box} covers. */
+export const BoxKind = Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle']);
+export type BoxKind = Schema.Schema.Type<typeof BoxKind>;
+
+/** Which corners a rect rounds. */
+export const Corners = Schema.Literals(['top', 'bottom', 'none']);
+export type Corners = Schema.Schema.Type<typeof Corners>;
+
 /** Closed shape drawn inside a local bounding box. */
 export const Box = Schema.Struct({
-  kind: Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle']),
+  kind: BoxKind,
   id,
   x: Schema.Number.annotate({ description: 'Left edge (object-local units).' }),
   y: Schema.Number.annotate({ description: 'Top edge (object-local units).' }),
@@ -65,7 +74,7 @@ export const Box = Schema.Struct({
   h: Schema.Number,
   rotation: Schema.optional(Schema.Number).annotate({ description: 'Clockwise rotation in degrees.' }),
   text: Schema.optional(Schema.String).annotate({ description: 'Centered label.' }),
-  corners: Schema.optional(Schema.Literals(['top', 'bottom', 'none'])).annotate({
+  corners: Schema.optional(Corners).annotate({
     description: 'Rects only: round just these corners (default all); backends without corner control ignore it.',
   }),
   ...styleFields,

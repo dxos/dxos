@@ -11,7 +11,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
-import { Link, Node, type Scene, type SceneId, type SceneMap } from '@dxos/react-ui-canvas/scene';
+import { Link, type Node, NodeBase, type Scene, type SceneId, type SceneMap } from '@dxos/react-ui-canvas/scene';
 
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
@@ -41,7 +41,7 @@ export const isSceneRecord = (record: unknown): record is SceneRecord =>
   isRecord(record) && record.kind === 'scene' && typeof record.id === 'string';
 
 export const isNodeRecord = (record: unknown): record is NodeRecord =>
-  isRecord(record) && record.kind === 'node' && typeof record.scene === 'string' && Schema.is(Node)(record.node);
+  isRecord(record) && record.kind === 'node' && typeof record.scene === 'string' && Schema.is(NodeBase)(record.node);
 
 export const isLinkRecord = (record: unknown): record is LinkRecord =>
   isRecord(record) && record.kind === 'link' && typeof record.scene === 'string' && Schema.is(Link)(record.link);

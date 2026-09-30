@@ -153,15 +153,15 @@ const isIndexableObject = (value: unknown): value is ObjectJSON => {
  * so registry entities land in `objectMeta` and the FTS snapshot table alongside everything else —
  * marked by `origin = 'registry'`, which is what keeps them out of every space-scoped read.
  *
- * Three things decide what an update pass sees:
+ * Four things decide what an update pass sees:
  *
  * - **Identity is the entry key, not the object id.** A key carries the version, so `…:0.1.0` and
  *   `…:0.2.0` are separate rows while a re-registration of one version replaces that row: last
  *   registered wins, even when the new entity is a different object.
- * - **Deduplication is by digest, twice.** A re-push of an unchanged entity does not advance its
- *   sequence, so it never enters the pipeline at all; and the first time a key is emitted in a
- *   session its digest is checked against the persisted row, which is what makes a restart — where
- *   the whole registry is pushed afresh — cost one query rather than a full re-index.
+ * - **Deduplication is by digest, throughout.** {@link prime} reads the persisted digests once, so
+ *   a boot recognises an entry the index already holds without parsing it or querying for it; a
+ *   re-push of an unchanged entity does not advance its sequence and never enters the pipeline.
+ *   A restart over an unchanged registry therefore costs one scan rather than a re-index.
  * - **The buffer is the union across clients.** Several clients share one host and each pushes its
  *   whole registry, so an entry is dropped only once no client still carries it; taking one
  *   client's snapshot as the truth would have each push delete the others' entries.

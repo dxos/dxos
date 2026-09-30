@@ -11,7 +11,7 @@ import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { Clipboard, Field, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Field, SystemIconButton, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -63,7 +63,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
               });
             }}
           />
-          <Clipboard.IconButton value={functionUrl} />
+          <SystemIconButton.Clipboard iconOnly value={functionUrl} />
         </Field.Root>
       )}
 

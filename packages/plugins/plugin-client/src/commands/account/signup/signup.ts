@@ -53,7 +53,7 @@ export const signup = Command.make(
   'signup',
   {
     code: Args.String('code').pipe(
-      Args.withDescription('Access code (8-character invitation code) to redeem. Validated before signing up.'),
+      Args.withDescription('Access code (invitation or vanity code) to redeem. Validated before signing up.'),
     ),
     input: Args.String('input').pipe(
       Args.withDescription('Method input: email address / Atmosphere handle. Prompted if omitted.'),
@@ -73,7 +73,7 @@ export const signup = Command.make(
     if (!Account.isValidAccessCodeFormat(code)) {
       return yield* Effect.fail(
         new CommandError({
-          message: `Access code ${code} is malformed — codes are 8 characters (Crockford base32, hyphen optional).`,
+          message: `Access code ${code} is malformed. Codes use A-Z, 0-9 and dashes (e.g. XK4F-9P2A or SF-MEETUP-7K2Q).`,
         }),
       );
     }

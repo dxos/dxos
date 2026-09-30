@@ -23,7 +23,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 // Exception to the headless `appGraphBuilder` default: this builder's node renders a `<Mic/>`
 // companion inline, so its module is genuinely browser-bound.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.tsx'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const EntityLookup = Capability.lazyModule(
   'EntityLookup',
@@ -48,11 +48,11 @@ export const RecordingSession = Capability.lazyModule(
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const TranscriptionDriver = AppCapability.reactContext(() => import('./transcription-driver.tsx'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const TextContent = AppCapability.textContent(() => import('./text-content.ts'), {
   activatesOn: TranscriptionEvents.Start,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
@@ -74,7 +74,7 @@ export const TranscriptionSettings = AppCapability.settings(() => import('./sett
 });
 export const TourFragment = Capability.lazyModule(
   'TourFragment',
-  { provides: [AppCapabilities.TourFragment], environments: [] },
+  { provides: [AppCapabilities.TourFragment], environments: ['browser', 'tauri'] },
   () => import('./tour-fragment.ts'),
 );
 export const Translations = AppCapability.translations(translations);

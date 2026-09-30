@@ -17,12 +17,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#commands": {
       "source": {
@@ -99,6 +101,11 @@
       "source": "./src/types/AccountCache.ts",
       "types": "./dist/types/src/types/AccountCache.d.ts",
       "import": "./dist/lib/AccountCache.mjs"
+    },
+    "./CliLogin": {
+      "source": "./src/types/CliLogin.ts",
+      "types": "./dist/types/src/types/CliLogin.d.ts",
+      "import": "./dist/lib/CliLogin.mjs"
     },
     "./ClientAction": {
       "source": "./src/types/ClientAction.ts",

@@ -48,7 +48,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
           {/* The clipped snippet dissolves into whatever the card sits on: a mask on the content,
               not a colour painted over it, since the card surface differs per host (grid, popover,
               board) and a fade to the wrong surface reads as a grey band across the last line. */}
-          <Card.Row fullWidth classNames='mask-b-from-[calc(100%-2rem)] mask-b-to-100%'>
+          <Card.Row fullWidth classNames='mask-b-from-[calc(100%-8rem)] mask-b-to-100%'>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}
             <MarkdownEditorProvider key={snippet} id={subject.id} viewMode='readonly' extensions={extensions}>

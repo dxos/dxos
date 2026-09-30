@@ -11,6 +11,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { type Translations } from '../app/index.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
@@ -37,7 +38,7 @@ type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleM
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
-  { activatesOn: ActivationEvents.Idle, environments: ['node', 'workerd'] },
+  { activatesOn: ActivationEvents.Idle, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -54,7 +55,7 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -66,7 +67,7 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
-  { activatesOn: AppActivationEvents.AssistantStart, environments: ['node', 'workerd'] },
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -84,7 +85,7 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -103,14 +104,14 @@ export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Cap
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
   Capabilities.LayerSpec,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing undo operation mappings. */
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',
   Capabilities.UndoMapping,
-  { environments: ['node', 'workerd'] },
+  { environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing observability event mappings. */
@@ -126,7 +127,7 @@ export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$
   // A context provider has to wrap the tree on the FIRST render, and shell components read what it
   // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
   // missing-capability invariant rather than merely rendering late.
-  { activatesOn: ActivationEvents.Startup, environments: [] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
 );
 
 /** Module maker contributing a React root. */
@@ -134,7 +135,17 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
   'ReactRoot',
   Capabilities.ReactRoot,
   // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
-  { activatesOn: ActivationEvents.Startup, environments: [] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
+);
+
+/**
+ * Module maker contributing a {@link AppCapabilities.DefaultParent} rule. On the startup pass: an
+ * operation handler asks for rules mid-create, which has no demand event to gate on.
+ */
+export const defaultParent: Maker<typeof AppCapabilities.DefaultParent> = Capability$.moduleMaker(
+  'DefaultParent',
+  AppCapabilities.DefaultParent,
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /**
@@ -145,7 +156,7 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
-  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
@@ -153,8 +164,55 @@ export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetRe
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
-  { activatesOn: ActivationEvents.Startup, environments: [] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
 );
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+/**
+ * The roles the surfaces in a module body's result bind that `declared` omits. Read structurally —
+ * a contribution's `values`, and the `role` (one or several) `Surface.create` resolves from each
+ * definition's filter — so this headless module need not load React's `Surface`.
+ */
+export const undeclaredSurfaceRoles = (result: unknown, declared: readonly string[]): string[] => {
+  const bound = (Array.isArray(result) ? result : [result])
+    .flatMap((contribution) =>
+      isRecord(contribution) &&
+      contribution.capability === Capabilities.ReactSurface &&
+      Array.isArray(contribution.values)
+        ? contribution.values
+        : [],
+    )
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .flatMap((surface) => (isRecord(surface) ? [surface.role].flat() : []))
+    .filter((role): role is string => typeof role === 'string');
+  return [...new Set(bound)].filter((role) => !declared.includes(role));
+};
+
+/**
+ * Reports, when a role-gated module loads, any role its surfaces bind but do not declare: a request
+ * for only that role never loads the module, so the surface silently renders nothing wherever no
+ * declared role was requested first.
+ */
+const withDeclaredRolesCheck =
+  <Props, Requires extends readonly Capability$.AnyTag[], Provides extends readonly Capability$.AnyTag[]>(
+    loader: Capability$.LoadModule<Props, Requires, Provides>,
+    roles: readonly string[],
+  ): Capability$.LoadModule<Props, Requires, Provides> =>
+  () =>
+    loader().then((module) => ({
+      default: (props: Props) =>
+        module.default(props).pipe(
+          Effect.tap((result) =>
+            Effect.sync(() => {
+              const undeclared = undeclaredSurfaceRoles(result, roles);
+              if (undeclared.length > 0) {
+                log.error('surface module binds roles missing from its declared roles', { undeclared, roles });
+              }
+            }),
+          ),
+        ),
+    }));
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
@@ -178,9 +236,9 @@ export const surface = <
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
 ): Capability$.Module<Options> => {
   const { roles, ...rest } = options ?? {};
-  return surfaceMaker(loader, {
+  return surfaceMaker(roles?.length ? withDeclaredRolesCheck(loader, roles) : loader, {
     ...rest,
-    environments: rest.environments ?? [],
+    environments: rest.environments ?? ['browser', 'tauri'],
     activatesOn:
       rest.activatesOn ??
       (roles?.length
@@ -193,14 +251,14 @@ export const surface = <
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
   'CommentConfig',
   AppCapabilities.CommentConfig,
-  { environments: ['node', 'workerd'] },
+  { environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing a text content extractor. */
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
   AppCapabilities.TextContent,
-  { environments: ['node', 'workerd'] },
+  { environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
 /** Module maker contributing an anchor sort comparator. */
@@ -208,7 +266,7 @@ export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.
   'AnchorSort',
   AppCapabilities.AnchorSort,
   // Browser-only: a sort comparator is registered into the app graph, which no headless host builds.
-  { environments: [] },
+  { environments: ['browser', 'tauri'] },
 );
 
 //
@@ -225,7 +283,7 @@ export const translations = (
     options?.name ?? 'translations',
     {
       provides: [AppCapabilities.Translations],
-      environments: options?.environments ?? ['node', 'workerd'],
+      environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
     },
     () => Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
   );
@@ -242,7 +300,7 @@ export const schema = (
 ) => {
   const spec = {
     provides: [AppCapabilities.Schema],
-    environments: options?.environments ?? ['node', 'workerd'],
+    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
   } as const;
   if (typeof types === 'function') {
     const loader = types;
@@ -265,7 +323,7 @@ export const tour = (
   const values: ReadonlyArray<AppCapabilities.Tour> = Array.isArray(tours) ? tours : [tours];
   return Capability$.inlineModule(
     options?.name ?? 'tour',
-    { provides: [AppCapabilities.Tour], environments: options?.environments ?? [] },
+    { provides: [AppCapabilities.Tour], environments: options?.environments ?? ['browser', 'tauri'] },
     () => Effect.succeed([Capability$.contributeAll(AppCapabilities.Tour, values)]),
   );
 };
@@ -278,7 +336,7 @@ export const tourFragment = (
   const values: ReadonlyArray<AppCapabilities.TourFragment> = Array.isArray(fragments) ? fragments : [fragments];
   return Capability$.inlineModule(
     options?.name ?? 'tour-fragment',
-    { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? [] },
+    { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? ['browser', 'tauri'] },
     () => Effect.succeed([Capability$.contributeAll(AppCapabilities.TourFragment, values)]),
   );
 };
@@ -291,7 +349,7 @@ export const pluginAsset = (
   const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
   return Capability$.inlineModule(
     options?.name ?? 'plugin-asset',
-    { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? [] },
+    { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? ['browser', 'tauri'] },
     () => Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
   );
 };
@@ -325,7 +383,7 @@ export const spaceTemplates = (
     {
       activatesOn: ActivationEvents.SpaceTemplatesRequested,
       provides: [AppCapabilities.SpaceTemplate],
-      environments: options?.environments ?? [],
+      environments: options?.environments ?? ['browser', 'tauri'],
     },
     () =>
       loader().then(({ default: templates }) => ({
@@ -340,7 +398,7 @@ export const commands = (
   const spec = {
     activatesOn: ActivationEvents.CommandsRequested,
     provides: [Capabilities.Command],
-    environments: options?.environments ?? ['node', 'workerd'],
+    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
   } as const;
   if (typeof values === 'function') {
     const loader = values;

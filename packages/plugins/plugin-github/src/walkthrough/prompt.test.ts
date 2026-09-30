@@ -43,6 +43,21 @@ describe('buildPrompt', () => {
     expect(prompt).to.contain('src/large.ts');
   });
 
+  test('drops a generated file even when everything fits', () => {
+    const withLock = {
+      ...INPUT,
+      diff: [INPUT.diff, file('pnpm-lock.yaml', 3), file('assets/logo.png', 1)].join('\n'),
+    };
+    const prompt = buildPrompt(withLock);
+
+    // A lockfile is the largest hunk in most pull requests and the one nobody reads, so it never
+    // competes with code for the budget.
+    expect(prompt).to.not.contain('diff --git a/pnpm-lock.yaml');
+    expect(prompt).to.contain('src/small.ts');
+    expect(prompt).to.contain('not yours to describe: pnpm-lock.yaml, assets/logo.png');
+    expect(promptOmissions(withLock)).to.deep.eq(['pnpm-lock.yaml', 'assets/logo.png']);
+  });
+
   test('reports what the budget dropped', () => {
     expect(promptOmissions(INPUT, { maxDiffChars: 200 })).to.deep.eq(['src/large.ts']);
     expect(promptOmissions(INPUT)).to.deep.eq([]);
@@ -62,6 +77,13 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).to.contain('```diff file=path/to/file.ts lines=66-99');
     expect(SYSTEM_PROMPT).to.contain('NEVER put diff content');
     expect(SYSTEM_PROMPT).to.contain('file AFTER the change');
+  });
+
+  test('asks for prose a reviewer can read once', () => {
+    // Review time is what the walkthrough exists to save; see `.agents/skills/readable-prose`.
+    expect(SYSTEM_PROMPT).to.contain('One idea per sentence');
+    expect(SYSTEM_PROMPT).to.contain('Name the mechanism, not the feeling');
+    expect(SYSTEM_PROMPT).to.contain('Sentence case headings');
   });
 });
 

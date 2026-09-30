@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -14,7 +14,7 @@ import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, useGraphMenuActions } from '@dxos/react-ui-menu';
+import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -50,7 +50,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
   const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
 
-  const graph = useMemo(() => {
+  const graph = useMenuGraph(() => {
     if (!db) {
       return undefined;
     }

@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import {
   Aggregate,
+  Annotation,
   Collection,
   Dataset,
   type Entity,
@@ -374,6 +375,117 @@ describe('Query', () => {
 
       const datasets = await db.query(Query.type(Dataset.Dataset)).run();
       expect(datasets).to.have.length(3);
+    });
+  });
+
+  describe.each(['memory', 'sql'] as const)('changes (%s executor)', (queryExecutor) => {
+    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
+    const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
+
+    test('a space-wide count by day follows new edits', async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush({ indexes: true });
+
+      let rows: readonly { day: number | null; changes: number; ops: number }[] = [];
+      const unsubscribe = db
+        .query(
+          Query.select(Filter.changes()).aggregate({
+            day: Aggregate.time('time', 'day'),
+            changes: Aggregate.count(),
+            ops: Aggregate.sum('ops'),
+          }),
+        )
+        .subscribe((result) => {
+          rows = result.results;
+        });
+      onTestFinished(unsubscribe);
+
+      await waitForCondition({ condition: () => total(rows) > 0, timeout: 5000 });
+      const before = total(rows);
+      expect(rows.every((row) => row.ops >= row.changes)).to.be.true;
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+      await waitForCondition({ condition: () => total(rows) > before, timeout: 5000 });
+    });
+
+    test("an object's history comes back as frozen change records, newest first", async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      for (const value of [2, 3]) {
+        Obj.update(object, (object) => {
+          object.value = value;
+        });
+      }
+      await db.flush({ indexes: true });
+
+      const changes = await db
+        .query(Query.select(Filter.changes(object)).orderBy(Order.property('time', 'desc')).limit(2))
+        .run();
+
+      expect(changes).to.have.length(2);
+      expect(changes[0].time).to.be.greaterThanOrEqual(changes[1].time);
+      for (const change of changes) {
+        expect(change).to.include({ source: 'document' });
+        expect(change).to.include.keys('key', 'time', 'actor', 'seq', 'ops');
+        expect(Object.isFrozen(change)).to.be.true;
+        expect(Reflect.set(change, 'ops', 0)).to.be.false;
+      }
+    });
+
+    test("the index and a replay agree on an object's changes", async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+
+      const [indexed, replayed] = await Promise.all([
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({ changes: Aggregate.count(), ops: Aggregate.sum('ops') }),
+          )
+          .run(),
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({
+              actor: Aggregate.group('actor'),
+              changes: Aggregate.count(),
+              ops: Aggregate.sum('ops'),
+            }),
+          )
+          .run(),
+      ]);
+
+      expect(total(indexed)).to.be.greaterThan(0);
+      expect(total(replayed)).to.equal(total(indexed));
+      expect(replayed.reduce((sum, row) => sum + row.ops, 0)).to.equal(indexed[0].ops);
+    });
+
+    test('sums and time buckets apply to ordinary objects', async () => {
+      const db = await createDatabase();
+      const day = Date.UTC(2026, 0, 2);
+      db.add(Obj.make(TestSchema.Expando, { at: day + 1_000, amount: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day + 2_000, amount: 3 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day - 1_000, amount: 7 }));
+      await db.flush({ indexes: true });
+
+      const rows = await db
+        .query(
+          Query.select(Filter.type(TestSchema.Expando))
+            .aggregate({ day: Aggregate.time('at', 'day'), amount: Aggregate.sum('amount') })
+            .orderBy(Order.property('day', 'asc')),
+        )
+        .run();
+
+      expect(rows.map(({ day, amount }) => ({ day, amount }))).to.deep.equal([
+        { day: day - 86_400_000, amount: 7 },
+        { day, amount: 5 },
+      ]);
     });
   });
 
@@ -4139,6 +4251,81 @@ describe('Query', () => {
       await db.flush({ updates: true });
       await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
       expect(query.results.map((obj) => obj.name)).toEqual(['Target']);
+    });
+  });
+
+  describe.each(['memory', 'sql'] as const)('Filter.annotation (%s executor)', (queryExecutor) => {
+    const StatusAnnotation = Annotation.make({ id: 'org.dxos.annotation.test-status', schema: Schema.String });
+    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
+
+    const setup = async () => {
+      const db = await createDatabase();
+      const done = db.add(Obj.make(TestSchema.Expando, { name: 'Done' }));
+      Obj.update(done, (done) => Annotation.set(done, StatusAnnotation, 'done'));
+      const open = db.add(Obj.make(TestSchema.Expando, { name: 'Open' }));
+      Obj.update(open, (open) => Annotation.set(open, StatusAnnotation, 'open'));
+      const plain = db.add(Obj.make(TestSchema.Expando, { name: 'Plain' }));
+      await db.flush({ indexes: true });
+      return { db, plain };
+    };
+
+    const names = (objects: readonly { name?: unknown }[]) => objects.map((obj) => String(obj.name)).sort();
+
+    test('without a value matches entities carrying the annotation', async () => {
+      const { db } = await setup();
+      const objects = await db.query(Query.select(Filter.annotation(StatusAnnotation))).run();
+      expect(names(objects)).toEqual(['Done', 'Open']);
+    });
+
+    test('with a value matches entities whose value is equal', async () => {
+      const { db } = await setup();
+      const objects = await db.query(Query.select(Filter.annotation(StatusAnnotation, 'done'))).run();
+      expect(names(objects)).toEqual(['Done']);
+    });
+
+    test('negation keeps entities without the annotation', async () => {
+      const { db } = await setup();
+      const objects = await db
+        .query(
+          Query.select(
+            Filter.and(Filter.type(TestSchema.Expando), Filter.not(Filter.annotation(StatusAnnotation, 'done'))),
+          ),
+        )
+        .run();
+      expect(names(objects)).toEqual(['Open', 'Plain']);
+    });
+
+    test('filters the result of a traversal', async () => {
+      const { db } = await setup();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const child = db.add(Obj.make(TestSchema.Expando, { name: 'Child' }));
+      const archived = db.add(Obj.make(TestSchema.Expando, { name: 'Archived child' }));
+      Obj.setParent(child, parent);
+      Obj.setParent(archived, parent);
+      Obj.update(archived, (archived) => Annotation.set(archived, StatusAnnotation, 'done'));
+      await db.flush({ indexes: true });
+
+      const objects = await db
+        .query(
+          Query.select(Filter.id(parent.id))
+            .children()
+            .select(Filter.not(Filter.annotation(StatusAnnotation, 'done'))),
+        )
+        .run();
+      expect(names(objects)).toEqual(['Child']);
+    });
+
+    test('a live query follows annotation changes', async () => {
+      const { db, plain } = await setup();
+
+      const query = db.query(Query.select(Filter.annotation(StatusAnnotation, 'done')));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+
+      Obj.update(plain, (plain) => Annotation.set(plain, StatusAnnotation, 'done'));
+      await db.flush({ indexes: true, updates: true });
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
     });
   });
 

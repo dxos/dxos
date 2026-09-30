@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Space } from '@dxos/client/echo';
-import { Obj, Query, Relation } from '@dxos/echo';
+import { type Database, Obj, Query, Relation } from '@dxos/echo';
 import { type BundleEdge, type TreeNode } from '@dxos/react-ui-graph';
 import {
   type RelationSpec,
@@ -30,13 +29,13 @@ export type ConnectedOrgsOptions = {
 };
 
 /**
- * Populate a space with Organizations, People, and HasConnection relations between organizations.
+ * Populate a database with Organizations, People, and HasConnection relations between organizations.
  * Uses `createObjectFactory` to generate Org/Person properties from their `GeneratorAnnotation`s,
  * then `createRelationFactory` to wire HasConnection relations (Org→Org) between them, spreading
  * the connections across the available kinds.
  */
 export const generateConnectedOrgs = async (
-  space: Space,
+  db: Database.Database,
   generator: ValueGenerator,
   { organizationCount = 12, personCount = 24, connectionCount = 18 }: ConnectedOrgsOptions = {},
 ): Promise<ConnectedOrgsResult> => {
@@ -46,7 +45,7 @@ export const generateConnectedOrgs = async (
     { type: Person.Person, count: personCount },
   ];
 
-  await createObjectFactory(space.db, generator)(specs);
+  await createObjectFactory(db, generator)(specs);
 
   // Distribute the requested connections evenly across the connection kinds.
   const relationSpecs: RelationSpec[] = CONNECTION_KINDS.map((kind, index) => ({
@@ -56,10 +55,10 @@ export const generateConnectedOrgs = async (
       (index < connectionCount % CONNECTION_KINDS.length ? 1 : 0),
     data: { kind },
   }));
-  const connections = await createRelationFactory(space.db, generator)(relationSpecs);
+  const connections = await createRelationFactory(db, generator)(relationSpecs);
 
-  const organizations = await space.db.query(Query.type(Organization.Organization)).run();
-  const people = await space.db.query(Query.type(Person.Person)).run();
+  const organizations = await db.query(Query.type(Organization.Organization)).run();
+  const people = await db.query(Query.type(Person.Person)).run();
   return { organizations, people, connections };
 };
 

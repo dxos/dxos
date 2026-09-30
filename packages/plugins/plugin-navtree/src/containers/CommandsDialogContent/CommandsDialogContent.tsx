@@ -12,10 +12,10 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActions } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { getHotkeyScope, keySymbols } from '@dxos/react-focus';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
-import { getHostPlatform } from '@dxos/util';
+import { resolveKeyBinding } from '@dxos/util';
 
 import { KEY_BINDING, meta } from '#meta';
 
@@ -74,14 +74,19 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       <Dialog.Content ref={forwardedRef}>
         <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Dialog.Title>
         <Dialog.Body>
-          <SearchList.Root onSearch={handleSearch}>
-            <SearchList.Input placeholder={t('command-list-input.placeholder')} />
+          <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
+            {/* Focused on mount, and marked so the dialog's own focus pass agrees: without either, the
+                caret stays outside the palette and Enter reaches the action bar's close button
+                instead of running the highlighted command. */}
+            <SearchList.Input
+              autoFocus
+              placeholder={t('command-list-input.placeholder')}
+              escapeBehavior='dismiss'
+              {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            />
             <SearchList.Viewport>
               {results.map((action) => {
-                const shortcut =
-                  typeof action.properties.keyBinding === 'string'
-                    ? action.properties.keyBinding
-                    : action.properties.keyBinding?.[getHostPlatform()];
+                const shortcut = resolveKeyBinding(action.properties.keyBinding);
 
                 return (
                   <SearchList.Item

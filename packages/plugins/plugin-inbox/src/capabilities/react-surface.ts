@@ -30,7 +30,7 @@ import { Calendar, Mailbox } from '#types';
 import { POPOVER_SAVE_FILTER } from '../constants.ts';
 import { getSubscriptionsId } from '../paths.ts';
 import { isAttachmentRef } from './app-graph-builder.ts';
-import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx';
+import { EventArticleSurface, MailboxMessageCompanion, MessageArticleSurface } from './InboxSurfaces.tsx';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -60,6 +60,16 @@ export default Capability.makeModule(() =>
           systemTag: properties?.systemTag,
           attendableId,
         }),
+      }),
+      Surface.create({
+        // The selected message beside the mailbox, so reading one never navigates over the list.
+        id: 'companion.message',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'message'),
+          AppSurface.companion(AppSurface.Article, Mailbox.Mailbox),
+        ),
+        component: MailboxMessageCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, mailbox: companionTo, attendableId }),
       }),
       Surface.create({
         id: 'draftMessage',
