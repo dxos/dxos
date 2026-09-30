@@ -23,6 +23,7 @@ const { prepare, steps: browserSteps } = await import(
  *   frontend bundled against EDGE preview from a commit pkg.pr.new has published, driven by
  *   `driver.mjs --target tauri`
  *
+ *   export DX_TAURI=true   # the `tauri` build condition, without which the bundle has no sandbox helper launcher
  *   export DX_EDGE_BASE_URL=https://preview.dxos.network/ DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true VITE_DX_STORAGE=memory
  *   export DX_PLUGIN_TOOLCHAIN_COMMIT=<a main commit>   # only for a build of an unpublished branch
  *   moon run composer-app:bundle && moon run composer-app:stage-sandbox-helper

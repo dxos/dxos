@@ -61,7 +61,7 @@ import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
+import { type BranchStore, EntityManager, type LoadObjectOptions, type SpaceDocumentHeads } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -110,6 +110,11 @@ export interface EchoDatabase extends Database.Database {
    * Get notification about the per-peer automerge document sync progress.
    */
   subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn;
+
+  /**
+   * Get the local heads of the space root document and every document it links.
+   */
+  getDocumentHeads(): Promise<SpaceDocumentHeads>;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -1116,7 +1121,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.areStrongDepsResolved(core);
   }
 
-  getDocumentHeads() {
+  getDocumentHeads(): Promise<SpaceDocumentHeads> {
     return this._entityManager.getDocumentHeads();
   }
 

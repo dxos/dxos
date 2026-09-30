@@ -107,7 +107,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-panproto": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -128,6 +128,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
