@@ -51,16 +51,33 @@ const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
 /** The plugin registry behind EDGE did not answer, or answered with something unusable. */
 export class RegistryError extends BaseError.extend('RegistryError', 'Plugin registry request failed.') {}
 
+export type EdgeRegistryPluginProviderOptions = {
+  /**
+   * `public` (default) lists the curator-verified AT Protocol catalog; `private` lists the plugins the
+   * client's identity published privately, so it needs a client with an identity set.
+   */
+  catalog?: 'public' | 'private';
+};
+
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
   #cachedPlugins: readonly Plugin.Meta[] = [];
   #cachedEntries: readonly PluginView[] = [];
+  readonly #catalog: 'public' | 'private';
 
-  constructor(private readonly _client: EdgeHttpClient) {}
+  constructor(
+    private readonly _client: EdgeHttpClient,
+    { catalog = 'public' }: EdgeRegistryPluginProviderOptions = {},
+  ) {
+    this.#catalog = catalog;
+  }
 
   listPlugins(): Effect.Effect<readonly Plugin.Meta[], RegistryError> {
     return Effect.tryPromise({
-      try: () => this._client.getRegistryPlugins(Context.default()),
+      try: () =>
+        this.#catalog === 'private'
+          ? this._client.getPrivateRegistryPlugins(Context.default())
+          : this._client.getRegistryPlugins(Context.default()),
       catch: RegistryError.wrap(),
     }).pipe(
       Effect.map((body) => {
