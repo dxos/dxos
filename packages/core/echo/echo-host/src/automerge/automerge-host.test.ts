@@ -447,7 +447,7 @@ describe('AutomergeHost', () => {
   });
 
   // A head no peer can deliver would otherwise fault the document in again after every eviction.
-  test('an evicted document is re-checked for a head it was found to lack only once a peer connects', async () => {
+  test('a change found missing keeps an evicted document different without loading it, until heads change or a peer connects', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({
@@ -473,17 +473,40 @@ describe('AutomergeHost', () => {
     const peerId = 'test-peer' as PeerId;
     const differentDocuments = async () =>
       (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
+    const leased: DocumentId[] = [];
+    const leaseUntilSettled = host['_leaseUntilSettled'];
+    host['_leaseUntilSettled'] = (id: DocumentId) => {
+      leased.push(id);
+      leaseUntilSettled.call(host, id);
+    };
+    // Runs the pass that decides whether to load, rather than waiting for the scheduled one.
+    const syncPass = async () => {
+      leased.length = 0;
+      await host['_handleCollectionSync'](Context.default(), collectionId, peerId);
+      return leased.includes(documentId);
+    };
 
     synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
     expect(await differentDocuments()).toEqual(1);
 
     handle[Symbol.dispose]();
     await waitForEviction(expect, host, documentId);
-    expect(await differentDocuments()).toEqual(0);
-
-    // A new connection may deliver what the last round could not, so the head counts as missing again.
-    host['_onPeerConnected']('another-peer' as PeerId);
     expect(await differentDocuments()).toEqual(1);
+    expect(await syncPass()).toBe(false);
+
+    // New heads may hold the change.
+    host['_onHeadsChanged']([[documentId, [localHead]]]);
+    expect(await syncPass()).toBe(true);
+    // The load checks the change again and finds it still missing.
+    const lease = await host.loadDoc(Context.default(), documentId);
+    expect(await differentDocuments()).toEqual(1);
+    lease?.[Symbol.dispose]();
+    await waitForEviction(expect, host, documentId);
+    expect(await syncPass()).toBe(false);
+
+    // A new connection may deliver what the last round could not.
+    host['_onPeerConnected']('another-peer' as PeerId);
+    expect(await syncPass()).toBe(true);
   });
 
   // Garbage collection deletes the document; a peer's later push must not bring it back.

@@ -234,17 +234,11 @@ export class AutomergeHost extends Resource {
 
   private _repo!: Repo;
   /**
-   * Changes the collection diff has confirmed present per document; see {@link _hasLocalChange}. Only heads a
-   * peer advertises beside a document's own land here, a few per document, capped per document and pruned
-   * with it by {@link removeDocument}; the absent map below is bounded the same way.
+   * Whether a resident document held each change {@link _hasLocalChange} checked, so an evicted one answers
+   * without a load. Only heads a peer advertises beside a document's own land here; least recently checked
+   * documents go first past {@link MAX_CHECKED_DOCUMENTS}, and forgetting costs one load to check again.
    */
-  private readonly _confirmedChanges = new Map<DocumentId, Set<string>>();
-
-  /**
-   * Changes the collection diff found absent from a resident document. Only replication can bring one, so a
-   * marker holds until new data is stored for the document or a peer connects.
-   */
-  private readonly _absentChanges = new Map<DocumentId, Set<string>>();
+  private readonly _changeChecks = new Map<DocumentId, Map<string, boolean>>();
 
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
@@ -454,7 +448,6 @@ export class AutomergeHost extends Resource {
         // Garbage collection removes documents that left every collection, so the collections decide
         // which pushes are worth a load, across restarts too.
         if (this.isOpen && this._isInLocalCollection(documentId)) {
-          this._absentChanges.delete(documentId);
           this._leaseUntilSettled(documentId);
         }
       });
@@ -964,8 +957,7 @@ export class AutomergeHost extends Resource {
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
     // it would re-create — and re-announce — the query this call deletes.
     this._leases.forget(documentId);
-    this._confirmedChanges.delete(documentId);
-    this._absentChanges.delete(documentId);
+    this._changeChecks.delete(documentId);
 
     // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
     // row could never be found again.
@@ -1519,14 +1511,11 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Whether the local replica holds a change, for the collection diff. Answers are remembered so an
-   * evicted document is loaded to check a change only when it was never checked, or replication has
-   * since stored data or connected a peer that could deliver it.
+   * Whether the local replica holds a change, for the collection diff. A resident document is checked and the
+   * answer recorded; an evicted one answers from the record, and an unchecked change counts as missing so the
+   * diff faults the document in to check it.
    */
   private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean | undefined {
-    if (this._confirmedChanges.get(documentId)?.has(changeHash)) {
-      return true;
-    }
     // Heads come from any peer and are only validated as strings; a malformed one is unanswerable,
     // and reporting it missing would fault the document in on every poll.
     if (!CHANGE_HASH_PATTERN.test(changeHash)) {
@@ -1537,24 +1526,56 @@ export class AutomergeHost extends Resource {
         ? this._repo.getHandle(documentId)?.doc()
         : undefined;
     if (!doc) {
-      return this._absentChanges.get(documentId)?.has(changeHash) ? undefined : false;
+      return this._changeChecks.get(documentId)?.get(changeHash) ?? false;
     }
-    if (!changeIsPresentInDoc(doc, changeHash)) {
-      const absent = defaultMap(this._absentChanges, documentId, () => new Set<string>());
-      if (absent.size >= MAX_REMEMBERED_CHANGES_PER_DOCUMENT) {
-        absent.clear();
+    const present = changeIsPresentInDoc(doc, changeHash);
+    this._recordChangeCheck(documentId, changeHash, present);
+    return present;
+  }
+
+  private _recordChangeCheck(documentId: DocumentId, changeHash: string, present: boolean): void {
+    const checks = this._changeChecks.get(documentId) ?? new Map<string, boolean>();
+    if (!checks.has(changeHash) && checks.size >= MAX_CHECKS_PER_DOCUMENT) {
+      checks.clear();
+    }
+    checks.set(changeHash, present);
+    // Re-inserted so the map iterates least recently checked first, which is the end the cap trims.
+    this._changeChecks.delete(documentId);
+    this._changeChecks.set(documentId, checks);
+    if (this._changeChecks.size > MAX_CHECKED_DOCUMENTS) {
+      const [leastRecent] = this._changeChecks.keys();
+      this._changeChecks.delete(leastRecent);
+    }
+  }
+
+  /** Forgets the changes found missing, so the next diff loads the document to check them again. */
+  private _forgetMissingChanges(documentIds: Iterable<DocumentId>): void {
+    for (const documentId of documentIds) {
+      const checks = this._changeChecks.get(documentId);
+      for (const [changeHash, present] of checks ?? []) {
+        if (!present) {
+          checks?.delete(changeHash);
+        }
       }
-      absent.add(changeHash);
-      return false;
     }
-    this._absentChanges.get(documentId)?.delete(changeHash);
-    const confirmed = defaultMap(this._confirmedChanges, documentId, () => new Set<string>());
-    // Bounded per document: forgetting costs at most one reload to check again.
-    if (confirmed.size >= MAX_REMEMBERED_CHANGES_PER_DOCUMENT) {
-      confirmed.clear();
-    }
-    confirmed.add(changeHash);
-    return true;
+  }
+
+  /**
+   * Whether an evicted document differs from the remote only by changes already checked, which a load
+   * already failed to fetch.
+   */
+  private _lacksOnlyCheckedChanges(
+    documentId: DocumentId,
+    local: readonly string[],
+    remote: readonly string[],
+  ): boolean {
+    const checks = this._changeChecks.get(documentId);
+    const localHeads = new Set(local);
+    return (
+      checks !== undefined &&
+      remote.some((head) => localHeads.has(head)) &&
+      remote.every((head) => localHeads.has(head) || checks.has(head))
+    );
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1575,7 +1596,7 @@ export class AutomergeHost extends Resource {
 
   private _onPeerConnected(peerId: PeerId): void {
     // A new connection can deliver a change a failed or offline round could not.
-    this._absentChanges.clear();
+    this._forgetMissingChanges(this._changeChecks.keys());
     this._collectionSynchronizer.onConnectionOpen(peerId);
   }
 
@@ -1742,6 +1763,14 @@ export class AutomergeHost extends Resource {
               sedimentreeId: documentIdToSedimentreeIdHex(documentId),
             });
           }
+        } else if (
+          this._lacksOnlyCheckedChanges(
+            documentId,
+            localState.documents[documentId] ?? [],
+            remoteState.documents[documentId] ?? [],
+          )
+        ) {
+          continue;
         }
       } else {
         sharePolicyCanHelp = true;
@@ -1798,6 +1827,8 @@ export class AutomergeHost extends Resource {
     for (const [documentId, heads] of docHeads) {
       this.documentHeadsChanged.emit({ documentId, heads });
     }
+    // New heads may hold a change found missing before.
+    this._forgetMissingChanges(docHeads.map(([documentId]) => documentId));
 
     const collectionsChanged = new Set<CollectionId>();
 
@@ -1880,7 +1911,9 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
 /** A hex-encoded change hash, the only form `getChangeByHash` accepts. */
 const CHANGE_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
-const MAX_REMEMBERED_CHANGES_PER_DOCUMENT = 64;
+const MAX_CHECKS_PER_DOCUMENT = 64;
+
+const MAX_CHECKED_DOCUMENTS = 1_000;
 
 const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
   return !!getBackend(doc).getChangeByHash(changeHash);
