@@ -574,7 +574,7 @@ describe('EdgeFeedReplicator', () => {
       const pushing = new Trigger();
       const release = new Trigger();
       // `createClient` already spies on `send`, so the original comes from the class.
-      const send = EdgeClient.prototype.send.bind(messenger);
+      const send: EdgeClient['send'] = (ctx, message) => EdgeClient.prototype.send.call(messenger, ctx, message);
       let held = false;
       vi.spyOn(messenger, 'send').mockImplementation(async (ctx, message) => {
         const payload = message.payload && decodeCbor(message.payload.value);

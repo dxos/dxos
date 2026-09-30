@@ -226,10 +226,10 @@ export class AutomergeHost extends Resource {
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
-    queryCollectionState: this._queryCollectionState.bind(this),
-    sendCollectionState: this._sendCollectionState.bind(this),
-    shouldSyncCollection: this._shouldSyncCollection.bind(this),
-    hasLocalChange: this._hasLocalChange.bind(this),
+    queryCollectionState: (collectionId, peerId) => this._queryCollectionState(collectionId, peerId),
+    sendCollectionState: (collectionId, peerId, state) => this._sendCollectionState(collectionId, peerId, state),
+    shouldSyncCollection: (collectionId, peerId) => this._shouldSyncCollection(collectionId, peerId),
+    hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
   });
 
   private _repo!: Repo;
@@ -240,8 +240,11 @@ export class AutomergeHost extends Resource {
    */
   private readonly _confirmedChanges = new Map<DocumentId, Set<string>>();
 
-  /** When the collection diff last found each change absent from a resident document. */
-  private readonly _absentChanges = new Map<DocumentId, Map<string, number>>();
+  /**
+   * Changes the collection diff found absent from a resident document. Only replication can bring one, so a
+   * marker holds until new data is stored for the document or a peer connects.
+   */
+  private readonly _absentChanges = new Map<DocumentId, Set<string>>();
 
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
@@ -1458,7 +1461,7 @@ export class AutomergeHost extends Resource {
       const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(localState, state) : state;
       const diff = diffCollectionStateForPeer(localState, state, {
         isEdgePeer,
-        hasLocalChange: this._hasLocalChange.bind(this),
+        hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
       });
       result.peers!.push({
         peerId,
@@ -1517,8 +1520,8 @@ export class AutomergeHost extends Resource {
 
   /**
    * Whether the local replica holds a change, for the collection diff. Answers are remembered so an
-   * evicted document is loaded to check a change only when it was never checked, or its absence was
-   * found long enough ago that a retry may now fetch it.
+   * evicted document is loaded to check a change only when it was never checked, or replication has
+   * since stored data or connected a peer that could deliver it.
    */
   private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean | undefined {
     if (this._confirmedChanges.get(documentId)?.has(changeHash)) {
@@ -1534,15 +1537,14 @@ export class AutomergeHost extends Resource {
         ? this._repo.getHandle(documentId)?.doc()
         : undefined;
     if (!doc) {
-      const checkedAt = this._absentChanges.get(documentId)?.get(changeHash);
-      return checkedAt !== undefined && Date.now() - checkedAt < ABSENT_CHANGE_RECHECK_INTERVAL ? undefined : false;
+      return this._absentChanges.get(documentId)?.has(changeHash) ? undefined : false;
     }
     if (!changeIsPresentInDoc(doc, changeHash)) {
-      const absent = defaultMap(this._absentChanges, documentId, () => new Map<string, number>());
+      const absent = defaultMap(this._absentChanges, documentId, () => new Set<string>());
       if (absent.size >= MAX_REMEMBERED_CHANGES_PER_DOCUMENT) {
         absent.clear();
       }
-      absent.set(changeHash, Date.now());
+      absent.add(changeHash);
       return false;
     }
     this._absentChanges.get(documentId)?.delete(changeHash);
@@ -1572,6 +1574,8 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerConnected(peerId: PeerId): void {
+    // A new connection can deliver a change a failed or offline round could not.
+    this._absentChanges.clear();
     this._collectionSynchronizer.onConnectionOpen(peerId);
   }
 
@@ -1607,7 +1611,7 @@ export class AutomergeHost extends Resource {
 
     const { different, missingOnLocal, missingOnRemote } = diffCollectionStateForPeer(localState, remoteState, {
       isEdgePeer: isEdgePeerId(peerId),
-      hasLocalChange: this._hasLocalChange.bind(this),
+      hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
     });
 
     const syncKey = `${collectionId}:${peerId}`;
@@ -1875,9 +1879,6 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
 
 /** A hex-encoded change hash, the only form `getChangeByHash` accepts. */
 const CHANGE_HASH_PATTERN = /^[0-9a-f]{64}$/;
-
-/** How long a change found absent keeps an evicted document from being loaded to check it again. */
-const ABSENT_CHANGE_RECHECK_INTERVAL = 5 * 60_000;
 
 const MAX_REMEMBERED_CHANGES_PER_DOCUMENT = 64;
 

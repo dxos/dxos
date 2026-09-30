@@ -10,7 +10,7 @@ import {
   generateAutomergeUrl,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
-import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -447,7 +447,7 @@ describe('AutomergeHost', () => {
   });
 
   // A head no peer can deliver would otherwise fault the document in again after every eviction.
-  test('an evicted document is not re-checked for a head it was found to lack until the check expires', async () => {
+  test('an evicted document is re-checked for a head it was found to lack only once a peer connects', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({
@@ -481,9 +481,8 @@ describe('AutomergeHost', () => {
     await waitForEviction(expect, host, documentId);
     expect(await differentDocuments()).toEqual(0);
 
-    const now = Date.now();
-    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 10 * 60_000);
-    onTestFinished(() => clock.mockRestore());
+    // A new connection may deliver what the last round could not, so the head counts as missing again.
+    host['_onPeerConnected']('another-peer' as PeerId);
     expect(await differentDocuments()).toEqual(1);
   });
 
