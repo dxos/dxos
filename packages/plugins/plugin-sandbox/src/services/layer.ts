@@ -87,6 +87,8 @@ const NO_LOCAL_RUNTIME = 'Local sandboxes need the desktop app, or Node or Bun.'
 
 const NO_PUBLISH = 'Publishing files needs a local sandbox in the desktop app.';
 
+const NO_REPOSITORIES = 'Repositories can be attached only to EDGE sandboxes.';
+
 /**
  * A backend that picks EDGE or local per call. Asking for local where nothing can run it is an
  * error rather than a silent fall back to EDGE, since the caller chose local to keep work off the network.
@@ -124,6 +126,12 @@ const selecting = ({
     readFileBytes: (...args) => Effect.flatMap(select, (backend) => backend.readFileBytes(...args)),
     writeFile: (...args) => Effect.flatMap(select, (backend) => backend.writeFile(...args)),
     listFiles: (...args) => Effect.flatMap(select, (backend) => backend.listFiles(...args)),
+    setRepositories: (...args) =>
+      Effect.flatMap(select, (backend) =>
+        backend.setRepositories
+          ? backend.setRepositories(...args)
+          : Effect.fail(new SandboxService.SandboxError({ message: NO_REPOSITORIES })),
+      ),
     publish: (...args) =>
       Effect.flatMap(select, (backend) =>
         backend.publish

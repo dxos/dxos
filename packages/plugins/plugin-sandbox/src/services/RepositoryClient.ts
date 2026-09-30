@@ -73,41 +73,15 @@ export const RepositoryFile = Schema.Struct({
 });
 export type RepositoryFile = Schema.Schema.Type<typeof RepositoryFile>;
 
-export const SyncResult = Schema.Struct({
-  repository: Schema.String,
-  branch: Schema.String,
-  commit: Schema.optional(Schema.String),
-  success: Schema.Boolean,
-  output: Schema.String,
-});
-export type SyncResult = Schema.Schema.Type<typeof SyncResult>;
-
 export type CreateRepositoryOptions = { description?: string; defaultBranch?: string };
-
-export type SyncOptions = {
-  repositoryId: string;
-  /** Sandbox directory; the workspace root when omitted. */
-  path?: string;
-  /** The repository's default branch when omitted. */
-  branch?: string;
-  timeout?: number;
-};
-
-export type PushOptions = SyncOptions & {
-  message?: string;
-  author?: { name: string; email: string };
-  force?: boolean;
-};
 
 /** Reads walk an in-memory clone on EDGE; the first after a push fetches, which bounds these. */
 const READ_TIMEOUT = Duration.seconds(60);
 
-/** Push and pull run git in the container, bounded server-side by their own `timeout`. */
-const SYNC_TIMEOUT = Duration.minutes(5);
-
 /**
- * Client for the repository routes of sandbox-service: repositories backed by Cloudflare Artifacts,
- * and the push and pull that move a sandbox directory into and out of one.
+ * Client for the repository routes of sandbox-service: repositories backed by Cloudflare Artifacts.
+ * A sandbox reaches a repository with plain git, as a remote attached to it (see
+ * `SandboxClient.setRepositories`); nothing here pushes or pulls.
  *
  * Shares {@link SandboxClient}'s base URL and credential: both are routes of the same worker, gated
  * by the same space membership.
@@ -130,24 +104,22 @@ export class RepositoryClient {
     return send(
       HttpClientRequest.put(this.#url(spaceId, repositoryId)),
       options,
-      Schema.Struct({ repository: RepositoryRecord }),
+      envelope(RepositoryRecord),
       READ_TIMEOUT,
       this._authHeader,
       { checkStatus: true },
-    ).pipe(Effect.map((body) => body.repository));
+    ).pipe(Effect.map((body) => body.data));
   }
 
   getRepository(spaceId: string, repositoryId: string): RequestEffect<RepositoryRecord> {
-    return this.#get(spaceId, repositoryId, '', {}, Schema.Struct({ repository: RepositoryRecord })).pipe(
-      Effect.map((body) => body.repository),
-    );
+    return this.#get(spaceId, repositoryId, '', {}, RepositoryRecord);
   }
 
   deleteRepository(spaceId: string, repositoryId: string): RequestEffect<void> {
     return send(
       HttpClientRequest.delete(this.#url(spaceId, repositoryId)),
       undefined,
-      Schema.Struct({ success: Schema.Boolean }),
+      envelope(Schema.Struct({})),
       READ_TIMEOUT,
       this._authHeader,
       { checkStatus: true },
@@ -173,9 +145,7 @@ export class RepositoryClient {
   }
 
   readCommit(spaceId: string, repositoryId: string, hash: string): RequestEffect<CommitInfo> {
-    return this.#get(spaceId, repositoryId, `/commits/${hash}`, {}, Schema.Struct({ commit: CommitInfo })).pipe(
-      Effect.map((body) => body.commit),
-    );
+    return this.#get(spaceId, repositoryId, `/commits/${hash}`, {}, CommitInfo);
   }
 
   readTree(spaceId: string, repositoryId: string, options: { ref?: string; path?: string } = {}): RequestEffect<Tree> {
@@ -190,26 +160,6 @@ export class RepositoryClient {
     return this.#get(spaceId, repositoryId, '/files', compact(options), RepositoryFile);
   }
 
-  push(spaceId: string, sandboxId: string, options: PushOptions): RequestEffect<SyncResult> {
-    return this.#sync(spaceId, sandboxId, 'push', options);
-  }
-
-  pull(spaceId: string, sandboxId: string, options: SyncOptions): RequestEffect<SyncResult> {
-    return this.#sync(spaceId, sandboxId, 'pull', options);
-  }
-
-  #sync(spaceId: string, sandboxId: string, action: 'push' | 'pull', options: SyncOptions): RequestEffect<SyncResult> {
-    const timeout = options.timeout ? Duration.millis(options.timeout + 30_000) : SYNC_TIMEOUT;
-    return send(
-      HttpClientRequest.post(`${this._base.replace(/\/$/, '')}/spaces/${spaceId}/sandboxes/${sandboxId}/${action}`),
-      options,
-      SyncResult,
-      timeout,
-      this._authHeader,
-      { checkStatus: true },
-    );
-  }
-
   #get<T>(
     spaceId: string,
     repositoryId: string,
@@ -220,13 +170,16 @@ export class RepositoryClient {
     return send(
       HttpClientRequest.get(this.#url(spaceId, repositoryId, path)).pipe(HttpClientRequest.setUrlParams(params)),
       undefined,
-      schema,
+      envelope(schema),
       READ_TIMEOUT,
       this._authHeader,
       { checkStatus: true },
-    );
+    ).pipe(Effect.map((body) => body.data));
   }
 }
+
+/** The `EdgeResponse` success envelope every repository route answers with. */
+const envelope = <T>(data: Schema.Codec<T>) => Schema.Struct({ success: Schema.Literal(true), data });
 
 const compact = (params: Record<string, string | undefined>): Record<string, string> =>
   Object.fromEntries(Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined));

@@ -11,12 +11,10 @@ import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { File } from '@dxos/types';
 
+import * as Repository from './Repository.ts';
+import * as RepositoryService from './RepositoryService.ts';
 import * as Sandbox from './Sandbox.ts';
 import * as SandboxService from './SandboxService.ts';
-
-const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
-  description: 'The sandbox object ID.',
-});
 
 export const CreateSandbox = Operation.make({
   meta: {
@@ -33,13 +31,18 @@ export const CreateSandbox = Operation.make({
     baseImage: Schema.optional(Schema.String).annotate({
       description: 'Base container image to use. Defaults to the service default.',
     }),
+    repositories: Schema.optional(
+      Schema.Array(Ref.Ref(Repository.Repository)).annotate({
+        description: 'Repositories to attach: each is a git remote, named after the repository, in every command.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     sandboxId: Schema.String.annotate({
       description: 'The ECHO object ID of the created sandbox (also used as the sandbox service ID).',
     }),
   }),
-  services: [Database.Service, SandboxService.Service],
+  services: [Database.Service, SandboxService.Service, RepositoryService.Service],
 });
 
 export const Exec = Operation.make({
@@ -50,7 +53,7 @@ export const Exec = Operation.make({
     icon: 'ph--terminal-window--regular',
   },
   input: Schema.Struct({
-    sandbox: SandboxRef,
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
     command: Schema.String.annotate({
       description: 'Shell command to run.',
     }),
@@ -83,7 +86,7 @@ export const UploadFile = Operation.make({
     icon: 'ph--upload--regular',
   },
   input: Schema.Struct({
-    sandbox: SandboxRef,
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
     file: Ref.Ref(File.File).annotate({
       description: 'The ECHO File object to upload.',
     }),
@@ -107,7 +110,7 @@ export const DownloadFile = Operation.make({
     icon: 'ph--download--regular',
   },
   input: Schema.Struct({
-    sandbox: SandboxRef,
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
     path: Schema.String.annotate({
       description: 'Absolute path of the file in the sandbox.',
     }),
@@ -132,7 +135,7 @@ export const PublishFiles = Operation.make({
     icon: 'ph--share-network--regular',
   },
   input: Schema.Struct({
-    sandbox: SandboxRef,
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
     path: Schema.String.annotate({
       description: 'Directory in the sandbox to serve, relative to its workspace (or under /workspace).',
     }),
@@ -146,4 +149,24 @@ export const PublishFiles = Operation.make({
     }),
   }),
   services: [Database.Service, SandboxService.Service],
+});
+
+export const AttachRepository = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sandbox.attachRepository'),
+    name: 'AttachRepository',
+    description:
+      'Attaches a repository to a sandbox. Every later command in the sandbox then has it as a git remote, so plain git (clone, pull, commit, push) moves work between the sandbox and the repository.',
+    icon: 'ph--git-branch--regular',
+  },
+  input: Schema.Struct({
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
+    repository: Ref.Ref(Repository.Repository).annotate({ description: 'The repository object ID.' }),
+  }),
+  output: Schema.Struct({
+    remote: Schema.String.annotate({
+      description: 'The git remote name commands in the sandbox address the repository by.',
+    }),
+  }),
+  services: [Database.Service, SandboxService.Service, RepositoryService.Service],
 });

@@ -9,19 +9,24 @@ import { Database, Obj } from '@dxos/echo';
 
 import { Sandbox, SandboxOperation, SandboxService } from '#types';
 
+import { resolveAttachments } from '../../services/attach-repositories.ts';
+
 export default SandboxOperation.CreateSandbox.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ name, baseImage }) {
+    Effect.fn(function* ({ name, baseImage, repositories = [] }) {
       const { db } = yield* Database.Service;
 
-      const sandbox = Sandbox.make({ name, baseImage });
+      const sandbox = Sandbox.make({ name, baseImage, repositories: [...repositories] });
       yield* Database.add(sandbox);
 
       const sandboxId = sandbox.id;
       const spaceId = db.spaceId;
       const sandboxService = yield* SandboxService.Service;
 
-      const record = yield* sandboxService.create(spaceId, sandboxId, { name, baseImage }).pipe(Effect.orDie);
+      const attached = yield* resolveAttachments(spaceId, repositories).pipe(Effect.orDie);
+      const record = yield* sandboxService
+        .create(spaceId, sandboxId, { name, baseImage, repositories: attached })
+        .pipe(Effect.orDie);
 
       Obj.update(sandbox, (sandbox) => {
         sandbox.createdAt = record.createdAt;

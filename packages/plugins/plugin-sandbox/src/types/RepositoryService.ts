@@ -13,11 +13,8 @@ import type {
   Branches,
   CommitInfo,
   CreateRepositoryOptions,
-  PushOptions,
   RepositoryFile,
   RepositoryRecord,
-  SyncOptions,
-  SyncResult,
   Tree,
 } from '../services/RepositoryClient.ts';
 
@@ -25,8 +22,8 @@ import type {
 export class RepositoryError extends BaseError.extend('RepositoryError', 'Repository request failed.') {}
 
 /**
- * Git repositories hosted by EDGE (Cloudflare Artifacts), and the push and pull between them and a
- * sandbox. Unlike a sandbox, a repository is durable: it is where a sandbox's work is kept.
+ * Git repositories hosted by EDGE (Cloudflare Artifacts). Unlike a sandbox, a repository is durable:
+ * it is where a sandbox's work is kept, pushed with plain git from a sandbox it is attached to.
  *
  * Reads create the remote repository on first use, so an object made on another device, or before
  * the service could be reached, is backed as soon as anything looks at it.
@@ -55,10 +52,6 @@ export interface Backend {
     repositoryId: string,
     options: { ref?: string; path: string },
   ): Effect.Effect<RepositoryFile, RepositoryError>;
-  /** Commits a sandbox directory and pushes it to a branch of the repository. */
-  push(spaceId: string, sandboxId: string, options: PushOptions): Effect.Effect<SyncResult, RepositoryError>;
-  /** Checks a branch of the repository out into a sandbox directory, or fast-forwards it. */
-  pull(spaceId: string, sandboxId: string, options: SyncOptions): Effect.Effect<SyncResult, RepositoryError>;
 }
 
 /** The repository backend, contributed to the process runtime by the plugin's layer spec. */

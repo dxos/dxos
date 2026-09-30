@@ -79,10 +79,6 @@ export const makeRepositoryBackend = (
       read(spaceId, repositoryId, (repositoryClient) => repositoryClient.readTree(spaceId, repositoryId, options)),
     readFile: (spaceId, repositoryId, options) =>
       read(spaceId, repositoryId, (repositoryClient) => repositoryClient.readFile(spaceId, repositoryId, options)),
-    push: (spaceId, sandboxId, options) =>
-      read(spaceId, options.repositoryId, (repositoryClient) => repositoryClient.push(spaceId, sandboxId, options)),
-    pull: (spaceId, sandboxId, options) =>
-      toRepositoryError(request((repositoryClient) => repositoryClient.pull(spaceId, sandboxId, options))),
   };
 };
 

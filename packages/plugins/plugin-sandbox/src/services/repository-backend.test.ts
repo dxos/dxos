@@ -59,10 +59,12 @@ describe('repository backend', () => {
     const { backend, requests } = stub(({ method, url }) => {
       if (method === 'PUT') {
         created = true;
-        return { status: 201, body: { repository: RECORD } };
+        return { status: 201, body: { success: true, data: RECORD } };
       }
       if (url.pathname.endsWith('/branches')) {
-        return created ? { status: 200, body: { defaultBranch: 'main', branches: [] } } : notFound;
+        return created
+          ? { status: 200, body: { success: true, data: { defaultBranch: 'main', branches: [] } } }
+          : notFound;
       }
       return notFound;
     });
@@ -86,8 +88,11 @@ describe('repository backend', () => {
   test('tree and file reads carry the ref and path as query parameters', async ({ expect }) => {
     const { backend, requests } = stub(({ url }) =>
       url.pathname.endsWith('/files')
-        ? { status: 200, body: { path: 'src/a.ts', hash: 'h', content: 'x', encoding: 'utf-8', size: 1 } }
-        : { status: 200, body: { commit: 'c', entries: [] } },
+        ? {
+            status: 200,
+            body: { success: true, data: { path: 'src/a.ts', hash: 'h', content: 'x', encoding: 'utf-8', size: 1 } },
+          }
+        : { status: 200, body: { success: true, data: { commit: 'c', entries: [] } } },
     );
     await EffectEx.runPromise(backend.tree('space', 'repo', { ref: 'feature', path: 'src' }));
     const file = await EffectEx.runPromise(backend.readFile('space', 'repo', { path: 'src/a.ts' }));
@@ -96,19 +101,5 @@ describe('repository backend', () => {
       'GET /spaces/space/repositories/repo/tree?ref=feature&path=src',
       'GET /spaces/space/repositories/repo/files?path=src%2Fa.ts',
     ]);
-  });
-
-  test('push posts to the sandbox route with the repository in the body', async ({ expect }) => {
-    let pushed: unknown;
-    const { backend, requests } = stub(({ body }) => {
-      pushed = body;
-      return { status: 200, body: { repository: 'repo', branch: 'main', commit: 'c', success: true, output: '' } };
-    });
-    const result = await EffectEx.runPromise(
-      backend.push('space', 'box', { repositoryId: 'repo', path: '/workspace/app', message: 'Build' }),
-    );
-    expect(result.success).toBe(true);
-    expect(requests).toEqual(['POST /spaces/space/sandboxes/box/push']);
-    expect(pushed).toEqual({ repositoryId: 'repo', path: '/workspace/app', message: 'Build' });
   });
 });

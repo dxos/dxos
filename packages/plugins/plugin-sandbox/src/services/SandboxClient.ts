@@ -11,11 +11,19 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
+/** A repository attached to a sandbox, and the git remote name commands in it address it by. */
+export const AttachedRepository = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+});
+export type AttachedRepository = Schema.Schema.Type<typeof AttachedRepository>;
+
 export const SandboxRecord = Schema.Struct({
   id: Schema.String,
   spaceId: Schema.String,
   name: Schema.optional(Schema.String),
   baseImage: Schema.String,
+  repositories: Schema.optional(Schema.Array(AttachedRepository)),
   createdAt: Schema.String,
   expiresAt: Schema.String,
 });
@@ -120,7 +128,7 @@ export class SandboxClient {
   createSandbox(
     spaceId: string,
     sandboxId: string,
-    options?: { name?: string; baseImage?: string; expiresIn?: number },
+    options?: { name?: string; baseImage?: string; expiresIn?: number; repositories?: readonly AttachedRepository[] },
   ): RequestEffect<SandboxRecord> {
     return send(
       HttpClientRequest.put(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}`)),
@@ -129,6 +137,25 @@ export class SandboxClient {
       CREATE_TIMEOUT,
       this._authHeader,
     ).pipe(Effect.map((body) => body.sandbox));
+  }
+
+  /**
+   * Replaces the repositories attached to a sandbox. Configuration of the sandbox, like its image:
+   * every later command in it gets each repository as a git remote named after it.
+   */
+  setRepositories(
+    spaceId: string,
+    sandboxId: string,
+    repositories: readonly AttachedRepository[],
+  ): RequestEffect<SandboxRecord> {
+    return send(
+      HttpClientRequest.put(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/repositories`)),
+      { repositories },
+      Schema.Struct({ success: Schema.Literal(true), data: SandboxRecord }),
+      METADATA_TIMEOUT,
+      this._authHeader,
+      { checkStatus: true },
+    ).pipe(Effect.map((body) => body.data));
   }
 
   getSandbox(spaceId: string, sandboxId: string): RequestEffect<SandboxRecord> {

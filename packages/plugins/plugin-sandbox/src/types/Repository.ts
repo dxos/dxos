@@ -8,8 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-export const SKILL_KEY = 'org.dxos.skill.repository';
-
 /**
  * ECHO object representing a git repository hosted by EDGE (Cloudflare Artifacts).
  * The object id is used as the repository id in the sandbox service. Sandboxes are ephemeral;
