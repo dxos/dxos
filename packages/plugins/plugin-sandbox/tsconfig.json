@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -52,6 +55,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"

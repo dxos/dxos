@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -146,4 +147,31 @@ export const PublishFiles = Operation.make({
     }),
   }),
   services: [Database.Service, SandboxService.Service],
+});
+
+/** The variable a granted account token is exported as, which `dx` reads for its API key. */
+export const ACCOUNT_TOKEN_ENV = 'DX_API_TOKEN';
+
+/**
+ * Lets commands in a sandbox act as the reader's account: mints an API token bound to their identity,
+ * expiring with the sandbox, and exports it to every command as {@link ACCOUNT_TOKEN_ENV}.
+ *
+ * Not a skill tool: a credential that acts as the reader is theirs to hand over, so only their click grants it.
+ */
+export const GrantAccountAccess = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sandbox.grantAccountAccess'),
+    name: 'GrantAccountAccess',
+    description: 'Gives the commands in a sandbox an API token that acts as your account.',
+    icon: 'ph--key--regular',
+  },
+  input: Schema.Struct({
+    sandbox: SandboxRef,
+  }),
+  output: Schema.Struct({
+    env: Schema.String.annotate({
+      description: 'The environment variable the token is exported as.',
+    }),
+  }),
+  services: [Capability.Service, Database.Service],
 });

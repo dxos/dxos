@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AppGraphBuilder,
   LocalLauncher,
   OperationHandler,
   PluginAsset,
@@ -12,10 +13,12 @@ import {
   Schema,
   Settings,
   SkillDefinition,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(LocalLauncher),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
@@ -23,6 +26,7 @@ export const SandboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(Settings),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

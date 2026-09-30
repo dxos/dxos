@@ -29,7 +29,11 @@ export class Sandbox extends Type.makeObject<Sandbox>(DXN.make('org.dxos.type.sa
         }),
       ),
     ),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' }),
+    // Listed in the navtree like any object the reader owns, which is where its "Grant account access" action lives.
+    Annotation.UserType.set(),
+  ),
 ) {}
 
 /**
