@@ -217,7 +217,8 @@ describe('EdgeFeedReplicator', () => {
         feedKey: source.key.toHex(),
         blockAt,
         blocksIn: ({ from, to }: BlockRange) => Promise.all(range(to - from, (offset) => blockAt(from + offset))),
-        // `get` on a sparse feed resolves when the block arrives, so this awaits delivery rather than polling.
+        // `get` on a sparse feed resolves when the block arrives, so this awaits delivery rather than polling;
+        // a test ends on it so no reply is still reading the source when its storage closes.
         holds: (indices: number[]) => Promise.all(indices.map((index) => replica.get(index))),
       };
     };
@@ -339,6 +340,7 @@ describe('EdgeFeedReplicator', () => {
       // The next request is the one this push causes: nothing was requested for the pushed blocks 3 and 4.
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(6)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 5, to: 7 } });
+      await holds([5, 6]);
     });
 
     test('does not repeat a request still in flight when the metadata reply arrives', async () => {
@@ -380,6 +382,7 @@ describe('EdgeFeedReplicator', () => {
 
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(5)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 3, to: 6 } });
+      await holds([3, 4, 5]);
     });
 
     test('recovers blocks left out of a reply on the next connection, without re-requesting them before', async () => {
@@ -488,6 +491,7 @@ describe('EdgeFeedReplicator', () => {
       await append();
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(5)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 4, to: 6 } });
+      await holds([4, 5]);
     });
 
     test('does not send pushed blocks back when a metadata reply behind them arrives', async () => {
@@ -510,6 +514,7 @@ describe('EdgeFeedReplicator', () => {
       await append();
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(5)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 4, to: 6 } });
+      await holds([4, 5]);
     });
   });
 
