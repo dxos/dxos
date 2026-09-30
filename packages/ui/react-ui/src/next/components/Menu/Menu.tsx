@@ -412,9 +412,23 @@ const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
       {...props}
       sub
       onSelect={onSelect ?? parent.onSelect}
-      positioning={{ placement: 'right-start', gutter: 0, ...positioning }}
+      positioning={{ placement: 'right-start', gutter: 0, getAnchorRect: parentEdgeRect, ...positioning }}
     />
   );
+};
+
+/**
+ * The trigger item's rect stretched to its menu's end edge, so a submenu opens beside the menu rather than over the
+ * thumb strip an overflowing menu reserves after its items.
+ */
+const parentEdgeRect = (element: unknown) => {
+  // A virtual anchor has no menu to measure, so zag falls back to its own rect.
+  if (!(element instanceof HTMLElement)) {
+    return null;
+  }
+  const item = element.getBoundingClientRect();
+  const frame = element.closest('.nx-popup')?.getBoundingClientRect();
+  return { x: item.x, y: item.y, width: (frame?.right ?? item.right) - item.x, height: item.height };
 };
 
 MenuSub.displayName = 'Next.Menu.Sub';

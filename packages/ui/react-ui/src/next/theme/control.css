@@ -242,11 +242,10 @@
     width: auto;
     padding-inline: var(--nx-control-inset);
   }
-  /* The caret is a smaller trailing icon, set closer to what it follows than a label is. */
+  /* The caret is a smaller trailing icon, a full gap from the label or icon it follows so the two read apart. */
   .nx-button[data-caret] > .nx-icon:last-child {
     width: calc(var(--nx-control-icon) * 0.75);
     height: calc(var(--nx-control-icon) * 0.75);
-    margin-inline-start: calc(var(--nx-control-inset) - var(--nx-gap-size));
   }
   .nx-button:disabled {
     opacity: 0.5;
@@ -499,6 +498,10 @@
     padding-block: 0;
     /* The viewport's focus ring is inset at the frame's edge, so the overlay thumb sits inside it. */
     --scroll-thumb-inset: var(--nx-focus-ring-width);
+  }
+  /* Only while it overflows, a popup reserves the thumb's strip (the thumb, one ring inset either side) at its end. */
+  .nx-scroll-root.nx-popup[data-overflow-y] > .nx-scroll-viewport {
+    padding-inline-end: calc(var(--nx-scroll-width) + 2 * var(--scroll-thumb-inset));
   }
   .nx-scroll-root.nx-popup:has(> .nx-scroll-viewport[hidden]) {
     display: none;

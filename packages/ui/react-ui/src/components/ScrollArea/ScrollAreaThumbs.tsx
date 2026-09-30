@@ -50,6 +50,8 @@ type ScrollAreaThumbsProps = {
   orientation: AllowedAxis;
   density: ScrollbarDensity;
   autoHide: boolean;
+  /** Called when a thumb appears or disappears, i.e. when the viewport starts or stops overflowing on that axis. */
+  onOverflowChange?: (overflow: { vertical: boolean; horizontal: boolean }) => void;
 };
 
 /**
@@ -57,7 +59,13 @@ type ScrollAreaThumbsProps = {
  * (its own scrollbars are hidden via CSS), so scroll chaining and nesting behave as the browser
  * intends. Must be rendered as a sibling of the viewport inside a positioned root.
  */
-export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: ScrollAreaThumbsProps) => {
+export const ScrollAreaThumbs = ({
+  viewport,
+  orientation,
+  density,
+  autoHide,
+  onOverflowChange,
+}: ScrollAreaThumbsProps) => {
   const [vertical, setVertical] = useState<ThumbGeometry>(HIDDEN);
   const [horizontal, setHorizontal] = useState<ThumbGeometry>(HIDDEN);
   const [dragging, setDragging] = useState<AllowedAxis | undefined>();
@@ -99,6 +107,10 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
       resize.disconnect();
     };
   }, [viewport, update]);
+
+  useEffect(() => {
+    onOverflowChange?.({ vertical: vertical.visible, horizontal: horizontal.visible });
+  }, [vertical.visible, horizontal.visible, onOverflowChange]);
 
   // Read current geometry during a drag without re-binding the move handler on every frame.
   const verticalRef = useRef(vertical);

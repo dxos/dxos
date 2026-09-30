@@ -141,14 +141,42 @@ export const expectScrollingPopup = async (popup: HTMLElement, steps: number) =>
     await expect(popup.scrollTop, `scrolled: ${where}`).toBeGreaterThan(0);
     await expect(itemRect.top >= viewRect.top - 0.5 && itemRect.bottom <= viewRect.bottom + 0.5, where).toBe(true);
   });
-  // The overlay thumb sits inside the viewport's inset focus ring, never over it.
-  const thumb = popupFrame(popup).querySelector<HTMLElement>('[data-scroll-thumb="vertical"]');
-  await expect(thumb, 'vertical thumb').not.toBeNull();
-  const ring = parseFloat(getComputedStyle(popup).getPropertyValue('--nx-focus-ring-width'));
-  await expect(ring, 'focus ring width').toBeGreaterThan(0);
-  await expect(thumb?.getBoundingClientRect().right ?? Infinity, 'thumb inside ring').toBeLessThanOrEqual(
-    popup.getBoundingClientRect().right - ring + 0.5,
-  );
+  await expectThumbReserve(popup);
+};
+
+/**
+ * Asserts an overflowing popup's overlay thumb sits inside the viewport's inset focus ring, and that the popup reserves
+ * the thumb's strip so no item (nor its last part, e.g. a shortcut) reaches the thumb.
+ */
+export const expectThumbReserve = async (popup: HTMLElement) => {
+  await waitFor(async () => {
+    const thumb = popupFrame(popup).querySelector<HTMLElement>('[data-scroll-thumb="vertical"]');
+    await expect(thumb, 'vertical thumb').not.toBeNull();
+    await expect(popupFrame(popup)).toHaveAttribute('data-overflow-y');
+    const thumbRect = thumb?.getBoundingClientRect() ?? new DOMRect();
+    const ring = parseFloat(getComputedStyle(popup).getPropertyValue('--nx-focus-ring-width'));
+    await expect(ring, 'focus ring width').toBeGreaterThan(0);
+    await expect(thumbRect.right, 'thumb inside ring').toBeLessThanOrEqual(
+      popup.getBoundingClientRect().right - ring + 0.5,
+    );
+    const items = popup.querySelectorAll<HTMLElement>('[role="option"], [role^="menuitem"]');
+    await expect(items.length, 'items').toBeGreaterThan(0);
+    for (const item of items) {
+      for (const part of [item, item.lastElementChild]) {
+        await expect(part?.getBoundingClientRect().right ?? Infinity, 'item clears the thumb').toBeLessThanOrEqual(
+          thumbRect.left + 0.5,
+        );
+      }
+    }
+  });
+};
+
+/** Asserts a popup that fits shows no thumb and reserves no strip for one. */
+export const expectNonScrollingPopup = async (popup: HTMLElement) => {
+  await expect(popup.scrollHeight, 'popup fits').toBeLessThanOrEqual(popup.clientHeight);
+  await expect(popupFrame(popup)).not.toHaveAttribute('data-overflow-y');
+  await expect(popupFrame(popup).querySelector('[data-scroll-thumb]')).toBeNull();
+  await expect(getComputedStyle(popup).paddingRight, 'no reserve').toBe('0px');
 };
 
 /** Hovers with a real pointer (the storybook runner's Playwright), since synthetic events never apply `:hover`. */

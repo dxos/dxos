@@ -17,6 +17,7 @@ import {
   centreY,
   controlSize,
   expectAnchoredBelow,
+  expectNonScrollingPopup,
   expectPopupSize,
   expectScoped,
   expectScrollingPopup,
@@ -194,6 +195,7 @@ export const Test: Story = {
     const listbox = await body.findByRole('listbox');
     await expect(listbox).toBe(body.getByTestId('listbox-md'));
     await expectAnchoredBelow(trigger, listbox);
+    await waitFor(() => expectNonScrollingPopup(listbox));
     // The ScrollArea frame is the surface; the listbox itself is its viewport.
     const frame = popupFrame(listbox);
     await expect(frame.dataset.surface).toBe('popup');
