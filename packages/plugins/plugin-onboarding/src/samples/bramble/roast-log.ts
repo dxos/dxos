@@ -185,7 +185,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       roaster: Ref.make(people.kai),
       greenWeightKg: 30,
       status: 'planned',
-      notes: 'Increase charge rate 2 % vs Run 1 to address drum unevenness. Schedule cupping on day 5.',
+      notes: 'Increase charge rate 2 % vs the v2 trial to address drum unevenness. Schedule cupping on day 5.',
     }),
     Obj.make(type, {
       title: 'Colombia Huila — Pre-production',

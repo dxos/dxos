@@ -29,7 +29,7 @@ Roastery Ops also owns a **Weekly roast report** routine. It's off. Turn it on a
 
 Everything that belongs to a project lives in its **Artifacts**. A document can also sit in more than one place:
 
-- The **Reference** collection holds company records that outlast any one project. **Wholesale terms** shows up in both the Olive & Vine and Spring Blend projects, and the **Esperanza cupping notes** in both Spring Blend and the sourcing trip. Delete either project and those documents stay put.
+- The **Reference** collection holds company records that outlast any one project. **Wholesale terms** shows up in both the Olive & Vine and Spring Blend projects, and the **Cupping notes — Finca Esperanza Lot A** in both Spring Blend and the sourcing trip. Delete either project and those documents stay put.
 - The **Roastery Handbook** collection gathers what a new hire reads first: the floor plan and the tasting protocol. Both belong to their projects. The handbook only points at them.
 
 The **About Bramble Coffee Roasters** document in the Welcome collection describes the company in detail: history, team, suppliers, customers, current work. It's a useful grounding doc if you want to ask the agent for new sample content that fits the same world.
