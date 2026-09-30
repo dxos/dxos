@@ -27,6 +27,7 @@ import {
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
 import { type ChangeGraph, ancestorsOf, applyStructuralEdit, frontierOf, isMapValue } from './fold-edit.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey } from './migration-context.ts';
+import { replayLosingMigrations } from './migration-merge.ts';
 
 //
 // Fold-forward as a standing rule (Phase C2/C3, `.agents/projects/lenses/IMPLEMENTATION-PLAN.md`
@@ -443,6 +444,7 @@ const foldStep = (
   const isRunnerChange = (message: string | null | undefined): boolean =>
     message === ownCheckpoint ||
     message?.startsWith(ownFold) === true ||
+    message?.startsWith('replay:') === true ||
     laterSteps.some((key) => message?.startsWith('fold:') === true && message.includes(`[${object.id}:${key}]`));
   // Only changes that write this object: a document can hold other objects, whose writes are no work.
   const pending = A.getChangesMetaSince(doc, base).filter(
@@ -544,6 +546,11 @@ const repairMigratedType = (object: Obj.Unknown, steps: readonly Migration.Recor
 const foldObject = (db: Database.Database, migrations: readonly Migration.Migration[], object: Obj.Unknown): void => {
   const steps = Migration.getMigrationSteps(object);
   repairMigratedType(object, steps);
+  try {
+    replayLosingMigrations(object, steps);
+  } catch (err) {
+    log.warn('foldForward: failed to replay edits onto the winning migration', { object: object.id, err });
+  }
   const checkpoints = new Map<string, Heads>();
   for (const [index, { key, step }] of steps.entries()) {
     const migration = migrations.find(

@@ -440,7 +440,7 @@ describe('fold-forward when two peers migrate from the same heads', () => {
 
   // Expected to fail until migrations merge like duplicate objects: from different heads each peer's
   // migration creates its own list, and edits inside the one Automerge does not show are lost.
-  test.fails('peers that migrate from different heads keep the direct edits each made inside the new list', async () => {
+  test('peers that migrate from different heads keep the direct edits each made inside the new list', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     // Not `await using`: the network must close after the builder.
     const builder = await new EchoTestBuilder().open();

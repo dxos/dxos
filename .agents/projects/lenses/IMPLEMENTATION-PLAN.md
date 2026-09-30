@@ -89,14 +89,21 @@ Follow-up (2026-09-29), superseding item 1:
 
 10. **Concurrent migrations of one object.** Objects a migration creates (`ensure`, array fan-out
     children, fan-in parents) carry convergence keys and converge through the convergence-key merger
-    (`migration-concurrent.test.ts`, `migration-fan-out.test.ts`). Target properties inside the migrated
-    object do not: each migration change creates its own lists, maps and text. Peers that migrate from the
-    same heads now author one shared change (`ObjectCore.sharedChangeAt`), so they share the containers.
-    Peers that migrate from different heads still lose direct edits made inside the containers Automerge
-    does not show (`test.fails` in `fold-forward.test.ts`). Proposed fix, by analogy with the merger: the
-    migration change whose containers are visible wins deterministically, only the winning step folds late
-    writes, and direct edits made inside a losing migration's containers are replayed onto the winner's per
-    change, with the same shared-change machinery.
+    (`migration-concurrent.test.ts`, `migration-fan-out.test.ts`). Target lists, maps and text inside the
+    migrated object are values, not objects: peers that migrate from the same heads author one shared
+    change (`ObjectCore.sharedChangeAt`), and peers that migrate from different heads each create their
+    own. For those, `migration-merge.ts` replays each user edit made inside a losing migration's container
+    onto the visible one per change, as the merger replays a losing duplicate's edits. Each step keeps
+    folding late writes into its own containers, which is correct whichever wins.
+11. **Open: keeping old peers working (not built).** A migrated object already holds both shapes; old
+    peers break because the type switch drops it from their version-exact type lists, and new-shape edits
+    never reach the old fields. Proposed: (a) keep `system.type` at the old version while old peers may
+    exist, with new clients reading the latest recorded step as the effective type (query and index
+    changes in new code only); (b) fold new-shape edits back into the old fields through a reverse
+    mapping (a lens's `put`, or an optional `backward` on `define`), with folds never counted as writes to
+    fold back; (c) finalize (switch the type, stop backward folds, drop the old fields) once every known
+    device reports it understands the new version, with an app-release cutoff for devices that never
+    return. Migrations with no reverse mapping switch the type at once, as today.
 
 ## Where things live
 
