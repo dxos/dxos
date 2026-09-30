@@ -33,5 +33,6 @@ export * as Tag from './Tag.ts';
 export * as Text from './Text.ts';
 export * as Type from './Type.ts';
 export * as Collection from './Collection.ts';
+export * as VersionLens from './VersionLens.ts';
 export * as View from './View.ts';
 export * as Dataset from './Dataset.ts';
