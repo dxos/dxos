@@ -174,7 +174,7 @@ const NODE_BUILTIN_STUBS = {
  */
 const WORKER_ENVIRONMENT: ModuleUrlEnvironment = {
   name: 'worker',
-  entries: ['src/workers/dedicated-worker.ts', 'src/workers/client-plugin.ts', 'src/workers/observability-plugin.ts'],
+  entries: ['src/workers/dedicated-worker.ts', 'src/workers/client-plugin.ts'],
 };
 
 /**

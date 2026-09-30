@@ -37,6 +37,13 @@ export type RunOptions = {
   storageLockKey: string;
   /** Plugins compiled into the worker entry; those listed in `runtime.client.workerPlugins` join them. */
   plugins?: readonly Plugin.Plugin[];
+  /** Runs once the tab's config arrives, before any plugin loads: the place for process-wide setup such as telemetry. */
+  onBeforeStart?: (config: Config) => Effect.Effect<void>;
+  /**
+   * Runs once the stack is ready and every {@link WorkerEvents.StackReady} subscriber has finished, before any
+   * session is admitted. A failure is logged: it must not keep the worker from serving its tabs.
+   */
+  onStart?: (stack: LayerStack.LayerStack) => Effect.Effect<void, unknown>;
 };
 
 /** Imports a worker plugin by URL; the module's default export is a plugin or a zero-arg factory. */
@@ -53,7 +60,7 @@ const loadPlugin = (url: string): Effect.Effect<Plugin.Plugin, WorkerPluginLoadE
  * {@link WorkerEvents.Startup}. Everything else — which services, when to open them, what to do
  * per session — is a plugin's, through {@link WorkerCapabilities.Host} and {@link WorkerEvents}.
  */
-export const run = ({ storageLockKey, plugins: builtIn = [] }: RunOptions): void =>
+export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onStart }: RunOptions): void =>
   Worker.run({
     storageLockKey,
     createRuntime: ({ config: values, requestShutdown }) =>
@@ -62,6 +69,9 @@ export const run = ({ storageLockKey, plugins: builtIn = [] }: RunOptions): void
         const hooks = Hook.makeController();
         const router = yield* RpcRouter.make;
         const provideHooks = Effect.provideService(Hook.Controller, hooks);
+        if (onBeforeStart) {
+          yield* onBeforeStart(config);
+        }
 
         const urls = config.values.runtime?.client?.workerPlugins ?? [];
         log('plugin-worker: loading plugins', { urls });
@@ -119,6 +129,9 @@ export const run = ({ storageLockKey, plugins: builtIn = [] }: RunOptions): void
         // Builds the eager specs — rpc registrations, lifecycle subscriptions — which nothing resolves.
         yield* stack.init().pipe(Effect.orDie, Scope.provide(stackScope));
         yield* Hook.emit(WorkerEvents.StackReady, { stack }).pipe(provideHooks);
+        if (onStart) {
+          yield* onStart(stack).pipe(Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))));
+        }
         log('plugin-worker: ready');
 
         let sessions = 0;

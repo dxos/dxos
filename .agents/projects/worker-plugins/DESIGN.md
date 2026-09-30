@@ -48,12 +48,13 @@ same unit of contribution a tab uses.
 - **D4 — storage mode rides config.** `runtime.client.storage.persistent === false` selects
   in-memory SQLite in the worker (replaces Composer's `VITE_DX_STORAGE=memory` worker option; the
   tab sets the flag).
-- **D5 — observability is a Composer worker plugin** (decision 4b), loaded by URL like the client
-  plugin: log sink, observability init, echo-host WASM init before the stack builds, identity data
-  provider on `StackReady`.
-
+- **D5 — observability stays in the worker entry.** The log sink is installed at module load, telemetry
+  starts in `PluginWorker.run`'s `onBeforeStart` (with the tab's config, before any plugin loads) and the
+  identity data provider is added in `onStart` (after every `StackReady` subscriber, so the stack is
+  open). A plugin would add a failure mode, and the log sink must predate plugin loading anyway.
+  (Supersedes decision 4b's observability plugin, per review.)
 - **D6 — the worker is one build environment.** Composer's `ModuleUrlPlugin` lists the worker
-  entry and its plugins (`dedicated-worker.ts`, `client-plugin.ts`, `observability-plugin.ts`) as
+  entry and its plugins (`dedicated-worker.ts`, `client-plugin.ts`) as
   entries of a `worker` build environment, built before the client with its exports kept. They share
   chunks, so the worker holds one instance of `effect`, `@dxos/rpc` and every other module they have
   in common; the environment's files are emitted into the client's output, and the tab starts the

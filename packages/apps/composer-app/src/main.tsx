@@ -76,7 +76,6 @@ import {
 } from './util/index.ts';
 import clientWorkerPluginUrl from './workers/client-plugin.ts?module-url';
 import dedicatedWorkerUrl from './workers/dedicated-worker.ts?module-url';
-import observabilityWorkerPluginUrl from './workers/observability-plugin.ts?module-url';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -525,7 +524,7 @@ const main = async () => {
             ...(import.meta.env.VITE_DX_STORAGE === 'memory' && { persistent: false }),
           },
           // What the dedicated worker serves: it loads each of these plugins by URL.
-          workerPlugins: [clientWorkerPluginUrl, observabilityWorkerPluginUrl],
+          workerPlugins: [clientWorkerPluginUrl],
         },
       },
     },
