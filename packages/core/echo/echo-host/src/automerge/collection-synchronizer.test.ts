@@ -255,6 +255,8 @@ describe('CollectionSynchronizer', () => {
     const state = (heads: string[]): CollectionState => ({ documents: { a: heads } as Record<DocumentId, A.Heads> });
     expect(isCollectionStateEqual(state(['h1', 'h2']), state(['h2', 'h1']))).toBe(true);
     expect(isCollectionStateEqual(state(['h1', 'h2']), state(['h1', 'h1']))).toBe(false);
+    // Heads compare as sets, so repeating one is not a difference.
+    expect(isCollectionStateEqual(state(['h1']), state(['h1', 'h1']))).toBe(true);
   });
 
   test('edge peer diff intersects remote with local key set', ({ expect }) => {

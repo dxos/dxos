@@ -451,26 +451,11 @@ const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
 /**
- * Whether two states name the same heads for the same documents. Exact rather than the diff's overlap
- * rule: the dedupe relies on it, and a head added beside a shared one is a change it must not drop.
+ * Whether two states name the same heads, compared as sets, for the same documents. Exact rather than
+ * the diff's overlap rule: the dedupe relies on it, and a head added beside a shared one is a change.
  */
-export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean => {
-  const leftDocuments = Record.filter(left.documents, (heads) => heads.length > 0);
-  const rightDocuments = Record.filter(right.documents, (heads) => heads.length > 0);
-  const documentIds = Record.keys(leftDocuments);
-  if (documentIds.length !== Record.keys(rightDocuments).length) {
-    return false;
-  }
-  return documentIds.every((documentId) => {
-    const rightHeads = rightDocuments[documentId];
-    if (!rightHeads) {
-      return false;
-    }
-    const leftHeads = new Set(leftDocuments[documentId]);
-    const rightSet = new Set(rightHeads);
-    return rightSet.size === leftHeads.size && [...rightSet].every((head) => leftHeads.has(head));
-  });
-};
+export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean =>
+  isDiffEmpty(diffCollectionState(left, right, { exact: true }));
 
 /**
  * Strip entries whose heads array is empty before sending a CollectionState
@@ -513,13 +498,20 @@ export const diffCollectionStateForPeer = (
   { isEdgePeer, hasLocalChange }: { isEdgePeer: boolean; hasLocalChange?: HasLocalChange },
 ): CollectionStateDiff => {
   const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(local, remote) : remote;
-  return diffCollectionState(local, effectiveRemote, hasLocalChange);
+  return diffCollectionState(local, effectiveRemote, { hasLocalChange });
+};
+
+export type DiffCollectionStateOptions = {
+  /** Lets the overlap rule tell a stale head a peer still advertises from a change this replica lacks. */
+  hasLocalChange?: HasLocalChange;
+  /** Marks a document `different` whenever its head sets differ, instead of applying the overlap rule. */
+  exact?: boolean;
 };
 
 export const diffCollectionState = (
   local: CollectionState,
   remote: CollectionState,
-  hasLocalChange?: HasLocalChange,
+  { hasLocalChange, exact = false }: DiffCollectionStateOptions = {},
 ): CollectionStateDiff => {
   const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
   const remoteDocuments = Record.filter(remote.documents, (heads) => heads.length > 0);
@@ -535,8 +527,10 @@ export const diffCollectionState = (
     } else if (!remoteDocuments[documentId]) {
       missingOnRemote.push(documentId);
     } else if (
-      !headsOverlap(local.documents[documentId], remote.documents[documentId]) ||
-      advertisesMissingChange(documentId, local.documents[documentId], remote.documents[documentId], hasLocalChange)
+      exact
+        ? !headsEqual(local.documents[documentId], remote.documents[documentId])
+        : !headsOverlap(local.documents[documentId], remote.documents[documentId]) ||
+          advertisesMissingChange(documentId, local.documents[documentId], remote.documents[documentId], hasLocalChange)
     ) {
       // Subduction's `getAllHeads()` on the edge mixes raw `LooseCommit` tips with
       // fragment heads (commit IDs promoted to depth >= 1 by leading-zero count of the
@@ -572,6 +566,13 @@ const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
     }
   }
   return false;
+};
+
+/** Whether two head lists name the same heads, compared as sets. */
+const headsEqual = (a: readonly string[], b: readonly string[]): boolean => {
+  const aset = new Set(a);
+  const bset = new Set(b);
+  return aset.size === bset.size && [...bset].every((head) => aset.has(head));
 };
 
 /**
