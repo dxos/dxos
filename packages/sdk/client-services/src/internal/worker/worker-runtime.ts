@@ -6,13 +6,10 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
 import { PROXY_CONNECTION_TIMEOUT, makeRtcServiceClientOverProtocol } from '@dxos/client-protocol';
@@ -21,18 +18,17 @@ import { type Config, ConfigService } from '@dxos/config';
 import { Hook } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
+import { type MemorySignalManagerContext } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
-import { WorkerRuntimeStartError, makeInProcessClient } from '@dxos/protocols';
-import { DevicesService, IdentityService, type RTCService } from '@dxos/protocols/rpc';
+import { WorkerRuntimeStartError } from '@dxos/protocols';
+import { type RTCService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
-import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import * as Events from '../../Events.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
-import { enableNetworking, layerClientServices } from '../services/index.ts';
+import { layerClientServices } from '../services/index.ts';
 import { SessionClosed } from './events.ts';
+import { type SqliteLayer, layerSqlite, openStack, signalMetadataTags, workerStackOptions } from './worker-services.ts';
 
 // Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol
 // serves the client services; systemProtocol carries the reverse-direction
@@ -50,15 +46,6 @@ export interface WorkerSession {
   readonly rtcService: RTCService.Client;
 }
 
-/**
- * Grace period between "worker booted" and the first edge dial. wa-sqlite runs in-process on this
- * thread, so the dial, its auth-header request, and the replication behind it contend with the boot
- * RPCs the tab is waiting on — on a document-heavy profile the session handshake loses that race and
- * the client reports a connect timeout. Yielding lets the queued handshake drain first; replication
- * then proceeds behind a live session. The stack exposes the capability; the embedder decides the timing.
- */
-const EDGE_NETWORKING_START_DELAY = '300 millis';
-
 export type WorkerRuntimeOptions = {
   configProvider: Effect.Effect<Config>;
   /** The runtime wants to terminate (its last session closed, or a reset finished); the embedder closes its scope. */
@@ -72,7 +59,7 @@ export type WorkerRuntimeOptions = {
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
    * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
    */
-  sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
+  sqliteLayer?: SqliteLayer;
 
   /**
    * Shared context for the in-memory signal manager used when edge signaling is off; tests pass one
@@ -122,10 +109,6 @@ export const makeWorkerRuntime = ({
     const transportFactory = new RtcTransportProxyFactory();
     const ready = new Trigger<Error | undefined>();
     const sessions = new Set<WorkerSession>();
-    const signalMetadataTags: any = {
-      runtime: 'worker-runtime',
-      origin: typeof location !== 'undefined' ? location.origin : 'unknown',
-    };
     const scope = yield* Effect.scope;
 
     let sessionForNetworking: WorkerSession | undefined;
@@ -137,7 +120,7 @@ export const makeWorkerRuntime = ({
       log.warn('Using testing SQLite layer');
     }
 
-    const sqlite = (sqliteLayer ?? LocalSqliteOpfsLayer).pipe(Layer.provideMerge(Reactivity.layer), Layer.orDie);
+    const sqlite = layerSqlite(sqliteLayer);
 
     const closeStack = Effect.gen(function* () {
       stack = undefined;
@@ -184,27 +167,12 @@ export const makeWorkerRuntime = ({
     yield* Effect.gen(function* () {
       log('starting...');
       const config = yield* configProvider;
-      const observabilityGroup = config.get('runtime.client.observabilityGroup');
-      if (observabilityGroup) {
-        signalMetadataTags.group = observabilityGroup;
-      }
 
       log('worker-runtime: building client services stack');
       // Building the layer also builds its eager specs, so the rpc registrations are in place before
-      // the events below run.
+      // the stack opens.
       const stackContext = yield* Layer.build(
-        layerClientServices({
-          // The dial is driven below once boot has drained, not on stack open.
-          autoConnect: false,
-          // Auto-activate spaces that were previously active after leader changeover.
-          runtimeProps: { autoActivateSpaces: true },
-          // Edge signaling is created by the platform layer from the edge connection; otherwise fall
-          // back to an in-memory manager (KUBE `WebsocketSignalManager` removed).
-          signalManager: config.get('runtime.client.edgeFeatures')?.signaling
-            ? undefined
-            : new MemorySignalManager(memorySignalManagerContext ?? new MemorySignalManagerContext()),
-          transportFactory,
-        }).pipe(
+        layerClientServices(workerStackOptions({ config, transportFactory, memorySignalManagerContext })).pipe(
           Layer.provide(sqlite),
           Layer.provide(Layer.succeed(ConfigService, config)),
           Layer.provide(Layer.succeed(Hook.Controller, controller)),
@@ -213,50 +181,14 @@ export const makeWorkerRuntime = ({
       const built = Context.get(stackContext, LayerStack.Service);
       stack = built;
       log('worker-runtime: stack built, opening');
-      // `StackOpened` resolves once every handler the cascade triggered has run.
-      yield* Effect.gen(function* () {
-        yield* Hook.emit(Events.Opening, undefined);
-        yield* Hook.emit(Events.StackOpened, undefined);
-      }).pipe(Effect.provideService(Hook.Controller, controller));
-      log('worker-runtime: stack opened, signalling ready');
+      // Anchored after the whole worker start sequence, not just the stack build, so networking
+      // starts only once boot has drained.
+      yield* openStack(built, signalMetadataTags(config)).pipe(
+        Effect.provideService(Hook.Controller, controller),
+        Scope.provide(stackScope),
+      );
       ready.wake(undefined);
       log('started');
-
-      // Bridge the identity/devices Handlers to the effect-rpc client surface in-process.
-      const [identityService, devicesService] = yield* Effect.all([
-        makeInProcessClient(
-          IdentityService.Rpcs,
-          yield* built.getServiceResolver().resolve(IdentityService.Tag, {}).pipe(Scope.provide(stackScope)),
-        ),
-        makeInProcessClient(
-          DevicesService.Rpcs,
-          yield* built.getServiceResolver().resolve(DevicesService.Tag, {}).pipe(Scope.provide(stackScope)),
-        ),
-      ]);
-      setIdentityTags({
-        identityService,
-        devicesService,
-        setTag: (key: string, value: string) => {
-          signalMetadataTags[key] = value;
-        },
-      });
-
-      // Boot is done: outbound traffic can no longer starve the session handshake the tab is
-      // waiting on. Anchored here rather than in the stack so the gate opens only after the whole
-      // worker start sequence has drained, not just the stack open. The grace period yields the
-      // thread so any RPC already queued behind this turn is served before the dial and its
-      // auth-header request start competing for it.
-      log.info('worker-runtime: boot complete, scheduling networking start', {
-        delay: EDGE_NETWORKING_START_DELAY,
-      });
-      const networkingFiber = yield* Effect.forkDetach(
-        Effect.gen(function* () {
-          yield* Effect.sleep(EDGE_NETWORKING_START_DELAY);
-          log('worker-runtime: starting networking');
-          yield* enableNetworking;
-        }).pipe(Effect.provideService(Hook.Controller, controller)),
-      );
-      yield* Effect.addFinalizer(() => Fiber.interrupt(networkingFiber));
     }).pipe(
       Effect.catchCause((cause) =>
         Effect.gen(function* () {
@@ -333,28 +265,3 @@ export const makeWorkerRuntime = ({
 export const layerWorkerRuntime = (
   options: WorkerRuntimeOptions,
 ): Layer.Layer<WorkerRuntime, WorkerRuntimeStartError> => Layer.effect(WorkerRuntime, makeWorkerRuntime(options));
-
-const DB_NAME = 'DXOS';
-
-/**
- * SqlExport layer that wraps SqliteClient to provide export functionality.
- */
-const SqlExportLayer: Layer.Layer<SqlExport.SqlExport, never, SqliteClient.SqliteClient> = Layer.effect(
-  SqlExport.SqlExport,
-  Effect.gen(function* () {
-    const sql = yield* SqliteClient.SqliteClient;
-    return {
-      export: sql.export,
-    } satisfies SqlExport.Service;
-  }),
-);
-
-/**
- * Local SQLite layer for the worker.
- * Uses in-process OPFS via {@link SqliteClient.layerOpfs} (no MessagePort).
- * NOTE: Only usable within a worker.
- */
-const LocalSqliteOpfsLayer = SqlExportLayer.pipe(
-  Layer.provideMerge(SqliteClient.layerOpfs({ dbName: DB_NAME })),
-  Layer.provideMerge(Reactivity.layer),
-);

@@ -86,6 +86,11 @@
       "types": "./dist/types/src/services/dedicated/dedicated-worker.d.ts",
       "import": "./dist/lib/services/dedicated/dedicated-worker.mjs"
     },
+    "./lock-key": {
+      "source": "./src/lock-key.ts",
+      "types": "./dist/types/src/lock-key.d.ts",
+      "import": "./dist/lib/lock-key.mjs"
+    },
     "./local": {
       "source": "./src/services/local.ts",
       "types": "./dist/types/src/services/local.d.ts",

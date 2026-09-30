@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: worker-plugins
+    status: active
+    user: dmaretskyi
+    host: cloud
+    created: 2026-09-30
+    summary: 'Composer dedicated worker as a plugin host: base worker (app-framework) provides hook bus, RPC router and a LayerStack built from Capabilities.LayerSpec contributed by worker plugin modules loaded by URL; plugin-client contributes client services.'
+    tasks: .agents/projects/worker-plugins/TASKS.md
+    design: .agents/projects/worker-plugins/DESIGN.md
+    prs: []
+    resume: 'Just started.'
   - name: architecture-rules
     status: active
     user: dmaretskyi

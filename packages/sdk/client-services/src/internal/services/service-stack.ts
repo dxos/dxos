@@ -67,6 +67,11 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
   signalManager?: SignalManager;
   /** Overrides the WebRTC transport; tests pass the in-memory transport. */
   transportFactory?: TransportFactory;
+  /**
+   * The embedder provides the `RpcRouter` the services register on, as a worker host does so one
+   * router outlives the stack and serves every tab; otherwise the stack builds its own.
+   */
+  externalRouter?: boolean;
 };
 
 /**
