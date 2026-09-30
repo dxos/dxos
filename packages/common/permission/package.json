@@ -26,7 +26,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*"
   },
   "devDependencies": {

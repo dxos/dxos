@@ -1,10 +1,12 @@
 # Design: Permission system
 
-Status: draft for review, revision 3 (2026-09-30). Project: "Permission system" in the DXOS space;
+Status: draft for review, revision 4 (2026-09-30). Project: "Permission system" in the DXOS space;
 this file mirrors the design document filed there. Package: `@dxos/permission` (name under
 discussion, see Naming).
 
-Revision 3 adds the Overview and the Naming section, and uses 'claim' for what a credential
+Revision 4 corrects the check algorithm from review on dxos/dxos#13555: the chain rule compares a
+child's issuer with its parent's audience, a candidate grant must cover the requirement's subject
+and command, and the requirement's policy is conjoined with the chain's. Revision 3 adds the Overview and the Naming section, and uses 'claim' for what a credential
 asserts, all from Rich's comments. Revision 2 folded in Dmytro's: subjects and principals are plain
 echo URIs, and a space can be a grant's audience with the role in the policy.
 
@@ -320,14 +322,18 @@ Pure, and the specification of the package:
 
 1. Resolve the subject from the requirement and the args.
 2. Candidates are the grants whose audience is the principal, or the space of the subject when the
-   principal is a member of it, inside their time window, not revoked.
+   principal is a member of it, inside their time window, not revoked, and holding at least one
+   permission that covers the resolved subject and the requirement's command. A grant for
+   `/email/send` never satisfies a requirement for `/sandbox/exec`.
 3. For each candidate, walk `proofs` to a root, where a root is a grant whose issuer owns the
    subject: an OWNER or ADMIN for a space or an object in it, the identity itself for its own
-   resources, the runtime for a process. At every hop the child's audience equals the parent's
-   issuer, the child's command is a descendant of the parent's, the child's subject is covered by
-   the parent's, every non-leaf is `delegable`, and the time windows intersect.
-4. Conjoin every policy on the chain and evaluate it over `{ args, caller }`. A later hop can add a
-   constraint and never remove one.
+   resources, the runtime for a process. At every hop the child's issuer equals the parent's
+   audience (the delegate re-grants what it was granted), the child's command is a descendant of
+   the parent's, the child's subject is covered by the parent's, every non-leaf is `delegable`,
+   and the time windows intersect.
+4. Conjoin the requirement's own policy with every policy on the chain and evaluate the result
+   over `{ args, caller }`. A later hop can add a constraint and never remove one, and the
+   requirement's policy is the operation's floor that no grant can lift.
 5. If a `consent` condition is present, require a matching `Consent` record from the named
    principal.
 6. The first chain that passes is the answer, returned with the chain for tracing and audit. None
@@ -575,8 +581,8 @@ once per session and re-evaluated when grants change; `consentable` operations s
 
 ## Package layout
 
-`packages/common/permission` (name pending), `private: true`. Dependencies: `effect`, `@dxos/keys`,
-`@dxos/invariant`, and a sha256 (`@dxos/crypto` or WebCrypto). No ECHO, no HALO, no Effect
+`packages/common/permission` (name pending), `private: true`. Dependencies: `effect`, `@dxos/keys`, and
+a sha256 (`@dxos/crypto` or WebCrypto) when grant ids arrive. No ECHO, no HALO, no Effect
 services beyond the `GrantSource` interface.
 
 Modules, namespace-exported per the code-style skill: `Principal`, `Subject`, `Command`, `Policy`

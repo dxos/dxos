@@ -3726,9 +3726,6 @@ importers:
 
   packages/common/permission:
     dependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../keys

@@ -6,9 +6,6 @@
   ],
   "references": [
     {
-      "path": "../invariant"
-    },
-    {
       "path": "../keys"
     }
   ]
