@@ -50,20 +50,27 @@ const AsyncCombobox = ({ size = 'md' }: SizeArgs) => {
     <Next.Field.Root>
       <Next.Combobox.Root items={items} defaultValue={[OPTIONS[1].value]}>
         <Next.Combobox.Label>Lead</Next.Combobox.Label>
-        <Next.Combobox.Input />
+        <Next.Combobox.Control />
         <Next.Combobox.Content />
       </Next.Combobox.Root>
     </Next.Field.Root>
   );
 };
 
-/** The default substring filter, a custom prefix `filter`, late-loading items, and a long list that scrolls. */
+/**
+ * The default substring filter with a clear trigger, a custom prefix `filter`, late-loading items in a Control that
+ * renders its default Input and Trigger, and a long list that scrolls.
+ */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <Next.Field.Root>
       <Next.Combobox.Root items={OPTIONS}>
         <Next.Combobox.Label>Owner</Next.Combobox.Label>
-        <Next.Combobox.Input placeholder='Search people' data-testid={`combobox-${size}`} />
+        <Next.Combobox.Control data-testid={`combobox-${size}`}>
+          <Next.Combobox.Input placeholder='Search people' />
+          <Next.Combobox.ClearTrigger aria-label='Clear owner' />
+          <Next.Combobox.Trigger />
+        </Next.Combobox.Control>
         <Next.Combobox.Content data-testid={`listbox-${size}`} />
       </Next.Combobox.Root>
     </Next.Field.Root>
@@ -71,7 +78,10 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     <Next.Field.Root>
       <Next.Combobox.Root items={OPTIONS} filter={startsWith}>
         <Next.Combobox.Label>Reviewer</Next.Combobox.Label>
-        <Next.Combobox.Input placeholder='Starts with' />
+        <Next.Combobox.Control>
+          <Next.Combobox.Input placeholder='Starts with' />
+          <Next.Combobox.Trigger />
+        </Next.Combobox.Control>
         <Next.Combobox.Content size='lg' />
       </Next.Combobox.Root>
     </Next.Field.Root>
@@ -79,7 +89,10 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     <Next.Field.Root>
       <Next.Combobox.Root items={LONG}>
         <Next.Combobox.Label>Assignee</Next.Combobox.Label>
-        <Next.Combobox.Input placeholder='Many people' data-testid={`long-${size}`} />
+        <Next.Combobox.Control data-testid={`long-${size}`}>
+          <Next.Combobox.Input placeholder='Many people' />
+          <Next.Combobox.Trigger />
+        </Next.Combobox.Control>
         <Next.Combobox.Content />
       </Next.Combobox.Root>
     </Next.Field.Root>
@@ -102,7 +115,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The control row is control-tall and as wide as an Input at every size, with its caret trigger a control square. A
+ * The control row is control-tall and as wide as an Input at every size, with its caret trigger a control square; a
+ * ClearTrigger shows only while there is a value, and clears it. A
  * preselected value shows its label once late items load; typing then Enter selects the first match; a custom
  * `filter` replaces the default substring match. Typing filters the portalled listbox (case-insensitive substring) and
  * choosing fills the input; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the highlight in
@@ -176,6 +190,15 @@ export const Test: Story = {
     await userEvent.click(within(listbox).getByRole('option', { name: 'Bob Grey' }));
     await waitFor(() => expect(input).toHaveValue('Bob Grey'));
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
+
+    // The clear trigger appears with a value and clears it.
+    const clear = byTestId(canvasElement, 'combobox-md').querySelector<HTMLElement>('[data-part="clear-trigger"]');
+    await expect(clear).toBeVisible();
+    if (clear) {
+      await userEvent.click(clear);
+    }
+    await waitFor(() => expect(input).toHaveValue(''));
+    await waitFor(() => expect(clear).not.toBeVisible());
 
     // Reopening lists every option again, and a query with no match shows the empty state.
     await userEvent.clear(input);

@@ -32,6 +32,7 @@ export const translations = [
         'system-button.ai.label': 'Run AI',
         'system-button.add.label': 'Add',
         'system-button.delete.label': 'Delete',
+        'system-button.remove.label': 'Remove',
         'system-button.edit.label': 'Edit',
         'system-button.close.label': 'Close',
         'system-button.open.label': 'Open',

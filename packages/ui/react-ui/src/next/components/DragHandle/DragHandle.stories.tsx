@@ -51,15 +51,13 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
               item={item}
               data-testid={`row-${item.value}-${size}`}
               ref={index === 0 ? (element) => setSource(element) : index === 1 ? rowRef : undefined}
-              trailing={
-                <Next.DragHandle
-                  label={`Move ${item.label}`}
-                  onMove={(direction) => move(item.value, direction)}
-                  data-testid={`handle-${item.value}-${size}`}
-                />
-              }
             >
-              {item.label}
+              <Next.Listbox.ItemText />
+              <Next.DragHandle
+                label={`Move ${item.label}`}
+                onMove={(direction) => move(item.value, direction)}
+                data-testid={`handle-${item.value}-${size}`}
+              />
               {index === 1 && <Next.DropIndicator edge='top' />}
             </Next.Listbox.Item>
           ))}

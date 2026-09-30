@@ -12,7 +12,6 @@ import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Container, type ContainerProps, type Level } from '../Container/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
-import { Toolbar, type ToolbarRootProps } from '../Toolbar/index.ts';
 
 //
 // Root
@@ -26,7 +25,7 @@ type PanelRootProps = {
 
 /**
  * The plank host (Phase 4 decision 1): fills its parent, sets `data-size` and a level for its subtree, and is the pane's
- * query container (decision 5), so its toolbar, content and statusbar collapse at the same pane width.
+ * query container (decision 5), so its header, body and footer collapse at the same pane width.
  */
 const PanelRoot = slottable<HTMLDivElement, PanelRootProps>(
   ({ children, asChild, size, level = 'base', ...props }, forwardedRef) => {
@@ -51,38 +50,54 @@ const PanelRoot = slottable<HTMLDivElement, PanelRootProps>(
 PanelRoot.displayName = 'Next.Panel.Root';
 
 //
-// Toolbar
+// Header
 //
 
-type PanelToolbarProps = Omit<ToolbarRootProps, 'size'>;
+type PanelHeaderProps = {};
 
-/** A `Next.Toolbar.Root` row at the top on the bar aspect, which steps off whatever level hosts the panel. */
-const PanelToolbar = slottable<HTMLDivElement, PanelToolbarProps>(({ classNames, ...props }, forwardedRef) => (
-  <Toolbar.Root {...props} data-surface='bar' classNames={mx(recipes.panelToolbar(), classNames)} ref={forwardedRef} />
-));
+/**
+ * The top row on the bar aspect, which steps off whatever level hosts the panel; it sizes to its content, so it takes
+ * no space when empty and one block when it holds a `Toolbar.Root`.
+ */
+const PanelHeader = slottable<HTMLDivElement, PanelHeaderProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props, { classNames: recipes.panelHeader() });
+  return (
+    <ark.div
+      asChild={asChild}
+      {...rest}
+      data-scope='panel'
+      data-part='header'
+      data-surface='bar'
+      className={className}
+      ref={forwardedRef}
+    >
+      {children}
+    </ark.div>
+  );
+});
 
-PanelToolbar.displayName = 'Next.Panel.Toolbar';
+PanelHeader.displayName = 'Next.Panel.Header';
 
 //
-// Content
+// Body
 //
 
-type PanelContentProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
+type PanelBodyProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
   Pick<ContainerProps, 'gutter' | 'columns' | 'gap' | 'layout'>;
 
 /**
  * The growing middle row: a composed ScrollArea (decision 5) around a gutter Container (`rail` by default), so the
  * thin overlay bar sits in the end gutter. The frame is no query container of its own: its Container collapses against
- * the panel, like the toolbar and statusbar. Carries ScrollArea's `data-scope` (finding 10); the ref is the frame's.
+ * the panel, like the header and footer. Carries ScrollArea's `data-scope` (finding 10); the ref is the frame's.
  */
-const PanelContent = slottable<HTMLDivElement, PanelContentProps>(
+const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(
   ({ children, classNames, mode, width, native, gutter = 'rail', columns, gap, layout, ...props }, forwardedRef) => (
     <ScrollArea.Root
       {...props}
       mode={mode}
       width={width}
       native={native}
-      classNames={mx(recipes.panelContent(), classNames)}
+      classNames={mx(recipes.panelBody(), classNames)}
       ref={forwardedRef}
     >
       <ScrollArea.Viewport asChild>
@@ -94,41 +109,39 @@ const PanelContent = slottable<HTMLDivElement, PanelContentProps>(
   ),
 );
 
-PanelContent.displayName = 'Next.Panel.Content';
+PanelBody.displayName = 'Next.Panel.Body';
 
 //
-// Statusbar
+// Footer
 //
 
-type PanelStatusbarProps = {};
+type PanelFooterProps = {};
 
-/** The bottom row: one block tall on the bar aspect, in the size's label text and `--color-description`; no role. */
-const PanelStatusbar = slottable<HTMLDivElement, PanelStatusbarProps>(
-  ({ children, asChild, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props, { classNames: recipes.panelStatusbar() });
-    return (
-      <ark.div
-        asChild={asChild}
-        {...rest}
-        data-scope='panel'
-        data-part='statusbar'
-        data-surface='bar'
-        className={className}
-        ref={forwardedRef}
-      >
-        {children}
-      </ark.div>
-    );
-  },
-);
+/** The bottom row on the bar aspect; like Header it sizes to its content, holding a `Toolbar.Root` when it needs one. */
+const PanelFooter = slottable<HTMLDivElement, PanelFooterProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props, { classNames: recipes.panelFooter() });
+  return (
+    <ark.div
+      asChild={asChild}
+      {...rest}
+      data-scope='panel'
+      data-part='footer'
+      data-surface='bar'
+      className={className}
+      ref={forwardedRef}
+    >
+      {children}
+    </ark.div>
+  );
+});
 
-PanelStatusbar.displayName = 'Next.Panel.Statusbar';
+PanelFooter.displayName = 'Next.Panel.Footer';
 
 export const Panel = {
   Root: PanelRoot,
-  Toolbar: PanelToolbar,
-  Content: PanelContent,
-  Statusbar: PanelStatusbar,
+  Header: PanelHeader,
+  Body: PanelBody,
+  Footer: PanelFooter,
 };
 
-export type { PanelContentProps, PanelRootProps, PanelStatusbarProps, PanelToolbarProps };
+export type { PanelBodyProps, PanelFooterProps, PanelHeaderProps, PanelRootProps };

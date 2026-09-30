@@ -16,16 +16,18 @@ import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.
 
 const ROWS = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 
-/** A panel filling a fixed-height host: a toolbar, 30 rows with rail icons that overflow the content, and a statusbar. */
+/** A panel filling a fixed-height host: a toolbar header, 30 rows with rail icons that overflow the body, and a footer. */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <div data-place='full' className='h-64' data-testid={`host-${size}`}>
     <Next.Panel.Root size={size} data-testid={`panel-${size}`}>
-      <Next.Panel.Toolbar data-testid={`toolbar-${size}`}>
-        <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-        <Next.Toolbar.Text>Inbox</Next.Toolbar.Text>
-        <Next.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
-      </Next.Panel.Toolbar>
-      <Next.Panel.Content data-testid={`content-${size}`}>
+      <Next.Panel.Header data-testid={`header-${size}`}>
+        <Next.Toolbar.Root>
+          <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+          <Next.Toolbar.Text>Inbox</Next.Toolbar.Text>
+          <Next.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body data-testid={`body-${size}`}>
         {ROWS.map((label, index) => (
           <Next.Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
             <Next.Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
@@ -34,10 +36,29 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
             <Next.Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Next.Typography>
           </Next.Container>
         ))}
-      </Next.Panel.Content>
-      <Next.Panel.Statusbar data-testid={`statusbar-${size}`}>{ROWS.length} items</Next.Panel.Statusbar>
+      </Next.Panel.Body>
+      <Next.Panel.Footer data-testid={`footer-${size}`}>
+        <Next.Toolbar.Root>
+          <Next.Toolbar.Text>{ROWS.length} items</Next.Toolbar.Text>
+        </Next.Toolbar.Root>
+      </Next.Panel.Footer>
     </Next.Panel.Root>
   </div>
+);
+
+/** The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing. */
+const TestStory = (args: SizeArgs) => (
+  <>
+    <DefaultStory {...args} />
+    <div data-place='full' className='h-16' data-testid={`bare-host-${args.size}`}>
+      <Next.Panel.Root size={args.size}>
+        <Next.Panel.Header data-testid={`empty-header-${args.size}`} />
+        <Next.Panel.Body data-testid={`bare-body-${args.size}`}>
+          <Next.Typography>Body</Next.Typography>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
+    </div>
+  </>
 );
 
 const meta = {
@@ -56,12 +77,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * At every size the panel fills its host and stacks a block-tall toolbar, the growing content and a block-tall
- * statusbar with no gaps; its `data-size` reaches the toolbar's controls and the content's rail Blocks. The content
- * overflows and scrolls with the thin overlay thumb in the end gutter. Narrowed below the collapse width, the panel (the
- * query container) collapses the content's rail gutter to the inset and hides the rail Blocks.
+ * At every size the panel fills its host and stacks a header and footer sized to their one-row toolbars (one block) and
+ * the growing body with no gaps, while an empty header and a missing footer take no space; its `data-size` reaches the
+ * toolbar's controls and the body's rail Blocks. The body overflows and scrolls with the thin overlay thumb in the end
+ * gutter. Narrowed below the collapse width, the panel (the query container) collapses the body's rail gutter to the
+ * inset and hides the rail Blocks.
  */
 export const Test: Story = {
+  render: TestStory,
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
@@ -69,23 +92,31 @@ export const Test: Story = {
       const panel = byTestId(canvasElement, `panel-${size}`);
       const host = byTestId(canvasElement, `host-${size}`).getBoundingClientRect();
       const rect = panel.getBoundingClientRect();
-      const toolbar = byTestId(canvasElement, `toolbar-${size}`).getBoundingClientRect();
-      const content = byTestId(canvasElement, `content-${size}`).getBoundingClientRect();
-      const statusbar = byTestId(canvasElement, `statusbar-${size}`).getBoundingClientRect();
+      const header = byTestId(canvasElement, `header-${size}`).getBoundingClientRect();
+      const body = byTestId(canvasElement, `body-${size}`).getBoundingClientRect();
+      const footer = byTestId(canvasElement, `footer-${size}`).getBoundingClientRect();
       await expect(panel).toHaveAttribute('data-size', size);
       await expect(getComputedStyle(panel).containerType, `${size} query container`).toBe('inline-size');
 
       // Fills the host; the parts stack edge to edge.
       await expect(rect.height, `${size} fills height`).toBeCloseTo(host.height, 0);
       await expect(rect.width, `${size} fills width`).toBeCloseTo(host.width, 0);
-      await expect(toolbar.top, `${size} toolbar top`).toBeCloseTo(rect.top, 0);
-      await expect(toolbar.height, `${size} toolbar height`).toBeCloseTo(block, 0);
-      await expect(content.top, `${size} content top`).toBeCloseTo(toolbar.bottom, 0);
-      await expect(statusbar.top, `${size} statusbar top`).toBeCloseTo(content.bottom, 0);
-      await expect(statusbar.bottom, `${size} statusbar bottom`).toBeCloseTo(rect.bottom, 0);
-      await expect(statusbar.height, `${size} statusbar height`).toBeCloseTo(block, 0);
+      await expect(header.top, `${size} header top`).toBeCloseTo(rect.top, 0);
+      await expect(header.height, `${size} toolbar header height`).toBeCloseTo(block, 0);
+      await expect(body.top, `${size} body top`).toBeCloseTo(header.bottom, 0);
+      await expect(footer.top, `${size} footer top`).toBeCloseTo(body.bottom, 0);
+      await expect(footer.bottom, `${size} footer bottom`).toBeCloseTo(rect.bottom, 0);
+      await expect(footer.height, `${size} toolbar footer height`).toBeCloseTo(block, 0);
 
-      // Size flows to the toolbar's controls and the content's rails.
+      // An empty header and a missing footer take no space: the body fills the panel.
+      const bareHost = byTestId(canvasElement, `bare-host-${size}`).getBoundingClientRect();
+      const emptyHeader = byTestId(canvasElement, `empty-header-${size}`).getBoundingClientRect();
+      const bareBody = byTestId(canvasElement, `bare-body-${size}`).getBoundingClientRect();
+      await expect(emptyHeader.height, `${size} empty header height`).toBe(0);
+      await expect(bareBody.top, `${size} bare body top`).toBeCloseTo(bareHost.top, 0);
+      await expect(bareBody.bottom, `${size} bare body bottom`).toBeCloseTo(bareHost.bottom, 0);
+
+      // Size flows to the toolbar's controls and the body's rails.
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
       await expect(add.height, `${size} control`).toBeCloseTo(controlSize(size), 0);
       await expect(add.left - rect.left, `${size} control inset`).toBeCloseTo(inset, 0);
@@ -97,8 +128,8 @@ export const Test: Story = {
     }
     await expectScoped(canvasElement);
 
-    // The content scrolls, the thumb in the end gutter following it.
-    const frame = byTestId(canvasElement, 'content-md');
+    // The body scrolls, the thumb in the end gutter following it.
+    const frame = byTestId(canvasElement, 'body-md');
     const viewport = frame.querySelector<HTMLElement>(':scope > .nx-scroll-viewport');
     await expect(viewport).not.toBeNull();
     if (!viewport) {

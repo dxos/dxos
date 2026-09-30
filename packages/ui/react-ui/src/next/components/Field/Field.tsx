@@ -4,7 +4,7 @@
 
 import { Field as FieldPrimitive, useFieldContext } from '@ark-ui/react/field';
 import { useFieldsetContext } from '@ark-ui/react/fieldset';
-import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import React, { Children, type ComponentPropsWithoutRef, forwardRef, isValidElement } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type MessageValence, type ThemedClassName } from '@dxos/ui-types';
@@ -30,7 +30,7 @@ type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps> & {
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
 const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
   ({ classNames, invalid, validationValence, ...props }, forwardedRef) => {
-    // Ark inherits only `disabled` from an enclosing FieldSet; an invalid set marks its fields invalid too.
+    // Ark inherits only `disabled` from an enclosing Fieldset; an invalid set marks its fields invalid too.
     const fieldset = useFieldsetContext();
     return (
       <FieldPrimitive.Root
@@ -86,9 +86,16 @@ type FieldLabelProps = ThemedClassName<FieldPrimitive.LabelProps> & {
  */
 const LABEL_TARGET_ATTRIBUTE = 'data-label-target';
 
+/**
+ * Names the control; while the root is `required` it ends with the required indicator, unless a
+ * `RequiredIndicator` among its children places the mark itself.
+ */
 const FieldLabel = forwardRef<HTMLLabelElement, FieldLabelProps>(
-  ({ classNames, srOnly, onClick, ...props }, forwardedRef) => {
+  ({ classNames, srOnly, onClick, children, ...props }, forwardedRef) => {
     const field = useFieldContext();
+    const placed = Children.toArray(children).some(
+      (child) => isValidElement(child) && child.type === FieldRequiredIndicator,
+    );
     return (
       <FieldPrimitive.Label
         {...props}
@@ -104,12 +111,35 @@ const FieldLabel = forwardRef<HTMLLabelElement, FieldLabelProps>(
         data-sr-only={srOnly ? '' : undefined}
         className={mx(recipes.label(), classNames)}
         ref={forwardedRef}
-      />
+      >
+        {children}
+        {field?.required && !placed && <FieldRequiredIndicator />}
+      </FieldPrimitive.Label>
     );
   },
 );
 
 FieldLabel.displayName = 'Next.Field.Label';
+
+//
+// RequiredIndicator
+//
+
+type FieldRequiredIndicatorProps = ThemedClassName<FieldPrimitive.RequiredIndicatorProps>;
+
+/** Ark's mark for a `required` root (`*` by default); `Field.Label` renders one, so use this only to place it yourself. */
+const FieldRequiredIndicator = forwardRef<HTMLSpanElement, FieldRequiredIndicatorProps>(
+  ({ classNames, ...props }, forwardedRef) => (
+    <FieldPrimitive.RequiredIndicator
+      aria-hidden
+      {...props}
+      className={mx(recipes.fieldRequired(), classNames)}
+      ref={forwardedRef}
+    />
+  ),
+);
+
+FieldRequiredIndicator.displayName = 'Next.Field.RequiredIndicator';
 
 //
 // HelperText
@@ -140,6 +170,7 @@ export const Field = {
   Root: FieldRoot,
   Header: FieldHeader,
   Label: FieldLabel,
+  RequiredIndicator: FieldRequiredIndicator,
   HelperText: FieldHelperText,
   ErrorText: FieldErrorText,
 };
@@ -151,6 +182,7 @@ export type {
   FieldHeaderProps,
   FieldHelperTextProps,
   FieldLabelProps,
+  FieldRequiredIndicatorProps,
   FieldRootProps,
   FieldValence,
 };

@@ -13,7 +13,6 @@ import { type Size } from '../../sizes.ts';
 import { Block } from '../Block/index.ts';
 import { Button, type ButtonProps } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
-import { DragHandle } from '../DragHandle/index.ts';
 import { Group } from '../Group/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Image, type ImageProps } from '../Image/index.ts';
@@ -377,7 +376,6 @@ export const Card = {
   Action: CardAction,
   Link: CardLink,
   Menu: CardMenu,
-  DragHandle,
 };
 
 export type {

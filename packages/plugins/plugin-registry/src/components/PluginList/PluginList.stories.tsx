@@ -56,9 +56,9 @@ const DefaultStory = () => {
 
   return (
     <Next.Panel.Root>
-      <Next.Panel.Content>
+      <Next.Panel.Body>
         <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
-      </Next.Panel.Content>
+      </Next.Panel.Body>
     </Next.Panel.Root>
   );
 };

@@ -95,7 +95,11 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
               {items.map((item) =>
                 item.value === 'leek' ? (
                   <Next.Select.Item key={item.value} item={item}>
-                    <Next.Tag hue='amber'>Leek</Next.Tag>
+                    <Next.Select.ItemIcon icon='ph--circle--fill' hue='amber' />
+                    <Next.Select.ItemText>
+                      <Next.Tag hue='amber'>Leek</Next.Tag>
+                    </Next.Select.ItemText>
+                    <Next.Select.ItemIndicator />
                   </Next.Select.Item>
                 ) : (
                   <Next.Select.Item key={item.value} item={item} />
@@ -148,7 +152,7 @@ export const Default: Story = {};
  * Triggers are control-tall and centred in their block at every size (decision 12). Clicking the trigger opens a
  * portalled listbox at `level='popup'`; choosing an option closes it and shows the choice, and Escape closes it without
  * choosing; a decorative Separator spans the popup between options. Grouped options sit in labelled `group`s, a
- * `hue` colours an option's icon, and an Item's children replace its icon and label. A `multiple` select stays open
+ * `hue` colours an option's icon, and an Item's children replace its whole row, composed from parts. A `multiple` select stays open
  * while choosing and lists every choice; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the
  * highlight in view; a `loading` trigger is busy and spins in place of its caret. A listbox takes its trigger row's size unless given its own. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
@@ -235,8 +239,18 @@ export const Test: Story = {
     const apple = within(produceList).getByRole('option', { name: 'Apple' }).querySelector('svg');
     const pear = within(produceList).getByRole('option', { name: 'Pear' }).querySelector('svg');
     await expect(apple && getComputedStyle(apple).color).not.toBe(pear && getComputedStyle(pear).color);
+    // Kale's default row renders its data (icon, text, indicator); Leek's children compose the same parts around a Tag.
+    const kale = within(vegetables).getByRole('option', { name: 'Kale' });
+    await expect(kale.querySelector('[data-part="item-text"]')).toHaveTextContent('Kale');
+    await expect(kale.querySelector('[data-part="item-indicator"]')).not.toBeNull();
+    await expect(kale.querySelectorAll('.nx-icon')).toHaveLength(2);
     const leek = within(vegetables).getByRole('option', { name: 'Leek' });
-    await expect(leek.querySelector('[data-scope="tag"]')).not.toBeNull();
+    await expect(leek.querySelector('[data-part="item-text"] [data-scope="tag"]')).not.toBeNull();
+    await expect(leek.querySelector('[data-part="item-indicator"]')).not.toBeNull();
+    await expect(leek.querySelector('.nx-icon')?.getBoundingClientRect().left).toBeCloseTo(
+      kale.querySelector('.nx-icon')?.getBoundingClientRect().left ?? 0,
+      0,
+    );
     await userEvent.click(leek);
     await waitFor(() => expect(produce).toHaveTextContent('Leek'));
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());

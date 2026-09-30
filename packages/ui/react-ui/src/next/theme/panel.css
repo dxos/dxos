@@ -1,12 +1,14 @@
 /*
- * Panel (Phase 4 decision 1): the plank host. It fills its parent, stacks toolbar, content and statusbar, and is the
- * pane's query container (decision 5), so every template root inside collapses at the panel's width.
+ * Panel (Phase 4 decision 1): the plank host. It fills its parent, stacks header, body and footer, and is the pane's
+ * query container (decision 5), so every template root inside collapses at the panel's width.
  */
 
 @layer dx-components {
+  /* Header and footer rows size to their content, so a missing or empty one takes no space. */
   .nx-panel {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
     height: 100%;
     min-width: 0;
@@ -17,25 +19,24 @@
     container-type: inline-size;
   }
 
-  .nx-panel > .nx-scroll-root.nx-toolbar-scroll,
-  .nx-panel > .nx-panel-statusbar {
-    flex-shrink: 0;
+  /* Rows are placed explicitly, so a panel without a header still puts its body in the growing track. */
+  .nx-panel-header {
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
-  /* The content frame is no query container of its own, so its Container collapses against the panel. */
-  .nx-panel > .nx-scroll-root.nx-panel-content {
-    flex: 1 1 auto;
+  /* The body frame is no query container of its own, so its Container collapses against the panel. */
+  .nx-panel > .nx-scroll-root.nx-panel-body {
+    grid-row: 2;
     container-type: normal;
   }
 
-  .nx-panel-statusbar {
+  .nx-panel-footer {
+    grid-row: 3;
     display: flex;
-    align-items: center;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
-    padding-inline: var(--nx-gap-size);
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
-    color: var(--color-description);
+    flex-direction: column;
+    min-width: 0;
   }
 }

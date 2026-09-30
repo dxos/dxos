@@ -111,58 +111,45 @@ export const PluginItem = ({
   );
 
   return (
-    <Listbox.Item
-      id={id}
-      icon={icon}
-      description={description}
-      data-testid={`pluginList.${id}`}
-      trailing={
-        <>
-          {failure && <PluginFailureBadge failure={failure} />}
-          {deviceOnly && <Next.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' />}
-          {displayTags.map((tag) => (
-            <Next.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
-              {tag}
-            </Next.Tag>
-          ))}
-          <Next.Button
-            variant='ghost'
-            iconOnly
-            icon='ph--info--regular'
-            label={t('details.label')}
-            onClick={handleClick}
-          />
-          <Next.Button
-            variant='ghost'
-            iconOnly
-            icon='ph--gear--regular'
-            label={t('plugin-settings.label')}
-            disabled={!hasSettings}
-            onClick={handleSettings}
-          />
-          {isUpdating ? (
-            <Next.Button variant='primary' disabled label={t('updating.label')} />
-          ) : showUpdateButton ? (
-            <Next.Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
-          ) : showInstallButton ? (
-            <Next.Button
-              variant='primary'
-              disabled={isInstalling}
-              label={isInstalling ? t('installing.label') : t('install.label')}
-              onClick={handleInstall}
-            />
-          ) : (
-            <Next.Switch
-              aria-label={name ?? id}
-              checked={isEnabled}
-              disabled={readOnly}
-              onCheckedChange={({ checked }) => onChange?.(id, checked)}
-            />
-          )}
-        </>
-      }
-    >
-      {name ?? id}
+    <Listbox.Item id={id} data-testid={`pluginList.${id}`}>
+      <Listbox.ItemIcon icon={icon} />
+      <Listbox.ItemText />
+      {description && <Listbox.ItemDescription>{description}</Listbox.ItemDescription>}
+      {failure && <PluginFailureBadge failure={failure} />}
+      {deviceOnly && <Next.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' />}
+      {displayTags.map((tag) => (
+        <Next.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
+          {tag}
+        </Next.Tag>
+      ))}
+      <Next.Button variant='ghost' iconOnly icon='ph--info--regular' label={t('details.label')} onClick={handleClick} />
+      <Next.Button
+        variant='ghost'
+        iconOnly
+        icon='ph--gear--regular'
+        label={t('plugin-settings.label')}
+        disabled={!hasSettings}
+        onClick={handleSettings}
+      />
+      {isUpdating ? (
+        <Next.Button variant='primary' disabled label={t('updating.label')} />
+      ) : showUpdateButton ? (
+        <Next.Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
+      ) : showInstallButton ? (
+        <Next.Button
+          variant='primary'
+          disabled={isInstalling}
+          label={isInstalling ? t('installing.label') : t('install.label')}
+          onClick={handleInstall}
+        />
+      ) : (
+        <Next.Switch
+          aria-label={name ?? id}
+          checked={isEnabled}
+          disabled={readOnly}
+          onCheckedChange={({ checked }) => onChange?.(id, checked)}
+        />
+      )}
     </Listbox.Item>
   );
 };

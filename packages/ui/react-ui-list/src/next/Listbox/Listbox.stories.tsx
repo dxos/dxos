@@ -14,7 +14,7 @@ import { translations } from '@dxos/react-ui/translations';
 
 import { Listbox } from './Listbox.tsx';
 
-const ITEMS: (Next.ListboxOption & { description?: string })[] = [
+const ITEMS: Next.ListboxOption[] = [
   { value: 'alpha', label: 'Alpha', description: 'The first letter' },
   { value: 'bravo', label: 'Bravo' },
   { value: 'charlie', label: 'Charlie', disabled: true },
@@ -46,14 +46,12 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Listbox.Label>Letters</Listbox.Label>
         <Listbox.Content>
           {ITEMS.map((item) => (
-            <Listbox.Item
-              key={item.value}
-              id={item.value}
-              icon='ph--circle--regular'
-              description={item.description}
-              trailing={<Listbox.Indicator />}
-              data-testid={`letter-${item.value}-${size}`}
-            />
+            <Listbox.Item key={item.value} id={item.value} data-testid={`letter-${item.value}-${size}`}>
+              <Listbox.ItemIcon icon='ph--circle--regular' />
+              <Listbox.ItemText />
+              {item.description && <Listbox.ItemDescription />}
+              <Listbox.ItemIndicator />
+            </Listbox.Item>
           ))}
         </Listbox.Content>
       </Listbox.Root>
@@ -67,15 +65,17 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Listbox.Root>
       <div className='h-48'>
         <Next.Panel.Root>
-          <Next.Panel.Toolbar>
-            <Next.Input
-              aria-label='Filter'
-              placeholder='Filter…'
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-            />
-          </Next.Panel.Toolbar>
-          <Next.Panel.Content>
+          <Next.Panel.Header>
+            <Next.Toolbar.Root>
+              <Next.Input
+                aria-label='Filter'
+                placeholder='Filter…'
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              />
+            </Next.Toolbar.Root>
+          </Next.Panel.Header>
+          <Next.Panel.Body>
             <Listbox.Root items={filtered} value={undefined} onValueChange={() => {}}>
               <Listbox.Content aria-label='Long'>
                 {filtered.map((item) => (
@@ -83,7 +83,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                 ))}
               </Listbox.Content>
             </Listbox.Root>
-          </Next.Panel.Content>
+          </Next.Panel.Body>
         </Next.Panel.Root>
       </div>
     </>

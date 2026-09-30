@@ -82,7 +82,7 @@ type ListboxItemProps = Omit<NextItemProps, 'item'> & {
   id: string;
 };
 
-/** A Next.Listbox row addressed by id: optional icon, label over description, trailing actions or indicator. */
+/** A Next.Listbox row addressed by id: the option's default row, or the parts given as children. */
 const ListboxItem: ForwardRefExoticComponent<ListboxItemProps & RefAttributes<HTMLDivElement>> = forwardRef<
   HTMLDivElement,
   ListboxItemProps
@@ -98,22 +98,33 @@ const ListboxItem: ForwardRefExoticComponent<ListboxItemProps & RefAttributes<HT
 ListboxItem.displayName = 'Listbox.Item';
 
 /**
- * Selectable or plain list on Next parts. `Content` is itself the scrolling viewport (a thin ScrollArea; `scroll={false}`
- * inside a host that scrolls, such as `Panel.Content`), so there is no separate `Viewport`; `ItemContent` is folded into Item's `icon`, `description` and `trailing`. Annotated so the
- * declaration names Next's parts through `Next` rather than react-ui's internal modules.
+ * Selectable or plain list on Next parts, with Next.Listbox's part names. `Content` is itself the scrolling viewport (a
+ * thin ScrollArea; `scroll={false}` inside a host that scrolls, such as `Panel.Body`), so there is no separate
+ * `Viewport`; the current `ItemContent` becomes a row composed from `ItemIcon`, `ItemText`, `ItemDescription` and
+ * trailing controls. Annotated so the declaration names Next's parts through `Next` rather than react-ui's modules.
  */
 export const Listbox: {
   Root: typeof ListboxRoot;
   Label: typeof Next.Listbox.Label;
   Content: typeof Next.Listbox.Content;
   Item: typeof ListboxItem;
-  Indicator: typeof Next.Listbox.ItemIndicator;
+  ItemIcon: typeof Next.Listbox.ItemIcon;
+  ItemText: typeof Next.Listbox.ItemText;
+  ItemDescription: typeof Next.Listbox.ItemDescription;
+  ItemIndicator: typeof Next.Listbox.ItemIndicator;
+  ItemGroup: typeof Next.Listbox.ItemGroup;
+  ItemGroupLabel: typeof Next.Listbox.ItemGroupLabel;
 } = {
   Root: ListboxRoot,
   Label: Next.Listbox.Label,
   Content: Next.Listbox.Content,
   Item: ListboxItem,
-  Indicator: Next.Listbox.ItemIndicator,
+  ItemIcon: Next.Listbox.ItemIcon,
+  ItemText: Next.Listbox.ItemText,
+  ItemDescription: Next.Listbox.ItemDescription,
+  ItemIndicator: Next.Listbox.ItemIndicator,
+  ItemGroup: Next.Listbox.ItemGroup,
+  ItemGroupLabel: Next.Listbox.ItemGroupLabel,
 };
 
 export type { ListboxItemProps, ListboxRootProps };

@@ -5,7 +5,7 @@
 import { createListCollection } from '@ark-ui/react/collection';
 import { Portal } from '@ark-ui/react/portal';
 import { Select as SelectPrimitive, useSelectContext } from '@ark-ui/react/select';
-import React, { type ReactNode, type RefObject, forwardRef, useMemo } from 'react';
+import React, { type ReactNode, type RefObject, createContext, forwardRef, useContext, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -13,7 +13,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Icon, type IconHue } from '../Icon/index.ts';
+import { Icon, type IconHue, type IconProps } from '../Icon/index.ts';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
@@ -178,29 +178,96 @@ SelectContent.displayName = 'Next.Select.Content';
 // Item
 //
 
+// The option an Item renders, so its parts default to the option's icon and label.
+const ItemContext = createContext<SelectOption | undefined>(undefined);
+
+const useItem = (part: string) => {
+  const item = useContext(ItemContext);
+  if (!item) {
+    throw new Error(`Next.Select.${part} must be inside Next.Select.Item`);
+  }
+  return item;
+};
+
 type SelectItemProps = ThemedClassName<Omit<SelectPrimitive.ItemProps, 'item' | 'children'>> & {
   item: SelectOption;
-  /** Replaces the icon and label (e.g. a label with a secondary line); the trigger still shows the option's label. */
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText` and `ItemIndicator`; the trigger still shows the label. */
   children?: ReactNode;
 };
 
+/** A block-tall row: without children, the option's icon, its label and the check shown while it is selected. */
 const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
   ({ classNames, item, children, ...props }, forwardedRef) => (
-    <SelectPrimitive.Item {...props} item={item} className={mx(recipes.selectItem(), classNames)} ref={forwardedRef}>
-      {children ?? (
-        <>
-          {item.icon && <Icon icon={item.icon} hue={item.iconHue} />}
-          <SelectPrimitive.ItemText>{item.label}</SelectPrimitive.ItemText>
-        </>
-      )}
-      <SelectPrimitive.ItemIndicator>
-        <Icon icon='ph--check--regular' />
-      </SelectPrimitive.ItemIndicator>
-    </SelectPrimitive.Item>
+    <ItemContext.Provider value={item}>
+      <SelectPrimitive.Item {...props} item={item} className={mx(recipes.selectItem(), classNames)} ref={forwardedRef}>
+        {children ?? (
+          <>
+            {item.icon && <SelectItemIcon />}
+            <SelectItemText />
+            <SelectItemIndicator />
+          </>
+        )}
+      </SelectPrimitive.Item>
+    </ItemContext.Provider>
   ),
 );
 
 SelectItem.displayName = 'Next.Select.Item';
+
+//
+// ItemIcon
+//
+
+type SelectItemIconProps = Omit<IconProps, 'icon'> & {
+  /** Defaults to the option's `icon`. */
+  icon?: string;
+};
+
+/** The leading icon, in the option's `iconHue` unless given a `hue`. */
+const SelectItemIcon = forwardRef<SVGSVGElement, SelectItemIconProps>(({ icon, hue, ...props }, forwardedRef) => {
+  const item = useItem('ItemIcon');
+  const glyph = icon ?? item.icon;
+  return glyph ? <Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
+});
+
+SelectItemIcon.displayName = 'Next.Select.ItemIcon';
+
+//
+// ItemText
+//
+
+type SelectItemTextProps = ThemedClassName<SelectPrimitive.ItemTextProps>;
+
+/** The row's label, taking the free space; the option's `label` by default. */
+const SelectItemText = forwardRef<HTMLDivElement, SelectItemTextProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const item = useItem('ItemText');
+    return (
+      <SelectPrimitive.ItemText {...props} className={mx(classNames)} ref={forwardedRef}>
+        {children ?? item.label}
+      </SelectPrimitive.ItemText>
+    );
+  },
+);
+
+SelectItemText.displayName = 'Next.Select.ItemText';
+
+//
+// ItemIndicator
+//
+
+type SelectItemIndicatorProps = ThemedClassName<SelectPrimitive.ItemIndicatorProps>;
+
+/** Shown while its item is selected: a check by default. */
+const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <SelectPrimitive.ItemIndicator {...props} className={mx(classNames)} ref={forwardedRef}>
+      {children ?? <Icon icon='ph--check--regular' />}
+    </SelectPrimitive.ItemIndicator>
+  ),
+);
+
+SelectItemIndicator.displayName = 'Next.Select.ItemIndicator';
 
 //
 // ItemGroup
@@ -253,6 +320,9 @@ export const Select = {
   Trigger: SelectTrigger,
   Content: SelectContent,
   Item: SelectItem,
+  ItemIcon: SelectItemIcon,
+  ItemText: SelectItemText,
+  ItemIndicator: SelectItemIndicator,
   ItemGroup: SelectItemGroup,
   ItemGroupLabel: SelectItemGroupLabel,
   Separator: SelectSeparator,
@@ -262,7 +332,10 @@ export type {
   SelectContentProps,
   SelectItemGroupLabelProps,
   SelectItemGroupProps,
+  SelectItemIconProps,
+  SelectItemIndicatorProps,
   SelectItemProps,
+  SelectItemTextProps,
   SelectLabelProps,
   SelectRootProps,
   SelectSeparatorProps,

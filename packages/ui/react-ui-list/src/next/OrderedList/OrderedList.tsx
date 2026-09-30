@@ -26,7 +26,6 @@ import {
 } from './OrderedListContext.ts';
 
 type ScrollAreaRootProps = ComponentPropsWithoutRef<typeof Next.ScrollArea.Root>;
-type ButtonProps = ComponentPropsWithoutRef<typeof Next.Button>;
 
 //
 // Root
@@ -109,43 +108,40 @@ const OrderedListRoot = <T,>(props: OrderedListRootProps<T>) => {
 };
 
 //
-// Viewport
-//
-
-type OrderedListViewportProps = PropsWithChildren<Pick<ScrollAreaRootProps, 'mode' | 'width'>>;
-
-/**
- * Optional thin ScrollArea whose viewport is the `Content` itself (no extra element); a drag near its edges
- * auto-scrolls it.
- */
-const OrderedListViewport = ({ mode, width, children }: OrderedListViewportProps) => {
-  const autoScrollRef = useReorderAutoScroll();
-  return (
-    <Next.ScrollArea.Root mode={mode} width={width}>
-      <Next.ScrollArea.Viewport asChild ref={autoScrollRef}>
-        {children}
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
-  );
-};
-
-//
 // Content
 //
 
-type OrderedListContentProps = Next.ContainerProps;
+type OrderedListContentProps = Next.ContainerProps &
+  Pick<ScrollAreaRootProps, 'mode' | 'width'> & {
+    /**
+     * `true` (the default) makes the list the viewport of a thin ScrollArea that a drag near its edges auto-scrolls;
+     * `false` leaves scrolling to a host that already scrolls, as `Listbox.Content` does.
+     */
+    scroll?: boolean;
+  };
 
-/**
- * The `list`: a stack Container (`inset` gutter by default) whose children are the rows. Composable, so a Viewport's
- * slot makes it the scrolling element.
- */
+/** The `list`: a stack Container (`inset` gutter by default) whose children are the rows. */
 const OrderedListContent: ForwardRefExoticComponent<
   ComposableProps<OrderedListContentProps> & RefAttributes<HTMLDivElement>
-> = composable<HTMLDivElement, OrderedListContentProps>(({ gutter = 'inset', children, ...props }, forwardedRef) => (
-  <Next.Container role='list' {...props} gutter={gutter} ref={forwardedRef}>
-    {children}
-  </Next.Container>
-));
+> = composable<HTMLDivElement, OrderedListContentProps>(
+  ({ gutter = 'inset', scroll = true, mode, width, children, ...props }, forwardedRef) => {
+    const autoScrollRef = useReorderAutoScroll();
+    const list = (
+      <Next.Container role='list' {...props} gutter={gutter} ref={forwardedRef}>
+        {children}
+      </Next.Container>
+    );
+    return scroll ? (
+      <Next.ScrollArea.Root mode={mode} width={width}>
+        <Next.ScrollArea.Viewport asChild ref={autoScrollRef}>
+          {list}
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
+    ) : (
+      list
+    );
+  },
+);
 
 OrderedListContent.displayName = 'OrderedList.Content';
 
@@ -212,34 +208,13 @@ const OrderedListDragHandle = () => {
 };
 
 //
-// Title
+// ItemText
 //
 
-type OrderedListTitleProps = ComponentPropsWithoutRef<typeof Next.Typography>;
+type OrderedListItemTextProps = ComponentPropsWithoutRef<typeof Next.Typography>;
 
 /** The row's text, truncated to one line. */
-const OrderedListTitle = (props: OrderedListTitleProps) => <Next.Typography truncate {...props} />;
-
-//
-// IconButton / DeleteButton
-//
-
-type OrderedListIconButtonProps = Omit<ButtonProps, 'variant' | 'iconOnly'>;
-
-/** A ghost icon-only Button for an inline row action. */
-const OrderedListIconButton = (props: OrderedListIconButtonProps) => (
-  <Next.Button {...props} variant='ghost' iconOnly />
-);
-
-type OrderedListDeleteButtonProps = Omit<OrderedListIconButtonProps, 'icon' | 'label'> & {
-  icon?: string;
-  label?: string;
-};
-
-const OrderedListDeleteButton = ({ icon = 'ph--x--regular', label, ...props }: OrderedListDeleteButtonProps) => {
-  const { t } = useTranslation(osTranslations);
-  return <OrderedListIconButton {...props} icon={icon} label={label ?? t('delete.label')} />;
-};
+const OrderedListItemText = (props: OrderedListItemTextProps) => <Next.Typography truncate {...props} />;
 
 //
 // DetailItem
@@ -294,7 +269,7 @@ const OrderedListDetailItem = ({
           {expandable ? (
             <Next.Collapsible.Trigger>{title}</Next.Collapsible.Trigger>
           ) : (
-            <OrderedListTitle>{title}</OrderedListTitle>
+            <OrderedListItemText>{title}</OrderedListItemText>
           )}
           {actions}
           {trailing}
@@ -317,7 +292,7 @@ const OrderedListDetailItem = ({
  *         {items.map((item) => (
  *           <OrderedList.Item key={item.id} id={item.id} columns='var(--nx-block-size) minmax(0, 1fr)'>
  *             <OrderedList.DragHandle />
- *             <OrderedList.Title>{item.label}</OrderedList.Title>
+ *             <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
  *           </OrderedList.Item>
  *         ))}
  *       </OrderedList.Content>
@@ -326,33 +301,24 @@ const OrderedListDetailItem = ({
  */
 export const OrderedList: {
   Root: typeof OrderedListRoot;
-  Viewport: typeof OrderedListViewport;
   Content: typeof OrderedListContent;
   Item: typeof OrderedListItem;
   DetailItem: typeof OrderedListDetailItem;
   DragHandle: typeof OrderedListDragHandle;
-  Title: typeof OrderedListTitle;
-  IconButton: typeof OrderedListIconButton;
-  DeleteButton: typeof OrderedListDeleteButton;
+  ItemText: typeof OrderedListItemText;
 } = {
   Root: OrderedListRoot,
-  Viewport: OrderedListViewport,
   Content: OrderedListContent,
   Item: OrderedListItem,
   DetailItem: OrderedListDetailItem,
   DragHandle: OrderedListDragHandle,
-  Title: OrderedListTitle,
-  IconButton: OrderedListIconButton,
-  DeleteButton: OrderedListDeleteButton,
+  ItemText: OrderedListItemText,
 };
 
 export type {
   OrderedListContentProps,
-  OrderedListDeleteButtonProps,
   OrderedListDetailItemProps,
-  OrderedListIconButtonProps,
   OrderedListItemProps,
+  OrderedListItemTextProps,
   OrderedListRootProps,
-  OrderedListTitleProps,
-  OrderedListViewportProps,
 };

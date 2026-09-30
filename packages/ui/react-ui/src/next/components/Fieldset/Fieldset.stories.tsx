@@ -16,13 +16,13 @@ import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.
 /** Valid and enabled sets, then an invalid and a disabled one; test ids are scoped by the size row. */
 const DefaultStory = () => (
   <>
-    <Next.FieldSet.Root data-testid='profile'>
-      <Next.FieldSet.Legend>
+    <Next.Fieldset.Root data-testid='profile'>
+      <Next.Fieldset.Legend>
         Profile
         <Next.Block data-testid='profile-lock'>
           <Next.Icon icon='ph--user--regular' />
         </Next.Block>
-      </Next.FieldSet.Legend>
+      </Next.Fieldset.Legend>
       <Next.Field.Root data-testid='name'>
         <Next.Field.Header>
           <Next.Field.Label>Name</Next.Field.Label>
@@ -35,20 +35,20 @@ const DefaultStory = () => (
         </Next.Field.Header>
         <Next.Input type='email' placeholder='ada@example.com' />
       </Next.Field.Root>
-      <Next.FieldSet.HelperText>Shown on your public page.</Next.FieldSet.HelperText>
-      <Next.FieldSet.ErrorText>Complete your profile.</Next.FieldSet.ErrorText>
-    </Next.FieldSet.Root>
+      <Next.Fieldset.HelperText>Shown on your public page.</Next.Fieldset.HelperText>
+      <Next.Fieldset.ErrorText>Complete your profile.</Next.Fieldset.ErrorText>
+    </Next.Fieldset.Root>
 
-    <Next.FieldSet.Root data-testid='notifications'>
-      <Next.FieldSet.Legend>Notifications</Next.FieldSet.Legend>
+    <Next.Fieldset.Root data-testid='notifications'>
+      <Next.Fieldset.Legend>Notifications</Next.Fieldset.Legend>
       <Next.Switch label='Email digests' defaultChecked />
       <Next.Switch label='Mentions' />
       <Next.Switch label='Product updates' />
       <Next.Checkbox label='Email me a weekly digest' />
-    </Next.FieldSet.Root>
+    </Next.Fieldset.Root>
 
-    <Next.FieldSet.Root invalid>
-      <Next.FieldSet.Legend>Account</Next.FieldSet.Legend>
+    <Next.Fieldset.Root invalid>
+      <Next.Fieldset.Legend>Account</Next.Fieldset.Legend>
       <Next.Field.Root>
         <Next.Field.Header>
           <Next.Field.Label>Handle</Next.Field.Label>
@@ -61,15 +61,15 @@ const DefaultStory = () => (
         </Next.Field.Header>
         <Next.Input type='email' />
       </Next.Field.Root>
-      <Next.FieldSet.ErrorText>Complete your account.</Next.FieldSet.ErrorText>
-    </Next.FieldSet.Root>
+      <Next.Fieldset.ErrorText>Complete your account.</Next.Fieldset.ErrorText>
+    </Next.Fieldset.Root>
 
-    <Next.FieldSet.Root disabled>
-      <Next.FieldSet.Legend>Privacy</Next.FieldSet.Legend>
+    <Next.Fieldset.Root disabled>
+      <Next.Fieldset.Legend>Privacy</Next.Fieldset.Legend>
       <Next.Switch label='Show online status' />
       <Next.Switch label='Read receipts' />
       <Next.Checkbox label='Share usage data' />
-    </Next.FieldSet.Root>
+    </Next.Fieldset.Root>
 
     <Next.Group justify='end'>
       <Next.Button>Cancel</Next.Button>
@@ -81,7 +81,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/FieldSet',
+  title: 'ui/react-ui-core/next/components/Fieldset',
   render: DefaultStory,
   decorators: [withSizes(), withTheme()],
   args: { size: 'md' },

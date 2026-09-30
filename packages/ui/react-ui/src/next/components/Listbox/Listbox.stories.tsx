@@ -14,7 +14,7 @@ import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
-const PEOPLE: (Next.ListboxOption & { icon: string; description?: string })[] = [
+const PEOPLE: Next.ListboxOption[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
   { value: 'bob', label: 'Bob Grey', icon: 'ph--user--regular', description: 'Away until Monday' },
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
@@ -34,13 +34,14 @@ const LONG: Next.ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
 }));
 
 const RECENT: Next.ListboxOption[] = [
-  { value: 'notes', label: 'Notes' },
-  { value: 'tasks', label: 'Tasks' },
+  { value: 'notes', label: 'Notes', icon: 'ph--file--regular' },
+  { value: 'tasks', label: 'Tasks', icon: 'ph--file--regular' },
 ];
 
 /**
- * A single-selection list with icons, a description, a disabled row, a trailing action and the selection indicator; a
- * multiple-selection list; a long list that scrolls in a fixed-height host; and a plain `role=list` with a current row.
+ * A single-selection list whose rows are composed from parts (icon, text, description, a trailing action and the
+ * selection indicator), except Alice's default row; a grouped multiple-selection list; a long list that scrolls in a
+ * fixed-height host; and a plain `role=list` with a current row.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [person, setPerson] = useState<string[]>(['alice']);
@@ -51,21 +52,19 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Next.Listbox.Label>People</Next.Listbox.Label>
         <Next.Listbox.Content>
           {PEOPLE.map((item) => (
-            <Next.Listbox.Item
-              key={item.value}
-              item={item}
-              icon={item.icon}
-              description={item.description}
-              data-testid={`person-${item.value}-${size}`}
-              trailing={
+            <Next.Listbox.Item key={item.value} item={item} data-testid={`person-${item.value}-${size}`}>
+              {item.value === 'alice' ? undefined : (
                 <>
+                  <Next.Listbox.ItemIcon />
+                  <Next.Listbox.ItemText />
+                  {item.description && <Next.Listbox.ItemDescription />}
                   {item.value === 'carol' && (
                     <Next.Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
                   )}
                   <Next.Listbox.ItemIndicator />
                 </>
-              }
-            />
+              )}
+            </Next.Listbox.Item>
           ))}
         </Next.Listbox.Content>
       </Next.Listbox.Root>
@@ -73,9 +72,15 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       <Next.Listbox.Root items={TAGS} selectionMode='multiple' value={tags} onValueChange={setTags}>
         <Next.Listbox.Label>Tags</Next.Listbox.Label>
         <Next.Listbox.Content>
-          {TAGS.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item} trailing={<Next.Listbox.ItemIndicator />} />
-          ))}
+          <Next.Listbox.ItemGroup>
+            <Next.Listbox.ItemGroupLabel>Status</Next.Listbox.ItemGroupLabel>
+            {TAGS.map((item) => (
+              <Next.Listbox.Item key={item.value} item={item}>
+                <Next.Listbox.ItemText />
+                <Next.Listbox.ItemIndicator />
+              </Next.Listbox.Item>
+            ))}
+          </Next.Listbox.ItemGroup>
         </Next.Listbox.Content>
       </Next.Listbox.Root>
       <Next.Typography data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Next.Typography>
@@ -90,7 +95,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </div>
       <div data-place='full' className='h-40'>
         <Next.Panel.Root size={size}>
-          <Next.Panel.Content data-testid={`panel-${size}`}>
+          <Next.Panel.Body data-testid={`panel-${size}`}>
             <Next.Typography data-testid={`panel-heading-${size}`}>In a panel</Next.Typography>
             <Next.Listbox.Root items={LONG}>
               <Next.Listbox.Content aria-label='In panel' scroll={false}>
@@ -99,13 +104,13 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                 ))}
               </Next.Listbox.Content>
             </Next.Listbox.Root>
-          </Next.Panel.Content>
+          </Next.Panel.Body>
         </Next.Panel.Root>
       </div>
       <Next.Listbox.Root items={RECENT} selectionMode='none'>
         <Next.Listbox.Content aria-label='Recent' data-testid={`recent-${size}`}>
           {RECENT.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item} icon='ph--file--regular' current={item.value === 'tasks'} />
+            <Next.Listbox.Item key={item.value} item={item} current={item.value === 'tasks'} />
           ))}
         </Next.Listbox.Content>
       </Next.Listbox.Root>
@@ -132,7 +137,8 @@ const highlighted = (listbox: HTMLElement) => listbox.querySelector('[data-highl
 
 /**
  * Rows are one block tall at every size (a description adds a line), with the icon in a block-sized cell so every
- * label starts at the same x. The listbox is named by its label, its rows are `option`s reporting `aria-selected`, and
+ * label starts at the same x; a default row (from the option's data) lays out like one composed from parts. Groups
+ * are `group`s named by their label. The listbox is named by its label, its rows are `option`s reporting `aria-selected`, and
  * a multiple list is `aria-multiselectable`. The keyboard moves the highlight (skipping the disabled row), Enter selects
  * and typeahead jumps to a match; clicks toggle in a multiple list. A long list scrolls in a thin ScrollArea keeping the
  * highlight in view. `selectionMode='none'` is a plain `list` of `listitem`s, with `aria-current` on the current row.
@@ -154,6 +160,26 @@ export const Test: Story = {
           .left;
       await expect(label('bob'), `${size} labels align`).toBeCloseTo(label('alice') ?? 0, 0);
       await expect(label('alice'), `${size} label after icon`).toBeCloseTo((icon?.left ?? 0) + block, 0);
+
+      // Alice's default row renders the option's icon and label; Carol's composed row adds its trailing action and
+      // indicator after the label, at the row's end (the indicator shows only while selected).
+      const aliceRow = byTestId(canvasElement, `person-alice-${size}`);
+      await expect(aliceRow.querySelector('[data-part="item-icon"] svg')).not.toBeNull();
+      await expect(aliceRow.querySelector('[data-part="item-text"]')).toHaveTextContent('Alice Green');
+      await expect(aliceRow.querySelector('[data-part="item-indicator"]')).toBeNull();
+      const carol = byTestId(canvasElement, `person-carol-${size}`);
+      const carolRect = carol.getBoundingClientRect();
+      await expect(carolRect.height, `${size} composed row`).toBeCloseTo(block, 0);
+      const action = within(carol).getByRole('button', { name: 'Message Carol' }).getBoundingClientRect();
+      const text = carol.querySelector('[data-part="item-text"]')?.getBoundingClientRect();
+      await expect(action.left, `${size} action after text`).toBeGreaterThanOrEqual((text?.right ?? 0) - 0.5);
+      await expect(action.right, `${size} action at the end`).toBeLessThanOrEqual(carolRect.right + 0.5);
+      await expect(action.right, `${size} action at the end`).toBeGreaterThan(carolRect.right - 2 * block);
+      await expect(label('carol'), `${size} composed label aligns`).toBeCloseTo(label('alice') ?? 0, 0);
+      const description = byTestId(canvasElement, `person-bob-${size}`)
+        .querySelector('[data-part="item-description"]')
+        ?.getBoundingClientRect();
+      await expect(description?.left, `${size} description under text`).toBeCloseTo(label('bob') ?? 0, 0);
     }
     await expectScoped(canvasElement);
 
@@ -183,6 +209,9 @@ export const Test: Story = {
     // Multiple selection toggles each clicked row.
     const tags = md.getByRole('listbox', { name: 'Tags' });
     await expect(tags).toHaveAttribute('aria-multiselectable', 'true');
+    await expect(within(within(tags).getByRole('group', { name: 'Status' })).getAllByRole('option')).toHaveLength(
+      TAGS.length,
+    );
     await userEvent.click(within(tags).getByRole('option', { name: 'Urgent' }));
     await userEvent.click(within(tags).getByRole('option', { name: 'Idea' }));
     await waitFor(() => expect(byTestId(canvasElement, 'tags-md-value')).toHaveTextContent('urgent, idea'));
@@ -214,7 +243,7 @@ export const Test: Story = {
       byTestId(canvasElement, 'panel-heading-md').getBoundingClientRect().left,
       0,
     );
-    // The test id names the Panel.Content frame; its viewport is what scrolls.
+    // The test id names the Panel.Body frame; its viewport is what scrolls.
     const panel =
       byTestId(canvasElement, 'panel-md').querySelector<HTMLElement>(':scope > .nx-scroll-viewport') ??
       byTestId(canvasElement, 'panel-md');

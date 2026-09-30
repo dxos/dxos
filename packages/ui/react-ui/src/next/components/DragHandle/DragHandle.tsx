@@ -37,8 +37,8 @@ type DragHandleProps = {
 };
 
 /**
- * A ghost icon-only Button with the six-dot grip for a drag-and-drop source to bind (`Toolbar.DragHandle`,
- * `Card.DragHandle`, list rows). It never joins a toolbar's roving focus and shows no Tooltip; pointer dragging belongs
+ * A ghost icon-only Button with the six-dot grip for a drag-and-drop source to bind (in a toolbar, a card or a list
+ * row). It never joins a toolbar's roving focus and shows no Tooltip; pointer dragging belongs
  * to the caller's drag-and-drop binding (pragmatic-drag-and-drop in react-ui-list), keyboard moves to `onMove`. Moves
  * and grabs are announced through one shared live region.
  */

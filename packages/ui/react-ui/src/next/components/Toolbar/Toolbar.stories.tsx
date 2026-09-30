@@ -43,14 +43,14 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         </Next.Select.Content>
       </Next.Select.Root>
       <Next.Toolbar.ToggleGroup type='single' defaultValue='list' aria-label='View'>
-        <Next.Toolbar.ToggleGroupItem
+        <Next.ToggleGroup.Item
           value='list'
           icon='ph--list--regular'
           label='List'
           iconOnly
           data-testid={`list-${size}`}
         />
-        <Next.Toolbar.ToggleGroupItem
+        <Next.ToggleGroup.Item
           value='grid'
           icon='ph--squares-four--regular'
           label='Grid'
@@ -60,7 +60,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </Next.Toolbar.ToggleGroup>
     </Next.Toolbar.Root>
     <Next.Toolbar.Root loop={false} data-testid={`document-${size}`}>
-      <Next.Toolbar.DragHandle label='Drag' data-testid={`drag-${size}`} />
+      <Next.DragHandle label='Drag' data-testid={`drag-${size}`} />
       <Next.Toolbar.Text data-testid={`text-${size}`}>
         A document title long enough to be truncated by the toolbar at every size
       </Next.Toolbar.Text>

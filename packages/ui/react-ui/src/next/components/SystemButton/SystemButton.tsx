@@ -229,6 +229,9 @@ const Cancel = createStaticPreset('Next.SystemButton.Cancel', 'ph--x--regular', 
 
 const Delete = createStaticPreset('Next.SystemButton.Delete', 'ph--trash--regular', 'system-button.delete.label');
 
+/** Takes a row out of a list without destroying what it names; the glyph is Close's, the intent Delete's. */
+const Remove = createStaticPreset('Next.SystemButton.Remove', 'ph--x--regular', 'system-button.remove.label');
+
 const Edit = createStaticPreset('Next.SystemButton.Edit', 'ph--pen--regular', 'system-button.edit.label');
 
 //
@@ -511,6 +514,7 @@ export const SystemButton = {
   Download,
   Edit,
   Mic,
+  Remove,
   Save,
   Star,
   Upload,

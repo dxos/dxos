@@ -163,7 +163,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
 11. **Switch** is Ark Switch in a block-tall row like Checkbox, with an icon-tall track (`--nx-icon-size` high, 1.75×
     wide, 2px thumb inset) filled with the accent when checked. Its hidden native checkbox takes `role=switch`
     (follow-up 21).
-12. **FieldSet** is Ark Fieldset: a borderless `<fieldset>` stacking its Fields with `--nx-gap-size`, headed by a
+12. **Fieldset** is Ark Fieldset: a borderless `<fieldset>` stacking its Fields with `--nx-gap-size`, headed by a
     Legend that is an sm label row like `Field.Header`. Ark passes only `disabled` down to Fields, so `Field.Root`
     also defaults `invalid` from the enclosing set.
 13. **Image** is an `<img>` (required `alt`, lazy, async decode) in a frame with a fixed `aspectRatio` (16 / 9 by
@@ -188,7 +188,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     stack's or Field's `margin-block` inset is the same value and the occupied height stays one block); the checkbox
     box and switch track are centred in the cell with inline margin. An IconButton's icon therefore sits at the same x
     as a rail Block's, and labels after a checkbox or switch align with icon-button rows. Trailing Blocks in
-    `Field.Header`, `FieldSet.Legend` and `Card.Header` take the same visible box and inset, so they keep matching
+    `Field.Header`, `Fieldset.Legend` and `Card.Header` take the same visible box and inset, so they keep matching
     IconButtons; the occupied cell, not the visible box, ends at the control's edge.
 20. **Tooltip focus swap.** zag (1.43.3, unchanged in 1.44.0) queues events per microtask: the old trigger's blur
     closes its tooltip first, which clears the shared open-tooltip store, and every closed tooltip reacts by queueing a
@@ -575,7 +575,7 @@ parallel-namespace approach; no compatibility shims).
 
 1. **Prerequisite:** export Next from `@dxos/react-ui` (a `next` subpath and its CSS).
 2. **Field coverage.** Direct Next equivalents: Text, Password, Number, Tuple, GeoPoint, Boolean (Switch), Select/
-   AsyncSelect, Autofill, InlineRef, nested groups (FieldSet + Collapsible + Tooltip), array add/remove (`Button iconOnly`).
+   AsyncSelect, Autofill, InlineRef, nested groups (Fieldset + Collapsible + Tooltip), array add/remove (`Button iconOnly`).
    New components: `Textarea`, `DateInput`, `Popover` + `Combobox` (Ref/lookup), `Tag`, `Toggle` (was `ToggleIconButton`), optional
    `Banner`; Select needs option icons. Restyle only: HuePicker, the markdown editor, OrderedList, `DxAnchor`.
 3. **Layout mapping.** `Form.Viewport` → `Next.Container gutter` + composed `Next.ScrollArea` (no Column helpers);
@@ -636,7 +636,9 @@ audit" (points 25–39, all accepted as recommended except where these rules say
    `item` (`item.icon`, `item.label`, `item.description`, the indicator); with children, they replace the whole row
    and compose it from parts (`ItemIcon`, `ItemText`, `ItemDescription`, `ItemIndicator`, any trailing control). No
    `icon`/`description`/`trailing` props, so each thing has one way to do it and `children` means the same in
-   Listbox, Select, Combobox and Menu.
+   Listbox, Select, Combobox and Menu. `ItemDescription` exists only where the option type carries a description
+   (Listbox), since popup rows are one block tall; Menu adds `ItemShortcut`, which Ark lacks (rule 8), and its items
+   take `item` data (`MenuOption`) like the list composites'.
 8. **Ark names first.** A part Ark has takes Ark's name (`CloseTrigger`, `ItemIndicator`, `RadioItemGroup`,
    `TriggerItem`, `Fieldset`), so our `data-part`s and Ark's docs agree; DXOS names are only for parts Ark lacks
    (`Header`, `Body`, `Footer`, `AlertDialog.Cancel`/`Action`), and Radix names are not carried over.

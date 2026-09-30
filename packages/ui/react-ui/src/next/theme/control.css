@@ -294,6 +294,11 @@
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
   }
+  /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
+  .nx-field-required {
+    margin-inline-start: 0.125em;
+    color: var(--color-error-text, currentColor);
+  }
   .nx-field-helper,
   .nx-field-error {
     font-size: var(--text-sm);

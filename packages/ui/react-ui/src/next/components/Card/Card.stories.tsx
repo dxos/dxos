@@ -77,10 +77,10 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 
       <Next.Card.Root data-testid={`rows-card-${size}`}>
         <Next.Card.Header>
-          <Next.Card.DragHandle label='Drag' data-testid={`drag-${size}`} />
+          <Next.DragHandle label='Drag' data-testid={`drag-${size}`} />
           <Next.Card.Title>Project</Next.Card.Title>
           <Next.Card.Menu label='Project actions'>
-            <Next.Menu.Item value='archive'>Archive</Next.Menu.Item>
+            <Next.Menu.Item item={{ value: 'archive', label: 'Archive' }} />
           </Next.Card.Menu>
         </Next.Card.Header>
         <Next.Card.Section title='Members' data-testid={`section-${size}`}>

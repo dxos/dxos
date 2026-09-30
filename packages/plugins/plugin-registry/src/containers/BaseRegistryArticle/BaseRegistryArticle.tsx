@@ -140,15 +140,17 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
 
     return (
       <Next.Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Next.Panel.Toolbar>
-          <Next.Input
-            aria-label={t('filter.label')}
-            placeholder={t('filter.placeholder')}
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-          />
-        </Next.Panel.Toolbar>
-        <Next.Panel.Content>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Input
+              aria-label={t('filter.label')}
+              placeholder={t('filter.placeholder')}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body>
           {filtered.length > 0 ? (
             <PluginList
               plugins={filtered}
@@ -171,7 +173,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
           ) : (
             empty
           )}
-        </Next.Panel.Content>
+        </Next.Panel.Body>
       </Next.Panel.Root>
     );
   },

@@ -63,33 +63,67 @@
     cursor: default;
   }
 
-  /* Label over description: together they take one block plus a line, not a block each. */
-  .nx-listbox-item-content {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+  /*
+   * Rows place their parts by part, so a composed row lays out like the default one: an optional block-sized icon cell,
+   * the text over its description in the growing column, then every other part in its own trailing column.
+   */
+  .nx-listbox-item {
+    --nx-item-columns: minmax(0, 1fr);
+    --nx-item-text-column: 1;
+    grid-template-rows: auto;
+    grid-auto-columns: auto;
+    align-items: center;
+    min-height: var(--nx-block-size);
   }
-  .nx-listbox-item-content > .nx-typography:not(:only-child):first-child {
+  .nx-listbox-item:has(> .nx-listbox-item-icon) {
+    --nx-item-columns: var(--nx-block-size) minmax(0, 1fr);
+    --nx-item-text-column: 2;
+  }
+  .nx-listbox-item:has(> .nx-listbox-item-description) {
+    grid-template-rows: auto auto;
+  }
+  .nx-listbox-item.nx-grid > * {
+    grid-column: auto;
+    grid-row: 1 / -1;
+  }
+  .nx-listbox-item.nx-grid > .nx-listbox-item-icon {
+    grid-column: 1;
+  }
+  .nx-listbox-item.nx-grid > .nx-listbox-item-text {
+    grid-column: var(--nx-item-text-column);
+    grid-row: 1;
+  }
+  .nx-listbox-item.nx-grid > .nx-listbox-item-description {
+    grid-column: var(--nx-item-text-column);
+    grid-row: 2;
+  }
+
+  /* Text over description: together they take one block plus a line, not a block each. */
+  .nx-listbox-item:has(> .nx-listbox-item-description) > .nx-listbox-item-text {
     padding-block-end: 0;
   }
-  .nx-listbox-item-content > .nx-typography + .nx-typography {
+  .nx-listbox-item > .nx-listbox-item-description {
     padding-block-start: 0;
   }
-  .nx-listbox-item-content:only-child,
-  .nx-listbox-item > .nx-block + .nx-listbox-item-content {
+  .nx-listbox-item > :is(.nx-listbox-item-text, .nx-listbox-item-description) {
     padding-inline-end: var(--nx-gap-size);
   }
-  .nx-listbox-item > .nx-listbox-item-content:first-child {
+  .nx-listbox-item:not(:has(> .nx-listbox-item-icon)) > :is(.nx-listbox-item-text, .nx-listbox-item-description) {
     padding-inline-start: var(--nx-gap-size);
   }
 
-  .nx-listbox-item-trailing {
-    display: flex;
-    align-items: center;
-    gap: var(--nx-control-inset);
-    justify-self: end;
+  /* Trailing parts are an inset apart, and an icon-only Button pads out to its block like it does in a toolbar. */
+  .nx-listbox-item.nx-grid
+    > :not(
+      .nx-listbox-item-icon,
+      .nx-listbox-item-text,
+      .nx-listbox-item-description,
+      .nx-listbox-item-indicator,
+      .nx-drop-indicator
+    ) {
+    margin-inline-end: var(--nx-control-inset);
   }
-  .nx-listbox-item-trailing > .nx-button[data-square] {
+  .nx-listbox-item.nx-grid > .nx-button[data-square] {
     margin: var(--nx-control-inset);
   }
 

@@ -31,7 +31,7 @@ const LONG: Item[] = Array.from({ length: 40 }, (_, index) => ({ id: `item-${ind
 // The app provides the os labels; stories provide their own.
 const translations = [
   ...uiTranslations,
-  { 'en-US': { [osTranslations]: { 'drag-handle.label': 'Drag to rearrange', 'delete.label': 'Delete' } } },
+  { 'en-US': { [osTranslations]: { 'drag-handle.label': 'Drag to rearrange' } } },
 ];
 
 const getId = (item: { id: string }) => item.id;
@@ -62,7 +62,7 @@ const SimpleStory = () => (
       <OrderedList.Content aria-label='Simple'>
         {items.map((item) => (
           <OrderedList.Item key={item.id} id={item.id}>
-            <OrderedList.Title>{item.label}</OrderedList.Title>
+            <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
           </OrderedList.Item>
         ))}
       </OrderedList.Content>
@@ -70,23 +70,21 @@ const SimpleStory = () => (
   </OrderedList.Root>
 );
 
-/** A long draggable list in a fixed-height host; the Viewport scrolls and auto-scrolls under a drag. */
+/** A long draggable list in a fixed-height host; the Content scrolls and auto-scrolls under a drag. */
 const ScrollableStory = () => {
   const [items, , move] = useItems(LONG);
   return (
     <div data-place='full' className='h-64 flex flex-col'>
       <OrderedList.Root items={items} getId={getId} onMove={move} dragPreview={(item) => item.label}>
         {({ items }) => (
-          <OrderedList.Viewport>
-            <OrderedList.Content aria-label='Scrollable'>
-              {items.map((item) => (
-                <OrderedList.Item key={item.id} id={item.id} columns={HANDLE_COLUMNS}>
-                  <OrderedList.DragHandle />
-                  <OrderedList.Title>{item.label}</OrderedList.Title>
-                </OrderedList.Item>
-              ))}
-            </OrderedList.Content>
-          </OrderedList.Viewport>
+          <OrderedList.Content aria-label='Scrollable'>
+            {items.map((item) => (
+              <OrderedList.Item key={item.id} id={item.id} columns={HANDLE_COLUMNS}>
+                <OrderedList.DragHandle />
+                <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
         )}
       </OrderedList.Root>
     </div>
@@ -95,8 +93,8 @@ const ScrollableStory = () => {
 
 type Todo = Item & { done: boolean };
 
-/** Checkbox, title and delete; the order is intrinsic, so no handle. */
-const CheckboxWithDeleteStory = () => {
+/** Checkbox, title and remove; the order is intrinsic, so no handle. */
+const CheckboxWithRemoveStory = () => {
   const [items, setItems] = useState<Todo[]>(ITEMS.map((item) => ({ ...item, done: false })));
   return (
     <OrderedList.Root items={items} getId={getId}>
@@ -113,9 +111,9 @@ const CheckboxWithDeleteStory = () => {
                   )
                 }
               />
-              <OrderedList.Title tone={item.done ? 'description' : undefined}>{item.label}</OrderedList.Title>
-              <OrderedList.DeleteButton
-                label={`Delete ${item.label}`}
+              <OrderedList.ItemText tone={item.done ? 'description' : undefined}>{item.label}</OrderedList.ItemText>
+              <Next.SystemButton.Remove
+                label={`Remove ${item.label}`}
                 onClick={() => setItems((items) => items.filter((todo) => todo.id !== item.id))}
               />
             </OrderedList.Item>
@@ -126,7 +124,7 @@ const CheckboxWithDeleteStory = () => {
   );
 };
 
-/** Master-detail rows: handle, the title as the disclosure trigger, a detail panel and a trailing delete. */
+/** Master-detail rows: handle, the title as the disclosure trigger, a detail panel and a trailing remove. */
 const DraggableWithToggleStory = ({ size = 'md' }: SizeArgs) => {
   const [items, setItems, move] = useItems(ITEMS);
   const [expandedId, setExpandedId] = useState<string>();
@@ -149,8 +147,8 @@ const DraggableWithToggleStory = ({ size = 'md' }: SizeArgs) => {
                 title={item.label}
                 data-testid={`row-${item.id}-${size}`}
                 trailing={
-                  <OrderedList.DeleteButton
-                    label={`Delete ${item.label}`}
+                  <Next.SystemButton.Remove
+                    label={`Remove ${item.label}`}
                     onClick={() => setItems((items) => items.filter((entry) => entry.id !== item.id))}
                   />
                 }
@@ -195,11 +193,11 @@ const NestedStory = () => {
             <OrderedList.DetailItem key={group.id} id={group.id} title={group.label}>
               <OrderedList.Root items={group.children} getId={getId} onMove={moveChild(group.id)}>
                 {({ items }) => (
-                  <OrderedList.Content aria-label={group.label}>
+                  <OrderedList.Content aria-label={group.label} scroll={false}>
                     {items.map((item) => (
                       <OrderedList.Item key={item.id} id={item.id} columns={HANDLE_COLUMNS}>
                         <OrderedList.DragHandle />
-                        <OrderedList.Title>{item.label}</OrderedList.Title>
+                        <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
                       </OrderedList.Item>
                     ))}
                   </OrderedList.Content>
@@ -232,14 +230,14 @@ export const Simple: Story = { render: () => <SimpleStory /> };
 
 export const Scrollable: Story = { render: () => <ScrollableStory /> };
 
-export const CheckboxWithDelete: Story = { render: () => <CheckboxWithDeleteStory /> };
+export const CheckboxWithRemove: Story = { render: () => <CheckboxWithRemoveStory /> };
 
 export const Nested: Story = { render: () => <NestedStory /> };
 
 /**
  * Rows are `listitem`s in a `list`, each the pointer drag source (`draggable`) through its handle. From the keyboard the
  * handle moves its row (Alt+ArrowDown at once; Space grabs, arrows move, Escape drops) and keeps focus. Clicking a
- * title opens its detail and closes the previously open one (single-expand); delete removes the row.
+ * title opens its detail and closes the previously open one (single-expand); remove takes the row out. The list scrolls in its own ScrollArea by default.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -273,8 +271,11 @@ export const Test: Story = {
     await waitFor(() => expect(canvas.getByTestId('panel-c-md')).toBeVisible());
     await waitFor(() => expect(canvas.queryByTestId('panel-b-md')).not.toBeInTheDocument());
 
-    // Delete.
-    await userEvent.click(canvas.getByRole('button', { name: 'Delete Delta' }));
+    // Content scrolls by default: the list is its own ScrollArea's viewport.
+    await expect(list).toHaveClass('nx-scroll-viewport');
+
+    // Remove.
+    await userEvent.click(canvas.getByRole('button', { name: 'Remove Delta' }));
     await waitFor(() => expect(order).toHaveTextContent('b c e a'));
   },
 };

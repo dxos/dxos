@@ -58,20 +58,16 @@ const HIERARCHY: MenuNode[] = [
 
 const MenuNodes = ({ nodes }: { nodes: MenuNode[] }) => (
   <>
-    {nodes.map(({ value, label, icon, children }) =>
+    {nodes.map(({ children, ...item }) =>
       children ? (
-        <Next.Menu.Sub key={value}>
-          <Next.Menu.SubTrigger icon={icon} data-testid={`sub-${value}`}>
-            {label}
-          </Next.Menu.SubTrigger>
+        <Next.Menu.Sub key={item.value}>
+          <Next.Menu.TriggerItem item={item} data-testid={`sub-${item.value}`} />
           <Next.Menu.Content>
             <MenuNodes nodes={children} />
           </Next.Menu.Content>
         </Next.Menu.Sub>
       ) : (
-        <Next.Menu.Item key={value} value={value} icon={icon}>
-          {label}
-        </Next.Menu.Item>
+        <Next.Menu.Item key={item.value} item={item} />
       ),
     )}
   </>
@@ -101,38 +97,34 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Next.Menu.Content>
           <Next.Menu.ItemGroup>
             <Next.Menu.ItemGroupLabel>Edit</Next.Menu.ItemGroupLabel>
-            <Next.Menu.Item value='cut' icon='ph--scissors--regular' shortcut='⌘X'>
-              Cut
-            </Next.Menu.Item>
-            <Next.Menu.Item value='copy' icon='ph--copy--regular' shortcut='⌘C'>
-              Copy
-            </Next.Menu.Item>
-            <Next.Menu.Item value='paste' icon='ph--clipboard--regular' shortcut='⌘V'>
-              Paste
-            </Next.Menu.Item>
+            <Next.Menu.Item item={{ value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '⌘X' }} />
+            <Next.Menu.Item item={{ value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '⌘C' }} />
+            <Next.Menu.Item item={{ value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '⌘V' }} />
           </Next.Menu.ItemGroup>
           <Next.Menu.Separator />
-          <Next.Menu.Item value='archive' disabled>
-            Archive
-          </Next.Menu.Item>
-          <Next.Menu.Item value='delete' icon='ph--trash--regular'>
-            Delete
+          <Next.Menu.Item item={{ value: 'archive', label: 'Archive', disabled: true }} />
+          <Next.Menu.Item item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }} data-testid='delete'>
+            <Next.Menu.ItemIcon />
+            <Next.Menu.ItemText />
+            <Next.Menu.ItemShortcut>⌫</Next.Menu.ItemShortcut>
           </Next.Menu.Item>
           <Next.Menu.Separator />
-          <Next.Menu.CheckboxItem value='grid' checked={grid} onCheckedChange={setGrid} shortcut='⌘G'>
-            Show grid
-          </Next.Menu.CheckboxItem>
-          <Next.Menu.RadioGroup value={sort} onValueChange={({ value }) => setSort(value)}>
+          <Next.Menu.CheckboxItem
+            item={{ value: 'grid', label: 'Show grid', shortcut: '⌘G' }}
+            checked={grid}
+            onCheckedChange={setGrid}
+          />
+          <Next.Menu.RadioItemGroup value={sort} onValueChange={({ value }) => setSort(value)}>
             <Next.Menu.ItemGroupLabel>Sort</Next.Menu.ItemGroupLabel>
-            <Next.Menu.RadioItem value='name'>Name</Next.Menu.RadioItem>
-            <Next.Menu.RadioItem value='date'>Date</Next.Menu.RadioItem>
-          </Next.Menu.RadioGroup>
+            <Next.Menu.RadioItem item={{ value: 'name', label: 'Name' }} />
+            <Next.Menu.RadioItem item={{ value: 'date', label: 'Date' }} />
+          </Next.Menu.RadioItemGroup>
           <Next.Menu.Separator />
           <Next.Menu.Sub>
-            <Next.Menu.SubTrigger icon='ph--share--regular'>Share</Next.Menu.SubTrigger>
+            <Next.Menu.TriggerItem item={{ label: 'Share', icon: 'ph--share--regular' }} />
             <Next.Menu.Content>
-              <Next.Menu.Item value='email'>Email</Next.Menu.Item>
-              <Next.Menu.Item value='link'>Copy link</Next.Menu.Item>
+              <Next.Menu.Item item={{ value: 'email', label: 'Email' }} />
+              <Next.Menu.Item item={{ value: 'link', label: 'Copy link' }} />
             </Next.Menu.Content>
           </Next.Menu.Sub>
         </Next.Menu.Content>
@@ -151,9 +143,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         </Next.Menu.Trigger>
         <Next.Menu.Content size='lg'>
           {LONG.map((label) => (
-            <Next.Menu.Item key={label} value={label}>
-              {label}
-            </Next.Menu.Item>
+            <Next.Menu.Item key={label} item={{ value: label, label }} />
           ))}
         </Next.Menu.Content>
       </Next.Menu.Root>
@@ -162,7 +152,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Next.Typography data-testid={`context-${size}`}>Right-click here</Next.Typography>
         </Next.Menu.ContextTrigger>
         <Next.Menu.Content>
-          <Next.Menu.Item value='rename'>Rename</Next.Menu.Item>
+          <Next.Menu.Item item={{ value: 'rename', label: 'Rename' }} />
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Group>
@@ -182,7 +172,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
       >
         <Next.Menu.Content arrow data-testid={`anchored-${size}`}>
-          <Next.Menu.Item value='pin'>Pin</Next.Menu.Item>
+          <Next.Menu.Item item={{ value: 'pin', label: 'Pin' }} />
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Typography data-testid={`selected-${size}`}>
@@ -223,7 +213,8 @@ export const Default: Story = {};
 /**
  * Escape closes the menu and returns focus to the trigger. Arrow keys move the highlight, skipping disabled items, and
  * Enter selects. Checkbox and radio items report `aria-checked` and update the caller's state, their labels aligned
- * by a leading indicator cell; a SubTrigger opens its nested menu beside it on ArrowRight. A ContextTrigger opens its
+ * by a leading indicator cell, the radios in a `RadioItemGroup` named by its label; a TriggerItem opens its nested
+ * menu beside it on ArrowRight. Items render their default row from `item`, or the parts given as children. A ContextTrigger opens its
  * menu at the pointer; a menu without a trigger anchors to `positioning.getAnchorRect`. A long menu scrolls in a
  * thin ScrollArea with no native bar, keeping the highlight in view. Every menu level takes the trigger row's size
  * unless given its own; a menu without a trigger falls back to `md`. The story ends with the menu open.
@@ -305,6 +296,23 @@ export const Test: Story = {
     );
     await expect(within(menu).getByRole('menuitemradio', { name: 'Name' })).toHaveAttribute('aria-checked', 'true');
     await expect(within(menu).getByRole('menuitemradio', { name: 'Date' })).toHaveAttribute('aria-checked', 'false');
+    // The RadioItemGroup is a `group` named by its label, holding the radios.
+    const sortGroup = within(menu).getByRole('group', { name: 'Sort' });
+    await expect(within(sortGroup).getAllByRole('menuitemradio')).toHaveLength(2);
+    // The TriggerItem renders its data: icon, text and caret.
+    const shareTrigger = within(menu).getByRole('menuitem', { name: 'Share' });
+    await expect(shareTrigger.querySelector('[data-part="item-text"]')).toHaveTextContent('Share');
+    await expect(shareTrigger.querySelectorAll('.nx-icon')).toHaveLength(2);
+    // A composed row lays out like a default one: Delete's children put its own shortcut where Cut's data puts one.
+    const deleteItem = within(menu).getByRole('menuitem', { name: /Delete/ });
+    await expect(deleteItem.querySelector('[data-part="item-shortcut"]')).toHaveTextContent('⌫');
+    await expect(deleteItem.querySelector('[data-part="item-text"]')?.getBoundingClientRect().left).toBeCloseTo(
+      within(menu)
+        .getByRole('menuitem', { name: /Cut/ })
+        .querySelector('[data-part="item-text"]')
+        ?.getBoundingClientRect().left ?? 0,
+      0,
+    );
     // Option items keep their labels in line with each other, checked or not.
     const labelLeft = (name: RegExp | string, role: string) =>
       within(menu).getByRole(role, { name }).querySelector('[data-part="item-text"]')?.getBoundingClientRect().left;

@@ -50,19 +50,19 @@ Rebuild on the agreed model: Container, ScrollArea, Toolbar, Block, Icon, Typogr
 
 ## Phase 2: More primitives
 
-FieldSet, Card, Collapsible, Menu, Switch, Tooltip on the Phase 1 model.
+Fieldset, Card, Collapsible, Menu, Switch, Tooltip on the Phase 1 model.
 
 ### Tasks
 
 - [x] **Switch** — Ark Switch; icon-tall track, block-tall row (DESIGN.md follow-up 11). — `components/Switch/`; Toggle play test.
-- [x] **FieldSet** — Ark Fieldset; Legend as sm label row; `invalid` reaches child Fields (DESIGN.md follow-up 12). — `components/FieldSet/`; Layout, Disabled, Invalid play tests.
+- [x] **Fieldset** — Ark Fieldset; Legend as sm label row; `invalid` reaches child Fields (DESIGN.md follow-up 12). — `components/Fieldset/`; Layout, Disabled, Invalid play tests.
 - [x] **Image** — fixed-ratio frame; `fit`; well while loading; broken-image fallback (DESIGN.md follow-up 13). — `components/Image/`; Load play test.
 - [x] **Card** — Container `level=+1 gutter=md`; Header/Title/Description/Body/Footer; `Card.Poster` Image (DESIGN.md follow-up 14). — `components/Card/`; Layout, Poster, BrokenPoster play tests.
 - [x] **Collapsible** — Ark Collapsible; caret trigger row; `--height` animation, reduced-motion aware (DESIGN.md follow-up 15). — `components/Collapsible/`; Toggle play test.
 - [x] **Menu** — Ark Menu; portalled popup with explicit `size`; Item icon/shortcut, Separator, ItemGroup + label (DESIGN.md follow-up 16). — `components/Menu/`; Open, Dismiss play tests.
 - [x] **Tooltip** — Ark Tooltip; portalled `sm` popup, 20rem cap, 300ms open delay (DESIGN.md follow-up 17). — `components/Tooltip/`; Open play test.
 - [x] **Per-component stories** — a `<Name>.stories.tsx` for Block, Button, Checkbox, Container, Field, Group, Icon, IconButton, Input, Label, ScrollArea, Select, Toolbar, Typography; per-component assertions moved out of `components.stories.tsx` (now a gallery + Benchmark); shared helpers in `testing.ts`. — 84 storybook tests pass.
-- [x] **Block-sized cells** — IconButton, Checkbox and Switch occupy a block square with the control inset (DESIGN.md follow-up 19). — IconButton Sizes, Checkbox Sizes, Form/FieldSet/Card Layout play tests.
+- [x] **Block-sized cells** — IconButton, Checkbox and Switch occupy a block square with the control inset (DESIGN.md follow-up 19). — IconButton Sizes, Checkbox Sizes, Form/Fieldset/Card Layout play tests.
 
 ## Phase 3: Fixes and react-ui-form port
 
@@ -78,7 +78,7 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 - [x] **New components** — `Textarea`, `DateInput` (date/time/datetime), `Popover` + `Combobox`, `Tag`, `ToggleIconButton`; Select option icons. — DESIGN.md follow-ups 24–30; 111 storybook tests pass.
 - [x] **Merge IconButton into Button** — `icon`/`iconEnd`/`label`/`iconOnly` on `Next.Button`; `Next.Toggle` replaces ToggleIconButton (DESIGN.md follow-up 36). — 119 storybook tests pass.
 - [x] **Standardize component stories** — `withSizes()` decorator; `Default` + one `Test` per component (DESIGN.md follow-up 37). — 67 storybook tests pass (was 120).
-- [ ] **`react-ui-form/next`** — Viewport/Content/Fields/FieldSet/Actions on Next; reuse `resolveFieldRenderer`; port Form stories.
+- [ ] **`react-ui-form/next`** — Viewport/Content/Fields/Fieldset/Actions on Next; reuse `resolveFieldRenderer`; port Form stories.
 - [ ] **Settings layout** — design the two-column `variant='settings'` (Container `columns`) — needs a decision.
 - [ ] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`.
 - [ ] **Pilot plugin** — move one plugin (e.g. plugin-space settings) to `react-ui-form/next`.
@@ -114,7 +114,7 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 ### Tasks
 
 - [ ] **1. Foundations** — pane host, popup size decision, Container child span, Group stretch, required marker, depth-5 benchmark, `+1` fallback.
-  - Done: `Next.Panel`, popup size inheritance, Group `fill`. Open: child span, required marker, benchmark (AUDIT.md §6 points 7, 8).
+  - Done: `Next.Panel`, popup size inheritance, Group `fill`. Open: child span, benchmark (AUDIT.md §6 point 7); the required marker is `Field.RequiredIndicator` (point 38).
 - [x] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
 - [x] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
 - [ ] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
@@ -126,3 +126,4 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 - [ ] **9. Ref and lookup fields** — RefField, InlineRefField, ComboboxField, ObjectPicker; pilot plugin-space.
 - [ ] **10. Higher-level form components** — ObjectProperties, ObjectForm, ViewEditor, FieldEditor, editor control frame; pilot plugin-map `MapViewEditor`.
 - [ ] **11. Tree next** — Ark tree-view spike, virtualization, DnD, MasterDetail; pilot plugin-navtree.
+- [x] **Part naming** — DESIGN.md "Part naming" rules 1–13 applied (AUDIT.md §6 points 25–39): `Panel.Header`/`Body`/`Footer` (content-sized rows); Items render their default row from `item` or compose `ItemIcon`/`ItemText`/`ItemDescription`/`ItemIndicator`, with `ItemGroup`/`ItemGroupLabel` in Listbox and Combobox; Combobox `Control`/`Input`/`Trigger`/`ClearTrigger`; Menu `RadioItemGroup`/`TriggerItem`/`ItemShortcut`; `Field.RequiredIndicator` rendered by `Field.Label`; `Fieldset`; `SystemButton.Remove`; OrderedList `Content scroll`/`ItemText`; foreign re-exports dropped.

@@ -9,7 +9,6 @@ import React, { type AnchorHTMLAttributes, type HTMLAttributes, forwardRef, useC
 import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { DragHandle } from '../DragHandle/index.ts';
 import { ScrollArea } from '../ScrollArea/index.ts';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { ToggleGroup, type ToggleGroupRootProps } from '../ToggleGroup/index.ts';
@@ -172,10 +171,8 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Text: ToolbarText,
   Link: ToolbarLink,
-  DragHandle,
   Separator: ToolbarSeparator,
   ToggleGroup: ToolbarToggleGroup,
-  ToggleGroupItem: ToggleGroup.Item,
 };
 
 export type { ToolbarLinkProps, ToolbarRootProps, ToolbarSeparatorProps, ToolbarTextProps, ToolbarToggleGroupProps };

@@ -206,7 +206,10 @@ const FocusRingsStory = () => (
       <Next.Field.Root>
         <Next.Combobox.Root items={OPTIONS}>
           <Next.Combobox.Label>Combobox</Next.Combobox.Label>
-          <Next.Combobox.Input placeholder='Search' />
+          <Next.Combobox.Control>
+            <Next.Combobox.Input placeholder='Search' />
+            <Next.Combobox.Trigger />
+          </Next.Combobox.Control>
           <Next.Combobox.Content size='md' />
         </Next.Combobox.Root>
       </Next.Field.Root>

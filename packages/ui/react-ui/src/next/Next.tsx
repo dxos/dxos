@@ -33,7 +33,7 @@ import {
   DragPreview as NextDragPreview,
   DropIndicator as NextDropIndicator,
   Field as NextField,
-  FieldSet as NextFieldSet,
+  Fieldset as NextFieldset,
   type FieldValence as NextFieldValence,
   Group as NextGroup,
   type GroupProps as NextGroupProps,
@@ -51,6 +51,7 @@ import {
   type ListboxOption as NextListboxOption,
   type ListboxSelectionMode as NextListboxSelectionMode,
   Menu as NextMenu,
+  type MenuOption as NextMenuOption,
   NumberInput as NextNumberInput,
   type NumberInputProps as NextNumberInputProps,
   Panel as NextPanel,
@@ -127,7 +128,7 @@ export namespace Next {
   export type SwitchProps = NextSwitchProps;
   export const SystemButton = NextSystemButton;
   export type SystemButtonProps = NextSystemButtonProps;
-  export const FieldSet = NextFieldSet;
+  export const Fieldset = NextFieldset;
   export const Image = NextImage;
   export type ImageProps = NextImageProps;
   export const Card = NextCard;
@@ -139,6 +140,7 @@ export namespace Next {
   export const dragScope = nextDragScope;
   export const Collapsible = NextCollapsible;
   export const Menu = NextMenu;
+  export type MenuOption = NextMenuOption;
   export const Tooltip = NextTooltip;
   export const TextTooltip = NextTextTooltip;
   export type TextTooltipProps = NextTextTooltipProps;

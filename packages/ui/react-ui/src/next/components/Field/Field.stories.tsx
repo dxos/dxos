@@ -21,7 +21,8 @@ const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
 /**
  * Every current `Field` part as a Next field (DESIGN.md follow-up 54): text, textarea, the segmented date, time and
  * date-time with the calendar trigger, PIN, number, password, and a checkbox and switch in block cells (the current
- * `Field.Block`). A `required` field, a `readOnly` one and an `asChild` root close it.
+ * `Field.Block`). A `required` field (its label marked automatically, then with the mark placed by hand), a `readOnly`
+ * one and an `asChild` root close it.
  */
 const EveryField = ({ size }: SizeArgs) => (
   <>
@@ -64,7 +65,13 @@ const EveryField = ({ size }: SizeArgs) => (
       <Next.Switch label='Notifications' data-testid={`every-switch-${size}`} />
     </Next.Field.Root>
     <Next.Field.Root required>
-      <Next.Field.Label>Handle</Next.Field.Label>
+      <Next.Field.Label data-testid={`required-label-${size}`}>Handle</Next.Field.Label>
+      <Next.Input />
+    </Next.Field.Root>
+    <Next.Field.Root required>
+      <Next.Field.Label data-testid={`placed-label-${size}`}>
+        <Next.Field.RequiredIndicator>required</Next.Field.RequiredIndicator> Alias
+      </Next.Field.Label>
       <Next.Input />
     </Next.Field.Root>
     <Next.Field.Root readOnly>
@@ -214,6 +221,21 @@ export const Test: Story = {
     await expect(canvas.getByRole('checkbox', { name: 'Subscribe' })).toBeInTheDocument();
     await expect(canvas.getByRole('switch', { name: 'Notifications' })).toBeInTheDocument();
     await expect(canvas.getByRole('textbox', { name: 'Handle' })).toBeRequired();
+    // A required root's label ends with Ark's mark on its own, kept out of the name; one placed in the label replaces it.
+    const marks = byTestId(canvasElement, 'required-label-md').querySelectorAll('[data-part="required-indicator"]');
+    await expect(marks).toHaveLength(1);
+    await expect(marks[0]).toHaveTextContent('*');
+    await expect(marks[0]).toHaveAttribute('aria-hidden', 'true');
+    await expect(
+      canvas
+        .getByRole('textbox', { name: 'Id' })
+        .closest('.nx-field')
+        ?.querySelector('[data-part="required-indicator"]'),
+    ).toBeNull();
+    const placed = byTestId(canvasElement, 'placed-label-md').querySelectorAll('[data-part="required-indicator"]');
+    await expect(placed).toHaveLength(1);
+    await expect(placed[0]).toHaveTextContent('required');
+    await expect(canvas.getByRole('textbox', { name: 'Alias' })).toBeRequired();
     await expect(canvas.getByRole('textbox', { name: 'Id' })).toHaveAttribute('readonly');
     const asChild = byTestId(canvasElement, 'every-as-child-md');
     await expect(asChild.tagName).toBe('SECTION');

@@ -4,7 +4,14 @@
 
 import { Menu as MenuPrimitive, useMenuContext } from '@ark-ui/react/menu';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ReactNode, type RefObject, createContext, forwardRef, useContext } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+  type RefObject,
+  createContext,
+  forwardRef,
+  useContext,
+} from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -12,7 +19,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Icon } from '../Icon/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
@@ -26,7 +33,7 @@ type MenuRootProps = MenuPrimitive.RootProps;
 
 /**
  * The enclosing menu: its `onSelect`, so a nested menu reports its selections to the root by default, and whether it
- * is a `Menu.Sub`, whose Content lines its first item up with the SubTrigger row.
+ * is a `Menu.Sub`, whose Content lines its first item up with the TriggerItem row.
  */
 const MenuContext = createContext<{ onSelect?: MenuRootProps['onSelect']; sub: boolean }>({ sub: false });
 
@@ -150,29 +157,130 @@ MenuContent.displayName = 'Next.Menu.Content';
 // Item
 //
 
-type MenuItemProps = ThemedClassName<MenuPrimitive.ItemProps> & {
+/** What a row shows: its default layout renders the icon, label and shortcut. */
+export type MenuItemData = {
+  label: string;
   /** Leading icon. */
   icon?: string;
   /** Trailing keyboard hint, e.g. `⌘C`; display only. */
   shortcut?: string;
 };
 
-/** A block-tall row: optional leading Icon, the label, and an optional trailing shortcut. */
+export type MenuOption = MenuItemData & {
+  value: string;
+  disabled?: boolean;
+};
+
+// The row an item part belongs to; a TriggerItem is no Ark option, so its text cannot be Ark's ItemText.
+const ItemContext = createContext<{ data: MenuItemData; trigger: boolean } | undefined>(undefined);
+
+const useItem = (part: string) => {
+  const context = useContext(ItemContext);
+  if (!context) {
+    throw new Error(`Next.Menu.${part} must be inside a Next.Menu item`);
+  }
+  return context;
+};
+
+type MenuItemProps = ThemedClassName<Omit<MenuPrimitive.ItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText`, `ItemShortcut` and any trailing control. */
+  children?: ReactNode;
+};
+
+/** A block-tall row: without children, the option's leading icon, its label and its trailing shortcut. */
 const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
-  ({ classNames, icon, shortcut, children, ...props }, forwardedRef) => (
-    <MenuPrimitive.Item {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
-      {icon && <Icon icon={icon} />}
-      <MenuPrimitive.ItemText className={recipes.menuItemText()}>{children}</MenuPrimitive.ItemText>
-      {shortcut && (
-        <kbd aria-hidden className={recipes.menuShortcut()}>
-          {shortcut}
-        </kbd>
-      )}
-    </MenuPrimitive.Item>
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: false }}>
+      <MenuPrimitive.Item
+        {...props}
+        value={item.value}
+        disabled={disabled ?? item.disabled}
+        className={mx(recipes.menuItem(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            {item.icon && <MenuItemIcon />}
+            <MenuItemText />
+            {item.shortcut && <MenuItemShortcut />}
+          </>
+        )}
+      </MenuPrimitive.Item>
+    </ItemContext.Provider>
   ),
 );
 
 MenuItem.displayName = 'Next.Menu.Item';
+
+//
+// ItemIcon
+//
+
+type MenuItemIconProps = Omit<IconProps, 'icon'> & {
+  /** Defaults to the item's `icon`. */
+  icon?: string;
+};
+
+const MenuItemIcon = forwardRef<SVGSVGElement, MenuItemIconProps>(({ icon, ...props }, forwardedRef) => {
+  const { data } = useItem('ItemIcon');
+  const glyph = icon ?? data.icon;
+  return glyph ? <Icon {...props} icon={glyph} ref={forwardedRef} /> : null;
+});
+
+MenuItemIcon.displayName = 'Next.Menu.ItemIcon';
+
+//
+// ItemText
+//
+
+type MenuItemTextProps = ThemedClassName<MenuPrimitive.ItemTextProps>;
+
+/** The row's label, taking the free space and truncating; the item's `label` by default. */
+const MenuItemText = forwardRef<HTMLDivElement, MenuItemTextProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { data, trigger } = useItem('ItemText');
+    const className = mx(recipes.menuItemText(), classNames);
+    return trigger ? (
+      <div {...props} data-scope='menu' data-part='item-text' className={className} ref={forwardedRef}>
+        {children ?? data.label}
+      </div>
+    ) : (
+      <MenuPrimitive.ItemText {...props} className={className} ref={forwardedRef}>
+        {children ?? data.label}
+      </MenuPrimitive.ItemText>
+    );
+  },
+);
+
+MenuItemText.displayName = 'Next.Menu.ItemText';
+
+//
+// ItemShortcut
+//
+
+type MenuItemShortcutProps = ThemedClassName<ComponentPropsWithoutRef<'kbd'>>;
+
+/** A trailing keyboard hint in the description colour, hidden from assistive tech; the item's `shortcut` by default. */
+const MenuItemShortcut = forwardRef<HTMLElement, MenuItemShortcutProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { data } = useItem('ItemShortcut');
+    return (
+      <kbd
+        aria-hidden
+        {...props}
+        data-scope='menu'
+        data-part='item-shortcut'
+        className={mx(recipes.menuShortcut(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? data.shortcut}
+      </kbd>
+    );
+  },
+);
+
+MenuItemShortcut.displayName = 'Next.Menu.ItemShortcut';
 
 //
 // ItemIndicator
@@ -180,10 +288,20 @@ MenuItem.displayName = 'Next.Menu.Item';
 
 type MenuItemIndicatorProps = ThemedClassName<MenuPrimitive.ItemIndicatorProps>;
 
-/** Shown while a checkbox or radio item is checked; a check by default. */
+/**
+ * The leading cell of a checkbox or radio item: icon-sized whether or not the item is checked, so labels align, and
+ * showing a check by default while it is.
+ */
 const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
-    <MenuPrimitive.ItemIndicator {...props} className={mx(recipes.menuIndicator(), classNames)} ref={forwardedRef}>
+    <MenuPrimitive.ItemIndicator
+      aria-hidden
+      // Kept in the layout while unchecked (styled by `data-state`), since preflight's `[hidden]` rule is `!important`.
+      hidden={false}
+      {...props}
+      className={mx(recipes.menuIndicator(), classNames)}
+      ref={forwardedRef}
+    >
       {children ?? <Icon icon='ph--check--regular' />}
     </MenuPrimitive.ItemIndicator>
   ),
@@ -191,65 +309,87 @@ const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>(
 
 MenuItemIndicator.displayName = 'Next.Menu.ItemIndicator';
 
-/** The leading cell of an option item: an icon-sized slot, so labels align whether or not the item is checked. */
-const IndicatorCell = ({ indicator }: { indicator?: ReactNode }) => (
-  <span aria-hidden data-scope='menu' data-part='indicator-cell' className={recipes.menuIndicatorCell()}>
-    <MenuItemIndicator>{indicator}</MenuItemIndicator>
-  </span>
-);
-
 //
 // CheckboxItem
 //
 
-type MenuCheckboxItemProps = ThemedClassName<MenuPrimitive.CheckboxItemProps> & {
-  /** Trailing keyboard hint, e.g. `⌘B`; display only. */
-  shortcut?: string;
+type MenuCheckboxItemProps = ThemedClassName<Omit<MenuPrimitive.CheckboxItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIndicator`, `ItemText` and `ItemShortcut`. */
+  children?: ReactNode;
 };
 
-/** A `menuitemcheckbox` row: a check cell, the label and an optional shortcut; selecting it toggles `checked`. */
+/** A `menuitemcheckbox` row: without children, a check cell, the label and the shortcut; selecting it toggles `checked`. */
 const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
-  ({ classNames, shortcut, children, ...props }, forwardedRef) => (
-    <MenuPrimitive.CheckboxItem {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
-      <IndicatorCell />
-      <MenuPrimitive.ItemText className={recipes.menuItemText()}>{children}</MenuPrimitive.ItemText>
-      {shortcut && (
-        <kbd aria-hidden className={recipes.menuShortcut()}>
-          {shortcut}
-        </kbd>
-      )}
-    </MenuPrimitive.CheckboxItem>
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: false }}>
+      <MenuPrimitive.CheckboxItem
+        {...props}
+        value={item.value}
+        disabled={disabled ?? item.disabled}
+        className={mx(recipes.menuItem(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            <MenuItemIndicator />
+            <MenuItemText />
+            {item.shortcut && <MenuItemShortcut />}
+          </>
+        )}
+      </MenuPrimitive.CheckboxItem>
+    </ItemContext.Provider>
   ),
 );
 
 MenuCheckboxItem.displayName = 'Next.Menu.CheckboxItem';
 
 //
-// RadioGroup
+// RadioItemGroup
 //
 
-type MenuRadioGroupProps = ThemedClassName<MenuPrimitive.RadioItemGroupProps>;
+type MenuRadioItemGroupProps = ThemedClassName<MenuPrimitive.RadioItemGroupProps>;
 
 /** A group of radio items holding one `value`; name it with an `ItemGroupLabel` inside. */
-const MenuRadioGroup = forwardRef<HTMLDivElement, MenuRadioGroupProps>(({ classNames, ...props }, forwardedRef) => (
-  <MenuPrimitive.RadioItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
-));
+const MenuRadioItemGroup = forwardRef<HTMLDivElement, MenuRadioItemGroupProps>(
+  ({ classNames, ...props }, forwardedRef) => (
+    <MenuPrimitive.RadioItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
+  ),
+);
 
-MenuRadioGroup.displayName = 'Next.Menu.RadioGroup';
+MenuRadioItemGroup.displayName = 'Next.Menu.RadioItemGroup';
 
 //
 // RadioItem
 //
 
-type MenuRadioItemProps = ThemedClassName<MenuPrimitive.RadioItemProps>;
+type MenuRadioItemProps = ThemedClassName<Omit<MenuPrimitive.RadioItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIndicator` and `ItemText`. */
+  children?: ReactNode;
+};
 
-/** A `menuitemradio` row with a dot in the indicator cell while it holds its group's value. */
+/** A `menuitemradio` row: without children, a dot in the indicator cell while it holds its group's value, and the label. */
 const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
-  ({ classNames, children, ...props }, forwardedRef) => (
-    <MenuPrimitive.RadioItem {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
-      <IndicatorCell indicator={<Icon icon='ph--dot-outline--fill' />} />
-      <MenuPrimitive.ItemText className={recipes.menuItemText()}>{children}</MenuPrimitive.ItemText>
-    </MenuPrimitive.RadioItem>
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: false }}>
+      <MenuPrimitive.RadioItem
+        {...props}
+        value={item.value}
+        disabled={disabled ?? item.disabled}
+        className={mx(recipes.menuItem(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            <MenuItemIndicator>
+              <Icon icon='ph--dot-outline--fill' />
+            </MenuItemIndicator>
+            <MenuItemText />
+          </>
+        )}
+      </MenuPrimitive.RadioItem>
+    </ItemContext.Provider>
   ),
 );
 
@@ -262,7 +402,7 @@ MenuRadioItem.displayName = 'Next.Menu.RadioItem';
 type MenuSubProps = MenuRootProps;
 
 /**
- * A nested menu: a Root inside a parent's Content, opened by its `SubTrigger` and placed beside it. Ark reports a
+ * A nested menu: a Root inside a parent's Content, opened by its `TriggerItem` and placed beside it. Ark reports a
  * nested item only to its own menu, so without an `onSelect` of its own a Sub forwards selections to its parent's.
  */
 const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
@@ -280,28 +420,33 @@ const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
 MenuSub.displayName = 'Next.Menu.Sub';
 
 //
-// SubTrigger
+// TriggerItem
 //
 
-type MenuSubTriggerProps = ThemedClassName<MenuPrimitive.TriggerItemProps> & {
-  /** Leading icon. */
-  icon?: string;
+type MenuTriggerItemProps = ThemedClassName<Omit<MenuPrimitive.TriggerItemProps, 'children'>> & {
+  item: MenuItemData;
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText` and a trailing caret. */
+  children?: ReactNode;
 };
 
-/** An item row that opens its `Menu.Sub` (hover, ArrowRight or Enter), with a trailing caret. */
-const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(
-  ({ classNames, icon, children, ...props }, forwardedRef) => (
-    <MenuPrimitive.TriggerItem {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
-      {icon && <Icon icon={icon} />}
-      <span data-scope='menu' data-part='item-text' className={recipes.menuItemText()}>
-        {children}
-      </span>
-      <Icon icon='ph--caret-right--regular' />
-    </MenuPrimitive.TriggerItem>
+/** An item row that opens its `Menu.Sub` (hover, ArrowRight or Enter): without children, icon, label and a caret. */
+const MenuTriggerItem = forwardRef<HTMLDivElement, MenuTriggerItemProps>(
+  ({ classNames, item, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: true }}>
+      <MenuPrimitive.TriggerItem {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
+        {children ?? (
+          <>
+            {item.icon && <MenuItemIcon />}
+            <MenuItemText />
+            <Icon icon='ph--caret-right--regular' />
+          </>
+        )}
+      </MenuPrimitive.TriggerItem>
+    </ItemContext.Provider>
   ),
 );
 
-MenuSubTrigger.displayName = 'Next.Menu.SubTrigger';
+MenuTriggerItem.displayName = 'Next.Menu.TriggerItem';
 
 //
 // Separator
@@ -354,12 +499,15 @@ export const Menu = {
   ContextTrigger: MenuContextTrigger,
   Content: MenuContent,
   Item: MenuItem,
+  ItemIcon: MenuItemIcon,
+  ItemText: MenuItemText,
+  ItemShortcut: MenuItemShortcut,
   ItemIndicator: MenuItemIndicator,
   CheckboxItem: MenuCheckboxItem,
-  RadioGroup: MenuRadioGroup,
+  RadioItemGroup: MenuRadioItemGroup,
   RadioItem: MenuRadioItem,
   Sub: MenuSub,
-  SubTrigger: MenuSubTrigger,
+  TriggerItem: MenuTriggerItem,
   Separator: MenuSeparator,
   ItemGroup: MenuItemGroup,
   ItemGroupLabel: MenuItemGroupLabel,
@@ -371,13 +519,16 @@ export type {
   MenuContextTriggerProps,
   MenuItemGroupLabelProps,
   MenuItemGroupProps,
+  MenuItemIconProps,
   MenuItemIndicatorProps,
   MenuItemProps,
-  MenuRadioGroupProps,
+  MenuItemShortcutProps,
+  MenuItemTextProps,
+  MenuRadioItemGroupProps,
   MenuRadioItemProps,
   MenuRootProps,
   MenuSeparatorProps,
   MenuSubProps,
-  MenuSubTriggerProps,
+  MenuTriggerItemProps,
   MenuTriggerProps,
 };
