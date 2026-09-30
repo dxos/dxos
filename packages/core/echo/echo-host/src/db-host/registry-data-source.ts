@@ -41,6 +41,27 @@ const registryIdentity = (data: ObjectJSON): RegistryIdentity => {
   return { name, version: typeof meta?.version === 'string' ? meta.version : '' };
 };
 
+/**
+ * The entity behind a contribution, parsed on first read and kept.
+ *
+ * The content was validated when its digest was first filed, so this cannot be reached with
+ * anything unparseable — but it is written defensively rather than asserted, since the cost of
+ * being wrong is a thrown error inside an index pass.
+ */
+const bodyOf = (contribution: Contribution): ObjectJSON | undefined => {
+  if (contribution.data !== undefined) {
+    return contribution.data;
+  }
+  try {
+    const parsed: unknown = JSON.parse(contribution.json);
+    if (isIndexableObject(parsed)) {
+      contribution.data = parsed;
+      return parsed;
+    }
+  } catch {}
+  return undefined;
+};
+
 /** The buffer's handle for an identity — the same string the index engine reclaims a row by. */
 const identityKey = ({ name, version }: RegistryIdentity): string => (version === '' ? name : `${name}:${version}`);
 
@@ -54,17 +75,25 @@ export type RegistryEntry = {
 
 export type RegistryDataSourceOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
-  /** Digest probe against the persisted rows; supplied by the index engine. */
-  lookupHashes: (
-    keys: readonly string[],
-  ) => Effect.Effect<Map<string, string | null>, SqlError.SqlError, SqlClient.SqlClient>;
+  /** The persisted registry index, read once per session; supplied by the index engine. */
+  listPersisted: () => Effect.Effect<
+    readonly { name: string; version: string; contentHash: string | null }[],
+    SqlError.SqlError
+  >;
 };
 
 /** One client's registration of a key. */
 type Contribution = {
   json: string;
   hash: string;
-  data: ObjectJSON;
+  /**
+   * The parsed entity, absent until something needs the body.
+   *
+   * A boot re-offers a registry the index already holds byte for byte, and those entries are
+   * skipped on their digest before the body is ever read — so parsing them would be work done
+   * only to throw away.
+   */
+  data?: ObjectJSON;
   /** Registration order within this session; the cursor names a value of this sequence. */
   seq: number;
   updatedAt: number;
@@ -145,37 +174,74 @@ export class RegistryDataSource implements IndexDataSource {
   readonly sourceName = 'registry';
 
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
-  readonly #lookupHashes: RegistryDataSourceOptions['lookupHashes'];
+  readonly #listPersisted: RegistryDataSourceOptions['listPersisted'];
   readonly #sessionId = crypto.randomUUID();
 
   /** Union of every connected client's registry, keyed by entry key. */
   readonly #entries = new Map<string, BufferedEntry>();
 
   /**
-   * Per client, the identity each snapshot digest it last sent resolved to.
+   * Identity per snapshot digest — a pure content-to-identity cache.
    *
-   * Lets an unchanged entry skip `JSON.parse`: the identity is a function of the content, so a
-   * digest that has been filed before names the same key again. Replaced wholesale on every
-   * submit, so it never outlives the contribution it describes.
+   * Lets an entry skip `JSON.parse`: the identity is read out of the entity's own metadata, so
+   * identical content always resolves to the same key. Seeded from the persisted index by
+   * {@link prime}, which is what keeps an unchanged boot from parsing the whole registry, and
+   * extended whenever content is parsed for the first time.
    */
-  readonly #filedByHash = new Map<string, Map<string, string>>();
+  readonly #identityByHash = new Map<string, string>();
 
   /**
-   * Persisted digest per entry key, as last read from the index; null where the key has no row.
+   * Persisted digest per entry key as of {@link prime}; absent where the key has no row.
    *
-   * Cached rather than re-read because one update pass calls {@link getChangedObjects} once per
-   * dependent index (each keeps its own cursor), and a probe whose result was discarded would
-   * report "no row" on the second call and re-index an entry the first call had just skipped.
-   * Only ever written from a read, never from an emit: a write that rolls back leaves its cursor
-   * behind too, and the entry must still look un-indexed when the next pass re-offers it.
+   * Read once rather than probed per pass: one update pass calls {@link getChangedObjects} once
+   * per dependent index, and a probe whose result was discarded would report "no row" on the
+   * second call and re-index an entry the first call had just skipped. Only ever written from
+   * that read, never from an emit — a write that rolls back leaves its cursor behind too, and the
+   * entry must still look un-indexed when the next pass re-offers it.
    */
   readonly #persistedHashes = new Map<string, string | null>();
+
+  #primed = false;
 
   #seq = 0;
 
   constructor(options: RegistryDataSourceOptions) {
     this.#runtime = options.runtime;
-    this.#lookupHashes = options.lookupHashes;
+    this.#listPersisted = options.listPersisted;
+  }
+
+  /**
+   * Read the persisted registry index once, before the first snapshot is folded in.
+   *
+   * The whole point of the boot path: a client that starts up re-offers a registry that is
+   * already indexed byte for byte, and without this every entry would be parsed to find its
+   * identity and then probed to find its digest. One scan answers both for all of them.
+   */
+  prime(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      if (this.#primed) {
+        return;
+      }
+      const rows = yield* this.#listPersisted();
+      for (const row of rows) {
+        const key = identityKey(row);
+        this.#persistedHashes.set(key, row.contentHash);
+        if (row.contentHash !== null) {
+          this.#identityByHash.set(row.contentHash, key);
+        }
+      }
+      this.#primed = true;
+    }).pipe(
+      RuntimeProvider.provide(this.#runtime),
+      // A failed read leaves the source unprimed rather than half-primed: every entry then takes
+      // the parse-and-emit path, which is slower but never skips a write the index still needs.
+      Effect.catchCause((cause) => Effect.sync(() => log.warn('Failed to read the persisted registry', { cause }))),
+    );
+  }
+
+  /** Entry keys the index already holds, as of {@link prime} — what a reconciliation reclaims against. */
+  get persistedKeys(): ReadonlySet<string> {
+    return new Set(this.#persistedHashes.keys());
   }
 
   /**
@@ -187,25 +253,28 @@ export class RegistryDataSource implements IndexDataSource {
   submit(clientId: string, entries: readonly RegistryEntry[]): { removed: string[]; changed: number } {
     const seen = new Set<string>();
     let changed = 0;
-    const filed = this.#filedByHash.get(clientId) ?? new Map<string, string>();
-    const refiled = new Map<string, string>();
     for (const entry of entries) {
       const hash = contentHash(entry.objectJson);
 
       // The identity lives inside the JSON, but parsing the whole registry on every push is what a
       // snapshot protocol does most of the time — the common push is byte-identical to the last
-      // one. A digest this client already filed names the identity it resolved to, so an unchanged
-      // entry is recognised without being parsed again.
-      const known = filed.get(hash);
-      if (known !== undefined && this.#entries.get(known)?.contributions.get(clientId)?.hash === hash) {
+      // one, and at boot it is byte-identical to what the index already holds. A digest already
+      // seen, here or on disk via `prime`, names the identity it resolved to without parsing
+      // again; only content nobody has filed before reaches the parse below.
+      const known = this.#identityByHash.get(hash);
+      if (known !== undefined) {
         seen.add(known);
-        refiled.set(hash, known);
+        if (this.#file(clientId, known, entry.objectJson, hash, undefined)) {
+          changed++;
+        }
         continue;
       }
 
       // An entry the indexer cannot file has no identity to be filed under, and so cannot count as
       // carried by this client — marking it would let a malformed replacement preserve the
-      // client's previous contribution, which the reconciliation would then never drop.
+      // client's previous contribution, which the reconciliation would then never drop. Only this
+      // path can reject an entry, which is why the fast path above needs no validation of its
+      // own: a digest is only ever filed for content that passed here.
       let parsed: unknown;
       try {
         parsed = JSON.parse(entry.objectJson);
@@ -218,45 +287,11 @@ export class RegistryDataSource implements IndexDataSource {
         continue;
       }
       const key = identityKey(registryIdentity(parsed));
-      refiled.set(hash, key);
-
-      const existing = this.#entries.get(key);
-      if (existing?.contributions.get(clientId)?.hash === hash) {
-        seen.add(key);
-        continue;
-      }
+      this.#identityByHash.set(hash, key);
       seen.add(key);
-
-      const contribution: Contribution = {
-        json: entry.objectJson,
-        hash,
-        data: parsed,
-        seq: ++this.#seq,
-        updatedAt: Date.now(),
-      };
-      if (existing === undefined) {
-        this.#entries.set(key, {
-          key,
-          contributions: new Map([[clientId, contribution]]),
-          active: contribution,
-        });
-      } else {
-        existing.contributions.set(clientId, contribution);
-        existing.active = contribution;
+      if (this.#file(clientId, key, entry.objectJson, hash, parsed)) {
+        changed++;
       }
-      // The persisted digest read for this key describes the row as it was before this write, and
-      // a later push may return the key to exactly that content — a comparison against the stale
-      // reading would then skip a change the row does not yet carry.
-      this.#persistedHashes.delete(key);
-      changed++;
-    }
-
-    // Wholesale, not merged: a digest this snapshot did not carry names a contribution the client
-    // no longer holds, and keeping it would let a later push resurrect the identity it resolved to.
-    if (refiled.size > 0) {
-      this.#filedByHash.set(clientId, refiled);
-    } else {
-      this.#filedByHash.delete(clientId);
     }
 
     const removed: string[] = [];
@@ -292,6 +327,38 @@ export class RegistryDataSource implements IndexDataSource {
     return { removed, changed };
   }
 
+  /**
+   * Record one client's contribution to an identity.
+   *
+   * @param data the parsed entity when the caller already had it; left out on the digest-matched
+   * path, where nothing has been parsed and — for an entry the index already holds — nothing will
+   * be, since {@link getChangedObjects} skips it before ever reading the body.
+   * @returns whether the buffer changed, and so whether an index pass is owed.
+   */
+  #file(clientId: string, key: string, json: string, hash: string, data: ObjectJSON | undefined): boolean {
+    const existing = this.#entries.get(key);
+    if (existing?.contributions.get(clientId)?.hash === hash) {
+      return false;
+    }
+
+    const contribution: Contribution = { json, hash, data, seq: ++this.#seq, updatedAt: Date.now() };
+    if (existing === undefined) {
+      this.#entries.set(key, { key, contributions: new Map([[clientId, contribution]]), active: contribution });
+    } else {
+      existing.contributions.set(clientId, contribution);
+      existing.active = contribution;
+    }
+
+    // Kept only while it still describes the row: a reading taken before this write is stale the
+    // moment the content differs from it, and a later push returning the key to exactly that
+    // content would then be skipped as already indexed when the row does not carry it. Matching
+    // content is the boot case — the row already holds this, so there is nothing to invalidate.
+    if (this.#persistedHashes.get(key) !== hash) {
+      this.#persistedHashes.delete(key);
+    }
+    return true;
+  }
+
   /** Entry keys any client currently holds — what a reconciliation compares the index against. */
   get keys(): ReadonlySet<string> {
     return new Set(this.#entries.keys());
@@ -309,17 +376,6 @@ export class RegistryDataSource implements IndexDataSource {
         .sort((left, right) => left.active.seq - right.active.seq);
       if (pending.length === 0) {
         return { objects: [], cursors: [this.#makeCursor(this.#seq)] };
-      }
-
-      // Entries first seen this session may already be indexed from a previous one, byte for byte.
-      // One (chunked) query decides that for everything pending; afterwards the in-memory digest
-      // comparison in `submit` is enough and the probe never runs for those keys again.
-      const unprobed = pending.map((entry) => entry.key).filter((key) => !this.#persistedHashes.has(key));
-      if (unprobed.length > 0) {
-        const persisted = yield* this.#lookupHashes(unprobed);
-        for (const key of unprobed) {
-          this.#persistedHashes.set(key, persisted.get(key) ?? null);
-        }
       }
 
       // The limit caps what is *emitted*, not what is examined: a skipped entry costs nothing to
@@ -344,16 +400,22 @@ export class RegistryDataSource implements IndexDataSource {
         if (this.#persistedHashes.get(entry.key) === entry.active.hash) {
           continue;
         }
+        // The first read of the body for an entry that took the digest-matched path into the
+        // buffer and then turned out to need indexing after all.
+        const data = bodyOf(entry.active);
+        if (data === undefined) {
+          continue;
+        }
         objects.push({
           spaceId: REGISTRY_SPACE_ID,
           queueId: null,
           queueNamespace: null,
           documentId: null,
           origin: ORIGIN_REGISTRY,
-          ...registryIdentity(entry.active.data),
+          ...registryIdentity(data),
           contentHash: entry.active.hash,
           recordId: null,
-          data: entry.active.data,
+          data,
           createdAt: null,
           updatedAt: entry.active.updatedAt,
         });

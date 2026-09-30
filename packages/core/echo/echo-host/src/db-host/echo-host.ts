@@ -368,7 +368,7 @@ export class EchoHost extends Resource {
     // which cannot exist until the SQL client resolves.
     this._registryDataSource = new RegistryDataSource({
       runtime: this._runtime,
-      lookupHashes: (keys) => this.indexEngine.lookupRegistryHashes(keys),
+      listPersisted: () => this.indexEngine.listRegistryDigests(),
     });
 
     log('echo-host: running index engine migration...');
@@ -522,6 +522,11 @@ export class EchoHost extends Resource {
     entries: readonly RegistryEntry[],
     opts?: { releasing?: boolean },
   ): Promise<boolean> {
+    // Before the snapshot is folded in: the source resolves an entry's identity and its
+    // already-indexed status from this, and without it a boot parses and probes the whole
+    // registry to conclude that nothing changed.
+    await this.#registryDataSource.prime().pipe(RuntimeProvider.runPromise(this._runtime));
+
     const { removed, changed } = this.#registryDataSource.submit(clientId, entries);
     // A releasing client is withdrawing its claim, not unregistering its entities: the rows stay
     // for the next session to re-adopt by digest, and the reconciliation below reclaims whatever
@@ -532,10 +537,10 @@ export class EchoHost extends Resource {
     // deleting exactly the rows a release is meant to keep. The first real snapshot reconciles.
     const reconciling = !opts?.releasing && !this._registryReconciled;
     if (reconciling) {
+      // Against the digests read by `prime` rather than a scan of its own: the same rows, already
+      // in memory, and one query fewer on the path every client takes at startup.
       const live = this.#registryDataSource.keys;
-      const indexed = await this.indexEngine.queryRegistry().pipe(RuntimeProvider.runPromise(this._runtime));
-      for (const row of indexed) {
-        const indexedKey = row.version === '' ? row.name : `${row.name}:${row.version}`;
+      for (const indexedKey of this.#registryDataSource.persistedKeys) {
         if (!live.has(indexedKey)) {
           stale.add(indexedKey);
         }

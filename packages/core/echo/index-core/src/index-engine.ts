@@ -245,6 +245,14 @@ export class IndexEngine {
     return this.#objectMetaIndex.queryRegistry(query);
   }
 
+  /** Every persisted registry row's identity and digest — read once per session; see the index. */
+  listRegistryDigests(): Effect.Effect<
+    readonly { name: string; version: string; contentHash: string | null }[],
+    SqlError.SqlError
+  > {
+    return this.#objectMetaIndex.listRegistryDigests();
+  }
+
   /** Stored snapshot digests for registry entry keys — the dedup probe for a re-push. */
   lookupRegistryHashes(keys: readonly string[]): Effect.Effect<Map<string, string | null>, SqlError.SqlError> {
     return this.#objectMetaIndex.lookupRegistryHashes(keys);

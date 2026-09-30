@@ -535,6 +535,25 @@ export class EntityMetaIndex implements Index {
       }),
   );
 
+  /**
+   * Every persisted registry row's identity and digest — the whole registry index in one lean scan.
+   *
+   * Read once per host session, and what lets an unchanged boot stay cheap: it answers "is this
+   * entry already indexed, byte for byte" without a chunked probe, and "which identity does this
+   * content have" without parsing the content, since the digest determines both.
+   */
+  listRegistryDigests = Effect.fn('EntityMetaIndex.listRegistryDigests')(
+    (): Effect.Effect<readonly { name: string; version: string; contentHash: string | null }[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        return yield* sql<{
+          name: string;
+          version: string;
+          contentHash: string | null;
+        }>`SELECT name, version, contentHash FROM objectMeta WHERE origin = ${ORIGIN_REGISTRY}`;
+      }),
+  );
+
   /** Record ids of the rows registered under the given entry keys — the set an unregister reclaims. */
   selectRegistryRecordIds = Effect.fn('EntityMetaIndex.selectRegistryRecordIds')(
     (keys: readonly string[]): Effect.Effect<number[], SqlError.SqlError> =>
