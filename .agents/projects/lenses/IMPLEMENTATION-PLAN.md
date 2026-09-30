@@ -75,10 +75,16 @@ Tests: `version-translation.test.ts` (12, pure), `version-documents.test.ts` (6,
 object), planner test for the step. Red-checked: designation, the wait for missing ancestor images, the
 loser merge, the listener move, and host resolution on both executor paths.
 
+Queries and references (item 1, 2026-09-30): a query's result type is part of the query. A selection
+returns rows of the version it names; one naming several versions of a type returns each object once, at
+the newest of them; one naming no version returns the newest the client knows. The host resolves this once
+over the query's own matches, before ordering and limits. The client returns a row of a version the object
+does not read as a version binding (one per object and version, typed at that version, edits translated),
+also returned by `db.version(obj, Type)`. A reference resolves to the version its schema declares, and a
+query traversing it returns that version.
+
 Not yet done:
 
-- A query that names an older version returns nothing when the client knows a newer one; `db.version(obj, v)`
-  bindings (as `db.branch`) are the way to read another version.
 - Branches of versioned objects (decision 4 in DESIGN.md §12.5).
 - `getDocumentHeads` and `waitUntilHeadsReplicated` cover linked documents only, not version documents
   (branch documents have the same gap).

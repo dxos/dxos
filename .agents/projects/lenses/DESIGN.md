@@ -1248,9 +1248,15 @@ returns each object at the newest version the reader knows.
 - **Designation.** A derived root records the digest of the lens keys from its origin; a device whose
   lenses give a different digest does not translate. Lenses with the same definition have the same key,
   so builds that agree need no designation.
-- **Host resolution** reads only the index: it drops a document row when another document of the same
-  object holds a newer version the reader lists. User branch documents share their main document's type
-  and are left to the client's routing, as before.
+- **A query's result type is part of the query.** A selection returns rows of the version its type filter
+  names; a query naming several versions of one type returns each object once, at the newest named; one
+  naming no version returns the newest the reader knows. The host resolves this over the query's own matches
+  (not every document of the object), once, before ordering, limits and aggregation.
+- **Several live objects per id.** The live object reads the reader's default version; a row of another
+  version is returned as a version binding bound to that version's document, one per object and version,
+  also reached by `db.version(obj, Type)`. A reference resolves to the version its schema declares, and a
+  query that traverses it returns that version (the traversal clause names only the property, so the client
+  derives the target from the anchor's schema).
 
 ## 13. References
 
