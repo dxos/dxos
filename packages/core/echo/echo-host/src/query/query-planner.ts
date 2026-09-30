@@ -267,6 +267,9 @@ export class QueryPlanner {
     if (query.options.deleted) {
       newContext.deletedHandling = query.options.deleted;
     }
+    if (query.options.versions) {
+      newContext.versions = query.options.versions;
+    }
     return this._generate(query.query, newContext);
   }
 
@@ -768,12 +771,18 @@ export class QueryPlanner {
     }
   }
 
+  /** The steps every selection is followed by: version resolution, then the deleted-state filter. */
   private _generateDeletedHandlingSteps(context: GenerationContext): QueryPlan.Step[] {
+    const versions: QueryPlan.Step[] =
+      context.versions && context.versions.length > 0
+        ? [{ _tag: 'ResolveVersionsStep', versions: context.versions }]
+        : [];
     switch (context.deletedHandling) {
       case 'include':
-        return [];
+        return versions;
       case 'exclude':
         return [
+          ...versions,
           {
             _tag: 'FilterDeletedStep',
             mode: 'only-non-deleted',
@@ -781,6 +790,7 @@ export class QueryPlanner {
         ];
       case 'only':
         return [
+          ...versions,
           {
             _tag: 'FilterDeletedStep',
             mode: 'only-deleted',
@@ -1242,7 +1252,14 @@ export class QueryPlanner {
     // We can only do this if there are no unions, traversals, or set differences between them.
     // AggregateStep is also a blocker: a limit above it counts whole groups, so it must not be
     // pushed down into the flat SelectStep/OrderStep scan (that would slice objects, not groups).
-    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep', 'AggregateStep']);
+    // ResolveVersionsStep drops rows after the scan, so a limit pushed past it would starve the result.
+    const BLOCKERS = new Set([
+      'UnionStep',
+      'TraverseStep',
+      'SetDifferenceStep',
+      'AggregateStep',
+      'ResolveVersionsStep',
+    ]);
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;
@@ -1399,6 +1416,11 @@ type GenerationContext = {
    * When generating a selection clause, whether to invert the filter.
    */
   selectionInverted: boolean;
+
+  /**
+   * Type URIs of the schema versions the reader reads, oldest first (`QueryOptions.versions`).
+   */
+  versions?: readonly string[];
 };
 
 const DEFAULT_CONTEXT: GenerationContext = {

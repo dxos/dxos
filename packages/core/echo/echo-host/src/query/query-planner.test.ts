@@ -1449,6 +1449,20 @@ describe('QueryPlanner', () => {
     `);
   });
 
+  test('known versions resolve each selection, and a limit is not pushed past them', () => {
+    const versions = ['dxn:com.example.type.task:0.1.0', 'dxn:com.example.type.task:0.2.0'];
+    const query = Query.select(Filter.type(TestSchema.Task)).limit(10);
+    const plan = planner.createPlan({ type: 'options', query: withSpaceIdOptions(query.ast), options: { versions } });
+
+    const [select, resolve] = plan.steps;
+    invariant(select._tag === 'SelectStep');
+    expect(select.limit).toBeUndefined();
+    expect(resolve).toEqual({ _tag: 'ResolveVersionsStep', versions });
+    const order = plan.steps.find((step) => step._tag === 'OrderStep');
+    invariant(order?._tag === 'OrderStep');
+    expect(order.limit).toBe(10);
+  });
+
   test('ordered and limited results', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
 

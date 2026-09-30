@@ -1679,9 +1679,14 @@ export class EntityManager implements IDatabaseBinding {
     return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
   }
 
+  /** Type URIs of the schema versions this client reads, oldest first. */
+  get knownVersionTypes(): readonly string[] {
+    return [...this.#knownVersionTypes];
+  }
+
   /**
-   * Sets the schema versions this client reads, by type URI, and moves every loaded object to the
-   * newest of its version documents among them.
+   * Sets the schema versions this client reads, by type URI oldest first, and moves every loaded
+   * object to the newest of its version documents among them.
    */
   setKnownVersionTypes(types: Iterable<string>): void {
     const next = new Set(types);

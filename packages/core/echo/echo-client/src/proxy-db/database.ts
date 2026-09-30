@@ -29,7 +29,7 @@ import {
   Ref,
   type Registry,
   Type,
-  type VersionLens,
+  VersionLens,
 } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
@@ -324,10 +324,13 @@ const combineSyncState = (
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta>; [key: string]: unknown };
 
-/** Every declared type the lenses connect, once each. */
-const versionTypesOf = (lenses: readonly VersionLens.VersionLens[]): Type.AnyObj[] => [
-  ...new Map(lenses.flatMap((lens) => [lens.from, lens.to]).map((type) => [Type.getURI(type), type])).values(),
-];
+/** Every declared type the lenses connect, once each, oldest version first. */
+const versionTypesOf = (lenses: readonly VersionLens.VersionLens[]): Type.AnyObj[] =>
+  [...new Map(lenses.flatMap((lens) => [lens.from, lens.to]).map((type) => [Type.getURI(type), type])).values()].sort(
+    (left, right) =>
+      Type.getTypename(left).localeCompare(Type.getTypename(right)) ||
+      VersionLens.compareVersions(VersionLens.versionOf(left), VersionLens.versionOf(right)),
+  );
 
 /** Idle time after the last update before a watched fold-forward pass, so a burst folds once. */
 const FOLD_FORWARD_DEBOUNCE_MS = 2_000;

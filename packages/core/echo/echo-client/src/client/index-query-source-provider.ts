@@ -270,7 +270,7 @@ export class IndexQuerySource implements QuerySource {
     cleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(query),
+        query: JSON.stringify(this._withVersions(query)),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
       }),
@@ -336,7 +336,7 @@ export class IndexQuerySource implements QuerySource {
     this._streamCleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(query),
+        query: JSON.stringify(this._withVersions(query)),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
       }),
@@ -538,6 +538,19 @@ export class IndexQuerySource implements QuerySource {
       }
       throw err;
     }
+  }
+
+  /** Names the schema versions this client reads, so the host returns an object stored per version once. */
+  private _withVersions(query: QueryAST.Query): QueryAST.Query {
+    const versions = [
+      ...new Set(
+        getTargetSpacesForQuery(query).flatMap((spaceId) => {
+          const database = this._params.graph.getDatabase(spaceId);
+          return database instanceof DatabaseImpl ? database._entityManager.knownVersionTypes : [];
+        }),
+      ),
+    ];
+    return versions.length === 0 ? query : { type: 'options', query, options: { versions } };
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {

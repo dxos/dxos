@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
-import { Filter, Obj, Type, VersionLens } from '@dxos/echo';
+import { Filter, Obj, Query, Type, VersionLens } from '@dxos/echo';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -124,6 +124,20 @@ describe('version documents', () => {
     invariant(type, 'object has no type');
     expect(Type.getURI(type)).toBe(Type.getURI(TaskV3));
     expect(task.labels).toEqual(['a', 'b']);
+  });
+
+  test('the host returns each object once, from its newest known version, so a limit is not short', async () => {
+    const { db } = await builder.createDatabase({ types });
+    const ids = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TaskV1, { title, tags: [] })).id);
+    await db.flush();
+    await db.syncVersions(lenses);
+    await db.flush({ indexes: true });
+
+    const all = Filter.or(Filter.type(TaskV1), Filter.type(TaskV2), Filter.type(TaskV3));
+    const limited = await db.query(Query.select(all).limit(3)).run();
+    expect(limited.map((object) => object.id).sort()).toEqual([...ids].sort());
+    // Only the newest version the client reads answers for each object.
+    expect(await db.query(Query.select(Filter.type(TaskV1))).run()).toHaveLength(0);
   });
 
   test('an object created at a newer version is linked at the oldest, which released apps read', async () => {

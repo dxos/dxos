@@ -871,6 +871,9 @@ export class QueryExecutor extends Resource {
       case 'FilterDeletedStep':
         ({ workingSet: newWorkingSet, trace } = await this._execFilterDeletedStep(step, workingSet));
         break;
+      case 'ResolveVersionsStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execResolveVersionsStep(step, workingSet));
+        break;
       case 'UnionStep':
         ({ workingSet: newWorkingSet, trace } = await this._execUnionStep(step, workingSet));
         break;
@@ -1359,6 +1362,48 @@ export class QueryExecutor extends Resource {
         ...ExecutionTrace.makeEmpty(),
         name: 'Filter(timestamp)',
         details: JSON.stringify(params),
+        objectCount: result.length,
+      },
+    };
+  }
+
+  /** Keeps a document item only when no other document of its object holds a newer listed version. */
+  private async _execResolveVersionsStep(
+    step: QueryPlan.ResolveVersionsStep,
+    workingSet: QueryItem[],
+  ): Promise<StepExecutionResult> {
+    const rank = (type: string | undefined): number => (type === undefined ? -1 : step.versions.indexOf(type));
+    const documentItems = workingSet.filter((item) => item.documentId !== null && item.queueId === null);
+    const metas =
+      documentItems.length === 0
+        ? []
+        : await this._runInRuntime(
+            this._indexEngine.queryObjectIds({
+              spaceIds: [...new Set(documentItems.map((item) => item.spaceId))],
+              objectIds: [...new Set(documentItems.map((item) => item.objectId))],
+            }),
+          );
+    const newest = new Map<string, number>();
+    for (const meta of metas) {
+      if (meta.queueId === '') {
+        const key = `${meta.spaceId}:${meta.objectId}`;
+        newest.set(key, Math.max(newest.get(key) ?? -1, rank(meta.typeDXN)));
+      }
+    }
+    const typeOf = (item: QueryItem): string | undefined =>
+      metas.find((meta) => meta.documentId === item.documentId && meta.objectId === item.objectId)?.typeDXN;
+    const result = workingSet.filter(
+      (item) =>
+        item.documentId === null ||
+        item.queueId !== null ||
+        rank(typeOf(item)) >= (newest.get(`${item.spaceId}:${item.objectId}`) ?? -1),
+    );
+    return {
+      workingSet: result,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'ResolveVersions',
+        details: JSON.stringify(step.versions),
         objectCount: result.length,
       },
     };

@@ -190,6 +190,8 @@ export class SqlPlanCompiler {
         return this.#compileFilter(step, ws);
       case 'FilterDeletedStep':
         return this.#compileFilterDeleted(step, ws);
+      case 'ResolveVersionsStep':
+        return this.#compileResolveVersions(step, ws);
       case 'TraverseStep':
         return this.#compileTraverse(step, ws);
       case 'UnionStep':
@@ -614,6 +616,22 @@ export class SqlPlanCompiler {
   //
   // Deleted, child-of, strong deps: recursive walks over the dependency columns.
   //
+
+  /** Drops a document row when another document of the same object holds a newer listed version. */
+  #compileResolveVersions(step: QueryPlan.ResolveVersionsStep, ws: Relation): Relation {
+    const sql = this.#sql;
+    const rank = (type: Fragment): Fragment =>
+      sql`CASE ${type} ${sql.join(' ', false)(step.versions.map((uri, index) => sql`WHEN ${uri} THEN ${index}`))} ELSE -1 END`;
+    return this.#define(
+      'ws',
+      sql`SELECT w.* FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
+      WHERE m.queueId != '' OR NOT EXISTS (
+        SELECT 1 FROM ${docRow(sql, 'o')}
+        WHERE o.spaceId = m.spaceId AND o.queueId = '' AND o.objectId = m.objectId AND o.recordId != m.recordId
+          AND ${rank(sql`o.typeDXN`)} > ${rank(sql`m.typeDXN`)})`,
+      ws.grouped,
+    );
+  }
 
   #compileFilterDeleted(step: QueryPlan.FilterDeletedStep, ws: Relation): Relation {
     const sql = this.#sql;
