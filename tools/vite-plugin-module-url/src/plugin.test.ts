@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -30,7 +30,7 @@ const loadDevUrlModule = async (base: string | undefined, file: string): Promise
 const fixtureDir = resolve(import.meta.dirname, '../test/fixture');
 
 describe('ModuleUrlPlugin', () => {
-  test('build emits the TS module as a compiled chunk whose exports survive', async () => {
+  test('build bundles the TS module on its own, exports kept, sharing nothing with the importer', async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'module-url-'));
     onTestFinished(() => rm(outDir, { recursive: true, force: true }));
 
@@ -39,6 +39,7 @@ describe('ModuleUrlPlugin', () => {
       configFile: false,
       logLevel: 'silent',
       plugins: [ModuleUrlPlugin()],
+      worker: { format: 'es', plugins: () => [ModuleUrlPlugin()] },
       build: {
         outDir,
         minify: false,
@@ -50,11 +51,17 @@ describe('ModuleUrlPlugin', () => {
       },
     });
 
+    const assets = await readdir(join(outDir, 'assets'));
+    const bundle = assets.find((name) => /^geometry-.*\.js$/.test(name));
+    expect(bundle).toBeDefined();
     const main = await readFile(join(outDir, 'main.js'), 'utf8');
-    expect(main).toMatch(/new URL\(.geometry\.js., import\.meta\.url\)/);
+    expect(main).toContain(`assets/${bundle}`);
+    // Self-contained: the relative import is inlined rather than split into a chunk shared with main.
+    const code = await readFile(join(outDir, 'assets', `${bundle}`), 'utf8');
+    expect(code).not.toMatch(/from\s*["']\./);
 
-    // Exercises the emitted chunk as a worker would: import it by URL and call the compiled class.
-    const geometry = await import(pathToFileURL(join(outDir, 'geometry.js')).href);
+    // Exercises the bundle as a worker would: import it by URL and call the compiled class.
+    const geometry = await import(pathToFileURL(join(outDir, 'assets', `${bundle}`)).href);
     const length = new geometry.Path().add({ x: 0, y: 0 }).add({ x: 3, y: 4 }).length();
     expect(length).toEqual({ value: 5, unit: 'px' });
   });

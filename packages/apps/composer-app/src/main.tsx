@@ -34,7 +34,6 @@ import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
-import clientWorkerPluginUrl from '@dxos/plugin-client/worker?module-url';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
@@ -75,6 +74,7 @@ import {
   startupProfiler,
   translations,
 } from './util/index.ts';
+import clientWorkerPluginUrl from './workers/client-plugin.ts?module-url';
 import observabilityWorkerPluginUrl from './workers/observability-plugin.ts?module-url';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack

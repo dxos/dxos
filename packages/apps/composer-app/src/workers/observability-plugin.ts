@@ -16,7 +16,6 @@ import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityC
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { isTauri } from '@dxos/util';
 
-import { initEchoHostWasm } from '../util/automerge-wasm.ts';
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util/index.ts';
 
 // Installed as the module is imported — before any plugin activates — so the worker's whole boot is
@@ -45,10 +44,6 @@ const Observability = Capability.inlineModule(
       post: (message) => observabilityWorker.postMessage(message),
     });
     observability.catch((err) => log.catch(err));
-    // The stack this worker builds hosts echo, and automerge is slim-resolved: it must be
-    // initialized before the stack is built, which happens once every Startup module has activated.
-    yield* Effect.promise(() => initEchoHostWasm());
-
     yield* Hook.on(WorkerEvents.StackReady, ({ stack }) =>
       Effect.gen(function* () {
         const instance = yield* Effect.promise(() => observability);

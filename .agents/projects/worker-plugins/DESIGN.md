@@ -52,12 +52,20 @@ same unit of contribution a tab uses.
   plugin: log sink, observability init, echo-host WASM init before the stack builds, identity data
   provider on `StackReady`.
 
+- **D6 — a module URL is a bundle of its own.** In a build, `?module-url` goes through Vite's
+  worker bundler with the entry's exports kept, rather than emitting a chunk into the tab's build:
+  shared chunks broke Composer's cycle-safe boot partition (a `boot-8 → chunk → boot-9` cycle left
+  `trace` undefined) and could carry DOM code into the worker. The cost is that each plugin carries
+  its own copy of module-level state. String-keyed identity (tags, capabilities, hooks) and
+  `globalThis` singletons (`@dxos/log`) survive that; anything else must be set up in the bundle that
+  uses it — so Composer's client plugin entry (`workers/client-plugin.ts`) initializes the slim
+  automerge/subduction wasm itself before re-exporting `@dxos/plugin-client/worker`.
+
 ## Risks
 
 - The base imports `LayerStack` from the `@dxos/compute-runtime` root barrel, which drags the AI
   SDKs into the worker graph (the old `worker-runtime.ts` did the same). A `LayerStack` subpath
   export would cut it; tracked in TASKS.
 
-- A `?module-url` chunk is emitted by the tab's build, so in production the worker holds a second
-  copy of shared deps (app-framework, effect). Identity is by string key for capabilities, service
-  tags and hooks, so this costs bytes, not correctness; measure in the production build.
+- Per-plugin bundles duplicate shared deps (app-framework, effect, client-services types) in bytes;
+  see D6 for what must not be module-level state.

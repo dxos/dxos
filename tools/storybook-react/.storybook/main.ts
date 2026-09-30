@@ -398,7 +398,8 @@ export const createConfig = ({
         },
         worker: {
           format: 'es',
-          plugins: () => [wasm()],
+          // A `?module-url` bundle is built as a worker entry, with its exports kept by this plugin.
+          plugins: () => [wasm(), ModuleUrlPlugin()],
         },
         plugins: [
           //
