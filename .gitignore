@@ -269,7 +269,7 @@ node_modules
 # Remote-cache benchmark output (tools/moon-cache/bench).
 .moon-bench/
 
-# Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
+# Agentic-review: finalize keeps only REVIEW.md per run
 # (STAGING.md / groups.json / groups/ are deleted on finalize).
 .agents/reviews/*/STAGING.md
 .agents/reviews/*/groups.json
