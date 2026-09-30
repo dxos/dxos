@@ -14,7 +14,8 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 /**
  * Adds the signed-in user's private plugins to the registry catalog. They are listed only to the
  * identity that published them, so the provider joins once an EDGE identity exists (on this boot,
- * or when one is created later) rather than with the public catalog at startup.
+ * or when one is created later) rather than with the public catalog at startup, and is replaced
+ * when that identity changes.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -27,21 +28,36 @@ export default Capability.makeModule(
       return [];
     }
 
-    const http = new EdgeHttpClient(edgeUrl);
-    let added = false;
+    // One provider per identity, so another identity's listings and caches never outlive a switch.
+    let current: { did: string; http: EdgeHttpClient; provider: EdgeRegistryPluginProvider } | undefined;
     const unsubscribe = identityService.subscribe(() => {
       const edgeIdentity = identityService.getEdgeIdentity();
-      if (Option.isNone(edgeIdentity)) {
+      const did = Option.isSome(edgeIdentity) ? edgeIdentity.value.identityDid : undefined;
+      if (current && current.did !== did) {
+        manager.pluginRegistry.removeProvider(current.provider);
+        current = undefined;
+      }
+      if (!did || Option.isNone(edgeIdentity)) {
         return;
       }
-      http.setIdentity(edgeIdentity.value);
-      if (!added) {
-        added = true;
-        manager.pluginRegistry.addProvider(new EdgeRegistryPluginProvider(http, { catalog: 'private' }));
+      if (current) {
+        current.http.setIdentity(edgeIdentity.value);
+        return;
       }
+      const http = new EdgeHttpClient(edgeUrl);
+      http.setIdentity(edgeIdentity.value);
+      current = { did, http, provider: new EdgeRegistryPluginProvider(http, { catalog: 'private' }) };
+      manager.pluginRegistry.addProvider(current.provider);
     });
 
-    yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        unsubscribe();
+        if (current) {
+          manager.pluginRegistry.removeProvider(current.provider);
+        }
+      }),
+    );
     return [];
   }),
 );

@@ -123,6 +123,16 @@ export class Manager {
     this.refresh();
   }
 
+  /** Removes a provider added with {@link addProvider}, dropping its plugins from the catalog. */
+  removeProvider(provider: PluginProvider): void {
+    const index = this.#providers.indexOf(provider);
+    if (index === -1) {
+      return;
+    }
+    this.#providers.splice(index, 1);
+    this.refresh();
+  }
+
   /**
    * Reloads the catalog from every provider, in the background. A provider that fails contributes
    * nothing and its error is surfaced on the atom, so one unreachable backend does not hide the others.

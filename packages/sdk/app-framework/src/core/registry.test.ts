@@ -68,6 +68,20 @@ describe('Registry.Manager', () => {
     ]);
   });
 
+  test('drops a removed provider from the catalog and from lookups', async ({ expect }) => {
+    const registry = AtomRegistry.make();
+    const manager = new Registry.Manager(provider([meta('org.example.public', 'https://public/a')]), registry);
+    const privateProvider = provider([meta('org.example.private', 'https://private/c')]);
+    manager.addProvider(privateProvider);
+    expect((await settled(registry, manager)).entries).toHaveLength(2);
+
+    manager.removeProvider(privateProvider);
+    expect((await settled(registry, manager)).entries.map((entry) => entry.profile.key)).toEqual([
+      'org.example.public',
+    ]);
+    await expect(EffectEx.runPromise(manager.getPlugin('org.example.private'))).rejects.toThrow();
+  });
+
   test('resolves a plugin from whichever provider lists it', async ({ expect }) => {
     const registry = AtomRegistry.make();
     const manager = new Registry.Manager(provider([meta('org.example.public', 'https://public/a')]), registry);
