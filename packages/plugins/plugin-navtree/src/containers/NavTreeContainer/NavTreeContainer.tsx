@@ -259,6 +259,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const target = location.current.dropTargets[0];
           const instruction: Instruction | null = extractInstruction(target.data);
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
+            AppGraph.flushBeforePaint();
             const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetPath = target.data.path as string[];

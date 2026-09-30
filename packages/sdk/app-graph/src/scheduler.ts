@@ -20,3 +20,6 @@ export const yieldOrContinue = async (_priority: 'smooth' | 'interactive' | 'idl
 };
 
 export const frameBudget: GraphBuilder.FrameBudget | undefined = undefined;
+
+/** Update flushes have no budget here, so there is nothing to lift. */
+export const flushBeforePaint = (): void => {};
