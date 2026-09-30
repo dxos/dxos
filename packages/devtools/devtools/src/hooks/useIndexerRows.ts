@@ -21,12 +21,8 @@ const POLL_INTERVAL = 5_000;
 export type IndexerRow = {
   spaceId: SpaceId;
   name: string;
-  /** Documents the client holds locally. */
-  total: number;
   /** Local documents whose heads the indexer has not indexed (missing, behind, or diverged). */
   unindexed: number;
-  /** Documents the indexer has indexed. */
-  indexed: number;
   indexingInProgress: boolean;
   error?: string;
 };
@@ -41,13 +37,11 @@ const compareHeads = (
   remote: IndexerHeadsResponse,
 ): IndexerRow => {
   const indexedHeads = new Map(remote.documents.map(({ documentId, heads }) => [documentId, heads]));
-  const documentIds = Object.keys(local);
   return {
     spaceId: space.id,
     name: getSpaceDisplayName(space),
-    total: documentIds.length,
-    unindexed: documentIds.filter((documentId) => !sameHeads(local[documentId], indexedHeads.get(documentId))).length,
-    indexed: remote.documents.length,
+    unindexed: Object.keys(local).filter((documentId) => !sameHeads(local[documentId], indexedHeads.get(documentId)))
+      .length,
     indexingInProgress: remote.indexingInProgress,
   };
 };
@@ -81,9 +75,7 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
           const row: IndexerRow = {
             spaceId: space.id,
             name: getSpaceDisplayName(space),
-            total: 0,
             unindexed: 0,
-            indexed: 0,
             indexingInProgress: false,
             error,
           };

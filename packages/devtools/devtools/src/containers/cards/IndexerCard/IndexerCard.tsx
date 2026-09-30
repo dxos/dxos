@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { Grid, SystemIconButton, Tooltip } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type IndexerRow } from '../../../hooks/index.ts';
@@ -16,20 +15,22 @@ export type IndexerCardProps = {
   onCopy?: () => void;
 };
 
-/** Fixed figure tracks so the header and every row's grid resolve to the same columns (see `SyncCard`). */
-const ROW_TRACKS = ['1fr', '4.5rem', '4rem'];
+const ROW_TRACKS = ['1fr', 'auto'];
 
 const rowIcon = (row: IndexerRow): { icon: string; className: string } => {
   if (row.error) {
     return { icon: 'ph--warning-circle--regular', className: 'text-error-text' };
   }
-  if (row.unindexed > 0 || row.indexingInProgress) {
+  if (row.unindexed > 0) {
     return { icon: 'ph--arrows-clockwise--regular', className: 'text-warning-text' };
   }
   return { icon: 'ph--check-circle--regular', className: 'text-success-text' };
 };
 
-/** Per space, how many of the client's documents the EDGE indexer has indexed at the client's heads. */
+const rowStatus = (row: IndexerRow): string =>
+  row.error ? 'error' : row.unindexed > 0 ? `${row.unindexed} behind` : 'up to date';
+
+/** Per space, how many of the client's documents the EDGE indexer has yet to index at the client's heads. */
 export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps) => {
   const behind = spaces.filter(({ unindexed, error }) => !error && unindexed > 0).length;
   const menu = [
@@ -47,15 +48,6 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
         menu={menu.length > 0 ? menu : undefined}
       />
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
-      {spaces.length > 0 && (
-        <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
-            <span className='text-start'>space</span>
-            <span>client</span>
-            <span>edge</span>
-          </Grid>
-        </StatCard.Row>
-      )}
       {spaces.map((row) => {
         const { icon, className } = rowIcon(row);
         return (
@@ -72,21 +64,7 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
                   onCopy={() => row.spaceId}
                 />
               </Tooltip.Trigger>
-              {row.error ? (
-                <span className='col-span-2 text-error-text'>error</span>
-              ) : (
-                <>
-                  <span
-                    className={mx(
-                      'font-mono tabular-nums',
-                      row.unindexed > 0 ? 'text-warning-text' : 'text-success-text',
-                    )}
-                  >
-                    {row.unindexed > 0 ? `${row.unindexed}/${row.total}` : row.total}
-                  </span>
-                  <span className='font-mono tabular-nums text-description'>{row.indexed}</span>
-                </>
-              )}
+              <span className={className}>{rowStatus(row)}</span>
             </Grid>
           </StatCard.Row>
         );
