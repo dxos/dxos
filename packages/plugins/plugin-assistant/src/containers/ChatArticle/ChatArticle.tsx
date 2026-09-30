@@ -154,6 +154,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
+                  // A companion mounts once its processor is ready, which can be a second after the
+                  // host document opened and the reader started typing in it.
+                  autoFocus={!companionTo}
                   attendableId={attendableId}
                   companionTo={companionTo}
                   customActions={customActions}
