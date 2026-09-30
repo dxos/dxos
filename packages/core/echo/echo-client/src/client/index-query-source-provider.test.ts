@@ -60,6 +60,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
+      'QueryService.updateRegistry': () => Effect.void,
     });
 
     const source = new IndexQuerySource({
@@ -100,6 +101,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
+      'QueryService.updateRegistry': () => Effect.void,
     });
 
     const source = new IndexQuerySource({
@@ -142,6 +144,7 @@ describe('IndexQuerySource', () => {
         });
       },
       'QueryService.reindex': () => Effect.void,
+      'QueryService.updateRegistry': () => Effect.void,
     });
 
     const source = new IndexQuerySource({
@@ -195,6 +198,7 @@ describe('IndexQuerySource', () => {
           emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
         }),
       'QueryService.reindex': () => Effect.void,
+      'QueryService.updateRegistry': () => Effect.void,
     });
 
     const updateEvent = new Event<ObjectUpdate>();
@@ -263,6 +267,7 @@ describe('IndexQuerySource', () => {
           );
         }),
       'QueryService.reindex': () => Effect.void,
+      'QueryService.updateRegistry': () => Effect.void,
     });
 
     const source = new IndexQuerySource({
@@ -306,6 +311,7 @@ describe('IndexQuerySource', () => {
             );
           }),
         'QueryService.reindex': () => Effect.void,
+        'QueryService.updateRegistry': () => Effect.void,
       });
 
       const source = new IndexQuerySource({
@@ -344,6 +350,7 @@ describe('IndexQuerySource', () => {
             emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
           }),
         'QueryService.reindex': () => Effect.void,
+        'QueryService.updateRegistry': () => Effect.void,
       });
 
       const updateEvent = new Event<ObjectUpdate>();

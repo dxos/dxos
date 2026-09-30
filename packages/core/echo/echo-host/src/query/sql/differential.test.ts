@@ -12,7 +12,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_DELETED, ATTR_TYPE, type ObjectJSON } from '@dxos/echo/internal';
-import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex } from '@dxos/index-core';
+import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex, ORIGIN_AUTOMERGE } from '@dxos/index-core';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { filterMatchObjectJSON } from '../../filter/index.ts';
@@ -155,6 +155,7 @@ describe('SqlPlanCompiler differential', () => {
           queueNamespace: null,
           queuePosition: null,
           recordId: null,
+          origin: ORIGIN_AUTOMERGE,
           createdAt: 1,
           updatedAt: 2,
           data: makeBody(random, id),

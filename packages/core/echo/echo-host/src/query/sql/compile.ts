@@ -9,8 +9,10 @@ import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-proto
 import { ATTR_META } from '@dxos/echo/internal';
 import {
   EscapedPropPath,
+  ORIGIN_REGISTRY,
   type QueueRef,
   type QueueWindow,
+  buildExcludeRegistryCondition,
   buildFtsCondition,
   buildQueueWindow,
   buildSourceCondition,
@@ -277,7 +279,10 @@ export class SqlPlanCompiler {
         // executor filtered them after the lookup.
         const spaceCondition =
           spaces.length > 0 ? sql`m.spaceId IN (SELECT value FROM json_each(${JSON.stringify(spaces)}))` : sql`1 = 1`;
-        base = sql`SELECT DISTINCT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM reverseRef r JOIN objectMeta m ON m.recordId = r.recordId WHERE r.targetDXN = ${target} AND ${pathCondition} AND ${spaceCondition}`;
+        // The reverse index is not scoped, and it holds registry rows like any other; a queue-only
+        // scope leaves `spaceCondition` open, so without this a registry entity that references
+        // the target would surface as one of its referrers.
+        base = sql`SELECT DISTINCT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM reverseRef r JOIN objectMeta m ON m.recordId = r.recordId WHERE r.targetDXN = ${target} AND ${pathCondition} AND ${spaceCondition} AND ${buildExcludeRegistryCondition(sql)}`;
         break;
       }
       case 'TextSelector': {
@@ -769,7 +774,7 @@ export class SqlPlanCompiler {
           sql`${project(sql`t`)} FROM ${wsRef} w
             JOIN reverseRef r ON r.targetDXN = 'echo:///' || w.objectId
             JOIN objectMeta t ON t.recordId = r.recordId
-            WHERE ${pathCondition}
+            WHERE ${pathCondition} AND t.origin != ${ORIGIN_REGISTRY}
             GROUP BY t.recordId`,
         );
       }

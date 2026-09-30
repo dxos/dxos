@@ -4,6 +4,8 @@
 
 import { type PublicKey } from '@dxos/keys';
 
+import { fnv1a32 } from './hash.ts';
+
 /**
  * When changing this set, please check the result in a console or e.g. RunKit (https://runkit.com/thure/642214441dd6ae000855a8de)
  * Emoji sometimes use a combination of code points, and some code points aren't visible on their own, so by adding or deleting you may unintentionally create non-visible items.
@@ -60,14 +62,16 @@ export const idHue = [
   'rose' as const,
 ];
 
-/** FNV-1a hash of an arbitrary string, as an unsigned 32-bit integer. */
-const fnv1a = (id: string): number => {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < id.length; index++) {
-    hash ^= id.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return Math.abs(hash);
+/**
+ * Palette seed for an id, reproducing the fold these palettes were mapped through.
+ *
+ * `Math.abs` of the *signed* digest, not the unsigned one {@link fnv1a32} returns — the two
+ * disagree for every input whose top bit is set. The empty string is its own case because the
+ * unfolded offset basis never passed through `Math.imul`, so it was never narrowed to int32.
+ */
+const paletteSeed = (id: string): number => {
+  const digest = fnv1a32(id);
+  return id.length === 0 ? digest : Math.abs(digest | 0);
 };
 
 /**
@@ -76,7 +80,7 @@ const fnv1a = (id: string): number => {
  * matching the colouring used for avatars/tags elsewhere. Prefer {@link hexToHue} when a hex
  * identity key is available (it aligns with the awareness-cursor palette).
  */
-export const stringToHue = (id: string): (typeof idHue)[number] => idHue[fnv1a(id) % idHue.length];
+export const stringToHue = (id: string): (typeof idHue)[number] => idHue[paletteSeed(id) % idHue.length];
 
 /**
  * Deterministic avatar fallback (emoji + hue) for an arbitrary id string (e.g. an identity DID).
@@ -84,7 +88,7 @@ export const stringToHue = (id: string): (typeof idHue)[number] => idHue[fnv1a(i
  * avatar seeded from an id and a tag coloured by {@link stringToHue} for the same id agree.
  */
 export const stringToFallback = (id: string): FallbackValue => {
-  const hash = fnv1a(id);
+  const hash = paletteSeed(id);
   return {
     emoji: idEmoji[Math.floor(hash / idHue.length) % idEmoji.length],
     hue: idHue[hash % idHue.length],

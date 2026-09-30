@@ -10,7 +10,7 @@ import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
-import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
+import { type DataSourceCursor, type IndexDataSource, type IndexerObject, ORIGIN_FEED } from '@dxos/index-core';
 import { failedInvariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -141,6 +141,7 @@ export class FeedDataSource implements IndexDataSource {
                 documentId: null,
                 recordId: null,
                 queuePosition: block.position ?? null,
+                origin: ORIGIN_FEED,
                 data,
                 createdAt: null,
                 updatedAt: block.timestamp,

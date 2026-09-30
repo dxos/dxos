@@ -14,6 +14,7 @@ import {
   type DocumentActivity,
   type IndexDataSource,
   type IndexerObject,
+  ORIGIN_AUTOMERGE,
 } from '@dxos/index-core';
 import { log } from '@dxos/log';
 
@@ -203,6 +204,7 @@ export class AutomergeDataSource implements IndexDataSource {
               queueNamespace: null,
               queuePosition: null,
               recordId: null,
+              origin: ORIGIN_AUTOMERGE,
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
