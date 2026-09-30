@@ -33,22 +33,22 @@ type SizesDecorator = (
 ) => ReactElement;
 
 export type WithSizesOptions = {
-  /** Tailwind width of the frame; the frame is the pane (the query container of decision 5). */
-  width?: string;
   sizes?: Size[];
 };
 
 /**
  * Renders the story at its `size` arg (default `md`), or once per size when `allSizes` is set, each in its own row: a
  * `level='base'` rail-gutter Container at that size, `data-testid='size-<size>'`, with the size passed as the `size` arg.
+ * The rows share a full-width frame, the pane (the query container of decision 5), so its width is set by an outer
+ * decorator (e.g. `withLayout({ classNames: 'p-0 w-[32rem]' })`).
  */
 export const withSizes =
-  ({ width = 'w-[32rem]', sizes = SIZES }: WithSizesOptions = {}): SizesDecorator =>
+  ({ sizes = SIZES }: WithSizesOptions = {}): SizesDecorator =>
   (Story, context) => {
     const selected = SIZES.find((size) => size === context.args.size) ?? 'md';
     const shown = context.args.allSizes === true ? sizes : [selected];
     return (
-      <div className={`nx-scope @container flex flex-col ${width}`} data-size='md'>
+      <div className='nx-scope @container flex flex-col w-full' data-size='md'>
         {shown.map((size) => (
           <Next.Container key={size} size={size} gutter='rail' level='base' data-testid={`size-${size}`}>
             <Story args={{ ...context.args, size }} />

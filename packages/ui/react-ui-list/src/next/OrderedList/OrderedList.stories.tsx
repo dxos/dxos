@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import '@dxos/react-ui/next/theme.css';
 import { Next } from '@dxos/react-ui/next';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { osTranslations } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -214,7 +214,7 @@ const NestedStory = () => {
 const meta = {
   title: 'ui/react-ui-list/next/OrderedList',
   render: DraggableWithToggleStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered', translations },

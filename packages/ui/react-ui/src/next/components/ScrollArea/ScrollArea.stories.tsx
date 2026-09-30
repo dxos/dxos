@@ -10,7 +10,7 @@ import { expect, waitFor } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { byTestId, expectScoped, realHover } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
@@ -102,7 +102,7 @@ const DefaultStory = ({ size, mode, width }: StoryArgs) => (
 const meta = {
   title: 'ui/react-ui-core/next/components/ScrollArea',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[56rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[56rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },

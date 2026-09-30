@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import '@dxos/react-ui/next/theme.css';
 import { Next } from '@dxos/react-ui/next';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
 import { Listbox } from './Listbox.tsx';
@@ -93,7 +93,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 const meta = {
   title: 'ui/react-ui-list/next/Listbox',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered', translations },

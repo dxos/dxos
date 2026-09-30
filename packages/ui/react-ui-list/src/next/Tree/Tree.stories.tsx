@@ -12,7 +12,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import '@dxos/react-ui/next/theme.css';
 import { random } from '@dxos/random';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
-import { withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { createStaticTreeModel } from '../../components/Tree/static-tree-model.ts';
 import { type TestItem, createTree, updateState } from '../../components/Tree/testing.ts';
@@ -132,7 +132,7 @@ const DefaultStory = ({
 }: StoryArgs) => {
   const { model, onOpenChange, onSelect, onDrop } = useStaticTree(tree, open);
   return (
-    <div style={{ height, width: '20rem', display: 'flex', flexDirection: 'column' }} data-testid={testId}>
+    <div data-place='full' style={{ height, display: 'flex', flexDirection: 'column' }} data-testid={testId}>
       <Tree.Root
         model={model}
         rootId={model.rootId}
@@ -155,7 +155,7 @@ const DefaultStory = ({
 const meta = {
   title: 'ui/react-ui-list/next/Tree',
   render: DefaultStory,
-  decorators: [withSizes(), withRegistry, withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withRegistry, withTheme()],
   args: { size: 'md', tree: () => createTree(4, 3), draggable: true },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
@@ -170,7 +170,12 @@ export const Default: Story = {};
 
 /** 5,000 rows with every branch open (50 branches of 99 leaves), windowed to the rows in view. */
 export const Large: Story = {
-  args: { tree: () => createWideTree(50, 99), open: true, virtualize: 'window', height: '32rem' },
+  args: {
+    tree: () => createWideTree(50, 99),
+    open: true,
+    virtualize: 'window',
+    height: '32rem',
+  },
 };
 
 const rows = (tree: HTMLElement) => within(tree).getAllByRole('treeitem');
@@ -239,7 +244,12 @@ export const Test: Story = {
  * the row a frame later), and ArrowUp from the top of a scrolled window keeps focus on a mounted row.
  */
 export const WindowedTest: Story = {
-  args: { tree: () => createWideTree(50, 99), open: true, virtualize: 'window', height: '32rem' },
+  args: {
+    tree: () => createWideTree(50, 99),
+    open: true,
+    virtualize: 'window',
+    height: '32rem',
+  },
   play: async ({ canvasElement }) => {
     const tree = within(canvasElement).getByRole('tree');
     await expect(rows(tree).length).toBeLessThan(100);
@@ -247,12 +257,26 @@ export const WindowedTest: Story = {
     await userEvent.keyboard('{End}');
     await waitFor(() => expect(focusedName()).toContain('Leaf 50.99'));
     await expect(tree.scrollTop).toBeGreaterThan(0);
-    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    // One key at a time: the window re-renders while it settles at the end, and a key sent mid-render is dropped.
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(focusedName()).toContain('Leaf 50.98'));
+    await userEvent.keyboard('{ArrowUp}');
     await waitFor(() => expect(focusedName()).toContain('Leaf 50.97'));
     await userEvent.keyboard('{Home}');
     await waitFor(() => expect(focusedName()).toContain('Branch 1'));
     await expect(tree.scrollTop).toBe(0);
     await expect(rows(tree).length).toBeLessThan(100);
+
+    // The host spans the pane's gutters, so the overlay thumb sits at the pane's right edge.
+    const thumb = await waitFor(() => {
+      const element = tree.closest('.nx-scroll-root')?.querySelector<HTMLElement>(':scope > .absolute');
+      if (!element) {
+        throw new Error('missing thumb');
+      }
+      return element;
+    });
+    const pane = within(canvasElement).getByTestId('size-md');
+    await expect(thumb.getBoundingClientRect().right).toBeCloseTo(pane.getBoundingClientRect().right, 0);
   },
 };
 

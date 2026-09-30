@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import {
@@ -82,7 +82,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 const meta = {
   title: 'ui/react-ui-core/next/components/SystemButton',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[24rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered', translations },

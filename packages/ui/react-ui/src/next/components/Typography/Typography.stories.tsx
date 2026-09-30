@@ -10,7 +10,7 @@ import { expect } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
@@ -49,7 +49,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 const meta = {
   title: 'ui/react-ui-core/next/components/Typography',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },

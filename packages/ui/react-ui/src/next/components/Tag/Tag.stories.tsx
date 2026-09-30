@@ -12,7 +12,7 @@ import { hues } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
@@ -84,7 +84,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 const meta = {
   title: 'ui/react-ui-core/next/components/Tag',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[48rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[48rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered', translations },
