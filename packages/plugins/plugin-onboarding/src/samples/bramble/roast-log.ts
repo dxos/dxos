@@ -77,9 +77,9 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
   return [
     // --- approved: past batches that cleared QC ---
     Obj.make(type, {
-      title: 'Finca Esperanza Lot #42 — Batch 1',
+      title: 'Finca Esperanza Lot A — Batch 1',
       date: daysAgo(28),
-      origin: 'Colombia / Finca Esperanza / Lot #42',
+      origin: 'Colombia / Finca Esperanza / Lot A',
       machine: 'Loring S15',
       roaster: Ref.make(people.kai),
       greenWeightKg: 15,
@@ -94,9 +94,9 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
         'Clean reference curve for the Spring Blend. Berry up front, long chocolate finish. Approved for production.',
     }),
     Obj.make(type, {
-      title: 'Finca Esperanza Lot #42 — Batch 2',
+      title: 'Finca Esperanza Lot A — Batch 2',
       date: daysAgo(21),
-      origin: 'Colombia / Finca Esperanza / Lot #42',
+      origin: 'Colombia / Finca Esperanza / Lot A',
       machine: 'Loring S15',
       roaster: Ref.make(people.kai),
       greenWeightKg: 15,
@@ -111,9 +111,9 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
         'Confirmed the curve. Added 5 s to development — slightly more body, stone fruit more pronounced. Approved.',
     }),
     Obj.make(type, {
-      title: 'Sidamo Coop Natural — Lot 12A',
+      title: 'Sidamo Coop Natural — Lot #42',
       date: daysAgo(14),
-      origin: 'Ethiopia / Sidamo Cooperative / Natural Lot 12A',
+      origin: 'Ethiopia / Sidamo Cooperative / Natural Lot #42',
       machine: 'Loring S15',
       roaster: Ref.make(people.diego),
       greenWeightKg: 12,
@@ -129,9 +129,9 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
     }),
     // --- cupped: awaiting final approval ---
     Obj.make(type, {
-      title: 'Spring Blend — Production Run 1',
+      title: 'Spring Blend v2 — Full-size trial',
       date: daysAgo(5),
-      origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
+      origin: 'Colombia / Finca Esperanza Lot A + Guatemala / Antigua Lot 7 (70/30)',
       machine: 'Loring S15',
       roaster: Ref.make(people.kai),
       greenWeightKg: 30,
@@ -143,13 +143,13 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       roastLevel: 'city',
       status: 'cupped',
       notes:
-        'First full blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
+        'First full-size blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
     }),
     // --- roasted: cooling / resting, not yet cupped ---
     Obj.make(type, {
-      title: 'Finca Esperanza Lot #42 — Dev Batch',
+      title: 'Finca Esperanza Lot A — Dev Batch',
       date: daysAgo(2),
-      origin: 'Colombia / Finca Esperanza / Lot #42',
+      origin: 'Colombia / Finca Esperanza / Lot A',
       machine: 'Loring S15',
       roaster: Ref.make(people.kai),
       greenWeightKg: 5,
@@ -162,9 +162,9 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       notes: 'Longer development trial for espresso use. Resting — cup on day 4.',
     }),
     Obj.make(type, {
-      title: 'Honduras El Puente — Sample Lot',
+      title: 'Peru Cajamarca — Sample Lot',
       date: daysAgo(1),
-      origin: 'Honduras / Cooperativa El Puente / Sample',
+      origin: 'Peru / Cajamarca / Lot 3 sample',
       machine: 'Loring S15',
       roaster: Ref.make(people.diego),
       greenWeightKg: 3,
@@ -174,13 +174,13 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       dropTemp: 205,
       roastLevel: 'light',
       status: 'roasted',
-      notes: 'New origin evaluation. Resting overnight before cupping.',
+      notes: "New producer our importer introduced. Resting overnight; cup before Diego's call with them.",
     }),
     // --- planned: upcoming ---
     Obj.make(type, {
-      title: 'Spring Blend — Production Run 2',
+      title: 'Spring Blend v3 — Full-size trial',
       date: daysFromNow(3),
-      origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
+      origin: 'Colombia / Finca Esperanza Lot A + Guatemala / Antigua Lot 7 (70/30)',
       machine: 'Loring S15',
       roaster: Ref.make(people.kai),
       greenWeightKg: 30,
