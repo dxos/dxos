@@ -242,10 +242,14 @@
     width: auto;
     padding-inline: var(--nx-control-inset);
   }
-  /* The caret is a smaller trailing icon, a full gap from the label or icon it follows so the two read apart. */
+  /* The caret is a smaller trailing icon, a full gap from a label so the two read apart. */
   .nx-button[data-caret] > .nx-icon:last-child {
     width: calc(var(--nx-control-icon) * 0.75);
     height: calc(var(--nx-control-icon) * 0.75);
+  }
+  /* With no label the caret belongs to the icon, so it sits an inset from it rather than a gap. */
+  .nx-button[data-square][data-caret] > .nx-icon:last-child {
+    margin-inline-start: calc(var(--nx-control-inset) - var(--nx-gap-size));
   }
   .nx-button:disabled {
     opacity: 0.5;

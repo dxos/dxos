@@ -310,7 +310,7 @@ export const Test: Story = {
         caret.getBoundingClientRect().right - parseFloat(getComputedStyle(caret).paddingRight),
         0,
       );
-      // The caret sits a full gap after the label, and after a leading icon.
+      // The caret sits a full gap after a label.
       const gap = parseFloat(getComputedStyle(caret).columnGap);
       // The label is a text node, so measure it through a Range.
       const text = Array.from(caret.childNodes).find(
@@ -329,7 +329,8 @@ export const Test: Story = {
       const [leading, trailing] = Array.from(iconCaret.querySelectorAll('svg')).map((svg) =>
         svg.getBoundingClientRect(),
       );
-      await expect(trailing.left - leading.right, `icon-caret-${size} gap`).toBeCloseTo(gap, 0);
+      // With no label the caret sits an inset from the icon, not a full gap.
+      await expect(trailing.left - leading.right, `icon-caret-${size} gap`).toBeCloseTo(inset, 0);
       await expect(iconCaret.getBoundingClientRect().height, `icon-caret-${size}`).toBeCloseTo(controlSize(size), 0);
       await expect(iconCaret.getBoundingClientRect().width).toBeGreaterThan(iconCaret.getBoundingClientRect().height);
       await expect(iconCaret).toHaveAttribute('aria-label', 'Style');
