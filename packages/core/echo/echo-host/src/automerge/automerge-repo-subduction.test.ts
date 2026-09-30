@@ -9,6 +9,7 @@ import {
   type DocumentId,
   type Message,
   type PeerId,
+  type StorageKey,
   type SubductionPolicy,
   generateAutomergeUrl,
   initSubduction,
@@ -36,6 +37,7 @@ import {
   findInStates,
   reconnectAdapters,
   shutdownRepo,
+  waitForDoc,
   waitForQueryState,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
@@ -53,6 +55,39 @@ describe('AutomergeRepo with Subduction', () => {
 
     const progress = host.findWithProgress(url);
     expect(progress.peek().state).to.equal('loading');
+  });
+
+  test('a document opened with no peers applies what Subduction already stored', async () => {
+    const storage = await createSqliteAdapter();
+    let url: AutomergeUrl | undefined;
+
+    {
+      const repo = createRepo({ network: [], storage }, { registerCleanup: false });
+      const handle = repo.create<{ value: number }>({ value: 1 });
+      url = handle.url;
+      await repo.flush();
+      const documentId = parseAutomergeUrl(url).documentId;
+      const olderCopy = await storage.loadRange([documentId]);
+
+      handle.change((doc) => {
+        doc.value = 2;
+      });
+      await repo.flush();
+      await waitForSubductionSave([repo]);
+      await shutdownRepo(repo);
+
+      // Repo storage holds only the first version.
+      await storage.open();
+      await storage.removeRange([documentId]);
+      await storage.saveBatch(
+        olderCopy.flatMap(({ key, data }) => (data ? [[key, data] as [StorageKey, Uint8Array]] : [])),
+      );
+    }
+
+    const repo = createRepo({ network: [], storage });
+    const handle = await repo.find<{ value: number }>(url);
+    await handle.whenReady(['ready']);
+    await waitForDoc(handle, (doc) => doc?.value === 2, { timeout: 5_000 });
   });
 
   test('documents on disk go to ready state', async () => {
@@ -187,6 +222,38 @@ describe('AutomergeRepo with Subduction', () => {
       // round-trip can hit its internal timeout (~5 s) and only the heal retry succeeds,
       // pushing past the original 5 s window. See the same fix on `accept/connect syncs`.
       await expect.poll(() => peer2Handle.doc(), { timeout: SYNC_WINDOW_MS }).toEqual(hostHandle.doc());
+    });
+
+    // A change hash starting with a zero byte is a fragment boundary, shipped as a fragment.
+    test('a fragment-boundary change reaches a peer through a relay', async () => {
+      const { repos, adapters, repoPairs } = await createRepoTopology({
+        peers: ['author', 'relay', 'receiver'],
+        connections: [
+          ['author', 'relay'],
+          ['relay', 'receiver'],
+        ],
+      });
+      const [author, relay, receiver] = repos;
+      await connectAdapters(adapters, { repoPairs });
+
+      const handle = author.create<{ count: number }>({ count: 0 });
+      await waitForSubductionSave(repos);
+      const relayed = await findInStates<{ count: number }>(relay, handle.url, FIND_STATES);
+      await waitForDoc(relayed, (doc) => doc?.count === 0);
+      const received = await findInStates<{ count: number }>(receiver, handle.url, FIND_STATES);
+      await waitForDoc(received, (doc) => doc?.count === 0);
+
+      let count = 0;
+      do {
+        count++;
+        handle.change((doc) => {
+          doc.count = count;
+        });
+        await waitForSubductionSave([author]);
+      } while (!A.getHeads(handle.doc()).some((head) => head.startsWith('00')) && count < 2_000);
+      await waitForSubductionSave(repos);
+
+      await waitForDoc(received, (doc) => doc?.count === count);
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
