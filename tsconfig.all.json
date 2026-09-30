@@ -340,6 +340,9 @@
       "path": "packages/e2e/perf-harness/tsconfig.json"
     },
     {
+      "path": "packages/common/permission/tsconfig.json"
+    },
+    {
       "path": "packages/common/phoenix/tsconfig.json"
     },
     {
