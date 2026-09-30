@@ -48,6 +48,12 @@ const versionDoc = async (db: EchoDatabase, objectId: string, version: string) =
   return handle;
 };
 
+/** The exact type URI, version included, of a live object. */
+const typeOf = (object: Obj.Unknown): string | undefined => {
+  const type = Obj.getType(object);
+  return type && Type.getURI(type);
+};
+
 const dataOf = (doc: DatabaseDirectory, objectId: string): Record<string, unknown> =>
   JSON.parse(JSON.stringify(doc.objects?.[objectId]?.data ?? {}));
 
@@ -126,7 +132,7 @@ describe('version documents', () => {
     expect(task.labels).toEqual(['a', 'b']);
   });
 
-  test('the host returns each object once, from its newest known version, so a limit is not short', async () => {
+  test('a query returns each object once, at the newest version it names, so a limit is not short', async () => {
     const { db } = await builder.createDatabase({ types });
     const ids = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TaskV1, { title, tags: [] })).id);
     await db.flush();
@@ -136,8 +142,44 @@ describe('version documents', () => {
     const all = Filter.or(Filter.type(TaskV1), Filter.type(TaskV2), Filter.type(TaskV3));
     const limited = await db.query(Query.select(all).limit(3)).run();
     expect(limited.map((object) => object.id).sort()).toEqual([...ids].sort());
-    // Only the newest version the client reads answers for each object.
-    expect(await db.query(Query.select(Filter.type(TaskV1))).run()).toHaveLength(0);
+    expect(limited.map(typeOf)).toEqual([TaskV3, TaskV3, TaskV3].map((type) => Type.getURI(type)));
+    const older = await db.query(Filter.or(Filter.type(TaskV1), Filter.type(TaskV2))).run();
+    expect(older).toHaveLength(3);
+    expect(older.map(typeOf)).toEqual([TaskV2, TaskV2, TaskV2].map((type) => Type.getURI(type)));
+  });
+
+  test('a query for an older version returns the object at that version', async () => {
+    const { db } = await builder.createDatabase({ types });
+    const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: ['a'] }));
+    await db.flush();
+    await db.syncVersions(lenses);
+    await db.flush({ indexes: true });
+
+    const olds = await db.query(Filter.type(TaskV1)).run();
+    expect(olds).toHaveLength(1);
+    const [old] = olds;
+    expect(old.id).toBe(id);
+    expect(typeOf(old)).toBe(Type.getURI(TaskV1));
+    expect(old.title).toBe('Plan');
+    const currents = await db.query(Filter.type(TaskV3)).run();
+    expect(currents).toHaveLength(1);
+    const [current] = currents;
+    expect(current.name).toBe('Plan');
+    // One object per version: the same query, and `db.version`, return the same instance.
+    const [again] = await db.query(Filter.type(TaskV1)).run();
+    expect(again).toBe(old);
+    expect(await db.version(current, TaskV1)).toBe(old);
+    expect(await db.version(current, TaskV3)).toBe(current);
+    expect(await db.version(old, TaskV3)).toBe(current);
+
+    // An edit at the older version reaches the object's live version.
+    Obj.update(old, (old) => {
+      old.tags.push('b');
+    });
+    await db.flush();
+    await db.syncVersions(lenses);
+    expect([...current.labels]).toEqual(['a', 'b']);
+    expect([...old.tags]).toEqual(['a', 'b']);
   });
 
   test('an object created at a newer version is linked at the oldest, which released apps read', async () => {

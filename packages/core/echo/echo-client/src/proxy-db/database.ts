@@ -3,6 +3,7 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 import * as EffectContext from 'effect/Context';
@@ -140,6 +141,13 @@ export interface EchoDatabase extends Database.Database {
    * versions. Without `objectIds`, covers every object of those types.
    */
   syncVersions(lenses: readonly VersionLens.VersionLens[], options?: SyncVersionsOptions): Promise<void>;
+
+  /**
+   * The object at version `type` of its type: the live object when it reads that version, else an object
+   * bound to that version's document, whose edits are translated to the object's other versions.
+   * Undefined when the object has no document for that version.
+   */
+  version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined>;
 
   /**
    * Syncs versions once for every object, then again, debounced, for each object whose documents
@@ -324,6 +332,12 @@ const combineSyncState = (
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta>; [key: string]: unknown };
 
+/** Whether `value` is an object of exactly version `type`; `Obj.instanceOf` matches any version of a typename. */
+const isAtVersion = <S extends Type.AnyObj>(type: S, value: unknown): value is Type.InstanceType<S> => {
+  const actual = Obj.instanceOf(type, value) ? Obj.getType(value) : undefined;
+  return actual !== undefined && Type.getURI(actual) === Type.getURI(type);
+};
+
 /** Every declared type the lenses connect, once each, oldest version first. */
 const versionTypesOf = (lenses: readonly VersionLens.VersionLens[]): Type.AnyObj[] =>
   [...new Map(lenses.flatMap((lens) => [lens.from, lens.to]).map((type) => [Type.getURI(type), type])).values()].sort(
@@ -375,6 +389,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** Serializes migration and fold-forward passes, which read a checkpoint and write it back. */
   readonly #migrationLock = new Mutex();
   readonly #versionSettled: VersionSettled = new Map();
+  readonly #versionBindings = new Map<string, Entity.Unknown>();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -870,6 +885,38 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       await syncVersionDocuments(this, lenses, objectIds, { settled: this.#versionSettled, ...options });
       await this._entityManager.flush();
     });
+  }
+
+  async version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined> {
+    if (isAtVersion(type, obj)) {
+      return obj;
+    }
+    const url = this._entityManager.versionDocumentUrlOfType(obj.id, Type.getURI(type));
+    const bound = url && (await this._loadVersionBinding(obj.id, url));
+    return isAtVersion(type, bound) ? bound : undefined;
+  }
+
+  /**
+   * The object bound to its version document `url`, beside the live object, which reads the version it
+   * routes to; one per version for the database's lifetime, so every read of that version shares it.
+   * @internal
+   */
+  async _loadVersionBinding(objectId: string, url: AutomergeUrl): Promise<Entity.Unknown> {
+    if (this._entityManager.routedDocumentUrl(objectId) === url) {
+      const live = await this._loadObjectById(objectId);
+      if (live) {
+        return live;
+      }
+    }
+    const key = `${objectId} ${url}`;
+    const existing = this.#versionBindings.get(key);
+    if (existing) {
+      return existing;
+    }
+    const core = await this._entityManager.bindCoreToVersion(objectId, url);
+    const object = this.#versionBindings.get(key) ?? initEchoReactiveObjectRootProxy(core, this);
+    this.#versionBindings.set(key, object);
+    return object;
   }
 
   watchVersions(getLenses: () => readonly VersionLens.VersionLens[], options?: { debounceMs?: number }): CleanupFn {

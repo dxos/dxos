@@ -25,7 +25,7 @@ import { type Database, type Entity, VersionLens } from '@dxos/echo';
 import { type BranchRecord, DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
@@ -399,6 +399,8 @@ export class EntityManager implements IDatabaseBinding {
     this._unsubscribeFromHandles();
     this._clearHandleReferences();
     this._objects.clear();
+    this.#versionCoreDisposers.splice(0).forEach((dispose) => dispose());
+    this.#versionCores.clear();
     this._unavailableObjects.clear();
     this._objectsPendingDocumentLoad.clear();
     this._currentlyLoadingObjects.clear();
@@ -1736,15 +1738,64 @@ export class EntityManager implements IDatabaseBinding {
     this._scheduleThrottledDbUpdate([objectId]);
   }
 
-  /** Whether `documentId` is one of the documents holding a version of the object. */
-  isVersionDocumentOf(objectId: string, documentId: string): boolean {
+  /** The url of the object's version document whose id is `documentId`, if it is one. */
+  versionDocumentUrl(objectId: string, documentId: string): AutomergeUrl | undefined {
     const spaceRootDoc = this.getSpaceRootDocHandle().doc();
     const urls = [
       spaceRootDoc.links?.[objectId]?.toString(),
       ...DatabaseDirectory.getVersionDocs(spaceRootDoc, objectId).map(({ url }) => url),
     ];
-    return urls.some((url) => url !== undefined && isValidAutomergeUrl(url) && toDocumentId(url) === documentId);
+    return urls.find(
+      (url): url is AutomergeUrl => url !== undefined && isValidAutomergeUrl(url) && toDocumentId(url) === documentId,
+    );
   }
+
+  /** The url of the object's document holding version `type` (a type URI), if the registry records one. */
+  versionDocumentUrlOfType(objectId: string, type: string): AutomergeUrl | undefined {
+    const url = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), objectId).find(
+      (entry) => entry.type === type,
+    )?.url;
+    return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
+  }
+
+  /** The document the object's live core reads. */
+  routedDocumentUrl(objectId: string): AutomergeUrl | undefined {
+    return this.#routedUrl(this.getSpaceRootDocHandle().doc(), objectId);
+  }
+
+  /**
+   * A core bound to one version document of an object, beside the object's live core, which reads the
+   * version it routes to. Kept for the manager's lifetime so every read of that version shares it.
+   */
+  async bindCoreToVersion(objectId: string, url: AutomergeUrl): Promise<ObjectCore> {
+    const key = `${objectId} ${url}`;
+    const existing = this.#versionCores.get(key);
+    if (existing) {
+      return existing;
+    }
+    const handle = this._repoProxy.find<DatabaseDirectory>(url);
+    await handle.whenReady();
+    const raced = this.#versionCores.get(key);
+    if (raced) {
+      return raced;
+    }
+    const core = new ObjectCore();
+    core.id = EntityId.make(objectId);
+    core.bind({ db: this, docHandle: handle, path: ['objects', objectId], assignFromLocalState: false });
+    // Routed to this core directly: the id-keyed routing of `_onDocumentUpdate` serves the live core only.
+    const onChange = (event: ChangeEvent<DatabaseDirectory>) => {
+      if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objectId)) {
+        core.notifyUpdate();
+      }
+    };
+    handle.on('change', onChange);
+    this.#versionCores.set(key, core);
+    this.#versionCoreDisposers.push(() => handle.off('change', onChange));
+    return core;
+  }
+
+  readonly #versionCores = new Map<string, ObjectCore>();
+  readonly #versionCoreDisposers: (() => void)[] = [];
 
   private _loadLinkedObjects(links: SpaceDocumentLinks, opts: LoadObjectDocumentOptions = {}): void {
     if (!links) {

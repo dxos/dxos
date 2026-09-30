@@ -617,16 +617,17 @@ export class SqlPlanCompiler {
   // Deleted, child-of, strong deps: recursive walks over the dependency columns.
   //
 
-  /** Drops a document row when another document of the same object holds a newer listed version. */
+  /** Drops a document row when the working set holds a row of the same object at a newer listed version. */
   #compileResolveVersions(step: QueryPlan.ResolveVersionsStep, ws: Relation): Relation {
     const sql = this.#sql;
+    const wsRef = this.#ref(ws);
     const rank = (type: Fragment): Fragment =>
       sql`CASE ${type} ${sql.join(' ', false)(step.versions.map((uri, index) => sql`WHEN ${uri} THEN ${index}`))} ELSE -1 END`;
     return this.#define(
       'ws',
-      sql`SELECT w.* FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
+      sql`SELECT w.* FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
       WHERE m.queueId != '' OR NOT EXISTS (
-        SELECT 1 FROM ${docRow(sql, 'o')}
+        SELECT 1 FROM ${wsRef} x JOIN objectMeta o NOT INDEXED ON o.recordId = x.recordId
         WHERE o.spaceId = m.spaceId AND o.queueId = '' AND o.objectId = m.objectId AND o.recordId != m.recordId
           AND ${rank(sql`o.typeDXN`)} > ${rank(sql`m.typeDXN`)})`,
       ws.grouped,

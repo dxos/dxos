@@ -1367,36 +1367,23 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  /** Keeps a document item only when no other document of its object holds a newer listed version. */
+  /** Keeps a document item only when the working set holds no item of its object at a newer listed version. */
   private async _execResolveVersionsStep(
     step: QueryPlan.ResolveVersionsStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
-    const rank = (type: string | undefined): number => (type === undefined ? -1 : step.versions.indexOf(type));
-    const documentItems = workingSet.filter((item) => item.documentId !== null && item.queueId === null);
-    const metas =
-      documentItems.length === 0
-        ? []
-        : await this._runInRuntime(
-            this._indexEngine.queryObjectIds({
-              spaceIds: [...new Set(documentItems.map((item) => item.spaceId))],
-              objectIds: [...new Set(documentItems.map((item) => item.objectId))],
-            }),
-          );
+    const isDocument = (item: QueryItem) => item.documentId !== null && item.queueId === null;
+    const rankOf = (item: QueryItem): number => {
+      const type = item.meta?.typeDXN ?? item.doc?.system?.type?.['/'];
+      return type === undefined ? -1 : step.versions.indexOf(type);
+    };
     const newest = new Map<string, number>();
-    for (const meta of metas) {
-      if (meta.queueId === '') {
-        const key = `${meta.spaceId}:${meta.objectId}`;
-        newest.set(key, Math.max(newest.get(key) ?? -1, rank(meta.typeDXN)));
-      }
+    for (const item of workingSet.filter(isDocument)) {
+      const key = `${item.spaceId}:${item.objectId}`;
+      newest.set(key, Math.max(newest.get(key) ?? -1, rankOf(item)));
     }
-    const typeOf = (item: QueryItem): string | undefined =>
-      metas.find((meta) => meta.documentId === item.documentId && meta.objectId === item.objectId)?.typeDXN;
     const result = workingSet.filter(
-      (item) =>
-        item.documentId === null ||
-        item.queueId !== null ||
-        rank(typeOf(item)) >= (newest.get(`${item.spaceId}:${item.objectId}`) ?? -1),
+      (item) => !isDocument(item) || rankOf(item) >= (newest.get(`${item.spaceId}:${item.objectId}`) ?? -1),
     );
     return {
       workingSet: result,

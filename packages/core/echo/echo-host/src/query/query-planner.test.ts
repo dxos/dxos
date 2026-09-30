@@ -1449,17 +1449,21 @@ describe('QueryPlanner', () => {
     `);
   });
 
-  test('known versions resolve each selection, and a limit is not pushed past them', () => {
+  test('known versions resolve the whole result once, before it is ordered and limited', () => {
     const versions = ['dxn:com.example.type.task:0.1.0', 'dxn:com.example.type.task:0.2.0'];
-    const query = Query.select(Filter.type(TestSchema.Task)).limit(10);
+    const query = Query.select(Filter.or(Filter.type(TestSchema.Task), Filter.type(TestSchema.Person))).limit(10);
     const plan = planner.createPlan({ type: 'options', query: withSpaceIdOptions(query.ast), options: { versions } });
 
-    const [select, resolve] = plan.steps;
-    invariant(select._tag === 'SelectStep');
+    const tags = plan.steps.map((step) => step._tag);
+    expect(tags.filter((tag) => tag === 'ResolveVersionsStep')).toHaveLength(1);
+    const resolve = tags.indexOf('ResolveVersionsStep');
+    expect(plan.steps[resolve]).toEqual({ _tag: 'ResolveVersionsStep', versions });
+    expect(tags.slice(resolve + 1)).toEqual(['OrderStep']);
+    const select = plan.steps.find((step) => step._tag === 'SelectStep');
+    invariant(select?._tag === 'SelectStep');
     expect(select.limit).toBeUndefined();
-    expect(resolve).toEqual({ _tag: 'ResolveVersionsStep', versions });
-    const order = plan.steps.find((step) => step._tag === 'OrderStep');
-    invariant(order?._tag === 'OrderStep');
+    const order = plan.steps[resolve + 1];
+    invariant(order._tag === 'OrderStep');
     expect(order.limit).toBe(10);
   });
 

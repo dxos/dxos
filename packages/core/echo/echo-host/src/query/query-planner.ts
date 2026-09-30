@@ -267,10 +267,10 @@ export class QueryPlanner {
     if (query.options.deleted) {
       newContext.deletedHandling = query.options.deleted;
     }
-    if (query.options.versions) {
-      newContext.versions = query.options.versions;
-    }
-    return this._generate(query.query, newContext);
+    const plan = this._generate(query.query, newContext);
+    return query.options.versions && query.options.versions.length > 0
+      ? withResolvedVersions(plan, query.options.versions)
+      : plan;
   }
 
   private _generateFromClause(query: QueryAST.QueryFromClause, context: GenerationContext): QueryPlan.Plan {
@@ -771,18 +771,12 @@ export class QueryPlanner {
     }
   }
 
-  /** The steps every selection is followed by: version resolution, then the deleted-state filter. */
   private _generateDeletedHandlingSteps(context: GenerationContext): QueryPlan.Step[] {
-    const versions: QueryPlan.Step[] =
-      context.versions && context.versions.length > 0
-        ? [{ _tag: 'ResolveVersionsStep', versions: context.versions }]
-        : [];
     switch (context.deletedHandling) {
       case 'include':
-        return versions;
+        return [];
       case 'exclude':
         return [
-          ...versions,
           {
             _tag: 'FilterDeletedStep',
             mode: 'only-non-deleted',
@@ -790,7 +784,6 @@ export class QueryPlanner {
         ];
       case 'only':
         return [
-          ...versions,
           {
             _tag: 'FilterDeletedStep',
             mode: 'only-deleted',
@@ -1396,6 +1389,26 @@ const namedEntityAnchor = (anchor: QueryAST.Query): URI.URI | undefined => {
   return DXN.isDXN(filter.metaKey) ? DXN.tryMake(filter.metaKey) : DXN.tryMake(`dxn:${filter.metaKey}`);
 };
 
+/** Steps that page, order or group a finished result, which version resolution must precede. */
+const RESULT_SHAPING_STEPS = new Set(['OrderStep', 'LimitStep', 'SkipStep', 'AggregateStep']);
+
+/**
+ * Resolves every object the plan returns to one of its version documents: the newest version, of those
+ * the reader lists, among the rows the query itself matched. It runs once over the whole result, after
+ * unions and traversals, and before the result is ordered, paged or grouped.
+ */
+const withResolvedVersions = (plan: QueryPlan.Plan, versions: readonly string[]): QueryPlan.Plan => {
+  let index = plan.steps.length;
+  while (index > 0 && RESULT_SHAPING_STEPS.has(plan.steps[index - 1]._tag)) {
+    index--;
+  }
+  return QueryPlan.Plan.make([
+    ...plan.steps.slice(0, index),
+    { _tag: 'ResolveVersionsStep', versions },
+    ...plan.steps.slice(index),
+  ]);
+};
+
 type GenerationContext = {
   /**
    * The original query.
@@ -1416,11 +1429,6 @@ type GenerationContext = {
    * When generating a selection clause, whether to invert the filter.
    */
   selectionInverted: boolean;
-
-  /**
-   * Type URIs of the schema versions the reader reads, oldest first (`QueryOptions.versions`).
-   */
-  versions?: readonly string[];
 };
 
 const DEFAULT_CONTEXT: GenerationContext = {

@@ -280,9 +280,11 @@ export class EchoClient extends Resource {
     }
 
     const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
-    if (documentId && objectDocId !== documentId && db._entityManager.isVersionDocumentOf(objectId, documentId)) {
-      // Another version of an object this client reads at its routed version; that document's hit stands for it.
-      return undefined;
+    const versionUrl =
+      documentId && objectDocId !== documentId ? db._entityManager.versionDocumentUrl(objectId, documentId) : undefined;
+    if (versionUrl) {
+      // A hit on another version of the object is the object at that version, as the query asked.
+      return db._loadVersionBinding(objectId, versionUrl);
     }
     if (objectDocId !== documentId) {
       // Dropping the hit makes the result short, which reads to a caller as "no such object".

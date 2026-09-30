@@ -248,8 +248,9 @@ export namespace QueryPlan {
   });
 
   /**
-   * Keeps each object stored as one document per schema version only in the newest of those versions the
-   * reader lists; an object none of whose documents is listed keeps every row.
+   * Keeps, for each object stored as one document per schema version, only its rows of the newest version
+   * the reader lists among the rows in the working set; rows of no listed version are kept only when no
+   * row of the object is listed.
    */
   export type ResolveVersionsStep = {
     _tag: 'ResolveVersionsStep';
