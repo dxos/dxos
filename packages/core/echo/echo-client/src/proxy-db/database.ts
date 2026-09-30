@@ -29,6 +29,7 @@ import {
   Ref,
   type Registry,
   Type,
+  type VersionLens,
 } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
@@ -87,6 +88,11 @@ import { computeGuardedDataWrites, encodedValuesEqual, getDecodedDataWithRefs } 
 import { runFanInMigration } from './fan-in.ts';
 import { type FoldForwardOptions, foldForwardMigrations } from './fold-forward.ts';
 import { createObjectMigrationContext } from './migration-context.ts';
+import {
+  type SyncVersionsOptions,
+  type VersionSettled,
+  syncVersionDocuments,
+} from './version-documents/version-runner.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -127,6 +133,19 @@ export interface EchoDatabase extends Database.Database {
    * late write touches. `getMigrations` is read on each pass so the current set always applies.
    */
   watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn;
+
+  /**
+   * Keeps every version document of the objects of each lens's type present and in sync: creates the
+   * versions an object lacks, merges duplicate version documents, and translates edits between the
+   * versions. Without `objectIds`, covers every object of those types.
+   */
+  syncVersions(lenses: readonly VersionLens.VersionLens[], options?: SyncVersionsOptions): Promise<void>;
+
+  /**
+   * Syncs versions once for every object, then again, debounced, for each object whose documents
+   * change. `getLenses` is read on each pass so the current set always applies.
+   */
+  watchVersions(getLenses: () => readonly VersionLens.VersionLens[], options?: { debounceMs?: number }): CleanupFn;
 
   /**
    * Get the current per-peer automerge document sync state.
@@ -347,6 +366,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly #retiredFeeds = new Set<Promise<void>>();
   /** Serializes migration and fold-forward passes, which read a checkpoint and write it back. */
   readonly #migrationLock = new Mutex();
+  readonly #versionSettled: VersionSettled = new Map();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -833,6 +853,81 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       clearTimeout(timer);
       unsubscribe();
     };
+  }
+
+  async syncVersions(lenses: readonly VersionLens.VersionLens[], options?: SyncVersionsOptions): Promise<void> {
+    await this.#migrationLock.executeSynchronized(async () => {
+      const objectIds = options?.objectIds ?? (await this.#versionedObjectIds(lenses));
+      await syncVersionDocuments(this, lenses, objectIds, { settled: this.#versionSettled, ...options });
+      await this._entityManager.flush();
+    });
+  }
+
+  watchVersions(getLenses: () => readonly VersionLens.VersionLens[], options?: { debounceMs?: number }): CleanupFn {
+    let changed: Set<string> | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const watched = new Map<DocHandleProxy<DatabaseDirectory>, () => void>();
+    const onHandle = (objectId: string, handle: DocHandleProxy<DatabaseDirectory>) => {
+      if (!watched.has(handle)) {
+        const listener = () => schedule([objectId]);
+        handle.on('change', listener);
+        watched.set(handle, () => handle.off('change', listener));
+      }
+    };
+    const pass = () => {
+      timer = undefined;
+      const objectIds = changed;
+      changed = new Set();
+      void this.syncVersions(getLenses(), { objectIds, onHandle }).catch((err) => {
+        if (!(err instanceof RpcClosedError)) {
+          log.catch(err);
+        }
+      });
+    };
+    const schedule = (objectIds: Iterable<string>) => {
+      for (const id of objectIds) {
+        changed?.add(id);
+      }
+      clearTimeout(timer);
+      timer = setTimeout(pass, options?.debounceMs ?? FOLD_FORWARD_DEBOUNCE_MS);
+    };
+    const unsubscribe = this._entityManager._updateEvent.on((event) => {
+      schedule(event.itemsUpdated.map(({ id }) => id));
+    });
+    // A registry or link change is how a version document another peer created arrives.
+    const root = this._getSpaceRootDocHandle();
+    const onRootChange = (event: { patches: readonly A.Patch[] }) => {
+      schedule(
+        event.patches
+          .filter(({ path }) => (path[0] === 'branches' || path[0] === 'links') && typeof path[1] === 'string')
+          .map(({ path }) => String(path[1])),
+      );
+    };
+    root.on('change', onRootChange);
+    // The first pass covers every object.
+    schedule([]);
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+      root.off('change', onRootChange);
+      for (const dispose of watched.values()) {
+        dispose();
+      }
+    };
+  }
+
+  /** Ids of every object of a type the lenses cover. */
+  async #versionedObjectIds(lenses: readonly VersionLens.VersionLens[]): Promise<string[]> {
+    const types = [
+      ...new Map(lenses.flatMap((lens) => [lens.from, lens.to]).map((type) => [Type.getURI(type), type])).values(),
+    ];
+    if (types.length === 0) {
+      return [];
+    }
+    const objects = await this._hypergraph
+      .query(Query.select(Filter.or(...types.map((type) => Filter.type(type)))).from(this))
+      .run();
+    return objects.map((object) => object.id);
   }
 
   async #runMigrations(migrations: Migration.Migration[]): Promise<void> {

@@ -276,7 +276,9 @@ export const translate = ({
   const sourceGraph: ChangeGraph = new Map(sourceChanges.map((change) => [change.hash, change.deps]));
   const sourceRoots = rootChangesOf(source.doc, objectId, sourceGraph);
 
+  // `A.merge` consumes the document it merges into, and the caller's may be a handle's live one.
   let doc = target.doc;
+  let owned = false;
   for (const change of sourceChanges) {
     const key = `${change.hash}>${target.version}`;
     if (settled?.has(key) || sourceRoots.has(change.hash) || isTranslation(change.message)) {
@@ -288,6 +290,13 @@ export const translate = ({
       sourceGraph,
       sourceRoots,
       target: doc,
+      own: () => {
+        if (!owned) {
+          doc = A.clone(doc);
+          owned = true;
+        }
+        return doc;
+      },
       targetVersion: target.version,
       change,
       objectId,
@@ -324,6 +333,7 @@ const translateEdit = ({
   sourceGraph,
   sourceRoots,
   target,
+  own,
   targetVersion,
   change,
   objectId,
@@ -334,6 +344,8 @@ const translateEdit = ({
   sourceGraph: ChangeGraph;
   sourceRoots: Set<string>;
   target: VersionDoc;
+  /** The target as a copy this translation may consume. */
+  own: () => VersionDoc;
   targetVersion: string;
   change: A.ChangeMetadata;
   objectId: string;
@@ -379,7 +391,7 @@ const translateEdit = ({
   const fork = frontierOf(targetGraph, images.length > 0 ? images : [...targetRoots]);
   const current = sectionsOf(objectAt(target, fork, objectId), identityPath);
   return sharedChange(
-    target,
+    own(),
     fork,
     (draft) => {
       for (const { at, key, previous, next } of moves) {
