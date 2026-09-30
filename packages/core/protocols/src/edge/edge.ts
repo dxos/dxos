@@ -455,6 +455,13 @@ export type EdgeStatus = {
   };
 };
 
+/** Heads of every Automerge document in a space as last indexed by the EDGE indexer. */
+export type IndexerHeadsResponse = {
+  spaceId: SpaceId;
+  indexingInProgress: boolean;
+  documents: { documentId: string; heads: string[] }[];
+};
+
 const MAX_ERROR_DEPTH = 3;
 
 /**

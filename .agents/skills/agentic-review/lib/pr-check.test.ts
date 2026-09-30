@@ -28,20 +28,23 @@ const commit = (message: string): string => {
 const lines = (count: number, tag = 'line'): string =>
   Array.from({ length: count }, (_, index) => `${tag} ${index}`).join('\n') + '\n';
 
-/** Commit a finalized review of HEAD whose RESOLUTION.md rows carry `statuses`. */
-const commitReview = (statuses: string[]): string => {
+/** Commit a finalized review of HEAD whose index rows carry `statuses`, in REVIEW.md or a legacy RESOLUTION.md. */
+const commitReview = (statuses: string[], { legacy = false }: { legacy?: boolean } = {}): string => {
   const reviewed = run('rev-parse', 'HEAD');
   const slug = run('rev-parse', '--short', 'HEAD');
-  write(
-    `.agents/reviews/${slug}/REVIEW.md`,
-    `---\nbranch: feature\ncommit: ${reviewed}\nbase: x\nmode: fast\nisFinalized: true\n---\n`,
+  const rows = statuses.map(
+    (status, index) => `- ${slug}-${index + 1} - ${status} - some-rule - src/a.ts:${index + 1}`,
   );
-  write(
-    `.agents/reviews/${slug}/RESOLUTION.md`,
-    statuses
-      .map((status, index) => `- ${slug}-${index + 1} - ${status} - some-rule - src/a.ts:${index + 1}`)
-      .join('\n') + '\n',
-  );
+  const frontmatter = `---\nbranch: feature\ncommit: ${reviewed}\nbase: x\nmode: fast\nisFinalized: true\n---\n`;
+  if (legacy) {
+    write(`.agents/reviews/${slug}/REVIEW.md`, frontmatter);
+    write(`.agents/reviews/${slug}/RESOLUTION.md`, `${rows.join('\n')}\n`);
+  } else {
+    write(
+      `.agents/reviews/${slug}/REVIEW.md`,
+      `${frontmatter}\n## Index\n\n${rows.join('\n')}\n\n## Issues\n\n## Appendix\n\n- model: x\n`,
+    );
+  }
   commit('review');
   return slug;
 };
@@ -149,6 +152,23 @@ describe('checkPr', () => {
     const check = checkPr({ base, root: repo });
     expect(check.ok).toBe(false);
     expect(check.unresolved.map(({ location }) => location)).toEqual(['src/a.ts:2']);
+  });
+
+  test('reads a legacy RESOLUTION.md ledger', () => {
+    const base = startFeature();
+    commitReview(['resolved', 'unresolved'], { legacy: true });
+    const check = checkPr({ base, root: repo });
+    expect(check.unresolved.map(({ location }) => location)).toEqual(['src/a.ts:2']);
+  });
+
+  test('ignores a store from the base that the PR only edits', () => {
+    const slug = commitReview(['unresolved']);
+    const base = startFeature();
+    write(`.agents/reviews/${slug}/REVIEW.md`, '---\ncommit: x\nisFinalized: true\n---\n\n## Index\n');
+    commit('edit old store');
+    const check = checkPr({ base, root: repo });
+    expect(check.reviews).toEqual([]);
+    expect(check.problems[0]).toContain('no agentic review');
   });
 
   test('fails once drift passes 20%', () => {

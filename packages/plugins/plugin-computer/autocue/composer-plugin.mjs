@@ -91,8 +91,105 @@ const CLOCK_TYPE = 'org.example.type.worldClock';
 /** Timezones added on camera, beside the local one the page starts with. */
 const TIMEZONES = ['Asia/Tokyo', 'Europe/London'];
 
-/** Contributed by plugin-computer's `src/templates/composer-plugin.ts`. */
+/** The template's id, the same in plugin-projects' desktop version and this plugin's browser one. */
 const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
+
+/**
+ * Off-camera prep shared with plugin-projects' desktop flow: dismiss the notice, enable Coding (Dev) when the
+ * take needs its template, uninstall an earlier take's plugin, pick the model, and open the space's Home.
+ * Every action is idempotent, so a replay simply re-applies it.
+ */
+export const prepare = async ({ demo, page }, { codingDev }) => {
+  // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
+  const notice = page.locator('[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))');
+  if (
+    await notice
+      .first()
+      .waitFor({ state: 'visible', timeout: 8_000 })
+      .then(
+        () => true,
+        () => false,
+      )
+  ) {
+    await notice.first().click();
+  }
+  if (codingDev) {
+    // Coding (Dev) contributes the template in a browser.
+    // On a fresh profile the first click can land while the navtree is still settling; retry it.
+    const filter = page.locator('input[placeholder="Filter…"]').first();
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
+      if (
+        await filter.waitFor({ state: 'visible', timeout: 5_000 }).then(
+          () => true,
+          () => false,
+        )
+      ) {
+        break;
+      }
+    }
+    await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Coding (Dev)', hud: false });
+    const toggle = page.locator('input[id="org.dxos.plugin.computer-input"]');
+    await toggle.waitFor({ state: 'visible', timeout: 10_000 });
+    if (!(await toggle.isChecked())) {
+      await toggle.click();
+    }
+    await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
+  }
+
+  // A plugin loaded in an earlier take persists in the profile, enabled (Enabled) or not (Labs, by
+  // its tag); uninstall it from its detail page. Only before the agent has started: a replay after
+  // it has built must keep the plugin it offered.
+  // Skipped when nothing is loaded under that name, which also keeps a clean take off the sidebar.
+  const underway = existsSync(new URL(LEFTOVERS[0], import.meta.url));
+  const loaded = await page.evaluate((name) => composer.plugins().some((plugin) => plugin.name === name), PLUGIN_NAME);
+  for (const category of underway || !loaded ? [] : ['installed', 'labs']) {
+    const tab = page.getByTestId(`pluginRegistry.${category}`);
+    if ((await tab.count()) === 0) {
+      continue;
+    }
+    await showSidebar({ demo, page }, `pluginRegistry.${category}`);
+    await page.waitForTimeout(500);
+    if ((await page.locator(card(PLUGIN_NAME)).count()) > 0) {
+      await demo.click({ selector: `${card(PLUGIN_NAME)} >> text=${PLUGIN_NAME}`, hud: false });
+      await demo.click({ selector: 'button:has-text("Uninstall")', hud: false });
+      await page.locator(card(PLUGIN_NAME)).waitFor({ state: 'detached', timeout: 10_000 });
+    }
+  }
+
+  // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
+  // The rail's settings button rather than ⌘, which the filter input swallows while it has focus.
+  const model = page.locator('role=combobox[name="Remote language model"]').first();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
+    // The desktop app opens its settings on the App page (updates), not the Assistant's.
+    const assistant = page.locator('[data-testid="deck.sidebar"] >> text="Assistant"').first();
+    if (
+      await assistant.waitFor({ state: 'visible', timeout: 3_000 }).then(
+        () => true,
+        () => false,
+      )
+    ) {
+      await demo.click({ selector: '[data-testid="deck.sidebar"] >> text="Assistant" >> nth=0', hud: false });
+    }
+    if (
+      await model.waitFor({ state: 'visible', timeout: 5_000 }).then(
+        () => true,
+        () => false,
+      )
+    ) {
+      break;
+    }
+  }
+  await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
+  await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
+  await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
+
+  // The take opens on the space's Home screen.
+  await demo.click({ selector: SPACE, hud: false });
+  await showSidebar({ demo, page }, 'spacePlugin.spaceHome');
+  await page.locator('[data-testid="deck.plank"][data-attendable-id$="/home"]').first().waitFor({ timeout: 15_000 });
+};
 
 export const steps = [
   {
@@ -137,105 +234,9 @@ export const steps = [
     },
   },
   {
-    // No `done`: every action here is idempotent, so a replay simply re-applies it.
     name: 'Prep (off camera): enable Coding (Dev), pick the model, dismiss notices',
     setup: true,
-    run: async ({ demo, page }) => {
-      // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
-      const notice = page.locator(
-        '[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))',
-      );
-      if (
-        await notice
-          .first()
-          .waitFor({ state: 'visible', timeout: 8_000 })
-          .then(
-            () => true,
-            () => false,
-          )
-      ) {
-        await notice.first().click();
-      }
-      // On a fresh profile the first click can land while the navtree is still settling; retry it.
-      const filter = page.locator('input[placeholder="Filter…"]').first();
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
-        if (
-          await filter.waitFor({ state: 'visible', timeout: 5_000 }).then(
-            () => true,
-            () => false,
-          )
-        ) {
-          break;
-        }
-      }
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Coding (Dev)', hud: false });
-      const toggle = page.locator('input[id="org.dxos.plugin.computer-input"]');
-      await toggle.waitFor({ state: 'visible', timeout: 10_000 });
-      if (!(await toggle.isChecked())) {
-        await toggle.click();
-      }
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
-
-      // A plugin loaded in an earlier take persists in the profile, enabled (Enabled) or not (Labs, by
-      // its tag); uninstall it from its detail page. Only before the agent has started: a replay after
-      // it has built must keep the plugin it offered.
-      // Skipped when nothing is loaded under that name, which also keeps a clean take off the sidebar.
-      const underway = existsSync(new URL(LEFTOVERS[0], import.meta.url));
-      const loaded = await page.evaluate(
-        (name) => composer.plugins().some((plugin) => plugin.name === name),
-        PLUGIN_NAME,
-      );
-      for (const category of underway || !loaded ? [] : ['installed', 'labs']) {
-        const tab = page.getByTestId(`pluginRegistry.${category}`);
-        if ((await tab.count()) === 0) {
-          continue;
-        }
-        await showSidebar({ demo, page }, `pluginRegistry.${category}`);
-        await page.waitForTimeout(500);
-        if ((await page.locator(card(PLUGIN_NAME)).count()) > 0) {
-          await demo.click({ selector: `${card(PLUGIN_NAME)} >> text=${PLUGIN_NAME}`, hud: false });
-          await demo.click({ selector: 'button:has-text("Uninstall")', hud: false });
-          await page.locator(card(PLUGIN_NAME)).waitFor({ state: 'detached', timeout: 10_000 });
-        }
-      }
-
-      // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
-      // The rail's settings button rather than ⌘, which the filter input swallows while it has focus.
-      const model = page.locator('role=combobox[name="Remote language model"]').first();
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
-        // The desktop app opens its settings on the App page (updates), not the Assistant's.
-        const assistant = page.locator('[data-testid="deck.sidebar"] >> text="Assistant"').first();
-        if (
-          await assistant.waitFor({ state: 'visible', timeout: 3_000 }).then(
-            () => true,
-            () => false,
-          )
-        ) {
-          await demo.click({ selector: '[data-testid="deck.sidebar"] >> text="Assistant" >> nth=0', hud: false });
-        }
-        if (
-          await model.waitFor({ state: 'visible', timeout: 5_000 }).then(
-            () => true,
-            () => false,
-          )
-        ) {
-          break;
-        }
-      }
-      await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
-      await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
-      await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
-
-      // The take opens on the space's Home screen.
-      await demo.click({ selector: SPACE, hud: false });
-      await showSidebar({ demo, page }, 'spacePlugin.spaceHome');
-      await page
-        .locator('[data-testid="deck.plank"][data-attendable-id$="/home"]')
-        .first()
-        .waitFor({ timeout: 15_000 });
-    },
+    run: (context) => prepare(context, { codingDev: true }),
   },
   {
     name: 'Create a project from the Composer Plugin template',

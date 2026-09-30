@@ -20,10 +20,10 @@ import { InboxCapabilities } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const IdentitySpecs = Capability.lazyModule(
   'IdentitySpecs',
@@ -59,7 +59,7 @@ export const AutomationTemplates = Capability.lazyModule(
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [ClientCapabilities.Client],
   },
 );

@@ -315,7 +315,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                   yield* Database.load(targetChannel.backend.config);
                   const feed = Channel.getFeed(targetChannel);
                   invariant(feed, 'Channel is not feed-backed');
-                  yield* Feed.append(feed, mapped);
+                  yield* Feed.append(feed, mapped).pipe(Effect.provideService(Database.Origin, 'system'));
 
                   // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
                   // succeeds so the next sync is incremental.

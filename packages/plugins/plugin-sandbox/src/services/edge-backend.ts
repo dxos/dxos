@@ -6,23 +6,22 @@ import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
-import { type Client } from '@dxos/client';
-
 import * as SandboxService from '../types/SandboxService.ts';
 import { encodeExecCommand } from './exec-command.ts';
-import { createSandboxClient } from './sandbox-url.ts';
+import { type EdgeContext, createSandboxClient } from './sandbox-url.ts';
 import { type SandboxClient, type SandboxRequestError } from './SandboxClient.ts';
 
 /**
  * Sandboxes run by EDGE's sandbox-service. The REST client is built per call: the service URL comes
  * from config that may be missing, which is then an error of the call rather than of the runtime.
+ * `resolve` is read per call for the same reason: the client arrives after the runtime is built.
  */
-export const makeEdgeBackend = (client: Client): SandboxService.Backend => {
+export const makeEdgeBackend = (resolve: () => EdgeContext): SandboxService.Backend => {
   const request = <T>(
     send: (sandboxClient: SandboxClient) => Effect.Effect<T, SandboxRequestError, HttpClient.HttpClient>,
   ): Effect.Effect<T, SandboxService.SandboxError> =>
     Effect.try({
-      try: () => createSandboxClient(client),
+      try: () => createSandboxClient(resolve()),
       catch: (cause) => new SandboxService.SandboxError({ message: describeError(cause), cause }),
     }).pipe(
       Effect.flatMap((sandboxClient) =>

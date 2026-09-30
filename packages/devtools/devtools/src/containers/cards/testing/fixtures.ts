@@ -17,6 +17,7 @@ import { type FeedSyncState, type PeerSyncState } from '@dxos/react-client/echo'
 
 import {
   type DatabaseInfo,
+  type IndexerRow,
   type MemoryInfo,
   type PerformanceEntryLike,
   type QueryInfo,
@@ -198,6 +199,25 @@ export const syncRows: SyncRow[] = [
   { spaceId: 'B4RQ7KM2ZP9VJ6TW', name: 'Personal Space', state: syncState(true, 120), feedState: feedState(0, 12) },
   { spaceId: 'BQ8ZT3NX5MC2HD7K', name: 'Acme Robotics', state: syncState(false, 480), feedState: feedState(31, 96) },
   { spaceId: 'BM6WP9RV4KT8XA2J', name: 'New space', state: syncState(true, 3) },
+];
+
+export const indexerRows: IndexerRow[] = [
+  {
+    spaceId: SpaceId.random(),
+    name: 'Personal Space',
+    unindexed: 0,
+  },
+  {
+    spaceId: SpaceId.random(),
+    name: 'Acme Robotics',
+    unindexed: 37,
+  },
+  {
+    spaceId: SpaceId.random(),
+    name: 'New space',
+    unindexed: 0,
+    error: 'Request failed: 503',
+  },
 ];
 
 const traceMessage = (index: number, type: string, space: string): ReceivedMessage => ({

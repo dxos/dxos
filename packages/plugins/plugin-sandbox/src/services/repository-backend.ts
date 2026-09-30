@@ -8,19 +8,17 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import type * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 
-import { type Client } from '@dxos/client';
-
 import * as RepositoryService from '../types/RepositoryService.ts';
 import { type RepositoryClient } from './RepositoryClient.ts';
-import { createRepositoryClient } from './sandbox-url.ts';
+import { type EdgeContext, createRepositoryClient } from './sandbox-url.ts';
 import { type SandboxRequestError } from './SandboxClient.ts';
 
 /**
  * Repositories on EDGE's sandbox-service. The REST client is built per call, as for sandboxes: the
  * service URL comes from config that may be missing, which is then an error of the call.
  */
-export const makeEdgeRepositoryBackend = (client: Client): RepositoryService.Backend =>
-  makeRepositoryBackend(() => createRepositoryClient(client), FetchHttpClient.layer);
+export const makeEdgeRepositoryBackend = (resolve: () => EdgeContext): RepositoryService.Backend =>
+  makeRepositoryBackend(() => createRepositoryClient(resolve()), FetchHttpClient.layer);
 
 /** A backend over any {@link RepositoryClient} and transport; the seam tests stub. */
 export const makeRepositoryBackend = (

@@ -11,6 +11,6 @@ import { composerPlugin } from '../templates/composer-plugin.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.contribute(ProjectCapabilities.Template, composerPlugin)];
+    return composerPlugin ? [Capability.contribute(ProjectCapabilities.Template, composerPlugin)] : [];
   }),
 );

@@ -2,14 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Client } from '@dxos/client';
-import { createEdgeIdentity } from '@dxos/client/edge';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import * as Option from 'effect/Option';
+
+import { type Config, EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 
 import { RepositoryClient } from './RepositoryClient.ts';
 import { SandboxClient } from './SandboxClient.ts';
+
+/** What reaching sandbox-service takes: the endpoint config and the identity to authenticate as. */
+export type EdgeContext = {
+  readonly config: Config;
+  readonly identity: Identity.ServiceApi;
+};
 
 /**
  * Base URL of the sandbox-service REST API.
@@ -18,10 +25,8 @@ import { SandboxClient } from './SandboxClient.ts';
  * through the EDGE entrypoint like every other service. `runtime.services.sandbox.url` stays as the
  * override for a worker that is not behind EDGE (a local `wrangler dev` on port 8792).
  */
-export const getSandboxServiceUrl = (client: Client): string => {
-  const url =
-    client.config.values.runtime?.services?.sandbox?.url ??
-    getEdgeServiceEndpoint(client.config, EdgeServiceName.Sandbox);
+export const getSandboxServiceUrl = (config: Config): string => {
+  const url = config.values.runtime?.services?.sandbox?.url ?? getEdgeServiceEndpoint(config, EdgeServiceName.Sandbox);
   if (!url) {
     throw new Error('Sandbox service URL not configured (runtime.services.edge.url or .sandbox.url).');
   }
@@ -51,8 +56,11 @@ export const acceptsCredentials = (url: string): boolean => {
  * available after boot and can be swapped, and a client bound once would go on presenting the
  * identity it was built with.
  */
-const createAuthHeaderProvider = (client: Client, sandboxUrl: string): (() => Promise<string | undefined>) => {
-  const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+const createAuthHeaderProvider = (
+  { config, identity }: EdgeContext,
+  sandboxUrl: string,
+): (() => Promise<string | undefined>) => {
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
   const maySendCredentials = acceptsCredentials(sandboxUrl);
   if (!maySendCredentials) {
     log.warn('sandbox: endpoint is not https, requests will be unauthenticated', { sandboxUrl });
@@ -65,7 +73,11 @@ const createAuthHeaderProvider = (client: Client, sandboxUrl: string): (() => Pr
     }
     try {
       edgeClient ??= new EdgeHttpClient(edgeUrl);
-      edgeClient.setIdentity(createEdgeIdentity(client));
+      const edgeIdentity = identity.getEdgeIdentity();
+      if (Option.isNone(edgeIdentity)) {
+        throw new Error('Identity not available');
+      }
+      edgeClient.setIdentity(edgeIdentity.value);
       return await edgeClient.getAuthHeader();
     } catch (error) {
       // Identity and device become ready independently; an unauthenticated request gets a 401 the
@@ -77,19 +89,19 @@ const createAuthHeaderProvider = (client: Client, sandboxUrl: string): (() => Pr
 };
 
 /**
- * Builds a {@link SandboxClient} from the DXOS client config.
+ * Builds a {@link SandboxClient} from the DXOS config and identity.
  *
  * The returned client resolves the edge credential per request, and sends the request
  * unauthenticated when no identity is available yet or the endpoint would carry it in cleartext
  * (see {@link acceptsCredentials}).
  */
-export const createSandboxClient = (client: Client): SandboxClient => {
-  const url = getSandboxServiceUrl(client);
-  return new SandboxClient(url, createAuthHeaderProvider(client, url));
+export const createSandboxClient = (context: EdgeContext): SandboxClient => {
+  const url = getSandboxServiceUrl(context.config);
+  return new SandboxClient(url, createAuthHeaderProvider(context, url));
 };
 
 /** Builds a {@link RepositoryClient}: the same service and credential as {@link createSandboxClient}. */
-export const createRepositoryClient = (client: Client): RepositoryClient => {
-  const url = getSandboxServiceUrl(client);
-  return new RepositoryClient(url, createAuthHeaderProvider(client, url));
+export const createRepositoryClient = (context: EdgeContext): RepositoryClient => {
+  const url = getSandboxServiceUrl(context.config);
+  return new RepositoryClient(url, createAuthHeaderProvider(context, url));
 };

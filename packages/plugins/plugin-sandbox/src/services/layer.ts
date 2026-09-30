@@ -7,33 +7,35 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientService } from '@dxos/client';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { getLocalSandboxBackend } from '#local-backend';
 
 import * as RepositoryService from '../types/RepositoryService.ts';
 import * as SandboxCapabilities from '../types/SandboxCapabilities.ts';
 import * as SandboxService from '../types/SandboxService.ts';
-import type * as Settings from '../types/Settings.ts';
+import * as Settings from '../types/Settings.ts';
 import { makeEdgeBackend } from './edge-backend.ts';
 import { makeEdgeRepositoryBackend } from './repository-backend.ts';
+import { type EdgeContext } from './sandbox-url.ts';
 
 /** Environment variable selecting the backend under Node or Bun; it overrides the plugin setting. */
 export const SANDBOX_BACKEND_ENV = 'DX_SANDBOX_BACKEND';
 
 /** Sandboxes on EDGE, authenticated as the client's identity. */
-export const layerEdge: Layer.Layer<SandboxService.Service, never, ClientService> = Layer.effect(
+export const layerEdge: Layer.Layer<SandboxService.Service, never, Capability.Service> = Layer.effect(
   SandboxService.Service,
   Effect.gen(function* () {
-    return makeEdgeBackend(yield* ClientService);
+    return makeEdgeBackend(edgeContext(yield* Capability.Service));
   }),
 );
 
 /** Repositories live on EDGE whichever backend runs the sandboxes: they are what outlives them. */
-export const layerRepository: Layer.Layer<RepositoryService.Service, never, ClientService> = Layer.effect(
+export const layerRepository: Layer.Layer<RepositoryService.Service, never, Capability.Service> = Layer.effect(
   RepositoryService.Service,
   Effect.gen(function* () {
-    return makeEdgeRepositoryBackend(yield* ClientService);
+    return makeEdgeRepositoryBackend(edgeContext(yield* Capability.Service));
   }),
 );
 
@@ -47,11 +49,11 @@ export const layerLocal: Layer.Layer<SandboxService.Service> = Layer.sync(
 );
 
 /** EDGE unless `DX_SANDBOX_BACKEND=local`: for embedders and tests without a plugin runtime. */
-export const layer: Layer.Layer<SandboxService.Service, never, ClientService> = Layer.effect(
+export const layer: Layer.Layer<SandboxService.Service, never, Capability.Service> = Layer.effect(
   SandboxService.Service,
   Effect.gen(function* () {
     return selecting({
-      edge: makeEdgeBackend(yield* ClientService),
+      edge: makeEdgeBackend(edgeContext(yield* Capability.Service)),
       preference: () => envPreference() ?? 'edge',
       launcher: () => undefined,
     });
@@ -64,30 +66,39 @@ export const layer: Layer.Layer<SandboxService.Service, never, ClientService> = 
  * this runtime cannot spawn processes, local sandboxes come from a contributed
  * {@link SandboxCapabilities.LocalLauncher} — the desktop app's helper process.
  */
-export const layerFromCapabilities: Layer.Layer<SandboxService.Service, never, ClientService | Capability.Service> =
-  Layer.effect(
-    SandboxService.Service,
-    Effect.gen(function* () {
-      const edge = makeEdgeBackend(yield* ClientService);
-      const capabilities = yield* Capability.Service;
-      const setting = (): Settings.Backend | undefined => {
-        const [settings] = capabilities.getAll(SandboxCapabilities.Settings);
-        const [registry] = capabilities.getAll(Capabilities.AtomRegistry);
-        return settings && registry ? registry.get(settings).backend : undefined;
-      };
-      return selecting({
-        edge,
-        preference: () => envPreference() ?? setting() ?? 'edge',
-        launcher: () => capabilities.getAll(SandboxCapabilities.LocalLauncher)[0],
-      });
-    }),
-  );
+export const layerFromCapabilities: Layer.Layer<SandboxService.Service, never, Capability.Service> = Layer.effect(
+  SandboxService.Service,
+  Effect.gen(function* () {
+    const capabilities = yield* Capability.Service;
+    const edge = makeEdgeBackend(edgeContext(capabilities));
+    const setting = (): Settings.Backend | undefined => {
+      const [settings] = capabilities.getAll(SandboxCapabilities.Settings);
+      const [registry] = capabilities.getAll(Capabilities.AtomRegistry);
+      return settings && registry ? registry.get(settings).backend : undefined;
+    };
+    return selecting({
+      edge,
+      preference: () => envPreference() ?? setting() ?? Settings.defaultBackend(),
+      launcher: () => capabilities.getAll(SandboxCapabilities.LocalLauncher)[0],
+    });
+  }),
+);
 
 const NO_LOCAL_RUNTIME = 'Local sandboxes need the desktop app, or Node or Bun.';
 
 const NO_PUBLISH = 'Publishing files needs a local sandbox in the desktop app.';
 
 const NO_REPOSITORIES = 'Repositories can be attached only to EDGE sandboxes.';
+
+/** Reads the client's config and identity per call: both arrive once the client has initialized. */
+const edgeContext = (capabilities: CapabilityManager.CapabilityManager) => (): EdgeContext => {
+  const [config] = capabilities.getAll(ClientCapabilities.Config);
+  const [identity] = capabilities.getAll(ClientCapabilities.IdentityService);
+  if (!config || !identity) {
+    throw new Error(`Sandbox EDGE backend: client ${config ? 'identity' : 'config'} is not available yet.`);
+  }
+  return { config, identity };
+};
 
 /**
  * A backend that picks EDGE or local per call. Asking for local where nothing can run it is an

@@ -9,7 +9,6 @@ export default defineConfig({
     index: 'src/index.ts',
     SandboxPlugin: 'src/SandboxPlugin.ts',
     skills: 'src/skills/index.ts',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',

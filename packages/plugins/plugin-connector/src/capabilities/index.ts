@@ -20,7 +20,7 @@ export * from './connector-coordinator/index.ts';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [ConnectorSpec.Connector],
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const BuiltinConnectors = Capability.lazyModule(
   'BuiltinConnectors',
@@ -31,7 +31,7 @@ export const BuiltinConnectors = Capability.lazyModule(
 // callback server, so only headless runtimes get the real command graph.
 export const Commands = AppCapability.commands(() => import('#commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const OAuthRedirect = Capability.lazyModule(
   'OAuthRedirect',
@@ -39,7 +39,7 @@ export const OAuthRedirect = Capability.lazyModule(
     requires: [ConnectorCoordination.ConnectorCoordinator],
     provides: [],
     activatesOn: ConnectorEvents.Start,
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./oauth-redirect.ts'),
 );

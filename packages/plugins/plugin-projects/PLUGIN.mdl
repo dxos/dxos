@@ -1,0 +1,84 @@
+---
+id: org.dxos.plugin.projects
+name: ProjectsPlugin
+version: 0.1.0
+---
+
+Projects: long-running work composed of instructions, skills, tasks, routines, artifacts and chats in the
+project's context. A project starts from a template (`src/templates/`); this document covers the templates
+whose run is a demo worth walking end to end.
+
+The **Composer Plugin** template (`src/templates/composer-plugin.ts`) is offered in the desktop app: an agent
+builds a TypeScript Composer plugin in a local sandbox and offers it back to load. The sandbox holds nothing but
+the bun runtime the app ships; the guide comes from GitHub and the packages from pkg.pr.new and npm, pinned to
+the commit and library versions the app was built from (`VITE_DX_PLUGIN_TOOLCHAIN`, stamped by composer-app's
+vite config). The browser has no local sandbox, so there plugin-computer contributes its own version of the
+template, which builds with the Computer shell of a vite server.
+
+## Extensions
+
+| Term   | URI                     |
+|--------|-------------------------|
+| `test` | `org.dxos.mdl.test@1.0` |
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an invocable
+operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Build a plugin with an agent in the desktop app
+  desc: |
+    An agent works the Composer Plugin template's parent task and four subtasks in a local sandbox — fetch the
+    guide, write a TypeScript plugin, install and build it, publish and offer it — and the reader loads the
+    result. The plugin adds a "World Clock" group to each space's navtree with a "Clocks" page under it: a world
+    map from plugin-map above a row of live clocks, kept in a `Clock` ECHO object. Walked by the autocue flow
+    `packages/plugins/plugin-projects/autocue/composer-plugin-desktop.mjs` through `driver.mjs --target tauri`.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open (the default "My Space" is fine)
+    - Composer is the desktop app, built from a commit of `main` that pkg.pr.new has published (every push to
+      `main` is), or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one
+    - Sandbox is enabled and its Backend is Local, the desktop app's default
+    - no plugin named "World Clock" is loaded, and no "World Clock" project or sandbox is left from an earlier
+      run (the flow's first setup step restores this)
+  steps:
+    - name: Create a project from the Composer Plugin template
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
+      capture: project
+      expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
+    - name: Assign the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+      expect: the delegated chat holds the parent and its four subtasks and is working
+    - name: Wait for the agent to offer the plugin
+      do: Watch the subtasks tick off.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox", text: "World Clock" }
+      capture: sandboxes
+      expect: |
+        a "World Clock" sandbox exists, all five tasks are done, and the chat shows a "Load plugin" prompt whose
+        URL is `http://localhost:<port>/files/<key>/manifest.json`
+      assert: return $result.results.length === 1
+      note: |
+        Every command the agent runs is in that sandbox: `curl` fetches the guide, `bunx @pnpm/exe` installs,
+        `bun run --bun` typechecks and builds. Nothing is read from a source tree on this machine.
+    - name: Load and enable the plugin
+      do: Click Load on the prompt, then open Plugins, then Labs, and turn World Clock on.
+      expect: World Clock loads from the sandbox's published directory and activates, with plugin-map
+    - name: Open the Clocks page and add two timezones
+      do: Click Clocks under the WORLD CLOCK group, then add two timezones with the plus card.
+      expect: the page shows the map above three ticking clock cards and the plus card
+  after:
+    - name: Delete the project
+      do: Right-click the "World Clock" project in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
+      expect: the project leaves the navtree
+    - name: Delete the sandbox
+      do: Right-click the "World Clock" sandbox in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandboxes.results[0].dxn }], target: $given.space }
+      expect: the sandbox leaves the navtree and its shell environment is torn down
+    - name: Uninstall World Clock
+      do: Open Plugins, then Labs, open the World Clock card's detail page and click Uninstall.
+      expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
+```

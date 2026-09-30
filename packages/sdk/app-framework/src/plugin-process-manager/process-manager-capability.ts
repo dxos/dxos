@@ -20,6 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
+import { Database } from '@dxos/echo';
 import { makeGlobalTracer } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -197,7 +198,8 @@ export default Capability.makeModule(
       Layer.provide(baseLayer),
     );
     const operationInvokerLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
-      Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer)),
+      // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
+      Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
     );
 
     // App-framework has no EDGE runtime, so the remote process view is empty;

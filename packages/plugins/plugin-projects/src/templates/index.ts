@@ -4,9 +4,19 @@
 
 import { ProjectCapabilities } from '#types';
 
+import { composerPlugin } from './composer-plugin.ts';
 import { defaultTemplate } from './default.ts';
 import { inboxResearch } from './inbox-research.ts';
 
+export {
+  GUIDE,
+  IDS,
+  PARENT_INSTRUCTIONS,
+  type Variant,
+  makeComposerPlugin,
+  readGuide,
+  writePlugin,
+} from './composer-plugin.ts';
 export * from './inbox-research.ts';
 export * from './scaffold.ts';
 
@@ -17,4 +27,9 @@ export * from './scaffold.ts';
  */
 export { defaultTemplate };
 
-export const defaultTemplates: ProjectCapabilities.Template[] = [defaultTemplate, inboxResearch];
+/** The Composer Plugin template joins them only where it can run (see {@link composerPlugin}). */
+export const defaultTemplates: ProjectCapabilities.Template[] = [
+  defaultTemplate,
+  inboxResearch,
+  ...[composerPlugin()].filter((template) => template !== undefined),
+];
