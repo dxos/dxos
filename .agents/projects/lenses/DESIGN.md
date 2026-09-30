@@ -1204,16 +1204,33 @@ returns each object at the newest version the reader knows.
   document with its main counterpart. Registry shape: `branches[...].members[objectId]` becomes a
   per-version map.
 
-### 12.5 Open questions
+### 12.5 Decisions (2026-09-30)
 
-1. Which version `links` points at for objects created after version documents ship by an app newer than
-   any released app: the newest version (released apps cannot read it anyway), or the oldest one they
-   might (derived back)?
-2. Host-side resolution: how the reader's known versions reach the query executor, and whether the index
-   should skip non-default rows for readers that never target other versions.
-3. How a reader learns that an object has a newer version it cannot read (for "update to open").
-4. Branch × version registry shape, and whether translation runs inside branches or only on main.
-5. The losing-document merge on concurrent creation: which device does it, and when the loser is reclaimed.
+1. **`links` points at the legacy version for every object.** For each type, the legacy version is the
+   newest version that existed before version documents shipped: the one released apps read. Existing
+   objects keep their document; objects created later get one at the legacy version too (phase 1
+   creates every version up front), so released apps see new objects. Every other version is reachable
+   only through the `versions` registry.
+2. **The reader's known versions travel with the query.** The host has no schema registry: types reach it
+   only as strings (`QueryServiceImpl` holds the index, SQL client, automerge host and space state; the
+   planner canonicalizes typenames to strings; the host never resolves a type to a schema). So "the newest
+   version the reader knows" must be sent: a field on `QueryAST.QueryOptions` (today `deleted` and
+   `debugLabel`) listing, per typename, the versions the reader's registry holds. The host resolves each
+   object id to one document with it, so results are never duplicated and limits are not shortchanged.
+   A query that names a version matches that version's documents directly.
+3. **"Update to open" for unreadable newer versions is out of scope.**
+4. **Branches of a versioned object: the simplest rule.** A branch forks every version document of each
+   member (registry `members[objectId]` becomes a per-version map), translation runs inside the branch as
+   on main, and merging a branch merges each version document into its main counterpart.
+5. **Duplicate version documents resolve deterministically.**
+   - Which document wins is the registry's visible value for `versions[objectId][version]`: concurrent
+     writes are an Automerge conflict, and every peer reads the same winner once synced.
+   - The losers are the other values of that conflict (`A.getConflicts`). Any device that holds a loser
+     merges it into the winner. The result is the union of both histories, identical whoever merges and
+     however often, because both documents start from the same deterministic root.
+   - A loser is reclaimed only once the winner holds its heads (`A.hasHeads`), a condition every device
+     evaluates the same way; the reclamation closure follows only the registry's visible values.
+   - Edits a device made into its losing document before it saw the winner are carried by the merge.
 
 ## 13. References
 
