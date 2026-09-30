@@ -73,7 +73,7 @@ export default Capability.makeModule(
       const existing = AppSpace.findSpaceFromTemplate(client, BRAMBLE_TEMPLATE_ID);
       const demoSpaceId =
         existing?.id ??
-        (yield* Operation.invoke(SpaceOperation.Create, { template: BRAMBLE_TEMPLATE_ID }).pipe(
+        (yield* Operation.invoke(SpaceOperation.Create, { template: BRAMBLE_TEMPLATE_ID, origin: 'system' }).pipe(
           Effect.provideService(Operation.Service, operationInvoker),
           Effect.map(({ id }) => id),
         ));
