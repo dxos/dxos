@@ -6,6 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   AppGraphBuilder,
+  ComposerPluginTemplate,
   CreateObject,
   NavigationTargetResolver,
   OperationHandler,
@@ -31,6 +32,7 @@ export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SubjectContext),
   // Injects `Assign to agent`, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
   Plugin.addModule(TaskAction),
+  Plugin.addModule(ComposerPluginTemplate),
   Plugin.addModule(Templates),
   Plugin.addModule(Tour),
   Plugin.addModule(Translations),

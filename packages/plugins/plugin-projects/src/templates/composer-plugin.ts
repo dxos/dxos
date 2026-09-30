@@ -28,6 +28,8 @@ const WORLD_CLOCK_SANDBOX = 'World Clock';
 export const PluginToolchain = Schema.Struct({
   commit: Schema.String,
   versions: Schema.Record(Schema.String, Schema.String),
+  /** Install spec for the `dx` CLI; the `@dxos/cli` build at `commit` when absent. */
+  cli: Schema.optional(Schema.String),
 });
 
 export interface PluginToolchain extends Schema.Schema.Type<typeof PluginToolchain> {}
@@ -52,10 +54,13 @@ export const GUIDE = 'docs/src/content/docs/docs/composer/publishing-plugins.md'
 /** pnpm checks `engines` against a node it cannot find under bun alone, and would skip rolldown's native binding. */
 const NPMRC = 'node-version=24.11.1\n';
 
-export const PARENT_INSTRUCTIONS = `Build the Composer plugin described by the task list in TypeScript, compile it \
-with the official tooling, and offer it to me to load into this running app. The parent task is the \
-whole run: set it started when you begin and done when its last subtask is done. Work the subtasks in \
-order and set each one's status as you finish it: the task list is how I follow this run.`;
+/** The run's brief; `outcome` is how the built plugin reaches this app. */
+const parentInstructions = (outcome: string): string => `Build the Composer plugin described by the task list in \
+TypeScript, compile it with the official tooling, and ${outcome}. The parent task is the whole run: set it started \
+when you begin and done when its last subtask is done. Work the subtasks in order and set each one's status as you \
+finish it: the task list is how I follow this run.`;
+
+export const PARENT_INSTRUCTIONS = parentInstructions('offer it to me to load into this running app');
 
 export const IDS = `Plugin, group, page and surface ids are camelCase: a hyphenated id is dropped without an error, \
 and the plugin then loads with nothing to show.`;
@@ -154,6 +159,37 @@ ${IDS}`,
   ],
 });
 
+/** The `dx` a sandbox publishes with: the one the app was built from, like every package it compiles against. */
+export const cliSpec = ({ commit, cli }: PluginToolchain): string => cli ?? `https://pkg.pr.new/@dxos/cli@${commit}`;
+
+/**
+ * The browser runs the build in a sandbox on EDGE and publishes the result to the reader's private registry,
+ * where Plugins → Registry lists it: nothing is loaded by URL. Publishing acts as the reader's account, so it
+ * waits for them to grant the sandbox a token.
+ */
+export const registryVariant = (toolchain: PluginToolchain, edgeUrl: string): Variant => {
+  const desktop = desktopVariant(toolchain);
+  return {
+    skill: SANDBOX_SKILL_KEY,
+    instructions: `${parentInstructions('publish it to my private plugin registry, which this app lists')}
+
+Use the Sandbox skill. Before the first subtask, create one sandbox named "${WORLD_CLOCK_SANDBOX}" and run every command \
+in it. It is a container on EDGE, every command starts in its workspace, and it holds \`node\`, \`npm\`, \`bun\` and \
+\`bunx\`: the tasks fetch everything else from GitHub, pkg.pr.new and npm. Run the commands in the tasks exactly as \
+written, in the workspace, without \`cd\`. Write files with a quoted bash heredoc.
+
+${IDS}`,
+    steps: [
+      ...desktop.steps.slice(0, -1),
+      {
+        title: 'Publish it to your registry',
+        description: `Run \`printenv DX_API_TOKEN | wc -c\`, which prints the token's length and never the token. If it prints 0, stop and ask me to grant the sandbox account access with its "Grant account access" action, then wait for my reply: the token acts as my account, so it is mine to hand over. Then run \`npx --yes --package=${cliSpec(toolchain)} dx registry publish --private --no-build --edge-url ${edgeUrl}\` with a \`timeout\` of 600000, and check that it printed an \`Uploaded:\` line. Tell me World Clock is now in Plugins → Registry. Do not emit a \`plugin-url-prompt\`: the registry lists it, and installing it is my click there.`,
+        estimate: 'xs',
+      },
+    ],
+  };
+};
+
 /** The parent task and its four subtasks, each subtask depending on the one before it. */
 const makeTasks = (steps: ReadonlyArray<TaskSeed>): Task.Task => {
   const subtasks = steps.map((step) => Task.make({ ...step, status: 'todo' }));
@@ -199,10 +235,18 @@ const readToolchain = (): PluginToolchain | undefined => {
 };
 
 /**
- * Offered in the desktop app, the one host with a local sandbox to build in, and only when the build stamped
- * the commit its packages are pinned to.
+ * Offered only when the build stamped the commit its packages are pinned to: in the desktop app, which builds in a
+ * local sandbox and loads the result by URL, and in a browser with an EDGE to build on and publish to.
  */
-export const composerPlugin = (): ProjectCapabilities.Template | undefined => {
-  const toolchain = readToolchain();
-  return isTauri() && toolchain ? makeComposerPlugin(desktopVariant(toolchain)) : undefined;
+export const composerPlugin = (
+  { edgeUrl }: { edgeUrl?: string } = {},
+  toolchain = readToolchain(),
+): ProjectCapabilities.Template | undefined => {
+  if (!toolchain) {
+    return undefined;
+  }
+  if (isTauri()) {
+    return makeComposerPlugin(desktopVariant(toolchain));
+  }
+  return edgeUrl ? makeComposerPlugin(registryVariant(toolchain, edgeUrl)) : undefined;
 };
