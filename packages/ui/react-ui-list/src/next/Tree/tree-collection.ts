@@ -21,6 +21,8 @@ export type TreeNode<T extends { id: string } = any> = {
   branch: boolean;
   open: boolean;
   current: boolean;
+  /** Read by zag's `getNodeState` from the node itself (it ignores `isNodeDisabled` there). */
+  disabled: boolean;
   /** Built only while the branch is open; a closed branch is marked by `childrenCount` alone. */
   children?: TreeNode<T>[];
   /** Makes zag's `isBranchNode` true for a closed branch whose children were never read. */
@@ -78,6 +80,7 @@ export const createTreeWalkAtom = <T extends { id: string }>(
           branch,
           open,
           current: get(model.itemCurrent(path)),
+          disabled: !!props.disabled,
           childrenCount: branch ? props.parentOf?.length : undefined,
           indexPath: [...parentIndexPath, nodes.length],
         };
@@ -104,6 +107,7 @@ export const createTreeWalkAtom = <T extends { id: string }>(
       branch: true,
       open: true,
       current: false,
+      disabled: false,
       children,
       indexPath: [],
     };

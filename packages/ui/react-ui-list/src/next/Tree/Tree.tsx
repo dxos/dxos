@@ -15,17 +15,17 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import {
-  draggable as makeDraggable,
   dropTargetForElements,
+  draggable as makeDraggable,
   monitorForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
-  type CSSProperties,
   type ComponentPropsWithoutRef,
+  type CSSProperties,
+  Fragment,
   type ReactNode,
   type RefObject,
-  Fragment,
   createContext,
   forwardRef,
   useCallback,
@@ -219,7 +219,7 @@ TreeRoot.displayName = 'Tree.Root';
 type TreeLabelProps = ComponentPropsWithoutRef<typeof TreeView.Label>;
 
 /** The machine's own label part, which it already points `aria-labelledby` at. */
-const TreeLabel = forwardRef<HTMLLabelElement, TreeLabelProps>((props, forwardedRef) => (
+const TreeLabel = forwardRef<HTMLHeadingElement, TreeLabelProps>((props, forwardedRef) => (
   <TreeView.Label {...props} className='nx-tree-label' ref={forwardedRef} />
 ));
 

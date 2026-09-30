@@ -32,6 +32,14 @@
     outline: none;
     user-select: none;
   }
+  /*
+   * A tree lives in narrow sidebars, where Container's `width < 24rem` query would stack a row's cells; the row keeps
+   * its fixed tracks at every width (the specificity beats the query's `.nx-grid[data-layout='row'] > *` rule).
+   */
+  .nx-tree-item.nx-grid[data-layout='row'] > :not([data-rail]) {
+    grid-column: auto;
+  }
+
   .nx-tree-item:hover {
     background: var(--color-hover-surface);
   }

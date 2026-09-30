@@ -185,7 +185,8 @@ export const Test: Story = {
   args: { tree: createFixedTree, allSizes: true, draggable: true, testId: 'fixed' },
   play: async ({ canvasElement }) => {
     for (const row of canvasElement.querySelectorAll<HTMLElement>('[data-tree-row]')) {
-      const block = Number.parseFloat(getComputedStyle(row).gridAutoRows);
+      // The disclosure cell is a Next.Block, one block square at the row's size.
+      const block = row.querySelector('.nx-block')?.getBoundingClientRect().width ?? 0;
       await expect(row.getBoundingClientRect().height, 'row is one block').toBeCloseTo(block, 0);
     }
 
@@ -263,6 +264,7 @@ const LARGE = () => createWideTree(50, 99);
  * frame times over 60 frames of 400px steps, and the mean ArrowDown latency, for SPIKE.md.
  */
 export const Benchmark: StoryObj<typeof meta> = {
+  tags: ['!test'],
   render: () => <BenchmarkStory />,
   play: async ({ canvasElement }) => {
     const bench = (window as any).__treeBench;
