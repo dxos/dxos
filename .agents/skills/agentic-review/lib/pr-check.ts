@@ -249,7 +249,7 @@ export const renderPrCheck = (check: PrCheck): string => {
       '',
       '### To fix',
       '',
-      'Run the fast review (Jev only, no subagents), commit the store it writes, then work the \`## Index\` of its REVIEW.md:',
+      'Run the fast review (Jev only), commit the store it writes, then work the \`## Index\` of its REVIEW.md. Do not run the full subagent review for this check, nor spawn subagents for what Jev left uncertain:',
       '',
       '```sh',
       FAST_COMMAND,

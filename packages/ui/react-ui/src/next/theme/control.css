@@ -76,6 +76,8 @@
     line-height: var(--nx-line-height);
   }
   .nx-control .nx-icon {
+    /* A one-line label can outgrow its row; the icon keeps its size rather than absorbing the squeeze. */
+    flex-shrink: 0;
     width: var(--nx-control-icon);
     height: var(--nx-control-icon);
   }
@@ -134,6 +136,16 @@
     width: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
     margin-inline: var(--nx-control-inset);
   }
+  /* Compact icon-only buttons abut, one segmented run (a stepper's − and +); the last keeps the row's end inset. */
+  .nx-input-adornment > .nx-button[data-square][data-compact] {
+    margin-inline: 0;
+  }
+  .nx-input-adornment > .nx-button[data-square][data-compact]:last-child {
+    margin-inline-end: var(--nx-control-inset);
+  }
+  .nx-input-adornment > .nx-button[data-compact] + .nx-button[data-compact] {
+    margin-inline-start: calc(-1 * var(--nx-control-inset));
+  }
 
   .nx-button {
     display: inline-flex;
@@ -143,6 +155,10 @@
     gap: var(--nx-gap-size);
     width: fit-content;
     min-width: var(--nx-control-size);
+    /* A button is one line at control height; a wrapped label would overflow it. The explicit `min-width` replaces the
+       flex minimum of its content, so without `flex-shrink: 0` a crowded row would squeeze the label out of it. */
+    white-space: nowrap;
+    flex-shrink: 0;
     background: var(--color-input-surface);
     cursor: pointer;
   }
@@ -226,10 +242,13 @@
     width: auto;
     padding-inline: var(--nx-control-inset);
   }
-  /* The caret is a smaller trailing icon, set closer to what it follows than a label is. */
+  /* The caret is a smaller trailing icon, a full gap from a label so the two read apart. */
   .nx-button[data-caret] > .nx-icon:last-child {
     width: calc(var(--nx-control-icon) * 0.75);
     height: calc(var(--nx-control-icon) * 0.75);
+  }
+  /* With no label the caret belongs to the icon, so it sits an inset from it rather than a gap. */
+  .nx-button[data-square][data-caret] > .nx-icon:last-child {
     margin-inline-start: calc(var(--nx-control-inset) - var(--nx-gap-size));
   }
   .nx-button:disabled {
@@ -287,6 +306,11 @@
     min-width: 0;
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
+  }
+  /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
+  .nx-field-required {
+    margin-inline-start: 0.125em;
+    color: var(--color-error-text, currentColor);
   }
   .nx-field-helper,
   .nx-field-error {
@@ -406,6 +430,48 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /*
+   * `fit='options'`: the value's cell (with the chosen icon's) also holds every option's icon and label, hidden and
+   * zero-height, so the trigger is as wide as the widest of them whichever is chosen.
+   */
+  .nx-select-trigger[data-fit='options'] {
+    display: inline-grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0;
+    width: auto;
+    justify-self: start;
+  }
+  .nx-field > .nx-select > .nx-select-trigger[data-fit='options'] {
+    align-self: start;
+  }
+  .nx-select-trigger[data-fit='options'] > * {
+    grid-row: 1;
+  }
+  .nx-select-trigger[data-fit='options'] > .nx-icon {
+    grid-column: 1;
+    margin-inline-end: var(--nx-control-inset);
+  }
+  .nx-select-trigger[data-fit='options'] > [data-part='value-text'] {
+    grid-column: 2;
+  }
+  .nx-select-trigger[data-fit='options'] > [data-part='indicator'] {
+    grid-column: 3;
+    margin-inline-start: var(--nx-control-inset);
+  }
+  .nx-select-value-sizer {
+    grid-column: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+  .nx-select-value-sizer > * {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-control-inset);
+    white-space: nowrap;
+  }
 
   /* Portalled content leaves every sized scope, so it sets its own metrics and level. */
   .nx-popup {
@@ -421,6 +487,38 @@
     outline: none;
   }
   .nx-popup:focus-visible {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+  /*
+   * A scrolling popup (Menu, Select, Combobox): the ScrollArea frame is the surface and the Ark content its viewport,
+   * since zag scrolls the highlighted item into view only inside a scrolling content element.
+   */
+  .nx-scroll-root.nx-popup {
+    /* Inline-size containment would size the popup without its items. */
+    container-type: normal;
+    max-width: var(--available-width, none);
+    max-height: min(var(--available-height, 20rem), 20rem);
+    padding-block: 0;
+    /* The viewport's focus ring is inset at the frame's edge, so the overlay thumb sits inside it. */
+    --scroll-thumb-inset: var(--nx-focus-ring-width);
+  }
+  /* Only while it overflows, a popup reserves the thumb's strip (the thumb, one ring inset either side) at its end. */
+  .nx-scroll-root.nx-popup[data-overflow-y] > .nx-scroll-viewport {
+    padding-inline-end: calc(var(--nx-scroll-width) + 2 * var(--scroll-thumb-inset));
+  }
+  .nx-scroll-root.nx-popup:has(> .nx-scroll-viewport[hidden]) {
+    display: none;
+  }
+  .nx-popup > .nx-scroll-viewport {
+    padding-block: var(--nx-control-inset);
+    scroll-padding-block: var(--nx-control-inset);
+    border-radius: inherit;
+  }
+  .nx-popup > .nx-scroll-viewport:focus {
+    outline: none;
+  }
+  .nx-popup > .nx-scroll-viewport:focus-visible {
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
     outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
@@ -449,8 +547,13 @@
     opacity: 0.5;
     cursor: default;
   }
+  /* One line: a popup capped at the viewport's width truncates its longest labels rather than wrapping them. */
   .nx-select-item [data-part='item-text'] {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* Padded top and bottom so an action row reads apart from the fields above it. */
@@ -488,10 +591,14 @@
     gap: var(--nx-control-inset);
     width: 100%;
     min-height: var(--nx-block-size);
-    overflow-x: auto;
-    scrollbar-width: none;
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
+  }
+  /* The toolbar's ScrollArea frame takes the place the toolbar would, and never sizes it without its items. */
+  .nx-scroll-root.nx-toolbar-scroll {
+    flex-shrink: 0;
+    width: 100%;
+    container-type: normal;
   }
   .nx-toolbar > .nx-control:not([data-square]),
   .nx-toolbar > .nx-select > .nx-control {

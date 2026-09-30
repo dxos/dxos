@@ -3,8 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import type * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
+import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
+import * as McpServer$ from 'effect/unstable/ai/McpServer';
+import * as HttpRouter from 'effect/unstable/http/HttpRouter';
 import { describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -114,9 +118,16 @@ const testHost = (
   };
 };
 
+/** Every skill these tests define, so a case not about the skill gate is never refused by it. */
+const EVERY_SKILL: ReadonlySet<string> = new Set(['codeProject', 'database', 'registry']);
+
 const runInvoke = (
   args: { key?: string; input?: Record<string, unknown>; spaceId?: SpaceId },
-  options: { registry?: Registry.Registry; host?: ReturnType<typeof testHost> } = {},
+  options: {
+    registry?: Registry.Registry;
+    host?: ReturnType<typeof testHost>;
+    loadedSkills?: ReadonlySet<string>;
+  } = {},
 ) => {
   const registry = options.registry ?? testRegistry();
   const host = options.host ?? testHost();
@@ -124,7 +135,12 @@ const runInvoke = (
     invocations: host.invocations,
     result: EffectEx.runPromise(
       Effect.result(
-        McpServer.invoke(registry, host.host, { key: args.key ?? KEY, input: args.input, spaceId: args.spaceId }),
+        McpServer.invoke(
+          registry,
+          host.host,
+          { key: args.key ?? KEY, input: args.input, spaceId: args.spaceId },
+          options.loadedSkills ?? EVERY_SKILL,
+        ),
       ),
     ),
   };
@@ -132,6 +148,61 @@ const runInvoke = (
 
 describe('McpServer', () => {
   describe('invokeOperation', () => {
+    // The skill carries conventions an operation's description does not, so a session that skipped
+    // it is told exactly which call to make rather than left to guess the input.
+    test('refuses an operation until a skill governing it is loaded, naming the skill', async ({ expect }) => {
+      const { invocations, result } = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_A },
+        { loadedSkills: new Set(['database']) },
+      );
+      const refused = failureOf(await result);
+      expect(refused.code).to.equal('skill_not_loaded');
+      expect(refused.message).to.include("Call loadSkill with skill: 'codeProject'");
+      expect(invocations).to.have.length(0);
+    });
+
+    test('loading the skill unlocks its operations, and a listing unlocks nothing', async ({ expect }) => {
+      const registry = testRegistry();
+      const ledger = McpServer.memorySkillLedger();
+      await EffectEx.runPromise(McpServer.loadSkill(registry, ledger, undefined));
+      expect((await EffectEx.runPromise(ledger.loaded)).size).to.equal(0);
+
+      // By registry key as well as prompt name: both resolve, and the ledger holds the prompt name.
+      await EffectEx.runPromise(McpServer.loadSkill(registry, ledger, 'org.dxos.skill.codeProject'));
+      const loadedSkills = await EffectEx.runPromise(ledger.loaded);
+      expect([...loadedSkills]).to.deep.equal(['codeProject']);
+      const { invocations, result } = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_A },
+        { registry, loadedSkills },
+      );
+      successOf(await result);
+      expect(invocations).to.have.length(1);
+    });
+
+    test('any one of several owning skills is enough', async ({ expect }) => {
+      const registry = testRegistry({
+        skills: [
+          makeSkill({ key: 'org.dxos.skill.codeProject', operations: [CreateTask] }),
+          makeSkill({ key: 'org.dxos.skill.database', operations: [CreateTask] }),
+        ],
+      });
+      const refused = failureOf(
+        await runInvoke({ input: { title: 'x' } }, { registry, loadedSkills: new Set() }).result,
+      );
+      expect(refused.message).to.include("'codeProject' or 'database'");
+      const { result } = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_A },
+        { registry, loadedSkills: new Set(['database']) },
+      );
+      successOf(await result);
+    });
+
+    // An unknown key is not a skill problem, and pointing at a skill would send the caller the wrong way.
+    test('an unknown operation is reported as unknown, whatever is loaded', async ({ expect }) => {
+      const { result } = runInvoke({ key: 'org.dxos.nope' }, { loadedSkills: new Set() });
+      expect(failureOf(await result).code).to.equal('invalid_request');
+    });
+
     test('dispatches the named operation into the space the call named', async ({ expect }) => {
       const { invocations, result } = runInvoke({ input: { title: 'Write tests' }, spaceId: SPACE_A });
       expect(successOf(await result)).to.deep.equal({ ok: true });
@@ -396,7 +467,9 @@ describe('McpServer', () => {
       const { host, invocations } = testHost();
       expect(await run(registry)).to.have.length(0);
       const dark = await EffectEx.runPromise(
-        Effect.result(McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects' })),
+        Effect.result(
+          McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects' }, EVERY_SKILL),
+        ),
       );
       expect(failureOf(dark).code).to.equal('invalid_request');
       expect(invocations).to.have.length(0);
@@ -404,7 +477,12 @@ describe('McpServer', () => {
       registry.add([makeSkill({ key: 'org.dxos.skill.database', operations: [QueryObjects] })]);
       expect((await run(registry)).map((row) => row.key)).to.deep.equal(['com.example.operation.space.queryObjects']);
       await EffectEx.runPromise(
-        McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects', spaceId: SPACE_A }),
+        McpServer.invoke(
+          registry,
+          host,
+          { key: 'com.example.operation.space.queryObjects', spaceId: SPACE_A },
+          EVERY_SKILL,
+        ),
       );
       expect(invocations).to.have.length(1);
       // CreateTask is still governed by no skill, so the new arrival widened nothing else.
@@ -516,14 +594,15 @@ describe('McpServer', () => {
       expect(operations.map((row) => row.key)).to.deep.equal([KEY]);
       expect(operations[0].hints.mutation).to.equal('write');
 
+      const ledger = McpServer.memorySkillLedger();
       const listing = successOf(
-        await EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(registry, 'codeProject'))),
+        await EffectEx.runPromise(Effect.result(McpServer.loadSkill(registry, ledger, 'codeProject'))),
       );
       expect(listing.instructions).to.equal('Bind a space first.');
 
       const { host, invocations } = testHost();
       await EffectEx.runPromise(
-        McpServer.invoke(registry, host, { key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }),
+        McpServer.invokeWithLedger(registry, host, ledger, { key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }),
       );
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }]);
     });
@@ -728,6 +807,108 @@ const buildHost = (definition: Skill.Definition, service: Operation.OperationSer
   EffectEx.runPromise(
     McpServer.host({ skills: [definition], spaceIds: [SPACE] }).pipe(Effect.provideService(Operation.Service, service)),
   );
+
+describe('McpServer.toolsLayer', () => {
+  const PROTOCOL_VERSION = '2026-07-28';
+
+  /** Serves `toolsLayer` over effect's HTTP transport, counting how often the registry resolves. */
+  const serve = (registry: Effect.Effect<Registry.Registry, McpServer.ToolFailure>) => {
+    const { host } = testHost();
+    return HttpRouter.toWebHandler(
+      McpServer.toolsLayer().pipe(
+        Layer.provide(Layer.succeed(McpServer.RegistrySource, McpServer.RegistrySource.of({ registry }))),
+        Layer.provide(Layer.succeed(McpServer.Host, host)),
+        Layer.provide(
+          McpServer$.layerHttp({ name: 'test', version: '0.0.0', path: '/mcp', protocols: [McpProtocol.v2026_07_28] }),
+        ),
+      ),
+    );
+  };
+
+  const send = async (
+    handler: (request: Request) => Promise<Response>,
+    method: string,
+    params: Record<string, unknown> = {},
+  ) => {
+    const response = await handler(
+      new Request('http://localhost/mcp', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'accept': 'application/json, text/event-stream',
+          'mcp-protocol-version': PROTOCOL_VERSION,
+          'mcp-method': method,
+          ...(typeof params.name === 'string' ? { 'mcp-name': params.name } : {}),
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method,
+          params: {
+            ...params,
+            _meta: {
+              'io.modelcontextprotocol/protocolVersion': PROTOCOL_VERSION,
+              'io.modelcontextprotocol/clientCapabilities': {},
+            },
+          },
+        }),
+      }),
+    );
+    return McpServer.normalizeResponse(response, { request: { method: 'POST', headers: new Headers() } }).then(
+      (normalized) => normalized.json(),
+    );
+  };
+
+  test('lists its tools without resolving the registry, and resolves it for the call that needs it', async ({
+    expect,
+  }) => {
+    let resolved = 0;
+    const registry = testRegistry();
+    const { handler, dispose } = serve(
+      Effect.sync(() => {
+        resolved++;
+        return registry;
+      }),
+    );
+    try {
+      const listed = await send(handler, 'tools/list');
+      expect(listed.result.tools.map((tool: { name: string }) => tool.name)).to.have.members([...McpServer.TOOL_NAMES]);
+      expect(resolved).to.equal(0);
+
+      const called = await send(handler, 'tools/call', { name: 'queryOperations', arguments: {} });
+      expect(called.result.isError).not.to.equal(true);
+      expect(resolved).to.equal(1);
+    } finally {
+      await dispose();
+    }
+  });
+
+  test('a registry that fails to resolve fails the call, not the surface', async ({ expect }) => {
+    const { handler, dispose } = serve(
+      Effect.fail(McpServer.failure('operation_failed', 'the operation registry is unavailable')),
+    );
+    try {
+      const listed = await send(handler, 'tools/list');
+      expect(listed.result.tools).to.have.length(McpServer.TOOL_NAMES.length);
+
+      const called = await send(handler, 'tools/call', { name: 'queryOperations', arguments: {} });
+      expect(called.result.isError).to.equal(true);
+      expect(JSON.stringify(called.result.content)).to.include('registry is unavailable');
+    } finally {
+      await dispose();
+    }
+  });
+
+  test('a host tool that takes one of its names is refused at build', async ({ expect }) => {
+    const colliding = McpServer.toolsLayer({ reservedToolNames: ['invokeOperation'] }).pipe(
+      Layer.provide(Layer.succeed(McpServer.RegistrySource, McpServer.RegistrySource.of({ registry: Effect.never }))),
+      Layer.provide(Layer.succeed(McpServer.Host, testHost().host)),
+    );
+    const exit = await EffectEx.runPromise(Effect.exit(Effect.scoped(Layer.build(colliding))));
+    expect(exit._tag).to.equal('Failure');
+    expect(String(exit._tag === 'Failure' ? exit.cause : '')).to.include('collision');
+  });
+});
 
 describe('McpServer.fromSkills', () => {
   test('invokes through the ambient Operation.Service, decoding input and passing the space', async ({ expect }) => {

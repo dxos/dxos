@@ -3,7 +3,7 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis } from '@dxos/ui-types';
@@ -69,6 +69,15 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    // Which axes currently show an overlay thumb, published as `data-overflow-*` so CSS can reserve its strip.
+    const [overflow, setOverflow] = useState({ vertical: false, horizontal: false });
+    const handleOverflowChange = useCallback(
+      (next: { vertical: boolean; horizontal: boolean }) =>
+        setOverflow((current) =>
+          current.vertical === next.vertical && current.horizontal === next.horizontal ? current : next,
+        ),
+      [],
+    );
     const { className, ...rest } = composableProps(props, {
       classNames: [recipes.scrollRoot(), autoHide && AUTO_HIDE_GROUP[orientation]],
     });
@@ -85,6 +94,8 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
           data-orientation={orientation}
           data-snap={snap ? '' : undefined}
           data-scrollbars={scrollbars ? undefined : 'false'}
+          data-overflow-y={overflow.vertical ? '' : undefined}
+          data-overflow-x={overflow.horizontal ? '' : undefined}
           className={className}
           ref={forwardedRef}
         >
@@ -95,6 +106,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
               orientation={orientation}
               density={width === 'thin' ? scrollbar.md : scrollbar.lg}
               autoHide={autoHide}
+              onOverflowChange={handleOverflowChange}
             />
           )}
         </ark.div>

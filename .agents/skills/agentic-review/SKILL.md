@@ -9,9 +9,9 @@ description: >-
   the repo's `.mdl` rules, or check a diff for known anti-patterns. For the
   built-in bug/quality passes use `/code-review` instead.
   A cheaper first pass with TypeSafe System One (`scripts/system-one.ts`)
-  judges most groups and routes only uncertain ones to subagents. In PR mode,
-  `scripts/fast.ts` reviews with System One (Jev) alone and the advisory
-  `Agentic Review` CI job checks the committed result.
+  judges most groups and routes only uncertain ones to subagents. A per-PR
+  review — including one prompted by the advisory `Agentic Review` CI check —
+  is `scripts/fast.ts` alone: System One (Jev) only, never subagents.
 ---
 
 # Agentic Review
@@ -24,6 +24,13 @@ over a bounded set of files, so the reviewer stays cheap and on-task.
 **new** rule never covered by a prior finalized run); later runs are incremental.
 **`--pr-only`:** diff-only against the last review or merge-base with main.
 **Claude drives the loop**: prepare → spawn subagents → finalize.
+
+> **Per-PR review = `fast.ts` only.** When the review is for a PR — the `Agentic Review` CI
+> check failed, its summary asks for a review, or you are adding the review a PR is expected to
+> carry — run `bun .agents/skills/agentic-review/scripts/fast.ts` and stop there (see
+> [PR mode](#pr-mode-fast-review--ci)). Do not run the subagent workflow below, do not spawn
+> subagents for the pairs System One left uncertain, and do not follow up on `system-one: off`
+> rules. The full workflow is only for when the user explicitly asks for a full or subagent review.
 
 The scripts are TypeScript run directly with Bun (`bun <script>.ts`, no build step), import
 nothing beyond `node:*` and `bun:*`, and can also be run by hand. Tests:
@@ -223,14 +230,16 @@ Every PR is expected to carry a review of its own change. The author or agent ru
 only checks the committed store, so CI needs no API key and spends nothing.
 
 ```sh
-bun .agents/skills/agentic-review/scripts/fast.ts            # needs TYPESAFE_API_KEY (`op`, see 1password skill)
+bun .agents/skills/agentic-review/scripts/fast.ts            # needs TYPESAFE_API_KEY (see 1password skill)
 bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
 ```
 
 `fast.ts` is prepare `--fast` → `system-one.ts` → finalize, with no subagents. What System One
-is unsure of, and `system-one: off` rules, are counted in the appendix and left unreviewed;
-run the full workflow above when a change deserves them. Then fix or dismiss each issue, set
-its index row to `resolved` or `ignored`, and commit the store with the fixes.
+is unsure of, and `system-one: off` rules, are counted in the appendix and left unreviewed —
+that is the intended trade, not a gap to fill: a PR review, and in particular one the CI check
+asked for, never spawns subagents for them. Only an explicit request from the user for a full
+review runs the subagent workflow above. Then fix or dismiss each issue, set its index row to
+`resolved` or `ignored`, and commit the store with the fixes.
 
 - **Changed files ignore merges.** `--pr-only` / `--fast` review only files a non-merge commit
   on HEAD's first-parent line touched and that still differ from the base, so a merge from

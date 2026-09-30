@@ -36,6 +36,11 @@
       "style": "./src/next/theme/index.css",
       "default": "./src/next/theme/index.css"
     },
+    "./next/testing": {
+      "source": "./src/next/testing/stories.tsx",
+      "types": "./dist/types/src/next/testing/stories.d.ts",
+      "import": "./dist/lib/next-testing.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
