@@ -40,6 +40,10 @@ export const SERVER_INSTRUCTIONS = trim`
   operation — invokeOperation refuses it until one of its skills is loaded in this session.
   loadSkill with no argument lists every skill. Skills are also offered to users as
   prompts (slash commands); loadSkill brings the same text into context without user action.
+
+  When you pick up a task through this server (claim it, assign it to yourself, or start it),
+  rename your own session after the task right away, with your client's session-title tool if it
+  has one, and pass the same title wherever the task's operations accept a session title.
 `;
 
 export type PassOptions = {
