@@ -118,6 +118,9 @@ export const ModuleUrlPlugin = ({ environment }: ModuleUrlPluginOptions = {}): P
             entryFileNames: fileNames,
             chunkFileNames: fileNames,
             assetFileNames: posix.join(assetsDir, '[name]-[hash][extname]'),
+            // Default splitting over several entries can put the two sides of a module cycle in chunks
+            // that import each other, and a class then extends a binding its chunk has not evaluated.
+            strictExecutionOrder: true,
           },
         },
       };
