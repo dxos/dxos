@@ -1136,7 +1136,86 @@ a late old-shape write to a referenced object is recoverable exactly as it is fo
 Projection is the half that needs §10.5's write-set-with-an-address. Composition needs none of it,
 which is another reason to build composition first.
 
-## 12. References
+## 12. Version documents — identity, storage and queries (draft, 2026-09-30)
+
+_Direction in [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) ("Direction: version documents");
+translation rules proven by the prototype in `echo-client/src/proxy-db/version-documents/`. This section
+works out how one logical object with several version documents fits ECHO, borrowing from branching
+(`echo-client/docs/VERSIONING.md`), which already gives one object id several documents._
+
+### 12.1 What branching already solves
+
+- **Registry outside `links`.** Branch documents live in `DatabaseDirectory.branches[rootId][name].members
+[objectId] → docUrl` (`echo-protocol/src/document-structure.ts`), never in `links`, so the loader never
+  materializes them as extra objects. Every document-enumeration path (replication
+  `getAllLinkedDocuments`, the reclamation closure, import remapping) walks the registry too.
+- **One object per id in results.** The host indexes every document, rows keyed by `(space, documentId,
+objectId)`; the client drops any hit whose document is not the one it routes that id to
+  (`echo-client/src/client/echo-client.ts` `_loadObjectFromDocument`). Known costs: rows from other
+  documents are indexed and can make a limited result short.
+- **Another view of the same id.** `db.branch(obj, name)` returns a binding whose core is bound to the
+  branch document; references resolve by id to the canonical instance.
+- **Random document ids are fine when histories are shared.** A branch document is an import of the
+  source's history under a new id; `A.merge` across ids works because the changes are the same.
+
+### 12.2 Storage
+
+- **Registry.** `DatabaseDirectory.versions[objectId][typeVersion] → docUrl`, outside `links`, walked by
+  every enumeration path branching already extended (replication, reclamation, import remap, flush
+  heads — the gap branching has there should be closed for both).
+- **`links[objectId]` stays what released apps read.** Apps released before version documents follow only
+  `links`. It keeps pointing at the document an object was created in, and for a type that existed
+  before version documents shipped, at the version those apps know; newer versions are reachable only
+  through the registry, which they ignore.
+- **Document ids are random.** Automerge document ids cannot be derived, so two devices that create the
+  same version document concurrently create two documents. Deterministic roots make this harmless: both
+  start from the byte-identical root change, so they share history exactly as a branch shares its
+  source's. The registry entry resolves by last-writer-wins; a device holding the losing document merges
+  it into the winner (`A.merge`, as `mergeBranch` does) and drops it. Until then, queries dedupe by id.
+
+### 12.3 Queries and identity
+
+The rule: a query can target any version the reader knows, never returns an object twice, and by default
+returns each object at the newest version the reader knows.
+
+- **Index.** Every version document is indexed under its own type, as branch documents are today, so
+  `Filter.type(Foo@2)` already matches only v2 documents.
+- **Resolution.** For each object id in a result, pick one document: the version the query names, else
+  the newest version the reader's registry knows among those the object has. Unknown newer versions are
+  never the default. This replaces branching's "the document `links` routes to" with "the document the
+  reader's version preference routes to".
+- **Where it runs.** Client-side first, as branching does (drop hits from non-chosen documents, then load
+  by id). The limit-shortfall problem then applies to versions too; the fix, for both, is host-side
+  resolution given the reader's known versions (sent with the query).
+- **Cores.** A reader may hold two versions of one object at once (a v2 query and a v3 query in one
+  session), so cores are keyed by `(objectId, version)`, with the default version the one `Filter.id` and
+  plain reads return. `db.version(obj, v)` returns another version's binding, like `db.branch`.
+- **References** carry an object id and resolve to the reader's default version. A reference that
+  names a version (a versioned DXN) resolves to that version's document.
+
+### 12.4 Translation and branches
+
+- **Who translates.** Every device holding two version documents translates between them (prototype
+  rules). Translation is triggered on document updates, as fold-forward is today; lens code runs in the
+  client until lenses are data (then the host or EDGE can run them).
+- **Branches of a versioned object.** Open. A branch forks documents; a versioned object has several. The
+  simplest rule forks every version document of each member and translates within the branch, so a
+  branch is a consistent alternate timeline across versions; merging a branch merges each version
+  document with its main counterpart. Registry shape: `branches[...].members[objectId]` becomes a
+  per-version map.
+
+### 12.5 Open questions
+
+1. Which version `links` points at for objects created after version documents ship by an app newer than
+   any released app: the newest version (released apps cannot read it anyway), or the oldest one they
+   might (derived back)?
+2. Host-side resolution: how the reader's known versions reach the query executor, and whether the index
+   should skip non-default rows for readers that never target other versions.
+3. How a reader learns that an object has a newer version it cannot read (for "update to open").
+4. Branch × version registry shape, and whether translation runs inside branches or only on main.
+5. The losing-document merge on concurrent creation: which device does it, and when the loser is reclaimed.
+
+## 13. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·
   `panproto-lens` https://docs.rs/panproto-lens/latest/panproto_lens/ ·
