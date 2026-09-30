@@ -610,10 +610,11 @@ parallel-namespace approach; no compatibility shims).
    macOS still shows the green "+" copy badge for one frame before the page answers the first `dragover`; Mosaic
    shows the same flash, and page code cannot reach it.
 
-## Part naming (proposed)
+## Part naming
 
-Rules for the parts of every Next composite and its wrappers in sibling packages. The audit behind them, with each
-rename to approve by number, is AUDIT §6 "Part naming audit" (points 25–39).
+Rules for the parts of every Next composite and its wrappers in sibling packages, adopted 2026-09-30: Ark's
+conventions throughout, with the three DXOS-specific choices below. The audit behind them is AUDIT §6 "Part naming
+audit" (points 25–39, all accepted as recommended except where these rules say otherwise).
 
 1. **Content is the component's own element.** `Content` is Ark's element for the component (the menu, listbox,
    popup or disclosure region), never a wrapper around it, so its ref, `data-part` and ARIA land on one element.
@@ -625,17 +626,20 @@ rename to approve by number, is AUDIT §6 "Part naming audit" (points 25–39).
    (AUDIT point 14).
 4. **Viewport belongs to ScrollArea.** No other composite has a `Viewport` part, since Ark uses the name only for
    scroll-area's scrolling element.
-5. **Body is the region between header and footer.** `Card.Body`, `Dialog.Body`, `Popover.Body` and `Panel.Body`
-   (point 27) name the same role; in a height-bound host Body composes a ScrollArea around a gutter Container. If
-   point 27 is declined, `Panel.Content` stays as the one documented exception to rule 1.
+5. **Header, Body, Footer.** `Card`, `Dialog`, `Popover` and `Panel` share them; `Panel.Toolbar`/`Statusbar` become
+   `Panel.Header`/`Footer`, generic regions that size to their content (`auto minmax(0,1fr) auto`) and hold a
+   `Toolbar.Root` as a child when they need one. A one-row toolbar keeps adjacent planks aligned, and an empty header
+   takes no space. In a height-bound host Body composes a ScrollArea around a gutter Container.
 6. **Items follow Ark's anatomy.** Every composite with items exports `Item`, `ItemText`, `ItemIndicator`,
    `ItemGroup` and `ItemGroupLabel`, so any row can be composed from parts.
-7. **Shorthand props render the default parts.** `item`, `icon`, `description`, `trailing` and `shortcut` fill an
-   Item's default cells, and `children` replaces only the text, inside `ItemText`, so the common row is one line and
-   `children` means the same in every composite.
+7. **Data renders the default row; children replace it.** An Item with no children renders its default layout from
+   `item` (`item.icon`, `item.label`, `item.description`, the indicator); with children, they replace the whole row
+   and compose it from parts (`ItemIcon`, `ItemText`, `ItemDescription`, `ItemIndicator`, any trailing control). No
+   `icon`/`description`/`trailing` props, so each thing has one way to do it and `children` means the same in
+   Listbox, Select, Combobox and Menu.
 8. **Ark names first.** A part Ark has takes Ark's name (`CloseTrigger`, `ItemIndicator`, `RadioItemGroup`,
    `TriggerItem`, `Fieldset`), so our `data-part`s and Ark's docs agree; DXOS names are only for parts Ark lacks
-   (`Header`, `Body`, `Footer`, `Statusbar`, `AlertDialog.Cancel`/`Action`), and Radix names are not carried over.
+   (`Header`, `Body`, `Footer`, `AlertDialog.Cancel`/`Action`), and Radix names are not carried over.
 9. **Internals stay bundled.** Positioner, Backdrop, Arrow, HiddenInput and leaf controls' Control/Thumb are not
    parts; a bundling part (`Select.Trigger`, `Combobox.Control`) renders its Ark sub-parts by default and accepts
    them as children, so splitting is opt-in.
@@ -645,5 +649,7 @@ rename to approve by number, is AUDIT §6 "Part naming audit" (points 25–39).
     parts and a part should have one import path.
 11. **Leaf controls are single components.** Checkbox, Switch, Toggle, NumberInput, PinInput, DateInput and
     PasswordInput take `label` as a prop and expose no parts, since no consumer composes their internals.
-12. **Wrappers keep the base names.** A sibling package's wrapper (`@dxos/react-ui-list/next` `Listbox`) uses the
+12. **Required is automatic.** `Field.Label` renders Ark's required indicator whenever `Field.Root` is `required`;
+    `Field.RequiredIndicator` is exported only for custom placement or a different mark.
+13. **Wrappers keep the base names.** A sibling package's wrapper (`@dxos/react-ui-list/next` `Listbox`) uses the
     wrapped composite's part names, so one vocabulary spans packages.

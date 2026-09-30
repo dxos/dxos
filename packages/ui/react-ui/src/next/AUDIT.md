@@ -627,6 +627,11 @@ bundled on purpose (rule 9) and omitted below. Blast radius counts files from `g
     consumer outside react-ui. Blast: `components/FieldSet/*` (3 files), `components/index.ts`, `Next.tsx`,
     `Field.tsx`, `theme/fieldset.css` (comment), DESIGN/AUDIT/TASKS; react-ui-form's `FormFieldSet` is unrelated.
 
+**Decided 2026-09-30:** points 25–39 accepted as recommended, with three changes recorded in DESIGN.md "Part
+naming": `Panel.Toolbar`/`Statusbar` become content-sized `Panel.Header`/`Footer` (rule 5); Items drop the
+`icon`/`description`/`trailing` props, rendering their default row from `item` and composing from parts when given
+children (rule 7); `Field.Label` shows the required indicator automatically (rule 12, which settles points 8 and 38).
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
