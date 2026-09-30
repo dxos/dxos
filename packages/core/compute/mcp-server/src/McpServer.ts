@@ -35,11 +35,13 @@ import * as wireInternal from './internal/wire.ts';
 //
 // Host contract.
 //
-// The registry needs no wrapper: the surface reads operations and skills straight off echo's
-// `Registry.Service` with the standard query API. What remains host-specific is how a chosen
-// operation actually runs and which spaces the session may address — the `Host` service, and
-// nothing else. The CLI supplies its in-process invoke; EDGE supplies its service binding and the
-// grant's spaces, hydrating a registry from its RPC records (see {@link hydrateRegistry}).
+// The surface reads operations and skills off an echo registry with the standard query API, but
+// when that registry loads is the host's call: the tools resolve it per call through
+// `RegistrySource`, and prompts are built from whatever registry the host hands `promptsLayer`. The
+// rest is how a chosen operation actually runs and which spaces the session may address — the
+// `Host` service. The CLI supplies its live registry and in-process invoke (`layer`); EDGE supplies
+// its service binding and the grant's spaces, hydrating registries from its RPC records
+// (see {@link hydrateRegistry}) only as far as each request needs.
 //
 
 /** Failure of the host's invoke seam — an outage or handler fault, not an authorship error. */
@@ -637,52 +639,35 @@ export type LayerOptions = {
   readonly reservedPromptNames?: readonly string[];
 };
 
-/** The fixed tool surface, reading the registry and dispatching through the host per call. */
-const surfaceLayer: Layer.Layer<never, never, Registry.Service | Host> = McpServer$.toolkit(ServerToolkit).pipe(
-  Layer.provide(
-    ServerToolkit.toLayer(
-      Effect.gen(function* () {
-        const registry = yield* Registry.Service;
-        const host = yield* Host;
-        const ledger = host.skillLedger ?? memorySkillLedger();
-        return ServerToolkit.of({
-          queryOperations: (query) => queryOperations(registry, query),
-          invokeOperation: (request) => invokeWithLedger(registry, host, ledger, request),
-          loadSkill: ({ skill }) => loadSkill(registry, ledger, skill),
-        });
-      }),
-    ),
-  ),
+export type RegistrySourceShape = {
+  /**
+   * The registry one tool call reads. Resolved per call rather than at layer build, so the host
+   * decides when operations load and how long they are kept — a host whose registry sits behind an
+   * RPC (EDGE) must not pay for it on requests that list tools and never call one.
+   */
+  readonly registry: Effect.Effect<Registry.Registry, ToolFailure>;
+};
+
+/** Where the tool handlers get the registry; see {@link RegistrySourceShape}. */
+export class RegistrySource extends Context.Service<RegistrySource, RegistrySourceShape>()(
+  '@dxos/mcp-server/RegistrySource',
+) {}
+
+/** A {@link RegistrySource} over echo's {@link Registry.Service}, for a host holding a live registry. */
+export const registrySourceLayer: Layer.Layer<RegistrySource, never, Registry.Service> = Layer.effect(
+  RegistrySource,
+  Effect.map(Registry.Service, (registry) => RegistrySource.of({ registry: Effect.succeed(registry) })),
 );
 
 /**
- * Builds the prompt layers for opted-in skills. Prompts are captured at layer build — effect's
- * `McpServer` has no tool/prompt removal, so the prompt list cannot follow the registry live the
- * way the tool handlers do.
+ * The fixed tool surface — `queryOperations` / `invokeOperation` / `loadSkill` — reading the
+ * registry from {@link RegistrySource} and dispatching through {@link Host} per call. Building it
+ * touches neither, so `tools/list` is served without the registry.
  */
-export const promptsLayer = (skills: readonly viewInternal.McpSkill[]): Layer.Layer<never> =>
-  Layer.mergeAll(
-    Layer.empty,
-    ...skills.map((candidate) =>
-      McpServer$.prompt({
-        name: candidate.promptName,
-        description: candidate.description,
-        parameters: {},
-        content: () => Effect.succeed(candidate.instructions),
-      }),
-    ),
-  );
-
-/**
- * The whole projected surface — `queryOperations` / `invokeOperation` / `loadSkill` over the
- * operations opted-in skills name, plus those skills as prompts. Hosts provide echo's
- * {@link Registry.Service} (holding `PersistentOperation` and `Skill` entities) and {@link Host},
- * merge their own static toolkits alongside, and declare those names as reserved.
- */
-export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: LayerOptions = {}): Layer.Layer<
+export const toolsLayer = ({ reservedToolNames = [] }: Pick<LayerOptions, 'reservedToolNames'> = {}): Layer.Layer<
   never,
   never,
-  Registry.Service | Host
+  RegistrySource | Host
 > =>
   Effect.gen(function* () {
     const claimed = reservedToolNames.filter((name) => (TOOL_NAMES as readonly string[]).includes(name));
@@ -691,11 +676,68 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
       // leaving the server advertising one tool and dispatching the other.
       throw new Error(`MCP tool name collision: the host reserves names this server defines: ${claimed.join(', ')}.`);
     }
-    const registry = yield* Registry.Service;
-    // A collision throws as a defect here, at layer build — an authorship error, surfaced loudly.
-    const skills = yield* viewInternal.mcpSkills(registry, reservedPromptNames);
-    return Layer.mergeAll(surfaceLayer, promptsLayer(skills));
+    return McpServer$.toolkit(ServerToolkit).pipe(
+      Layer.provide(
+        ServerToolkit.toLayer(
+          Effect.gen(function* () {
+            const source = yield* RegistrySource;
+            const host = yield* Host;
+            const ledger = host.skillLedger ?? memorySkillLedger();
+            return ServerToolkit.of({
+              queryOperations: (query) =>
+                Effect.flatMap(source.registry, (registry) => queryOperations(registry, query)),
+              invokeOperation: (request) =>
+                Effect.flatMap(source.registry, (registry) => invokeWithLedger(registry, host, ledger, request)),
+              loadSkill: ({ skill }) =>
+                Effect.flatMap(source.registry, (registry) => loadSkill(registry, ledger, skill)),
+            });
+          }),
+        ),
+      ),
+    );
   }).pipe(Layer.unwrap);
+
+/**
+ * The opted-in skills of `registry` as MCP prompts. Needs skills only, never operations. Prompts
+ * are captured at layer build — effect's `McpServer` has no tool/prompt removal, so the prompt list
+ * cannot follow the registry live the way the tool handlers do. A prompt-name collision dies here,
+ * at layer build, as the authorship error it is.
+ */
+export const promptsLayer = (
+  registry: Registry.Registry,
+  { reservedPromptNames = [] }: Pick<LayerOptions, 'reservedPromptNames'> = {},
+): Layer.Layer<never> =>
+  viewInternal.mcpSkills(registry, reservedPromptNames).pipe(
+    Effect.map((skills) =>
+      Layer.mergeAll(
+        Layer.empty,
+        ...skills.map((candidate) =>
+          McpServer$.prompt({
+            name: candidate.promptName,
+            description: candidate.description,
+            parameters: {},
+            content: () => Effect.succeed(candidate.instructions),
+          }),
+        ),
+      ),
+    ),
+    Layer.unwrap,
+  );
+
+/**
+ * The whole projected surface built eagerly over a live {@link Registry.Service} — {@link toolsLayer}
+ * plus {@link promptsLayer} — for a host that holds its registry in process (the CLI, tests). A host
+ * that has to fetch its registry composes the two itself, choosing when each part loads.
+ */
+export const layer = ({ reservedToolNames, reservedPromptNames }: LayerOptions = {}): Layer.Layer<
+  never,
+  never,
+  Registry.Service | Host
+> =>
+  Layer.mergeAll(
+    toolsLayer({ reservedToolNames }).pipe(Layer.provide(registrySourceLayer)),
+    Effect.map(Registry.Service, (registry) => promptsLayer(registry, { reservedPromptNames })).pipe(Layer.unwrap),
+  );
 
 //
 // Transports.
