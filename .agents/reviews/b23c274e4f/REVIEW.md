@@ -12,6 +12,22 @@ reviewId: b23c274e4f
 
 _2 error(s), 7 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- b23c274e4f-1 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx:381
+- b23c274e4f-2 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx:81
+- b23c274e4f-3 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx:129
+- b23c274e4f-4 - resolved - no-casts - packages/plugins/plugin-computer/src/templates/composer-plugin.test.ts:42
+- b23c274e4f-5 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/brand/src/components/experimental/Logo.stories.tsx:75
+- b23c274e4f-6 - ignored - no-styling-wrapper-divs - packages/ui/brand/src/components/experimental/Logo.stories.tsx:171
+- b23c274e4f-7 - ignored - no-casts - packages/ui/brand/src/components/experimental/Logo.stories.tsx:224
+- b23c274e4f-8 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-experimental/src/components/Countdown/Countdown.tsx:36
+- b23c274e4f-9 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx:499
+
+## Issues
+
 # WARN b23c274e4f-1 no-styling-wrapper-divs `packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx:381`
 
 System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.94. The likeliest place is lines 381-402 (`const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children,...`, location confidence 0.77). This is a single-shot classifier: confirm against the rule before acting.
@@ -47,3 +63,19 @@ System One judges this a likely violation of `extract-non-rendering-logic-from-c
 # WARN b23c274e4f-9 no-styling-wrapper-divs `packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx:499`
 
 System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.89. The likeliest place is lines 499-519 (`TaskListContent.displayName = 'TaskList.Content';`, location confidence 0.38). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `beee1cfaab292de02c9dc545c73e32a61ed2eb93`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 9 violations written to fragments, 163 uncertain, 759 clean, 0 unanswered
+
+```text
+requests: 405 (101 verdicts re-asked with context the model requested)
+estimated input tokens: 2702609
+billed input tokens: 2540317 (cost $0.1067)
+measured chars per token: 3.19
+```

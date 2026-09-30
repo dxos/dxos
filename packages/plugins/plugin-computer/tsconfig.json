@@ -55,9 +55,6 @@
     },
     {
       "path": "../plugin-projects"
-    },
-    {
-      "path": "../plugin-sandbox"
     }
   ]
 }

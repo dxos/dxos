@@ -135,6 +135,26 @@ describe('AskQuestion', () => {
   );
 
   it.effect(
+    'refuses a blank question without blocking the task',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { chat, invoke } = yield* setupChat;
+        yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
+
+        const result = yield* invoke(AskQuestion, { task: 'Draft the reply', question: '  \n ' });
+        yield* Database.flush();
+
+        expect(String(result)).toContain('question is empty');
+        expect(yield* loadQuestions(chat)).toEqual([]);
+        const [task] = yield* Chat.loadTasks(chat);
+        expect(task.status).toBe('started');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'refuses a title two tasks share rather than blocking either',
     Effect.fnUntraced(
       function* ({ expect }) {

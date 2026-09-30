@@ -2,74 +2,77 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
+// Loaded only through the lazy `RangeList` container, so Next's CSS stays out of the boot graph.
+import '@dxos/react-ui/next/theme.css';
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Banner, Field, Flex, useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { OrderedList } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
-import { Sheet, SheetUtil } from '#types';
+import { type Sheet, SheetUtil } from '#types';
+
+/** Handle cell, title, remove. */
+const COLUMNS = 'var(--nx-block-size) minmax(0, 1fr) var(--nx-block-size)';
+
+/** A sheet toggles a `key`/`value` on a cell range at most once, so the triple identifies a range across reorders. */
+const getRangeId = ({ key, value, range }: Sheet.Range) => `${key}:${value}:${range}`;
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;
 };
 
+/** The sheet's formatting ranges in precedence order (later ranges win); rows reorder and remove. */
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [sheet, updateSheet] = useObject(sheetProp);
-  // TODO(thure): Implement similar to comments, #8121
-  const handleSelectRange = (range: Sheet.Range) => {};
-  const handleDeleteRange = useCallback(
-    (range: Sheet.Range) => {
-      const index = sheet.ranges.findIndex((sheetRange) => sheetRange === range);
+
+  const handleMove = useCallback(
+    (from: number, to: number) =>
       updateSheet((sheet) => {
-        sheet.ranges.splice(index, 1);
-      });
-    },
-    [sheet, updateSheet],
+        const [range] = sheet.ranges.splice(from, 1);
+        // Re-inserting the detached element would re-parent a removed node; insert a copy of its fields.
+        sheet.ranges.splice(to, 0, { range: range.range, key: range.key, value: range.value });
+      }),
+    [updateSheet],
   );
+
+  const handleRemove = useCallback(
+    (id: string) =>
+      updateSheet((sheet) => {
+        const index = sheet.ranges.findIndex((range) => getRangeId(range) === id);
+        if (index >= 0) {
+          sheet.ranges.splice(index, 1);
+        }
+      }),
+    [updateSheet],
+  );
+
   return (
     <>
-      <Field.Root>
-        <Field.Label>{t('range-list.heading')}</Field.Label>
-      </Field.Root>
+      <Next.Typography>{t('range-list.heading')}</Next.Typography>
       {sheet.ranges.length === 0 ? (
-        <Banner.Root>
-          <Banner.Content>
-            <Banner.Title>{t('no-ranges.message')}</Banner.Title>
-          </Banner.Content>
-        </Banner.Root>
+        <Next.Typography tone='description'>{t('no-ranges.message')}</Next.Typography>
       ) : (
-        <OrderedList.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
+        <OrderedList.Root<Sheet.Range> items={sheet.ranges} getId={getRangeId} onMove={handleMove}>
           {({ items: ranges }) => (
-            <OrderedList.Content>
+            <OrderedList.Content aria-label={t('range-list.heading')} scroll={false}>
               {ranges.map((range) => {
-                // Use the range's underlying cell range string as the stable id so deletes /
-                // re-renders don't shift row identity by array position. Reorder is not
-                // wired (DX-8121); add `OrderedList.DragHandle` + a real id strategy when it
-                // lands. We avoid `OrderedList.Title` because there's no disclosure panel
-                // for it to control here.
-                const id = range.range;
+                const id = getRangeId(range);
                 return (
-                  <OrderedList.Item
-                    key={id}
-                    id={id}
-                    item={range}
-                    hover
-                    classNames='flex items-center cursor-pointer'
-                    onClick={() => handleSelectRange(range)}
-                  >
-                    <Flex align='center' classNames='grow truncate px-2'>
+                  <OrderedList.Item key={id} id={id} columns={COLUMNS}>
+                    <OrderedList.DragHandle />
+                    <OrderedList.ItemText>
                       {t('range.title', {
                         position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
                         key: t(`range-key.${range.key}.label`),
                         value: t(`range-value.${range.value}.label`),
                       })}
-                    </Flex>
-                    <OrderedList.DeleteButton onClick={() => handleDeleteRange(range)} />
+                    </OrderedList.ItemText>
+                    <Next.SystemButton.Remove onClick={() => handleRemove(id)} />
                   </OrderedList.Item>
                 );
               })}

@@ -6,6 +6,7 @@ export * from './useCredentials.tsx';
 export * from './useDevtoolsContext.tsx';
 export * from './useEdgeStatus.ts';
 export * from './useFeedMessages.tsx';
+export * from './useIndexerRows.ts';
 export * from './useMetadata.tsx';
 export * from './useProxiedClient.tsx';
 export * from './useRoutes.tsx';

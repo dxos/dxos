@@ -8,8 +8,9 @@ Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash 
 multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
 that runs a shell script under a configured root. Nothing is mounted outside a vite server.
 
-It also contributes the **Composer Plugin** project template: a project whose agent uses these tools to
-build a TypeScript Composer plugin on this machine and offer it back to load (QA-2).
+In a browser it also contributes the browser version of plugin-projects' **Composer Plugin** project template:
+a project whose agent uses these tools to build a TypeScript Composer plugin on this machine and offer it back
+to load (QA-2). The desktop app has no vite server, so it offers plugin-projects' own version instead.
 
 ## Extensions
 
@@ -202,61 +203,4 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       do: Delete `temp/plugins/world-clock` and `out/composer/plugins/world-clock` under the Composer app.
       expect: both folders are gone, restoring the `given` for the next run
       note: The autocue flow's first setup step does this and the uninstall before each take.
-```
-
-```mdl
-test QA-3: Build a plugin with an agent in the desktop app
-  desc: |
-    QA-2 in the native desktop app. There is no vite server there, so no Computer shell: the template's
-    desktop variant (`desktopVariant` in `src/templates/composer-plugin.ts`) has the agent create a local
-    sandbox with plugin-sandbox's Sandbox skill, link the toolchain of the source tree the app was built from,
-    build World Clock in the sandbox's workspace, and offer the URL Publish Files serves the build at. Walked
-    by the autocue flow `packages/plugins/plugin-computer/autocue/composer-plugin-desktop.mjs` through
-    `driver.mjs --target tauri`.
-  actors: both
-  status: unverified
-  given:
-    - an identity exists
-    - space: a space is open (the default "My Space" is fine)
-    - Composer is the desktop app, a release build whose frontend was bundled with `DX_ENVIRONMENT=dev` against
-      EDGE preview — a dev bundle carries Coding (Dev) and the source root local sandboxes may read
-    - plugin-sandbox's Backend setting is Local and its `dx-sandbox` helper is staged beside the app binary
-    - plugin-projects and Coding (Dev) are enabled, and the Assistant's default remote model is DeepSeek V4 Pro
-    - no plugin named "World Clock" is loaded, and no "Composer Plugin" project or "World Clock" sandbox is left
-      from an earlier run (the flow's first setup step restores this)
-  steps:
-    - name: Create a project from the Composer Plugin template
-      do: As QA-2 step 1.
-      capture: project
-      expect: a "World Clock" project opens, and its navtree folder shows what it holds
-    - name: Assign the parent task to the agent
-      do: As QA-2 steps 2 to 4 — open Tasks, tick the parent task, assign it, open the companion's Assistant tab.
-      expect: the delegated chat holds the parent and its four subtasks and is working
-      note: The project's skill is Sandbox, not Coding (Dev); its instructions name the source root it links.
-    - name: Wait for the agent to offer the plugin
-      do: Watch the subtasks tick off.
-      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox", text: "World Clock" }
-      capture: sandboxes
-      expect: |
-        a "World Clock" sandbox exists, all five tasks are done, and the chat shows a "Load plugin" prompt whose
-        URL is `http://localhost:<port>/files/<key>/manifest.json`
-      assert: return $result.results.length === 1
-    - name: Load and enable the plugin
-      do: As QA-2 steps 10 and 11.
-      expect: World Clock loads from the sandbox's published directory and activates from Labs
-    - name: Open the Clocks page and add two timezones
-      do: As QA-2 steps 12 and 13.
-      expect: the page shows the map above three ticking clock cards and the plus card
-  after:
-    - name: Delete the project
-      do: Right-click the "World Clock" project in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
-      expect: the project leaves the navtree
-    - name: Delete the sandbox
-      do: Right-click the "World Clock" sandbox in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandboxes.results[0].dxn }], target: $given.space }
-      expect: the sandbox leaves the navtree and its shell environment is torn down
-    - name: Uninstall World Clock
-      do: As QA-2's after step 2.
-      expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
 ```

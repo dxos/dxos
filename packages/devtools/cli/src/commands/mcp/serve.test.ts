@@ -37,9 +37,17 @@ const SURFACE_REQUESTS = [
   { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: SKILL } } },
   { jsonrpc: '2.0', id: 5, method: 'prompts/get', params: { name: SKILL, arguments: {} } },
   { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: 'noSuchSkill' } } },
+  // Before its skill is loaded, so it is refused; the same call after `loadSkill` (20) runs, as 21.
   {
     jsonrpc: '2.0',
     id: 7,
+    method: 'tools/call',
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.registry.queryPlugins' } },
+  },
+  { jsonrpc: '2.0', id: 20, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: 'registry' } } },
+  {
+    jsonrpc: '2.0',
+    id: 21,
     method: 'tools/call',
     params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.registry.queryPlugins' } },
   },
@@ -58,6 +66,7 @@ const SURFACE_REQUESTS = [
     params: { name: 'invokeOperation', arguments: { key: 'org.dxos.nope' } },
   },
   { jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'loadSkill', arguments: {} } },
+  { jsonrpc: '2.0', id: 22, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: 'database' } } },
   {
     jsonrpc: '2.0',
     id: 13,
@@ -119,6 +128,18 @@ const runSession = (
 
     const responses = new Map<number, Response>();
     let buffer = '';
+    // One request in flight at a time: the server handles requests concurrently, so a request that
+    // depends on an earlier one (an invoke after its `loadSkill`) could otherwise overtake it.
+    let next = 0;
+    const writeNext = () => {
+      while (next < requests.length) {
+        const request = requests[next++] as { id?: number };
+        child.stdin.write(`${JSON.stringify(request)}\n`);
+        if (request.id !== undefined && awaitedIds.includes(request.id)) {
+          return;
+        }
+      }
+    };
     const finish = (error?: Error) => {
       clearTimeout(timer);
       child.kill('SIGKILL');
@@ -149,13 +170,16 @@ const runSession = (
       }
       if (awaitedIds.every((id) => responses.has(id))) {
         finish();
+        return;
+      }
+      const inFlight = (requests[next - 1] as { id?: number } | undefined)?.id;
+      if (inFlight === undefined || responses.has(inFlight)) {
+        writeNext();
       }
     });
     child.on('error', finish);
 
-    for (const request of requests) {
-      child.stdin.write(`${JSON.stringify(request)}\n`);
-    }
+    writeNext();
   });
 
 /** `responses` holds a fixed, known set of request ids, so a missing one is a broken session. */
@@ -266,10 +290,20 @@ const surfaceTests = (responses: () => Map<number, Response>) => {
 
     // This profile has no identity and so no spaces: an operation declaring no database must still
     // answer, which is what makes the space resolution conditional rather than unconditional.
-    const result = getResult(7);
+    const result = getResult(21);
     expect(result.isError, JSON.stringify(result.content)).to.not.be.true;
     const { plugins } = JSON.parse(result.content[0].text);
     expect(plugins.map((plugin: { id: string }) => plugin.id)).to.include('org.dxos.plugin.registry');
+  });
+
+  // A skill carries the conventions its operations' descriptions do not, so skipping it is refused
+  // with the call that fixes it, rather than left to produce a plausible but wrong invocation.
+  test('refuses an operation until a skill governing it is loaded', ({ expect }) => {
+    const refused = getResult(7);
+    expect(refused.isError).to.be.true;
+    expect(refused.content[0].text).to.include('skill_not_loaded');
+    expect(refused.content[0].text).to.include("loadSkill with skill: 'registry'");
+    expect(getResult(20).isError, JSON.stringify(getResult(20).content)).to.not.be.true;
   });
 
   // A client renders these as the tool's safety badge, and an unset `destructiveHint` defaults to

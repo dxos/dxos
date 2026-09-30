@@ -1,5 +1,7 @@
 # react-ui-form and react-ui-list on Next: audit and plan
 
+Status and open questions: [§6 Decision points](#6-decision-points).
+
 Next can already render every scalar form row, a nested field set, a dialog and a card. It cannot yet host
 a form inside a real plank, open a correctly sized popup from a form without per-call-site props, pick a
 reference object, or render a list row. Five gaps block the rewrite (see [Blocking gaps](#blocking-gaps)); the
@@ -47,21 +49,24 @@ are listed under "Deliberate" and do not count toward the verdict.
 
 ### Controls and fields
 
-| Next        | Current counterpart(s)                                                    | Missing in Next                                                                                                                                   | Next adds                                                                                                                                                                              | Verdict | Deliberate                                                                                                                                                                              |
-| ----------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Button`    | `Button`, `IconButton`, `SystemIconButton.*`, `ButtonGroup`               | the `SystemIconButton` presets (Add, Close, Delete, Clipboard, Mic, Upload, …): deferred to the pilot that first needs each                       | block-cell `iconOnly`, valence adopted from the surface, `iconEnd`; `hue`, `caretDown`, `compact`, `tooltipSide` (40)                                                                  | minor   | `tag` variant moved to Tag (34), its colour kept as `hue` (40); `density`/`elevation` (2, 4); `iconClassNames` (no class escape hatch for icons, 6: colour comes from `hue` or valence) |
-| `Toggle`    | `Toggle`, `ToggleIconButton`, `ToggleGroup`                               |                                                                                                                                                   | text toggles, `aria-pressed` from zag; `activeIcon` (40); `Next.ToggleGroup` single (`radiogroup`) / multiple, `Toolbar.ToggleGroup` (40)                                              | parity  | the 90° rotation without `activeIcon`: a disclosure is `Collapsible` (15)                                                                                                               |
-| `Label`     | `Field.Label`                                                             |                                                                                                                                                   | `srOnly` (39)                                                                                                                                                                          | parity  |                                                                                                                                                                                         |
-| `Field`     | `Field.Root/Label/HelperText/ErrorText/Block/TriggerIcon/PinInput`        | `asChild` root; `PinInput` (deferred: no form renderer uses either)                                                                               | `Field.Header` label row with trailing Blocks; `invalid` inherited from FieldSet; `validationValence` (all four tones) and `Label srOnly` (41)                                         | parity  | `Field.Block` becomes `Next.Block`                                                                                                                                                      |
-| `FieldSet`  | `Fieldset.*`                                                              |                                                                                                                                                   | legend as an sm label row                                                                                                                                                              | parity  |                                                                                                                                                                                         |
-| `Input`     | `Field.Input`                                                             |                                                                                                                                                   | Field wiring from Ark; `start`/`end` adornments in a control row, `noAutoFill`, `variant=subdued` (41)                                                                                 | parity  | `density`/`elevation` (2, 4)                                                                                                                                                            |
-| `Textarea`  | `Field.Textarea`                                                          |                                                                                                                                                   | `autoResize`, 3-row minimum                                                                                                                                                            | parity  |                                                                                                                                                                                         |
-| `Checkbox`  | `Field.Checkbox`                                                          |                                                                                                                                                   | block cell aligned with icon buttons                                                                                                                                                   | parity  | `size` (2)                                                                                                                                                                              |
-| `Switch`    | `Field.Switch`                                                            |                                                                                                                                                   | `role=switch`                                                                                                                                                                          | parity  |                                                                                                                                                                                         |
-| `DateInput` | `Field.Date/Time/DateTime` (segmented), `Field.TriggerIcon`, `DatePicker` | segmented keyboard entry; calendar popup; one date format across browsers                                                                         | native picker behind the icon                                                                                                                                                          | minor   | native input chosen (25)                                                                                                                                                                |
-| `Select`    | `Select.*` (15 parts)                                                     |                                                                                                                                                   | option icons in item and trigger, `items` collection; `ItemGroup`/`ItemGroupLabel`, `Separator`, `iconHue`, Item children, `multiple`, Trigger `loading` (42); portal `container` (45) | parity  | explicit `size` on Content (follow-up 2); number values: options stay strings and SelectField maps them back (2.14, 42)                                                                 |
-| `Combobox`  | `react-ui-list` `Combobox.*` and `Picker.*`                               | button trigger with the input in the popup, `VirtualTrigger`, item `description`, a create row, async/loading, groups, `multiple`, `displayValue` | input-in-trigger, `filter`, `empty` row, autohighlight Enter; portal `container` (45)                                                                                                  | major   |                                                                                                                                                                                         |
-| `Tag`       | `Tag`                                                                     | `asChild`                                                                                                                                         | pill sized to fit a control                                                                                                                                                            | parity  |                                                                                                                                                                                         |
+| Next            | Current counterpart(s)                                                    | Missing in Next                                                                                                                                   | Next adds                                                                                                                                                                                                                     | Verdict | Deliberate                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button`        | `Button`, `IconButton`, `SystemIconButton.*`, `ButtonGroup`               |                                                                                                                                                   | block-cell `iconOnly`, valence adopted from the surface, `iconEnd`; `hue`, `caretDown`, `compact`, `tooltipSide` (40); `SystemButton.*` presets (51)                                                                          | minor   | `tag` variant moved to Tag (34), its colour kept as `hue` (40); `density`/`elevation` (2, 4); `iconClassNames` (no class escape hatch for icons, 6: colour comes from `hue` or valence) |
+| `Toggle`        | `Toggle`, `ToggleIconButton`, `ToggleGroup`                               |                                                                                                                                                   | text toggles, `aria-pressed` from zag; `activeIcon` (40); `Next.ToggleGroup` single (`radiogroup`) / multiple, `Toolbar.ToggleGroup` (40)                                                                                     | parity  | the 90° rotation without `activeIcon`: a disclosure is `Collapsible` (15)                                                                                                               |
+| `Label`         | `Field.Label`                                                             |                                                                                                                                                   | `srOnly` (39)                                                                                                                                                                                                                 | parity  |                                                                                                                                                                                         |
+| `Field`         | `Field.Root/Label/HelperText/ErrorText/Block/TriggerIcon/PinInput`        |                                                                                                                                                   | `Field.Header` label row with trailing Blocks; `invalid` inherited from FieldSet; `validationValence` (all four tones) and `Label srOnly` (41); `asChild`, `required`, `readOnly` roots; every field type in one story (54)   | parity  | `Field.Block` needs no part: Checkbox/Switch occupy a block cell (19, 54); `TriggerIcon` is the DateInput trigger or a Button in an `end` slot (54)                                     |
+| `FieldSet`      | `Fieldset.*`                                                              |                                                                                                                                                   | legend as an sm label row                                                                                                                                                                                                     | parity  |                                                                                                                                                                                         |
+| `Input`         | `Field.Input`                                                             |                                                                                                                                                   | Field wiring from Ark; `start`/`end` adornments in a control row, `noAutoFill`, `variant=subdued` (41)                                                                                                                        | parity  | `density`/`elevation` (2, 4)                                                                                                                                                            |
+| `Textarea`      | `Field.Textarea`                                                          |                                                                                                                                                   | `autoResize`, 3-row minimum; `variant=subdued` (54)                                                                                                                                                                           | parity  |                                                                                                                                                                                         |
+| `Checkbox`      | `Field.Checkbox`                                                          |                                                                                                                                                   | block cell aligned with icon buttons                                                                                                                                                                                          | parity  | `size` (2)                                                                                                                                                                              |
+| `Switch`        | `Field.Switch`                                                            |                                                                                                                                                   | `role=switch`                                                                                                                                                                                                                 | parity  |                                                                                                                                                                                         |
+| `DateInput`     | `Field.Date/Time/DateTime` (segmented), `Field.TriggerIcon`, `DatePicker` |                                                                                                                                                   | zag `date-input` segments (locale order, typing, arrow steps), Ark `DatePicker` calendar (day/month/year views) behind the trailing trigger, `min`/`max`, `granularity`, `hourCycle`, `locale`, the native value strings (54) | parity  | native input dropped (54, supersedes 25); range/multiple selection not exposed (no current caller)                                                                                      |
+| `PinInput`      | `Field.PinInput`                                                          |                                                                                                                                                   | Ark `pin-input`: `mask`, `otp`, `type`, `onValueComplete`; control-sized cells (54)                                                                                                                                           | parity  |                                                                                                                                                                                         |
+| `NumberInput`   | `Field.Input type=number`                                                 |                                                                                                                                                   | Ark `number-input`: locale parsing/formatting, `step`, clamping, stepper buttons (54)                                                                                                                                         | parity  |                                                                                                                                                                                         |
+| `PasswordInput` | `Field.Input type=password`                                               |                                                                                                                                                   | Ark `password-input`: visibility toggle, `ignorePasswordManagers` (54)                                                                                                                                                        | parity  |                                                                                                                                                                                         |
+| `Select`        | `Select.*` (15 parts)                                                     |                                                                                                                                                   | option icons in item and trigger, `items` collection; `ItemGroup`/`ItemGroupLabel`, `Separator`, `iconHue`, Item children, `multiple`, Trigger `loading` (42); portal `container` (45)                                        | parity  | explicit `size` on Content (follow-up 2); number values: options stay strings and SelectField maps them back (2.14, 42)                                                                 |
+| `Combobox`      | `react-ui-list` `Combobox.*` and `Picker.*`                               | button trigger with the input in the popup, `VirtualTrigger`, item `description`, a create row, async/loading, groups, `multiple`, `displayValue` | input-in-trigger, `filter`, `empty` row, autohighlight Enter; portal `container` (45)                                                                                                                                         | major   |                                                                                                                                                                                         |
+| `Tag`           | `Tag`                                                                     | `asChild`                                                                                                                                         | pill sized to fit a control                                                                                                                                                                                                   | parity  |                                                                                                                                                                                         |
 
 ### Overlays and toolbars
 
@@ -76,17 +81,17 @@ are listed under "Deliberate" and do not count toward the verdict.
 
 ### Needed by form or list but absent from Next
 
-| Missing                                                                    | Used by                                          | Candidate                                          |
-| -------------------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
-| `Panel` (plank host: sized scope, query container, toolbar/content/footer) | every plugin container                           | Next.Panel as a template root                      |
-| `Listbox`                                                                  | Listbox (112 roots), MasterDetail, Combobox list | Ark `listbox` (zag listbox machine)                |
-| List row layout (icon, title, description, trailing actions)               | `Listbox.ItemContent`, `useListGrid`, Tree rows  | `Container layout='row'` with `columns`            |
-| `DragHandle`, `DropIndicator`                                              | OrderedList, Tree, ArrayField                    | Button `iconOnly` ghost; CSS on `--nx-*`           |
-| `Tree` / `TreeView`                                                        | plugin-navtree, react-ui-form ObjectTree         | Ark `tree-view`, or the current model on Next rows |
-| `Banner`                                                                   | ViewEditor                                       | valence surface (follow-up 34 already adopts it)   |
-| `PasswordInput`, `NumberInput`, `TagsInput`                                | PasswordField, NumberField, string arrays        | Ark components of the same names                   |
-| `HuePicker`, `IconPicker` on Next Popover                                  | HueField, SelectOptionField, ObjectForm          | `react-ui-pickers` restyle                         |
-| A control frame for third-party editors                                    | MarkdownField, RefEditor                         | generalise DateInput's control row                 |
+| Missing                                                                    | Used by                                          | Candidate                                                                   |
+| -------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------- |
+| `Panel` (plank host: sized scope, query container, toolbar/content/footer) | every plugin container                           | Next.Panel as a template root                                               |
+| `Listbox`                                                                  | Listbox (112 roots), MasterDetail, Combobox list | Ark `listbox` (zag listbox machine)                                         |
+| List row layout (icon, title, description, trailing actions)               | `Listbox.ItemContent`, `useListGrid`, Tree rows  | `Container layout='row'` with `columns`                                     |
+| `DragHandle`, `DropIndicator`                                              | OrderedList, Tree, ArrayField                    | Button `iconOnly` ghost; CSS on `--nx-*`                                    |
+| `Tree` / `TreeView`                                                        | plugin-navtree, react-ui-form ObjectTree         | Ark `tree-view`, or the current model on Next rows                          |
+| `Banner`                                                                   | ViewEditor                                       | valence surface (follow-up 34 already adopts it)                            |
+| `TagsInput`                                                                | string arrays                                    | Ark `tags-input` (`PasswordInput`, `NumberInput` done, 54)                  |
+| `HuePicker`, `IconPicker` on Next Popover                                  | HueField, SelectOptionField, ObjectForm          | `react-ui-pickers` restyle                                                  |
+| A control frame for third-party editors                                    | MarkdownField, RefEditor                         | `.nx-input-row` (Input, DateInput, NumberInput, PasswordInput share it, 54) |
 
 ## 2. Shortcomings of the Next model
 
@@ -172,8 +177,8 @@ array of structs and inline refs: four or five inheriting Containers deep.
 
 ### 2.8 Browser differences
 
-Style queries are Baseline only since Firefox 151 (May 2026) and Safari 18. `DateInput` keeps Firefox's own
-picker button. Composer also ships in WebKit shells (plugin-native).
+Style queries are Baseline only since Firefox 151 (May 2026) and Safari 18. `DateInput` is segmented in every
+browser (54). Composer also ships in WebKit shells (plugin-native).
 
 - **Impact.** Medium. On an older WebKit `level='+1'` resolves to nothing, so a Card paints on its host's
   surface.
@@ -213,7 +218,7 @@ control inside a Next row renders, but at the wrong height and with the wrong fo
 Each Ark component so far brought a quirk: the tooltip focus swap (20), toolbar item ids (31), a modal dialog's
 one-time `aria-hidden` sweep (10), `CloseTrigger` renaming its child (26).
 
-- **Impact.** Medium. Listbox, TreeView, TagsInput and NumberInput are still to come.
+- **Impact.** Medium. Listbox, TreeView and TagsInput are still to come.
 - **Mitigation.** Budget a play test per interaction contract, not only per render; keep zag on one catalog
   version.
 
@@ -260,26 +265,26 @@ Next Select and Combobox options are `{ value: string }`. Schema literal unions 
 
 **Field renderers.**
 
-| Renderer                     | Today                                                                      | Next mapping                                                    | Missing                                            |
-| ---------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------- |
-| `TextField`                  | `Field.Input`                                                              | `Input`                                                         |                                                    |
-| `PasswordField`              | `Field.Input type=password noAutoFill`                                     | `Input type='password' data-1p-ignore`                          | visibility toggle (Ark `password-input`, optional) |
-| `NumberField`                | `Field.Input` + numeric constraints                                        | `Input inputMode='decimal'`                                     | stepper (Ark `number-input`, optional)             |
-| `TextAreaField`              | `Field.Textarea`                                                           | `Textarea autoResize`                                           |                                                    |
-| `DateField`                  | `Field.Date/Time/DateTime` + `TriggerIcon`                                 | `DateInput type`                                                | segmented entry (deliberate, 25)                   |
-| `BooleanField`               | `Field.Block > Field.Switch`, `labelPlacement='beside'`                    | `Switch label`                                                  |                                                    |
-| `TupleField` (standalone)    | several `Field.Input`                                                      | `Container layout='row' columns` of `Input`                     |                                                    |
-| `GeoPointField` (standalone) | two `Field.Root` in cells                                                  | `Container layout='row' columns='1fr 1fr'`, a `Field.Root` each |                                                    |
-| `SelectField`                | `Select.TriggerButton` + `Option` + hue icon                               | `Select.Root/Trigger/Content/Item` with `icon`                  | icon hue; number values (2.14)                     |
-| `AsyncSelectField`           | SelectField + lookup                                                       | same                                                            | loading state                                      |
-| `AutofillField`              | TextField                                                                  | `Input`                                                         |                                                    |
-| `ComboboxField`              | list `Combobox` (button trigger, input in popup, free-text item)           | `Combobox`                                                      | trigger mode, create row                           |
-| `HueField`                   | `HuePicker`                                                                | `HuePicker` on Next Popover                                     | pickers restyle                                    |
-| `MarkdownField`              | CodeMirror `Editor.View classNames='dx-input'`                             | Editor in a Next control frame                                  | control frame (2.9)                                |
-| `RefField`                   | `ObjectPicker` (list Combobox + Popover + inline create Form) + `DxAnchor` | `Combobox` trigger mode + `Popover` holding a nested Form       | trigger mode, description, create row, async       |
-| `InlineRefField`             | `FormFieldSet collapsible` + nested `FormRoot`                             | `FieldSet` + `Collapsible` + nested Form                        |                                                    |
-| `ArrayField`                 | `OrderedList` + `DragHandle` + `CompactIconButton`                         | `react-ui-list/next` OrderedList + `Button iconOnly`            | OrderedList next                                   |
-| `SelectOptionField`          | `OrderedList` + `Tag` + `ToggleIconButton` + `HuePicker` + `IconButton`    | OrderedList next + `Tag` + `Toggle` + `HuePicker`               | OrderedList next; pickers                          |
+| Renderer                     | Today                                                                      | Next mapping                                                    | Missing                                      |
+| ---------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------- |
+| `TextField`                  | `Field.Input`                                                              | `Input`                                                         |                                              |
+| `PasswordField`              | `Field.Input type=password noAutoFill`                                     | `PasswordInput ignorePasswordManagers`                          |                                              |
+| `NumberField`                | `Field.Input` + numeric constraints                                        | `NumberInput min max step`                                      |                                              |
+| `TextAreaField`              | `Field.Textarea`                                                           | `Textarea autoResize`                                           |                                              |
+| `DateField`                  | `Field.Date/Time/DateTime` + `TriggerIcon`                                 | `DateInput type` (segmented, with calendar, 54)                 |                                              |
+| `BooleanField`               | `Field.Block > Field.Switch`, `labelPlacement='beside'`                    | `Switch label`                                                  |                                              |
+| `TupleField` (standalone)    | several `Field.Input`                                                      | `Container layout='row' columns` of `Input`                     |                                              |
+| `GeoPointField` (standalone) | two `Field.Root` in cells                                                  | `Container layout='row' columns='1fr 1fr'`, a `Field.Root` each |                                              |
+| `SelectField`                | `Select.TriggerButton` + `Option` + hue icon                               | `Select.Root/Trigger/Content/Item` with `icon`                  | icon hue; number values (2.14)               |
+| `AsyncSelectField`           | SelectField + lookup                                                       | same                                                            | loading state                                |
+| `AutofillField`              | TextField                                                                  | `Input`                                                         |                                              |
+| `ComboboxField`              | list `Combobox` (button trigger, input in popup, free-text item)           | `Combobox`                                                      | trigger mode, create row                     |
+| `HueField`                   | `HuePicker`                                                                | `HuePicker` on Next Popover                                     | pickers restyle                              |
+| `MarkdownField`              | CodeMirror `Editor.View classNames='dx-input'`                             | Editor in a Next control frame                                  | control frame (2.9)                          |
+| `RefField`                   | `ObjectPicker` (list Combobox + Popover + inline create Form) + `DxAnchor` | `Combobox` trigger mode + `Popover` holding a nested Form       | trigger mode, description, create row, async |
+| `InlineRefField`             | `FormFieldSet collapsible` + nested `FormRoot`                             | `FieldSet` + `Collapsible` + nested Form                        |                                              |
+| `ArrayField`                 | `OrderedList` + `DragHandle` + `CompactIconButton`                         | `react-ui-list/next` OrderedList + `Button iconOnly`            | OrderedList next                             |
+| `SelectOptionField`          | `OrderedList` + `Tag` + `ToggleIconButton` + `HuePicker` + `IconButton`    | OrderedList next + `Tag` + `Toggle` + `HuePicker`               | OrderedList next; pickers                    |
 
 **Higher-level components.** `ObjectProperties` (39 uses), `ObjectForm` (8), `ViewEditor` (18), `FieldEditor`,
 `RefEditor`, `ObjectPicker` and `ObjectTree` compose the parts above. ViewEditor also needs `Banner` and
@@ -448,3 +453,211 @@ A plugin moves a container and all of the renderers in its `fieldMap` together, 
 current controls misaligns inside a next form and nothing in the type system catches it. The pilots cover
 each renderer shape: plugin-space (`fieldMap` rows and refs), plugin-higgsfield and plugin-studio (the most
 renderers: 6 and 5 files), and plugin-assistant (`createSelectField`).
+
+## 6. Decision points
+
+What is settled, what is deferred, and what still needs an answer before react-ui-list and react-ui-form can
+reach parity. Numbered once across the section so a reply can cite a number.
+
+### Settled
+
+| Topic                   | Decision                                                                                                   | Where                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Pane host (gap 1)       | `Next.Panel` (`Root`, `Toolbar`, `Content`, `Statusbar`) sets `data-size`/level and is the query container | DESIGN.md Phase 4 decision 1 |
+| Popup size (gap 2)      | a popup copies `data-size` from its trigger's nearest sized ancestor on open; `size` still wins            | Phase 4 decision 2           |
+| List primitives (gap 4) | `Next.Listbox` on Ark listbox; `DragHandle`, `DropIndicator`, `DragPreview` with keyboard moves            | Phase 4 decision 5           |
+| Drag and drop           | stays on pragmatic-drag-and-drop; plugins keep `onMove`, `canDrop`, `getDropKind`                          | Phase 4 decision 5           |
+| i18n (2.10)             | Next parts translate their default labels through `@dxos/react-ui` translations                            | follow-ups 51, 54            |
+
+### Deferred, with a recommendation
+
+1. **Settings layout (gap 5, milestone 7).** Options in §3.2: (1) two-track subgrid rows, (2) label-above
+   cards, (3) drop the variant. Recommendation: 1. The react-ui piece is letting `Field.Root` join a parent's
+   `columns` as a subgrid row; decide when milestone 6 lands, so a real settings form can be tried in both shapes.
+2. **Tree (milestone 11).** Options: (1) Ark `tree-view` driven by `TreeModel` atoms, (2) keep the current Tree
+   logic and restyle its rows on Container, (3) a Listbox with indentation. Recommendation: spike 1 against a
+   5,000-node story; fall back to 2 if lazy children or virtualization fight zag's collection model.
+
+### Open
+
+3. **Virtualization (2.5).** Listbox and OrderedList rows are Container subgrid rows; `react-ui-virtual`
+   positions rows absolutely, which drops them out of the grid. Options: (1) virtualize only flat lists and give
+   rows fixed `columns` instead of subgrid, (2) `content-visibility: auto` on rows and no virtualizer, (3) keep
+   the current list for large collections. Recommendation: 2 for lists under a few thousand rows, 1 for Tree.
+4. **Selection state ownership.** Ark's listbox owns selection and focus; `useListSelection` (4 users) owns it
+   today. Options: (1) Listbox controlled through `value`/`onValueChange` and `useListSelection` becomes a
+   thin adapter, (2) retire `useListSelection`. Recommendation: 1 until the four callers migrate.
+5. **Unselectable lists.** `role=list` rows (OrderedList, plain lists) have no Ark machine. Options:
+   (1) `OrderedList` on a plain Container stack with roving focus from Toolbar's pattern, (2) Ark listbox with
+   `selectionMode='none'`. Recommendation: 2, so keyboard navigation and typeahead come from one machine.
+6. **Row template.** `useListGrid` builds a grid template per list; Next rows take Container `columns`.
+   Options: (1) the Root takes `columns` and rows inherit as subgrid, (2) each row sets its own. Recommendation:
+   1, so drag handles, titles and trailing buttons align across rows.
+7. **Container child span (§3.4 item 3).** `Form.Layout` needs a child to span tracks. Options: (1) a `span`
+   prop on Container, (2) a `Container.Cell` part. Recommendation: 1; still unimplemented.
+8. **Required marker (§3.4 item 4).** `Field.Root required` sets the attribute but draws no marker. Options:
+   (1) CSS on `[data-required]` in the label, (2) a `Field.Label required` prop. Recommendation: 1.
+9. **Combobox trigger mode (gap 3, milestone 5).** Extend `Next.Combobox` with a button trigger and the input
+   inside the popup, or add a separate `Next.Picker`. Recommendation: extend Combobox (one machine, one set of
+   item parts); retire the list package's `Combobox` and `Picker` in `/next`.
+10. **Control frame (§3.4 item 7).** DateInput's frame (adornments inside a bordered control) generalised for
+    PasswordInput, MarkdownField and RefEditor. Options: (1) `Next.ControlFrame` part, (2) Input `start`/`end`
+    slots only. Recommendation: 1, since editors are not inputs.
+11. **Mixing guard (2.11).** A lint rule forbidding current `@dxos/react-ui` controls inside `/next` files.
+    Options: (1) oxlint `no-restricted-imports` per `src/next/**`, (2) the no-className test extended to imports.
+    Recommendation: 1.
+12. **Boot budget.** The Composer boot graph is at 4.52 of 4.55 MB. Next code and `next/theme.css` must load only
+    from lazy plugin modules. Options: (1) each pilot imports the CSS in its lazy surface module, (2) raise the
+    budget once Next replaces the current components. Recommendation: 1 until the old implementations are
+    deleted.
+13. **Image dominant colour** (TASKS Parity). Move the sampler to a shared utility and adopt it in `Next.Image`,
+    or leave it out per decision 11. Recommendation: leave it out until a list or card consumer asks.
+
+### Open from the react-ui-list pilot
+
+14. **Nested scrolling.** Decided (1): `Listbox.Content scroll={false}` drops its ScrollArea; the plugin-registry
+    pilot uses it. `Next.Listbox.Content` is always its own ScrollArea, so inside `Next.Panel.Content` there
+    are two scroll frames and the inner one never scrolls. Options: (1) a Listbox mode that renders its content
+    without a ScrollArea, (2) keep it and have hosts not scroll. Recommendation: 1.
+15. **List rows on the panel's rails.** Decided with 14: without a ScrollArea the rows default to `gutter='inherit'`. `gutter='inherit'` cannot reach through the Listbox's ScrollArea, so rows use
+    an `inset` gutter and miss the panel's rails. Recommendation: follows from 14; with no inner ScrollArea, rows
+    inherit.
+16. **DetailItem layout.** A row Container centres every cell, so the detail row is a Collapsible root holding its
+    own row. Options: (1) keep that, (2) a top-aligned Container row option. Recommendation: 1.
+17. **Drop-target styling.** Rows showing a drop indicator are positioned by a generic `:has(> .nx-drop-indicator)`
+    rule. Options: (1) keep it, (2) an explicit `data-drop-target` attribute. Recommendation: 1.
+18. **Title in a disclosure row.** `Collapsible.Trigger` draws its label in the description colour. Options: (1) a
+    title variant on the trigger, (2) accept it. Recommendation: 1.
+19. **OrderedList keyboard grammar.** Options: (1) roving focus between rows, as the current `navigationMode`,
+    (2) a tab stop per control, as now. Recommendation: 1, which needs a roving-focus part outside Toolbar.
+20. **Shared row states.** Hover and selected styles apply only to `.nx-listbox-item`. Recommendation: one row-state
+    rule that OrderedList rows share.
+21. **List chrome labels.** "Drag to rearrange" and "Delete" come from app-level `osTranslations`. Recommendation:
+    move them to react-ui translations (2.10).
+22. **Story helpers for other packages.** `@dxos/react-ui/next/testing` exports `withSizes`, `SIZE_ARG_TYPES` and
+    `SizeArgs`; `GEOMETRY`, `byTestId` and the rest of `testing.ts` stay internal because they import
+    `storybook/test`. Recommendation: move `testing.ts` under `testing/` too and export it once a second package
+    needs geometry assertions.
+23. **Plugin list look.** The pilot swapped 14rem cards for list rows and lost the per-plugin icon hue.
+    Options: (1) Listbox items take an icon hue, (2) rows as Next Cards. Recommendation: 1.
+24. **Default drag preview.** Without `dragPreview`, the browser snapshots the row. Recommendation: a default
+    `Next.DragPreview` chip labelled via a `getLabel` prop.
+
+### Part naming audit
+
+Every Next composite's namespace against the installed Ark (`@ark-ui/react` 5.39.1) and against its Next peers,
+judged by DESIGN.md "Part naming (proposed)". Ark's positioner, backdrop, arrow, hidden-input and context parts are
+bundled on purpose (rule 9) and omitted below. Blast radius counts files from `git grep` in this worktree.
+
+| Component               | Our parts                                                                                                                                               | Ark parts                                                                                                                                                                    | Differences                                                                                                                                                                                        | Proposed change                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `Listbox`               | Root, Label, Content, Item, ItemIndicator                                                                                                               | Root, Label, Content, Item, ItemText, ItemIndicator, ItemGroup, ItemGroupLabel, Empty, Input, ValueText                                                                      | Content is the listbox and wraps itself in a ScrollArea (`scroll`); Item draws text from `item.label`, `icon`, `description`, `trailing`, and `children` replaces the label; no ItemText or groups | keep Content (rules 1–3); add ItemText (29), ItemGroup/ItemGroupLabel (30) |
+| `Listbox` (list/next)   | Root, Label, Content, Item, Indicator                                                                                                                   | as above                                                                                                                                                                     | `Indicator` copies the current react-ui-list name; Item takes an id, not an option                                                                                                                 | rename Indicator (28)                                                      |
+| `OrderedList`           | Root, Viewport, Content, Item, DetailItem, DragHandle, Title, IconButton, DeleteButton                                                                  | none (no Ark machine)                                                                                                                                                        | `Viewport` is a ScrollArea around Content, where Listbox uses `scroll`; `IconButton`/`DeleteButton` duplicate Button and SystemButton; `Title` is `Typography truncate`                            | 26, 36, 37                                                                 |
+| `Select`                | Root, Label, Trigger, Content, Item, ItemGroup, ItemGroupLabel, Separator                                                                               | Root, Label, Control, Trigger, ValueText, Indicator, ClearTrigger, Content, List, Item, ItemText, ItemIndicator, ItemGroup, ItemGroupLabel                                   | Trigger bundles ValueText and Indicator; Item renders ItemText/ItemIndicator but exports neither, and its `children` replace icon and label; `Separator` is ours (decorative)                      | 29, 32                                                                     |
+| `Combobox`              | Root, Label, Input, Content, Item                                                                                                                       | Root, Label, Control, Input, Trigger, ClearTrigger, Content, List, Empty, Item, ItemText, ItemIndicator, ItemGroup, ItemGroupLabel                                           | `Input` renders Ark's Control + Input + Trigger; Content's `empty` prop renders Ark's Empty; Item takes no `children`; no groups                                                                   | 29, 30, 31                                                                 |
+| `Menu`                  | Root, Trigger, ContextTrigger, Content, Item, ItemIndicator, CheckboxItem, RadioGroup, RadioItem, Sub, SubTrigger, Separator, ItemGroup, ItemGroupLabel | Root, Trigger, ContextTrigger, Indicator, Content, Item, ItemText, ItemIndicator, CheckboxItem, RadioItemGroup, RadioItem, TriggerItem, Separator, ItemGroup, ItemGroupLabel | `RadioGroup`, `SubTrigger` are Radix names; `Sub` is ours (Ark nests a Root); Item wraps `children` in ItemText already; `icon`, `shortcut` shorthands                                             | 29, 33                                                                     |
+| `Popover`               | Root, Trigger, Anchor, Content, Header, Title, Description, Body, CloseTrigger                                                                          | Root, Trigger, Anchor, Indicator, Content, Title, Description, CloseTrigger                                                                                                  | Header and Body are ours; Body is a ScrollArea around a Container                                                                                                                                  | keep                                                                       |
+| `Dialog`                | Root, Trigger, Content, Header, Title, Description, CloseTrigger, Body, Footer                                                                          | Root, Trigger, Content, Title, Description, CloseTrigger                                                                                                                     | Header, Body, Footer are ours                                                                                                                                                                      | keep                                                                       |
+| `AlertDialog`           | Dialog's parts + Cancel, Action                                                                                                                         | none (Ark Dialog with `role=alertdialog`)                                                                                                                                    | `Cancel` is `Dialog.CloseTrigger asChild > Button`; `Action` closes after `onClick`; both are Radix names                                                                                          | keep (34)                                                                  |
+| `Tooltip`               | Root, Trigger, Content                                                                                                                                  | Root, Trigger, Content                                                                                                                                                       | none                                                                                                                                                                                               | keep                                                                       |
+| `Collapsible`           | Root, Trigger, Content                                                                                                                                  | Root, Trigger, Indicator, Content                                                                                                                                            | Trigger bundles Indicator (`icon` prop)                                                                                                                                                            | keep (rule 9)                                                              |
+| `Toggle`, `ToggleGroup` | Toggle; ToggleGroup.Root, Item                                                                                                                          | Toggle.Root, Indicator; ToggleGroup.Root, Item                                                                                                                               | Toggle is a leaf Button                                                                                                                                                                            | keep                                                                       |
+| `Toolbar`               | Root, Text, Link, DragHandle, Separator, ToggleGroup, ToggleGroupItem                                                                                   | none                                                                                                                                                                         | Root is its own ScrollArea viewport (rule 2); `ToggleGroupItem` is `ToggleGroup.Item` and `DragHandle` is `Next.DragHandle`, both re-exported unchanged                                            | 35                                                                         |
+| `Card`                  | Root, Poster, Header, Title, Description, Body, Footer, Section, Row, Text, Action, Link, Menu, DragHandle                                              | none                                                                                                                                                                         | `DragHandle` re-exports `Next.DragHandle`                                                                                                                                                          | 35                                                                         |
+| `Panel`                 | Root, Toolbar, Content, Statusbar                                                                                                                       | none                                                                                                                                                                         | Content is a ScrollArea around a gutter Container: the role `Dialog.Body`/`Popover.Body` play, under Ark's name for a component's own element                                                      | 27                                                                         |
+| `ScrollArea`            | Root, Viewport                                                                                                                                          | Root, Viewport, Content, Scrollbar, Thumb, Corner                                                                                                                            | not Ark-backed; Ark's Content is the element inside the Viewport, which `Viewport asChild` merges away                                                                                             | keep                                                                       |
+| `Field`                 | Root, Header, Label, HelperText, ErrorText                                                                                                              | Root, Label, Input, Textarea, Select, HelperText, ErrorText, RequiredIndicator, Item                                                                                         | Header is ours; controls are Next's own; no RequiredIndicator                                                                                                                                      | 38                                                                         |
+| `FieldSet`              | Root, Legend, HelperText, ErrorText                                                                                                                     | `Fieldset`: Root, Legend, HelperText, ErrorText                                                                                                                              | namespace casing differs from Ark and the current `Fieldset`                                                                                                                                       | 39                                                                         |
+| Leaf controls           | Checkbox, Switch, NumberInput, PinInput, DateInput, PasswordInput (single components)                                                                   | Root, Control, Label, Indicator/Thumb, Input, HiddenInput, …                                                                                                                 | flattened, `label` prop                                                                                                                                                                            | keep (rule 11)                                                             |
+| Tree                    | none yet                                                                                                                                                | TreeView: Root, Tree, Item, ItemText, ItemIndicator, Branch, BranchControl, BranchTrigger, BranchContent, …                                                                  | deferred (point 2)                                                                                                                                                                                 | follow rules 6–8 when built                                                |
+
+25. **Adopt the rules.** DESIGN.md "Part naming (proposed)" 1–12. Recommendation: adopt, then apply 26–39.
+26. **`OrderedList.Viewport` → `OrderedList.Content scroll`.** Content takes `scroll` (and binds the drag
+    auto-scroll ref when it scrolls), matching `Listbox.Content`. Options: (1) default `true`, as Listbox, (2) default
+    `false`, as OrderedList behaves today. Recommendation: 1, one default for both lists. Blast: react-ui-list
+    `next/OrderedList/OrderedList.tsx`, `OrderedList.stories.tsx` (2 refs); no plugin. Migration: the current
+    `OrderedList.Viewport` (react-ui-list `OrderedListRoot.tsx`, stories).
+27. **`Panel.Content` → `Panel.Body`.** Options: (1) rename, since it is the middle region Dialog and Popover call
+    Body and `Content` means a component's own element, (2) keep as the documented exception to rule 1.
+    Recommendation: 1; migrating files are rewritten anyway. Blast: `Panel.tsx`, `Panel.stories.tsx`, react-ui
+    `Listbox.tsx` (doc comment) and `Listbox.stories.tsx`, react-ui-list `next/Listbox/Listbox.tsx` and stories,
+    plugin-registry `BaseRegistryArticle.tsx` and `PluginList.stories.tsx`. Migration: the current `Panel.Content`
+    appears in 273 files (161 in plugins).
+28. **react-ui-list `Listbox.Indicator` → `Listbox.ItemIndicator`** (rules 8, 12). Recommendation: rename. Blast:
+    react-ui-list `next/Listbox/Listbox.tsx`, `Listbox.stories.tsx`; plugin-registry does not use it. Migration: the
+    current `Listbox.Indicator` in plugin-assistant `ChatOptions.tsx`, stories-brain `EntityList`/`PredicateList`,
+    ui-template `renderer.tsx`.
+29. **Export `ItemText` and `ItemIndicator` everywhere; `children` replaces only the text** (rules 6, 7).
+    Listbox gains ItemText; Select, Combobox and Menu export the ItemText they already render; Combobox.Item takes
+    `children`; `Select.Item` children stop replacing the icon. Recommendation: do it. Blast: react-ui `Listbox.tsx`,
+    `Select.tsx`, `Combobox.tsx`, `Menu.tsx`; behaviour change only in `Select.stories.tsx` (the Leek Tag item).
+    react-ui-list and plugin-registry `PluginItem.tsx` keep working (additive).
+30. **Add `ItemGroup`/`ItemGroupLabel` to Listbox and Combobox**, as Select and Menu have. Groups must follow the
+    collection's order, or keyboard order and DOM order diverge. Recommendation: add. Blast: none (new parts).
+31. **Split `Combobox.Input`** into Ark's `Control`, `Input`, `Trigger` and `ClearTrigger`; `Control` with no
+    children renders Input + Trigger (rule 9). Point 9's button-trigger mode needs `Trigger` outside the Control.
+    Recommendation: decide with point 9. Blast: `Combobox.tsx`, `Combobox.stories.tsx` (4 refs),
+    `components.stories.tsx` (1).
+32. **`Select.Trigger` accepts `ValueText` and `Indicator` as children**, rendering them by default (rule 9).
+    Recommendation: add when a caller needs a custom trigger; no change until then. Blast: `Select.tsx` only.
+33. **Menu to Ark names: `RadioGroup` → `RadioItemGroup`, `SubTrigger` → `TriggerItem`.** `Sub` stays (Ark has no
+    part; ours carries the parent's `onSelect` and positioning). Recommendation: rename. Blast: `Menu.tsx`,
+    `Menu.stories.tsx`. Migration: the current Menu keeps its Radix names (3 files).
+34. **`AlertDialog.Cancel`/`Action` stay.** Ark has neither part; the current AlertDialog uses the same names (11
+    files). Recommendation: keep, documented as DXOS names (rule 8). Blast: none; plugin-registry's dialogs use the
+    current AlertDialog.
+35. **Drop re-exported foreign parts** (rule 10): `Toolbar.ToggleGroupItem` (use `ToggleGroup.Item`, which joins
+    roving focus through Button already), `Toolbar.DragHandle` and `Card.DragHandle` (use `Next.DragHandle`).
+    `Toolbar.ToggleGroup` stays. Recommendation: drop. Blast: `Toolbar.tsx`, `Toolbar.stories.tsx` (3 refs),
+    `Card.tsx`, `Card.stories.tsx`, `DragHandle.tsx` (doc comment). Migration: the current
+    `Toolbar.ToggleGroupItem` (9 files).
+36. **Drop `OrderedList.IconButton` and `DeleteButton`.** IconButton is `Next.Button variant='ghost' iconOnly`
+    with no caller; DeleteButton differs from `SystemButton.Delete` only in its glyph (x vs trash). Options:
+    (1) use `SystemButton.Delete`, (2) add a `SystemButton.Remove` preset (x, "Remove") for list rows.
+    Recommendation: 2, which also moves the label into react-ui translations (point 21). Blast: react-ui-list
+    `next/OrderedList/OrderedList.tsx`, stories (2 refs); `SystemButton.tsx` for option 2. Migration: current
+    callers in plugin-sheet `RangeList`, plugin-pipeline `PipelineProperties`, plugin-zen `Mixer`.
+37. **`OrderedList.Title` → `OrderedList.ItemText`** (rules 6, 12), so both lists share the row vocabulary.
+    Recommendation: rename. Blast: react-ui-list `next/OrderedList/OrderedList.tsx`, stories (4 refs).
+38. **`Field.RequiredIndicator`** from Ark's Field, rendered by `Field.Label` when the root is `required`: a third
+    option for point 8. Recommendation: take it over options 1–2, since zag already tracks `required`. Blast:
+    `Field.tsx`, `Field.stories.tsx`, `theme/field-inputs.css`.
+39. **`FieldSet` → `Fieldset`**, the casing of Ark and the current react-ui. Recommendation: rename while Next has no
+    consumer outside react-ui. Blast: `components/FieldSet/*` (3 files), `components/index.ts`, `Next.tsx`,
+    `Field.tsx`, `theme/fieldset.css` (comment), DESIGN/AUDIT/TASKS; react-ui-form's `FormFieldSet` is unrelated.
+
+**Decided 2026-09-30:** points 25–39 accepted as recommended, with three changes recorded in DESIGN.md "Part
+naming": `Panel.Toolbar`/`Statusbar` become content-sized `Panel.Header`/`Footer` (rule 5); Items drop the
+`icon`/`description`/`trailing` props, rendering their default row from `item` and composing from parts when given
+children (rule 7); `Field.Label` shows the required indicator automatically (rule 12, which settles points 8 and 38).
+
+### Open from the plugin-sheet pilot
+
+40. **Typography cannot carry an `id`**, so a heading cannot label a list (`aria-labelledby`). Options: (1) Typography
+    passes `id` through, (2) a heading/label part. Recommendation: 1.
+41. **No Next empty state.** Next has no Banner, so an empty list falls back to a description Typography.
+    Recommendation: an `Empty` part on Listbox and OrderedList, like Ark's Combobox.
+42. **Next sections inside current hosts.** A section rendered in the current `ObjectProperties`/Panel has no Next
+    scope, so it renders at md beside react-ui-form's current fields. Decide with milestone 10.
+43. **Row identity for plain-struct arrays.** `getId` needs a stable id and `Sheet.Range` has none, so the pilot
+    derives one from its fields. Options: (1) an index fallback in `OrderedList`, (2) ids on such schemas.
+    Recommendation: 2.
+44. **Per-row Remove names.** `SystemButton.Remove` says "Remove"; a per-row name ("Remove A1:B2") needs a
+    translation with the row's text. Decide with point 21.
+
+### Milestone status
+
+| #   | Milestone                     | Status                                                                                                             |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 1   | Foundations                   | pane host, popup size, Group stretch done; child span (point 7), required marker (point 8), depth-5 benchmark open |
+| 2   | Next.Listbox                  | done                                                                                                               |
+| 3   | `react-ui-list/next` scaffold | done: `./next` entry, Listbox, plugin-registry pilot (open: points 14, 15, 23)                                     |
+| 4   | OrderedList next              | done: OrderedList; plugin-sheet `RangeList` migrated (open: points 16–20, 24, 40–44)                               |
+| 5   | Combobox trigger mode         | blocked on point 9                                                                                                 |
+| 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                                                     |
+| 7   | Settings layout               | blocked on point 1                                                                                                 |
+| 8   | Arrays and layout templates   | needs milestones 4, 6, 7                                                                                           |
+| 9   | Ref and lookup fields         | needs milestones 5, 6                                                                                              |
+| 10  | Higher-level form components  | needs milestones 7–9, point 10                                                                                     |
+| 11  | Tree next                     | blocked on points 2, 3                                                                                             |

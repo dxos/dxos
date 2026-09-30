@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Dialog as DialogPrimitive } from '@ark-ui/react/dialog';
+import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialog';
 import { Portal } from '@ark-ui/react/portal';
 import React, { type ComponentPropsWithoutRef, type ReactNode, type RefObject, forwardRef } from 'react';
 
@@ -15,6 +15,7 @@ import { Button } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
 import { Group } from '../Group/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /**
  * Marks the control a dialog focuses when it opens (the current constant's role); zag's own initial-focus lookup reads
@@ -53,7 +54,7 @@ DialogTrigger.displayName = 'Next.Dialog.Trigger';
 //
 
 type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
-  /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
   size?: Size;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
@@ -61,22 +62,26 @@ type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
 
 /** Portalled surface at `level='raised'` over a scrim, centred in the viewport: a column of Header, Body and Footer. */
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, size = 'md', container, children, ...props }, forwardedRef) => (
-    <Portal container={container}>
-      <DialogPrimitive.Backdrop className={recipes.dialogBackdrop()} />
-      <DialogPrimitive.Positioner className={recipes.dialogPositioner()}>
-        <DialogPrimitive.Content
-          {...props}
-          data-surface='raised'
-          data-size={size}
-          className={mx(recipes.dialogContent(), classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Positioner>
-    </Portal>
-  ),
+  ({ classNames, size, container, children, ...props }, forwardedRef) => {
+    const dialog = useDialogContext();
+    const dialogSize = usePopupSize(size, dialog.open, [dialog.getTriggerProps().id], 'md');
+    return (
+      <Portal container={container}>
+        <DialogPrimitive.Backdrop className={recipes.dialogBackdrop()} />
+        <DialogPrimitive.Positioner className={recipes.dialogPositioner()}>
+          <DialogPrimitive.Content
+            {...props}
+            data-surface='raised'
+            data-size={dialogSize}
+            className={mx(recipes.dialogContent(), classNames)}
+            ref={forwardedRef}
+          >
+            {children}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Positioner>
+      </Portal>
+    );
+  },
 );
 
 DialogContent.displayName = 'Next.Dialog.Content';

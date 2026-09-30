@@ -290,7 +290,6 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

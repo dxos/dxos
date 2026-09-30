@@ -70,7 +70,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       return;
     }
     const manager = transcriptionManagerProvider({});
-    manager.setFeed(space, feed);
+    manager.setFeed(space.db, feed);
     void manager.open();
     managerRef.current = manager;
     return () => {

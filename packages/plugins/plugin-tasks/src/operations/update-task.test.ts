@@ -78,6 +78,45 @@ describe('update-task', () => {
     ),
   );
 
+  it.effect('names an untitled session after the task it claims, keeping a name it already has', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      const named = yield* Database.add(
+        RemoteSession.make({
+          sessionId: 'session_named',
+          title: 'Own name',
+          state: 'running',
+          started: new Date().toISOString(),
+        }),
+      );
+      yield* Database.flush();
+      const { task: first } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Rotate the keys' });
+      const { task: second } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Backfill' });
+
+      yield* updateTask.handler({
+        task: Ref.make(first),
+        status: 'started',
+        remoteSession: { sessionId: 'session_new' },
+      });
+      yield* updateTask.handler({ task: Ref.make(second), remoteSession: { sessionId: 'session_named' } });
+
+      const [created] = yield* Database.query(
+        Filter.foreignKeys(RemoteSession.RemoteSession, [RemoteSession.key('session_new')]),
+      ).run;
+      expect(created.title).toBe('Rotate the keys');
+      expect(named.title).toBe('Own name');
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
+      ),
+    ),
+  );
+
   it.effect('reuses the session already recorded for that harness id', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));

@@ -8,11 +8,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** A single-select group of icon-only items (alignment) and a multiple-select group of text items (marks). */
 const DefaultStory = ({ size }: SizeArgs) => {
@@ -25,23 +25,18 @@ const DefaultStory = ({ size }: SizeArgs) => {
           type='single'
           value={align}
           onValueChange={setAlign}
-          aria-label={`Alignment ${size}`}
+          aria-label='Alignment'
           data-testid={`align-${size}`}
         >
-          <Next.ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label={`Left ${size}`} iconOnly />
-          <Next.ToggleGroup.Item
-            value='center'
-            icon='ph--text-align-center--regular'
-            label={`Centre ${size}`}
-            iconOnly
-          />
-          <Next.ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label={`Right ${size}`} iconOnly />
+          <Next.ToggleGroup.Item value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
+          <Next.ToggleGroup.Item value='center' icon='ph--text-align-center--regular' label='Centre' iconOnly />
+          <Next.ToggleGroup.Item value='right' icon='ph--text-align-right--regular' label='Right' iconOnly />
         </Next.ToggleGroup.Root>
         <Next.ToggleGroup.Root
           type='multiple'
           value={marks}
           onValueChange={setMarks}
-          aria-label={`Marks ${size}`}
+          aria-label='Marks'
           data-testid={`marks-${size}`}
         >
           <Next.ToggleGroup.Item value='bold'>Bold</Next.ToggleGroup.Item>
@@ -59,9 +54,11 @@ const DefaultStory = ({ size }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/toggle-group',
+  title: 'ui/react-ui-core/next/components/ToggleGroup',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[36rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[36rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -77,6 +74,7 @@ export const Default: Story = {};
  * arrow keys rove between its items (skipping disabled ones) and Space or Enter changes the value.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const group = byTestId(canvasElement, `align-${size}`).getBoundingClientRect();
@@ -89,9 +87,9 @@ export const Test: Story = {
     await expectScoped(canvasElement);
 
     const canvas = within(sizeRow(canvasElement, 'md'));
-    const alignment = canvas.getByRole('radiogroup', { name: 'Alignment md' });
-    const left = within(alignment).getByRole('radio', { name: 'Left md' });
-    const centre = within(alignment).getByRole('radio', { name: 'Centre md' });
+    const alignment = canvas.getByRole('radiogroup', { name: 'Alignment' });
+    const left = within(alignment).getByRole('radio', { name: 'Left' });
+    const centre = within(alignment).getByRole('radio', { name: 'Centre' });
     await expect(left).toHaveAttribute('aria-checked', 'true');
     await expect(centre).toHaveAttribute('aria-checked', 'false');
     const unchecked = getComputedStyle(centre).backgroundColor;
@@ -102,12 +100,12 @@ export const Test: Story = {
     await expect(left).toHaveAttribute('aria-checked', 'false');
     await expect(byTestId(canvasElement, 'state-md')).toHaveTextContent('center / bold');
     await userEvent.keyboard('{ArrowRight}');
-    const right = within(alignment).getByRole('radio', { name: 'Right md' });
+    const right = within(alignment).getByRole('radio', { name: 'Right' });
     await waitFor(() => expect(right).toHaveFocus());
     await userEvent.keyboard(' ');
     await waitFor(() => expect(right).toHaveAttribute('aria-checked', 'true'));
 
-    const marks = canvas.getByRole('group', { name: 'Marks md' });
+    const marks = canvas.getByRole('group', { name: 'Marks' });
     const bold = within(marks).getByRole('button', { name: 'Bold' });
     const italic = within(marks).getByRole('button', { name: 'Italic' });
     await expect(bold).toHaveAttribute('aria-pressed', 'true');
