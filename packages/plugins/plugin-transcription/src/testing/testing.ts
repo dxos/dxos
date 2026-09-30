@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -43,7 +42,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
   start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
 
-  constructor(private readonly _space?: Space) {
+  constructor(private readonly _db?: Database.Database) {
     super();
   }
 
@@ -57,9 +56,9 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
   createBlock(): ContentBlock.Transcript {
     let text = random.lorem.paragraph();
-    if (this._space) {
+    if (this._db) {
       const label = random.commerce.productName();
-      const obj = this._space.db.add(
+      const obj = this._db.add(
         Obj.make(TestItem, {
           title: label,
           description: random.lorem.paragraph(),

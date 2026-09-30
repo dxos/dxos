@@ -52,7 +52,6 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/blob": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/errors": "workspace:*",

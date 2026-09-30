@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Redacted from 'effect/Redacted';
 import * as AiError from 'effect/unstable/ai/AiError';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
@@ -13,7 +14,6 @@ import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -96,13 +96,17 @@ export default Capability.makeModule(
     // yet at Startup.
     let edgeClient: EdgeHttpClient | undefined;
     const getEdgeClient = (): EdgeHttpClient => {
-      const [client] = manager.getAll(ClientCapabilities.Client);
-      invariant(client, 'Client capability is required for TypeSafe requests.');
-      const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+      const [config] = manager.getAll(ClientCapabilities.Config);
+      invariant(config, 'Client config is required for TypeSafe requests.');
+      const [haloIdentity] = manager.getAll(ClientCapabilities.IdentityService);
+      invariant(haloIdentity, 'HALO identity capability is required for TypeSafe requests.');
+      const edgeUrl = config.values.runtime?.services?.edge?.url;
       invariant(edgeUrl, 'EDGE services are not configured.');
+      const edgeIdentity = haloIdentity.getEdgeIdentity();
+      invariant(Option.isSome(edgeIdentity), 'Identity not available.');
       edgeClient ??= new EdgeHttpClient(edgeUrl);
       // A no-op unless the identity changed, so the cached EDGE credential survives between calls.
-      edgeClient.setIdentity(createEdgeIdentity(client));
+      edgeClient.setIdentity(edgeIdentity.value);
       return edgeClient;
     };
 
