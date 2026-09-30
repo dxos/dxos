@@ -397,12 +397,6 @@ describe('CollectionSynchronizer', () => {
       // A remote head the local document already contains is an ancestor, not missing work.
       const holdsAll = () => true;
       expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: holdsAll }).different).toEqual([]);
-
-      // A document that is not resident cannot be checked without loading it, so the overlap rule stands.
-      const notResident = () => undefined;
-      expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: notResident }).different).toEqual(
-        [],
-      );
     });
 
     test('an unchanged remote state is re-diffed while it advertises a missing change', async ({ expect }) => {

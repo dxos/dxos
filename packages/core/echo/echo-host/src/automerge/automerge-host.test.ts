@@ -447,7 +447,7 @@ describe('AutomergeHost', () => {
   });
 
   // A head no peer can deliver would otherwise fault the document in again after every eviction.
-  test('a change found missing keeps an evicted document different without loading it, until heads change or a peer connects', async () => {
+  test('an evicted document lacking a change stays different and is loaded once per head pair and connection', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({
@@ -469,44 +469,46 @@ describe('AutomergeHost', () => {
     await host.updateLocalCollectionState(collectionId, [documentId]);
     const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
     const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+    const [otherMissingHead] = A.getHeads(A.from({ elsewhere: false }));
     const synchronizer = host['_collectionSynchronizer'];
     const peerId = 'test-peer' as PeerId;
     const differentDocuments = async () =>
       (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
-    const leased: DocumentId[] = [];
+    let loads = 0;
     const leaseUntilSettled = host['_leaseUntilSettled'];
     host['_leaseUntilSettled'] = (id: DocumentId) => {
-      leased.push(id);
+      loads += id === documentId ? 1 : 0;
       leaseUntilSettled.call(host, id);
     };
-    // Runs the pass that decides whether to load, rather than waiting for the scheduled one.
-    const syncPass = async () => {
-      leased.length = 0;
+    // Counts the loads a change causes by the end of the pass that reacts to it; a scheduled pass that
+    // gets there first spends the same budget, so the count does not depend on which one ran.
+    const loadsAfter = async (change: () => void) => {
+      const before = loads;
+      change();
       await host['_handleCollectionSync'](Context.default(), collectionId, peerId);
-      return leased.includes(documentId);
+      return loads - before;
     };
+    const advertise = (heads: string[]) => () =>
+      synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: heads } });
 
-    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
-    expect(await differentDocuments()).toEqual(1);
-
+    expect(await loadsAfter(advertise([localHead, missingHead]))).toEqual(1);
     handle[Symbol.dispose]();
     await waitForEviction(expect, host, documentId);
     expect(await differentDocuments()).toEqual(1);
-    expect(await syncPass()).toBe(false);
+    expect(await loadsAfter(() => {})).toEqual(0);
 
-    // New heads may hold the change.
-    host['_onHeadsChanged']([[documentId, [localHead]]]);
-    expect(await syncPass()).toBe(true);
-    // The load checks the change again and finds it still missing.
-    const lease = await host.loadDoc(Context.default(), documentId);
-    expect(await differentDocuments()).toEqual(1);
-    lease?.[Symbol.dispose]();
+    expect(await loadsAfter(advertise([localHead, otherMissingHead]))).toEqual(1);
     await waitForEviction(expect, host, documentId);
-    expect(await syncPass()).toBe(false);
+    expect(await loadsAfter(() => {})).toEqual(0);
 
-    // A new connection may deliver what the last round could not.
-    host['_onPeerConnected']('another-peer' as PeerId);
-    expect(await syncPass()).toBe(true);
+    // A reconnect, after which the peer sends its state again, is a fresh chance for the round that could not
+    // fetch the change.
+    expect(
+      await loadsAfter(() => {
+        host['_onPeerDisconnected'](peerId);
+        advertise([localHead, otherMissingHead])();
+      }),
+    ).toEqual(1);
   });
 
   // Garbage collection deletes the document; a peer's later push must not bring it back.

@@ -22,11 +22,8 @@ const MIN_QUERY_INTERVAL = 5_000;
 
 const POLL_INTERVAL = 10_000;
 
-/**
- * Whether the local replica of a document contains the change with the given hash, or `undefined`
- * when that cannot or need not be answered; `false` marks the document `different`.
- */
-export type HasLocalChange = (documentId: DocumentId, changeHash: string) => boolean | undefined;
+/** Whether the local replica of a document contains the change with the given hash; `false` marks it `different`. */
+export type HasLocalChange = (documentId: DocumentId, changeHash: string) => boolean;
 
 export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
@@ -575,10 +572,7 @@ const headsEqual = (a: readonly string[], b: readonly string[]): boolean => {
   return aset.size === bset.size && [...bset].every((head) => aset.has(head));
 };
 
-/**
- * True when `remote` names a head that is not a local head and that the local document provably
- * does not contain. An unanswerable check (document not resident) counts as not missing.
- */
+/** True when `remote` names a head that is not a local head and that the local replica does not contain. */
 const advertisesMissingChange = (
   documentId: DocumentId,
   local: readonly string[],
@@ -589,7 +583,7 @@ const advertisesMissingChange = (
     return false;
   }
   const localSet = new Set(local);
-  return remote.some((head) => !localSet.has(head) && hasLocalChange(documentId, head) === false);
+  return remote.some((head) => !localSet.has(head) && !hasLocalChange(documentId, head));
 };
 
 const validateCollectionState = (state: CollectionState) => {

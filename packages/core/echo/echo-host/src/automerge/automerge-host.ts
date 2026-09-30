@@ -234,11 +234,11 @@ export class AutomergeHost extends Resource {
 
   private _repo!: Repo;
   /**
-   * Whether a resident document held each change {@link _hasLocalChange} checked, so an evicted one answers
-   * without a load. Only heads a peer advertises beside a document's own land here; least recently checked
-   * documents go first past {@link MAX_CHECKED_DOCUMENTS}, and forgetting costs one load to check again.
+   * Changes {@link _hasLocalChange} found in a resident document, so an evicted one answers without a load.
+   * Only heads a peer advertises beside a document's own land here; least recently confirmed documents go
+   * first past {@link MAX_CONFIRMED_DOCUMENTS}, and forgetting costs one load to check again.
    */
-  private readonly _changeChecks = new Map<DocumentId, Map<string, boolean>>();
+  private readonly _confirmedChanges = new Map<DocumentId, Set<string>>();
 
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
@@ -297,7 +297,8 @@ export class AutomergeHost extends Resource {
    * backoff — so one call per observed head pair is the whole retry budget, and calling it again
    * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
    * rather than a plain "already tried" flag so that a genuine change on either side (the peer
-   * advanced, or we committed again) re-opens the retry.
+   * advanced, or we committed again) re-opens the retry. An evicted document spends the same budget on
+   * the load that faults it in, which is its round.
    *
    * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
    * unambiguous, and cleanup compares the ids stored on each entry instead.
@@ -957,7 +958,7 @@ export class AutomergeHost extends Resource {
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
     // it would re-create — and re-announce — the query this call deletes.
     this._leases.forget(documentId);
-    this._changeChecks.delete(documentId);
+    this._confirmedChanges.delete(documentId);
 
     // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
     // row could never be found again.
@@ -1306,6 +1307,16 @@ export class AutomergeHost extends Resource {
     return null;
   }
 
+  /** Whether any registered local collection lists the document. */
+  private _isInLocalCollection(documentId: DocumentId): boolean {
+    return this._collectionSynchronizer
+      .getRegisteredCollectionIds()
+      .some(
+        (collectionId) =>
+          documentId in (this._collectionSynchronizer.getLocalCollectionState(collectionId)?.documents ?? {}),
+      );
+  }
+
   /**
    * Resolve the space id owning a document for the share policy.
    *
@@ -1321,15 +1332,6 @@ export class AutomergeHost extends Resource {
    * Falls back to the document's own embedded space key (loaded handle) / the root-doc lookup for
    * a doc not yet linked into any local collection (e.g. inbound during initial sync).
    */
-  private _isInLocalCollection(documentId: DocumentId): boolean {
-    return this._collectionSynchronizer
-      .getRegisteredCollectionIds()
-      .some(
-        (collectionId) =>
-          documentId in (this._collectionSynchronizer.getLocalCollectionState(collectionId)?.documents ?? {}),
-      );
-  }
-
   async getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null> {
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
@@ -1511,71 +1513,39 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Whether the local replica holds a change, for the collection diff. A resident document is checked and the
-   * answer recorded; an evicted one answers from the record, and an unchecked change counts as missing so the
-   * diff faults the document in to check it.
+   * Whether the local replica holds a change, for the collection diff. A resident document is checked; an
+   * evicted one holds only the changes confirmed earlier, and anything else counts as missing so the collection
+   * sync loads it once per head pair to check.
    */
-  private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean | undefined {
+  private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean {
     // Heads come from any peer and are only validated as strings; a malformed one is unanswerable,
-    // and reporting it missing would fault the document in on every poll.
+    // and reporting it missing would keep the document `different` for good.
     if (!CHANGE_HASH_PATTERN.test(changeHash)) {
-      return undefined;
+      return true;
     }
     const doc =
       this._repo && getHandleState(this._repo, documentId) === 'ready'
         ? this._repo.getHandle(documentId)?.doc()
         : undefined;
     if (!doc) {
-      return this._changeChecks.get(documentId)?.get(changeHash) ?? false;
+      return this._confirmedChanges.get(documentId)?.has(changeHash) ?? false;
     }
-    const present = changeIsPresentInDoc(doc, changeHash);
-    this._recordChangeCheck(documentId, changeHash, present);
-    return present;
-  }
-
-  private _recordChangeCheck(documentId: DocumentId, changeHash: string, present: boolean): void {
-    const checks = this._changeChecks.get(documentId) ?? new Map<string, boolean>();
-    if (!checks.has(changeHash) && checks.size >= MAX_CHECKS_PER_DOCUMENT) {
-      checks.clear();
+    if (!changeIsPresentInDoc(doc, changeHash)) {
+      return false;
     }
-    checks.set(changeHash, present);
-    // Re-inserted so the map iterates least recently checked first, which is the end the cap trims.
-    this._changeChecks.delete(documentId);
-    this._changeChecks.set(documentId, checks);
-    if (this._changeChecks.size > MAX_CHECKED_DOCUMENTS) {
-      const [leastRecent] = this._changeChecks.keys();
-      this._changeChecks.delete(leastRecent);
+    const confirmed = this._confirmedChanges.get(documentId) ?? new Set<string>();
+    if (!confirmed.has(changeHash) && confirmed.size >= MAX_CONFIRMED_PER_DOCUMENT) {
+      confirmed.clear();
     }
-  }
-
-  /** Forgets the changes found missing, so the next diff loads the document to check them again. */
-  private _forgetMissingChanges(documentIds: Iterable<DocumentId>): void {
-    for (const documentId of documentIds) {
-      const checks = this._changeChecks.get(documentId);
-      for (const [changeHash, present] of checks ?? []) {
-        if (!present) {
-          checks?.delete(changeHash);
-        }
-      }
+    confirmed.add(changeHash);
+    // Re-inserted so the map iterates least recently confirmed first, which is the end the cap trims.
+    this._confirmedChanges.delete(documentId);
+    this._confirmedChanges.set(documentId, confirmed);
+    if (this._confirmedChanges.size > MAX_CONFIRMED_DOCUMENTS) {
+      const [leastRecent] = this._confirmedChanges.keys();
+      this._confirmedChanges.delete(leastRecent);
     }
-  }
-
-  /**
-   * Whether an evicted document differs from the remote only by changes already checked, which a load
-   * already failed to fetch.
-   */
-  private _lacksOnlyCheckedChanges(
-    documentId: DocumentId,
-    local: readonly string[],
-    remote: readonly string[],
-  ): boolean {
-    const checks = this._changeChecks.get(documentId);
-    const localHeads = new Set(local);
-    return (
-      checks !== undefined &&
-      remote.some((head) => localHeads.has(head)) &&
-      remote.every((head) => localHeads.has(head) || checks.has(head))
-    );
+    return true;
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1595,8 +1565,6 @@ export class AutomergeHost extends Resource {
   }
 
   private _onPeerConnected(peerId: PeerId): void {
-    // A new connection can deliver a change a failed or offline round could not.
-    this._forgetMissingChanges(this._changeChecks.keys());
     this._collectionSynchronizer.onConnectionOpen(peerId);
   }
 
@@ -1731,46 +1699,33 @@ export class AutomergeHost extends Resource {
       // lever: `_leaseUntilSettled` below faults it in and `SubductionSource.attach` gives it a
       // fresh never-synced entry.
       if (this._useSubduction && differentSet.has(documentId)) {
-        if (isDocumentLoaded(this._repo, documentId as DocumentId)) {
-          const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
-          // Both sides' heads: a round already spent against this exact pair cannot do better, but
-          // either side advancing means the situation changed and is worth another.
-          const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
-          if (this._divergedResyncHeads.get(resyncKey)?.heads !== heads) {
-            this._divergedResyncHeads.set(resyncKey, {
-              collectionId,
-              peerId,
-              documentId: documentId as DocumentId,
-              heads,
-            });
-            log('resyncing diverged document', {
-              collectionId,
-              peerId,
-              documentId,
-              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-              localHeads: localState.documents[documentId],
-              remoteHeads: remoteState.documents[documentId],
-            });
-            this.resyncDocument(documentId as DocumentId);
-            sharePolicyCanHelp = true;
-          } else {
-            // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-            // so at warn level it floods the console without indicating a real fault.
-            log.verbose('diverged document already resynced at these heads', {
-              collectionId,
-              peerId,
-              documentId,
-              sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-            });
-          }
-        } else if (
-          this._lacksOnlyCheckedChanges(
+        const resyncKey = JSON.stringify([collectionId, peerId, documentId]);
+        // Both sides' heads: a round already spent against this exact pair cannot do better, but
+        // either side advancing means the situation changed and is worth another.
+        const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
+        if (this._divergedResyncHeads.get(resyncKey)?.heads === heads) {
+          // Verbose: this fires on every diff pass for docs that are in practice fully synced,
+          // so at warn level it floods the console without indicating a real fault.
+          log.verbose('diverged document already resynced at these heads', {
+            collectionId,
+            peerId,
             documentId,
-            localState.documents[documentId] ?? [],
-            remoteState.documents[documentId] ?? [],
-          )
-        ) {
+            sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+          });
           continue;
+        }
+        this._divergedResyncHeads.set(resyncKey, { collectionId, peerId, documentId, heads });
+        if (isDocumentLoaded(this._repo, documentId)) {
+          log('resyncing diverged document', {
+            collectionId,
+            peerId,
+            documentId,
+            sedimentreeId: documentIdToSedimentreeIdHex(documentId),
+            localHeads: localState.documents[documentId],
+            remoteHeads: remoteState.documents[documentId],
+          });
+          this.resyncDocument(documentId);
+          sharePolicyCanHelp = true;
         }
       } else {
         sharePolicyCanHelp = true;
@@ -1827,8 +1782,6 @@ export class AutomergeHost extends Resource {
     for (const [documentId, heads] of docHeads) {
       this.documentHeadsChanged.emit({ documentId, heads });
     }
-    // New heads may hold a change found missing before.
-    this._forgetMissingChanges(docHeads.map(([documentId]) => documentId));
 
     const collectionsChanged = new Set<CollectionId>();
 
@@ -1911,9 +1864,9 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
 /** A hex-encoded change hash, the only form `getChangeByHash` accepts. */
 const CHANGE_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
-const MAX_CHECKS_PER_DOCUMENT = 64;
+const MAX_CONFIRMED_PER_DOCUMENT = 64;
 
-const MAX_CHECKED_DOCUMENTS = 1_000;
+const MAX_CONFIRMED_DOCUMENTS = 1_000;
 
 const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
   return !!getBackend(doc).getChangeByHash(changeHash);
