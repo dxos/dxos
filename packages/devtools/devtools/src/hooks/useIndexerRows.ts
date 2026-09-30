@@ -7,18 +7,19 @@ import { useCallback, useEffect, useState } from 'react';
 import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type IndexerHeadsResponse } from '@dxos/protocols';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, useSpaces } from '@dxos/react-client/echo';
 
-import { getSpaceDisplayName } from './useSyncRows.ts';
+import { getSpaceDisplayName } from './space-display-name.ts';
 
 /** Polled rather than subscribed: the indexer has no push channel to the client. */
 const POLL_INTERVAL = 5_000;
 
 export type IndexerRow = {
-  spaceId: string;
+  spaceId: SpaceId;
   name: string;
   /** Documents the client holds locally. */
   total: number;

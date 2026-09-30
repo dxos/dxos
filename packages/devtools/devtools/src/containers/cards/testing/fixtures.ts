@@ -203,7 +203,7 @@ export const syncRows: SyncRow[] = [
 
 export const indexerRows: IndexerRow[] = [
   {
-    spaceId: 'B4RQ7KM2ZP9VJ6TW',
+    spaceId: SpaceId.random(),
     name: 'Personal Space',
     total: 120,
     unindexed: 0,
@@ -211,7 +211,7 @@ export const indexerRows: IndexerRow[] = [
     indexingInProgress: false,
   },
   {
-    spaceId: 'BQ8ZT3NX5MC2HD7K',
+    spaceId: SpaceId.random(),
     name: 'Acme Robotics',
     total: 480,
     unindexed: 37,
@@ -219,7 +219,7 @@ export const indexerRows: IndexerRow[] = [
     indexingInProgress: true,
   },
   {
-    spaceId: 'BM6WP9RV4KT8XA2J',
+    spaceId: SpaceId.random(),
     name: 'New space',
     total: 0,
     unindexed: 0,
