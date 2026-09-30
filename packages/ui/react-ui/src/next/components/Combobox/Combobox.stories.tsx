@@ -170,6 +170,13 @@ export const Test: Story = {
     await waitFor(() => expect(assignee).toHaveFocus());
     await expect(popupFrame(longList)).toHaveAttribute('data-width', 'thin');
     await expectScrollingPopup(longList, 20);
+    // The arrow keys stop at either end rather than wrapping.
+    const highlighted = () => longList.querySelector('[data-highlighted]')?.textContent;
+    const options = within(longList).getAllByRole('option');
+    await userEvent.keyboard('{End}{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe(options[options.length - 1].textContent));
+    await userEvent.keyboard('{Home}{ArrowUp}');
+    await waitFor(() => expect(highlighted()).toBe(options[0].textContent));
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
