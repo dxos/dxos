@@ -609,3 +609,41 @@ parallel-namespace approach; no compatibility shims).
    `dragover` in the list is left to the browser (which answers with its copy cursor). Known limitation: Chrome on
    macOS still shows the green "+" copy badge for one frame before the page answers the first `dragover`; Mosaic
    shows the same flash, and page code cannot reach it.
+
+## Part naming (proposed)
+
+Rules for the parts of every Next composite and its wrappers in sibling packages. The audit behind them, with each
+rename to approve by number, is AUDIT §6 "Part naming audit" (points 25–39).
+
+1. **Content is the component's own element.** `Content` is Ark's element for the component (the menu, listbox,
+   popup or disclosure region), never a wrapper around it, so its ref, `data-part` and ARIA land on one element.
+2. **Scrolling is composed.** It comes only from `ScrollArea.Root > ScrollArea.Viewport asChild > <part>`; a part
+   that scrolls itself (a popup's Content, `Toolbar.Root`, a list's Content) wraps itself so its own element is the
+   viewport, since a part must keep its ref and `data-part` (finding 10).
+3. **`scroll` is the only sugar.** List Contents (`Listbox.Content`, `OrderedList.Content`) take `scroll` (default
+   `true`); `scroll={false}` hands scrolling to a host that already scrolls, since nested frames never scroll
+   (AUDIT point 14).
+4. **Viewport belongs to ScrollArea.** No other composite has a `Viewport` part, since Ark uses the name only for
+   scroll-area's scrolling element.
+5. **Body is the region between header and footer.** `Card.Body`, `Dialog.Body`, `Popover.Body` and `Panel.Body`
+   (point 27) name the same role; in a height-bound host Body composes a ScrollArea around a gutter Container. If
+   point 27 is declined, `Panel.Content` stays as the one documented exception to rule 1.
+6. **Items follow Ark's anatomy.** Every composite with items exports `Item`, `ItemText`, `ItemIndicator`,
+   `ItemGroup` and `ItemGroupLabel`, so any row can be composed from parts.
+7. **Shorthand props render the default parts.** `item`, `icon`, `description`, `trailing` and `shortcut` fill an
+   Item's default cells, and `children` replaces only the text, inside `ItemText`, so the common row is one line and
+   `children` means the same in every composite.
+8. **Ark names first.** A part Ark has takes Ark's name (`CloseTrigger`, `ItemIndicator`, `RadioItemGroup`,
+   `TriggerItem`, `Fieldset`), so our `data-part`s and Ark's docs agree; DXOS names are only for parts Ark lacks
+   (`Header`, `Body`, `Footer`, `Statusbar`, `AlertDialog.Cancel`/`Action`), and Radix names are not carried over.
+9. **Internals stay bundled.** Positioner, Backdrop, Arrow, HiddenInput and leaf controls' Control/Thumb are not
+   parts; a bundling part (`Select.Trigger`, `Combobox.Control`) renders its Ark sub-parts by default and accepts
+   them as children, so splitting is opt-in.
+10. **Flatten only what changes behaviour.** A host re-exports a part only when it behaves differently inside the
+    host (`Toolbar.ToggleGroup` gives up its own roving focus); unchanged foreign parts are imported from their own
+    namespace (`ToggleGroup.Item`, `DragHandle`), since the composite-components skill forbids re-exported foreign
+    parts and a part should have one import path.
+11. **Leaf controls are single components.** Checkbox, Switch, Toggle, NumberInput, PinInput, DateInput and
+    PasswordInput take `label` as a prop and expose no parts, since no consumer composes their internals.
+12. **Wrappers keep the base names.** A sibling package's wrapper (`@dxos/react-ui-list/next` `Listbox`) uses the
+    wrapped composite's part names, so one vocabulary spans packages.
