@@ -632,6 +632,20 @@ naming": `Panel.Toolbar`/`Statusbar` become content-sized `Panel.Header`/`Footer
 `icon`/`description`/`trailing` props, rendering their default row from `item` and composing from parts when given
 children (rule 7); `Field.Label` shows the required indicator automatically (rule 12, which settles points 8 and 38).
 
+### Open from the plugin-sheet pilot
+
+40. **Typography cannot carry an `id`**, so a heading cannot label a list (`aria-labelledby`). Options: (1) Typography
+    passes `id` through, (2) a heading/label part. Recommendation: 1.
+41. **No Next empty state.** Next has no Banner, so an empty list falls back to a description Typography.
+    Recommendation: an `Empty` part on Listbox and OrderedList, like Ark's Combobox.
+42. **Next sections inside current hosts.** A section rendered in the current `ObjectProperties`/Panel has no Next
+    scope, so it renders at md beside react-ui-form's current fields. Decide with milestone 10.
+43. **Row identity for plain-struct arrays.** `getId` needs a stable id and `Sheet.Range` has none, so the pilot
+    derives one from its fields. Options: (1) an index fallback in `OrderedList`, (2) ids on such schemas.
+    Recommendation: 2.
+44. **Per-row Remove names.** `SystemButton.Remove` says "Remove"; a per-row name ("Remove A1:B2") needs a
+    translation with the row's text. Decide with point 21.
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
@@ -639,7 +653,7 @@ children (rule 7); `Field.Label` shows the required indicator automatically (rul
 | 1   | Foundations                   | pane host, popup size, Group stretch done; child span (point 7), required marker (point 8), depth-5 benchmark open |
 | 2   | Next.Listbox                  | done                                                                                                               |
 | 3   | `react-ui-list/next` scaffold | done: `./next` entry, Listbox, plugin-registry pilot (open: points 14, 15, 23)                                     |
-| 4   | OrderedList next              | done: OrderedList on Container/Collapsible rows; plugin-sheet `RangeList` pilot open (points 16–20, 24)            |
+| 4   | OrderedList next              | done: OrderedList; plugin-sheet `RangeList` migrated (open: points 16–20, 24, 40–44)                               |
 | 5   | Combobox trigger mode         | blocked on point 9                                                                                                 |
 | 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                                                     |
 | 7   | Settings layout               | blocked on point 1                                                                                                 |

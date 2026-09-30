@@ -117,7 +117,7 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
   - Done: `Next.Panel`, popup size inheritance, Group `fill`. Open: child span, benchmark (AUDIT.md §6 point 7); the required marker is `Field.RequiredIndicator` (point 38).
 - [x] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
 - [x] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
-- [ ] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
+- [x] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
   - Done: DragHandle (keyboard moves), DropIndicator, DragPreview, OrderedList. Open: plugin-sheet `RangeList` pilot; AUDIT.md §6 points 16–20, 24.
 - [ ] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
 - [ ] **6. `react-ui-form/next` core** — parts, scalar renderers, `fieldMap`/`fieldProvider`/`createSelectField`; pilot plugin-thread `ChannelCreatePanel`.

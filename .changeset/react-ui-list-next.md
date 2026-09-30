@@ -2,18 +2,29 @@
 '@dxos/react-ui': minor
 '@dxos/react-ui-list': minor
 '@dxos/plugin-registry': patch
+'@dxos/plugin-sheet': patch
 ---
 
-`@dxos/react-ui/next` gains `Next.Panel` (a sized plank host with toolbar, scrolling content and statusbar),
-`Next.Listbox`, and drag-and-drop parts (`DragHandle` with keyboard moves, `DropIndicator`, `DragPreview`). Popups
-(Menu, Select, Combobox, Popover, Tooltip, Dialog, the date calendar) now open at the size of their trigger's nearest
-sized ancestor unless given a `size`. Fixes: buttons keep their label on one line; `AlertDialog` and popups resolve
-elements in their own root node (shadow roots, other documents); calendar navigation is labelled per view; a
-horizontal `ScrollArea` no longer reserves a vertical gutter. A `./next/testing` entry exports the Next story helpers.
+`@dxos/react-ui/next` adopts Ark's part names throughout (DESIGN.md "Part naming"): `Content` is always the component's
+own element, scrolling is composed from `ScrollArea`, and items render a default row from their `item` data or are
+composed from `ItemIcon`, `ItemText`, `ItemDescription` and `ItemIndicator`. New and renamed parts:
 
-`@dxos/react-ui-list/next` is a new entry with `Listbox` and `OrderedList` built on those parts: Container or
-Collapsible master-detail rows that reorder by pointer (pragmatic-drag-and-drop via `useReorderList`) or keyboard.
-`useReorderList`'s `dragPreview` renderer also receives the dragged row, and reorder drags declare a move so the
-browser's copy cursor no longer flickers. The package now emits its declared `./util` entry.
+- `Next.Panel` hosts a plank as `Header`, `Body` and `Footer`; the header and footer size to their content.
+- `Next.Listbox` (Ark listbox) with item groups; `Listbox.Content scroll={false}` joins a host that already scrolls.
+- Drag and drop: `DragHandle` with keyboard moves, `DropIndicator`, `DragPreview`.
+- `Menu.RadioItemGroup`, `Menu.TriggerItem` and `Fieldset` take Ark's names; Combobox exports `Control`, `Input`,
+  `Trigger` and `ClearTrigger`; `Field.Label` marks required fields itself.
+- `Tag` takes `onClick` and `onDelete`; `Icon` takes `valence`; `Card.Root` takes `grid` to put row icons and actions
+  in its gutters; `Select.Trigger` takes `fit='options'`; `SystemButton.Remove` is a new preset.
 
-The plugin registry's list is the first surface on Next: rows in a `Next.Panel` under a filter toolbar.
+Popups open at their trigger's size, grow to fit their options, and reserve room for the scroll thumb only while they
+overflow. Tooltips open after 600ms, Combobox arrow keys stop at the ends, and NumberInput uses compact steppers and
+tabular figures. A `./next/testing` entry exports the Next story helpers.
+
+`@dxos/react-ui-list/next` is a new entry with `Listbox` and `OrderedList` on those parts, plus a private `Tree`
+prototype on Ark's tree-view. Reorder drags declare a move, so the browser's copy cursor no longer flickers over the
+dragged row, and `useReorderList`'s `dragPreview` renderer also receives the dragged row. The package now emits its
+declared `./util` entry.
+
+The plugin registry's list is the first surface on Next: rows in a `Next.Panel` under a filter toolbar. The sheet's
+range list follows on `OrderedList`, and its ranges can now be reordered by drag or keyboard.
