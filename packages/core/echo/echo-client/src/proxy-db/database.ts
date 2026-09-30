@@ -149,6 +149,12 @@ export interface EchoDatabase extends Database.Database {
    */
   version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined>;
 
+  /** @internal */
+  _versionOfType(obj: Entity.Unknown, type: string): Promise<Entity.Unknown>;
+
+  /** @internal */
+  _peekVersionOfType(obj: Entity.Unknown, type: string, onLoad?: () => void): Entity.Unknown | undefined;
+
   /**
    * Syncs versions once for every object, then again, debounced, for each object whose documents
    * change. `getLenses` is read on each pass so the current set always applies.
@@ -888,12 +894,41 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined> {
-    if (isAtVersion(type, obj)) {
+    const bound = await this._versionOfType(obj, Type.getURI(type));
+    return isAtVersion(type, bound) ? bound : undefined;
+  }
+
+  /**
+   * The object at the version whose type URI is `type`: `obj` itself when it reads that version or has
+   * no document for it.
+   * @internal
+   */
+  async _versionOfType(obj: Entity.Unknown, type: string): Promise<Entity.Unknown> {
+    const url = this.#versionUrl(obj, type);
+    return url ? this._loadVersionBinding(obj.id, url) : obj;
+  }
+
+  /**
+   * As {@link _versionOfType}, without waiting: undefined until the version is bound, and `onLoad`, when
+   * given, is called once it is.
+   * @internal
+   */
+  _peekVersionOfType(obj: Entity.Unknown, type: string, onLoad?: () => void): Entity.Unknown | undefined {
+    const url = this.#versionUrl(obj, type);
+    if (!url) {
       return obj;
     }
-    const url = this._entityManager.versionDocumentUrlOfType(obj.id, Type.getURI(type));
-    const bound = url && (await this._loadVersionBinding(obj.id, url));
-    return isAtVersion(type, bound) ? bound : undefined;
+    const bound = this.#versionBindings.get(`${obj.id} ${url}`);
+    if (!bound && onLoad) {
+      void this._loadVersionBinding(obj.id, url).then(onLoad, (err) => log.catch(err));
+    }
+    return bound;
+  }
+
+  /** The document holding version `type` of `obj`, when it is not the one `obj` reads. */
+  #versionUrl(obj: Entity.Unknown, type: string): AutomergeUrl | undefined {
+    const url = this._entityManager.versionDocumentUrlOfType(obj.id, type);
+    return url !== undefined && url !== getObjectCore(obj).docHandle?.url ? url : undefined;
   }
 
   /**

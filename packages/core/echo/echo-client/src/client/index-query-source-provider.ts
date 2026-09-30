@@ -21,6 +21,7 @@ import { chunkArray, isNonNullable } from '@dxos/util';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
+import { toDeclaredVersion } from '../proxy-db/version-documents/declared-version.ts';
 import {
   type QuerySource,
   type SourceEntry,
@@ -686,7 +687,8 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    const object = await this._resolveIndexedObject(result);
+    const resolved = await this._resolveIndexedObject(result);
+    const object = resolved && this._query ? await toDeclaredVersion(resolved, this._query) : resolved;
     if (!object) {
       return null;
     }

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
-import { Filter, Obj, Query, Type, VersionLens } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Type, VersionLens } from '@dxos/echo';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -37,7 +37,15 @@ const lenses = [
   }),
 ];
 
-const types = [TaskV1, TaskV2, TaskV3];
+/** Two holders of one task, written against different versions of it. */
+const OldBoard = Type.makeObject(DXN.make('org.dxos.test.oldBoard', '0.1.0'))(
+  Schema.Struct({ task: Ref.Ref(TaskV1), backlog: Schema.mutable(Schema.Array(Ref.Ref(TaskV1))) }),
+);
+const NewBoard = Type.makeObject(DXN.make('org.dxos.test.newBoard', '0.1.0'))(
+  Schema.Struct({ task: Schema.optional(Ref.Ref(TaskV3)) }),
+);
+
+const types = [TaskV1, TaskV2, TaskV3, OldBoard, NewBoard];
 
 /** The version document `db` records for `objectId` at `version`. */
 const versionDoc = async (db: EchoDatabase, objectId: string, version: string) => {
@@ -180,6 +188,38 @@ describe('version documents', () => {
     await db.syncVersions(lenses);
     expect([...current.labels]).toEqual(['a', 'b']);
     expect([...old.tags]).toEqual(['a', 'b']);
+  });
+
+  test('a typed reference resolves to its target at the version the schema names', async () => {
+    const { db } = await builder.createDatabase({ types });
+    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    const oldBoard = db.add(Obj.make(OldBoard, { task: Ref.make(task), backlog: [Ref.make(task)] }));
+    await db.flush();
+    await db.syncVersions(lenses);
+    const current = await db.version(task, TaskV3);
+    invariant(current, 'no v3 of the task');
+    const newBoard = db.add(Obj.make(NewBoard, { task: Ref.make(current) }));
+    await db.flush({ indexes: true });
+
+    const viaOld = await oldBoard.task.load();
+    expect(typeOf(viaOld)).toBe(Type.getURI(TaskV1));
+    expect(viaOld.title).toBe('Plan');
+    const [inBacklog] = await Promise.all(oldBoard.backlog.map((ref) => ref.load()));
+    expect(inBacklog).toBe(viaOld);
+    const viaNew = await newBoard.task?.load();
+    expect(viaNew && typeOf(viaNew)).toBe(Type.getURI(TaskV3));
+    expect(viaNew?.name).toBe('Plan');
+    // Once loaded, `.target` reads the same objects synchronously.
+    expect(oldBoard.task.target).toBe(viaOld);
+    expect(newBoard.task?.target).toBe(viaNew);
+
+    // A query that traverses the reference returns the version the reference declares.
+    const fromOld = await db.query(Query.select(Filter.type(OldBoard)).reference('task')).run();
+    expect(fromOld).toHaveLength(1);
+    expect(fromOld[0]).toBe(viaOld);
+    const fromNew = await db.query(Query.select(Filter.type(NewBoard)).reference('task')).run();
+    expect(fromNew).toHaveLength(1);
+    expect(fromNew[0]).toBe(viaNew);
   });
 
   test('an object created at a newer version is linked at the oldest, which released apps read', async () => {

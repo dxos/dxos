@@ -5,6 +5,7 @@
 import * as A from '@automerge/automerge';
 import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
@@ -35,6 +36,7 @@ import {
   getProxyHandler,
   getProxyTarget,
   getRefSavedTarget,
+  getReferenceAst,
   getSchemaURI,
   getTypeAnnotation,
   isInChangeContext,
@@ -45,7 +47,7 @@ import {
   setProxyHandler,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -421,7 +423,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return handleStoredSchema(target, decoded);
     }
     if (isEncodedReference(decoded)) {
-      return lookupRef(target, decoded);
+      return lookupRef(target, decoded, referenceTargetType(target, namespace, dataPath));
     }
     if (Array.isArray(decoded)) {
       const targetKey = TargetKey.new(dataPath, namespace, 'array');
@@ -1052,6 +1054,30 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
 /**
  * @internal
  */
+/**
+ * The type URI, version included, that the schema declares for the target of the ref at `dataPath`, so
+ * the ref resolves to its target at that version.
+ */
+const referenceTargetType = (target: ProxyTarget, namespace: string, dataPath: Doc.KeyPath): string | undefined => {
+  const schema = namespace === DATA_NAMESPACE ? getSchema(target) : undefined;
+  if (!schema) {
+    return undefined;
+  }
+  let ast: SchemaAST.AST;
+  try {
+    ast = SchemaValidator.getPropertySchema(schema, dataPath, (path) =>
+      target[symbolInternals].getDecoded([namespace, ...path]),
+    ).ast;
+  } catch {
+    // An object may hold properties its schema does not declare; their refs name no version.
+    return undefined;
+  }
+  const reference = [ast, ...(SchemaAST.isUnion(ast) ? ast.types : [])]
+    .map((candidate) => getReferenceAst(candidate))
+    .find((candidate) => candidate !== undefined);
+  return reference && DXN.make(reference.typename, reference.version);
+};
+
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): Entity.Unknown => {
   // Each core owns exactly one root proxy; callers must not call this twice on the same core.
   invariant(!core.rootProxy, 'ObjectCore already has a root proxy; bind to a fresh core instead.');
