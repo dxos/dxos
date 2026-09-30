@@ -61,6 +61,8 @@ export type IndexQueryProviderProps = {
   runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
+  /** Type URIs of the schema versions the client reads in a space, oldest first; none when absent. */
+  versionsFor?: (spaceId: SpaceId) => readonly string[];
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
@@ -93,6 +95,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       runtime: this._params.runtime,
       objectLoader: this._params.objectLoader,
       graph: this._params.graph,
+      versionsFor: this._params.versionsFor,
       queryTimeout: this._params.queryTimeout,
       hydrationTimeout: this._params.hydrationTimeout,
     });
@@ -104,6 +107,8 @@ export type IndexQuerySourceProps = {
   runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
+  /** Type URIs of the schema versions the client reads in a space, oldest first; none when absent. */
+  versionsFor?: (spaceId: SpaceId) => readonly string[];
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
@@ -542,14 +547,10 @@ export class IndexQuerySource implements QuerySource {
 
   /** Names the schema versions this client reads, so the host returns an object stored per version once. */
   private _withVersions(query: QueryAST.Query): QueryAST.Query {
-    const versions = [
-      ...new Set(
-        getTargetSpacesForQuery(query).flatMap((spaceId) => {
-          const database = this._params.graph.getDatabase(spaceId);
-          return database instanceof DatabaseImpl ? database._entityManager.knownVersionTypes : [];
-        }),
-      ),
-    ];
+    const versionsFor = this._params.versionsFor;
+    const versions = versionsFor
+      ? [...new Set(getTargetSpacesForQuery(query).flatMap((spaceId) => versionsFor(spaceId)))]
+      : [];
     return versions.length === 0 ? query : { type: 'options', query, options: { versions } };
   }
 

@@ -124,9 +124,14 @@ export class EchoClient extends Resource {
         updateEvent: this._objectsUpdated,
       },
       graph: this._graph,
+      versionsFor: this.#versionsFor,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
+
+  /** The schema versions the database of a space reads, which its queries name to the host. */
+  readonly #versionsFor = (spaceId: SpaceId): readonly string[] =>
+    this._databases.get(spaceId)?._entityManager.knownVersionTypes ?? [];
 
   protected override async _close(ctx: Context): Promise<void> {
     if (this._indexQuerySourceProvider) {
@@ -231,6 +236,7 @@ export class EchoClient extends Resource {
           updateEvent: this._objectsUpdated,
         },
         graph: this._graph,
+        versionsFor: this.#versionsFor,
       });
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }
