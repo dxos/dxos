@@ -103,9 +103,12 @@ model PluginRelease {
   // `PENDING` (upload in progress / failed, retryable) | `PUBLISHED` | `YANKED`.
   state           String   @default("PENDING")
 
-  // Upload lease: only the request holding an unexpired lease may write this release's R2 prefix.
+  // Upload lease: at most one live upload attempt per release; the lease id names that attempt's R2 prefix.
   leaseId         String?
   leaseExpiresAt  DateTime?
+
+  // Attempt whose R2 prefix is served once PUBLISHED; set atomically with the state change.
+  attemptId       String?
 
   // sha256-<base64> of manifest.json as stored, computed by the server.
   manifestHash    String?
@@ -119,9 +122,15 @@ model PluginRelease {
 }
 ```
 
-R2 is unchanged: the same `PLUGIN_BUNDLES` bucket and `modules/<key>/<version>/<path>` layout, so a
-direct release's `moduleUrl` is `https://<edge>/registry/modules/<key>/<version>/manifest.json`,
-identical in shape to an AT Protocol release. Composer's `UrlLoader` sees no difference.
+R2 keeps the `PLUGIN_BUNDLES` bucket. Direct uploads write to an attempt-specific prefix,
+`releases/<key>/<version>/<attemptId>/<path>`, and never to a shared one, so an upload whose lease
+expired mid-write can only touch its own, never-served prefix. The public URL stays
+`https://<edge>/registry/modules/<key>/<version>/manifest.json`, identical in shape to an AT Protocol
+release, so Composer's `UrlLoader` sees no difference: `GET /modules/:key/:version/*` resolves the
+release's published `attemptId` from D1 and reads that prefix, falling back to the legacy
+`modules/<key>/<version>/` prefix for releases uploaded through `/upload`. The lookup is cacheable
+indefinitely because a published release never changes. Unpublished attempt prefixes are deleted by
+a periodic sweep.
 
 ### Ownership
 
@@ -196,15 +205,16 @@ All under the existing `/registry` mount (edge `api.ts` forwards to `REGISTRY_SE
    release → `409`; an existing `PENDING` one is a retry of a failed upload and proceeds.
 4. Acquire the upload lease with one conditional `UPDATE` that sets `leaseId` and
    `leaseExpiresAt = now + 5m` only where `state = 'PENDING'` and the current lease is absent or
-   expired. Zero rows changed → `409 upload_in_progress`.
-   R2 keeps the last write to a key, so without the lease two concurrent retries of one version could
-   interleave and pair one request's manifest with the other's assets.
-5. Write every file to R2, then `manifest.json` last, so a partially written prefix never has a
-   manifest the loader could fetch.
-6. Compute `manifestHash` over the stored manifest bytes; set `state = PUBLISHED`, store the hash,
-   `dependenciesJSON` and the profile from the manifest, and clear the lease, in one batch guarded by
-   `leaseId = ?` so a request whose lease expired cannot publish. On failure clear the lease and
-   leave the release `PENDING`.
+   expired. Zero rows changed → `409 upload_in_progress`. The new `leaseId` is this attempt's id.
+5. Write every file under `releases/<key>/<version>/<leaseId>/`. R2 keeps the last write to a key,
+   so a shared prefix would let two attempts interleave; per-attempt prefixes make that impossible
+   even after a lease expires with writes still in flight.
+6. Compute `manifestHash` over the stored manifest bytes, then publish in one batch guarded by
+   `leaseId = ? AND leaseExpiresAt > now`: set `state = PUBLISHED`, `attemptId = leaseId`, the hash,
+   `dependenciesJSON` and the profile from the manifest, and clear the lease. Zero rows changed means
+   the lease expired or was taken over, and the request fails without publishing. Selecting
+   `attemptId` is the atomic switch; nothing is served from an attempt until it is selected. On
+   failure, clear the lease only `WHERE leaseId = ?`, leaving the release `PENDING`.
 7. Return `{ key, version, moduleUrl, manifestHash }`.
 
 Multipart rather than the JSON-with-base64 body `/upload` uses: it avoids the 33% inflation and
@@ -286,7 +296,7 @@ Order matters: the dxos schema change must publish before edge can consume it.
    claim-or-check before writing R2. Independently valuable; ships first.
 4. **edge — direct publish routes** and catalog merge, with `*.workerd.test.ts` coverage alongside
    `registry-upload.workerd.test.ts` (claim, foreign-owner 403, re-publish 409, pending retry, concurrent
-   upload 409, yank, unscoped-token 403, API-token auth).
+   upload 409, expired-lease publish rejected, yank, unscoped-token 403, API-token auth).
 5. **dxos — CLI**: `--target direct`, token auth, `yank` / `list --mine`; update
    `docs/composer/publishing-plugins.md` (also fix its stale `package.*` NSIDs and `outdir` field).
 6. **dxos — Composer**: `direct` / unverified badges and toggle in `plugin-registry`; client-side
