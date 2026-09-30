@@ -344,6 +344,17 @@ Pure, and the specification of the package:
 are the helpers spawn and delegation UIs use; `attenuate` is the only way to mint a child grant and
 refuses anything the parent does not cover.
 
+**Signing on behalf of a space.** A space has no key of its own, so when a parent grant's audience
+is `echo://<spaceId>` the chain rule makes the child's issuer the space while a member's device key
+does the signing. The child is a HALO credential whose `issuer` is the space key and whose `Proof`
+is signed by a device; HALO already resolves such a proof through the device's chain of
+`AuthorizedDevice` credentials to an identity. `attenuate` and `check` then require, at the child's
+issuance time, that the identity was a `SpaceMember` of that space and that its role satisfied the
+parent grant's policy (an `/space` grant delegable to admins and owners cannot be re-granted by an
+editor). The signing identity and role are recorded in the child's `meta` for audit, but the
+authority is the space's, so revoking the member later revokes what they signed only through the
+normal revocation path, never silently.
+
 ### Derived grants
 
 A `GrantSource` is an interface, not a store, so grants can be computed. The membership source
