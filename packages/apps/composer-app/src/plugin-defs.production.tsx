@@ -26,7 +26,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins({ ...config, externalPlugins: false }),
   // `Agent` and `Sequence` are unfinished, so the curated set does not offer creating them.
   AssistantPlugin.make({ experimentalTypes: false }),
-  // Owns the `Drawing` type that tldraw renders; tldraw alone contributes only a variant.
   IllustratorPlugin.make(),
   MarkdownPlugin.make(),
   ProjectsPlugin.make(),
