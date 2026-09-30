@@ -383,6 +383,49 @@ describe('CollectionSynchronizer', () => {
         expect(diff.different).toEqual([documentId]);
       }
     });
+
+    // EDGE nightly soak: a merge commit was advertised as `[parent1, merge, parent2]`, and peers
+    // holding `[parent1, parent2]` read the shared parents as convergence and never fetched it.
+    describe('with the local document to consult', () => {
+      const base = A.change(A.init<{ text: string[] }>(), (doc) => {
+        doc.text = [];
+      });
+      const left = A.change(A.clone(base), (doc) => {
+        doc.text.push('left');
+      });
+      const right = A.change(A.clone(base), (doc) => {
+        doc.text.push('right');
+      });
+      const behind = A.merge(A.clone(left), right);
+      const ahead = A.change(A.clone(behind), (doc) => {
+        doc.text.push('merge');
+      });
+      const hasLocalHeads = (_documentId: DocumentId, heads: A.Heads) => A.hasHeads(behind, heads);
+      const local = { documents: { [documentId]: A.getHeads(behind) } as Record<DocumentId, A.Heads> };
+
+      test('a remote head missing from local history is different despite the overlap', ({ expect }) => {
+        const remote = {
+          documents: { [documentId]: [...A.getHeads(behind), ...A.getHeads(ahead)] } as Record<DocumentId, A.Heads>,
+        };
+        expect(diffCollectionStateForPeer(local, remote, asEdge).different).toEqual([]);
+        expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalHeads }).different).toEqual([documentId]);
+      });
+
+      test('a remote head deep in local history is not different', ({ expect }) => {
+        const remote = {
+          documents: { [documentId]: [...A.getHeads(behind), ...A.getHeads(base)] } as Record<DocumentId, A.Heads>,
+        };
+        expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalHeads }).different).toEqual([]);
+      });
+
+      test('a document that cannot be consulted keeps the overlap rule', ({ expect }) => {
+        const remote = {
+          documents: { [documentId]: [...A.getHeads(behind), ...A.getHeads(ahead)] } as Record<DocumentId, A.Heads>,
+        };
+        const diff = diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalHeads: () => undefined });
+        expect(diff.different).toEqual([]);
+      });
+    });
   });
 
   // The `syncPeer` span feeds a PostHog dashboard, so when it opens and how it ends is its contract.

@@ -7,6 +7,7 @@ import {
   type Heads,
   getBackend,
   getHeads,
+  hasHeads,
   equals as headsEquals,
   isAutomerge,
   save,
@@ -229,6 +230,7 @@ export class AutomergeHost extends Resource {
     queryCollectionState: this._queryCollectionState.bind(this),
     sendCollectionState: this._sendCollectionState.bind(this),
     shouldSyncCollection: this._shouldSyncCollection.bind(this),
+    hasLocalHeads: this._hasLocalHeads.bind(this),
   });
 
   private _repo!: Repo;
@@ -1422,7 +1424,10 @@ export class AutomergeHost extends Resource {
       // edge orphans (sedimentrees the edge still knows about but the local
       // root no longer references) don't inflate counts or appear unsynced.
       const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(localState, state) : state;
-      const diff = diffCollectionStateForPeer(localState, state, { isEdgePeer });
+      const diff = diffCollectionStateForPeer(localState, state, {
+        isEdgePeer,
+        hasLocalHeads: this._hasLocalHeads.bind(this),
+      });
       result.peers!.push({
         peerId,
         missingOnRemote: diff.missingOnRemote.length,
@@ -1478,6 +1483,16 @@ export class AutomergeHost extends Resource {
     }
   }
 
+  /** Answers only for a resident document, so a diff pass never faults one in just to compare heads. */
+  private _hasLocalHeads(documentId: DocumentId, heads: Heads): boolean | undefined {
+    const handle = this._repo?.getHandle(documentId);
+    if (!handle || getHandleState(this._repo, documentId) !== 'ready') {
+      return undefined;
+    }
+    const document = handle.doc();
+    return document ? hasHeads(document, heads) : undefined;
+  }
+
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
     this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);
   }
@@ -1530,6 +1545,7 @@ export class AutomergeHost extends Resource {
 
     const { different, missingOnLocal, missingOnRemote } = diffCollectionStateForPeer(localState, remoteState, {
       isEdgePeer: isEdgePeerId(peerId),
+      hasLocalHeads: this._hasLocalHeads.bind(this),
     });
 
     const syncKey = `${collectionId}:${peerId}`;

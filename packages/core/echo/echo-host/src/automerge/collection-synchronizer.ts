@@ -26,6 +26,8 @@ export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
   shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
+  /** See {@link HasLocalHeads}; without it the diff cannot tell a new remote head from a fragment head. */
+  hasLocalHeads?: HasLocalHeads;
 };
 
 /**
@@ -35,6 +37,7 @@ export class CollectionSynchronizer extends Resource {
   private readonly _sendCollectionState: CollectionSynchronizerProps['sendCollectionState'];
   private readonly _queryCollectionState: CollectionSynchronizerProps['queryCollectionState'];
   private readonly _shouldSyncCollection: CollectionSynchronizerProps['shouldSyncCollection'];
+  private readonly _hasLocalHeads: CollectionSynchronizerProps['hasLocalHeads'];
 
   /**
    * CollectionId -> State.
@@ -62,6 +65,7 @@ export class CollectionSynchronizer extends Resource {
     this._sendCollectionState = params.sendCollectionState;
     this._queryCollectionState = params.queryCollectionState;
     this._shouldSyncCollection = params.shouldSyncCollection;
+    this._hasLocalHeads = params.hasLocalHeads;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -246,7 +250,12 @@ export class CollectionSynchronizer extends Resource {
     }
 
     const localState = perCollectionState.localState ?? { documents: {} };
-    return isDiffEmpty(diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) }));
+    return isDiffEmpty(
+      diffCollectionStateForPeer(localState, remoteState, {
+        isEdgePeer: isEdgePeerId(peerId),
+        hasLocalHeads: this._hasLocalHeads,
+      }),
+    );
   }
 
   private _diffCollectionState(collectionId: string, peerId: PeerId, trigger: SyncSpanTrigger) {
@@ -258,7 +267,10 @@ export class CollectionSynchronizer extends Resource {
 
     log('diffCollectionState', { collectionId, peerId });
     const localState = perCollectionState.localState ?? { documents: {} };
-    const diff = diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) });
+    const diff = diffCollectionStateForPeer(localState, remoteState, {
+      isEdgePeer: isEdgePeerId(peerId),
+      hasLocalHeads: this._hasLocalHeads,
+    });
     if (isDiffEmpty(diff)) {
       this._endSyncSpan(collectionId, peerId, 'synced');
     } else {
@@ -417,6 +429,12 @@ export type CollectionState = {
   documents: Record<DocumentId, Heads>;
 };
 
+/**
+ * Whether the local copy of a document contains every one of `heads` in its history: `undefined`
+ * when that cannot be answered synchronously, e.g. the document is not resident.
+ */
+export type HasLocalHeads = (documentId: DocumentId, heads: Heads) => boolean | undefined;
+
 export type CollectionStateDiff = {
   missingOnRemote: DocumentId[];
   missingOnLocal: DocumentId[];
@@ -473,13 +491,17 @@ export const subsetRemoteToLocal = (local: CollectionState, remote: CollectionSt
 export const diffCollectionStateForPeer = (
   local: CollectionState,
   remote: CollectionState,
-  { isEdgePeer }: { isEdgePeer: boolean },
+  { isEdgePeer, hasLocalHeads }: { isEdgePeer: boolean; hasLocalHeads?: HasLocalHeads },
 ): CollectionStateDiff => {
   const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(local, remote) : remote;
-  return diffCollectionState(local, effectiveRemote);
+  return diffCollectionState(local, effectiveRemote, { hasLocalHeads });
 };
 
-export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
+export const diffCollectionState = (
+  local: CollectionState,
+  remote: CollectionState,
+  { hasLocalHeads }: { hasLocalHeads?: HasLocalHeads } = {},
+): CollectionStateDiff => {
   const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
   const remoteDocuments = Record.filter(remote.documents, (heads) => heads.length > 0);
   // NOTE: Using `Array.union` is slow.
@@ -500,6 +522,12 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
       // it has no notion of fragments — so the two views can disagree on a doc's
       // head set even when every change byte is replicated. We treat the doc as in
       // sync as long as both sides agree on at least one head.
+      different.push(documentId);
+    } else if (
+      hasUnknownRemoteHead(documentId, local.documents[documentId], remote.documents[documentId], hasLocalHeads)
+    ) {
+      // Overlap alone also passes when the remote lists a new change beside the parents we hold as
+      // tips — `getAllHeads()` reports exactly that — which would leave this peer never fetching it.
       different.push(documentId);
     }
   }
@@ -527,6 +555,24 @@ const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
     }
   }
   return false;
+};
+
+/**
+ * True when the remote advertises a head the local document provably lacks. A head that is merely
+ * not a local tip is usually a fragment head deep in local history, so only the document can say.
+ */
+const hasUnknownRemoteHead = (
+  documentId: DocumentId,
+  local: readonly string[],
+  remote: readonly string[],
+  hasLocalHeads: HasLocalHeads | undefined,
+): boolean => {
+  if (!hasLocalHeads) {
+    return false;
+  }
+  const localSet = new Set(local);
+  const extra = remote.filter((head) => !localSet.has(head));
+  return extra.length > 0 && hasLocalHeads(documentId, extra) === false;
 };
 
 const validateCollectionState = (state: CollectionState) => {
