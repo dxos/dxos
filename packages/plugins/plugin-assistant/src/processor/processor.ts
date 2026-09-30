@@ -708,3 +708,20 @@ export class AiChatProcessor {
     return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt }, { spaceId });
   }
 }
+
+export type AiChatProcessorState = Pick<
+  AiChatProcessor,
+  'streaming' | 'active' | 'messages' | 'error' | 'mcpErrors' | 'activity'
+>;
+
+const idleProcessorState: AiChatProcessorState = {
+  streaming: Atom.make(false),
+  active: Atom.make(false),
+  messages: Atom.make<Message.Message[]>([]),
+  error: Atom.make<Option.Option<Error>>(Option.none()),
+  mcpErrors: Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]),
+  activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),
+};
+
+export const getProcessorState = (processor: AiChatProcessor | undefined): AiChatProcessorState =>
+  processor ?? idleProcessorState;

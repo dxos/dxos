@@ -65,7 +65,9 @@ export const useChatProcessor = ({
       runtime,
       registry: observableRegistry,
     });
+    const openedAt = performance.now();
     await session.open();
+    log('session opened', { chat: chat.id, duration: Math.round(performance.now() - openedAt) });
     setSession(session);
     return () => {
       void session.close();
