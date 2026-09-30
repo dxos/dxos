@@ -12,6 +12,16 @@ reviewId: e04913c1
 
 _2 error(s), 1 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- e04913c1-1 - ignored - no-sleep-in-test - packages/core/mesh/edge-client/src/edge-client.test.ts:93
+- e04913c1-2 - ignored - errors-extend-base-error - packages/core/mesh/edge-client/src/edge-client.ts:37
+- e04913c1-3 - resolved - no-casts - packages/core/mesh/edge-client/src/testing/test-utils.ts:87
+
+## Issues
+
 # WARN e04913c1-1 no-sleep-in-test `packages/core/mesh/edge-client/src/edge-client.test.ts:93`
 
 System One judges this a likely violation of `no-sleep-in-test` (No sleep or polling in tests), p=0.91. The likeliest place is lines 93-104 (`setTimeout(() => admitConnection.wake(), 20);`, location confidence 0.81). This is a single-shot classifier: confirm against the rule before acting.
@@ -23,3 +33,19 @@ System One judges this a likely violation of `errors-extend-base-error` (Error c
 # ERROR e04913c1-3 no-casts `packages/core/mesh/edge-client/src/testing/test-utils.ts:87`
 
 System One judges this a likely violation of `no-casts` (No casts to silence the type-checker), p=0.97. The likeliest place is lines 87-100 (`admittedAttempts: () => [...admittedAttempts],`, location confidence 0.38). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `dc3302bcfd2a4136e2e7656a569d1486fec18237`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 3 violations written to fragments, 64 uncertain, 48 clean, 0 unanswered
+
+```text
+requests: 80 (38 verdicts re-asked with context the model requested)
+estimated input tokens: 592745
+billed input tokens: 580281 (cost $0.0244)
+measured chars per token: 3.06
+```

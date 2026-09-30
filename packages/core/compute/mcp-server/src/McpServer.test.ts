@@ -114,9 +114,16 @@ const testHost = (
   };
 };
 
+/** Every skill these tests define, so a case not about the skill gate is never refused by it. */
+const EVERY_SKILL: ReadonlySet<string> = new Set(['codeProject', 'database', 'registry']);
+
 const runInvoke = (
   args: { key?: string; input?: Record<string, unknown>; spaceId?: SpaceId },
-  options: { registry?: Registry.Registry; host?: ReturnType<typeof testHost> } = {},
+  options: {
+    registry?: Registry.Registry;
+    host?: ReturnType<typeof testHost>;
+    loadedSkills?: ReadonlySet<string>;
+  } = {},
 ) => {
   const registry = options.registry ?? testRegistry();
   const host = options.host ?? testHost();
@@ -124,7 +131,12 @@ const runInvoke = (
     invocations: host.invocations,
     result: EffectEx.runPromise(
       Effect.result(
-        McpServer.invoke(registry, host.host, { key: args.key ?? KEY, input: args.input, spaceId: args.spaceId }),
+        McpServer.invoke(
+          registry,
+          host.host,
+          { key: args.key ?? KEY, input: args.input, spaceId: args.spaceId },
+          options.loadedSkills ?? EVERY_SKILL,
+        ),
       ),
     ),
   };
@@ -132,6 +144,61 @@ const runInvoke = (
 
 describe('McpServer', () => {
   describe('invokeOperation', () => {
+    // The skill carries conventions an operation's description does not, so a session that skipped
+    // it is told exactly which call to make rather than left to guess the input.
+    test('refuses an operation until a skill governing it is loaded, naming the skill', async ({ expect }) => {
+      const { invocations, result } = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_A },
+        { loadedSkills: new Set(['database']) },
+      );
+      const refused = failureOf(await result);
+      expect(refused.code).to.equal('skill_not_loaded');
+      expect(refused.message).to.include("Call loadSkill with skill: 'codeProject'");
+      expect(invocations).to.have.length(0);
+    });
+
+    test('loading the skill unlocks its operations, and a listing unlocks nothing', async ({ expect }) => {
+      const registry = testRegistry();
+      const ledger = McpServer.memorySkillLedger();
+      await EffectEx.runPromise(McpServer.loadSkill(registry, ledger, undefined));
+      expect((await EffectEx.runPromise(ledger.loaded)).size).to.equal(0);
+
+      // By registry key as well as prompt name: both resolve, and the ledger holds the prompt name.
+      await EffectEx.runPromise(McpServer.loadSkill(registry, ledger, 'org.dxos.skill.codeProject'));
+      const loadedSkills = await EffectEx.runPromise(ledger.loaded);
+      expect([...loadedSkills]).to.deep.equal(['codeProject']);
+      const { invocations, result } = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_A },
+        { registry, loadedSkills },
+      );
+      successOf(await result);
+      expect(invocations).to.have.length(1);
+    });
+
+    test('any one of several owning skills is enough', async ({ expect }) => {
+      const registry = testRegistry({
+        skills: [
+          makeSkill({ key: 'org.dxos.skill.codeProject', operations: [CreateTask] }),
+          makeSkill({ key: 'org.dxos.skill.database', operations: [CreateTask] }),
+        ],
+      });
+      const refused = failureOf(
+        await runInvoke({ input: { title: 'x' } }, { registry, loadedSkills: new Set() }).result,
+      );
+      expect(refused.message).to.include("'codeProject' or 'database'");
+      const { result } = runInvoke(
+        { input: { title: 'x' }, spaceId: SPACE_A },
+        { registry, loadedSkills: new Set(['database']) },
+      );
+      successOf(await result);
+    });
+
+    // An unknown key is not a skill problem, and pointing at a skill would send the caller the wrong way.
+    test('an unknown operation is reported as unknown, whatever is loaded', async ({ expect }) => {
+      const { result } = runInvoke({ key: 'org.dxos.nope' }, { loadedSkills: new Set() });
+      expect(failureOf(await result).code).to.equal('invalid_request');
+    });
+
     test('dispatches the named operation into the space the call named', async ({ expect }) => {
       const { invocations, result } = runInvoke({ input: { title: 'Write tests' }, spaceId: SPACE_A });
       expect(successOf(await result)).to.deep.equal({ ok: true });
@@ -396,7 +463,9 @@ describe('McpServer', () => {
       const { host, invocations } = testHost();
       expect(await run(registry)).to.have.length(0);
       const dark = await EffectEx.runPromise(
-        Effect.result(McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects' })),
+        Effect.result(
+          McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects' }, EVERY_SKILL),
+        ),
       );
       expect(failureOf(dark).code).to.equal('invalid_request');
       expect(invocations).to.have.length(0);
@@ -404,7 +473,12 @@ describe('McpServer', () => {
       registry.add([makeSkill({ key: 'org.dxos.skill.database', operations: [QueryObjects] })]);
       expect((await run(registry)).map((row) => row.key)).to.deep.equal(['com.example.operation.space.queryObjects']);
       await EffectEx.runPromise(
-        McpServer.invoke(registry, host, { key: 'com.example.operation.space.queryObjects', spaceId: SPACE_A }),
+        McpServer.invoke(
+          registry,
+          host,
+          { key: 'com.example.operation.space.queryObjects', spaceId: SPACE_A },
+          EVERY_SKILL,
+        ),
       );
       expect(invocations).to.have.length(1);
       // CreateTask is still governed by no skill, so the new arrival widened nothing else.
@@ -516,14 +590,15 @@ describe('McpServer', () => {
       expect(operations.map((row) => row.key)).to.deep.equal([KEY]);
       expect(operations[0].hints.mutation).to.equal('write');
 
+      const ledger = McpServer.memorySkillLedger();
       const listing = successOf(
-        await EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(registry, 'codeProject'))),
+        await EffectEx.runPromise(Effect.result(McpServer.loadSkill(registry, ledger, 'codeProject'))),
       );
       expect(listing.instructions).to.equal('Bind a space first.');
 
       const { host, invocations } = testHost();
       await EffectEx.runPromise(
-        McpServer.invoke(registry, host, { key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }),
+        McpServer.invokeWithLedger(registry, host, ledger, { key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }),
       );
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }]);
     });

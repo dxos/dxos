@@ -10,4 +10,26 @@ rules: [barrel-imports-not-internal-paths, business-logic-out-of-ui, co-locate-t
 reviewId: b70909be74
 ---
 
-<!-- no diagnostics: clean -->
+_Clean: no issues._
+
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+<!-- no issues -->
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `89a6ee43deb83e8144e2e5132a954d204994e67a`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 0 violations written to fragments, 24 uncertain, 41 clean, 0 unanswered
+
+```text
+requests: 42 (14 verdicts re-asked with context the model requested)
+estimated input tokens: 225074
+billed input tokens: 221176 (cost $0.0093)
+measured chars per token: 3.05
+```
