@@ -42,6 +42,8 @@ export class RegistryPublisher {
   readonly #clientId: string;
 
   #publish!: DeferredTask;
+  /** Owned by the publisher so {@link close} can stop it; the caller's context outlives `close()`. */
+  #ctx: Context | undefined;
 
   constructor(params: RegistryPublisherParams) {
     this.#registry = params.registry;
@@ -50,21 +52,37 @@ export class RegistryPublisher {
     this.#clientId = params.clientId;
   }
 
-  /** Publishes the current registry and keeps publishing as it changes, until `ctx` is disposed. */
+  /** Publishes the current registry and keeps publishing as it changes, until {@link close}. */
   open(ctx: Context): void {
+    // Derived rather than used directly: `Resource` hands `_open` its *parent* context, which its
+    // `close()` never disposes — so a publisher bound to it would keep answering registry changes
+    // after the client is gone, re-claiming every entry for a client that can no longer release.
+    const publisherCtx = ctx.derive({ name: 'RegistryPublisher' });
+    this.#ctx = publisherCtx;
     // A background push only logs a failure: it is driven by a registry change no caller is
     // waiting on, and letting it reject would surface as an unhandled rejection in the task.
     // A push still in flight when the client tears down is interrupted rather than failed, and
     // reporting that as a warning would put a stack in every closing client's output.
-    this.#publish = new DeferredTask(ctx, () =>
+    this.#publish = new DeferredTask(publisherCtx, () =>
       this.#push().catch((err) => {
-        if (!ctx.disposed) {
+        if (!publisherCtx.disposed) {
           log.warn('Failed to publish registry', { err });
         }
       }),
     );
-    this.#registry.changed.on(ctx, () => this.#publish.schedule());
+    this.#registry.changed.on(publisherCtx, () => this.#publish.schedule());
     this.#publish.schedule();
+  }
+
+  /**
+   * Stops publishing, so no later registry change re-claims this client's entries.
+   *
+   * Separate from {@link release}, and ordered before it: the release is sent straight to the
+   * service rather than through the deferred task, so it still goes out once this has run.
+   */
+  async close(): Promise<void> {
+    await this.#ctx?.dispose();
+    this.#ctx = undefined;
   }
 
   /**

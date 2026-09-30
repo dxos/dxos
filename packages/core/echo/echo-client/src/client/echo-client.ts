@@ -161,6 +161,9 @@ export class EchoClient extends Resource {
     // publisher, so reopening replaces the stale claim, and the next host session's
     // reconciliation reclaims rows nothing comes back for.
     try {
+      // Stopped before the release, so a registry change landing mid-teardown cannot re-claim the
+      // entries this is withdrawing.
+      await this._registryPublisher?.close();
       await this._registryPublisher?.release();
     } catch (err) {
       log.warn('Failed to release registry on close', { err });

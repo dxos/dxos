@@ -157,12 +157,6 @@ export interface QueueRef {
 }
 
 /**
- * Composite map key for a name/version pair, so a SQL row can be matched back to the entry key a
- * caller asked about. `\u0000` cannot occur in either part, so the join is unambiguous.
- */
-const _identityKey = ({ name, version }: { name: string; version: string }): string => `${name}\u0000${version}`;
-
-/**
  * Predicate admitting only rows sourced from a space. Registry rows share these tables but belong
  * to no space, so every space- or queue-scoped read has to exclude them; `queryRegistry` is the
  * only read that does not. `FtsIndex` spells the same predicate against its `objectMeta` alias.
@@ -450,7 +444,7 @@ export class EntityMetaIndex implements Index {
    * Registry rows, optionally restricted to a set of entry keys.
    *
    * An unversioned key (`dxn:<nsid>`) matches every version registered under that name — an
-   * equality match on `name` alone, now that the version is its own column; a versioned key
+   * equality match on `name` alone, since the version is its own column; a versioned key
    * matches only itself. Rows come back newest-registration-first (`seq` is the monotonic counter
    * the indexer stamps on every write), so the caller reading the first row per key gets the
    * entity that was registered last.
@@ -464,20 +458,32 @@ export class EntityMetaIndex implements Index {
     ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         const sql = this.#sql;
-        const typeCondition =
-          query.typeDxns === undefined ? undefined : sql`(${buildTypeDxnCondition(sql, query.typeDxns)})`;
         if (query.typeDxns !== undefined && query.typeDxns.length === 0) {
           return [];
         }
 
-        const rowsFor = (condition: Statement.Fragment) =>
-          typeCondition === undefined
-            ? sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${condition} ORDER BY seq DESC`
-            : sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${condition} AND ${typeCondition} ORDER BY seq DESC`;
+        // Both lists bind variables into the same statement, so the budget is split between them
+        // rather than spent twice: a key binds two (name and version), and a type DXN up to eight
+        // — two URI forms, four each once a versionless one expands to a range plus its residual.
+        const typeChunks: (readonly string[] | undefined)[] =
+          query.typeDxns === undefined
+            ? [undefined]
+            : chunkArray([...new Set(query.typeDxns)], chunkSizeForBoundVariables(16));
 
+        const rowsFor = (condition: Statement.Fragment, typeDxns: readonly string[] | undefined) =>
+          typeDxns === undefined
+            ? sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${condition} ORDER BY seq DESC`
+            : sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${condition} AND (${buildTypeDxnCondition(sql, typeDxns)}) ORDER BY seq DESC`;
+
+        const results: EntityMeta[] = [];
         if (query.keys === undefined) {
-          const rows = yield* rowsFor(sql`origin = ${ORIGIN_REGISTRY}`);
-          return rows.map((row) => ({ ...row, deleted: !!row.deleted }));
+          for (const typeDxns of typeChunks) {
+            const rows = yield* rowsFor(sql`origin = ${ORIGIN_REGISTRY}`, typeDxns);
+            results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
+          }
+          return [...new Map(results.map((row) => [row.recordId, row])).values()].sort(
+            (left, right) => right.seq - left.seq,
+          );
         }
         // An empty key carries no name, and the empty name is what every non-registry row holds,
         // so it would address the whole ordinary index rather than nothing; never let one through.
@@ -486,22 +492,22 @@ export class EntityMetaIndex implements Index {
           return [];
         }
 
-        // Up to two bound variables per key (name plus version), so halve the chunk budget.
-        const results: EntityMeta[] = [];
-        for (const chunk of chunkArray(keys, chunkSizeForBoundVariables(2))) {
-          const condition = sql.or(
-            chunk.map((key) => {
-              const { name, version } = splitRegistryKey(key);
-              return version === '' ? sql`name = ${name}` : sql`(name = ${name} AND version = ${version})`;
-            }),
-          );
-          const rows = yield* rowsFor(sql`(origin = ${ORIGIN_REGISTRY} AND (${condition}))`);
-          results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
+        for (const typeDxns of typeChunks) {
+          for (const chunk of chunkArray(keys, chunkSizeForBoundVariables(4))) {
+            const condition = sql.or(
+              chunk.map((key) => {
+                const { name, version } = splitRegistryKey(key);
+                return version === '' ? sql`name = ${name}` : sql`(name = ${name} AND version = ${version})`;
+              }),
+            );
+            const rows = yield* rowsFor(sql`(origin = ${ORIGIN_REGISTRY} AND (${condition}))`, typeDxns);
+            results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
+          }
         }
         // Chunking splits one ordering into several; restore the global newest-first order so the
         // caller's "first row per key is the primary" reading holds across chunk boundaries.
-        // Deduplicated first: an unversioned key matches the same row as its versioned sibling, so
-        // a pair split across chunks would otherwise come back twice.
+        // Deduplicated first: an unversioned key matches the same row as its versioned sibling,
+        // and a row can match under more than one type chunk, so either would come back twice.
         return [...new Map(results.map((row) => [row.recordId, row])).values()].sort(
           (left, right) => right.seq - left.seq,
         );
@@ -527,7 +533,13 @@ export class EntityMetaIndex implements Index {
       }),
   );
 
-  /** Record ids of the rows registered under the given entry keys — the set an unregister reclaims. */
+  /**
+   * Record ids of the rows registered under the given entry keys — the set an unregister reclaims.
+   *
+   * Matches the (name, version) pair exactly, unlike {@link queryRegistry}: a key addresses the one
+   * row it was filed under, and the lookup's rule that an unversioned key spans every version under
+   * the name would have an unregistered `dxn:foo` reclaim a live `dxn:foo:1.0.0` beside it.
+   */
   selectRegistryRecordIds = Effect.fn('EntityMetaIndex.selectRegistryRecordIds')(
     (keys: readonly string[]): Effect.Effect<number[], SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
@@ -543,7 +555,7 @@ export class EntityMetaIndex implements Index {
           const condition = sql.or(
             chunk.map((key) => {
               const { name, version } = splitRegistryKey(key);
-              return version === '' ? sql`name = ${name}` : sql`(name = ${name} AND version = ${version})`;
+              return sql`(name = ${name} AND version = ${version})`;
             }),
           );
           const rows = yield* sql<{

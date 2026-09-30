@@ -15,6 +15,7 @@ import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
+import { toServiceError } from '@dxos/protocols';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -185,9 +186,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   }
 
   ['QueryService.updateRegistry'](request: QueryService.RegistryUpdateRequest): Effect.Effect<void, Error> {
-    return Effect.promise(() =>
-      this._params.updateRegistry(request.clientId, request.entries, { releasing: request.releasing }),
-    );
+    // `tryPromise`, not `promise`: a failed reclaim is a `SqlError` the caller can act on, and
+    // `promise` would turn it into a defect that never reaches the declared error channel.
+    return Effect.tryPromise({
+      try: () => this._params.updateRegistry(request.clientId, request.entries, { releasing: request.releasing }),
+      catch: toServiceError,
+    });
   }
 
   ['QueryService.execQuery'](

@@ -239,20 +239,47 @@ export class RegistryDataSource implements IndexDataSource {
     );
   }
 
+  /**
+   * Whether {@link prime} has read the persisted registry.
+   *
+   * False after a failed read, where {@link persistedKeys} is empty for want of an answer rather
+   * than because the index is: reconciling against it would conclude that nothing is orphaned and
+   * retire the one pass that could ever reclaim the previous session's rows.
+   */
+  get primed(): boolean {
+    return this.#primed;
+  }
+
   /** Entry keys the index already holds, as of {@link prime} — what a reconciliation reclaims against. */
   get persistedKeys(): ReadonlySet<string> {
     return new Set(this.#persistedHashes.keys());
   }
 
   /**
+   * Drop the record of what the index holds for these keys, once their rows are actually gone.
+   *
+   * {@link getChangedObjects} skips an entry whose digest matches the persisted one, so a key
+   * reclaimed from the index while its digest stays here is never re-emitted: re-registering the
+   * same content later would be recognised as already indexed and silently dropped.
+   */
+  forgetPersisted(keys: Iterable<string>): void {
+    for (const key of keys) {
+      this.#persistedHashes.delete(key);
+    }
+  }
+
+  /**
    * Replace one client's contribution to the buffer with the entries it currently holds.
+   *
+   * Resolved in full before anything is filed, so that two entities sharing one identity collapse
+   * to the last of them rather than each overwriting the other: filing both would leave the
+   * contribution flipping on every push, and a byte-identical re-push would report a change.
    *
    * @returns the keys no client carries any more, for the caller to reclaim from the index.
    * Unchanged entries keep their sequence, so they are not re-emitted.
    */
   submit(clientId: string, entries: readonly RegistryEntry[]): { removed: string[]; changed: number } {
-    const seen = new Set<string>();
-    let changed = 0;
+    const resolved = new Map<string, { json: string; hash: string; data: ObjectJSON | undefined }>();
     for (const entry of entries) {
       const hash = contentHash(entry.objectJson);
 
@@ -263,10 +290,7 @@ export class RegistryDataSource implements IndexDataSource {
       // again; only content nobody has filed before reaches the parse below.
       const known = this.#identityByHash.get(hash);
       if (known !== undefined) {
-        seen.add(known);
-        if (this.#file(clientId, known, entry.objectJson, hash, undefined)) {
-          changed++;
-        }
+        resolved.set(known, { json: entry.objectJson, hash, data: undefined });
         continue;
       }
 
@@ -288,15 +312,19 @@ export class RegistryDataSource implements IndexDataSource {
       }
       const key = identityKey(registryIdentity(parsed));
       this.#identityByHash.set(hash, key);
-      seen.add(key);
-      if (this.#file(clientId, key, entry.objectJson, hash, parsed)) {
+      resolved.set(key, { json: entry.objectJson, hash, data: parsed });
+    }
+
+    let changed = 0;
+    for (const [key, { json, hash, data }] of resolved) {
+      if (this.#file(clientId, key, json, hash, data)) {
         changed++;
       }
     }
 
     const removed: string[] = [];
     for (const [key, entry] of this.#entries) {
-      if (seen.has(key) || !entry.contributions.has(clientId)) {
+      if (resolved.has(key) || !entry.contributions.has(clientId)) {
         continue;
       }
       entry.contributions.delete(clientId);
@@ -389,9 +417,10 @@ export class RegistryDataSource implements IndexDataSource {
         if (objects.length >= limit) {
           break;
         }
-        // Re-read through the map: the digest probe above suspends, and a snapshot arriving in that
-        // window can unregister a key or promote another client's registration. Emitting the
-        // superseded object would write a row that the pass that deleted it can no longer reclaim.
+        // Re-read through the map rather than trusting the snapshot taken above: the write this
+        // batch feeds lands in a later transaction, and a client's push in between can unregister
+        // a key or promote another client's registration. Emitting the superseded object would
+        // write a row that the push that reclaimed it has already stopped looking for.
         const live = this.#entries.get(entry.key);
         if (live === undefined || live.active !== entry.active) {
           continue;

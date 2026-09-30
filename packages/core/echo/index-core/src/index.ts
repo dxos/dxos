@@ -16,6 +16,7 @@ export {
   EntityMetaIndex,
   type QueueRef,
   type QueueWindow,
+  buildExcludeRegistryCondition,
   buildQueueWindow,
   buildSourceCondition,
   buildTypeDxnCondition,

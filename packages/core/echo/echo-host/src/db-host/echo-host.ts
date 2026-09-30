@@ -204,6 +204,9 @@ export class EchoHost extends Resource {
    */
   #registryIndexOwed = false;
 
+  /** Bumped by every snapshot that owes a pass, so a pass cannot clear a debt it never read. */
+  #registryGeneration = 0;
+
   private _updateIndexes!: DeferredTask;
 
   /**
@@ -422,6 +425,11 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       listPersisted: () => this.indexEngine.listRegistryDigests(),
     });
+    // Reset alongside the source they describe: a reopened host gets an empty buffer and a fresh
+    // session id, and carrying the old flags over would skip the reconciliation that reclaims the
+    // rows no client came back for.
+    this._registryReconciled = false;
+    this.#registryIndexOwed = false;
 
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
@@ -586,7 +594,10 @@ export class EchoHost extends Resource {
     // Never off a release: it carries no entries, so if it is the first snapshot of a session the
     // live set is empty and reconciliation would read the whole persisted registry as orphaned —
     // deleting exactly the rows a release is meant to keep. The first real snapshot reconciles.
-    const reconciling = !opts?.releasing && !this._registryReconciled;
+    // Gated on a successful prime: an empty `persistedKeys` from a failed read is indistinguishable
+    // from an empty index here, and reconciling on it would mark the job done having reclaimed
+    // nothing. Left unset, the next snapshot retries.
+    const reconciling = !opts?.releasing && !this._registryReconciled && this.#registryDataSource.primed;
     if (reconciling) {
       // Against the digests read by `prime` rather than a scan of its own: the same rows, already
       // in memory, and one query fewer on the path every client takes at startup.
@@ -602,6 +613,10 @@ export class EchoHost extends Resource {
       const deleted = await this.indexEngine
         .deleteRegistryEntries([...stale])
         .pipe(RuntimeProvider.runPromise(this._runtime));
+      // Only once the rows are gone: the source skips an entry whose digest matches what it
+      // believes the index holds, so a key reclaimed here but left in that record could never be
+      // re-registered with the same content for the rest of the session.
+      this.#registryDataSource.forgetPersisted(stale);
       log('reclaimed registry entries', { keys: stale.size, rows: deleted });
       this._queryService.invalidateQueries();
     }
@@ -619,6 +634,7 @@ export class EchoHost extends Resource {
       // serialized against this one but races the scheduling that follows it, and it has to see
       // that a pass is outstanding in order to wait for it.
       this.#registryIndexOwed = true;
+      this.#registryGeneration++;
     }
     return owed;
   }
@@ -1565,13 +1581,17 @@ export class EchoHost extends Resource {
       }
 
       {
+        // Read before the leg: a snapshot folded in while it runs bumps this, and clearing the
+        // flag on a generation this pass never saw would tell that snapshot's caller its entries
+        // are queryable when the pass had already read past them.
+        const generation = this.#registryGeneration;
         const result = await this.indexEngine
           .update(ctx, this.#registryDataSource, { spaceId: null, limit: 50 })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
         // Cleared only once the leg has drained: a batch that stopped at its limit still owes the
         // rest, and a waiter told otherwise would read an index missing the tail.
-        if (result.done) {
+        if (result.done && this.#registryGeneration === generation) {
           this.#registryIndexOwed = false;
         }
       }

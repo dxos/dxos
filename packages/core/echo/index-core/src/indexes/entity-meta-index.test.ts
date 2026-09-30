@@ -15,7 +15,7 @@ import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
 import { IndexTracker } from '../index-tracker.ts';
 import { backfillNormalizedIds } from '../migrations/entity-meta/0009_backfill_normalized_ids.ts';
-import { ORIGIN_AUTOMERGE } from '../registry-keys.ts';
+import { ORIGIN_AUTOMERGE, ORIGIN_REGISTRY, REGISTRY_SPACE_ID } from '../registry-keys.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
 
@@ -68,6 +68,40 @@ describe('EntityMetaIndex', () => {
         { recordId: localRecordId, parentId },
         { recordId: crossSpaceRecordId, parentId: null },
       ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // An unversioned lookup matches every version under the name, which is right for a read and
+  // wrong for a reclaim: the key names one row, and expanding it takes live siblings with it.
+  it.effect('reclaiming an unversioned key leaves the versions registered under that name', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+
+      const name = 'dxn:com.example.op.resize';
+      const registryObject = (version: string): IndexerObject => ({
+        spaceId: REGISTRY_SPACE_ID,
+        queueId: null,
+        queueNamespace: null,
+        documentId: null,
+        recordId: null,
+        origin: ORIGIN_REGISTRY,
+        name,
+        version,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+      });
+
+      yield* index.update([registryObject(''), registryObject('1.0.0')]);
+      expect((yield* index.queryRegistry({})).length).toEqual(2);
+
+      // The unversioned entity stops being registered; the versioned one is still carried.
+      const reclaimed = yield* index.selectRegistryRecordIds([name]);
+      expect(reclaimed.length, 'an unversioned key reclaims only its own row').toEqual(1);
+
+      const survivors = yield* index.queryRegistry({ keys: [`${name}:1.0.0`] });
+      expect(survivors.map((row) => row.version)).toEqual(['1.0.0']);
     }).pipe(Effect.provide(TestLayer)),
   );
 
