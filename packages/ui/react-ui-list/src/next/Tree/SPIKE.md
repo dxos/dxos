@@ -17,7 +17,7 @@ spike shows work: a lazy walk, flat rows, and a fixed-block window. Option 3 wou
 | `tree-collection.ts`      | `createTreeWalkAtom`: the `TreeModel` → zag adapter (lazy, visible rows only) and `createCollection`                                                                          |
 | `Tree.tsx`                | a private `Tree` namespace: `Root` (controlled Ark `TreeView.Root`), `Label`, `Content` (Ark's `tree` element as a ScrollArea viewport, optional windowing), `Item` (the row) |
 | `tree.css`                | row styles; they belong in `@dxos/react-ui/next/theme` on adoption                                                                                                            |
-| `Tree.stories.tsx`        | `Default` (static model, draggable), `Large` (5,000 rows, windowed), `Test`, `WindowedTest`, `Benchmark` (tagged `!test`)                                                     |
+| `Tree.stories.tsx`        | `Default` (static model, draggable), `Large` (5,000 rows, windowed), `Test`, `OpenTest`, `StaticTest`, `WindowedTest`, `Benchmark` (tagged `!test`)                           |
 | `tree-collection.test.ts` | the walk reads only open branches; opening re-walks; 5,000-row walk timing                                                                                                    |
 
 Not exported from `src/next/index.ts`.
@@ -145,6 +145,30 @@ also works windowed.
   win (finding 10). The spike copies the attributes by hand. `containerAttributes` should be exported through `Next`
   so wrappers in sibling packages can use it, as `Next.Listbox.Item` does.
 
+## Animation
+
+`Tree.Root` `animate` (default on) ports the current Tree's disclosure animation to flat rows. With no nested
+`BranchContent` to animate, each row under the branch animates itself (`data-disclosure` on the row, keyframes in
+`tree.css`):
+
+- **Open** records the disclosure, then commits: the rows the commit mounts carry `data-disclosure='enter'` from their
+  first frame and grow from zero to one block while fading in.
+- **Close** records the disclosure and does not commit. zag still sees the branch as expanded (its `expandedValue` is
+  the walk's), so the rows stay mounted with `data-disclosure='conceal'` and shrink to zero (`forwards` holds them
+  there), the branch row carries `data-concealing` so its caret turns with them, and `aria-expanded` stays true. After
+  the duration a timer commits `onOpenChange(false)` and the walk drops the rows; a close pending at unmount is
+  committed then. The timer, not `animationend`, ends the phase, because a windowed tree may have none of the rows
+  mounted.
+- **User-driven only.** Only disclosures requested through the machine (or a drag hover) are recorded, so rows
+  rendered open from the start never animate; no insertion-time gate is needed.
+- **Duration** is `--nx-tree-disclosure-duration`, set on `.nx-tree` from the theme's `--duration-tree-disclosure` and
+  `0ms` under `prefers-reduced-motion`; Root reads the resolved value, so CSS and timer agree, and 0 commits at once.
+- Works in every `virtualize` mode; the window measures its block from a row that is not animating.
+- `tree.css` (keyframes included) moves into the Next theme with the rest of the Tree's styles on adoption.
+
+`Test` (enter and conceal, observed with a MutationObserver so a 200 ms phase is never missed), `OpenTest` (initial
+open state does not animate) and `StaticTest` (`animate={false}`) cover it.
+
 ## 6. Recommendation and remaining work
 
 **Adopt Ark tree-view (option 1)**, ported from the current Ark-based Tree rather than written fresh. Reasons: zag
@@ -161,7 +185,7 @@ Remaining work, roughly **8–12 days**:
    as `ItemGroup`/`ItemGroupLabel` (2–3 d).
 3. Windowing: keep the focused row mounted when it scrolls out of the window. It is currently unmounted, which
    leaves focus on `body` and the tree with no tab stop. Also handle variable-height rows (a description line) by
-   seeding `react-ui-virtual` with the block size (AUDIT §2.5), and disclosure animation for windowed rows (2–3 d).
+   seeding `react-ui-virtual` with the block size (AUDIT §2.5) (2–3 d). Disclosure animation is done (see Animation).
 4. Port the activation and selection details from question 2, and the drop details (`dropAtEnd`,
    `dropBelowExpanded`, drag-collapse of an open branch, focus restore, `DropIndicator` `inside`/indent) (2–3 d).
 5. Migrate plugin-navtree and sdk/shell (32 call sites), plus a manual drag and scroll pass on a real display

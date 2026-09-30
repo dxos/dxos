@@ -36,6 +36,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 import { raise } from '@dxos/debug';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -48,6 +49,9 @@ import { type TreeNode, type TreeWalk, createCollection, createTreeWalkAtom } fr
 
 /** `window` mounts only the rows in view; `css` mounts every row with `content-visibility: auto`. */
 export type TreeVirtualize = 'none' | 'css' | 'window';
+
+/** A disclosure in flight: the rows under `path` fade in (`open`) or conceal before the close commits. */
+type TreeDisclosure = { value: string; path: string[]; open: boolean };
 
 export type TreeDropEvent<T extends { id: string } = any> = {
   instruction: Instruction;
@@ -64,7 +68,9 @@ type TreeContextValue = {
   indentGuides: boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
-  onOpenChange?: (params: { item: any; path: string[]; open: boolean }) => void;
+  /** Every disclosure goes through here, so an animated close can hold its rows until they have concealed. */
+  setOpen: (node: TreeNode, open: boolean) => void;
+  disclosures: readonly TreeDisclosure[];
   /** Set by Content when windowed; zag calls it before focusing a row it may not have mounted. */
   scrollToIndexRef: RefObject<((index: number) => void) | null>;
 };
@@ -90,6 +96,8 @@ type TreeRootProps<T extends { id: string } = any> = {
   virtualize?: TreeVirtualize;
   draggable?: boolean;
   indentGuides?: boolean;
+  /** Animate user-driven disclosure (never the initial or persisted open state); off under reduced motion. */
+  animate?: boolean;
   canDrop?: TreeContextValue['canDrop'];
   getDropKind?: TreeContextValue['getDropKind'];
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
@@ -111,6 +119,7 @@ const TreeRoot = <T extends { id: string }>({
   virtualize = 'none',
   draggable = false,
   indentGuides = false,
+  animate = true,
   canDrop,
   getDropKind,
   onOpenChange,
@@ -122,6 +131,69 @@ const TreeRoot = <T extends { id: string }>({
   const walk = useAtomValue(walkAtom);
   const collection = useMemo(() => createCollection(walk.root), [walk.root]);
   const scrollToIndexRef = useRef<((index: number) => void) | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  // Only disclosures requested after mount are recorded, so rows rendered open from the start never animate.
+  const [disclosures, setDisclosures] = useState<readonly TreeDisclosure[]>([]);
+  const pendingRef = useRef(
+    new Map<string, { disclosure: TreeDisclosure; timer: ReturnType<typeof setTimeout>; close?: () => void }>(),
+  );
+  // A close still concealing at unmount is committed, so the model does not lose it.
+  useEffect(() => {
+    const pending = pendingRef.current;
+    return () => {
+      pending.forEach(({ timer, close }) => {
+        clearTimeout(timer);
+        close?.();
+      });
+      pending.clear();
+    };
+  }, []);
+
+  const setOpen = useCallback(
+    (node: TreeNode<T>, open: boolean) => {
+      const commit = () => onOpenChange?.({ item: node.item, path: node.path, open });
+      const pending = pendingRef.current;
+      const previous = pending.get(node.value);
+      if (previous) {
+        if (previous.disclosure.open === open) {
+          return;
+        }
+        clearTimeout(previous.timer);
+        pending.delete(node.value);
+        setDisclosures((list) => list.filter((entry) => entry !== previous.disclosure));
+        // Reopening a concealing branch: the model never closed it, so its rows just stop concealing.
+        if (open) {
+          return;
+        }
+      }
+
+      const duration = animate && rootRef.current ? disclosureDuration(rootRef.current) : 0;
+      if (duration <= 0) {
+        return commit();
+      }
+
+      const disclosure: TreeDisclosure = { value: node.value, path: node.path, open };
+      // Flushed before the commit: the model's update renders synchronously (an external store), so a batched phase
+      // would land a commit after the rows it animates had already mounted at full height.
+      flushSync(() => setDisclosures((list) => [...list, disclosure]));
+      if (open) {
+        commit();
+      }
+      pending.set(node.value, {
+        disclosure,
+        timer: setTimeout(() => {
+          pending.delete(node.value);
+          if (!open) {
+            commit();
+          }
+          setDisclosures((list) => list.filter((entry) => entry !== disclosure));
+        }, duration),
+        close: open ? undefined : commit,
+      });
+    },
+    [animate, onOpenChange],
+  );
 
   const handleExpandedChange = useCallback(
     ({ expandedValue }: { expandedValue: string[] }) => {
@@ -129,14 +201,14 @@ const TreeRoot = <T extends { id: string }>({
       const previous = new Set(walk.expanded);
       for (const value of expandedValue) {
         const node = previous.has(value) ? undefined : walk.byValue.get(value);
-        node && onOpenChange?.({ item: node.item, path: node.path, open: true });
+        node && setOpen(node, true);
       }
       for (const value of walk.expanded) {
         const node = next.has(value) ? undefined : walk.byValue.get(value);
-        node && onOpenChange?.({ item: node.item, path: node.path, open: false });
+        node && setOpen(node, false);
       }
     },
-    [walk, onOpenChange],
+    [walk, setOpen],
   );
 
   const handleSelectionChange = useCallback(
@@ -190,10 +262,11 @@ const TreeRoot = <T extends { id: string }>({
       indentGuides,
       canDrop,
       getDropKind,
-      onOpenChange,
+      setOpen,
+      disclosures,
       scrollToIndexRef,
     }),
-    [id, walk, virtualize, draggable, indentGuides, canDrop, getDropKind, onOpenChange],
+    [id, walk, virtualize, draggable, indentGuides, canDrop, getDropKind, setOpen, disclosures],
   );
 
   return (
@@ -208,6 +281,7 @@ const TreeRoot = <T extends { id: string }>({
         scrollToIndexFn={virtualize === 'window' ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
         data-size={size}
         className='nx-tree'
+        ref={rootRef}
       >
         {children}
       </TreeView.Root>
@@ -216,6 +290,17 @@ const TreeRoot = <T extends { id: string }>({
 };
 
 TreeRoot.displayName = 'Tree.Root';
+
+/** The disclosure duration the tree's CSS resolves (the theme token, 0 under reduced motion), in milliseconds. */
+const disclosureDuration = (element: HTMLElement): number => {
+  const value = getComputedStyle(element).getPropertyValue('--nx-tree-disclosure-duration').trim();
+  const duration = Number.parseFloat(value);
+  return Number.isNaN(duration) ? 0 : value.endsWith('ms') ? duration : duration * 1000;
+};
+
+/** Whether `path` lies strictly under `ancestor`. */
+const isDescendant = (path: string[], ancestor: string[]) =>
+  path.length > ancestor.length && ancestor.every((id, index) => path[index] === id);
 
 //
 // Label
@@ -297,7 +382,8 @@ const TreeContent = ({ children: renderRow = (node) => <TreeItem node={node} /> 
     if (!windowed) {
       return;
     }
-    const row = viewportRef.current?.querySelector<HTMLElement>('[data-tree-row]');
+    // An animating row is mid-way between zero and one block.
+    const row = viewportRef.current?.querySelector<HTMLElement>('[data-tree-row]:not([data-disclosure])');
     const height = row?.getBoundingClientRect().height;
     if (height && height !== blockRef.current) {
       blockRef.current = height;
@@ -384,7 +470,7 @@ type DragState = { instruction: Instruction | null; kind: DropKind; dragging: bo
  * one block per level. Rows are drag sources and drop targets when the Root is `draggable`.
  */
 const TreeItem = ({ node, children }: TreeItemProps) => {
-  const { treeId, virtualize, draggable, indentGuides, canDrop, getDropKind, onOpenChange } =
+  const { treeId, virtualize, draggable, indentGuides, canDrop, getDropKind, setOpen, disclosures } =
     useTreeContext('Tree.Item');
   const { t } = useTranslation();
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -439,7 +525,7 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
               : desired;
           // Holding over a closed branch's centre opens it, as the current Tree does.
           if (instruction?.type === 'make-child' && branch && !open && !expandTimer) {
-            expandTimer = setTimeout(() => onOpenChange?.({ item, path, open: true }), 500);
+            expandTimer = setTimeout(() => setOpen(node, true), 500);
           } else if (instruction?.type !== 'make-child') {
             clearTimeout(expandTimer);
             expandTimer = undefined;
@@ -451,7 +537,12 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
       }),
       () => clearTimeout(expandTimer),
     );
-  }, [draggable, treeId, id, path, item, depth, branch, open, canDrop, getDropKind, onOpenChange]);
+  }, [draggable, treeId, node, id, path, item, depth, branch, open, canDrop, getDropKind, setOpen]);
+
+  // A conceal outranks an enter: a row under a closing branch leaves with it.
+  const under = disclosures.filter((disclosure) => isDescendant(path, disclosure.path));
+  const phase = under.some(({ open }) => !open) ? 'conceal' : under.length > 0 ? 'enter' : undefined;
+  const concealing = disclosures.some((disclosure) => !disclosure.open && disclosure.value === node.value);
 
   const style: CSSProperties & Record<`--${string}`, string> = {
     '--nx-columns': 'var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) auto',
@@ -466,6 +557,8 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
     'data-virtualize': virtualize === 'css' ? 'css' : undefined,
     'data-dragging': drag.dragging ? '' : undefined,
     'data-drop': drag.instruction?.type === 'make-child' ? 'inside' : undefined,
+    'data-disclosure': phase,
+    'data-concealing': concealing ? '' : undefined,
     'data-testid': props.testId,
     style,
     'className': 'nx-grid nx-tree-item',

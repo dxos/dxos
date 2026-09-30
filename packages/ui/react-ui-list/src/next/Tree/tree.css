@@ -12,6 +12,8 @@
     max-height: 100%;
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
+    /* Read by Tree.Root to time the commit of a close, so the CSS and the timer share one value. */
+    --nx-tree-disclosure-duration: var(--duration-tree-disclosure, 200ms);
   }
 
   .nx-tree > .nx-scroll-root {
@@ -71,10 +73,58 @@
   .nx-tree-branch-indicator {
     display: grid;
     place-items: center;
-    transition: transform 150ms;
+    transition: transform var(--nx-tree-disclosure-duration) ease-out;
   }
   .nx-tree-branch-indicator[data-state='open'] {
     transform: rotate(90deg);
+  }
+  /* The machine still reports a concealing branch as open (the close has not committed); the caret turns with its rows. */
+  .nx-tree-item[data-concealing] .nx-tree-branch-indicator {
+    transform: none;
+  }
+
+  /*
+   * Disclosure (Tree.Root `animate`). Rows are flat, so each row under the branch animates itself: an entering row
+   * grows and fades in from the commit that mounts it; a concealing row shrinks and fades out while the close waits,
+   * and `forwards` holds it collapsed until the commit removes it. The clip exists only while the height moves, so a
+   * row at rest still paints its focus ring and drop line.
+   */
+  .nx-tree-item[data-disclosure='enter'] {
+    animation: nx-tree-row-enter var(--nx-tree-disclosure-duration) ease-out;
+  }
+  .nx-tree-item[data-disclosure='conceal'] {
+    animation: nx-tree-row-conceal var(--nx-tree-disclosure-duration) ease-in forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-tree {
+      --nx-tree-disclosure-duration: 0ms;
+    }
+  }
+
+  @keyframes nx-tree-row-enter {
+    from {
+      opacity: 0;
+      block-size: 0;
+      overflow-y: clip;
+    }
+    to {
+      opacity: 1;
+      block-size: var(--nx-block-size);
+      overflow-y: clip;
+    }
+  }
+  @keyframes nx-tree-row-conceal {
+    from {
+      opacity: 1;
+      block-size: var(--nx-block-size);
+      overflow-y: clip;
+    }
+    to {
+      opacity: 0;
+      block-size: 0;
+      overflow-y: clip;
+    }
   }
 
   /* One segment per ancestor, centred under that ancestor's disclosure block; segments join across rows. */

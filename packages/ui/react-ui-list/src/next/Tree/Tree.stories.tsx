@@ -69,6 +69,7 @@ type StoryArgs = SizeArgs & {
   virtualize?: TreeVirtualize;
   draggable?: boolean;
   indentGuides?: boolean;
+  animate?: boolean;
   height?: string;
   testId?: string;
 };
@@ -127,6 +128,7 @@ const DefaultStory = ({
   virtualize = 'none',
   draggable = false,
   indentGuides = true,
+  animate,
   height = '24rem',
   testId,
 }: StoryArgs) => {
@@ -141,6 +143,7 @@ const DefaultStory = ({
         virtualize={virtualize}
         draggable={draggable}
         indentGuides={indentGuides}
+        animate={animate}
         onOpenChange={onOpenChange}
         onSelect={onSelect}
         onDrop={onDrop}
@@ -182,6 +185,46 @@ const rows = (tree: HTMLElement) => within(tree).getAllByRole('treeitem');
 const focusedName = () => (document.activeElement as HTMLElement | null)?.textContent;
 
 /**
+ * Records, per row label, each disclosure phase (with the animation it resolves to) as the row is inserted or
+ * re-attributed, and its removal: a MutationObserver sees a phase however short, where a poll could miss it.
+ */
+const recordDisclosure = (tree: HTMLElement) => {
+  const events = new Map<string, string[]>();
+  const push = (row: Element, event: string) => {
+    const name = row.textContent ?? '';
+    events.set(name, [...(events.get(name) ?? []), event]);
+  };
+  const rowsOf = (node: Node) =>
+    node instanceof Element
+      ? [...(node.matches('[data-tree-row]') ? [node] : node.querySelectorAll('[data-tree-row]'))]
+      : [];
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.type === 'attributes') {
+        rowsOf(record.target).forEach((row) => {
+          const phase = row.getAttribute('data-disclosure');
+          phase && push(row, `${phase}:${getComputedStyle(row).animationName}`);
+        });
+        continue;
+      }
+      record.addedNodes.forEach((node) =>
+        rowsOf(node).forEach((row) => {
+          const phase = row.getAttribute('data-disclosure');
+          push(row, phase ? `${phase}:${getComputedStyle(row).animationName}` : 'mounted');
+        }),
+      );
+      record.removedNodes.forEach((node) => rowsOf(node).forEach((row) => push(row, 'removed')));
+    }
+  });
+  observer.observe(tree, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-disclosure'] });
+  return {
+    events: (name: string) => events.get(name) ?? [],
+    phases: () => [...events.values()].flat().filter((event) => event !== 'mounted' && event !== 'removed'),
+    stop: () => observer.disconnect(),
+  };
+};
+
+/**
  * Rows are one block tall at every size. The keyboard follows the APG tree pattern from zag: ArrowDown/Up move,
  * ArrowRight opens a branch then enters it, ArrowLeft returns to the parent then closes it, Home/End, typeahead, and
  * Enter selects; the model receives each change and feeds it back (`aria-expanded`, `aria-selected`).
@@ -200,16 +243,31 @@ export const Test: Story = {
     await expect(fruit).toHaveAttribute('aria-expanded', 'false');
     await expect(rows(tree)).toHaveLength(3);
 
+    // A click selects the branch and (zag's `expandOnClick`) opens it; the rows the open mounts enter animated.
+    const opening = recordDisclosure(tree);
     await userEvent.click(within(fruit).getByText('Fruit'));
     await waitFor(() => expect(fruit).toHaveAttribute('aria-selected', 'true'));
     await waitFor(() => expect(focusedName()).toContain('Fruit'));
+    await waitFor(() =>
+      expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true'),
+    );
+    await expect(rows(tree)).toHaveLength(5);
+    await waitFor(() => expect(opening.events('Apple')).toEqual(['enter:nx-tree-row-enter']));
+    await waitFor(() => expect(tree.querySelector('[data-disclosure]')).toBeNull());
+    opening.stop();
 
     // Branch disclosure from the keyboard, fed back through the model.
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() =>
+      expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'false'),
+    );
+    await expect(rows(tree)).toHaveLength(3);
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() =>
       expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true'),
     );
     await expect(rows(tree)).toHaveLength(5);
+    await waitFor(() => expect(tree.querySelector('[data-disclosure]')).toBeNull());
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(focusedName()).toContain('Apple'));
     await userEvent.keyboard('{ArrowDown}');
@@ -221,11 +279,15 @@ export const Test: Story = {
     await expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-selected', 'false');
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() => expect(focusedName()).toContain('Fruit'));
+    // A close holds its rows mounted while they conceal, then commits and removes them.
+    const closing = recordDisclosure(tree);
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() =>
       expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'false'),
     );
     await expect(rows(tree)).toHaveLength(3);
+    await expect(closing.events('Banana')).toEqual(['conceal:nx-tree-row-conceal', 'removed']);
+    closing.stop();
 
     await userEvent.keyboard('{End}');
     await waitFor(() => expect(focusedName()).toContain('Grain'));
@@ -236,6 +298,42 @@ export const Test: Story = {
 
     // Rows are drag sources (pragmatic-dnd) without leaving zag's roving tabstop.
     await expect(within(tree).getByRole('treeitem', { name: /Grain/ })).toHaveAttribute('draggable', 'true');
+  },
+};
+
+/** Rows rendered open from the start (persisted open state) do not animate; only user-driven disclosure does. */
+export const OpenTest: Story = {
+  args: { tree: createFixedTree, open: true, draggable: false },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    await expect(rows(tree)).toHaveLength(6);
+    for (const row of tree.querySelectorAll<HTMLElement>('[data-tree-row]')) {
+      await expect(row).not.toHaveAttribute('data-disclosure');
+      await expect(getComputedStyle(row).animationName).toBe('none');
+    }
+  },
+};
+
+/** `animate={false}`: rows appear with the open and leave with the close, with no phase between. */
+export const StaticTest: Story = {
+  args: { tree: createFixedTree, animate: false, draggable: false },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    const recorder = recordDisclosure(tree);
+    tree.querySelector<HTMLElement>('[data-tree-row]')?.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() =>
+      expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true'),
+    );
+    await expect(rows(tree)).toHaveLength(5);
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() =>
+      expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'false'),
+    );
+    await expect(rows(tree)).toHaveLength(3);
+    await expect(recorder.events('Banana')).toEqual(['mounted', 'removed']);
+    await expect(recorder.phases()).toEqual([]);
+    recorder.stop();
   },
 };
 

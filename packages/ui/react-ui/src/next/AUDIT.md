@@ -1,6 +1,44 @@
 # react-ui-form and react-ui-list on Next: audit and plan
 
-Status and open questions: [§6 Decision points](#6-decision-points).
+## Roadmap
+
+_Updated 2026-09-30. The detail behind every line is below: milestones in [§5](#5-plan), decisions in
+[§6](#6-decision-points)._
+
+### Where we are
+
+| Area                        | Status          | Notes                                                                                    |
+| --------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
+| Next components (react-ui)  | **Partial**     | 37 components, tested per size; Ark part naming adopted; used by two pilots              |
+| Foundations (M1)            | **Mostly done** | Panel, popup sizing, required mark done; Container child span and depth-5 benchmark open |
+| Listbox, OrderedList (M2–4) | **Done**        | `@dxos/react-ui-list/next`; pilots: plugin-registry list, plugin-sheet RangeList         |
+| Combobox trigger mode (M5)  | **In progress** | Button trigger, input in popup, descriptions, create row, async, virtual anchor          |
+| Tree (M11)                  | **Prototype**   | Ark tree-view spike works (5,000 rows windowed); `animate` in progress; port ~8–12 days  |
+| MasterDetail (M11)          | Not started     | Needs toolbar actions (`useMenuActions`) on Next Menu                                    |
+| react-ui-form/next (M6–10)  | Not started     | Needs M5 and the settings-layout decision                                                |
+| Migration and cleanup       | Not started     | ~97 react-ui-list and ~155 react-ui-form importers; then delete the old code             |
+
+Blocking gaps (below): 1 (host), 2 (popup size) and 4 (list primitives) are closed; 3 (Combobox) is M5; 5 (settings
+layout) is deferred to M7.
+
+### What's next, in order
+
+1. **Land the follow-up PR:** Tree `animate` (on by default), Combobox trigger mode (M5).
+2. **Finish Foundations (M1):** Container child span (§6 point 7), depth-5 subgrid benchmark, `+1` level fallback.
+3. **react-ui-form/next core (M6):** form parts and scalar renderers on Next; pilot plugin-thread `ChannelCreatePanel`.
+4. **Settings layout (M7)**, then **arrays and layout templates (M8)**, **ref and lookup fields (M9)**,
+   **higher-level form components (M10)**.
+5. **Tree port (M11):** move the prototype to a real `Tree`; pilot plugin-navtree; then MasterDetail.
+6. **Migrate and delete:** move importers package by package, add the mixing lint rule (point 11), delete the old
+   components and make `next` each package's root entry.
+
+### Decisions still needed
+
+- **Lists:** virtualization (point 3), selection ownership (4), OrderedList keyboard grammar (19), shared row states
+  (20), `Empty` parts (41), row identity for plain arrays (43).
+- **Form:** settings layout (1, deferred to M7), Next sections inside current hosts (42).
+- **Labels and text:** list chrome translations (21), Typography `id` (40), per-row Remove names (44).
+- **Tooling:** mixing lint rule (11).
 
 Next can already render every scalar form row, a nested field set, a dialog and a card. It cannot yet host
 a form inside a real plank, open a correctly sized popup from a form without per-call-site props, pick a
