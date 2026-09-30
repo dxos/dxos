@@ -121,7 +121,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** 1. Test: every depth's controls, legends and rails share the form's tracks. */
+/** 1. Test: each nested object is an enclosed, indented group on its host's surface, its fields aligned within it. */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -129,28 +129,36 @@ export const Test: Story = {
     // 2. Two fields per level, six levels (the root and five nested groups).
     await expect(inputs).toHaveLength((DEPTH + 1) * 2);
 
-    // 3. Subgrid all the way down: every input spans exactly the top-level input's content track.
-    const top = inputs[0].getBoundingClientRect();
-    for (const input of inputs) {
-      const box = input.getBoundingClientRect();
-      await expect(box.left).toBeCloseTo(top.left, 0);
-      await expect(box.right).toBeCloseTo(top.right, 0);
+    // 3. Both fields of a level share its track; each depth is indented by the same step on both sides.
+    const boxes = inputs.map((input) => input.getBoundingClientRect());
+    const step = boxes[2].left - boxes[0].left;
+    await expect(step).toBeGreaterThan(4);
+    for (let depth = 0; depth <= DEPTH; depth++) {
+      const [first, second] = [boxes[depth * 2], boxes[depth * 2 + 1]];
+      await expect(second.left).toBeCloseTo(first.left, 0);
+      await expect(first.left - boxes[0].left).toBeCloseTo(depth * step, 0);
+      await expect(boxes[0].right - first.right).toBeCloseTo(depth * step, 0);
     }
 
-    // 4. Each nested group is a Fieldset (a `group` named by its legend) whose grid is a subgrid.
+    // 4. Each nested group is a Fieldset (a `group` named by its legend): a bordered subgrid on its host's surface.
     const groups = canvas.getAllByRole('group', { name: /^Level / });
     await expect(groups).toHaveLength(DEPTH);
-    const rootColumns = getComputedStyle(canvasElement.querySelector('[role="form"]')!).gridTemplateColumns;
     for (const group of groups) {
-      await expect(getComputedStyle(group).display).toBe('grid');
-      await expect(getComputedStyle(group).gridTemplateColumns).toBe(rootColumns);
+      const style = getComputedStyle(group);
+      await expect(style.display).toBe('grid');
+      await expect(style.borderTopWidth).toBe('1px');
+      await expect(style.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      await expect(group).not.toHaveAttribute('data-surface');
     }
-    await expect(canvas.getByRole('group', { name: `Level ${DEPTH}` })).toBeInTheDocument();
 
-    // 5. Legends start on the content track, like labels.
-    const label = canvas.getAllByText('Field 1', { selector: 'label' })[0].getBoundingClientRect();
-    for (const trigger of canvasElement.querySelectorAll('[data-scope="fieldset"][data-part="legend"] button')) {
-      await expect(trigger.getBoundingClientRect().left).toBeCloseTo(label.left, 0);
+    // 5. A legend starts on its level's label line and ends with the disclosure at the group's inner edge.
+    for (const [index, group] of groups.entries()) {
+      const legend = group.querySelector<HTMLElement>(':scope > [data-part="legend"]')!.getBoundingClientRect();
+      await expect(legend.left).toBeCloseTo(boxes[(index + 1) * 2].left, 0);
+      const disclosure = within(group).getAllByRole('button', { name: /^Level / })[0];
+      // An icon-only Button's block cell (its visible box plus the control inset) ends at the row's end.
+      const cellRight = disclosure.getBoundingClientRect().right + parseFloat(getComputedStyle(disclosure).marginRight);
+      await expect(cellRight).toBeCloseTo(legend.right, 0);
     }
 
     // 6. Folding a group hides its fields.

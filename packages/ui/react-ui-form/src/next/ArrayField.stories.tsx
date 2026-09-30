@@ -88,12 +88,26 @@ export const Test: Story = {
     await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
     await waitFor(() => expect(readValues(canvasElement).steps).toEqual(['Bake', 'Mix', 'Cool']));
 
-    // 6. Rows share the form's content track: an item's input starts where a label does.
-    const label = canvas.getByText('Kind', { selector: 'label' }).getBoundingClientRect();
-    const handle = within(steps).getAllByRole('button', { name: 'Drag to rearrange' })[0].getBoundingClientRect();
-    await expect(handle.left).toBeGreaterThanOrEqual(label.left - 1);
+    // 6. The header row: label at the start, the add Button's block cell ending the row, on the rows' remove column.
+    const add = canvas.getByTestId('tags.add');
+    const header = add.parentElement!.getBoundingClientRect();
+    const label = canvas.getByText('Tags').getBoundingClientRect();
+    await expect(label.left).toBeCloseTo(header.left, 0);
+    await expect(add.getBoundingClientRect().right + parseFloat(getComputedStyle(add).marginRight)).toBeCloseTo(
+      header.right,
+      0,
+    );
+    const centre = (element: Element) => {
+      const box = element.getBoundingClientRect();
+      return box.left + box.width / 2;
+    };
+    for (const remove of within(tags).getAllByRole('button', { name: 'Delete item' })) {
+      await expect(centre(remove)).toBeCloseTo(centre(add), 0);
+    }
 
-    // 7. An object item renders its fields as a nested set.
-    await expect(canvas.getByRole('textbox', { name: 'Value' })).toHaveValue('ada@example.com');
+    // 7. An object item renders its fields as a nested, bordered set.
+    const value = canvas.getByRole('textbox', { name: 'Value' });
+    await expect(value).toHaveValue('ada@example.com');
+    await expect(getComputedStyle(value.closest('[role="group"][data-inset]')!).borderTopWidth).toBe('1px');
   },
 };

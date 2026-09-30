@@ -11,7 +11,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
@@ -90,7 +90,14 @@ export const Test: Story = {
         .getBoundingClientRect();
       await expect(clear.top, `clear-${size} top`).toBeGreaterThanOrEqual(row.top);
       await expect(clear.bottom, `clear-${size} bottom`).toBeLessThanOrEqual(row.bottom);
-      await expect(row.right - clear.right, `clear-${size} end`).toBeCloseTo(GEOMETRY[size].inset, 0);
+      await expectEndCell(
+        within(byTestId(canvasElement, `button-end-${size}`))
+          .getByRole('button')
+          .querySelector('svg'),
+        row.right,
+        size,
+        `clear-${size}`,
+      );
     }
     const find = canvas.getByRole('textbox', { name: 'Find' });
     const findRow = byTestId(canvasElement, 'start-md');

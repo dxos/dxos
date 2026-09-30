@@ -29,6 +29,14 @@ export const ScalarSchema = Schema.Struct({
   meetingAt: Schema.optional(Format.DateTime.annotate({ title: 'Next meeting' })),
   reminderAt: Schema.optional(Format.TimeOnly.annotate({ title: 'Reminder' })),
   location: Schema.optional(Format.GeoPoint.annotate({ title: 'Location' })),
+  // An array, so the form's trailing-icon column includes a header action and a row's remove.
+  tags: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Tags' })),
+  // A nested object, so it includes a group's disclosure.
+  address: Schema.optional(
+    Schema.Struct({ street: Schema.optional(Schema.String), city: Schema.optional(Schema.String) }).annotate({
+      title: 'Address',
+    }),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export type ScalarValues = Schema.Schema.Type<typeof ScalarSchema>;
@@ -39,6 +47,7 @@ export const SCALAR_VALUES: ScalarValues = {
   birthday: '1815-12-10',
   reminderAt: '09:00:00',
   location: [-0.1276, 51.5072],
+  tags: ['analytical'],
 };
 
 /** A struct nested `depth` levels, `fields` text properties at each level; the depth-5 benchmark's shape. */

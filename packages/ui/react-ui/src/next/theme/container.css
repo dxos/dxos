@@ -90,6 +90,9 @@
     grid-auto-rows: minmax(var(--nx-block-size), auto);
     align-items: center;
   }
+  .nx-grid[data-layout='row'][data-align='start'] {
+    align-items: start;
+  }
   .nx-grid[data-layout='row'] > :not([data-rail]) {
     grid-column: auto;
   }

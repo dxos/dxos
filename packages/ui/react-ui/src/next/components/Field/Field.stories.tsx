@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
@@ -135,6 +135,11 @@ const DefaultStory = ({ size }: SizeArgs) => (
         </Next.Field.Root>
       ))}
     </Next.Container>
+    {/* A header whose label is text (no single control to name): its action still ends the row. */}
+    <Next.Field.Header data-testid={`text-header-${size}`}>
+      <Next.Typography truncate>Tags</Next.Typography>
+      <Next.Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
+    </Next.Field.Header>
     {/* A row with its own columns spaces them by its gap. */}
     <Next.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
       <Next.Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
@@ -280,6 +285,46 @@ export const Test: Story = {
     const first = byTestId(canvasElement, 'pair-first-md').getBoundingClientRect();
     const second = byTestId(canvasElement, 'pair-second-md').getBoundingClientRect();
     await expect(second.left - first.right).toBeCloseTo(4, 0);
+
+    // Header actions end the row whatever the label is: the icon sits in the block-wide end cell.
+    for (const size of SIZES) {
+      const header = byTestId(canvasElement, `text-header-${size}`);
+      const box = header.getBoundingClientRect();
+      await expect(header.firstElementChild!.getBoundingClientRect().left, `${size} text label`).toBeCloseTo(
+        box.left,
+        0,
+      );
+      await expectEndCell(
+        within(header).getByRole('button', { name: 'Add tag' }).querySelector('svg'),
+        box.right,
+        size,
+        size,
+      );
+    }
+
+    // Colours resolved from the tokens, through a probe element in the same scope.
+    const resolve = (token: string) => {
+      const probe = canvasElement.ownerDocument.createElement('span');
+      probe.style.color = `var(${token})`;
+      canvasElement.appendChild(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    };
+
+    // A field label reads in the subdued text colour, distinct from the value.
+    const field = within(byTestId(canvasElement, 'field-md'));
+    const emailLabel = field.getByText('Email');
+    await expect(getComputedStyle(emailLabel).color).toBe(resolve('--color-subdued'));
+    await expect(getComputedStyle(emailLabel).color).not.toBe(getComputedStyle(field.getByRole('textbox')).color);
+
+    // The required mark is warning-coloured, a small gap after the label's text.
+    const requiredLabel = byTestId(canvasElement, 'required-label-md');
+    const mark = requiredLabel.querySelector<HTMLElement>('[data-part="required-indicator"]')!;
+    await expect(getComputedStyle(mark).color).toBe(resolve('--color-warning-text'));
+    const range = canvasElement.ownerDocument.createRange();
+    range.selectNodeContents(requiredLabel.firstChild!);
+    await expect(mark.getBoundingClientRect().left - range.getBoundingClientRect().right).toBeGreaterThan(0.5);
 
     const clear = website.getByRole('button', { name: 'Clear website' });
     await userEvent.hover(clear);

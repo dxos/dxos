@@ -37,7 +37,7 @@ const DefaultStory = ({ schema: key, variant = 'default' }: StoryArgs) => {
   const handleChange = (next: Record<string, any>) => setValues((previous) => ({ ...previous, ...next }));
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body layout='row' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='md'>
+      <Next.Panel.Body layout='row' align='start' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='md'>
         <CurrentForm.Root
           variant={variant}
           schema={schema}
@@ -101,5 +101,37 @@ export const Test: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'Grace');
     await waitFor(() => expect(current.getByRole('textbox', { name: 'Name' })).toHaveValue('Grace'));
+  },
+};
+
+/**
+ * 1. TestPerson: a form taller than the pane starts at the Body's top, both columns start level, and the Body scrolls
+ * to the last field.
+ */
+export const TestPerson: Story = {
+  args: { schema: 'person' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = canvasElement.querySelector<HTMLElement>('.nx-scroll-viewport[data-scope="container"]')!;
+    const top = body.getBoundingClientRect().top;
+    const current = canvas.getByTestId('current');
+    const next = canvas.getByTestId('next');
+    const firstLabel = (form: HTMLElement) => form.querySelector('label')!.getBoundingClientRect();
+
+    // 2. Nothing is laid out above the Body, and both columns start at its top (the current Form then pads its first
+    // row down by its own content padding, which is its look rather than the row's alignment).
+    await expect(body.scrollTop).toBe(0);
+    await expect(next.getBoundingClientRect().top).toBeGreaterThanOrEqual(top - 0.5);
+    await expect(firstLabel(next).top).toBeGreaterThanOrEqual(top - 0.5);
+    await expect(next.getBoundingClientRect().top).toBeCloseTo(current.getBoundingClientRect().top, 0);
+
+    // 3. The Body scrolls to the last field.
+    await expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
+    body.scrollTop = body.scrollHeight;
+    await waitFor(async () => {
+      const inputs = within(next).getAllByRole('textbox');
+      const last = inputs[inputs.length - 1].getBoundingClientRect();
+      await expect(last.bottom).toBeLessThanOrEqual(body.getBoundingClientRect().bottom + 0.5);
+    });
   },
 };

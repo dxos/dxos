@@ -13,7 +13,15 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectPopupSize, expectScoped, sizeRow } from '../../testing.ts';
+import {
+  GEOMETRY,
+  byTestId,
+  controlSize,
+  expectEndCell,
+  expectPopupSize,
+  expectScoped,
+  sizeRow,
+} from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import { type FieldRootProps } from '../Field/index.ts';
 
@@ -131,10 +139,7 @@ export const Test: Story = {
       await expect(rect.width, `${size} width`).toBeCloseTo(input.width, 0);
       await expect(parseFloat(getComputedStyle(row).marginTop), `${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
       const trigger = within(row).getByRole('button', { name: 'Pick a date' });
-      await expect(trigger.getBoundingClientRect().right, `${size} trigger end`).toBeCloseTo(
-        rect.right - GEOMETRY[size].inset,
-        0,
-      );
+      await expectEndCell(trigger.querySelector('svg'), rect.right, size, `${size} trigger`);
     }
     await expectScoped(canvasElement);
 

@@ -62,23 +62,21 @@ FieldRoot.displayName = 'Next.Field.Root';
 //
 
 type FieldHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  /** The row's own size; `sm` by default so it reads as a caption row above an `md` control. */
+  /** Overrides the field's size; by default the row shares it, so its actions share the control's end column. */
   size?: Size;
 };
 
 /** The label row: a Label followed by optional trailing Icons or icon-only Buttons, aligned to the control's edges. */
-const FieldHeader = forwardRef<HTMLDivElement, FieldHeaderProps>(
-  ({ classNames, size = 'sm', ...props }, forwardedRef) => (
-    <div
-      {...props}
-      data-scope='field'
-      data-part='header'
-      data-size={size}
-      className={mx(recipes.fieldHeader(), classNames)}
-      ref={forwardedRef}
-    />
-  ),
-);
+const FieldHeader = forwardRef<HTMLDivElement, FieldHeaderProps>(({ classNames, size, ...props }, forwardedRef) => (
+  <div
+    {...props}
+    data-scope='field'
+    data-part='header'
+    data-size={size}
+    className={mx(recipes.fieldHeader(), classNames)}
+    ref={forwardedRef}
+  />
+));
 
 FieldHeader.displayName = 'Next.Field.Header';
 

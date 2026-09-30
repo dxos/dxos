@@ -40,6 +40,11 @@ export type ContainerProps = {
   level?: Level;
   /** Row gap only: columns are shared through subgrid, so a column gap would shift the parent's tracks. */
   gap?: ContainerGap;
+  /**
+   * Block alignment of a `row`'s cells: `center` (default) centres controls in a one-block row; `start` tops cells of
+   * differing heights (e.g. two forms side by side), which centring would offset against the tallest.
+   */
+  align?: 'center' | 'start';
 };
 
 /**
@@ -55,6 +60,7 @@ export const containerAttributes = ({
   place,
   level,
   gap,
+  align,
 }: ContainerProps) => {
   const style: CSSProperties & CSSVariables = columns ? { '--nx-columns': columns } : {};
   return {
@@ -64,6 +70,7 @@ export const containerAttributes = ({
     'data-place': place,
     'data-surface': level,
     'data-gap': gap,
+    'data-align': align === 'start' ? align : undefined,
     'data-columns': columns ? '' : undefined,
     style,
   };
@@ -72,7 +79,7 @@ export const containerAttributes = ({
 /** Grid part (decision 5): every prop is a `data-*` attribute resolved by `theme/container.css`. */
 export const Container = slottable<HTMLDivElement, ContainerProps>(
   (
-    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, gap, ...props },
+    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, gap, align, ...props },
     forwardedRef,
   ) => {
     const localRef = useRef<HTMLDivElement>(null);
@@ -98,6 +105,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       place,
       level,
       gap,
+      align,
     });
     return (
       <ark.div

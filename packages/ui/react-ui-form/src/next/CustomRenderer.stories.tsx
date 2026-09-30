@@ -57,7 +57,7 @@ const DefaultStory = (_: PaneArgs) => {
   const [values, setValues] = useState({ name: 'Research' });
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body layout='row' columns='minmax(0, 1fr) minmax(0, 1fr)'>
+      <Next.Panel.Body layout='row' align='start' columns='minmax(0, 1fr) minmax(0, 1fr)'>
         <CurrentForm.Root
           variant='settings'
           schema={SpaceFormSchema}

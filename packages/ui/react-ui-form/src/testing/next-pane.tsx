@@ -22,15 +22,17 @@ export type PaneArgs = {
  * `src/next`, whose files may not carry class names (AUDIT §3.3).
  */
 export const withNextPane =
-  ({ width = '32rem', height = '40rem' }: { width?: string; height?: string } = {}): Decorator =>
+  ({ width = '32rem', height = '40rem' }: { width?: string; height?: string } = {}): Decorator<PaneArgs> =>
   (Story, context) => {
-    const args = context.args as PaneArgs;
+    const { args } = context;
     return (
-      <div className='fixed inset-0 grid place-items-center overflow-auto dx-deck-surface'>
+      // `safe` centring starts a pane taller than the canvas at the top instead of pushing it out of reach above it.
+      <div className='fixed inset-0 grid [place-items:safe_center] overflow-auto dx-deck-surface'>
         <div
           data-testid='pane'
           className='flex flex-col'
-          style={{ width: args.paneWidth ?? width, height: args.paneHeight ?? height }}
+          // Capped at the viewport, so the form scrolls inside the Panel's Body as it would in a plank.
+          style={{ width: args.paneWidth ?? width, height: args.paneHeight ?? height, maxHeight: '100dvh' }}
         >
           <Story />
         </div>

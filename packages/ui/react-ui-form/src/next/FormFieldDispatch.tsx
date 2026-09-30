@@ -48,16 +48,28 @@ import { FormFieldSet } from './FormFieldSet.tsx';
 /**
  * `resolveFieldRenderer` (shared with the current Form) answers a scalar with the current renderer component rather
  * than a key, so the next dispatcher maps each one to its Next counterpart; a renderer missing here is not ported yet.
+ * A function, not a module-level table, so nothing imported is read while the modules of this recursion evaluate.
  */
-const SCALARS = new Map<FormFieldRenderer, FormFieldRenderer>([
-  [Current.TextField, TextField],
-  [Current.NumberField, NumberField],
-  [Current.BooleanField, BooleanField],
-  [Current.DateField, DateField],
-  [Current.GeoPointField, GeoPointField],
-  [Current.PasswordField, PasswordField],
-  [Current.TextAreaField, TextAreaField],
-]);
+const nextScalar = (component: FormFieldRenderer): FormFieldRenderer | undefined => {
+  switch (component) {
+    case Current.TextField:
+      return TextField;
+    case Current.NumberField:
+      return NumberField;
+    case Current.BooleanField:
+      return BooleanField;
+    case Current.DateField:
+      return DateField;
+    case Current.GeoPointField:
+      return GeoPointField;
+    case Current.PasswordField:
+      return PasswordField;
+    case Current.TextAreaField:
+      return TextAreaField;
+    default:
+      return undefined;
+  }
+};
 
 export type { FormFieldDispatchProps, FormFieldsProps };
 
@@ -178,7 +190,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     readonly,
     presentation: layout,
   };
-  const scalar = resolution.kind === 'scalar' ? SCALARS.get(resolution.component) : undefined;
+  const scalar = resolution.kind === 'scalar' ? nextScalar(resolution.component) : undefined;
   return (
     <FormFieldRow
       label={label}
@@ -196,7 +208,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   function renderControl(resolution: FieldRendererResolution): ReactNode | undefined {
     switch (resolution.kind) {
       case 'scalar': {
-        const ScalarField = SCALARS.get(resolution.component);
+        const ScalarField = nextScalar(resolution.component);
         return ScalarField ? <ScalarField {...fieldProps} /> : undefined;
       }
       case 'select':

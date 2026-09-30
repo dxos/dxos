@@ -24,6 +24,11 @@ type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
   gutter?: 'inherit';
   /** A rung for the set's surface, as on Container; only applies with `gutter='inherit'`. */
   level?: Level;
+  /**
+   * A nested group (with `gutter='inherit'`): bordered and indented one step inside the parent's content track, on its
+   * host's surface, its fields still sharing the parent's columns.
+   */
+  inset?: boolean;
 };
 
 // Whether the enclosing Root is a grid set, whose legend must be an ordinary grid item rather than a rendered legend.
@@ -35,7 +40,7 @@ const GridContext = createContext(false);
  * box that cannot be a subgrid; it is named by its Legend, and `disabled` reaches its Fields through Ark's context.
  */
 const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(
-  ({ classNames, gutter, level, style, children, ...props }, forwardedRef) => {
+  ({ classNames, gutter, level, inset, style, children, ...props }, forwardedRef) => {
     if (!gutter) {
       return (
         <FieldsetPrimitive.Root
@@ -55,6 +60,7 @@ const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(
         <FieldsetPrimitive.Root
           {...props}
           {...grid}
+          data-inset={inset ? '' : undefined}
           asChild
           style={{ ...gridStyle, ...style }}
           className={mx(recipes.fieldsetRoot(), recipes.container(), classNames)}
@@ -74,13 +80,13 @@ FieldsetRoot.displayName = 'Next.Fieldset.Root';
 //
 
 type FieldsetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
-  /** The row's own size; `sm` by default so it reads like a Field's label row. */
+  /** A size of its own makes the legend a heading row; by default it takes the set's size, in its label step. */
   size?: Size;
 };
 
 /** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or icon-only Buttons. */
 const FieldsetLegend = forwardRef<HTMLLegendElement, FieldsetLegendProps>(
-  ({ classNames, size = 'sm', children, ...props }, forwardedRef) => {
+  ({ classNames, size, children, ...props }, forwardedRef) => {
     const grid = useContext(GridContext);
     return (
       <FieldsetPrimitive.Legend

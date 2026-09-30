@@ -126,5 +126,65 @@ export const Test: Story = {
     await expect(canvas.getByTestId('cancel-button')).toBeInTheDocument();
     await userEvent.click(canvas.getByTestId('save-button'));
     await waitFor(() => expect(canvas.queryByTestId('form.error')).toBeNull());
+
+    // 12. Every trailing icon shares one column and one size.
+    await expectTrailingColumn(canvasElement);
   },
 };
+
+/** Selectors for every trailing icon of a form column, control adornments and row actions alike. */
+const TRAILING_ICONS = [
+  '.nx-select-trigger [data-part="indicator"] svg',
+  '.nx-input-adornment > .nx-button:last-child svg',
+  '.nx-field-header > .nx-button svg',
+  '[role="listitem"] > .nx-button:last-child svg',
+  '[data-part="legend"] > .nx-button svg',
+].join(', ');
+
+/**
+ * The trailing icons (select carets, the stepper's last button, the password and calendar toggles, the array header's
+ * add, its rows' remove and a nested group's disclosure) are all the size's control icon size and centre on their
+ * level's end cell: one column for the form's own rows, and one indent step in for a nested group's legend, whose
+ * enclosure indents its end as well as its start (DESIGN follow-up 60).
+ */
+const expectTrailingColumn = async (canvasElement: HTMLElement) => {
+  const form = canvasElement.querySelector<HTMLElement>('[role="form"]')!;
+  const icons = [...form.querySelectorAll<SVGElement>(TRAILING_ICONS)];
+  // Status and Model carets, Age stepper, Secret toggle, Birthday and Next meeting calendars, Tags add and remove,
+  // and the Address disclosure.
+  await expect(icons).toHaveLength(9);
+  const probe = canvasElement.ownerDocument.createElement('span');
+  probe.style.display = 'block';
+  probe.style.width = 'var(--nx-control-icon)';
+  form.appendChild(probe);
+  const iconSize = probe.getBoundingClientRect().width;
+  probe.remove();
+  const centre = (icon: SVGElement) => {
+    const box = icon.getBoundingClientRect();
+    return box.left + box.width / 2;
+  };
+  // A nested group's end column is the form's, less the group's end border and padding.
+  const inset = (icon: SVGElement) => {
+    const group = icon.closest<HTMLElement>('[data-inset]');
+    const style = group && getComputedStyle(group);
+    return style ? parseFloat(style.borderRightWidth) + parseFloat(style.paddingRight) : 0;
+  };
+  const column = centre(icons[0]);
+  for (const icon of icons) {
+    await expect(centre(icon) + inset(icon)).toBeCloseTo(column, 0);
+    await expect(icon.getBoundingClientRect().width).toBeCloseTo(iconSize, 0);
+  }
+};
+
+/** 1. The trailing column at the other sizes. */
+const trailingColumnAt = (size: NonNullable<StoryArgs['size']>): Story => ({
+  args: { size },
+  play: async ({ canvasElement }) => {
+    await expectTrailingColumn(canvasElement);
+  },
+});
+
+export const TestXs = trailingColumnAt('xs');
+export const TestSm = trailingColumnAt('sm');
+export const TestLg = trailingColumnAt('lg');
+export const TestXl = trailingColumnAt('xl');

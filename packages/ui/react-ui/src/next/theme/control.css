@@ -130,18 +130,23 @@
   .nx-input-row:has(> .nx-input-adornment:last-child > .nx-button[data-square]:last-child) {
     padding-inline-end: 0;
   }
+  /*
+   * A trailing icon-only Button fills a block-wide end cell, so a control spanning to the row's end
+   * centres its icon on the same column as the row's own actions (a header's icon-only Buttons, a list row's remove).
+   */
   .nx-input-adornment > .nx-button[data-square] {
     margin: 0;
+    min-width: 0;
     height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
     width: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
-    margin-inline: var(--nx-control-inset);
+    margin-inline: calc((var(--nx-block-size) - var(--nx-control-size)) / 2 + var(--nx-control-inset));
   }
-  /* Compact icon-only buttons abut, one segmented run (a stepper's − and +); the last keeps the row's end inset. */
+  /* Compact icon-only buttons abut, one segmented run (a stepper's − and +); the last centres on the end cell. */
   .nx-input-adornment > .nx-button[data-square][data-compact] {
     margin-inline: 0;
   }
   .nx-input-adornment > .nx-button[data-square][data-compact]:last-child {
-    margin-inline-end: var(--nx-control-inset);
+    margin-inline-end: calc((var(--nx-block-size) - var(--nx-control-icon)) / 2 - var(--nx-control-inset));
   }
   .nx-input-adornment > .nx-button[data-compact] + .nx-button[data-compact] {
     margin-inline-start: calc(-1 * var(--nx-control-inset));
@@ -321,29 +326,50 @@
       grid-row: auto;
     }
   }
-  /* The label row is a small block row (size sm by default), so trailing icons and icon buttons fit at its end. */
+  /*
+   * The label row takes its field's size, so a trailing icon-only Button or Block fills the same block-wide end cell as
+   * the control's own trailing icon below it (one column, one icon size); the row is only control-tall, its buttons
+   * dropping their block inset, and its text is the size's label step.
+   */
   .nx-field-header {
     display: flex;
     align-items: center;
     gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
+    min-height: var(--nx-control-size);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
   }
   /* A trailing Block matches an icon-only Button's visible box and block-sized cell, so static and interactive icons align. */
   .nx-field-header > .nx-block {
     width: var(--nx-control-size);
     height: var(--nx-control-size);
-    margin: var(--nx-control-inset);
+    margin: 0 var(--nx-control-inset);
   }
-  .nx-field-header > .nx-label {
+  .nx-field-header > .nx-button[data-square] {
+    margin-block: 0;
+  }
+  /* Trailing actions sit at the row's end whatever the label is (a Label, or Typography for a row with no one control). */
+  .nx-field-header > :is(.nx-block, .nx-button):not(:is(.nx-block, .nx-button) ~ *) {
+    margin-inline-start: auto;
+  }
+  .nx-field-header > :is(.nx-label, .nx-typography) {
     flex: 1;
     min-width: 0;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
   }
   /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
+  /*
+   * A field's label reads a step below its value, in ui-theme's subdued text; a Checkbox or Switch's own label is the
+   * control's text, not a field label, so it keeps the base colour.
+   */
+  :is(.nx-field, .nx-field-header) > :is(.nx-label, .nx-typography) {
+    color: var(--color-subdued);
+  }
+  /* The required mark is the current Form's: a warning-coloured `*` a small gap after the label at every size. */
   .nx-field-required {
-    margin-inline-start: 0.125em;
-    color: var(--color-error-text, currentColor);
+    margin-inline-start: max(0.125em, var(--nx-control-inset));
+    color: var(--color-warning-text, currentColor);
   }
   .nx-field-helper,
   .nx-field-error {
@@ -446,6 +472,8 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--nx-control-inset);
+    /* The caret centres on the block-wide end cell, the column of the row's trailing actions. */
+    padding-inline-end: calc((var(--nx-block-size) - var(--nx-control-icon)) / 2);
     width: 100%;
     min-width: 0;
     background: var(--color-input-surface);

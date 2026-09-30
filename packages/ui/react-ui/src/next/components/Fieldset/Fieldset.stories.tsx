@@ -145,11 +145,11 @@ export const Test: Story = {
     await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeInTheDocument();
     await expect(getComputedStyle(profile).borderTopStyle).toBe('none');
 
-    // The legend is an sm label row spanning the content track, like a Field's header.
+    // The legend is a control-tall label row spanning the content track, like a Field's header.
     const legend = bounds(canvasElement, '[data-testid="profile"] legend');
     const label = bounds(canvasElement, '[data-testid="name"] label');
     const input = bounds(canvasElement, '[data-testid="name"] .nx-input');
-    await expect(legend.height).toBeCloseTo(24, 0);
+    await expect(legend.height).toBeCloseTo(28, 0);
     await expect(legend.left).toBeCloseTo(label.left, 0);
     // The trailing Block is inset in a block-sized cell that ends at the control's edge.
     await expect(bounds(canvasElement, '[data-testid="profile-lock"]').right + 2).toBeCloseTo(input.right, 0);

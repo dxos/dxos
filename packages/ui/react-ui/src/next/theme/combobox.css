@@ -38,12 +38,12 @@
     color: inherit;
   }
 
-  /* A control-sized square, so the caret sits where an icon-only Button's icon would. */
+  /* A block-wide end cell, so the caret centres on the column of the row's trailing actions. */
   .nx-combobox-trigger {
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: var(--nx-control-size);
+    width: var(--nx-block-size);
     height: 100%;
     padding: 0;
     border: none;

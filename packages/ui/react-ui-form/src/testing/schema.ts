@@ -31,7 +31,11 @@ export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.pers
           title: 'State',
           description: 'State code',
         }),
-        zip: Schema.Number.annotate({ title: 'ZIP Code' }),
+        // A string: ZIP codes keep leading zeros and may carry the +4 suffix.
+        zip: Schema.String.pipe(Schema.check(Schema.isPattern(/^\d{5}(-\d{4})?$/))).annotate({
+          title: 'ZIP Code',
+          description: 'Five digits, optionally followed by a dash and four more.',
+        }),
       }).annotate({ title: 'Address' }),
     ),
     employer: Schema.optional(Ref.Ref(Organization).annotate({ title: 'Employer' })),

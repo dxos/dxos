@@ -135,11 +135,12 @@ export const Layout: Story = {
     const boxMargin = boxElement ? parseFloat(getComputedStyle(boxElement).marginLeft) : Number.NaN;
     await expect((box?.left ?? Number.NaN) - boxMargin).toBeCloseTo(part(canvasElement, 'name', '.nx-input').left, 0);
 
-    // The label row is an sm block row; its trailing icon-only Button is inset in a block-sized cell ending at the control's edge.
+    // The label row takes the field's size and is control-tall; its trailing icon-only Button is a control square, inset
+    // inline in a block-wide cell ending at the control's edge (DESIGN follow-up 62).
     const header = canvasElement.querySelector('[data-testid="email"] [data-part="header"]')?.getBoundingClientRect();
     const info = canvas.getByRole('button', { name: 'About email' }).getBoundingClientRect();
-    await expect(header?.height).toBeCloseTo(24, 0);
-    await expect(info.height).toBeCloseTo(20, 0);
+    await expect(header?.height).toBeCloseTo(28, 0);
+    await expect(info.height).toBeCloseTo(28, 0);
     await expect(info.right + 2).toBeCloseTo(part(canvasElement, 'email', '.nx-input').right, 0);
 
     // A trailing Block (a static icon) takes the same box and cell as an icon-only Button, so both line up at the row's end.

@@ -16,6 +16,7 @@ import {
   byTestId,
   controlSize,
   expectAnchoredBelow,
+  expectEndCell,
   expectPopupSize,
   expectScoped,
   expectScrollingPopup,
@@ -135,8 +136,9 @@ export const Test: Story = {
       );
       await expect(parseFloat(getComputedStyle(control).marginTop), size).toBeCloseTo(GEOMETRY[size].inset, 0);
       const trigger = control.querySelector('[data-part="trigger"]')?.getBoundingClientRect();
-      await expect(trigger?.width, size).toBeCloseTo(controlSize(size), 0);
+      await expect(trigger?.width, size).toBeCloseTo(GEOMETRY[size].block, 0);
       await expect(trigger?.right, size).toBeCloseTo(rect.right, 0);
+      await expectEndCell(control.querySelector('[data-part="trigger"] svg'), rect.right, size, `${size} caret`);
     }
     await expectScoped(canvasElement);
 

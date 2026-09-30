@@ -7,7 +7,8 @@ view layer rebuilt entirely on Next parts, with no `className`, no wrapper `div`
 scope item below passes its play test. Three of the nine items needed a change to a Next primitive, four changes in
 all, each small and additive (a row layout for `Field.Root`, grid-joining `Fieldset` and `Collapsible.Content`, a
 column gap for own-column rows); the one real surprise is that a native `<fieldset>` cannot be a subgrid, so a grid Fieldset renders a `group`
-element. Deep subgrids are not a performance risk: a depth-5, ~500-field form mounts and lays out faster than the
+element. After a review round, nested objects are enclosed and indented rather than stepping surfaces, and every
+trailing icon shares one column. Deep subgrids are not a performance risk: a depth-5, ~500-field form mounts and lays out faster than the
 current Form, and a keystroke costs the same React re-render in both.
 
 Everything lives in `src/next/` (not exported from the package root); stories are titled `ui/react-ui-form/next/*`.
@@ -22,13 +23,20 @@ Everything lives in `src/next/` (not exported from the package root); stories ar
 - **Row-level blur.** `Field.Root onBlur` (a bubbling `focusout`) marks the field touched, so a control needs no
   `onBlur` of its own. That matters because NumberInput, PasswordInput and DateInput take no `onBlur` (proposed point
   50).
-- **Broke: an import cycle.** The current Form's modules import each other in a cycle (FormControls → FormFields →
-  FormFieldDispatch → fields → ObjectPicker → Form.tsx). It only resolves when `components/Form/Form.tsx` is evaluated
-  first; importing `FormControls.tsx` first throws "Cannot access 'FormRoot' before initialization". `next/Form.tsx`
-  therefore takes `Root` from `Form.tsx`, which is order-sensitive (proposed point 49).
+- **Fixed: an import cycle.** Rendering recurses (a RefField renders an ObjectPicker that renders a Form that renders
+  fields), so the modules import each other in cycles. A cycle is harmless while no module reads an import as it
+  evaluates. `components/Form/Form.tsx` does exactly that: `Form = { Root: FormRoot, … }` builds an object from its
+  imports. ObjectPicker imported that namespace, which put `Form.tsx` inside the cycle, so whichever module was
+  evaluated first decided whether a part was still uninitialised. The spike's `Form.stories.tsx` failed with "Cannot
+  access 'FormFields' before initialization".
+
+  ObjectPicker now imports the parts from their own modules, as InlineRefField already did, so no namespace module is
+  on any cycle (`madge --circular` from `src/index.ts` and `src/next/index.ts` lists none). The next dispatcher maps
+  current renderers to Next ones in a function rather than a module-level `Map`, so it reads nothing at evaluation
+  either. No import order matters any more (point 49, done).
+
 - **Friction: resolution returns components.** `resolveFieldRenderer` answers a scalar with the current renderer
-  component, so the next dispatcher keeps a `Map` from each current renderer to its Next counterpart (proposed point
-  48).
+  component, so the next dispatcher maps each current renderer to its Next counterpart (proposed point 48).
 - **Exported from the root to be shared.** The next layer reuses these root-module helpers, which are now exported (and
   so reach the root barrel): `useFormFieldBindingAt`, `isEmptyValue`, `formatStaticValue`, `useFormFieldsProperties`,
   `isoToLocalDateTime`, `localDateTimeToIso`.
@@ -50,10 +58,21 @@ password (`PasswordInput`) and geo point (two `Field.Root`s in an own-column row
 
 ### 3. Nested objects, depth 5 (`Nested.stories.tsx`)
 
-Each nested object is a grid `Fieldset` (`gutter='inherit'`, `level='+1'`) whose legend holds a `Collapsible.Trigger`
-and whose body is a `Collapsible.Content gutter='inherit'`, so every level is a subgrid of the form. The Test asserts that
-every input at all six levels spans exactly the top-level content track, that each group's `grid-template-columns`
-equals the form's, that legends start on the labels' line, and that folding hides the level's fields.
+Each nested object is a grid `Fieldset` (`gutter='inherit'`, `inset`). Its legend is the label, ending with a
+`SystemButton.Disclosure` in the row's end cell, and its body is a `Collapsible.Content gutter='inherit'`.
+
+**Decided in review: enclosed and indented, no surface stepping** (DESIGN follow-up 60). Like the current Form, a nested
+object is a bordered group on its host's surface, indented one step per depth. An inset set spans only its parent's
+content track and inherits that track's edge lines, so its fields still subgrid the tracks (and any interior line, such
+as the settings `control`), offset by its padding.
+
+The Test asserts, across six levels:
+
+- both fields of a level align;
+- each depth is indented by one constant step on both sides;
+- every group has a 1px border, a transparent background and no `data-surface`;
+- each legend starts on its level's label line and ends with the disclosure's cell at the group's inner edge;
+- folding hides a level's fields.
 
 - **Broke: `<fieldset>` cannot be a subgrid.** Its children lay out in an anonymous content box whose parent (the
   fieldset) is not the grid, so `subgrid` silently becomes `none` and `grid-column: content` names a line that does not
@@ -62,10 +81,9 @@ equals the form's, that legends start on the labels' line, and that folding hide
   instead of the native attribute (Next change 2; proposed point 45).
 - **Row gap does not travel down subgrids.** A subgrid shares columns only, so a grid Fieldset and Collapsible Content
   now take `row-gap: inherit` (Next change 3).
-- **The level ladder saturates.** `+1` steps base → raised → overlay → popup and stops: from depth 4 down, groups no
-  longer step, and a control's well loses contrast on the top rungs (proposed point 47).
-- **No indentation.** Shared rails mean nested fields line up with top-level ones; hierarchy shows only as surface and
-  legend. The current Form indents and borders nested groups (proposed point 53).
+- **Superseded: surface stepping.** The first version stepped `level='+1'` per depth and shared the rails, which gave no
+  indentation, and the `+1` ladder ran out at popup (depth 4 and deeper stopped stepping). The review settled points 47
+  and 53 in favour of the enclosed, indented group above.
 
 **Measurements** (`Nested.stories.tsx` Benchmark): the same schema, 6 levels × 83 text fields (498 fields, depth 5), in a
 32rem × 44rem pane; headless Chromium via the storybook vitest runner, median of 3 mounts and 9 keystrokes. Mount is
@@ -74,10 +92,11 @@ native `input` event on the deepest input through React's commit to a forced lay
 
 | Implementation | Mount   | Layout  | Keystroke |
 | -------------- | ------- | ------- | --------- |
-| Next (spike)   | 43.1 ms | 8.6 ms  | 89.7 ms   |
-| Current Form   | 51.0 ms | 12.2 ms | 105.3 ms  |
+| Next (spike)   | 42.6 ms | 8.1 ms  | 90.5 ms   |
+| Current Form   | 51.1 ms | 11.9 ms | 102.7 ms  |
 
-Three separate runs agreed within ±4 ms. Deep subgrids and the `+1` style queries cost less than the current Form's nested
+These are from one run with inset groups. Across five runs (two with `+1` surfaces, three with inset groups) each figure
+stayed within ±8 ms of the table, and the border and padding cost nothing measurable. Deep subgrids cost less than the current Form's nested
 Column grids. The keystroke is dominated in both by React re-rendering the whole form on each value change
 (`Form.Root` owns `values`), not by style or layout. That is a form-state issue for M6, not a Next one. The
 Foundations depth-5 subgrid benchmark (AUDIT 2.7, milestone 1) can use these numbers; a 110 ms budget per keystroke at
@@ -93,8 +112,9 @@ and type, remove, Alt+ArrowDown reorder, and object items rendering as nested se
   the `content-*` line names, so a nested group in a cell places its children in implicit tracks. The item's cell is
   therefore a `Container gutter='none'`, a template root (proposed point 46). The same applies to a Form placed in a
   row cell (the side-by-side story uses `Form.Viewport gutter='none'`).
-- `Field.Header` pushes trailing Buttons to the end only after a `.nx-label`. With a Typography label (an array or a
-  standalone row), the add Button sits right after the text (proposed point 51).
+- **Fixed: the add Button sits at the row's end.** `Field.Header`'s first trailing Block or Button now takes
+  `margin-inline-start: auto` whatever the label is (point 51, done). The "+" and every row's "×" share one column
+  (see the review section below).
 - Row identity is a parallel id list, as today (AUDIT point 43). The drag label still comes from `osTranslations`
   (AUDIT point 21).
 
@@ -163,9 +183,10 @@ their own border.
 ### 9. Side by side (`SideBySide.stories.tsx`)
 
 The current Form (left) and the spike (right) on the Person, scalar, array and settings schemas, sharing values; the
-Test edits the spike and reads the current form. Visible differences: nested groups are unindented surfaces rather
-than bordered insets (point 53), the array add Button sits after the label (point 51), dates are segmented with a
-calendar trigger inside the control, and controls sit a control inset shorter (decision 12).
+Test edits the spike and reads the current form. TestPerson covers a form taller than the pane. The Body starts at
+the top with `scrollTop` 0, both columns start at the Body's top, and the Body scrolls to the last field. The row uses
+`align='start'`. Remaining visible differences: dates are segmented with a calendar trigger inside the control;
+controls sit a control inset shorter (decision 12); labels are subdued.
 
 ## Next primitive changes
 
@@ -184,6 +205,46 @@ Minimal and additive; each is covered by that component's Test story, and all 41
 4. **Container:** `gap` also sets `column-gap` on a `row` with its own `columns` and no gutters, which shares no parent
    tracks; and no dev "not a direct child" warning when `columns` is set, since such a container starts a fresh
    template. Covered by Field `Test` (a two-input row).
+
+Added in review (DESIGN follow-ups 60–64):
+
+5. **`Fieldset.Root inset`**: a bordered, indented grid set on its host's surface (nested objects). Covered by the
+   spike's Nested `Test`.
+6. **One trailing column.** Every trailing icon centres on the row's block-wide end cell at the control icon size:
+   - input-row square Buttons (DateInput calendar, PasswordInput toggle, Input `end`) get the cell's inline margin;
+   - the last compact stepper centres on the cell, with the other half of the pair before it;
+   - the Select trigger's end padding places its caret on the cell's centre;
+   - Combobox triggers are a block wide.
+
+   `Field.Header` and Fieldset legends take the field's size (control-tall, label-step text; square Buttons drop their
+   block inset), so their actions share the column. `expectEndCell` in react-ui `testing.ts` asserts it in the Input,
+   DateInput, NumberInput, PasswordInput, Select, Combobox and Field Tests. The spike's Form `Test`, `TestXs`, `TestSm`,
+   `TestLg` and `TestXl` collect all nine trailing icons of a form and assert one icon size and one centre line at
+   every size. The nine include the Address disclosure, a `SystemButton.Disclosure` in the legend's end cell and the
+   same size as the rest. A nested group's end cell sits one indent in from the form's column: its border and padding
+   indent both sides (point 54).
+
+7. **Scrolling row viewports size rows to content** (`scroll-area.css`), and **`Container align='start'`** (also on
+   `Panel.Body`) for rows of differing heights.
+8. **Label colours**: field labels, header Typography and legends use `--color-subdued`. Checkbox and Switch labels
+   keep the base colour, since they are the control's own text. The required mark uses `--color-warning-text`, placed
+   `max(0.125em, --nx-control-inset)` after the label. Covered by Field `Test`, which resolves the tokens through a probe
+   element and measures the gap with a Range.
+
+## Review round 1
+
+- **Top of the form clipped** (SideBySide Person). The cause was not centring alone. A `row` Container's rows are
+  `minmax(block, auto)`, and a fixed minimum grows only into a definite-height container's free space: the Panel
+  Body's viewport was 768px tall and held a 1289px column, so the row stayed 768px and the column overflowed it centred,
+  252px above the top, where no scroll position could reach it. Scrolling row viewports now use `auto` rows, and
+  side-by-side columns use `align='start'`. Asserted in SideBySide `TestPerson` and Panel `Test`.
+- **ZIP code** in the shared `Person` schema is a string (`^\d{5}(-\d{4})?$`) with a description, so both Forms render
+  a text input. No fixture or test used a numeric zip.
+- **Label colours** (dark theme, ui-theme `roles.css`): labels are `--color-subdued` (neutral-600) and descriptions
+  `--color-description` (neutral-400). In light: neutral-500 and neutral-600. ui-theme orders the text roles base →
+  description → subdued (weakest), so subdued labels now read **dimmer than descriptions** in both themes. They are
+  distinguishable, but inverted from the requested "description even lighter". To get that order, labels would take
+  `--color-description` and descriptions `--color-subdued`; that is a one-line swap in `control.css` if wanted.
 
 ## Decision points (AUDIT §6)
 
@@ -204,22 +265,20 @@ Proposed new points:
 46. **Subgrid in a one-track cell.** An inheriting child of a `row` cell has no `content-*` lines. Options: (1) a dev
     warning when an inheriting Container's or grid set's parent is a `row` Container, (2) have row cells re-declare the
     edge names. Recommendation: 1.
-47. **Nested groups and the level ladder.** `+1` saturates at popup and wells lose contrast. Options: (1) nested form
-    groups use an aspect (a `group`/well tint that steps off its host, like `bar`) instead of a rung per depth, (2) step
-    only the first nesting. Recommendation: 1.
+47. **Nested groups and the level ladder.** Settled in review: no surface stepping for nesting (DESIGN follow-up 60).
 48. **`resolveFieldRenderer` returns a scalar kind** (`'text' | 'number' | …`) rather than the current component, so
     both views map kinds to their own renderers. Recommendation: do it in M6.
-49. **Break the Form module cycle** (FormControls ↔ FormFields ↔ fields ↔ ObjectPicker → Form). Recommendation: in
-    M6, before `next` is imported from anywhere but stories.
+49. **Break the Form module cycle.** Done: no namespace module sits on a cycle (item 1).
 50. **Blur lives on the row.** `Field.Root onBlur` (`focusout`) marks touched for every control. Recommendation: keep
     it, and add no `onBlur` to NumberInput, PasswordInput or DateInput.
-51. **`Field.Header` with a text label.** The trailing push applies only after `.nx-label`. Recommendation: extend it
-    to a Typography label.
+51. **`Field.Header` with a text label.** Done: trailing actions always end the row.
 52. **Mono input** for `Format.Key` (the current `font-mono` class). Recommendation: `Input variant='mono'` or a `font`
     prop.
-53. **Hierarchy without indentation.** Nested groups share the rails, so they do not indent. Options: (1) accept (a
-    surface and a legend), (2) indent the content track per depth with a nested `columns` offset, (3) a bordered inset
-    card (which gives up rail alignment). Recommendation: decide with a designer; 1 fits decision 5.
+53. **Hierarchy without indentation.** Settled in review: enclosed and indented (DESIGN follow-up 60). Nested fields
+    give up the top-level rails, not the columns.
+54. **One trailing column across nesting.** An inset group's end cell is indented with it, so a nested disclosure
+    lines up with its own level's trailing icons, not the top level's. This follows from decision 60; say if the
+    column should instead stay fixed across depths.
 
 ## Revised estimate, milestones 6–10 (AUDIT §5)
 
@@ -242,7 +301,7 @@ Run locally in this worktree (not the cloud sandbox), headless Chromium.
 
 - `npx tsc -b packages/ui/react-ui-form/tsconfig.json` (builds react-ui and react-ui-list declarations): pass.
 - `pnpm exec oxlint src` (react-ui-form) and `pnpm exec oxlint src/next` (react-ui): pass.
-- Storybook vitest: react-ui-form `src/next` 8 files, 24 tests pass (includes the benchmark); react-ui `src/next` 41
+- Storybook vitest: react-ui-form `src/next` 8 files, 29 tests pass (includes the benchmark); react-ui `src/next` 41
   files, 87 tests pass; react-ui-list `src/next` 3 files, 12 tests pass.
 - Node vitest: react-ui-form `src/next` (`rules.test.ts`: no className, classNames, tv recipe or `div`) and
   `src/components/Form`: 10 files, 55 tests pass.
