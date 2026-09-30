@@ -19,9 +19,12 @@ Design: [`./DESIGN.md`](./DESIGN.md). Branch `dm/zen-hawking-92843m`.
 - [x] Observability worker plugin.
 - [x] Worker entry → `PluginWorker.run`; tab config lists plugin URLs (`?module-url`).
 - [x] Dev boot verified with Playwright: identity created, survives reload, second tab boots.
-- [ ] CI: production build + Composer e2e.
+- [x] `worker` build environment (`ModuleUrlPlugin({ environment })`): the worker and its plugins share one graph.
+- [ ] Production boot verified locally; CI production build + Composer e2e green.
 
 ## Follow-ups
+
+- [ ] Worker shared-module registry, for worker plugins built outside Composer.
 
 - [ ] `@dxos/compute-runtime/LayerStack` subpath so the worker base stops importing the root barrel.
 - [ ] Move the tasks/todomvc apps (and `@dxos/client/worker`'s `runDedicatedWorker`) onto `PluginWorker`,

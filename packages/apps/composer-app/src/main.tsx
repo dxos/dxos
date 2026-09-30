@@ -75,6 +75,7 @@ import {
   translations,
 } from './util/index.ts';
 import clientWorkerPluginUrl from './workers/client-plugin.ts?module-url';
+import dedicatedWorkerUrl from './workers/dedicated-worker.ts?module-url';
 import observabilityWorkerPluginUrl from './workers/observability-plugin.ts?module-url';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
@@ -532,7 +533,8 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createDedicatedWorker: () =>
-      new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
+      // A module URL, not `new URL(...)`: the worker entry shares one build with the plugins it loads.
+      new Worker(dedicatedWorkerUrl, {
         type: 'module',
         name: 'dxos-client-worker',
       }),
