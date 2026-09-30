@@ -33,7 +33,10 @@ export const CreateRepository = Operation.make({
   }),
   output: Schema.Struct({
     repositoryId: Schema.String.annotate({ description: 'The ECHO object URI of the created repository.' }),
-    remote: Schema.String.annotate({ description: 'Git remote URL. Pushing to it needs the Push operation.' }),
+    remote: Schema.String.annotate({
+      description:
+        'Git remote URL on EDGE. To push, attach the repository to a sandbox and use the remote name AttachRepository returns.',
+    }),
   }),
   services: [Database.Service, RepositoryService.Service],
 });

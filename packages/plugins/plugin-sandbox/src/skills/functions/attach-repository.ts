@@ -24,8 +24,12 @@ export default SandboxOperation.AttachRepository.pipe(
       const loadedRepository = yield* Database.load(repository);
 
       const current = sandbox.repositories ?? [];
+      const currentIds = new Set<string>();
+      for (const ref of current) {
+        currentIds.add((yield* Database.load(ref)).id);
+      }
+      const added = !currentIds.has(loadedRepository.id);
       const attached = yield* resolveAttachments(db.spaceId, [...current, repository]).pipe(Effect.orDie);
-      const added = attached.length > current.length;
       const sandboxService = yield* SandboxService.Service;
       yield* sandboxService.setRepositories
         ? sandboxService.setRepositories(db.spaceId, sandbox.id, attached).pipe(Effect.orDie)
@@ -35,7 +39,11 @@ export default SandboxOperation.AttachRepository.pipe(
 
       if (added) {
         Obj.update(sandbox, (sandbox) => {
-          sandbox.repositories = [...current, repository];
+          if (sandbox.repositories) {
+            sandbox.repositories.push(repository);
+          } else {
+            sandbox.repositories = [repository];
+          }
         });
       }
 

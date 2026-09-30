@@ -42,16 +42,25 @@ export const RepositoryArticle = ({ role, subject: repository }: RepositoryArtic
 
   // Bumped whenever the ref changes, so a response for the previous ref is dropped when it lands.
   const generation = useRef(0);
+  // Directories with a listing request in flight, so an effect re-run does not request them again.
+  const pending = useRef(new Set<string>());
 
+  /** Runs an operation; a failure is logged, and unless `quiet` replaces the viewer with its message. */
   const invoke = useCallback(
-    async <I, O>(operation: Operation.Definition<I, O>, input: I): Promise<O | undefined> => {
+    async <I, O>(
+      operation: Operation.Definition<I, O>,
+      input: I,
+      { quiet = false }: { quiet?: boolean } = {},
+    ): Promise<O | undefined> => {
       if (!spaceId) {
         return undefined;
       }
       const { data, error } = await invoker.invokePromise(operation, input, { spaceId });
       if (error) {
         log.catch(error);
-        setError(error.message);
+        if (!quiet) {
+          setError(error.message);
+        }
         return undefined;
       }
       return data;
@@ -85,6 +94,7 @@ export const RepositoryArticle = ({ role, subject: repository }: RepositoryArtic
       return;
     }
     const current = ++generation.current;
+    pending.current = new Set();
     setDirectories(new Map());
     setFile(undefined);
     void invoke(RepositoryOperation.GetTree, { repository: repositoryRef, ref: currentRef, path: '' }).then(
@@ -102,11 +112,14 @@ export const RepositoryArticle = ({ role, subject: repository }: RepositoryArtic
       return;
     }
     const current = generation.current;
+    const inFlight = pending.current;
     for (const path of expanded) {
-      if (directories.has(path)) {
+      if (directories.has(path) || inFlight.has(path)) {
         continue;
       }
+      inFlight.add(path);
       void invoke(RepositoryOperation.GetTree, { repository: repositoryRef, ref: currentRef, path }).then((result) => {
+        inFlight.delete(path);
         if (result && current === generation.current) {
           setDirectories((previous) => new Map(previous).set(path, result.entries));
         }
@@ -114,19 +127,26 @@ export const RepositoryArticle = ({ role, subject: repository }: RepositoryArtic
     }
   }, [invoke, repositoryRef, currentRef, expanded, directories]);
 
-  // The selected file, at the current ref; a path the ref does not have simply shows nothing.
+  // The selected file, at the current ref. Quiet: a path the ref does not have empties the file pane
+  // rather than replacing the whole viewer, and a slower read of a file no longer selected is dropped.
   useEffect(() => {
     if (!currentRef || !selectedPath) {
       return;
     }
+    let cancelled = false;
     const current = generation.current;
-    void invoke(RepositoryOperation.ReadFile, { repository: repositoryRef, ref: currentRef, path: selectedPath }).then(
-      (result) => {
-        if (current === generation.current) {
-          setFile(result);
-        }
-      },
-    );
+    void invoke(
+      RepositoryOperation.ReadFile,
+      { repository: repositoryRef, ref: currentRef, path: selectedPath },
+      { quiet: true },
+    ).then((result) => {
+      if (!cancelled && current === generation.current) {
+        setFile(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [invoke, repositoryRef, currentRef, selectedPath, refreshKey]);
 
   const loadCommits = useCallback(
