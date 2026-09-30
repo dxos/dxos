@@ -26,7 +26,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
+import { Listbox, TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, Task } from '@dxos/types';
 import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
@@ -313,16 +313,34 @@ TaskListRoot.displayName = 'TaskList.Root';
 // add row stays pinned while the rows scroll.
 //
 
-type TaskListViewportProps = ComposableProps;
+type TaskListViewportProps = ComposableProps<{
+  /** Caps the height at exactly this many rows, so a longer list scrolls without showing a partial row. */
+  rows?: number;
+}>;
 
-const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  return (
-    <Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} ref={forwardedRef}>
-      {children}
-    </Listbox.Viewport>
-  );
-});
+const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
+  ({ children, rows: rowsProp, ...props }, forwardedRef) => {
+    const { className, style, ...rest } = composableProps(props);
+    // Whole rows only: a fractional count would cut through the next row.
+    const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
+    return (
+      <Listbox.Viewport
+        {...rest}
+        classNames={mx('dx-shrink', className)}
+        // Each row is one control tall (the rail-item square every cell holds), and the tree's grid
+        // puts a `gap-0.5` (0.125rem) between rows; without the gaps the last row is cut short.
+        style={
+          rows === undefined
+            ? style
+            : { ...style, maxHeight: `calc(${rows} * var(--dx-control) + ${Math.max(rows - 1, 0)} * 0.125rem)` }
+        }
+        ref={forwardedRef}
+      >
+        {children}
+      </Listbox.Viewport>
+    );
+  },
+);
 
 TaskListViewport.displayName = 'TaskList.Viewport';
 
@@ -358,7 +376,8 @@ const buildGridTemplate = ({
   hasActions: boolean;
 }): string => {
   const candidates: (GridTrack | false)[] = [
-    toggle && [undefined, 'var(--dx-control)'],
+    // The tree's block, which each level also indents by, so a guide lands under its branch's chevron.
+    toggle && [undefined, TREE_BLOCK],
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],

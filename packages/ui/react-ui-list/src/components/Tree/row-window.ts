@@ -23,6 +23,10 @@ export type RowUnit =
   | { kind: 'row'; key: string; node: TreeNodeEntry }
   | { kind: 'end'; key: string };
 
+/** Whether `path` lies strictly under `ancestor`. */
+export const isDescendantPath = (path: readonly string[], ancestor: readonly string[]): boolean =>
+  path.length > ancestor.length && ancestor.every((id, index) => path[index] === id);
+
 /** The id the window measures a unit by, namespaced by kind so no item collides with a header or the end strip. */
 export const rowUnitId = (unit: RowUnit): string => `${unit.kind}:${unit.key}`;
 

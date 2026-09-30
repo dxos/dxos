@@ -12,4 +12,5 @@ export const SandboxHandlers = OperationHandlerSet.lazy([
   SandboxOperation.Exec.pipe(Operation.lazyHandler(() => import('./exec.ts'))),
   SandboxOperation.UploadFile.pipe(Operation.lazyHandler(() => import('./upload-file.ts'))),
   SandboxOperation.DownloadFile.pipe(Operation.lazyHandler(() => import('./download-file.ts'))),
+  SandboxOperation.PublishFiles.pipe(Operation.lazyHandler(() => import('./publish-files.ts'))),
 ]);

@@ -9,6 +9,7 @@ export * from './trace-processor.ts';
 export * from './tracing-types.ts';
 export * from './diagnostic.ts';
 export * from './diagnostics-channel.ts';
+export * from './remote/events.ts';
 export * from './remote/metrics.ts';
 
 trace.diagnostic({

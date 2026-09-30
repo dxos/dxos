@@ -112,7 +112,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           }),
         });
 
-        yield* Feed.append(feed, [relation]);
+        yield* Feed.append(feed, [relation]).pipe(Effect.provideService(Database.Origin, 'system'));
         yield* Database.flush();
 
         return {

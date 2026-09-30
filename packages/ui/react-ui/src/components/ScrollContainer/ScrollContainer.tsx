@@ -26,8 +26,10 @@ import { IconButton } from '../Button/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
 import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext.ts';
 
+// Within a pixel: at fractional zoom the three measures are rounded differently, and exact equality
+// never holds at the bottom, so the pin could not re-arm.
 const isBottom = (el: HTMLElement | null) => {
-  return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
+  return !!(el && Math.abs(el.scrollHeight - el.scrollTop - el.clientHeight) <= 1);
 };
 
 export interface ScrollController {

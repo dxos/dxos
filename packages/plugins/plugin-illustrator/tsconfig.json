@@ -76,6 +76,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-search"
     },
     {

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
@@ -30,13 +31,17 @@ export default Capability.makeModule(
       }
     });
 
-    Obj.update(settingsSpace.properties, (properties) => {
-      Annotation.set(
-        properties,
-        AppAnnotation.AppSettingsAnnotation,
-        Ref.make(settingsSpace.db.add(AppSettings.make())),
-      );
-    });
+    // Settings sync may have named its own object already: it also runs on this event, and replacing its object
+    // would orphan whatever it wrote there.
+    if (Option.isNone(Annotation.get(settingsSpace.properties, AppAnnotation.AppSettingsAnnotation))) {
+      Obj.update(settingsSpace.properties, (properties) => {
+        Annotation.set(
+          properties,
+          AppAnnotation.AppSettingsAnnotation,
+          Ref.make(settingsSpace.db.add(AppSettings.make())),
+        );
+      });
+    }
 
     return Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace);
   }),

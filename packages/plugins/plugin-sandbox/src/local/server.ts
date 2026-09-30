@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import { timingSafeEqual } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { type IncomingMessage, type ServerResponse, createServer } from 'node:http';
+import { posix } from 'node:path';
 
 import { log } from '@dxos/log';
 
@@ -27,17 +28,32 @@ export type SandboxServer = {
   close(): Promise<void>;
 };
 
+/** Where a published directory is served: `/files/<key>/<path inside it>`. */
+export const FILES_PREFIX = '/files/';
+
+/** A directory `publish` exposed, keyed by the unguessable id in its URL. */
+type Published = { spaceId: string; sandboxId: string; path: string };
+
+/** Caps the directories one helper serves, so its registry cannot grow for as long as the app runs. */
+const MAX_PUBLISHED = 256;
+
 /**
  * Serves `backend` on the loopback interface as one `POST /<method>` per backend method with a JSON
  * body; file contents travel as base64 so binary files survive.
  *
  * This is how a runtime that cannot spawn processes — the Tauri webview — reaches local sandboxes:
  * the desktop shell starts this server as a sidecar and the webview calls it through `HttpBackend.make`.
+ *
+ * `POST /publish` additionally serves one of a sandbox's directories read-only at `GET /files/<key>/…`,
+ * without the token: the loaders that fetch what a sandbox built (the plugin manifest, `import()`, the
+ * desktop app's asset cache) cannot send a header, so the key in the path is the credential. It is 128
+ * random bits, minted per call and forgotten when the helper exits.
  */
 export const serve = async ({ backend, token, port = 0 }: ServeOptions): Promise<SandboxServer> => {
   const expected = Buffer.from(`Bearer ${token}`);
+  const published = new Map<string, Published>();
   const server = createServer((request, response) => {
-    void handle(backend, expected, request, response).catch((error) => {
+    void handle(backend, expected, published, request, response).catch((error) => {
       log.catch(error);
       send(response, 500, { error: 'internal error' });
     });
@@ -62,21 +78,28 @@ type Call =
   | { method: 'exec'; spaceId: string; sandboxId: string; request: ExecRequestBody }
   | { method: 'read'; spaceId: string; sandboxId: string; path: string }
   | { method: 'write'; spaceId: string; sandboxId: string; path: string; content: string }
-  | { method: 'list'; spaceId: string; sandboxId: string; path: string };
+  | { method: 'list'; spaceId: string; sandboxId: string; path: string }
+  | { method: 'publish'; spaceId: string; sandboxId: string; path: string };
 
 type ExecRequestBody = { command: string; cwd?: string; env?: Record<string, string>; timeout?: number };
 
 const handle = async (
   backend: SandboxService.Backend,
   expected: Buffer,
+  published: Map<string, Published>,
   request: IncomingMessage,
   response: ServerResponse,
 ): Promise<void> => {
   // Any origin may ask; only a holder of the token gets an answer.
   response.setHeader('Access-Control-Allow-Origin', request.headers.origin ?? '*');
-  response.setHeader('Access-Control-Allow-Headers', 'authorization, content-type');
-  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  response.setHeader('Vary', 'Origin');
+  // Whatever the preflight asks for: the webview's fetch is instrumented and adds trace headers (`traceparent`),
+  // and a fixed list refused every call; the bearer token, not the header list, is what guards the shell.
+  response.setHeader(
+    'Access-Control-Allow-Headers',
+    request.headers['access-control-request-headers'] ?? 'authorization, content-type',
+  );
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  response.setHeader('Vary', 'Origin, Access-Control-Request-Headers');
   if (request.method === 'OPTIONS') {
     send(response, 204);
     return;
@@ -85,6 +108,14 @@ const handle = async (
   // Any other name is a page that rebound its own DNS onto this port.
   if (!/^(127\.0\.0\.1|localhost):\d+$/.test(request.headers.host ?? '')) {
     send(response, 403, { error: 'forbidden host' });
+    return;
+  }
+  if (request.method === 'GET' && (request.url ?? '').startsWith(FILES_PREFIX)) {
+    // No bearer token guards these, so only a page on this machine (the app) may read them cross-origin.
+    if (!isLocalOrigin(request.headers.origin)) {
+      response.removeHeader('Access-Control-Allow-Origin');
+    }
+    await serveFile(backend, published, request.url ?? '', response);
     return;
   }
   const authorization = Buffer.from(request.headers.authorization ?? '');
@@ -105,7 +136,9 @@ const handle = async (
     return;
   }
 
-  const exit = await Effect.runPromiseExit(dispatch(backend, call));
+  const exit = await Effect.runPromiseExit(
+    call.method === 'publish' ? publish(backend, published, call) : dispatch(backend, call),
+  );
   if (Exit.isSuccess(exit)) {
     send(response, 200, exit.value ?? {});
     return;
@@ -118,7 +151,84 @@ const handle = async (
   throw new Error('sandbox call died', { cause: exit.cause });
 };
 
-const dispatch = (backend: SandboxService.Backend, call: Call): Effect.Effect<unknown, SandboxService.SandboxError> => {
+/** A loopback web origin, or the webview's own scheme; an absent `Origin` is a same-origin or non-browser request. */
+const isLocalOrigin = (origin: string | undefined): boolean =>
+  origin === undefined || /^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?|tauri:\/\/localhost)$/.test(origin);
+
+/** Registers a directory for {@link serveFile}, once the backend confirms it is one. */
+const publish = (
+  backend: SandboxService.Backend,
+  published: Map<string, Published>,
+  { spaceId, sandboxId, path }: Published,
+): Effect.Effect<{ path: string }, SandboxService.SandboxError> =>
+  Effect.flatMap(backend.listFiles(spaceId, sandboxId, path), () => {
+    // Republishing a directory answers its existing URL, so a rebuild loop does not add entries.
+    const existing = [...published].find(
+      ([, entry]) => entry.spaceId === spaceId && entry.sandboxId === sandboxId && entry.path === path,
+    );
+    if (existing) {
+      return Effect.succeed({ path: `${FILES_PREFIX}${existing[0]}/` });
+    }
+    if (published.size >= MAX_PUBLISHED) {
+      return Effect.fail(
+        new SandboxService.SandboxError({ message: `at most ${MAX_PUBLISHED} directories can be published` }),
+      );
+    }
+    const key = randomBytes(16).toString('hex');
+    published.set(key, { spaceId, sandboxId, path });
+    return Effect.succeed({ path: `${FILES_PREFIX}${key}/` });
+  });
+
+/** Content types a module loader insists on; anything else keeps the type the backend sniffed. */
+const CONTENT_TYPES: Record<string, string> = {
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.map': 'application/json',
+  '.mjs': 'text/javascript',
+  '.wasm': 'application/wasm',
+};
+
+/** Answers `GET /files/<key>/<path>` from the published directory, never from outside it. */
+const serveFile = async (
+  backend: SandboxService.Backend,
+  published: Map<string, Published>,
+  url: string,
+  response: ServerResponse,
+): Promise<void> => {
+  const [key, ...rest] = url.slice(FILES_PREFIX.length).split('?')[0].split('/');
+  const entry = published.get(key);
+  let relative: string;
+  try {
+    relative = posix.normalize(rest.map(decodeURIComponent).join('/'));
+  } catch {
+    relative = '..';
+  }
+  if (!entry || relative === '.' || relative === '..' || relative.startsWith('../') || posix.isAbsolute(relative)) {
+    send(response, 404, { error: 'not found' });
+    return;
+  }
+  const exit = await Effect.runPromiseExit(
+    backend.readFileBytes(entry.spaceId, entry.sandboxId, posix.join(entry.path, relative)),
+  );
+  if (!Exit.isSuccess(exit)) {
+    send(response, 404, { error: 'not found' });
+    return;
+  }
+  response.statusCode = 200;
+  response.setHeader('Content-Type', CONTENT_TYPES[posix.extname(relative)] ?? exit.value.type);
+  // This origin is same-site with the app's, so nothing served here may run as a document of its own.
+  response.setHeader('X-Content-Type-Options', 'nosniff');
+  response.setHeader('Content-Security-Policy', 'sandbox');
+  // A rebuild rewrites the files behind the same URL; a cached copy would load the last build.
+  response.setHeader('Cache-Control', 'no-store');
+  response.end(Buffer.from(exit.value.bytes));
+};
+
+const dispatch = (
+  backend: SandboxService.Backend,
+  call: Exclude<Call, { method: 'publish' }>,
+): Effect.Effect<unknown, SandboxService.SandboxError> => {
   switch (call.method) {
     case 'create':
       return backend.create(call.spaceId, call.sandboxId, call.options);
@@ -181,6 +291,7 @@ const parseCall = (method: string, body: Record<string, unknown>): Call => {
     }
     case 'read':
     case 'list':
+    case 'publish':
       return { method, spaceId, sandboxId, path: string(body, 'path') };
     case 'write':
       return { method, spaceId, sandboxId, path: string(body, 'path'), content: string(body, 'content') };

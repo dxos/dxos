@@ -876,7 +876,7 @@ describe('Agent Service (control plane)', () => {
 
         // Selecting a model on the chat tears the process down and respawns it bound to the selection.
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(DXN.make('com.anthropic.model.claude-haiku-4-5.default'));
+          chat.session = { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') };
         });
         yield* Database.flush();
         const sessionB = yield* ComputeAgentService.getSession(chat);

@@ -246,7 +246,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // The chat's own selection wins: the process is bound to the chat, so the model it runs on is
         // recovered from the chat on rehydration like the instructions are.
-        const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? options.defaultModel;
+        const model = chat.session?.model ?? options.defaultModel;
         const requestModelLayer = AiService.languageModel(DXN.getName(model ?? Model.claudeSonnet5.id), {
           provider: options.provider,
         });

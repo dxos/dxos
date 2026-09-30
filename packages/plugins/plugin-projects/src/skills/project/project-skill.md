@@ -132,7 +132,7 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   file a sub-task under its parent, which then lists it in its own `subtasks`. Reorder or re-parent
   a task with `tasks-move`; move it, with its sub-tasks, to another project with `tasks-move-to-set`
   (the target project's `taskSet`). Never edit a task set's `tasks` array by hand.
-  Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
+  Task `status` is `backlog`|`todo`|`started`|`review`|`blocked`|`done`|`failed`|`cancelled`|`duplicate`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
 - **Assignee** — a task's `assignee` is an actor, not a label. For a person, name them
@@ -151,16 +151,40 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   then a document whose `content` references it (`space-add-object` typenames `org.dxos.type.text`
   and `org.dxos.type.document`).
 
+## Tasks are a tree
+
+Tasks nest to any depth: a root task sits in the task set, and each sub-task sits in its parent's
+`subtasks`. Read the whole tree before acting on any part of it.
+
+- Load it with `tasks-list { project, includeSubtasks: true, spaceId }`. Without `includeSubtasks`
+  you see only root tasks and miss most of the work. Results are paged: while the response carries
+  `nextCursor`, call again with `after: nextCursor` (and the same `includeSubtasks: true`).
+- For any task you touch, look **down** (its `subtasks`, recursively) and **up** (the task whose
+  `subtasks` lists it, up to the root). A sub-task's intent and acceptance criteria often live on
+  its parent.
+- Group related work by nesting it under a parent task (`tasks-create { parentTask }`, or
+  `tasks-move { task, parentTask }` to re-parent), not by prefixing titles or keeping parallel flat
+  lists. Milestones group by phase; nesting groups by what the work is part of.
+- When you start a large task, break it down first: create its sub-tasks with
+  `tasks-create { parentTask }`, then work and close them one at a time. A parent is done when all
+  its sub-tasks are.
+
 ## Asking the user about a task
 
 When a task is stuck on a decision only the user can make, ask it on the task rather than
 guessing: an assumption the ledger then carries as fact costs more than the round trip.
 
-- `tasks-ask-question { task: {"/": "echo:///<task-id>"}, question, context?, options?, actor?, spaceId }`
+- **Ask only what you genuinely cannot decide.** If the answer is in the prompt, the space or the
+  code, use it and carry on: a question costs the user a round trip, and the task stays `blocked`
+  until they answer.
+- `tasks-ask-question { task: {"/": "echo:///<task-id>"}, question, context?, options?, actor?, remoteSession?, spaceId }`
   files the question in the task's `history` and sets the task to `blocked`. Put what you are
   stuck on in `context`, offer the likely answers in `options` (`{ title, description? }` — the
-  user may still type their own), and pass your own actor as `actor` (see "Assignee" above). It
-  returns the question's `questionId`.
+  user may still type their own, so never phrase the list as exhaustive, and never pick an answer
+  yourself), and pass your own actor as `actor` (see "Assignee" above). A coding-agent session
+  passes `remoteSession: { "sessionId": "<the harness session id>" }` instead: the blocked task is
+  assigned to that session and the question is recorded as asked by it, as `tasks-update` does.
+  It returns the question's `questionId`.
 - One open question per task: a second call while the first is unanswered is refused. Ask
   everything you need in one question.
 - The user answers in Composer, on the task. Nothing wakes you: read the answer back with
@@ -168,8 +192,9 @@ guessing: an assumption the ledger then carries as fact costs more than the roun
   `event: "answer"` whose `questionId` matches. Until it is there, work on something else or stop.
 - Once answered, unblock the task yourself with `tasks-update { status }` if the answer cleared
   it, or ask again if it did not. The answer does not change the status on its own.
-- If the user is in this conversation with you, ask them here instead; `tasks-ask-question` is for a
-  question that has to wait on the task until someone answers it in Composer.
+- Ask on the task even when the user is in this conversation. A question asked only in chat is
+  lost when the session ends; one filed on the task stays with the work, and anyone picking the
+  task up later sees both the question and the answer. Tell the user in one line that you filed it.
 
 ## Artifacts — the project's work products
 
@@ -183,6 +208,14 @@ outlines, sheets, contacts, …), distinct from its tasks and its outline.
   record it on that task with `tasks-add-artifact { task, object }`. It needs no project, so it is also
   the verb for a task that lives in a plain task set. For a file on your own disk, create the `File`
   first (see the File skill's upload flow) and pass its reference as `object`.
+- **When the work is code**, the pull request is the task's main artifact. Load the GitHub skill,
+  import the PR with `github-import-pull-request` (its URL, or `owner/repo#number`), and attach the
+  returned `pullRequest` reference with `tasks-add-artifact { task, object }`. Import as soon as
+  the PR exists, not when it merges; importing again returns the same object.
+- **When the change has a visual side** (UI, layout, rendering), capture screenshots or a short
+  screen recording, upload each with the File skill (`createUpload`, the returned `curl`, then
+  `file-create-from-upload`), and attach the resulting `File` to the task with
+  `tasks-add-artifact` next to the PR.
 - Before searching the whole space for something the project should already hold, call
   `projects-list-artifact { project }` — it returns a DXN, type and label per artifact, and you load the
   content of the one you want.
@@ -191,6 +224,32 @@ outlines, sheets, contacts, …), distinct from its tasks and its outline.
 
 In a project-scoped chat the project's reference is already bound into the context, so these two
 verbs work without the space binding the slash verbs below require.
+
+## Checking in from outside Composer
+
+An agent running outside Composer (Claude Code or another harness, connected over MCP) is
+invisible to the space unless it reports itself. Keep a session object for your run with
+`tasks-record-session`:
+
+- **At the start**, and again at each natural checkpoint (a task finished, a PR opened, before a
+  long wait): `tasks-record-session { sessionId, spaceId, title?, summary, repo?, branch?, worktree? }`,
+  where `sessionId` is your harness's session id and `summary` is one sentence on where the work
+  stands. The first call creates the session; later calls update it and stamp the check-in time.
+- The result lists the open tasks assigned to this session. Read it: it is the cheapest point to
+  notice you have drifted from what you were asked to do.
+- To assign a task to yourself, find the session object with `tasks-list-sessions { sessionId }`
+  and use it as the assignee's `subject` (see "Assignee").
+- **Name the session after the work once you pick up a task.** Pass `title` — the task's title,
+  or the root task's when you claim a tree — on `tasks-record-session` and in `remoteSession` on
+  `tasks-update`, so Composer lists the run by what it is doing rather than by a bare harness id. A
+  `remoteSession` with no `title` names a still-untitled session after the task it claims; a
+  session that already has a title keeps it. If your harness can rename its own session (a
+  session-title tool), give it the same name.
+- **When you stop**, record once more with `state: "finished"` (or `"failed"`) so the session is not
+  left looking like it is still running.
+
+Hooks in some harnesses already call `tasks-record-session`. Check in yourself anyway when you
+have something new to report: the hook cannot write the summary.
 
 ## When to use
 
@@ -225,7 +284,7 @@ spaceId }`. Report the new project id.
   several — never guess silently.
 - **`/project hydrate`** — checkpoint before stopping or handing off:
   1. Reconcile task statuses: `tasks-update { status }` every task whose real state has
-     moved; leave a short `description` note on anything left `in-progress` (what's blocked,
+     moved; leave a short `description` note on anything left `started` (what's blocked,
      what's next).
   2. Refresh the resume pointer: `tasks-update-outline` the `Resume:` line to the single next action.
   3. Reconcile the milestone sequence: `tasks-create-milestone` anything newly scoped, `space-update-object`
@@ -234,7 +293,7 @@ spaceId }`. Report the new project id.
      it. Patch the project's `status` with `space-update-object` if the work-stream's state changed.
   4. Push durable _why_ (decisions, findings) into the design document, not the outline — the
      outline is scratch, the document is the record.
-  5. Confirm the checkpoint in one short block (done / in-progress / next).
+  5. Confirm the checkpoint in one short block (done / in review / started / next).
 - **`/project end`** — close out a work-stream: run the hydrate checkpoint first, then
   `space-update-object { object: {"/": "echo:///<id>"}, properties: { status: 'ended' }, spaceId }`. Ended projects stay
   queryable; nothing is deleted.
@@ -244,7 +303,7 @@ spaceId }`. Report the new project id.
   2. `projects-get { project: {"/": "echo:///<id>"}, spaceId }`, then `tasks-list-milestone` and
      `tasks-list { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }`; read the outline's
      `Resume:` line.
-  3. Report a concise state: done / in-progress / **next action**. Continue with the next
+  3. Report a concise state: done / in review / started / **next action**. Continue with the next
      action, or wait for direction if the user gave any.
 
   A project records no branch or worktree, deliberately: each session runs in a fresh
@@ -275,37 +334,51 @@ spaceId }`. Report the new project id.
 ## Workflow discipline
 
 1. **At task start** — `space-query-objects { typename: 'org.dxos.type.project' }`, then `projects-get` + `tasks-list` (project ref
-   and `spaceId` on both) to reload state; create the project if none exists for this stream.
+   and `spaceId` on both, `includeSubtasks: true` on `tasks-list`) to reload state; create the project if none exists for this stream.
 2. **As you work** — update task status in the **same turn** the work completes. Never leave
    statuses stale, and never batch-update everything at the end.
 3. **When parking a task** — leave a one-line note in its `description` (what's blocked, what's
    next) so it's resumable.
-4. **Before claiming done** — reconcile the ledger against reality: every `done` task is
-   actually complete, and no completed work is still `todo`.
-5. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
+4. **When you finish a task, move it to `review` if there is something for someone to review,
+   otherwise to `done`.** Something to review means an output a person has to check before the
+   work counts: an open pull request, a draft document, a design awaiting sign-off, screenshots of a
+   visual change. Attach it to the task (`tasks-add-artifact`) before setting `review`, so the
+   reviewer finds it on the task. Work with nothing to check (a question answered, data filed,
+   a merged change) goes straight to `done`. Move a `review` task to `done` once the review is
+   through, e.g. its PR merged.
+5. **Before claiming done** — reconcile the ledger against reality: every `done` task is
+   actually complete, every `review` task has its reviewable output attached, and no completed
+   work is still `todo` or `started`.
+6. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
    (`/project track`). `spawn` is the one sanctioned use of a chip, and it only ever acts on a
    task already recorded in the ledger.
-6. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
+7. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
    never a lone sub-task; the PR covers every sub-task, and is attached to the root
    (`tasks-add-artifact` redirects it there). Claiming or starting any task claims its whole tree.
 
 ## Common mistakes
 
-| Mistake                                                            | Fix                                                                                          |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.      |
-| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute a space the file does not list.                |
-| Writing to a space that is not in `spaces`                         | Only the listed spaces are candidates; offer setup to add one rather than writing to it.     |
-| Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                       |
-| Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object. |
-| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.   |
-| Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.   |
-| Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.       |
-| Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.     |
-| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.               |
-| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.        |
-| Creating a new project when one for this work already exists       | Query for projects first; resume/extend the existing one instead of forking state.           |
-| Guessing at a decision only the user can make                      | `tasks-ask-question` on the task, then read the answer back from its `history`.              |
-| Spawning a task chip for a follow-up you just discovered           | Record it with `tasks-create`; `spawn` only hands off a task already in the ledger.          |
-| A `spawn` prompt that assumes this conversation                    | The receiving session has none of it — restate project, task, ids and paths verbatim.        |
-| Renumbering between `tasks` and `spawn`                            | Same order, same numbers; the user is quoting a row they just saw.                           |
+| Mistake                                                            | Fix                                                                                           |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.       |
+| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute a space the file does not list.                 |
+| Writing to a space that is not in `spaces`                         | Only the listed spaces are candidates; offer setup to add one rather than writing to it.      |
+| Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                        |
+| Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object.  |
+| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.    |
+| Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.    |
+| Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.        |
+| Marking a task `done` while its PR is still open                   | Set `review` with the PR attached; `done` once it has merged.                                 |
+| Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.      |
+| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.                |
+| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.         |
+| Creating a new project when one for this work already exists       | Query for projects first; resume/extend the existing one instead of forking state.            |
+| Guessing at a decision only the user can make                      | `tasks-ask-question` on the task, then read the answer back from its `history`.               |
+| Asking a task's question in chat                                   | File it with `tasks-ask-question` on the task, even when the user is in the conversation.     |
+| Reading only root tasks                                            | `tasks-list { includeSubtasks: true }`; check each task's parent and sub-tasks before acting. |
+| Starting a large task as one lump                                  | Break it into sub-tasks with `tasks-create { parentTask }` first, then close them one by one. |
+| Opening a PR without recording it                                  | `github-import-pull-request`, then `tasks-add-artifact` the PR onto the task.                 |
+| Working outside Composer without checking in                       | `tasks-record-session` at the start, at checkpoints, and with a terminal `state` at the end.  |
+| Spawning a task chip for a follow-up you just discovered           | Record it with `tasks-create`; `spawn` only hands off a task already in the ledger.           |
+| A `spawn` prompt that assumes this conversation                    | The receiving session has none of it — restate project, task, ids and paths verbatim.         |
+| Renumbering between `tasks` and `spawn`                            | Same order, same numbers; the user is quoting a row they just saw.                            |

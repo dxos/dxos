@@ -326,6 +326,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
     // On the list's template the pane has the rows' columns: the ordinal gutter it leaves empty, the
     // status column takes the icon, and the title column takes the field — which is what puts the
     // caret where the rows' titles start. Off it, the pane keeps a template of its own.
+    const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
+
     return (
       // One grid, not a row of grids: the title and the description line up column for column, and
       // the toolbar can sit on the title line while coming LAST in the DOM — so Tab runs title →
@@ -338,7 +340,10 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         className={mx(
           // The gap between the rows is the grid's, not a margin on each cell: a margin has to be
           // repeated on every cell that might start a row, and is missed by whichever one is added next.
-          'grid w-full min-w-0 shrink-0 grid-rows-[auto_auto] gap-y-2',
+          'grid w-full min-w-0 shrink-0',
+          // The description row only when there is one: an empty second track still takes the row gap,
+          // which left the pane a gap taller than a task row.
+          hasDescription ? 'grid-rows-[auto_auto] gap-y-2' : 'grid-rows-[auto]',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
           // No leading control means no icon track: the title then starts where the host's own
@@ -404,7 +409,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           />
         </Field.Root>
 
-        {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
+        {hasDescription && (
           <div
             data-testid='taskList.edit.description'
             // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a

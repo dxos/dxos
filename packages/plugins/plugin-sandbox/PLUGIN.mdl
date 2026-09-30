@@ -10,21 +10,26 @@ Sandbox plugin for DXOS Composer providing isolated shell environments.
 
 The operations run against `SandboxService.Service`, which the plugin contributes to the process
 runtime as an application-affinity `LayerSpec`. Sandboxes run on EDGE's sandbox-service unless the
-plugin's **Backend** setting is `local` (`DX_SANDBOX_BACKEND=local|edge` overrides it under Node or
-Bun). Local sandboxes are processes confined by the OS sandbox (bubblewrap on Linux, Seatbelt on
+plugin's **Backend** setting is `local`, its default in the desktop app (`DX_SANDBOX_BACKEND=local|edge`
+overrides it under Node or Bun). Local sandboxes are processes confined by the OS sandbox (bubblewrap on Linux, Seatbelt on
 macOS) via `@carderne/sandbox-runtime`:
 
 - **Where they run**: in-process under Node or Bun. In the desktop app, whose webview cannot spawn
   processes, the plugin starts `dx-sandbox` (this package's `compile-sidecar` output) and the
-  webview reaches it on a loopback port with a per-launch token passed over stdin.
+  webview reaches it on a loopback port with a per-launch token passed over stdin. The launcher is
+  annotated `environments: ['tauri']`, so only the Tauri (desktop and iOS) bundles carry it.
 - **Filesystem**: each sandbox is `$DX_SANDBOX_ROOT/<id>/` (default `~/.local/state/dxos/sandboxes`).
   Commands write only its `workspace/` (their cwd and `$HOME`) and `tmp/`; the user's home directory
   and other sandboxes are unreadable. `/workspace/…` paths in file operations map onto `workspace/`.
-- **Network**: only package registries and GitHub (`DEFAULT_ALLOWED_DOMAINS`) are reachable.
+- **Network**: only package registries, pkg.pr.new and GitHub (`DEFAULT_ALLOWED_DOMAINS`) are reachable.
+- **Toolchain**: in the desktop app, commands find `bun` and `bunx` first on their `PATH`. They are the helper
+  itself, a `bun build --compile` executable run with `BUN_BE_BUN=1`, so a sandbox installs and builds
+  JavaScript on a machine with no node or bun of its own.
 - **Limits**: per-command CPU time, writable memory (Linux only) and file size, plus the wall-clock
   `timeout`, which kills the command's whole process group.
 - **Environment**: the host's environment is not inherited; only `PATH`, `HOME`, `TMPDIR`, `LANG`,
-  `WORKSPACE` and the operation's `env` are set.
+  `WORKSPACE` and the operation's `env` are set, plus the helper's own `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE`
+  (and read access to the bundles they name), so installs work behind a TLS-inspecting proxy.
 
 ## Extensions
 
@@ -104,6 +109,25 @@ op downloadFile
     objectId: string     # ECHO object URI of the File
   effects: [sandbox:read, echo:write]
 ```
+
+```mdl
+op publishFiles
+  key: org.dxos.operation.sandbox.publishFiles
+  desc: Serves a directory of a local sandbox read-only over HTTP on this machine and returns its base URL.
+  input:
+    sandbox: Ref<Sandbox>
+    path: string         # directory, relative to the workspace or under /workspace
+  output:
+    url: string          # ends in "/"; empty when it failed
+    error?: string       # set iff url is empty
+  effects: [sandbox:read, sandbox:serve]
+```
+
+Only the desktop app's helper publishes: it serves the directory at `http://localhost:<port>/files/<key>/`
+without the bearer token, since a module loader cannot send one, so the 128-bit key minted per call is the
+credential. Paths that climb out of the directory, and symlinks out of the workspace, answer 404; files are served
+`nosniff` under `Content-Security-Policy: sandbox`, and keys are forgotten when the helper exits.
+Under the EDGE backend, or in-process under Node, the output carries the reason instead.
 
 ## QA
 

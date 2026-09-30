@@ -14,7 +14,7 @@ import { getLocalSandboxBackend } from '#local-backend';
 
 import * as SandboxCapabilities from '../types/SandboxCapabilities.ts';
 import * as SandboxService from '../types/SandboxService.ts';
-import type * as Settings from '../types/Settings.ts';
+import * as Settings from '../types/Settings.ts';
 import { makeEdgeBackend } from './edge-backend.ts';
 import { type EdgeContext } from './sandbox-url.ts';
 
@@ -68,13 +68,15 @@ export const layerFromCapabilities: Layer.Layer<SandboxService.Service, never, C
     };
     return selecting({
       edge,
-      preference: () => envPreference() ?? setting() ?? 'edge',
+      preference: () => envPreference() ?? setting() ?? Settings.defaultBackend(),
       launcher: () => capabilities.getAll(SandboxCapabilities.LocalLauncher)[0],
     });
   }),
 );
 
 const NO_LOCAL_RUNTIME = 'Local sandboxes need the desktop app, or Node or Bun.';
+
+const NO_PUBLISH = 'Publishing files needs a local sandbox in the desktop app.';
 
 /** Reads the client's config and identity per call: both arrive once the client has initialized. */
 const edgeContext = (capabilities: CapabilityManager.CapabilityManager) => (): EdgeContext => {
@@ -123,6 +125,12 @@ const selecting = ({
     readFileBytes: (...args) => Effect.flatMap(select, (backend) => backend.readFileBytes(...args)),
     writeFile: (...args) => Effect.flatMap(select, (backend) => backend.writeFile(...args)),
     listFiles: (...args) => Effect.flatMap(select, (backend) => backend.listFiles(...args)),
+    publish: (...args) =>
+      Effect.flatMap(select, (backend) =>
+        backend.publish
+          ? backend.publish(...args)
+          : Effect.fail(new SandboxService.SandboxError({ message: NO_PUBLISH })),
+      ),
   };
 };
 

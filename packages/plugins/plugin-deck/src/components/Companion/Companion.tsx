@@ -36,6 +36,8 @@ export type CompanionProps = ThemedClassName<{
   companionTo?: unknown;
   /** Toolbar controls rendered after the tabs (e.g. close). */
   controls?: ReactNode;
+  /** Omit the toolbar (e.g. fullscreen). */
+  headless?: boolean;
 }>;
 
 export const Companion = ({
@@ -46,6 +48,7 @@ export const Companion = ({
   attendableId,
   companionTo,
   controls,
+  headless,
 }: CompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   const companions = companionsProp ?? [];
@@ -58,6 +61,7 @@ export const Companion = ({
         id: node.id,
         icon: node.properties?.icon ?? 'ph--circle-dashed--regular',
         label: toLocalizedString(node.properties?.label ?? '', t),
+        testId: `deck.companion.tab.${Attention.getLinkedVariant(node.id)}`,
       })),
     [companions, t],
   );
@@ -81,10 +85,12 @@ export const Companion = ({
 
   return (
     <Pane.Root classNames={classNames} data-testid='deck.companion'>
-      <Pane.Toolbar>
-        <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
-        {controls}
-      </Pane.Toolbar>
+      {!headless && (
+        <Pane.Toolbar>
+          <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
+          {controls}
+        </Pane.Toolbar>
+      )}
       {companionsProp?.length === 0 && (
         <Pane.Content classNames='grid place-items-center'>
           <p className='text-sm text-description'>{t('no-companions.message')}</p>

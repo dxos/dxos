@@ -50,8 +50,15 @@ import {
 import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
-import { DROP_INDENTATION, indentTrack } from './helpers.ts';
-import { type RowUnit, flattenRowUnits, nominalExtents, rowUnitId, useScroller } from './row-window.ts';
+import { COMPACT_INDENT, DROP_INDENTATION, TREE_BLOCK, indentTrack } from './helpers.ts';
+import {
+  type RowUnit,
+  flattenRowUnits,
+  isDescendantPath,
+  nominalExtents,
+  rowUnitId,
+  useScroller,
+} from './row-window.ts';
 import { type TreeData, isTreeDataFor } from './tree-data.ts';
 import {
   type ColumnRenderer,
@@ -64,6 +71,7 @@ import {
   type TreeNodeEntry,
   type TreeRenderContextValue,
   TreeRenderProvider,
+  type WindowDisclosure,
   useTreeRender,
 } from './TreeContext.ts';
 import { TreeDropDebug } from './TreeDropDebug.tsx';
@@ -86,6 +94,13 @@ const NO_MODIFIERS: SelectModifiers = { option: false, shift: false, meta: false
  */
 const TREE_TRACK = '[tree-row-start] minmax(0, 1fr) [tree-row-end]';
 const TREE_GRID = 'grid gap-0.5';
+
+/** The theme's disclosure duration, which the windowed rows' animation runs for; 0 where animation is off. */
+const disclosureDuration = (): number => {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--duration-tree-disclosure').trim();
+  const duration = Number.parseFloat(value);
+  return Number.isNaN(duration) ? 0 : value.endsWith('ms') ? duration : duration * 1000;
+};
 
 type TreeWalkState<T extends { id: string }> = {
   root: TreeNodeEntry<T>;
@@ -297,10 +312,20 @@ export type TreeProps<T extends { id: string } = any> = {
    * measured extents and the scrollbar, and the tree renders the mounted range into a translated
    * parent. Off by default — a list short enough to render whole gains nothing.
    *
-   * An open branch's children are mounted as rows of the window after their parent, so windowed
-   * disclosure is immediate rather than animated.
+   * An open branch's children are mounted as rows of the window after their parent, so those rows
+   * animate the disclosure themselves; a close is committed once they have concealed.
    */
   virtualize?: boolean;
+  /**
+   * Draw a vertical guide line down the left of each open branch's children, centred under the
+   * branch's disclosure toggle (or its icon when `toggle` is off), as Ark's indent guides do.
+   *
+   * Windowed, a branch's children are rows of the window rather than content of the branch, so no
+   * element spans them; each row draws a segment per ancestor instead, and the segments join up.
+   */
+  indentGuides?: boolean;
+  /** Indent each level by half the usual step, for a dense tree such as the navtree. */
+  compact?: boolean;
   /**
    * The element that scrolls the tree, when the consumer owns one.
    *
@@ -342,7 +367,7 @@ export const Tree = <T extends { id: string } = any>({
   id,
   ariaLabel,
   classNames,
-  gridTemplateColumns = '[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]',
+  gridTemplateColumns = `[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content [tree-row-end]`,
   density = 'md',
   toggle = true,
   draggable = false,
@@ -359,6 +384,8 @@ export const Tree = <T extends { id: string } = any>({
   dropAtEnd = false,
   hideDragSource = false,
   virtualize = false,
+  indentGuides = false,
+  compact = false,
   scrollerRef,
   canSelect,
   onOpenChange,
@@ -402,8 +429,32 @@ export const Tree = <T extends { id: string } = any>({
     return Date.now() - at < MODIFIER_WINDOW ? { option, shift, meta } : NO_MODIFIERS;
   }, []);
 
+  // Windowed, a branch's children are rows of the window rather than its content, so they have no
+  // container to animate: the rows animate themselves, and a close is committed only once they have.
+  const windowedRef = useRef(false);
+  const [disclosure, setDisclosure] = useState<WindowDisclosure>();
+  const disclosureTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(disclosureTimerRef.current), []);
+
   const setOpen = useCallback(
-    (node: TreeNodeEntry<T>, open: boolean) => onOpenChange?.({ item: node.item, path: node.path, open }),
+    (node: TreeNodeEntry<T>, open: boolean) => {
+      const commit = () => onOpenChange?.({ item: node.item, path: node.path, open });
+      clearTimeout(disclosureTimerRef.current);
+      if (!windowedRef.current) {
+        return commit();
+      }
+
+      setDisclosure({ path: node.path, open });
+      if (open) {
+        commit();
+      }
+      disclosureTimerRef.current = setTimeout(() => {
+        if (!open) {
+          commit();
+        }
+        setDisclosure(undefined);
+      }, disclosureDuration());
+    },
     [onOpenChange],
   );
 
@@ -700,6 +751,7 @@ export const Tree = <T extends { id: string } = any>({
   );
   const scroller = useScroller(treeRef, scrollerRef, !!units);
   const windowed = !!units && !!scroller;
+  windowedRef.current = windowed;
   // The first commit that renders rows, which a tree still finding its scroller has not had.
   const resolving = !!units && scroller === undefined;
   useEffect(() => {
@@ -728,7 +780,10 @@ export const Tree = <T extends { id: string } = any>({
       canSelect,
       selectionMode,
       mountedRef,
+      indentGuides,
+      indentStep: compact ? COMPACT_INDENT : TREE_BLOCK,
       windowed,
+      disclosure,
       claimFocus,
     }),
     [
@@ -751,7 +806,10 @@ export const Tree = <T extends { id: string } = any>({
       selectionMode,
       onOpenChange,
       onItemHover,
+      indentGuides,
+      compact,
       windowed,
+      disclosure,
       claimFocus,
     ],
   );
@@ -834,6 +892,7 @@ const TreeWindow = ({
   endData: TreeData;
   revealRef: RefObject<((value: string) => boolean) | null>;
 }) => {
+  const { disclosure } = useTreeRender();
   const scrollerRef = useRef<HTMLElement | null>(scroller);
   scrollerRef.current = scroller;
   const model = useListModel(units, rowUnitId);
@@ -875,8 +934,20 @@ const TreeWindow = ({
     }
 
     const id = rowUnitId(unit);
+    const moving = disclosure && unit.kind === 'row' && isDescendantPath(unit.node.path, disclosure.path);
     mounted.push(
-      <div key={id} role='none' className='col-[tree-row] grid grid-cols-subgrid' {...windowRowProps(index, id)}>
+      <div
+        key={id}
+        role='none'
+        className={mx(
+          'col-[tree-row] grid grid-cols-subgrid',
+          // An opening row fades rather than grows: the window measures a row once per commit, so one
+          // mounted at zero height would be placed at zero until something else re-rendered it.
+          // A concealing row may shrink, since it leaves the window when the close commits.
+          moving && (disclosure.open ? 'animate-fade-in' : '[interpolate-size:allow-keywords] animate-tree-conceal'),
+        )}
+        {...windowRowProps(index, id)}
+      >
         {unit.kind === 'header' ? (
           <TreeSectionHeader label={unit.label} />
         ) : unit.kind === 'end' ? (
@@ -967,7 +1038,9 @@ TreeNodeRow.displayName = 'Tree.NodeRow';
  * time because lazy-mounted content attaches long after the row first renders.
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef } = useTreeRender();
+  const { mountedRef, indentGuides, indentStep, toggle } = useTreeRender();
+  // Only with children to span: the guide would otherwise defeat `empty:hidden` on a childless branch.
+  const guide = indentGuides && (node.children?.length ?? 0) > 0;
 
   const handleRef = useCallback(
     (element: HTMLDivElement | null) => {
@@ -989,6 +1062,8 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
         // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
         // the rows inside an expanded branch.
         'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden empty:hidden',
+        // The containing block the guide spans; an absolute grid child takes no track or gap.
+        guide && 'relative',
         '[interpolate-size:allow-keywords]',
         'data-[animate]:data-[state=open]:animate-tree-disclose',
         'data-[animate]:data-[state=closed]:animate-tree-conceal',
@@ -997,6 +1072,14 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
       {node.children?.map((child) => (
         <TreeNodeRow key={child.value} node={child} />
       ))}
+      {guide && (
+        <TreeView.BranchIndentGuide
+          className='absolute inset-y-0 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
+          // Under the branch's own toggle (or its icon, when there is no toggle), clear of its children's
+          // toggles, which sit a block in.
+          style={{ insetInlineStart: `calc(${indentTrack(node.level, indentStep)} + ${TREE_BLOCK} / 2)` }}
+        />
+      )}
     </TreeView.BranchContent>
   );
 };
@@ -1062,6 +1145,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canSelect,
     selectionMode,
     claimFocus,
+    windowed,
+    indentGuides,
+    indentStep,
+    disclosure,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
@@ -1329,7 +1416,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           places it with `row-start-2`. */}
       <div
         className='indent relative grid grid-rows-[var(--dx-control)]'
-        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level) }}
+        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level, indentStep) }}
       >
         {toggle &&
           (branch ? (
@@ -1338,7 +1425,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
                   open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
               <TreeItemToggle
                 isBranch
-                open={open}
+                // A windowed branch stays open in the model while its rows conceal; the chevron turns with them.
+                open={open && !(disclosure && !disclosure.open && disclosure.path.join('/') === path.join('/'))}
                 density={density}
                 // Nothing to disclose: a branch the model knows to be childless keeps its chevron for
                 // row geometry but offers no toggle.
@@ -1355,6 +1443,18 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           <TreeNodeHeading item={item} path={path} props={props} />
         )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
+        {windowed &&
+          indentGuides &&
+          Array.from({ length: level - 1 }, (_, index) => (
+            <div
+              key={index}
+              role='none'
+              data-part='row-indent-guide'
+              // Down past the row into the gap below it, so one ancestor's segments read as a single line.
+              className='absolute top-0 -bottom-0.5 w-0 -translate-x-1/2 border-s border-subdued-separator pointer-events-none'
+              style={{ insetInlineStart: `calc(${indentTrack(index + 1, indentStep)} + ${TREE_BLOCK} / 2)` }}
+            />
+          ))}
         {instruction && (
           <TreeDropIndicator instruction={instruction} kind={dropKind === 'link' ? 'link' : 'move'} gap={2} />
         )}
@@ -1391,15 +1491,19 @@ const TreeNodeHeading = <T extends { id: string }>({
     <TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
       <div
         data-testid='treeItem.heading'
-        className={mx(
-          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) select-none',
-          props.headingClassName,
-        )}
+        className={mx('flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none', props.headingClassName)}
       >
         {RenderIcon ? (
           <RenderIcon item={item} path={path} props={props} />
         ) : (
-          props.icon && <Icon size={5} icon={props.icon} classNames={['my-1', styles?.text]} />
+          props.icon && (
+            <Icon
+              size={5}
+              icon={props.icon}
+              // Centred in a block, the column a child row's toggle sits in.
+              classNames={['my-1 mx-0.5', styles?.text]}
+            />
+          )
         )}
         <span className='min-w-0 truncate text-start' data-tooltip>
           {text}
@@ -1417,7 +1521,7 @@ const TreeNodeHeading = <T extends { id: string }>({
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
       </Tag>
     );
@@ -1425,7 +1529,7 @@ const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 
 
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
       </Tag>
     );

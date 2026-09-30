@@ -417,7 +417,7 @@ const GanttAxisToggle = (_: GanttAxisToggleProps) => {
       density='sm'
       size={3}
       iconOnly
-      icon={axis === 'time' ? 'ph--clock--regular' : 'ph--list-numbers--regular'}
+      icon={axis === 'time' ? 'ph--clock--regular' : 'ph--dots-three-outline--regular'}
       label={t(axis === 'time' ? 'gantt-axis-unit.label' : 'gantt-axis-time.label')}
       onClick={() => onAxisChange(axis === 'time' ? 'unit' : 'time')}
       data-testid='gantt.axisToggle'

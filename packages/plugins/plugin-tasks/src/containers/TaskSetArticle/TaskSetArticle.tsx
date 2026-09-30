@@ -301,17 +301,12 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
-      {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
-          than turning into an editor the moment a row is selected. Full width, edge to edge — it is
-          the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
       <TaskList.Editor
         createOnly
         showDescription
-        // Only where a plugin can store the file, as the task's own article decides.
         acceptFiles={!!attachFile}
         descriptionExtensions={descriptionExtensions}
-        // Flush with the list, with no border of its own: it reads as the list's last row.
-        classNames='bg-input-surface px-15 pb-2'
+        classNames='bg-input-surface px-2 pb-2'
         placeholder={t('task-create.placeholder')}
       />
     </TaskList.Root>
