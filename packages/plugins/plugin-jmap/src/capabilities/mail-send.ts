@@ -9,7 +9,7 @@ import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
 import { JmapOperation } from '#types';
 
-import { JMAP_MAIL_CONNECTOR_ID } from '../constants';
+import { JMAP_MAIL_CONNECTOR_ID } from '../constants.ts';
 
 /** Routes a draft whose mailbox is bound to a JMAP connection to this provider's send operation. */
 export default Capability.makeModule(

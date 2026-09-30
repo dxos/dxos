@@ -8,7 +8,9 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { FileOperation } from '#types';
 
 export const FileOperationHandlerSet = OperationHandlerSet.lazy([
-  FileOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
-  FileOperation.CreateFromSource.pipe(Operation.lazyHandler(() => import('./create-from-source'))),
-  FileOperation.Read.pipe(Operation.lazyHandler(() => import('./read'))),
+  FileOperation.Create.pipe(Operation.lazyHandler(() => import('./create.ts'))),
+  FileOperation.CreateFromSource.pipe(Operation.lazyHandler(() => import('./create-from-source.ts'))),
+  FileOperation.CreateFromUpload.pipe(Operation.lazyHandler(() => import('./create-from-upload.ts'))),
+  FileOperation.ResolveDownload.pipe(Operation.lazyHandler(() => import('./resolve-download.ts'))),
+  FileOperation.Read.pipe(Operation.lazyHandler(() => import('./read.ts'))),
 ]);

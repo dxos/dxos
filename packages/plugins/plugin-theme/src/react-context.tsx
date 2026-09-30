@@ -12,6 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { ACCENT_HUES, type AccentHue, applyAccent } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { Settings, ThemeCapabilities } from '#types';
@@ -21,20 +22,23 @@ export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'resour
   platform?: 'mobile' | 'desktop';
 };
 
-// Parse the appearance from a cross-tab `storage` event value; `Atom.kvs` stores
-// the settings object as a single JSON string. Fall back to 'system' on any
-// malformed value.
-const parseAppearance = (value: string | null): Settings.Appearance => {
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+// Parse the settings from a cross-tab `storage` event value; `Atom.kvs` stores the settings object
+// as a single JSON string. Anything malformed falls back to the defaults.
+const parseSettings = (value: string | null): Settings.Settings => {
   if (!value) {
-    return 'system';
+    return {};
   }
   try {
     const parsed: unknown = JSON.parse(value);
-    const appearance =
-      typeof parsed === 'object' && parsed !== null && 'appearance' in parsed ? parsed.appearance : undefined;
-    return appearance === 'light' || appearance === 'dark' ? appearance : 'system';
+    const { appearance, accent } = isRecord(parsed) ? parsed : {};
+    return {
+      ...((appearance === 'light' || appearance === 'dark') && { appearance }),
+      ...(typeof accent === 'string' && ACCENT_HUES.some((hue) => hue === accent) && { accent: accent as AccentHue }),
+    };
   } catch {
-    return 'system';
+    return {};
   }
 };
 
@@ -46,24 +50,24 @@ export default Capability.makeModule(
 
     const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // 'system' follows the OS; 'light'/'dark' override it.
-    const applyTheme = (appearance: Settings.Appearance) => {
+    // 'system' follows the OS; 'light'/'dark' override it. The accent rewrites the accent role tokens on
+    // the root, or clears them back to the stylesheet's default.
+    const applyTheme = ({ appearance = 'system', accent }: Settings.Settings) => {
       const dark = appearance === 'system' ? modeQuery.matches : appearance === 'dark';
       document.documentElement.classList[dark ? 'add' : 'remove']('dark');
+      applyAccent(document.documentElement, accent);
       registry.set(themeAtom, { themeMode: dark ? 'dark' : 'light' });
     };
 
-    const currentAppearance = (): Settings.Appearance => registry.get(settingsAtom).appearance ?? 'system';
-
     // Apply the persisted setting synchronously to avoid a flash on load.
-    applyTheme(currentAppearance());
+    applyTheme(registry.get(settingsAtom));
 
     // System preference changes (observed while appearance is 'system').
-    const handleModeChange = () => applyTheme(currentAppearance());
+    const handleModeChange = () => applyTheme(registry.get(settingsAtom));
     modeQuery.addEventListener('change', handleModeChange);
 
     // In-tab setting changes.
-    const unsubscribe = registry.subscribe(settingsAtom, (settings) => applyTheme(settings.appearance ?? 'system'));
+    const unsubscribe = registry.subscribe(settingsAtom, (settings) => applyTheme(settings));
 
     // Cross-tab setting changes: `Atom.kvs` does not observe the `storage` event,
     // so re-apply from the written value to keep every tab in the same browser in sync.
@@ -71,7 +75,7 @@ export default Capability.makeModule(
       if (event.key !== meta.profile.key) {
         return;
       }
-      applyTheme(parseAppearance(event.newValue));
+      applyTheme(parseSettings(event.newValue));
     };
     window.addEventListener('storage', handleStorage);
 
@@ -93,8 +97,10 @@ export default Capability.makeModule(
             <Toast.Provider>
               <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                 {children}
+                {/* Toasts render in the viewport, not where their roots sit, and their close button is a
+                    tooltip trigger, which throws without a provider above it. */}
+                <Toast.Viewport />
               </Tooltip.Provider>
-              <Toast.Viewport />
             </Toast.Provider>
           </ThemeProvider>
         );

@@ -5,8 +5,8 @@
 import { type EntityId } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
-import { type AnyEntity } from '../common/types';
-import { Ref } from './ref';
+import { type AnyEntity } from '../common/types/index.ts';
+import { Ref } from './ref.ts';
 
 /**
  * Helper functions for working with arrays of refs.

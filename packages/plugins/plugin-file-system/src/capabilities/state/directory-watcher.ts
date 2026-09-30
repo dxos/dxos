@@ -9,7 +9,7 @@ import { debounce } from '@dxos/async';
 
 import { FileSystemCapabilities } from '#types';
 
-import { watchDirectory } from './disk-io';
+import { watchDirectory } from './disk-io.ts';
 
 const WATCHER_DEBOUNCE_MS = 500;
 

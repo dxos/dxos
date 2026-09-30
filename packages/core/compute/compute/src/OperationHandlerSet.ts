@@ -15,8 +15,8 @@ import { EffectEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { NoHandlerError } from './errors';
-import type * as Operation from './Operation';
+import { NoHandlerError } from './errors.ts';
+import type * as Operation from './Operation.ts';
 
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;
 export type TypeId = typeof TypeId;

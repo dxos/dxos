@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
@@ -19,14 +20,14 @@ import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
-import { GITHUB_SOURCE } from '../constants';
+import { GITHUB_SOURCE } from '../constants.ts';
 import {
   GitHubProjectMissingError,
   GitHubRepoInaccessibleError,
   GitHubRepoUnresolvedError,
   formatGitHubSyncFailure,
-} from '../errors';
-import { GitHubApi } from '../services';
+} from '../errors.ts';
+import { GitHubApi } from '../services/index.ts';
 
 const { mergeField, snapshotField } = ConnectorSync;
 
@@ -152,7 +153,9 @@ const dueOnToTargetDate = (dueOn: string | null | undefined): string | undefined
  * ref for a task already in the set.
  */
 export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
-  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+  const listed = container.tasks.some(Ref.hasEntityId(task.id));
+  // A stale entry for a task now parented elsewhere is not membership; it still needs re-rooting.
+  if (listed && Obj.getParent(task)?.id === container.id) {
     return;
   }
   // The reverse-ref index, not `Obj.getParent`: legacy sets may hold refs to tasks whose parent
@@ -165,12 +168,23 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
       continue;
     }
     Obj.update(set, (set) => {
-      set.tasks = set.tasks.filter((ref) => !Ref.hasEntityId(task.id)(ref));
+      TaskSet.removeRefsInPlace(set.tasks, new Set([task.id]));
     });
   }
-  Obj.update(container, (container) => {
-    container.tasks = [...container.tasks, Ref.make(task)];
-  });
+  // A task filed as a sub-task is listed by its parent rather than a set; it leaves that list too.
+  const parent = Task.getParentTask(task);
+  if (parent) {
+    Obj.update(parent, (parent) => {
+      TaskSet.removeRefsInPlace(parent.subtasks ?? [], new Set([task.id]));
+    });
+  }
+  if (!listed) {
+    Obj.update(container, (container) => {
+      container.tasks.push(Ref.make(task));
+    });
+  }
+  // `tasks` claims only an unparented task, so a move between sets moves the edge itself.
+  Obj.setParent(task, container);
 });
 
 //
@@ -221,7 +235,7 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
       // Add the GitHub login identity if not already present.
       const ids = existing.identities ?? [];
       if (!ids.some((entry: { value: string }) => entry.value === user.login)) {
-        existing.identities = [...ids, { label: 'github', value: user.login }];
+        (existing.identities ??= []).push({ label: 'github', value: user.login });
       }
     });
     return existing;
@@ -321,7 +335,7 @@ export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
   // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
   if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
     Obj.update(taskSet, (taskSet) => {
-      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+      taskSet.milestones.push(Ref.make(milestone));
     });
     Obj.setParent(milestone, taskSet);
   }
@@ -737,7 +751,7 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
         },
         pushed: pushResult,
       };
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(GitHubApi.fromAccessToken(binding.spec.source))),
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromAccessToken(binding.spec.source)))),
   );
 
   // Write sync state onto the binding.

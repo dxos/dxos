@@ -16,7 +16,7 @@ import { Message, Person } from '@dxos/types';
 import { InboxOperationHandlerSet } from '#operations';
 import { InboxOperation, Mailbox } from '#types';
 
-import { getTaggedIds } from '../../types/SystemTags';
+import { getTaggedIds } from '../../types/SystemTags.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: InboxOperationHandlerSet.handlers,

@@ -15,6 +15,9 @@ import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import {
+  AddToCollectionDialog,
+  type AddToCollectionDialogProps,
+  CardMasonry,
   CollectionArticle,
   CollectionSection,
   CreateSpaceDialog,
@@ -34,16 +37,17 @@ import {
 import { meta } from '#meta';
 
 import {
+  ADD_TO_COLLECTION_DIALOG,
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
   OBJECT_FORM_DIALOG,
   RENAME_POPOVER,
-} from '../constants';
-import { TypeInputOptionsAnnotationId } from '../types/SpaceForm';
-import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema';
-import { SpaceHomeContent } from '../types/SpaceSurface';
-import { HueField, IconField, TypenameField } from './SpaceFormFields';
+} from '../constants.ts';
+import { TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
+import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
+import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
   NavtreePresenceSurface,
@@ -56,8 +60,8 @@ import {
   SpaceSettingsSurface,
   TypeArticleSurface,
   ViewEditorSurface,
-} from './SpaceSurfaces';
-import { tryGetViewForObject } from './try-get-view';
+} from './SpaceSurfaces.tsx';
+import { tryGetViewForObject } from './try-get-view.ts';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -185,6 +189,12 @@ export default Capability.makeModule(
         component: ImportSpaceDialog,
       }),
       Surface.create({
+        id: ADD_TO_COLLECTION_DIALOG,
+        filter: AppSurface.component<AddToCollectionDialogProps>(AppSurface.Dialog, ADD_TO_COLLECTION_DIALOG),
+        component: AddToCollectionDialog,
+        props: ({ data: { props } }) => ({ ...props }),
+      }),
+      Surface.create({
         id: OBJECT_FORM_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof ObjectFormDialog>>(AppSurface.Dialog, OBJECT_FORM_DIALOG),
         component: ObjectFormDialog,
@@ -253,6 +263,20 @@ export default Capability.makeModule(
         ),
         component: NavbarPresenceSurface,
         props: ({ data: { subject } }) => ({ subject }),
+      }),
+      // Role-only: one generic stack serves every host, since the host supplies the objects rather
+      // than the surface deriving them from a subject it would have to match on.
+      Surface.create({
+        id: 'cardMasonry',
+        filter: Surface.makeFilter(AppSurface.CardMasonry),
+        component: CardMasonry,
+        props: ({ data: { objects, size, inline, CardMenu, pending } }) => ({
+          objects,
+          size,
+          inline,
+          CardMenu,
+          pending,
+        }),
       }),
       Surface.create({
         id: 'collectionSection',

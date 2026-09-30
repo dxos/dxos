@@ -28,11 +28,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ### Existing types used by this plugin
 
@@ -320,7 +320,7 @@ feat F-6: Publisher Connection and Bidirectional Sync
 ## Acceptance
 
 ```mdl
-test T-1: AddPublication persists an empty Publication
+scenario T-1: AddPublication persists an empty Publication
   given: a database db
   when: op:AddPublication invoked with { name: "My Blog", target: db }
   then:
@@ -330,7 +330,7 @@ test T-1: AddPublication persists an empty Publication
 ```
 
 ```mdl
-test T-2: AddPost creates outline + body and defaults to draft
+scenario T-2: AddPost creates outline + body and defaults to draft
   given: a persisted Publication and a target Collection
   when: op:AddPost invoked with { publication, name: "Hello World", target }
   then:
@@ -342,7 +342,7 @@ test T-2: AddPost creates outline + body and defaults to draft
 ```
 
 ```mdl
-test T-3: SyncPosts pushes an unlinked local post
+scenario T-3: SyncPosts pushes an unlinked local post
   given: a Publication with one unlinked Post, a stub PublisherService
   when: op:SyncPosts invoked (service.listDrafts returns [])
   then:
@@ -352,7 +352,7 @@ test T-3: SyncPosts pushes an unlinked local post
 ```
 
 ```mdl
-test T-4: SyncPosts updates a linked local post (local wins)
+scenario T-4: SyncPosts updates a linked local post (local wins)
   given: a Post linked to remote id "x1"; service.listDrafts returns ["x1"]
   when: op:SyncPosts invoked
   then:
@@ -361,7 +361,7 @@ test T-4: SyncPosts updates a linked local post (local wins)
 ```
 
 ```mdl
-test T-5: SyncPosts reverts a linked post whose remote was deleted
+scenario T-5: SyncPosts reverts a linked post whose remote was deleted
   given: a published Post linked to remote id "gone"; service.listDrafts returns []
   when: op:SyncPosts invoked
   then:
@@ -371,7 +371,7 @@ test T-5: SyncPosts reverts a linked post whose remote was deleted
 ```
 
 ```mdl
-test T-6: SyncPosts pulls an unlinked remote draft into a new published post
+scenario T-6: SyncPosts pulls an unlinked remote draft into a new published post
   given: a Publication with no posts; service.listDrafts returns ["x2"]
   when: op:SyncPosts invoked
   then:
@@ -380,7 +380,7 @@ test T-6: SyncPosts pulls an unlinked remote draft into a new published post
 ```
 
 ```mdl
-test T-7: SyncPosts falls back to getDraft when listDrafts omits body text
+scenario T-7: SyncPosts falls back to getDraft when listDrafts omits body text
   given: a Publication with no posts; service.listDrafts returns ["x2"] with empty text
   when: op:SyncPosts invoked
   then:
@@ -416,11 +416,11 @@ test T-7: SyncPosts falls back to getDraft when listDrafts omits body text
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a Publication and a Post
+test QA-1: Create a Publication and a Post
   desc: The core authoring round-trip — a Publication, a Post inside it, reading its content back.
   actors: both
   covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.3, F-3.1, F-3.2, T-1, T-2]
@@ -428,8 +428,8 @@ flow QA-1: Create a Publication and a Post
   given:
     - an identity exists
     - space: a space is open
-    - no Publication named "QA Blog" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Publication named "QA Blog" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the Publication
       do: In the space's "Publications" section, click "+ Publication". Name it "QA Blog".
       invoke: |
@@ -463,7 +463,7 @@ flow QA-1: Create a Publication and a Post
 ```
 
 ```mdl
-flow QA-2: Sync posts with a connected publisher
+test QA-2: Sync posts with a connected publisher
   desc: The bidirectional sync path against a live publisher connection (e.g. plugin-typefully).
   actors: both
   covers: [F-6.2, F-6.3, F-6.4, F-6.5, T-3]
@@ -475,7 +475,7 @@ flow QA-2: Sync posts with a connected publisher
     - connection: a Connection to a real publisher exists in the space, matching the
       Publication's ConnectorAuthAnnotation — this is an external-service dependency; without it
       the toolbar's Sync action stays disabled (F-6.5)
-  test:
+  steps:
     - name: Sync
       do: Click "Sync" in the Publication's toolbar (enabled once the Connection exists).
       invoke: |
@@ -519,8 +519,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

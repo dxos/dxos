@@ -8,8 +8,8 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
-import { assembleDocument } from './align';
-import { type Document, Upos } from './Document';
+import { assembleDocument } from './align.ts';
+import { type Document, Upos } from './Document.ts';
 
 const PARSE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -48,7 +48,7 @@ export const parseText = (text: string) =>
       }),
     );
     return assembleDocument(text, value.sentences);
-  }).pipe(Effect.provide(AiService.model(PARSE_MODEL)));
+  }).pipe(Effect.provide(AiService.languageModel(PARSE_MODEL)));
 
 /** The pluggable parser contract consumed by the editor extension and pipeline. */
 export type Parser = (text: string) => Promise<Document>;

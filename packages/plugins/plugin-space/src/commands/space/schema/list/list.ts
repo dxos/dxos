@@ -9,10 +9,9 @@ import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
-import { type Key, Type } from '@dxos/echo';
-import { getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, type Key, Type } from '@dxos/echo';
 
-import { createTypenameFilter, mapSchemas, printSchemas } from './util';
+import { createTypenameFilter, mapSchemas, printSchemas } from './util.ts';
 
 export const handler = Effect.fn(function* ({
   spaceId,
@@ -30,7 +29,7 @@ export const handler = Effect.fn(function* ({
 
   const schemas = types
     .map((schema) => {
-      const schemaAnnotation = getTypeAnnotation(Type.getSchema(schema));
+      const schemaAnnotation = Annotation.getTypeAnnotation(Type.getSchema(schema));
       return {
         id: Type.getURI(schema).toString(),
         typename: schemaAnnotation?.typename ?? Type.getTypename(schema) ?? '',
@@ -51,7 +50,7 @@ export const list = Command.make(
   'list',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.string('typename').pipe(Options.withDescription('Filter schemas by typename.'), Options.optional),
+    typename: Options.String('typename').pipe(Options.withDescription('Filter schemas by typename.'), Options.optional),
   },
   handler,
 ).pipe(Command.withDescription('List space schemas.'));

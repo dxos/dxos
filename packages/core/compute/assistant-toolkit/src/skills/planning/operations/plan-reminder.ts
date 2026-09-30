@@ -13,7 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { ContentBlock } from '@dxos/types';
 import { concat, trim } from '@dxos/util';
 
-import { PlanReminder } from './definitions';
+import { PlanReminder } from './definitions.ts';
 
 /**
  * End-request hook for the planning skill. When the conversation's checklist still has
@@ -55,7 +55,7 @@ export default PlanReminder.pipe(
           ],
         });
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
+      Effect.provide(AiService.languageModel('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
 );

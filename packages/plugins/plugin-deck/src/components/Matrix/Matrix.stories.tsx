@@ -20,7 +20,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
@@ -30,8 +30,8 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import type { DeckCapabilities } from '#types';
 
-import { Plank } from '../Plank';
-import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+import { Plank } from '../Plank/index.ts';
+import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix.tsx';
 
 random.seed(123);
 
@@ -55,15 +55,9 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
               <p>{Obj.getLabel(props.data)}</p>
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Syntax.Root data={props.data}>
-            <Panel.Content asChild>
-              <Syntax.Content>
-                <Syntax.Viewport>
-                  <Syntax.Code />
-                </Syntax.Viewport>
-              </Syntax.Content>
-            </Panel.Content>
-          </Syntax.Root>
+          <Panel.Content asChild>
+            <JsonHighlighter data={props.data} />
+          </Panel.Content>
         </Panel.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -95,15 +89,7 @@ const TestExtension = Capability.contribute(
         return <Loading />;
       }
 
-      return (
-        <Syntax.Root data={subject}>
-          <Syntax.Content>
-            <Syntax.Viewport>
-              <Syntax.Code />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
-      );
+      return <JsonHighlighter data={subject} />;
     },
   }),
 );

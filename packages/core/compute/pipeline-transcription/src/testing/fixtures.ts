@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ScriptedBlock } from './scripted-source';
+import { type ScriptedBlock } from './scripted-source.ts';
 
 /** A short multi-utterance meeting transcript (raw, lower-cased — as Whisper tends to emit). */
 export const SAMPLE_MEETING: readonly ScriptedBlock[] = Object.freeze([

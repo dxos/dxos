@@ -15,8 +15,8 @@ import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
-import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { AtomEx, RuntimeProvider } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,7 +36,7 @@ export class Binding extends Type.makeObject<Binding>(DXN.make('org.dxos.type.co
       added: Schema.Array(Ref.Ref(Obj.Unknown)),
       removed: Schema.Array(Ref.Ref(Obj.Unknown)),
     }),
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+  }),
 ) {}
 export type BindingProps = Partial<{
   skills: Ref.Ref<Skill.Skill>[];
@@ -86,7 +86,7 @@ export class Binder extends Resource {
     assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
     this._feed = options.feed;
     this._runtime = options.runtime;
-    this._registry = options.registry ?? AtomRegistry.make();
+    this._registry = options.registry ?? AtomEx.makeRegistry();
   }
 
   /**
@@ -132,18 +132,19 @@ export class Binder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this.#bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+    const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.query(this._feed, Query.type(Binding)),
     );
+    this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
-    const initialResults = await this.#bindingsQuery.run();
+    const initialResults = await bindingsQuery.run();
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
     this._ctx.onDispose(
-      this.#bindingsQuery.subscribe(async () => {
-        await this._updateBindings(this.#bindingsQuery!.results);
+      bindingsQuery.subscribe(async () => {
+        await this._updateBindings(bindingsQuery.results);
       }),
     );
   }
@@ -153,12 +154,23 @@ export class Binder extends Resource {
    */
   async sync(): Promise<void> {
     if (this.#bindingsQuery) {
-      const results = await this.#bindingsQuery.run();
+      let results: Binding[];
+      try {
+        results = await this.#bindingsQuery.run();
+      } catch (error) {
+        // The query's live subscription already keeps the bindings current, so a re-read that fails
+        // (an index query timing out under load) costs freshness, not correctness — and a caller
+        // running this between agent turns would otherwise fail the whole agent process on it.
+        log.warn('bindings sync failed; keeping the current bindings', { error });
+        return;
+      }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
-        skillKeys: this._registry.get(this._skills).map((bp) => Skill.getKey(bp)),
+        // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
+        // make a diagnostic log the thing that breaks the sync.
+        skillKeys: this._registry.get(this._skills).map((skill) => Obj.getMeta(skill).key),
       });
     }
   }
@@ -187,29 +199,19 @@ export class Binder extends Resource {
       resolvedSkillKeys: resolvedSkills.map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
     });
 
-    // Drop skills that have no registry key — they cannot be used downstream
-    // (e.g. tool/operation registration calls Skill.getKey which throws).
-    const keyedSkills = resolvedSkills.filter((bp) => {
-      if (Obj.getMeta(bp).key === undefined) {
-        log.warn('dropping skill with no meta key', { uri: Obj.getURI(bp) });
-        return false;
-      }
-      return true;
-    });
-
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
     const reducedSkillDxns = new Set<URI.URI>([...bindings.skills].map((ref) => ref.uri));
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredSkills = currentSkills.filter((obj) => {
       const uri = Obj.getURI(obj);
-      return uri != null && reducedSkillDxns.has(uri) && Obj.getMeta(obj).key !== undefined;
+      return uri != null && reducedSkillDxns.has(uri);
     });
     const filteredObjects = currentObjects.filter((obj) => {
       const uri = Obj.getURI(obj);
       return uri != null && reducedObjectDxns.has(uri);
     });
-    const mergedSkills = this._mergeInto(filteredSkills, keyedSkills);
+    const mergedSkills = this._mergeInto(filteredSkills, resolvedSkills);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
     this._registry.set(this._skills, mergedSkills);

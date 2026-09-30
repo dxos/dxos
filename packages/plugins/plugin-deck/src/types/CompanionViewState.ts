@@ -12,6 +12,8 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 /** Global context for the deck-companion view state. */
 export const CONTEXT = 'deck-companion';
 
+export const DEFAULT_COMPANION_VARIANT = 'help';
+
 export const State = Schema.Struct({
   /** Linked variant of the currently selected companion tab. */
   variant: Schema.optional(Schema.String),
@@ -28,5 +30,5 @@ export const aspect: ViewState.Aspect<State> = ViewState.define<State>({
   key: 'deck-companion',
   backend: 'local',
   schema: State,
-  defaultValue: () => ({}),
+  defaultValue: () => ({ variant: DEFAULT_COMPANION_VARIANT }),
 });

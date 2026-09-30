@@ -8,12 +8,13 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import { Root, Todos } from './components';
+import { AppError, Root, Todos } from './components/index.ts';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <Root />,
+    errorElement: <AppError />,
     children: [
       { path: '/', element: <Todos /> },
       { path: ':spaceProp', element: <Todos /> },

@@ -15,8 +15,8 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { meta } from '#meta';
 import { FileSystemCapabilities } from '#types';
 
-import { MockFileSystemManager } from '../testing/mock-file-system-manager';
-import { createFileSystemEntryExtensions } from './app-graph-builder';
+import { MockFileSystemManager } from '../testing/mock-file-system-manager.ts';
+import { createFileSystemEntryExtensions } from './app-graph-builder.ts';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
 

@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { Chat } from './Chat';
+import { translations } from '../../translations.ts';
+import { Chat } from './Chat.tsx';
 
 // The agent hooks are stubbed in Storybook (see .storybook/mocks), so this renders the initial
 // no-messages state: an empty streaming thread over the editor input.

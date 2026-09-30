@@ -12,9 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { Builder } from '../testing/builder';
-import * as Mailbox from './Mailbox';
-import * as SystemTags from './SystemTags';
+import { Builder } from '../testing/builder.ts';
+import * as Mailbox from './Mailbox.ts';
+import * as SystemTags from './SystemTags.ts';
 
 describe('SystemTags', () => {
   let builder: EchoTestBuilder;

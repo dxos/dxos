@@ -18,7 +18,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { AiSession, PartialBlock, RequestPhase, type RequestPhaseName } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -31,7 +31,7 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { AiChatProcessor } from './processor';
+import { AiChatProcessor } from './processor.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 
@@ -244,7 +244,7 @@ describe('AiChatProcessor streaming', () => {
   );
 
   it.effect(
-    'reports each setup phase while the reader waits, then clears once content streams in',
+    'reports each phase while the turn runs, then clears once the request settles',
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
@@ -295,13 +295,17 @@ describe('AiChatProcessor streaming', () => {
         // `starting` is set locally before the process resolves, so it precedes anything the agent
         // itself can report; the agent's own phases follow in the order it entered them.
         expect(snapshots).toEqual(
-          expect.arrayContaining(['starting', 'preparing', 'connecting-mcp', 'contacting-provider']),
+          expect.arrayContaining(['starting', 'preparing', 'connecting-mcp', 'contacting-provider', 'generating']),
         );
         expect(snapshots.indexOf('starting')).toBeLessThan(snapshots.indexOf('preparing'));
         expect(snapshots.indexOf('connecting-mcp')).toBeLessThan(snapshots.indexOf('contacting-provider'));
         expect(attempts[snapshots.indexOf('contacting-provider')]).toBe(3);
 
-        // The streamed block supersedes the phase line, and the settled request leaves nothing behind.
+        // A streamed block no longer clears the phase line — an agentic turn streams a little and then
+        // works for a long time — it moves it to `generating`, and only the settled request clears
+        // it: the two empty snapshots are the subscription's immediate read and the settle.
+        expect(snapshots.indexOf('contacting-provider')).toBeLessThan(snapshots.indexOf('generating'));
+        expect(snapshots.filter((phase) => phase === undefined)).toHaveLength(2);
         expect(snapshots.at(-1)).toBeUndefined();
         expect(observableRegistry.get(processor.activity)).toBeUndefined();
       },
@@ -316,16 +320,16 @@ describe('AiChatProcessor streaming', () => {
 //
 
 /** Builds a trace event carrying a request setup phase (the payload the activity atom consumes). */
-const requestPhaseEvent = (phase: RequestPhaseName, attempt?: number): Trace.Event => ({
+const requestPhaseEvent = (phase: Trace.RequestPhaseName, attempt?: number): Trace.Event => ({
   timestamp: 0,
-  type: RequestPhase.key,
+  type: Trace.RequestPhase.key,
   data: { phase, ...(attempt !== undefined ? { attempt } : {}) },
 });
 
 /** Builds a trace event carrying an assistant text block (the payload `#handleEphemeralMessage` consumes). */
 const partialBlockEvent = (messageId: string, text: string, pending: boolean): Trace.Event => ({
   timestamp: 0,
-  type: PartialBlock.key,
+  type: Trace.PartialBlock.key,
   data: {
     messageId,
     role: 'assistant',

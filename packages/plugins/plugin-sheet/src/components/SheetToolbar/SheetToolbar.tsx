@@ -12,18 +12,18 @@ import { type CompleteCellRange } from '@dxos/compute-hyperformula';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   createGapSeparator,
   graphActions,
   isToolbarAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
-import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetRoot';
-import { createAlign, useAlignState } from './align';
-import { createStyle, useStyleState } from './style';
-import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';
+import { type SheetModel } from '../../model/index.ts';
+import { useSheetContext } from '../SheetRoot/index.ts';
+import { createAlign, useAlignState } from './align.ts';
+import { createStyle, useStyleState } from './style.ts';
+import { type ToolbarStateAtom, useToolbarState } from './useToolbarState.ts';
 
 type ToolbarActionsContext = {
   model: SheetModel;
@@ -82,13 +82,7 @@ export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props
   );
   const menuActions = useMenuActions(actionsCreator);
 
-  return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />;
 });
 
 SheetToolbar.displayName = 'SheetToolbar';

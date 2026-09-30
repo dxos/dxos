@@ -7,10 +7,12 @@
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 
+import { Annotation, type Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { type FormFieldMap } from '@dxos/react-ui-form';
+import { type OptionsLookupEntry } from '@dxos/react-ui-form/annotations';
 
-import * as Generation from './Generation';
+import * as Generation from './Generation.ts';
 
 /**
  * Provider-agnostic, per-`kind` generation contract shared by plugin-studio and provider
@@ -53,6 +55,31 @@ export type GenerationProgress = {
   readonly total?: number;
 };
 
+/** What a file-backed request field accepts (an `<input type='file'>` `accept` pattern). */
+export const FileUrlOptions = Schema.Struct({ accept: Schema.optional(Schema.String) });
+export type FileUrlOptions = Schema.Schema.Type<typeof FileUrlOptions>;
+
+/**
+ * Marks a URL request field as one the user may fill by uploading a file: the studio form renders
+ * it with an Upload control that stores the file through the app's `FileUploader` and writes the
+ * resulting URL. The provider only ever sees a URL.
+ */
+export const FileUrlAnnotationId = 'org.dxos.plugin.studio.fileUrl';
+export const FileUrlAnnotation = Annotation.make({
+  id: FileUrlAnnotationId,
+  schema: FileUrlOptions,
+});
+
+/** One selectable value of a request field, as loaded by {@link GenerationService.fieldOptions}. */
+export type FieldOption = OptionsLookupEntry;
+
+/** Options passed to a {@link GenerationService.fieldOptions} loader. */
+export interface FieldOptionsRequest {
+  /** API key resolved from the Connector-managed credential (absent for keyless providers). */
+  readonly apiKey?: Redacted.Redacted<string>;
+  readonly signal?: AbortSignal;
+}
+
 /** Options passed to every provider call by the generate operation. */
 export interface GenerateOptions {
   /** API key resolved from the Connector-managed credential (absent for keyless providers). */
@@ -61,6 +88,11 @@ export interface GenerateOptions {
   readonly signal?: AbortSignal;
   /** Called as the provider makes progress; drives the studio progress monitor. */
   readonly onProgress?: (progress: GenerationProgress) => void;
+  /**
+   * Loads an object a request field references (a reference artifact); the config carries `Ref`s
+   * as the form wrote them, and only the studio's operation has the database to follow them.
+   */
+  readonly load?: <T>(ref: Ref.Ref<T>) => Promise<T>;
 }
 
 /**
@@ -72,7 +104,7 @@ export interface GenerateOptions {
  *
  * A provider is either **synchronous** (implements {@link generate}, e.g. a single request/response
  * like Ideogram) or **asynchronous/job-based** (implements {@link enqueue} + {@link awaitResult},
- * e.g. HeyGen: submit → poll). The generate operation persists the job id on the Artifact between
+ * e.g. HeyGen: submit → poll). The generate operation persists the job id on the MediaArtifact between
  * enqueue and completion so a long poll resumes across navigation/remount.
  */
 export interface GenerationService {
@@ -94,8 +126,15 @@ export interface GenerationService {
   readonly requestSchema: Schema.Codec<any, any>;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
+  /**
+   * Loaders for request fields whose values come from the provider (keyed by JSON path — HeyGen's
+   * avatars/voices, a model catalogue). Studio renders each as a combobox over the loaded list,
+   * resolves the credential, and caches the result per provider/field/credential, so a provider
+   * supplies only the fetch. A static list is a loader that ignores its request.
+   */
+  readonly fieldOptions?: Record<string, (request: FieldOptionsRequest) => Promise<readonly FieldOption[]>>;
   /** Per-field renderers (keyed by JSON path) for the schema-driven form — customizes specific
-   * request fields (e.g. HeyGen's avatar/voice pickers) without replacing the whole form. */
+   * request fields without replacing the whole form; takes precedence over {@link fieldOptions}. */
   readonly fieldMap?: FormFieldMap;
   /** One-shot generation (synchronous providers). Mutually exclusive with enqueue/awaitResult. */
   generate?(request: GenerationRequest, options: GenerateOptions): Promise<GenerationResult>;
@@ -127,8 +166,4 @@ export class MissingCredentialError extends BaseError.extend(
 }
 
 /** Generation failed. */
-export class GenerationError extends BaseError.extend('GenerationError', 'Generation failed') {
-  constructor(message: string) {
-    super({ message });
-  }
-}
+export class GenerationError extends BaseError.extend('GenerationError', 'Generation failed.') {}

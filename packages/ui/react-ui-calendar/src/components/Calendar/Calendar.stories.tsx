@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Calendar, type CalendarEvent, type Range as DateRange } from './Calendar';
+import { Calendar, type CalendarEvent, type Range as DateRange } from './Calendar.tsx';
 
 const meta = {
   title: 'ui/react-ui-calendar/Calendar',

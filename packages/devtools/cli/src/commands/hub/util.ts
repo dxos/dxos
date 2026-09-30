@@ -41,7 +41,7 @@ export const hubApiRequest = <T>(
   options?: { body?: unknown; query?: Record<string, string> },
 ) =>
   Effect.gen(function* () {
-    const apiKey = yield* Config.string('DX_HUB_API_KEY');
+    const apiKey = yield* Config.String('DX_HUB_API_KEY');
     const baseUrl = yield* hubBaseUrl;
 
     const url = new URL(path.join(baseUrl, apiPath));

@@ -37,11 +37,11 @@ const parser = StreamLanguage.define<{ count: number }>({
 const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
-    class: mx('dx-tag dx-tag--indigo'),
+    class: mx('dx-tag dx-tag--indigo mx-0.5'),
   },
   {
     tag: tags.labelName,
-    class: mx('dx-tag dx-tag--blue'),
+    class: mx('dx-tag dx-tag--blue mx-0.5'),
   },
 ]);
 

@@ -96,46 +96,47 @@ type EditTarget =
  *    anchor — agent may replace the whole doc via `updateDocument`.
  *  - 'none' when the subject isn't editable text — no edit tools wired.
  */
-const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): EditTarget => {
-  if (!Obj.instanceOf(Markdown.Document, subject)) {
-    return { kind: 'none' };
-  }
-  const text = subject.content?.target;
-  if (!text) {
-    return { kind: 'none' };
-  }
-  const db = Obj.getDatabase(thread);
-  if (!db) {
-    return { kind: 'document', text };
-  }
-  const relations = db.query(Filter.type(AnchoredTo.AnchoredTo)).runSync();
-  const ours = relations.find(
-    (relation: AnchoredTo.AnchoredTo) =>
-      Relation.getSource(relation) === thread && Relation.getTarget(relation) === subject,
-  );
-  if (!ours?.anchor) {
-    return { kind: 'document', text };
-  }
-  try {
-    const accessor = Doc.createAccessor(text, ['content']);
-    const range = getRangeFromCursor(accessor, ours.anchor);
-    if (!range || range.start === range.end) {
+const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): Effect.Effect<EditTarget> =>
+  Effect.gen(function* () {
+    if (!Obj.instanceOf(Markdown.Document, subject)) {
+      return { kind: 'none' };
+    }
+    const text = subject.content?.target;
+    if (!text) {
+      return { kind: 'none' };
+    }
+    const db = Obj.getDatabase(thread);
+    if (!db) {
       return { kind: 'document', text };
     }
-    const content = (text as unknown as { content: string }).content ?? '';
-    return {
-      kind: 'anchored',
-      text,
-      from: range.start,
-      to: range.end,
-      snippet: content.slice(range.start, range.end),
-      relation: ours,
-    };
-  } catch (err) {
-    log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
-    return { kind: 'document', text };
-  }
-};
+    const relations = yield* Effect.promise(() => db.query(Filter.type(AnchoredTo.AnchoredTo)).run());
+    const ours = relations.find(
+      (relation: AnchoredTo.AnchoredTo) =>
+        Relation.getSource(relation) === thread && Relation.getTarget(relation) === subject,
+    );
+    if (!ours?.anchor) {
+      return { kind: 'document', text };
+    }
+    try {
+      const accessor = Doc.createAccessor(text, ['content']);
+      const range = getRangeFromCursor(accessor, ours.anchor);
+      if (!range || range.start === range.end) {
+        return { kind: 'document', text };
+      }
+      const content = (text as unknown as { content: string }).content ?? '';
+      return {
+        kind: 'anchored',
+        text,
+        from: range.start,
+        to: range.end,
+        snippet: content.slice(range.start, range.end),
+        relation: ours,
+      };
+    } catch (err) {
+      log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
+      return { kind: 'document', text };
+    }
+  });
 
 /**
  * Build the system prompt for a turn. Inlines the doc content and, when the
@@ -206,7 +207,7 @@ export default Capability.makeModule(
           );
           const history = normalizeRoles(loaded);
 
-          const target = resolveEditTarget(thread, subject);
+          const target = yield* resolveEditTarget(thread, subject);
           const prompt = yield* AiPreprocessor.preprocessPrompt(history, {
             system: buildInstructions(subject, target),
           });
@@ -253,8 +254,12 @@ export default Capability.makeModule(
 
           const response = yield* LanguageModel.generateText({ prompt, toolkit }).pipe(
             Effect.scoped,
-            Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer))),
-            Effect.provide(toolkitLayer),
+            Effect.provide(
+              Layer.provideMerge(
+                AiService.languageModel(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer)),
+                toolkitLayer,
+              ),
+            ),
           );
 
           // The chat message defaults to whatever the model returned, but when

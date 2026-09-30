@@ -23,10 +23,17 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Outline, Task, TaskSet } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { Calculate, CalculatorSkill, ModuleContainer, config, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import {
+  Calculate,
+  CalculatorSkill,
+  ModuleContainer,
+  config,
+  createDecorators,
+  storyParameters,
+} from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
@@ -51,6 +58,25 @@ const captureSpace = async ({ space }: { space: Space }) => {
 
 // Read directly rather than through the index, which lags objects seeded during activation.
 let storyChat: AssistantChat.Chat | undefined;
+
+/**
+ * The URI of the checklist task titled `title`, resolved when the scripted turn is emitted:
+ * update-tasks addresses tasks by ref, and a task's id only exists once the story seeded or the
+ * session created it. A bare URI, not the `{ '/': uri }` envelope: a ref parameter reaches a tool
+ * as the string the model is shown, and the envelope form fails its decoding.
+ */
+const checklistRef = (title: string): string => {
+  const task = storyChat && AssistantChat.resolveTasks(storyChat).find((task) => task.title === title);
+  if (!task) {
+    throw new Error(`No checklist task titled "${title}".`);
+  }
+  return Obj.getURI(task).toString();
+};
+
+/** Captures the chat the decorator created, so {@link checklistRef} can read its checklist. */
+const captureChat = async ({ chat }: { chat: AssistantChat.Chat }) => {
+  storyChat = chat;
+};
 
 /** The seeded chat's tasks, else the first queried chat's. */
 const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
@@ -82,12 +108,12 @@ const seedProjectTask = async ({
   chat: AssistantChat.Chat;
   binder: AiContext.Binder;
 }) => {
+  storyChat = chat;
   const project = db.add(Project.make({ name: 'Coffee launch' }));
-  const taskSet = db.add(TaskSet.make({}));
+  const taskSet = db.add(TaskSet.make({ [Obj.Parent]: project }));
   Obj.update(project, (project) => {
     project.taskSet = Ref.make(taskSet);
   });
-  Obj.setParent(taskSet, project);
 
   // A named reviewer is what sends the finished task to `review` rather than `done`.
   const task = AssistantChat.addTask(db, chat, POEM_TASK_TITLE, {
@@ -333,6 +359,39 @@ export const WithTasks: Story = {
 };
 
 /**
+ * Agent-facing plugin-url prompt: the chat is seeded with an assistant turn that emits a
+ * `plugin-url-prompt` surface, as the model does once it has built and served a plugin (see the
+ * Plugin Manager skill). Clicking the button would load the plugin; the story shows the offer.
+ */
+export const WithPluginUrlPrompt: Story = {
+  decorators: createDecorators({
+    onChatCreated: async ({ db, chat }) => {
+      const feed = await chat.feed.load();
+      await db.appendToFeed(feed, [
+        Message.make({
+          sender: 'assistant',
+          blocks: [
+            { _tag: 'text', text: 'Space Clock is built and served. Load it into the app:' },
+            {
+              _tag: 'surface',
+              role: 'plugin-url-prompt',
+              data: { url: 'http://localhost:4173/plugins/space-clock/manifest.json', name: 'Space Clock' },
+            },
+          ],
+        }),
+      ]);
+    },
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('assistant.pluginUrlPrompt.load', {}, { timeout: 10_000 })).toBeVisible();
+  },
+};
+
+/**
  * Live twin of the drain: seeded with the same dependent tasks, a real model, and the calculator
  * tool — type a prompt yourself (e.g. "delegate all tasks", "do the first and last", "do all
  * tasks that don't have dependencies"). Live AI, so excluded from CI.
@@ -426,6 +485,7 @@ export const TestPlanningScripted: Story = {
   decorators: createDecorators({
     skills: [PlanningSkill.key],
     onInit: captureSpace,
+    onChatCreated: captureChat,
     scripted: [
       {
         name: 'chat-name',
@@ -440,23 +500,22 @@ export const TestPlanningScripted: Story = {
             parts: [
               text('Here is the plan.'),
               toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [
-                  { title: 'Source the beans', status: 'started' },
-                  { title: 'Dial in the roast', status: 'todo' },
-                  { title: 'Print the labels', status: 'todo' },
+                changes: [
+                  { create: true, title: 'Source the beans', status: 'started' },
+                  { create: true, title: 'Dial in the roast' },
+                  { create: true, title: 'Print the labels' },
                 ],
               }),
             ],
           },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [
-                  { title: 'Source the beans', status: 'done' },
-                  { title: 'Dial in the roast', status: 'done' },
-                  { title: 'Print the labels', status: 'done' },
-                ],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: ['Source the beans', 'Dial in the roast', 'Print the labels'].map((title) => ({
+                  task: checklistRef(title),
+                  status: 'done',
+                })),
+              })),
             ],
           },
           { parts: [text('All three steps are done.')] },
@@ -471,7 +530,7 @@ export const TestPlanningScripted: Story = {
     const canvas = within(canvasElement);
     await submitPrompt(canvasElement, 'Plan the launch.');
 
-    // Items are upserted by title, so the three survive the second call rather than duplicating.
+    // The second call addresses the three by ref, so they are completed rather than duplicated.
     const planned = await waitForChecklist((items) => items.length === 3);
     if (planned.map(({ title }) => title).join('|') !== 'Source the beans|Dial in the roast|Print the labels') {
       throw new Error(`Unexpected checklist: ${JSON.stringify(planned)}`);
@@ -580,17 +639,17 @@ export const TestTaskExecutionScripted: Story = {
           {
             parts: [
               text('Starting task 1.'),
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: EXECUTABLE_TASKS[0].title, status: 'started' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'started' }],
+              })),
             ],
           },
           { parts: [toolCall(Operation.toolName(Calculate), { expression: EXECUTABLE_TASKS[0].expression })] },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: EXECUTABLE_TASKS[0].title, status: 'done' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'done' }],
+              })),
             ],
           },
           { parts: [text('Task 1 complete: 10! = 3628800.')] },
@@ -773,9 +832,9 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the opening prompt deliberately does not restate it.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: POEM_TASK_TITLE, status: 'started' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'started' }],
+              })),
             ],
           },
           {
@@ -791,9 +850,9 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the task attachment.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
-                tasks: [{ title: POEM_TASK_TITLE, status: 'done' }],
-              }),
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+                changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'done' }],
+              })),
             ],
           },
           { parts: [text('Wrote the poem.')] },

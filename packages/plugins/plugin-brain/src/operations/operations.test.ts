@@ -12,8 +12,8 @@ import { AiService } from '@dxos/ai';
 import { EffectEx } from '@dxos/effect';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { queryCompactFacts } from './query-facts';
-import { summarizeSubject } from './summarize-subject';
+import { queryCompactFacts } from './query-facts.ts';
+import { summarizeSubject } from './summarize-subject.ts';
 
 const makeFact = (options: {
   id: string;
@@ -52,15 +52,18 @@ const seededStore = Effect.gen(function* () {
 
 /** Stub `AiService` whose `generateText` echoes a canned response (summaries are not LLM-tested here). */
 const textAiService = (text: string): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, {
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed({ text, content: [] }),
-        generateObject: () => Effect.succeed({ value: {}, content: [] }),
-        streamText: () => Stream.empty,
-        // Test stub: the LanguageModel surface is wider than the three methods exercised here.
-      } as any),
-  });
+  Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      languageModel: () =>
+        Layer.succeed(LanguageModel.LanguageModel, {
+          generateText: () => Effect.succeed({ text, content: [] }),
+          generateObject: () => Effect.succeed({ value: {}, content: [] }),
+          streamText: () => Stream.empty,
+          // Test stub: the LanguageModel surface is wider than the three methods exercised here.
+        } as any),
+    }),
+  );
 
 describe('QueryFacts', () => {
   test('filters by entity across subject and object positions', async ({ expect }) => {
@@ -94,7 +97,9 @@ describe('SummarizeSubject', () => {
       Effect.gen(function* () {
         yield* seededStore;
         return yield* summarizeSubject({ subject: 'Alice' });
-      }).pipe(Effect.provide(FactStoreLive.layerMemory), Effect.provide(textAiService('Alice works at Acme [f-1].'))),
+      }).pipe(
+        Effect.provide(Layer.provideMerge(FactStoreLive.layerMemory, textAiService('Alice works at Acme [f-1].'))),
+      ),
     );
     expect(result.factCount).toBe(2);
     expect(result.summary).toContain('[f-1]');
@@ -109,14 +114,18 @@ describe('SummarizeSubject', () => {
         yield* seededStore;
         return yield* summarizeSubject({ subject: 'nobody' });
       }).pipe(
-        Effect.provide(FactStoreLive.layerMemory),
-        // A dying stub proves the LLM path is never reached for an ungrounded subject.
         Effect.provide(
-          Layer.succeed(AiService.AiService, {
-            model: () => {
-              throw new Error('LLM must not be invoked');
-            },
-          }),
+          Layer.provideMerge(
+            FactStoreLive.layerMemory,
+            Layer.succeed(
+              AiService.AiService,
+              AiService.make({
+                languageModel: () => {
+                  throw new Error('LLM must not be invoked');
+                },
+              }),
+            ),
+          ),
         ),
       ),
     );

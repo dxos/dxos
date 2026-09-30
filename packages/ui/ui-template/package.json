@@ -43,7 +43,6 @@
     "@codemirror/view": "catalog:",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
     "@zag-js/react": "catalog:",
     "@zag-js/splitter": "catalog:"
   },

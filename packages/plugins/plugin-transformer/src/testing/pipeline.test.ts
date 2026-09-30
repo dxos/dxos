@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { NodeRagPipeline } from './node-pipeline';
+import { NodeRagPipeline } from './node-pipeline.ts';
 
 describe.skip('transformers', () => {
   test('tokenizer', async () => {

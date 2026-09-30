@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { CounterConnection, type CounterSessionInfo, type PingMeasurement } from './counter-connection';
-import { type TimingStatsSnapshot } from './counter-service';
+import { CounterConnection, type CounterSessionInfo, type PingMeasurement } from './counter-connection.ts';
+import { type TimingStatsSnapshot } from './counter-service.ts';
 
 const PING_INTERVAL_MS = 1_000;
 const DEFAULT_BLOCK_MS = 500;
@@ -184,21 +184,21 @@ const SessionMeta = ({
     <div className='flex flex-col gap-1 text-xs text-subdued'>
       <div className='flex flex-wrap items-center gap-2'>
         <span
-          className={`rounded px-1.5 py-0.5 font-medium ${session.isOwner ? 'bg-primary/15 text-primary' : 'bg-separator text-subdued'}`}
+          className={`rounded px-1.5 py-0.5 font-medium ${session.isOwner ? 'bg-primary-surface/15 text-primary-text' : 'bg-separator text-subdued'}`}
         >
           {session.isOwner ? 'Owner' : 'Guest'}
         </span>
         {reconnectCount > 0 && (
-          <span className='rounded bg-warning/15 px-1.5 py-0.5 font-medium text-warning'>
+          <span className='rounded bg-warning-surface/15 px-1.5 py-0.5 font-medium text-warning-text'>
             Reconnected ×{reconnectCount}
           </span>
         )}
       </div>
       <div>
-        Worker: <span className='font-mono text-foreground'>{shortId(session.leaderId)}</span>
+        Worker: <span className='font-mono text-base-fg'>{shortId(session.leaderId)}</span>
       </div>
       <div>
-        Client: <span className='font-mono text-foreground'>{shortId(session.clientId)}</span>
+        Client: <span className='font-mono text-base-fg'>{shortId(session.clientId)}</span>
       </div>
     </div>
   );

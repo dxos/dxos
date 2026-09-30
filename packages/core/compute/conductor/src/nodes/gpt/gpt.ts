@@ -20,8 +20,8 @@ import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';
-import { StreamSchema } from '../../util';
+import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types/index.ts';
+import { StreamSchema } from '../../util/index.ts';
 
 export const GptMessage = Schema.Struct({
   role: Schema.Union([Schema.Literal('system'), Schema.Literal('user')]),
@@ -149,7 +149,7 @@ export const gptNode = defineComputeNode({
 
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     const runDeps = Layer.mergeAll(
-      AiService.model(DXN.getName(Model.DEFAULT_EDGE)).pipe(
+      AiService.languageModel(DXN.getName(Model.DEFAULT_EDGE)).pipe(
         Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
       ),
       // TODO(dmaretskyi): Move them out.

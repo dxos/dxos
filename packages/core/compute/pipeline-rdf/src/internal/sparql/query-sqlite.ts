@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as Statement from 'effect/unstable/sql/Statement';
 
-import { SemanticIndexError } from '../../errors';
-import { type Fact } from '../../types';
-import { type Row, rowToQuad } from '../source/sqlite-source';
-import { FACT, entityIri, prov, sx } from '../vocab';
-import { triplesToFacts } from './mapping';
-import { normalizePredicate } from './normalize-predicate';
-import { type SemanticQuery } from './query-builder';
+import { SemanticIndexError } from '../../errors.ts';
+import { type Fact } from '../../types/index.ts';
+import { type Row, rowToQuad } from '../source/sqlite-source.ts';
+import { FACT, entityIri, prov, sx } from '../vocab.ts';
+import { triplesToFacts } from './mapping.ts';
+import { normalizePredicate } from './normalize-predicate.ts';
+import { type SemanticQuery } from './query-builder.ts';
 
 /**
  * Execute a structured {@link SemanticQuery} directly over the SQLite `triples` table — no SPARQL

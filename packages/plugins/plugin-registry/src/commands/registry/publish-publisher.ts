@@ -12,7 +12,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
 /**
  * `dx registry publish-publisher` — publishes the authenticated user's own
@@ -24,20 +24,20 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 export const publishPublisher = Command.make(
   'publish-publisher',
   {
-    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.string('app-password').pipe(
+    handle: Options.String('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.String('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    displayName: Options.string('display-name').pipe(
+    displayName: Options.String('display-name').pipe(
       Options.withDescription('Publisher display name (the human/org name shown in UIs).'),
     ),
-    bio: Options.string('bio').pipe(Options.withDescription('Short bio.'), Options.optional),
-    homepageUrl: Options.string('homepage-url').pipe(
+    bio: Options.String('bio').pipe(Options.withDescription('Short bio.'), Options.optional),
+    homepageUrl: Options.String('homepage-url').pipe(
       Options.withDescription('Publisher homepage URL.'),
       Options.optional,
     ),
-    contact: Options.string('contact').pipe(
+    contact: Options.String('contact').pipe(
       Options.withDescription('Contact (email, handle, etc.).'),
       Options.optional,
     ),

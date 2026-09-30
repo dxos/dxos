@@ -8,7 +8,7 @@ import { afterAll, describe, test } from 'vitest';
 
 import { FactStore, FactStoreLive, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 
-import { commitmentLedger } from './ledger';
+import { commitmentLedger } from './ledger.ts';
 
 const runtime = ManagedRuntime.make(FactStoreLive.layerMemory);
 

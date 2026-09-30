@@ -18,7 +18,7 @@ import {
   getMessageProps,
   messageMatchesQuery,
   orderThreadItems,
-} from './util';
+} from './util.ts';
 
 describe('createDraftMessage', () => {
   test('compose mode returns empty to and provided subject/body', ({ expect }) => {

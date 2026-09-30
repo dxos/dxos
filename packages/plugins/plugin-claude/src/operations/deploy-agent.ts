@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 import { createAgent, toAgentConfig, updateAgent } from '#api';
 import { ClaudeAgentOperation, ClaudeManagedAgent } from '#types';
 
-import { getApiKey } from '../credentials';
+import { getApiKey } from '../credentials.ts';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.DeployAgent> = ClaudeAgentOperation.DeployAgent.pipe(
   Operation.withHandler(

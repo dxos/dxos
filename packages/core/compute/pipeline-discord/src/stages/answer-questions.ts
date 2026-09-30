@@ -12,8 +12,8 @@ import { type Stage } from '@dxos/pipeline';
 import { FactStore, type RDF, generateQuery } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import { type StoreError } from '../errors';
-import { QuestionStore } from '../stores';
+import { type StoreError } from '../errors.ts';
+import { QuestionStore } from '../stores/index.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -77,7 +77,7 @@ export const answerOpenQuestions = (
         const { value } = yield* LanguageModel.generateObject({
           schema: AnswerShape,
           prompt: answerPrompt(question.text, facts),
-        }).pipe(Effect.provide(AiService.model(DEFAULT_MODEL)));
+        }).pipe(Effect.provide(AiService.languageModel(DEFAULT_MODEL)));
         const text = value.answer?.trim();
         if (!text) {
           return false;

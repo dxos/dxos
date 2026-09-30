@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Knot } from './Knot';
-import { defaultOptions, presets } from './three';
+import { Knot } from './Knot.tsx';
+import { defaultOptions, presets } from './three.ts';
 
 /**
  * Coerces a leva color control value into a 24-bit hex integer.

@@ -17,8 +17,9 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Deep, Delay, Enabled, Input, Typename } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction } from '../util';
+import { RoutineCommandError } from '../../errors.ts';
+import { Deep, Delay, Enabled, Input, Typename } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFunction } from '../util.ts';
 
 export const subscription = Command.make(
   'subscription',
@@ -42,12 +43,12 @@ export const subscription = Command.make(
       const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
-        return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
       }
 
       const typename = yield* Option.match(options.typename, {
         onNone: () =>
-          Prompt.text({
+          Prompt.String({
             message: 'Enter type name:',
           }).pipe(Prompt.run),
         onSome: (value) => Effect.succeed(value),
@@ -56,7 +57,7 @@ export const subscription = Command.make(
 
       const deepOption = yield* Option.match(options.deep, {
         onNone: () =>
-          Prompt.confirm({
+          Prompt.Confirm({
             message: 'Watch changes to nested properties (deep)?',
             initial: false,
           }).pipe(
@@ -69,7 +70,7 @@ export const subscription = Command.make(
       const delayOption = yield* Option.match(options.delay, {
         onNone: () =>
           Effect.gen(function* () {
-            const delayStr = yield* Prompt.text({
+            const delayStr = yield* Prompt.String({
               message: 'Debounce delay in milliseconds (optional, press Enter to skip):',
             }).pipe(Prompt.run);
             return delayStr === '' ? Option.none<number>() : Option.some(parseInt(delayStr, 10));
@@ -94,7 +95,7 @@ export const subscription = Command.make(
       // Always prompt for enabled if functionId is not provided.
       const enabled = yield* Option.match(options.functionId, {
         onNone: () =>
-          Prompt.confirm({
+          Prompt.Confirm({
             message: 'Enable the trigger?',
             initial: true,
           }).pipe(Prompt.run),

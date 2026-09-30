@@ -12,15 +12,14 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleField } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 
-import { doLayout } from '../../layout';
-import { Container, DragTest, useSelection } from '../../testing';
-import { type CanvasGraphModel, Polygon, isPolygon } from '../../types';
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
+import { doLayout } from '../../layout/index.ts';
+import { Container, DragTest, useSelection } from '../../testing/index.ts';
+import { type CanvasGraphModel, Polygon, isPolygon } from '../../types/index.ts';
+import { Editor, type EditorController, type EditorRootProps } from './Editor.tsx';
 
 const generator: ValueGenerator = random as any;
 
@@ -87,7 +86,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
               >
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>

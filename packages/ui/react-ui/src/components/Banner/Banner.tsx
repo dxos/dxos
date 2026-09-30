@@ -2,22 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
+import { ark } from '@ark-ui/react/factory';
+import React, {
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type PropsWithChildren,
+  type ReactNode,
+  forwardRef,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useId } from '@dxos/react-hooks';
-import { type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
+import { createContext, useId } from '@dxos/react-hooks';
+import { type ComposableProps, type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { IconButton } from '../Button';
-import { Column } from '../Column';
-import { Icon } from '../Icon';
+import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { Column } from '../Column/index.ts';
+import { Icon } from '../Icon/index.ts';
 
 const bannerIcons: Record<MessageValence, string> = {
   success: 'ph--check-circle--duotone',
@@ -148,7 +152,7 @@ BannerContent.displayName = BANNER_CONTENT_NAME;
 
 const BANNER_TITLE_NAME = 'Banner.Title';
 
-type BannerTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
+type BannerTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof ark.h2>>, 'id'> & {
   icon?: string;
   onClose?: () => void;
 };
@@ -194,7 +198,7 @@ BannerTitle.displayName = BANNER_TITLE_NAME;
 
 const BANNER_BODY_NAME = 'Banner.Body';
 
-type BannerBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
+type BannerBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof ark.h2>>, 'id'> & {
   asChild?: boolean;
 };
 
@@ -202,16 +206,64 @@ const BannerBody = forwardRef<HTMLParagraphElement, BannerBodyProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { descriptionId } = useMessageContext(BANNER_BODY_NAME);
-    const Comp = asChild ? Slot : Primitive.p;
     return (
-      <Comp {...props} className={tx('banner.body', {}, classNames)} id={descriptionId} ref={forwardedRef}>
+      <ark.p
+        asChild={asChild}
+        {...props}
+        className={tx('banner.body', {}, classNames)}
+        id={descriptionId}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.p>
     );
   },
 );
 
 BannerBody.displayName = BANNER_BODY_NAME;
+
+//
+// Empty
+//
+
+const BANNER_EMPTY_NAME = 'Banner.Empty';
+
+type BannerEmptyProps = ComposableProps<{
+  /** Message to show; the caller translates it. Falls back to a generic message when omitted. */
+  label?: ReactNode;
+  /** Optional Phosphor icon name shown above the message. */
+  icon?: string;
+}>;
+
+/**
+ * A surface standing in for content that is not there: no list items, no selection, no result.
+ *
+ * A banner rather than a component of its own because it is the same statement — a message in place
+ * of content — but the one case that carries no valence and paints no surface: nothing has gone
+ * wrong, there is simply nothing to show. So it renders flat and centred, and announces itself as a
+ * status rather than an alert. It composes no `Banner.Root`: with no valence there is nothing for
+ * the context to carry.
+ */
+const BannerEmpty = composable<HTMLDivElement, BannerEmptyProps>(({ label, icon, ...props }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  // `defaultValue` keeps the fallback working even before a host registers the key, and leaves it translatable.
+  const message = label ?? t('empty.label', { defaultValue: 'No items' });
+  return (
+    <div
+      {...composableProps<HTMLDivElement>(props, {
+        classNames: 'flex flex-col items-center justify-center gap-2 p-trim-md text-sm text-center text-description',
+        role: 'status',
+      })}
+      ref={forwardedRef}
+    >
+      {/* Decorative: the message carries the whole statement, so the glyph is not announced beside it. */}
+      {icon && <Icon icon={icon} size={6} classNames='text-subdued' aria-hidden='true' />}
+      <span>{message}</span>
+    </div>
+  );
+});
+
+BannerEmpty.displayName = BANNER_EMPTY_NAME;
 
 //
 // Banner
@@ -222,6 +274,7 @@ export const Banner = {
   Content: BannerContent,
   Title: BannerTitle,
   Body: BannerBody,
+  Empty: BannerEmpty,
 };
 
-export type { BannerBodyProps, BannerContentProps, BannerRootProps, BannerTitleProps };
+export type { BannerBodyProps, BannerContentProps, BannerEmptyProps, BannerRootProps, BannerTitleProps };

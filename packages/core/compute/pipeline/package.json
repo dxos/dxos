@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

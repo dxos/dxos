@@ -22,21 +22,34 @@ import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
-import { LogLevel, levels, log } from '@dxos/log';
+import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
-import { admin, chat, commandConfigLayer, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
-import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
-import { setDispatcher } from './dispatcher';
+import {
+  admin,
+  chat,
+  commandConfigLayer,
+  debug,
+  dx,
+  fn,
+  hub,
+  mailbox,
+  mcp,
+  reflect,
+  repl,
+  reset,
+} from './commands/index.ts';
+import { getCore, getDefaults, getPlugins } from './commands/plugin-defs.ts';
+import { setDispatcher } from './dispatcher.ts';
 import {
   commandPath,
   flushObservability,
   identifySession,
   initializeObservability,
   observabilityNamespace,
-} from './observability';
-import { installStderrFilter, registerSharedScope } from './util';
+} from './observability.ts';
+import { installStderrFilter, registerSharedScope } from './util/index.ts';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
@@ -46,12 +59,41 @@ if (!process.env.DX_KEEP_WARNINGS) {
   installStderrFilter();
 }
 
+/** Root flags whose value is a separate token, so the value is not mistaken for a command. */
+const ROOT_FLAGS_TAKING_A_VALUE = new Set(['--config', '-c', '--logLevel', '-l', '--profile', '-p', '--timeout']);
+
+/** The command tokens, with root flags and their values removed. */
+const commandTokens = (argv: readonly string[]): string[] => {
+  const path: string[] = [];
+  for (let i = 0; i < argv.length && path.length < 2; i++) {
+    const token = argv[i];
+    if (!token.startsWith('-')) {
+      path.push(token);
+    } else if (ROOT_FLAGS_TAKING_A_VALUE.has(token)) {
+      i++;
+    }
+  }
+  return path;
+};
+
+/** True for `dx mcp serve`, with or without `--watch`: stdout carries the MCP protocol. */
+const isMcpServe = (argv: readonly string[]): boolean => {
+  const [command, subcommand] = commandTokens(argv);
+  return command === 'mcp' && subcommand === 'serve';
+};
+
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
 if (level) {
   filter = levels[level] ?? LogLevel.ERROR;
 }
-log.config({ filter });
+// Chosen before plugins boot, since activation logs ahead of any command handler.
+log.config({
+  filter,
+  // `dx mcp serve` writes the protocol to stdout, so it logs only through the processors
+  // observability installs.
+  ...(isMcpServe(process.argv.slice(2)) ? { processor: LogProcessorType.NOOP } : {}),
+});
 
 // Before any command can create a space: an unset `Migrations.targetVersion` stamps no version, and
 // Composer then reports the space as pending migration.
@@ -104,10 +146,9 @@ const isWatchSupervisor = (argv: readonly string[]): boolean => {
   if (argv.includes('--help') || argv.includes('-h')) {
     return false;
   }
-  const serve = argv.indexOf('serve');
   // Bare `--watch` only: `--watch=false` means watch OFF, and any `--watch=…` form is left to the
   // real parser — a miss costs a slow start via `serve.ts`'s own branch, never wrong behavior.
-  return serve > 0 && argv[serve - 1] === 'mcp' && argv.includes('--watch');
+  return isMcpServe(argv) && argv.includes('--watch');
 };
 
 const program = Effect.gen(function* () {
@@ -116,7 +157,7 @@ const program = Effect.gen(function* () {
   // Before `ConfigService.load` and the command tree: see `isWatchSupervisor`. `serve.ts` keeps an
   // equivalent branch so a miss here degrades to a slow start rather than an unknown flag.
   if (isWatchSupervisor(argv)) {
-    const { runWatchSupervisor } = yield* Effect.promise(() => import('./commands/mcp/watch'));
+    const { runWatchSupervisor } = yield* Effect.promise(() => import('./commands/mcp/watch.ts'));
     return yield* runWatchSupervisor();
   }
 

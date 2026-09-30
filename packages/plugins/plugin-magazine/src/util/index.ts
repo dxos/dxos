@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './date';
-export * from './post-content';
-export * from './text';
+export * from './date.ts';
+export * from './post-content.ts';
+export * from './text.ts';

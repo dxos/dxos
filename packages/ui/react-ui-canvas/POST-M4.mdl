@@ -1,0 +1,204 @@
+---
+id: org.dxos.ui.react-ui-canvas.post-m4
+name: SceneEnginePostM4
+version: 0.1.0
+---
+
+The fixes made after migration milestone M4 landed, as executable checks. They are separated from
+`SPEC.mdl` — which states what the engine IS — because this file states what was WRONG and how to see
+that it no longer is: every flow here began as a report against a build, and several of the first
+attempts at a fix were wrong in ways only a measurement showed.
+
+The through-line is one mistake made three times: **a quantity fixed in scene units, compared against
+something measured on screen**. The grid drew levels filtered by their on-screen size while snapping
+used a constant; node defaults were constant while the camera that displays them was not; text was
+constant while the level it sat in was not. Each flow below pins one of those to the quantity it has
+to track.
+
+Run `moon run react-ui-canvas:e2e` for the automated subset (`src/playwright/create.spec.ts` and
+`scene.spec.ts`), or the storybook at 9006 / 9009 for the human ones.
+
+## Extensions
+
+```mdl
+ext test
+  desc: An executable QA flow: actors, the requirements it covers, and steps as do/expect pairs.
+  fields:
+    desc?: string
+    actors: ('human' | 'agent')[]
+    covers: string[]
+    status: 'automated' | 'partially-automated' | 'manual'
+    given?: string[]
+    steps: { name: string, do: string, expect: string }[]
+    after?: string[]
+```
+
+## QA
+
+```mdl
+test PM4-1: A create covers the same screen area at any zoom
+  desc: |
+    The palette drop and the toolbar's create menu had the type's default size in scene units, so what
+    they produced grew and shrank with the camera: at a nested level, where the camera arrives at a
+    fraction of the parent's zoom, a new node came out a quarter of its apparent size, and drawing one
+    large enough to read left its label tiny against it.
+
+    A first fix scaled by the portal's own factor. That was unstable and is the trap worth remembering:
+    `portalFrame` grows its factor until the frame contains the child's bounds, so a larger node
+    enlarged the factor, which enlarged the next node. Measured in Chromium, nodes came out several
+    times too big. The camera zoom is the right quantity because it does not depend on the content.
+  actors: human, agent
+  covers: [F-3.7]
+  status: automated
+  given:
+    - the `SceneView` Default story (an empty canvas), at 1400x900
+  steps:
+    - name: Create at the fitted zoom
+      do: Open the toolbar's create menu and pick the first type. Note the node's width in screen px.
+      expect: a node about 250px wide
+    - name: Zoom in two steps and create again
+      do: Press the toolbar's zoom-in twice, then create the same way.
+      expect: the new node is within a grid cell of the first one's SCREEN width, not 1.5x it
+    - name: Zoom out four steps and create again
+      do: Press zoom-out four times, then create the same way.
+      expect: again within a cell of the first width; measured 261 / 247 / 257px at 45 / 64 / 100%
+    - name: The same at depth
+      do: Drill into a portal in the Nested story and create there.
+      expect: the node arrives the size it would have at the root, not a quarter of it
+```
+
+```mdl
+test PM4-2: A drawn box is what the pointer swept, and an empty gesture creates nothing
+  desc: |
+    A press that moved less than a cell used to fall back to the type's default size, so a stray click
+    with a shape tool planted a node, and a small deliberate box silently became a large default one.
+  actors: human, agent
+  covers: [F-3.6]
+  status: automated
+  given:
+    - the `SceneView` Default story
+  steps:
+    - name: Draw a wide box
+      do: Press R, drag a box about 240x160 on empty canvas.
+      expect: the node matches the sweep within a grid cell on each axis, and is not the default 2:1 shape
+    - name: Draw a small box
+      do: Press R, drag about 120x80.
+      expect: the node matches that sweep; no minimum size is imposed
+    - name: Click without moving
+      do: Press R and click once, without moving the pointer.
+      expect: NOTHING is created
+```
+
+```mdl
+test PM4-3: Snapping lands on the lines that are drawn
+  desc: |
+    The snap unit was fixed in scene units while `Grid` keeps a level only while its cells are legible
+    on screen, so the two parted company with the zoom. Far enough in, the drawn lines were four times
+    finer than the snap. In a nested scene they were coarser, and a snap moved the node by less than a
+    screen pixel — the "snapping doesn't work when zoomed in" report.
+  actors: human, agent
+  covers: [F-2.1, F-2.2, F-2.6]
+  status: partially-automated
+  given:
+    - the `SceneView` Default story with a node on it
+  steps:
+    - name: Zoom out hard, then nudge
+      do: Press the toolbar's zoom-out six times, then drag the node a few pixels.
+      expect: it either stays put or jumps a whole visible cell; it never drifts by the few pixels dragged
+    - name: Look at the lines
+      do: With snapping on, drag a node slowly at any zoom.
+      expect: its edges land on lines that are actually drawn — no finer mesh between them
+    - name: Drill in and drag
+      do: Drill into a portal and drag a node there.
+      expect: snapping still lands on that level's drawn lines
+    - name: Turn snapping off
+      do: Press G.
+      expect: the grid DISAPPEARS and the gesture is free
+```
+
+```mdl
+test PM4-4: The zoom readout is against the level's own 1:1
+  desc: |
+    Entering a portal divides the camera by the frame's factor, so the raw number dropped fourfold on a
+    drill-in that changed nothing the user could see (70% became 23%). The readout is divided by the
+    same portal product. It is display only — nothing derives geometry from it, so the feedback loop
+    that broke the first sizing fix cannot form here.
+  actors: human
+  covers: [F-1.4]
+  status: manual
+  given:
+    - the `SceneView` Nested story
+  steps:
+    - name: Note the zoom, then drill in
+      do: Read the toolbar's percentage, double-click a portal, and read it again.
+      expect: it stays about where it was; it does not drop to a quarter
+    - name: Drill back out
+      do: Press Escape.
+      expect: the readout returns, and depth follows the breadcrumbs
+```
+
+```mdl
+test PM4-5: Links join shapes, not just ports
+  desc: |
+    A link could only start at a port, so joining two shapes meant aiming at a 5px dot; and with a link
+    tool every node drew its ports at once, a field of dots over the diagram being drawn.
+  actors: human, agent
+  covers: [F-8.1, F-8.2, F-8.3]
+  status: partially-automated
+  given:
+    - the `SceneView` Freehand story
+  steps:
+    - name: Ports appear on hover only
+      do: Press L, then move the pointer across the canvas.
+      expect: only the node under the pointer shows ports; the rest stay clean
+    - name: Body to body
+      do: Drag from the middle of one node to the middle of another.
+      expect: a link is created between them, and no new node is created at the drop
+    - name: Port still wins up close
+      do: Drag from a port and drop near (not on) a port of another node.
+      expect: the end binds to that port, not to the body
+    - name: A node that refuses the end
+      do: Drop on a node whose ports all refuse this end.
+      expect: the link binds to the body rather than the drop being refused
+```
+
+```mdl
+test PM4-6: A smart link is routed, not drawn
+  desc: |
+    First cut: a stub out of each port along its side's normal by half a major cell, one segment joining
+    them, corners rounded by the same builder a spline uses. Nothing is stored, so it follows the nodes.
+  actors: human, agent
+  covers: [F-8.4]
+  status: partially-automated
+  given:
+    - the `SceneView` Freehand story
+  steps:
+    - name: Draw one
+      do: Press O, drag from one node's body to another's.
+      expect: the route leaves each port straight out and turns with rounded corners
+    - name: Two ports on the same side
+      do: Link the east port of one node to the east port of a node below it.
+      expect: the route doubles back through the middle segment rather than cutting across either node
+    - name: Move a node
+      do: Drag one of the linked nodes.
+      expect: the route re-forms live; nothing about it was stored
+```
+
+```mdl
+test PM4-7: Text reads at the level it was drawn in
+  desc: |
+    `style.fontSize` in the node's own scene units. The node views drop their Tailwind size class when
+    it is set, which would otherwise win over the inherited value.
+  actors: human
+  covers: [F-3.10]
+  status: manual
+  given:
+    - the `SceneView` Default story
+  steps:
+    - name: Create and read
+      do: Create a node from the toolbar at any zoom and type a label into it.
+      expect: the label is legible against the box, at any zoom and any depth
+    - name: Override it
+      do: Select the node and change `fontSize` in the properties panel.
+      expect: every text part of that node takes the new size
+```

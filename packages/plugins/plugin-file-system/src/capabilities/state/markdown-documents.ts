@@ -18,7 +18,7 @@ import { Text } from '@dxos/schema';
 
 import { FileSystemCapabilities } from '#types';
 
-import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
+import { findFileById, readFileContent, updateFileInWorkspace } from '../../util.ts';
 import {
   type FileMapEntry,
   getFileXattrDXN,
@@ -26,8 +26,8 @@ import {
   setFileXattrDXN,
   watchMarkdownFile,
   writeFileMap,
-} from './disk-io';
-import { collectMarkdownFileIds, collectMarkdownFiles, relativePath } from './file-helpers';
+} from './disk-io.ts';
+import { collectMarkdownFileIds, collectMarkdownFiles, relativePath } from './file-helpers.ts';
 
 /** Yield to the event loop every N files during restore so capability init cannot wedge the UI thread. */
 const RESTORE_YIELD_EVERY_N_FILES = 25;

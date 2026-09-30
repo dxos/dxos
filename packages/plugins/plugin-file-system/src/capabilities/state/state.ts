@@ -13,11 +13,11 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { FileSystemCapabilities } from '#types';
 
-import { loadWorkspace, refreshWorkspace } from '../../util';
-import { createDirectoryWatcher } from './directory-watcher';
-import * as FileSystemManager from './FileSystemManager';
-import { createMarkdownDocuments } from './markdown-documents';
-import { MirrorSpaceManager } from './mirror-space-manager';
+import { loadWorkspace, refreshWorkspace } from '../../util.ts';
+import { createDirectoryWatcher } from './directory-watcher.ts';
+import * as FileSystemManager from './FileSystemManager.ts';
+import { createMarkdownDocuments } from './markdown-documents.ts';
+import { MirrorSpaceManager } from './mirror-space-manager.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 
-import * as Expando from './Expando';
+import * as Expando from './Expando.ts';
 
 describe('Expando', () => {
   test('Obj.instanceOf works with Expando', ({ expect }) => {

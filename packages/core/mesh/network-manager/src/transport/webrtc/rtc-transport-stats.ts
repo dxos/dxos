@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { TransportStats } from '../transport';
+import type { TransportStats } from '../transport.ts';
 
 export const describeSelectedRemoteCandidate = async (connection?: RTCPeerConnection): Promise<string> => {
   const stats = connection && (await getRtcConnectionStats(connection));

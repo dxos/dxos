@@ -14,18 +14,18 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['node'],
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
+  environments: ['browser', 'node', 'tauri'],
 });
 // Browser-only: the variant descriptor carries the `card`/`article` React components the game
 // host renders, so the module cannot load without a DOM.
 export const GameVariant = Capability.lazyModule(
   'GameVariant',
-  { provides: [GameCapabilities.VariantProvider], activatesOn: GameEvents.Start, environments: [] },
-  () => import('./game-variant'),
+  { provides: [GameCapabilities.VariantProvider], activatesOn: GameEvents.Start, environments: ['browser', 'tauri'] },
+  () => import('./game-variant.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const PluginAsset = AppCapability.pluginAsset({

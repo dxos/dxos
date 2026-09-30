@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SheetToolbar } from './SheetToolbar';
+import { SheetToolbar } from './SheetToolbar.tsx';
 
 const DefaultStory = () => {
   // TODO(wittjosiah): Depends on SheetRoot.

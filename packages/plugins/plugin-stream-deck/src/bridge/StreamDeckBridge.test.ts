@@ -7,7 +7,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 
 import * as Protocol from '#protocol';
 
-import { type BridgeState, StreamDeckBridge } from './StreamDeckBridge';
+import { type BridgeState, StreamDeckBridge } from './StreamDeckBridge.ts';
 
 const PORT = 21998;
 const URL = `ws://127.0.0.1:${PORT}`;

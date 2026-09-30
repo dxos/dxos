@@ -11,11 +11,10 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { SemanticIndexError } from './errors';
-import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
-import { FactPipeline } from './pipeline';
+import { SemanticIndexError } from './errors.ts';
+import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract.ts';
+import { FactPipeline } from './pipeline.ts';
 import {
   type DocumentFacts,
   extractFacts,
@@ -23,11 +22,11 @@ import {
   indexFactsStage,
   normalizeEntityId,
   normalizeFactsStage,
-} from './stages';
-import { FactStore, FactStoreLive } from './store';
-import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
-import { type ExtractDocument } from './types';
-import { type Fact } from './types';
+} from './stages/index.ts';
+import { FactStore, FactStoreLive } from './store/index.ts';
+import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing/index.ts';
+import { type ExtractDocument } from './types/index.ts';
+import { type Fact } from './types/index.ts';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -88,13 +87,11 @@ const QUESTION_OUTPUT = {
 };
 
 const TestLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(mockAiService(LLM_OUTPUT)),
 );
 
 const FailingLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(failingAiService()),
 );
@@ -271,7 +268,6 @@ describe('FactPipeline', () => {
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
       const layer = FactStoreLive.layer.pipe(
-        Layer.provideMerge(SqlTransaction.layer),
         Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
         Layer.provideMerge(ai.layer),
       );

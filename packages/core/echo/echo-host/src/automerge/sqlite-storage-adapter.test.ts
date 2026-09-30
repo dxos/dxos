@@ -9,15 +9,14 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
-import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter';
+import { SqliteHeadsStore } from './sqlite-heads-store.ts';
+import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter.ts';
 
 const makeTestLayer = () => {
   const baseLayer = SqliteClient.layer({ filename: ':memory:' });
-  const txLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
+  const txLayer = baseLayer;
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
   return { runtime: rt.contextEffect, dispose: () => rt.dispose() };
 };

@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { Config } from './config';
-import { EdgeServiceName, getEdgeServiceEndpoint } from './edge-services';
+import { Config } from './config.ts';
+import { EdgeServiceName, getEdgeServiceEndpoint } from './edge-services.ts';
 
 // Unconfigured lookups must never inject an endpoint (configPreset is exempt: calling the factory is the opt-in).
 describe('no default endpoints', () => {

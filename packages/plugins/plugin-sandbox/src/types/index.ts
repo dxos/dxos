@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Sandbox from './Sandbox';
-export * as SandboxEvents from './SandboxEvents';
-export * as SandboxOperation from './SandboxOperation';
+export * as Sandbox from './Sandbox.ts';
+export * as SandboxEvents from './SandboxEvents.ts';
+export * as SandboxOperation from './SandboxOperation.ts';
+export * as SandboxService from './SandboxService.ts';
+export * as SandboxCapabilities from './SandboxCapabilities.ts';
+export * as Settings from './Settings.ts';

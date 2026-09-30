@@ -9,15 +9,15 @@ import type * as Schema from 'effect/Schema';
 import { SchemaAST } from '@dxos/effect';
 import { DXN, type URI } from '@dxos/keys';
 
-import type * as Entity from './Entity';
-import type * as internal from './internal';
-import { ReferenceAnnotationId } from './internal/Annotation';
-import * as refInternal from './internal/Ref';
-import type * as JsonSchema from './JsonSchema';
-import type * as Obj from './Obj';
-import type * as Relation from './Relation';
+import type * as Entity from './Entity.ts';
+import { ReferenceAnnotationId } from './internal/Annotation/index.ts';
+import type * as internal from './internal/index.ts';
+import * as refInternal from './internal/Ref/index.ts';
+import type * as JsonSchema from './JsonSchema.ts';
+import type * as Obj from './Obj.ts';
+import type * as Relation from './Relation.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Type$ from './Type';
+import type * as Type$ from './Type.ts';
 
 /**
  * Instance type for a reference.
@@ -104,12 +104,25 @@ export type Resolver = refInternal.RefResolver;
 
 export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef;
 
+/**
+ * Whether a schema identifier names a ref declaration.
+ *
+ * A JSON-schema generator's default reference policy hoists anything carrying an identifier into
+ * `$defs`; generators that must keep refs inline decline exactly these.
+ */
+export const isRefIdentifier: (identifier: string | undefined) => boolean = refInternal.isRefIdentifier;
+
 export const make = refInternal.Ref.make;
 
 // TODO(dmaretskyi): Consider just allowing `make` to accept URI.
 export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromURI(uri);
 
 export const hasEntityId = refInternal.Ref.hasEntityId;
+
+/**
+ * Disposition of a deleted target. Defaults to `'exclude'`, matching the query option.
+ */
+export type LoadOptions = refInternal.LoadOptions;
 
 /**
  * The URI a reference property points at, or `undefined` when the node is not a reference.

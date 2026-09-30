@@ -17,6 +17,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./next": {
+      "source": "./src/next/index.ts",
+      "types": "./dist/types/src/next/index.d.ts",
+      "import": "./dist/lib/next.mjs"
+    },
     "./util": {
       "source": "./src/util/index.ts",
       "types": "./dist/types/src/util/index.d.ts",
@@ -38,18 +43,15 @@
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-virtual": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",

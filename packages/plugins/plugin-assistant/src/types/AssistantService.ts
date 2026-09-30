@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Ref, Type } from '@dxos/echo';
 
 // TODO(burdon): Factor out and reconcile with https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-token-manager/src/defs/presets.ts#L7
 
@@ -85,7 +85,7 @@ export class ServiceType extends Type.makeObject<ServiceType>(DXN.make('org.dxos
      * Entries exposed: functions, workflows, and APIs.
      */
     interfaces: Schema.optional(Schema.Array(ServiceInterface)),
-  }),
+  }).pipe(Annotation.UserType.set()),
 ) {}
 
 //

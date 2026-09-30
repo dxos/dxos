@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './dial';
-export * from './frame';
-export * from './icons';
-export * from './key';
-export * from './palette';
-export * from './text';
-export * from './useFrame';
+export * from './dial.ts';
+export * from './frame.ts';
+export * from './icons.ts';
+export * from './key.ts';
+export * from './palette.ts';
+export * from './text.ts';
+export * from './useFrame.ts';

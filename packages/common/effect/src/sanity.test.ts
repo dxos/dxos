@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { runAndForwardErrors } from './internal/errors';
+import { runAndForwardErrors } from './internal/errors.ts';
 
 describe('sanity tests', () => {
   test('function pipeline', async ({ expect }) => {

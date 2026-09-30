@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 
 import { Subscription } from '#types';
 
-import { partitionByKeepBound } from './util';
+import { partitionByKeepBound } from './util.ts';
 
 describe('partitionByKeepBound', () => {
   test('keeps the newest N non-starred posts and drops the rest', () => {

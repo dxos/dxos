@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
@@ -11,7 +12,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { TrelloOperation } from '#types';
 
-import { TrelloApi } from '../services';
+import { TrelloApi } from '../services/index.ts';
 
 /**
  * Discovery only — list Trello boards reachable from the connection's token
@@ -40,7 +41,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.GetTrelloBoards> = T
           description: board.shortUrl,
         }));
         return { targets };
-      }).pipe(Effect.provide(Database.layer(db)), Effect.provide(TrelloApi.fromConnection(connection)));
+      }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), TrelloApi.fromConnection(connection))));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

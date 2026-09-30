@@ -9,9 +9,10 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Thread } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as Markdown from './Markdown';
+import * as Markdown from './Markdown.ts';
 
 // The edit descriptions feed the markdown skill's LLM tool definition (and its memoized
 // fixtures), so the schema stays local and context-tuned; the apply logic is shared via `Text.apply`.
@@ -132,7 +133,7 @@ export const ScrollToAnchor = Operation.make({
   input: Schema.Struct({
     subject: Schema.String.annotate({ description: 'Attendable ID of the markdown editor.' }),
     cursor: Schema.String.annotate({ description: 'Cursor position to scroll to.' }),
-    id: Schema.optional(Schema.String.annotate({ description: 'Reference ID (e.g. thread ID).' })),
+    id: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
   }),
   output: Schema.Void,
 });

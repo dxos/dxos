@@ -21,7 +21,8 @@ const root: ComponentFunction<ProgressStyleProps> = (_props, ...etc) =>
 const bar: ComponentFunction<ProgressStyleProps> = ({ indeterminate, countdown, error }, ...etc) =>
   mx(
     'absolute inset-y-0 block rounded-full',
-    error ? 'bg-error-surface' : 'bg-primary-surface',
+    // The accent role, as a primary button: `primary-surface` is a fixed tint that reads as a track.
+    error ? 'bg-error-surface' : 'bg-accent-bg',
     indeterminate
       ? 'animate-progress-indeterminate'
       : countdown

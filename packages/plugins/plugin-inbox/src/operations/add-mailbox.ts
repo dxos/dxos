@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { InboxOperation } from '#types';
 
-import { getMailboxPath } from '../paths';
+import { getMailboxPath } from '../paths.ts';
+import { InboxOperationError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(
@@ -25,19 +25,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       // The space id names the database, so the target has to live in it; one from another space —
       // or a detached one — would take the reference somewhere the mailbox is not.
       if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
-        return yield* Effect.fail(new Error(`Target collection does not belong to space ${db.spaceId}.`));
+        return yield* Effect.fail(
+          new InboxOperationError({ message: `Target collection does not belong to space ${db.spaceId}.` }),
+        );
       }
 
-      yield* CollectionModel.add({ object, target });
-
-      yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.object.add',
-        properties: {
-          spaceId: db.spaceId,
-          objectId: object.id,
-          typename: Obj.getTypename(object),
-        },
-      });
+      yield* DefaultParent.add({ object, target });
 
       return {
         id: Obj.getURI(object),

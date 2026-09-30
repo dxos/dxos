@@ -7,7 +7,7 @@ import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef }
 import { Card, type ThemedClassName } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
-import { Row } from '../Row';
+import { Row } from '../Row/index.ts';
 
 //
 // Root

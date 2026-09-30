@@ -9,12 +9,12 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
-import { DXN, EID, URI } from '@dxos/keys';
-import { SqlTransaction } from '@dxos/sql-sqlite';
+import { ATTR_META } from '@dxos/echo/internal';
+import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref';
-import { EscapedPropPath, chunkArray } from '../utils';
-import type { Index, IndexerObject } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref/index.ts';
+import { type EntityPropPath, EscapedPropPath, chunkArray, normalizePropPath } from '../utils.ts';
+import type { Index, IndexerObject } from './interface.ts';
 
 /**
  * Normalizes a reference URI so every spelling of the same target shares one index key: an echo
@@ -80,22 +80,36 @@ export interface ReverseRefQuery {
 }
 
 /**
+ * One object holding references to a target, joined to the object metadata for its document.
+ * `propPaths` are the unescaped property paths within the referrer's data that the index
+ * recorded as pointing at the target.
+ */
+export type Referrer = {
+  objectId: EntityId;
+  documentId: string;
+  propPaths: EntityPropPath[];
+};
+
+/**
  * Indexes reverse references - tracks which objects reference which targets.
  * Only indexes references, not relations.
  */
 export class ReverseRefIndex implements Index {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
-   *
-   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
-   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
    */
   migrate = Effect.fn('ReverseRefIndex.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      Effect.provide(SqlTransaction.clientLayer),
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
@@ -103,9 +117,9 @@ export class ReverseRefIndex implements Index {
    * Query all references pointing to a target DXN.
    */
   query = Effect.fn('ReverseRefIndex.query')(
-    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         const normalized = referenceIndexKey(targetDXN);
         if (normalized === undefined) {
           return [];
@@ -116,47 +130,90 @@ export class ReverseRefIndex implements Index {
       }),
   );
 
+  /**
+   * Referrers of one target in one space, joined to the object metadata for the referrer's
+   * document — the point lookup behind merge reference rewriting. Queue entities carry no
+   * document to rewrite and rows from other spaces are not this space's to repoint, so both
+   * are excluded in SQL.
+   */
+  queryReferrers = Effect.fn('ReverseRefIndex.queryReferrers')(
+    ({
+      spaceId,
+      targetDXN,
+    }: {
+      spaceId: SpaceId;
+      targetDXN: URI.URI;
+    }): Effect.Effect<readonly Referrer[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const normalized = referenceIndexKey(targetDXN);
+        if (normalized === undefined) {
+          return [];
+        }
+        const rows = yield* sql<{ objectId: EntityId; documentId: string; propPath: string }>`
+          SELECT om.objectId, om.documentId, rr.propPath
+          FROM reverseRef rr JOIN objectMeta om ON om.recordId = rr.recordId
+          WHERE rr.targetDXN = ${normalized} AND om.spaceId = ${spaceId} AND om.documentId != ''`;
+        const byReferrer = new Map<string, Referrer>();
+        for (const row of rows) {
+          // Object ids are unique within a space, but the row's document is the one the index saw.
+          const key = `${row.documentId}/${row.objectId}`;
+          const referrer = byReferrer.get(key) ?? { objectId: row.objectId, documentId: row.documentId, propPaths: [] };
+          referrer.propPaths.push(EscapedPropPath.unescape(row.propPath));
+          byReferrer.set(key, referrer);
+        }
+        return [...byReferrer.values()];
+      }),
+  );
+
   /** Delete reverse-reference rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ReverseRefIndex.deleteByRecordIds')(
-    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         for (const chunk of chunkArray(recordIds)) {
           yield* sql`DELETE FROM reverseRef WHERE ${sql.in('recordId', chunk)}`;
         }
       }),
   );
 
-  update = Effect.fn('ReverseRefIndex.update')(
-    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+  update = Effect.fn('ReverseRefIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
 
-        yield* Effect.forEach(
-          objects,
-          (object) =>
-            Effect.gen(function* () {
-              const { recordId, data } = object;
-              if (recordId === null) {
-                return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
-              }
+      yield* Effect.forEach(
+        objects,
+        (object) =>
+          Effect.gen({ self: this }, function* () {
+            const { recordId, data } = object;
+            if (recordId === null) {
+              return yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
+            }
 
-              // Delete existing references for this record.
-              yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
+            // Delete existing references for this record.
+            yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
-              // Extract references from data.
-              const refs = extractReferences(data as unknown as Record<string, unknown>);
+            // Document objects carry `@meta` only so the entity-meta index can extract the
+            // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+            // return everything merely tagged with it. Queue blocks always carried meta, so
+            // their extraction is unchanged.
+            const extractable = object.documentId
+              ? Object.fromEntries(
+                  Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
+                )
+              : (data as unknown as Record<string, unknown>);
+            const refs = extractReferences(extractable);
 
-              // Insert new references.
-              yield* Effect.forEach(
-                refs,
-                (ref) =>
-                  sql`INSERT INTO reverseRef (recordId, targetDXN, propPath) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)})`,
-                { discard: true },
-              );
-            }),
-          { discard: true },
-        );
-      }),
+            // Insert new references.
+            yield* Effect.forEach(
+              refs,
+              (ref) =>
+                sql`INSERT INTO reverseRef (recordId, targetDXN, propPath, propPathNormalized) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)}, ${EscapedPropPath.escape(normalizePropPath(ref.path))})`,
+              { discard: true },
+            );
+          }),
+        { discard: true },
+      );
+    }),
   );
 }

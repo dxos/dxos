@@ -9,5 +9,5 @@
 // `@dxos/echo-panproto/wasm` entrypoint (loaded lazily by the runner), so this surface never statically
 // depends on it — the wasm implementation can be swapped or retired without touching the API.
 
-export { Adapter, Lens, Migration } from './wire-lens';
-export { type RefType, type TextFormat, decode, encode, registerRefType, registerTextFormat } from './runner';
+export { Adapter, Lens, Migration } from './wire-lens.ts';
+export { type RefType, type TextFormat, decode, encode, registerRefType, registerTextFormat } from './runner.ts';

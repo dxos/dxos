@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 
-import type { JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
+import type * as JsonSchema from '@dxos/echo/JsonSchema';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -15,8 +15,8 @@ import { EdgeResponse, makeInProcessClient } from '@dxos/protocols';
 import type { EdgeFunctionEnv, FunctionProtocol } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
-import { ServiceContainer } from './internal';
-import { FUNCTION_ROUTE_HEADER, type FunctionMetadata, FunctionRouteValue } from './types';
+import { ServiceContainer } from './internal/index.ts';
+import { FUNCTION_ROUTE_HEADER, type FunctionMetadata, FunctionRouteValue } from './types.ts';
 
 /**
  * Wraps a user function in a Cloudflare-compatible handler.
@@ -100,8 +100,8 @@ const handleFunctionMetaCall = (functionDefinition: FunctionProtocol.Func, reque
     key: functionDefinition.meta.key,
     name: functionDefinition.meta.name,
     description: functionDefinition.meta.description,
-    inputSchema: functionDefinition.meta.inputSchema as JsonSchemaType | undefined,
-    outputSchema: functionDefinition.meta.outputSchema as JsonSchemaType | undefined,
+    inputSchema: functionDefinition.meta.inputSchema as JsonSchema.JsonSchema | undefined,
+    outputSchema: functionDefinition.meta.outputSchema as JsonSchema.JsonSchema | undefined,
   };
 
   return new Response(JSON.stringify(response), {
@@ -122,7 +122,11 @@ export const createFunctionContext = async ({
   serviceScope: Scope.Scope;
   accessTokenService?: EdgeFunctionEnv.AccessTokenService;
 }): Promise<FunctionProtocol.Context> => {
+  // Phase marks: on Workers `Date.now()` advances only across I/O, so a span here is zero-length
+  // while these deltas are real.
+  const startedAt = Date.now();
   const services = await serviceContainer.createServices();
+  const servicesAt = Date.now();
   // Bridge the host Handlers to the effect-rpc client surface in-process (no wire hop), matching the
   // client shape consumers expect.
   const [dataService, queryService, queueService] = await EffectEx.runPromise(
@@ -132,6 +136,7 @@ export const createFunctionContext = async ({
       makeInProcessClient(FeedService.Rpcs, services.queueService),
     ]).pipe(Effect.provideService(Scope.Scope, serviceScope)),
   );
+  const clientsAt = Date.now();
 
   let spaceKey: string | undefined;
   let rootUrl: string | undefined;
@@ -144,6 +149,12 @@ export const createFunctionContext = async ({
     invariant(!meta.rootDocumentId.startsWith('automerge:'));
     rootUrl = `automerge:${meta.rootDocumentId}`;
   }
+  log.info('function context timing', {
+    spaceId: contextSpaceId,
+    servicesMs: servicesAt - startedAt,
+    clientsMs: clientsAt - servicesAt,
+    spaceMetaMs: Date.now() - clientsAt,
+  });
 
   return {
     services: {

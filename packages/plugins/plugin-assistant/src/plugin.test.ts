@@ -33,8 +33,8 @@ import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
 import { AssistantEvents, AssistantOperation } from '#types';
 
-import { AssistantSkill } from './skills/assistant';
-import { PluginManagerSkill } from './skills/plugin-manager';
+import { AssistantSkill } from './skills/assistant/index.ts';
+import { PluginManagerSkill } from './skills/plugin-manager/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -158,7 +158,7 @@ describe('AssistantPlugin', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
       }).pipe(
         Effect.provide(
-          AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+          AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
             Layer.provideMerge(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService)),
           ),
         ),

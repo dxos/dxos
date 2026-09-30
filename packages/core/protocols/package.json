@@ -25,22 +25,10 @@
       "browser": "./dist/src/rpc.js",
       "import": "./dist/src/rpc.js"
     },
-    "./proto": {
-      "browser": "./dist/src/proto/index.js",
-      "import": "./dist/src/proto/index.js"
-    },
     "./proto/dxos/*.proto": "./src/proto/dxos/*.proto",
-    "./proto/*": {
-      "browser": "./dist/src/proto/gen/*.js",
-      "import": "./dist/src/proto/gen/*.js"
-    },
     "./buf": {
       "browser": "./dist/src/buf/index.js",
       "import": "./dist/src/buf/index.js"
-    },
-    "./buf-shape-compat": {
-      "browser": "./dist/src/buf/shape-compat.js",
-      "import": "./dist/src/buf/shape-compat.js"
     },
     "./buf-service": {
       "browser": "./dist/src/buf/service.js",
@@ -68,7 +56,6 @@
   "dependencies": {
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",

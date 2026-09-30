@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Compiler } from './compiler';
+import { Compiler } from './compiler.ts';
 
 describe('Compiler', () => {
   test('Basic', async () => {

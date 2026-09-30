@@ -14,8 +14,8 @@ import * as Credential from '@dxos/compute/Credential';
 
 import { GoogleCalendar } from '#apis';
 
-import { GoogleApiError } from '../errors';
-import { GoogleCredentials } from './google-credentials';
+import { GoogleApiError } from '../errors.ts';
+import { GoogleCredentials } from './google-credentials.ts';
 
 /**
  * The requirements the underlying {@link GoogleCalendar} request functions carry (auth token + HTTP

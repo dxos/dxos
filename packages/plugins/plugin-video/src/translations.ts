@@ -4,9 +4,9 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { Video } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Video } from '#types';
 
 export const translations = [
   {
@@ -36,6 +36,7 @@ export const translations = [
         'transcript.tab.label': 'Transcript',
         'summary.tab.label': 'Summary',
         'no-url.pending.label': 'Set a video URL to generate a transcript.',
+        'unsupported-url.message': 'Transcripts can be generated for YouTube videos only.',
         'transcribing.pending.label': 'Generating transcript…',
         'summarizing.pending.label': 'Generating summary…',
         'no-transcript.pending.label': 'A transcript is required to generate a summary.',

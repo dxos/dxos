@@ -47,8 +47,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@radix-ui/react-context": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",

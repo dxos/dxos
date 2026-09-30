@@ -5,7 +5,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { useContainerId } from './useContainerId';
+import { useContainerId } from './useContainerId.ts';
 
 describe('useContainerId', () => {
   test('prefixes a stable per-instance discriminator', () => {

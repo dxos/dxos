@@ -12,8 +12,8 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
 
-import { type PluginRecord, loadPlugins, savePlugins } from '../../storage';
-import { PluginInstallError, downloadAssets, resolveLocator } from '../../util';
+import { type PluginRecord, loadPlugins, savePlugins } from '../../storage.ts';
+import { PluginInstallError, downloadAssets, resolveLocator } from '../../util/index.ts';
 
 export const handler = Effect.fn(function* ({
   locator,
@@ -100,7 +100,7 @@ const confirmTrust = Effect.fn(function* ({ locator, dev, yes }: { locator: stri
     ].join('\n'),
   );
 
-  const trusted = yield* Prompt.confirm({ message: 'Do you trust this code?', initial: false });
+  const trusted = yield* Prompt.Confirm({ message: 'Do you trust this code?', initial: false });
   if (!trusted) {
     return yield* Effect.fail(
       new PluginInstallError({
@@ -114,17 +114,19 @@ const confirmTrust = Effect.fn(function* ({ locator, dev, yes }: { locator: stri
 export const add = Command.make(
   'add',
   {
-    locator: Args.string('locator').pipe(
+    locator: Args.String('locator').pipe(
       Args.withDescription('Manifest URL to install from, or a directory to install with --dev.'),
     ),
-    dev: Options.boolean('dev').pipe(
+    dev: Options.Boolean('dev').pipe(
+      Options.withDefault(false),
       Options.withDescription('Read the plugin in place from a directory, overriding a builtin of the same id.'),
     ),
-    enable: Options.boolean('enable').pipe(
+    enable: Options.Boolean('enable').pipe(
       Options.withDefault(true),
       Options.withDescription('Enable the plugin after installing it.'),
     ),
-    yes: Options.boolean('yes').pipe(
+    yes: Options.Boolean('yes').pipe(
+      Options.withDefault(false),
       Options.withAlias('y'),
       Options.withDescription('Confirm that you trust the plugin code, skipping the prompt.'),
     ),

@@ -48,7 +48,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);
-    const [view] = useObject(object.view);
+    const [viewRef] = useObject(object, 'view');
+    const [view] = useObject(viewRef);
     const queryAst = view?.query?.ast;
     const typeUri = getTypeURIFromQuery(queryAst);
     const schema = useType(db, typeUri);
@@ -67,16 +68,14 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {
-        void invokePromise(SpaceOperation.RemoveObjects, { objects });
+        void invokePromise(SpaceOperation.RemoveObjects, { objects }, { spaceId: db?.spaceId });
       },
-      [invokePromise],
+      [invokePromise, db],
     );
 
     const handleDeleteColumn = useCallback(
       (fieldId: string) => {
-        const liveView = object.view.target;
-        invariant(liveView);
-        void invokePromise(SpaceOperation.DeleteField, { view: liveView, fieldId });
+        void invokePromise(SpaceOperation.DeleteField, { view: object.view, fieldId });
       },
       [invokePromise, object.view],
     );

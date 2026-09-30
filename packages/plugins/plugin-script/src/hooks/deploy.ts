@@ -17,7 +17,7 @@ import { messageValence } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
+import { deployScript, getFunctionUrl, isScriptDeployed } from '../util/index.ts';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
 
@@ -28,7 +28,7 @@ export type DeployState = {
   error: string;
 };
 
-import { type ScriptToolbarStateStore } from './useToolbarState';
+import { type ScriptToolbarStateStore } from './useToolbarState.ts';
 
 export type CreateDeployOptions = {
   state: ScriptToolbarStateStore;
@@ -69,7 +69,14 @@ export const createDeploy = ({
       state.set('error', undefined);
       state.set('deploying', true);
 
-      const result = await deployScript({ script, client, db, fn, existingFunctionId });
+      const result = await deployScript({
+        script,
+        getEdgeHttpClient: () => client.edge.http,
+        ownerDid: client.halo.identity.get()?.did,
+        db,
+        fn,
+        existingFunctionId,
+      });
 
       if (!result.success) {
         log.catch(result.error);

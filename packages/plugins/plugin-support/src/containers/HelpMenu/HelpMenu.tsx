@@ -10,13 +10,13 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useConfig } from '@dxos/react-client';
-import { DropdownMenu, Flex, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, IconButton, Menu, useTranslation } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { SHORTCUTS_DIALOG } from '../../constants';
-import { downloadUrl } from './download';
+import { SHORTCUTS_DIALOG } from '../../constants.ts';
+import { downloadUrl } from './download.ts';
 
 // Mirrors the welcome plugin's ABOUT_DIALOG constant (composer-app/src/plugins/welcome);
 // inlined because composer-app is not a workspace dependency.
@@ -49,51 +49,51 @@ export const HelpMenu = () => {
   const downloadHref = downloadUrl(getEnvString(config, 'DX_ENVIRONMENT'));
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+    <Menu.Root>
+      <Menu.Trigger asChild>
         <StatusBar.Item>
           <IconButton variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content side='left' align='end'>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item asChild>
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Content side='left' align='end'>
+          <Menu.Viewport>
+            <Menu.Item asChild>
               <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
                 <Icon icon='ph--book-open--regular' size={4} />
                 <span>{t('docs.label')}</span>
               </a>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
+            </Menu.Item>
+            <Menu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
               <Icon icon='ph--keyboard--regular' size={4} />
               <span>{t('shortcuts.label')}</span>
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item asChild>
+            </Menu.Item>
+            <Menu.Separator />
+            <Menu.Item asChild>
               <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
                 <Icon icon='ph--discord-logo--regular' size={4} />
                 <span>{t('discord.label')}</span>
               </a>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item asChild>
+            </Menu.Item>
+            <Menu.Item asChild>
               <a href={GITHUB_URL} target='_blank' rel='noopener noreferrer'>
                 <Icon icon='ph--github-logo--regular' size={4} />
                 <span>{t('github.label')}</span>
               </a>
-            </DropdownMenu.Item>
+            </Menu.Item>
             {!isTauri() && (
-              <DropdownMenu.Item asChild>
+              <Menu.Item asChild>
                 <a href={downloadHref} target='_blank' rel='noopener noreferrer'>
                   <Icon icon='ph--download-simple--regular' size={4} />
                   <span>{t('download-apps.label')}</span>
                 </a>
-              </DropdownMenu.Item>
+              </Menu.Item>
             )}
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item onClick={openDialog(ABOUT_DIALOG)}>
+            <Menu.Separator />
+            <Menu.Item onClick={openDialog(ABOUT_DIALOG)}>
               <Icon icon='ph--info--regular' size={4} />
               <span>{t('about.label')}</span>
-            </DropdownMenu.Item>
+            </Menu.Item>
             {version && (
               <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
                 <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
@@ -108,11 +108,11 @@ export const HelpMenu = () => {
                 )}
               </Flex>
             )}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+          </Menu.Viewport>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Portal>
+    </Menu.Root>
   );
 };
 

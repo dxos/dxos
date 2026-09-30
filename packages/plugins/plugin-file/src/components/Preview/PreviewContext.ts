@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from 'react';
 
-import { type PdfApi, type PdfCanvasState, type PdfFit } from '../PdfCanvas';
+import { type PdfApi, type PdfCanvasState, type PdfFit } from '../PdfCanvas/index.ts';
 
 // Kept out of `Preview.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

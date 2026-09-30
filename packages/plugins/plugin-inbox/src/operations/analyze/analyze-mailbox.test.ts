@@ -25,7 +25,7 @@ import { Message, Organization, Person } from '@dxos/types';
 import { InboxOperationHandlerSet } from '#operations';
 import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
-import { inboxMailboxProcessors } from '../../capabilities/mailbox-processors';
+import { inboxMailboxProcessors } from '../../capabilities/mailbox-processors.ts';
 
 /** A service no layer in this test provides — the whole point of the stub below. */
 class MissingService extends Context.Service<MissingService, { readonly unused: true }>()(

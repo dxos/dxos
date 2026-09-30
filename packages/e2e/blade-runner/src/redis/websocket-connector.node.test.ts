@@ -8,10 +8,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
-import { ReplicantEnvImpl } from '../env';
-import { type ReplicantProps } from '../plan';
-import { WebSocketConnector } from './websocket-connector';
-import { WebSocketRedisProxy } from './websocket-redis-proxy';
+import { ReplicantEnvImpl } from '../env/index.ts';
+import { type ReplicantProps } from '../plan/index.ts';
+import { WebSocketConnector } from './websocket-connector.ts';
+import { WebSocketRedisProxy } from './websocket-redis-proxy.ts';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.

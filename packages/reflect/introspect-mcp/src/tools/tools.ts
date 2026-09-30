@@ -43,7 +43,7 @@ import {
   TOOL_METADATA,
 } from '@dxos/introspect-tools';
 
-import type { ToolLogger } from './logger';
+import type { ToolLogger } from './logger.ts';
 import {
   type ToolResult,
   shapeFindSymbol,
@@ -56,7 +56,7 @@ import {
   shapeListPlugins,
   shapeListSchemas,
   shapeListSurfaces,
-} from './shaping';
+} from './shaping.ts';
 
 /** Pull the list-options bag out of an args object before forwarding to a shaper. */
 const pickListOptions = (args: { limit?: number; compact?: boolean }): ListOptions => ({

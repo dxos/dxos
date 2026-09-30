@@ -15,7 +15,7 @@ import { runMailSync } from '@dxos/plugin-inbox/sync';
 import { JmapCredentials, JmapMailApi } from '#services';
 import { JmapOperation } from '#types';
 
-import { jmapMailSyncProvider } from './sync-provider';
+import { jmapMailSyncProvider } from './sync-provider.ts';
 
 const handler = JmapOperation.JmapSync.pipe(
   Operation.withHandler(({ connection, priority }) =>

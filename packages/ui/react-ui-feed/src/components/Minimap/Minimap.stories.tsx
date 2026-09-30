@@ -9,7 +9,7 @@ import { expect } from 'storybook/test';
 import { ListModel, Window, type WindowController, type WindowState } from '@dxos/react-ui-virtual';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Minimap } from './Minimap';
+import { Minimap } from './Minimap.tsx';
 
 /**
  * The minimap against a live window, because its whole job is to draw what the window publishes:

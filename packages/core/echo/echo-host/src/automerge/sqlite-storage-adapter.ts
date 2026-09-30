@@ -9,13 +9,9 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type MaybePromise } from '@dxos/util';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks';
-
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks/index.ts';
 
 export interface StorageAdapterDataMonitor {
   recordBytesStored(count: number): void;
@@ -25,7 +21,7 @@ export interface StorageAdapterDataMonitor {
 }
 
 export type SqliteStorageAdapterProps = {
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   callbacks?: SqliteStorageCallbacks;
   monitor?: StorageAdapterDataMonitor;
 };
@@ -39,7 +35,7 @@ export type SqliteStorageCallbacks = {
  * Stores automerge document chunks in the `automerge_chunks` table.
  */
 export class SqliteStorageAdapter implements StorageAdapterInterface {
-  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   readonly #callbacks?: SqliteStorageCallbacks;
   readonly #monitor?: StorageAdapterDataMonitor;
 
@@ -55,6 +51,11 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     return this.#open;
   }
 
+  /** The SQL runtime the chunks live in, for the data migrations that run beside them. */
+  get runtime(): RuntimeProvider.RuntimeProvider<SqlClient.SqlClient> {
+    return this.#runtime;
+  }
+
   async open(): Promise<void> {
     this.#open = true;
   }
@@ -64,14 +65,12 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
-   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
-   * `BEGIN` / `COMMIT` — rejected in workerd.
+   * Applies any migrations this database has not recorded yet.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
-    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
-  ).pipe(
-    Effect.provide(SqlTransaction.clientLayer),
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> = Migrator.make({})({
+    loader: Migrator.fromRecord(MIGRATIONS),
+    table: MIGRATIONS_TABLE,
+  }).pipe(
     // A malformed bundled manifest is a defect, not something a caller can recover from.
     Effect.catchTag('MigrationError', (error) => Effect.die(error)),
     Effect.asVoid,
@@ -128,8 +127,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const tx = yield* SqlTransaction.SqlTransaction;
-        yield* tx.withTransaction(
+        yield* sql.withTransaction(
           Effect.gen(function* () {
             for (const [key, data] of encoded) {
               yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${key}, ${data})`;
@@ -275,7 +273,7 @@ const SEPARATOR_UPPER_BOUND = String.fromCharCode(SEPARATOR.charCodeAt(0) + 1);
  * Excludes `prefix` itself, which callers select separately — {@link loadRange} must still return a
  * key stored at exactly the queried prefix (the `subduction-ids-<sid>` shape does this).
  */
-const descendantRange = (prefix: string): { lower: string; upper: string } => ({
+export const descendantRange = (prefix: string): { lower: string; upper: string } => ({
   lower: prefix + SEPARATOR,
   upper: prefix + SEPARATOR_UPPER_BOUND,
 });

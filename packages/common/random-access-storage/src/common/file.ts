@@ -7,7 +7,7 @@ import type { FileStat, RandomAccessStorage, RandomAccessStorageProperties } fro
 
 import { log } from '@dxos/log';
 
-import { type StorageType } from './storage';
+import { type StorageType } from './storage.ts';
 
 const MAX_STORAGE_OPERATION_TIME = 50;
 

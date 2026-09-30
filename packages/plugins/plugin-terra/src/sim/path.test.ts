@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { angleBetween, bearingTo, toUnit } from './geo';
-import { walkRoute, walkRouteSeries } from './path';
+import { angleBetween, bearingTo, toUnit } from './geo.ts';
+import { walkRoute, walkRouteSeries } from './path.ts';
 
 describe('walkRoute', () => {
   const a = toUnit({ lat: 0, lng: 0 });

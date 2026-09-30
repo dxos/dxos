@@ -13,6 +13,7 @@
   "author": "DXOS.org",
   "type": "module",
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -31,5 +32,10 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "fast-deep-equal": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/compute": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/network-manager": "workspace:*"
   }
 }

@@ -16,11 +16,11 @@ export const handler = Effect.fn(function* ({ file, storage }: { file: string; s
   const { json } = yield* CommandConfig;
   const fs = yield* FileSystem.FileSystem;
 
-  const { decodeProfileArchive } = yield* Effect.promise(() => import('@dxos/client-services'));
+  const { Storage } = yield* Effect.promise(() => import('@dxos/client-services'));
 
   const data = yield* fs.readFile(file);
 
-  const archive = decodeProfileArchive(data);
+  const archive = Storage.decodeProfileArchive(data);
 
   if (json) {
     yield* Console.log(
@@ -57,8 +57,11 @@ export const handler = Effect.fn(function* ({ file, storage }: { file: string; s
 export const inspect = Command.make(
   'inspect',
   {
-    file: Options.string('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    storage: Options.boolean('storage').pipe(Options.withDescription('List storage entries.')),
+    file: Options.String('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    storage: Options.Boolean('storage').pipe(
+      Options.withDefault(false),
+      Options.withDescription('List storage entries.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Inspect profile archive.'));

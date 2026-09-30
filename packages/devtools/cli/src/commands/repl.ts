@@ -7,8 +7,8 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Command from 'effect/unstable/cli/Command';
 
-import { getDispatcher } from '../dispatcher';
-import { closeLineReader, multilinePrompt } from '../util';
+import { getDispatcher } from '../dispatcher.ts';
+import { closeLineReader, multilinePrompt } from '../util/index.ts';
 
 /**
  * Splits a raw input line into argv tokens. Supports single/double-quoted

@@ -11,7 +11,7 @@ import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 

@@ -10,7 +10,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './list';
+import { handler } from './list.ts';
 
 describe('spaces list', () => {
   it('should list empty space list', () =>

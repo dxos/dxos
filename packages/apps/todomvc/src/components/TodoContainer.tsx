@@ -7,8 +7,8 @@ import React from 'react';
 import { type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 
-import { type Todo } from '../types';
-import { TodoItem } from './TodoItem';
+import { type Todo } from '../types.ts';
+import { TodoItem } from './TodoItem.tsx';
 
 export type TodoContainerProps = {
   todo: Ref.Ref<Todo>;

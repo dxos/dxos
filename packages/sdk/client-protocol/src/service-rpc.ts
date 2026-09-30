@@ -18,7 +18,7 @@ import { Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
+import { makeInProcessClient, normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -27,21 +27,21 @@ import {
   EdgeAgentService,
   FeedService,
   IdentityService,
+  InboxService,
   InvitationsService,
   LoggingService,
   NetworkService,
   QueryService,
   SpacesService,
   SystemService,
-  WorkerService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
-import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
+import { type RpcPort, RpcRouter, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { DEFAULT_CLIENT_CHANNEL } from './config';
-import * as Rpc from './Rpc';
-import { type ClientServices } from './service';
+import { DEFAULT_CLIENT_CHANNEL } from './config.ts';
+import * as Rpc from './Rpc.ts';
+import { type ClientServices } from './service.ts';
 
 export type MessagePortLike = MessagePort;
 
@@ -55,11 +55,6 @@ export type ClientServicesTransport = MessagePortLike | RpcPort;
 /**
  * All client service RPCs served over a single connection.
  * Rpc tags are prefixed with the {@link ClientServices} key (e.g. `DataService.subscribe`).
- *
- * {@link WorkerService} (the tab→worker control channel: `start`/`stop`) is merged in here rather
- * than served over a second port: it runs in the same tab→worker direction as the service RPCs, so
- * it multiplexes over the same app {@link MessagePort}. Only the reverse-direction `BridgeService`
- * (worker→tab) needs its own port.
  */
 export class ClientServicesRpcs extends RpcGroup.make().merge(
   SystemService.Rpcs,
@@ -73,9 +68,9 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   QueryService.Rpcs,
   FeedService.Rpcs,
   ContactsService.Rpcs,
+  InboxService.Rpcs,
   EdgeAgentService.Rpcs,
   DevtoolsHost.Rpcs,
-  WorkerService.Rpcs,
 ) {}
 
 type ClientServicesRpcUnion = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
@@ -97,13 +92,10 @@ export type ClientServicesHandlers = {
   QueryService: QueryService.Handlers;
   FeedService: FeedService.Handlers;
   ContactsService: ContactsService.Handlers;
+  InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
-  // Provided per-session by the worker session (drives readiness/origin/lock), not by the host.
-  WorkerService: WorkerService.Handlers;
 };
-
-const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
 const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'Void';
 
@@ -232,6 +224,52 @@ export const serveClientServicesOverIFrame = async ({
 };
 
 /**
+ * The rpc tag prefix a group was defined with (e.g. `DataService.`), read off its requests so a
+ * registration carries no second copy of the service name.
+ */
+const servicePrefix = <Rpcs extends EffectRpc.Any>(group: RpcGroup.RpcGroup<Rpcs>): string => {
+  const [tag] = [...group.requests.keys()];
+  invariant(tag, 'rpc group has no requests');
+  const index = tag.indexOf('.');
+  invariant(index > 0, `rpc tag is not service-prefixed: ${tag}`);
+  return tag.slice(0, index + 1);
+};
+
+/**
+ * Registers a service's handlers with the stack's {@link RpcRouter.RpcRouter}, which serves them
+ * over every attached transport (and in-process) for the life of the layer. Handler creation and
+ * registration stay separate layers: a provider merges this with the layer that supplies its tag,
+ * and no list of services is needed anywhere else.
+ */
+export const RegisterService = <Rpcs extends EffectRpc.Any, Identifier>(
+  rpc: RpcGroup.RpcGroup<Rpcs>,
+  tag: Context.Key<Identifier, RpcGroup.HandlersFrom<Rpcs>>,
+): Layer.Layer<never, never, Identifier | RpcRouter.RpcRouter | EffectRpc.ServicesServer<Rpc.Served<Rpcs>>> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      const handlers = normalizeHandlers(rpc, yield* tag);
+      yield* Rpc.serveOnRouter(servicePrefix(rpc), rpc, handlers, {
+        // The in-process surface calls the handlers directly, so it is built from the group as
+        // defined rather than from the middleware-wrapped one the transport serves.
+        inProcessClient: makeInProcessClient(rpc, handlers),
+      });
+    }),
+  );
+
+/**
+ * The whole in-process {@link ClientServicesRpc}, sourced from the services registered with the
+ * router rather than from an enumerated handler map.
+ */
+export const makeClientServicesRpcFromRouter: Effect.Effect<
+  ClientServicesRpc,
+  never,
+  RpcRouter.RpcRouter | Scope.Scope
+> =
+  // The router's client is keyed dynamically by rpc tag; `ClientServicesRpc` is the static view of
+  // the same record, and is what every consumer of the stack expects.
+  RpcRouter.client.pipe(Effect.map((client) => client as unknown as ClientServicesRpc));
+
+/**
  * Builds handler layers for every client service RPC, dispatching to the service implementations
  * resolved from `services` on each call.
  */
@@ -239,7 +277,7 @@ export const makeClientServicesHandlers = ({
   services,
   onRequest,
 }: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>> => {
-  const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
+  const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toServiceError }) : Effect.void;
 
   const handlers: Record<string, (payload: unknown) => unknown> = {};
   for (const [tag, rpc] of ClientServicesRpcs.requests) {
@@ -310,9 +348,9 @@ export interface ClientServicesRpc
     QueryService.Client,
     FeedService.Client,
     ContactsService.Client,
+    InboxService.Client,
     EdgeAgentService.Client,
-    DevtoolsHost.Client,
-    WorkerService.Client {}
+    DevtoolsHost.Client {}
 
 /**
  * Builds the effect-native {@link ClientServicesRpc} over a {@link MessagePort}.
@@ -410,7 +448,7 @@ export const makeRpcFromServices = (services: () => Partial<ClientServices>): Cl
         pbStreamToStream(() => resolveMethod()(request) as PbStream<unknown>);
     } else {
       service[methodName] = (request?: unknown) =>
-        Effect.tryPromise({ try: async () => resolveMethod()(request), catch: toError });
+        Effect.tryPromise({ try: async () => resolveMethod()(request), catch: toServiceError });
     }
   }
   return rpc as unknown as ClientServicesRpc;
@@ -430,12 +468,12 @@ export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, E
     try {
       source = open();
     } catch (err) {
-      emit.fail(toError(err));
+      emit.fail(toServiceError(err));
       return;
     }
     source.subscribe(
       (data) => void emit.single(data),
-      (err) => void (err ? emit.fail(toError(err)) : emit.end()),
+      (err) => void (err ? emit.fail(toServiceError(err)) : emit.end()),
     );
     return Effect.promise(async () => source.close());
   });
@@ -456,7 +494,7 @@ export const streamToPbStream = <T>(
       Effect.matchCauseEffect({
         onFailure: (cause) =>
           Effect.sync(() => {
-            const error = toError(Cause.squash(cause));
+            const error = toServiceError(Cause.squash(cause));
             if (Cause.hasInterruptsOnly(cause)) {
               close();
               return;

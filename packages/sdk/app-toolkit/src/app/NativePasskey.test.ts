@@ -4,7 +4,7 @@
 
 import { afterEach, describe, test, vi } from 'vitest';
 
-import * as NativePasskey from './NativePasskey';
+import * as NativePasskey from './NativePasskey.ts';
 
 /**
  * Build a minimal WebAuthn attestation object for testing.

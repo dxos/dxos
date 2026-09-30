@@ -18,15 +18,15 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
+import { Field, Icon, IconButton, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
-import * as Graph from '../AppGraph';
-import * as GraphBuilder from '../AppGraphBuilder';
-import * as CreateAtom from '../atoms';
-import { JsonTree } from './Tree';
+import * as Graph from '../AppGraph.ts';
+import * as GraphBuilder from '../AppGraphBuilder.ts';
+import * as CreateAtom from '../atoms.ts';
+import { JsonTree } from './Tree.tsx';
 
 const DEFAULT_PERIOD = 500;
 
@@ -213,15 +213,15 @@ const Controls = ({ children }: PropsWithChildren) => {
           onClick={() => setGenerating((generating) => !generating)}
         />
         <div className='relative' title='mutation period'>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               autoComplete='off'
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
-          </Input.Root>
+          </Field.Root>
           <Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
         <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
@@ -229,7 +229,6 @@ const Controls = ({ children }: PropsWithChildren) => {
           <Select.TriggerButton placeholder='Select value' />
           <Select.Portal>
             <Select.Content>
-              <Select.ScrollUpButton />
               <Select.Viewport>
                 {Object.keys(actionWeights).map((action) => (
                   <Select.Option key={action} value={action}>
@@ -237,8 +236,6 @@ const Controls = ({ children }: PropsWithChildren) => {
                   </Select.Option>
                 ))}
               </Select.Viewport>
-              <Select.ScrollDownButton />
-              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>

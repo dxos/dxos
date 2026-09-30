@@ -35,7 +35,7 @@ export const sync = Command.make(
   'sync',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    spaceTimeout: Options.integer('spaceTimeout').pipe(
+    spaceTimeout: Options.Int('spaceTimeout').pipe(
       Options.withDescription('The timeout to wait for the space to be available in milliseconds.'),
       Options.withDefault(5000),
     ),

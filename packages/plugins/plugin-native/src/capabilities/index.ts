@@ -16,7 +16,7 @@ import { NativeCapabilities, NativeEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const NativeSettings = AppCapability.settings(() => import('./settings'), {
+export const NativeSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [NativeCapabilities.Settings],
 });
@@ -31,7 +31,7 @@ export const Ollama = Capability.lazyModule(
     provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.OllamaManager],
     activatesOn: ActivationEvents.Startup,
   },
-  () => import('./ollama'),
+  () => import('./ollama.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
@@ -39,13 +39,13 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
 export const SpotlightListener = Capability.lazyModule(
   'SpotlightListener',
   { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
-  () => import('./spotlight-listener'),
+  () => import('./spotlight-listener.ts'),
 );
 export const Translations = AppCapability.translations(translations);
 export const Updater = Capability.lazyModule(
@@ -55,5 +55,5 @@ export const Updater = Capability.lazyModule(
     provides: [NativeCapabilities.UpdateManager],
     activatesOn: NativeEvents.Start,
   },
-  () => import('./updater'),
+  () => import('./updater.ts'),
 );

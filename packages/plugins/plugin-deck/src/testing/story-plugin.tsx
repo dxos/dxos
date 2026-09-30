@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useMemo } from 'react';
 
@@ -23,7 +24,7 @@ import { useConnections } from '@dxos/plugin-graph/hooks';
 import { random } from '@dxos/random';
 import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading } from '@dxos/react-ui/testing';
 import { Position } from '@dxos/util';
 
@@ -36,8 +37,8 @@ random.seed(1234);
 // TODO(burdon): Show/hide companions.
 // TODO(burdon): Companion width.
 
-const storyDeckSettings = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckSettings = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableNativeRedirect: false,
@@ -47,16 +48,16 @@ const storyDeckSettings = Capability.makeModule(() =>
   }),
 );
 
-const storyDeckState = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckState = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const defaultStoredDeckState: DeckSchema.StoredDeckState = {
       sidebarState: 'expanded',
       complementarySidebarState: 'collapsed',
       complementarySidebarPanel: undefined,
-      activeDeck: 'default',
-      previousDeck: 'default',
+      activeDeck: STORY_WORKSPACE_PATH,
+      previousDeck: STORY_WORKSPACE_PATH,
       decks: {
-        default: { ...DeckSchema.defaultDeck },
+        [STORY_WORKSPACE_PATH]: { ...DeckSchema.defaultDeck },
       },
     };
 
@@ -75,6 +76,7 @@ const storyDeckState = Capability.makeModule(() =>
       toasts: [],
       currentUndoId: undefined,
       scrollIntoView: undefined,
+      open: {},
     };
 
     const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(
@@ -86,25 +88,35 @@ const storyDeckState = Capability.makeModule(() =>
       const ephemeral = get(ephemeralAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       return {
-        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.active,
-        inactive: deck.inactive,
-        scrollIntoView: ephemeral.scrollIntoView,
+        active: open.active,
+        inactive: open.inactive,
+        scrollIntoView: ephemeral.scrollIntoView?.id,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, Error>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
+
+/** The workspace the story items live under. */
+const STORY_WORKSPACE = 'stories';
+
+/** Graph id of the story workspace, which is also the story deck's id. */
+export const STORY_WORKSPACE_PATH = `${GraphNode.RootId}/${STORY_WORKSPACE}`;
+
+const STORY_ITEM_KEY = 'item';
 
 export type StoryItem = { id: string; title: string; children?: StoryItem[] };
 
@@ -126,7 +138,7 @@ export const STORY_ITEMS = Array.from({ length: 5 }, () => createItem());
  * Graph id of a top-level story item. The graph addresses a node by its path from the root, so the bare
  * {@link STORY_ITEMS} id names no node and opening it yields a plank that never resolves.
  */
-export const storyItemId = (index: number): string => `${GraphNode.RootId}/${STORY_ITEMS[index].id}`;
+export const storyItemId = (index: number): string => `${STORY_WORKSPACE_PATH}/${STORY_ITEMS[index].id}`;
 
 /**
  * Maps a nested {@link StoryItem} tree to graph nodes so `AppGraph.getConnections` / `useConnections` see children.
@@ -189,18 +201,12 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
           return (
             // Stamped so a host's play test can assert the companion body resolved, not just its tab.
             <div className='contents' data-testid='story.companion' data-companion-variant={variant}>
-              <Syntax.Root
+              <JsonHighlighter
                 data={{
                   primaryItem: companionTo,
                   companion: { data: subject, properties, variant },
                 }}
-              >
-                <Syntax.Content>
-                  <Syntax.Viewport>
-                    <Syntax.Code />
-                  </Syntax.Viewport>
-                </Syntax.Content>
-              </Syntax.Root>
+              />
             </div>
           );
         },
@@ -215,12 +221,27 @@ const storyGraphBuilder = Capability.inlineModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
-        id: 'storyItems',
+        id: 'storyWorkspace',
         match: GraphNodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppGraphNode.make({
+              id: STORY_WORKSPACE,
+              type: 'story-workspace',
+              data: null,
+              properties: { label: 'Stories', icon: 'ph--folder--regular' },
+            }),
+          ]),
+      }),
+      AppGraphBuilder.createExtension({
+        id: 'storyItems',
+        match: GraphNodeMatcher.whenId(STORY_WORKSPACE_PATH),
+        url: { key: STORY_ITEM_KEY, kind: 'item', path: [] },
         connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
       }),
       AppGraphBuilder.createExtension({
         id: 'storyItemCompanions',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenNodeType('story-item'),
         connector: (node) =>
           Effect.succeed([
@@ -256,7 +277,12 @@ export const DeckStoryPlugin = Plugin.define(pluginMeta).pipe(
   }),
   Plugin.addModule({
     id: 'story-deck-state',
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Projection,
+      AppCapabilities.Layout,
+    ],
     activate: storyDeckState,
   }),
   Plugin.addModule(OperationHandler),
@@ -274,7 +300,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   const layout = useLayout();
   const { invokePromise } = useOperationInvoker();
 
-  const items = useConnections(graph, GraphNode.RootId, 'child');
+  const items = useConnections(graph, STORY_WORKSPACE_PATH, 'child');
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
@@ -308,11 +334,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
   const connections = useConnections(graph, id, 'child');
-  const items = useMemo(
-    () =>
-      connections.filter((node) => !AppGraphNode.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
-    [connections],
-  );
+  const items = useMemo(() => connections.filter((node) => !AppGraphNode.isActionLike(node)), [connections]);
 
   return (
     <Listbox.Root>

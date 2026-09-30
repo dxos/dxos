@@ -1,0 +1,171 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+import React, { useEffect, useMemo, useState } from 'react';
+
+import { generateName } from '@dxos/display-name';
+import { Format } from '@dxos/echo/Format';
+import { type PublicKey } from '@dxos/keys';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SubscribeToFeedBlocksResponse_Block } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
+import { type Client, useClient } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { type Space } from '@dxos/react-client/echo';
+import { useContacts } from '@dxos/react-client/halo';
+import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+
+import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../../components/index.ts';
+import { DataSpaceSelector } from '../../../../containers/index.ts';
+import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../../hooks/index.ts';
+import { assertionTypeName } from '../../../../util/index.ts';
+import { type ArticleProps } from '../../types.ts';
+
+type FeedTableRow = SubscribeToFeedBlocksResponse_Block & {
+  type: string;
+  issuer: string;
+};
+
+export const FeedsArticle = ({ role, ...props }: ArticleProps & { space?: Space }) => {
+  const devtoolsHost = useDevtools();
+  const setContext = useDevtoolsDispatch();
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
+  const feedKey = state.feedKey;
+  const feedMessages = useFeedMessages({ feedKey, maxBlocks: 1000 }).reverse();
+  const contacts = useContacts();
+  const client = useClient();
+
+  const [refreshCount, setRefreshCount] = useState(0);
+  const feedKeys = [
+    ...(space?.internal.data.pipeline?.controlFeeds ?? []),
+    ...(space?.internal.data.pipeline?.dataFeeds ?? []),
+  ].map(requirePublicKey);
+  const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
+  const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
+  const tableRows = mapToRows(client, space?.key, contacts, feedMessages);
+
+  // TODO(burdon): Not updated in realtime.
+  // Hack to select and refresh first feed.
+  const key = feedKey ?? feedKeys[0];
+  useEffect(() => {
+    if (key && !feedKey) {
+      handleSelect(key);
+      setTimeout(() => {
+        handleRefresh();
+      });
+    }
+  }, [key]);
+
+  useEffect(() => {
+    if (feedKey && feedKeys.length > 0 && !feedKeys.find((feed) => feed.equals(feedKey))) {
+      handleSelect(feedKeys[0]);
+    }
+  }, [JSON.stringify(feedKeys), feedKey]); // TODO(burdon): Avoid stringify.
+
+  const handleSelect = (feedKey?: PublicKey) => {
+    setContext((state) => ({ ...state, feedKey }));
+    setTimeout(() => {
+      handleRefresh();
+    });
+  };
+
+  const handleRefresh = () => {
+    setRefreshCount(refreshCount + 1);
+  };
+
+  const getLabel = (key: PublicKey) => {
+    const feed = feeds?.find((feed) => feed.feedKey.equals(key));
+    const feedLength = feed ? ` (${feed.length})` : '';
+    return `${formatIdentity(client, contacts, feed?.owner)}${feedLength}`;
+  };
+
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'type', format: Format.TypeFormat.String },
+      { name: 'issuer', format: Format.TypeFormat.String },
+      { name: 'feedKey', format: Format.TypeFormat.JSON, size: 180 },
+      { name: 'seq', format: Format.TypeFormat.Number, size: 80 },
+    ],
+    [],
+  );
+
+  const tableData = useMemo(() => {
+    return tableRows.map((row) => ({
+      id: `${requirePublicKey(row.feedKey).toHex()}-${row.seq}`,
+      ...row,
+    }));
+  }, [tableRows]);
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          {!props.space && <DataSpaceSelector />}
+          <PublicKeySelector
+            placeholder='Select feed'
+            getLabel={getLabel}
+            keys={feedKeys}
+            value={key}
+            onChange={handleSelect}
+          />
+
+          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div className='h-full'>
+          <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
+          <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
+const mapToRows = (
+  client: Client,
+  spaceKey: PublicKey | undefined,
+  contacts: Contact[],
+  blocks: SubscribeToFeedBlocksResponse_Block[],
+): FeedTableRow[] => {
+  return blocks.map((block) => {
+    // `FeedMessage.Payload` is a oneof, so the credential arrives as a tagged case rather than a
+    // field that is simply absent.
+    const payload = block.data?.payload?.payload;
+    const credential = payload?.case === 'credential' ? payload.value.credential : undefined;
+    const type = assertionTypeName(credential);
+    const issuer = toPublicKey(credential?.issuer);
+    const signer = toPublicKey(credential?.proof?.signer);
+    const issuerKeys = issuer && signer ? { identity: issuer, device: signer } : undefined;
+    return {
+      type,
+      issuer: issuerKeys ? formatIdentity(client, contacts, issuerKeys) : 'unknown',
+      ...block,
+    };
+  });
+};
+
+const formatIdentity = (
+  client: Client,
+  contacts: Contact[],
+  identityInfo: DevtoolsHost.SubscribeToFeedsResponse.FeedOwner | undefined,
+): string => {
+  if (!identityInfo) {
+    return 'unknown';
+  }
+  let identityName;
+  if (toPublicKey(client.halo.identity.get()?.identityKey)?.equals(identityInfo.identity)) {
+    identityName = toPublicKey(client.halo.device?.deviceKey)?.equals(identityInfo.device)
+      ? 'this device'
+      : 'my device';
+  } else {
+    const ownerContact =
+      identityInfo && contacts.find((contact) => toPublicKey(contact.identityKey)?.equals(identityInfo.identity));
+    identityName = ownerContact?.profile?.displayName ?? generateName(identityInfo.identity.toHex());
+  }
+  return `${identityName} (${identityInfo.device.truncate()})`;
+};

@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import type * as SchemaRepresentation from 'effect/SchemaRepresentation';
 import * as Stream from 'effect/Stream';
 import * as Tool from 'effect/unstable/ai/Tool';
 import type * as Toolkit from 'effect/unstable/ai/Toolkit';
@@ -18,11 +19,12 @@ import { OpaqueToolkit } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
 import { Filter, Ref, Registry } from '@dxos/echo';
+import * as EchoJsonSchema from '@dxos/echo/JsonSchema';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { RefFromLLM } from '../util';
+import { RefFromLLM } from '../util/index.ts';
 
 export const makeToolResolverFromOperations = <R = never>({
   toolkit: extraToolkit = OpaqueToolkit.empty,
@@ -244,12 +246,12 @@ const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
  * Parameter schema for an operation that takes no input.
  *
  * Spelled as a record with an uninhabited value type rather than `Schema.Struct({})` because v4
- * emits an empty struct as `{anyOf: [{type: 'object'}, {type: 'array'}]}`, whose object branch
- * declares no `additionalProperties`. A provider's strict tool mode rejects that outright
+ * emits an empty struct as `{not: {type: 'null'}}` — the bare `object` keyword, which states
+ * neither `type` nor `additionalProperties`. A provider's strict tool mode rejects that outright
  * ("For 'object' type, 'additionalProperties' must be explicitly set to false"), and one bad tool
  * fails the whole request. A `Never` value type admits no keys, so this emits
  * `{type: 'object', additionalProperties: false}` — the same shape, and valid under strict.
- * A JSON-schema annotation cannot express this: v4 honours only a fixed annotation whitelist.
+ * A JSON-schema annotation cannot express this: v4 honours such an annotation only on a check.
  */
 const EMPTY_PARAMETERS_SCHEMA = Schema.Record(Schema.String, Schema.Never);
 
@@ -287,6 +289,19 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
 };
 
 /**
+ * Keeps refs inline rather than hoisting them into `$defs`.
+ *
+ * The default policy extracts anything carrying an `identifier`, and `Ref` carries one so its
+ * rejection messages can name the target type. Without this a ref parameter reaches the model as a
+ * `$ref` into `$defs` instead of the described URI string it used to be. Only refs are declined, so
+ * a recursive parameter keeps the name it was recorded under.
+ */
+const REFERENCES_INLINE = {
+  referencePolicy: ({ identifier }: SchemaRepresentation.ReferencePolicyInput) =>
+    Ref.isRefIdentifier(identifier) ? undefined : identifier,
+} as const;
+
+/**
  * Emits the JSON Schema the model is shown for a tool's parameters.
  *
  * v4 renders `Schema.optional(T)` as `anyOf: [T, null]` while its decoder accepts an absent key but
@@ -298,9 +313,16 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
 const toModelJsonSchema = (schema: Schema.Codec<unknown, unknown>): JsonSchema.JsonSchema => {
   // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
   // record; keeping only the root would advertise a dangling reference to the model.
-  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema);
+  // Closed structs, as the recorded corpus states them; Effect's default leaves them open.
+  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema, {
+    ...REFERENCES_INLINE,
+    onExcessProperty: 'error',
+  });
   const document = Object.keys(definitions).length > 0 ? { ...root, $defs: definitions } : root;
-  return statePropertyOpenness(dropNullBranches(document, new Set(asStringArray(schema))));
+  // Folded first: once openness sets `additionalProperties`, the fold skips the node.
+  return statePropertyOpenness(
+    EchoJsonSchema.foldRestSignatures(dropNullBranches(document, new Set(asStringArray(schema)))),
+  );
 };
 
 /**
@@ -332,7 +354,7 @@ const statePropertyOpenness = (node: JsonSchema.JsonSchema): JsonSchema.JsonSche
 
 /** Property names the schema marks required; only optional properties carry the spurious null branch. */
 const asStringArray = (schema: Schema.Codec<unknown, unknown>): readonly string[] => {
-  const { required } = Schema.toJsonSchemaDocument(schema).schema;
+  const { required } = Schema.toJsonSchemaDocument(schema, REFERENCES_INLINE).schema;
   return Array.isArray(required) ? required.map(String) : [];
 };
 

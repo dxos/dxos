@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './vec2';
+export * from './vec2.ts';

@@ -16,7 +16,7 @@ import { CallsCapabilities, CallsEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [CallsCapabilities.Manager],
   // The manager provider rides the client-initialized event, so the feature demand alone is
   // not enough for the pull to find it.
@@ -35,9 +35,9 @@ export const CallManager = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.AtomRegistry, ClientCapabilities.IdentityService],
     provides: [CallsCapabilities.Manager],
     activatesOn: ClientEvents.Initialized,
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
-  () => import('./call-manager'),
+  () => import('./call-manager.ts'),
 );
 export const CallTransport = Capability.lazyModule(
   'CallTransport',
@@ -45,17 +45,17 @@ export const CallTransport = Capability.lazyModule(
     requires: [ClientCapabilities.Client],
     provides: [CallsCapabilities.CallTransportProvider],
     activatesOn: ClientEvents.Initialized,
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
-  () => import('./call-transport'),
+  () => import('./call-transport.ts'),
 );
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.ts'), {
   activatesOn: ClientEvents.Initialized,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.activeCall', 'org.dxos.role.devtoolsOverview'],
 });
-export const Translations = AppCapability.translations(translations, { environments: ['node'] });
+export const Translations = AppCapability.translations(translations, { environments: ['browser', 'node', 'tauri'] });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',

@@ -31,8 +31,8 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
         const binding = yield* Effect.promise(() => Branch.bind(markdownDoc, branch));
         try {
           let newContent = '';
-          Obj.update(binding.object, () => {
-            newContent = Text.apply(binding.object, 'content', edits);
+          Obj.update(binding.object, (object) => {
+            newContent = Text.apply(object, 'content', edits);
           });
           return { applied: edits.length, length: newContent.length };
         } finally {
@@ -42,7 +42,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
 
       // `Text.apply` treats a missing/empty `oldString` as append-to-end, matching the Update schema.
       let newContent = '';
-      Obj.update(content, () => {
+      Obj.update(content, (content) => {
         newContent = Text.apply(content, 'content', edits);
       });
 

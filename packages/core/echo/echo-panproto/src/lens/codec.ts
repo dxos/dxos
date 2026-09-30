@@ -6,8 +6,8 @@ import type * as Schema from 'effect/Schema';
 
 import { Obj, type Type } from '@dxos/echo';
 
-import { plan as compile, readSource } from './mapping';
-import { getOverlay } from './overlay';
+import { plan as compile, readSource } from './mapping.ts';
+import { getOverlay } from './overlay.ts';
 import {
   type AnyLens,
   type CodedMapping,
@@ -16,7 +16,7 @@ import {
   type Plan,
   type ResolvedEntry,
   type Write,
-} from './types';
+} from './types.ts';
 
 const read = (obj: Obj.Unknown | Obj.Snapshot) => (property: string) => Obj.getValue(obj, [property]);
 

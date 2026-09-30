@@ -4,7 +4,7 @@
 
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 /**
  * Hook to initialize atoms with values

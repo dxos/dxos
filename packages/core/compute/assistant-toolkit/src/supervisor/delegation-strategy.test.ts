@@ -3,27 +3,30 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as AiError from 'effect/unstable/ai/AiError';
+import { test } from 'vitest';
 
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { getSession } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
-import { AgentHandlers } from '../operations';
-import { DelegationSkill, DelegationSkillHandlers } from '../skills';
-import { DelegateTask } from '../skills/delegation/operations/definitions';
-import { makeDelegationStrategy } from './delegation-strategy';
+import { AgentHandlers } from '../operations/index.ts';
+import { DelegateTask } from '../skills/delegation/operations/definitions.ts';
+import { DelegationSkill, DelegationSkillHandlers } from '../skills/index.ts';
+import { isSubAgentTask, makeDelegationStrategy } from './delegation-strategy.ts';
 
 const { text, toolCall, promptIncludes, scriptedAiService } = ScriptedLanguageModel;
 
@@ -114,6 +117,49 @@ const FailingTestLayer = AssistantTestLayer({
   ],
 });
 
+const USAGE_LIMIT = 'You have reached your specified API usage limits.';
+
+// The supervisor's model request fails outright, as a provider error (e.g. a usage limit) does.
+const TurnFailingTestLayer = AssistantTestLayer({
+  agent: { delegationStrategy: makeDelegationStrategy() },
+  aiService: scriptedAiService([
+    {
+      fail: new AiError.AiError({
+        module: 'AnthropicClient',
+        method: 'createMessageStream',
+        reason: new AiError.UnknownError({ description: USAGE_LIMIT }),
+      }),
+    },
+  ]),
+  operationHandlers: [DelegationSkillHandlers, AgentHandlers],
+  skills: [DelegationSkill.make()],
+  types: [Agent.Agent, Task.Task, Chat.Chat, AiContext.Binding, Message.Message, Project.Project],
+});
+
+/** A chat's checklist as the three kinds of task it can hold, for the failure paths below. */
+const addChecklist = (chat: Chat.Chat) =>
+  Effect.gen(function* () {
+    // Delegated to the chat itself: its own agent is working it.
+    const held = yield* Database.add(
+      Task.make({
+        title: 'Draft the notice',
+        status: 'started',
+        assignee: { role: 'assistant', subject: Ref.make(chat) },
+      }),
+    );
+    // Run by a sub-agent the supervisor spawned, which may outlive the turn.
+    const delegated = yield* Database.add(
+      Task.make({ title: 'Compute 10 factorial', status: 'started', assignee: { role: 'assistant' } }),
+    );
+    // Not begun.
+    const queued = yield* Database.add(Task.make({ title: 'Send the notice', status: 'todo' }));
+    Obj.update(chat, (chat) => {
+      chat.tasks.push(Ref.make(held), Ref.make(delegated), Ref.make(queued));
+    });
+    yield* Database.flush();
+    return { held, delegated, queued };
+  });
+
 describe('makeDelegationStrategy', () => {
   it.effect(
     'replies immediately, delegates to a sub-agent, and folds the result back',
@@ -137,7 +183,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         const ephemeral = yield* collectEphemeral(session);
 
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
@@ -191,7 +237,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(chat);
+        const session = yield* AgentService.getSession(chat);
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
         yield* session.waitForCompletion();
 
@@ -209,4 +255,90 @@ describe('makeDelegationStrategy', () => {
     ),
     { timeout: 30_000 },
   );
+});
+
+describe('makeDelegationStrategy.onTurnFailed', () => {
+  it.effect(
+    'fails the tasks the conversation holds, and leaves sub-agent and queued tasks alone',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        yield* Database.flush();
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const { held, delegated, queued } = yield* addChecklist(chat);
+
+        const strategy = makeDelegationStrategy();
+        invariant(strategy.onTurnFailed, 'Expected the supervisor to handle a failed turn.');
+        yield* strategy.onTurnFailed(chat, Cause.fail(new Error(USAGE_LIMIT)));
+
+        expect(held.status).toBe('failed');
+        // Recorded like any other status change, so the task's activity says what happened and why.
+        const entry = held.history?.at(-1);
+        invariant(entry?.event === 'updated', 'Expected a status change in the task history.');
+        expect(entry.description).toContain(USAGE_LIMIT);
+        // A spawned sub-agent is still running; its own exit decides its task.
+        expect(delegated.status).toBe('started');
+        expect(queued.status).toBe('todo');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the task a chat holds fails when the model request fails',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        yield* Database.flush();
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const { held, queued } = yield* addChecklist(chat);
+
+        const session = yield* AgentService.getSession(chat);
+        yield* session.submitPrompt('Work on the tasks.');
+        yield* session.waitForCompletion().pipe(Effect.exit);
+
+        // Not left `started`: nothing is working it any more, and the reader must see that.
+        expect(held.status).toBe('failed');
+        expect(queued.status).toBe('todo');
+      },
+      Effect.provide(TurnFailingTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'the sweep after a turn leaves a task the chat itself holds alone',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        yield* Database.flush();
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const { held } = yield* addChecklist(chat);
+
+        // A turn that ends with the work unfinished — the agent stopped to ask a question.
+        yield* makeDelegationStrategy().reconcile(chat, new Set());
+        expect(held.status).toBe('started');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+describe('isSubAgentTask', () => {
+  test('is only a bare assistant assignee: a subject names a session that already owns the task', ({ expect }) => {
+    const chat = Chat.make({ feed: Ref.make(Feed.make()) });
+    expect(isSubAgentTask(Task.make({ title: 'unassigned' }))).toBe(false);
+    expect(isSubAgentTask(Task.make({ title: 'person', assignee: { name: 'Alice' } }))).toBe(false);
+    expect(isSubAgentTask(Task.make({ title: 'delegated', assignee: { role: 'assistant' } }))).toBe(true);
+    // The planning tool's self-assignment: started by this conversation's agent, not a spawn request.
+    expect(isSubAgentTask(Task.make({ title: 'self', assignee: { role: 'assistant', subject: Ref.make(chat) } }))).toBe(
+      false,
+    );
+  });
 });

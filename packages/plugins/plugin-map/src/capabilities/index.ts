@@ -14,28 +14,28 @@ import { MapCapabilities, MapEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [MapCapabilities.MarkerProvider],
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['node'],
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
+  environments: ['browser', 'node', 'tauri'],
 });
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
-  environments: ['node'],
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['browser', 'node', 'tauri'],
 });
 // Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
 // `useMemo`/`useQuery`/`useObject` in its own body.
 export const MarkerProvider = Capability.lazyModule(
   'MarkerProvider',
-  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
-  () => import('./marker-provider'),
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: ['browser', 'tauri'] },
+  () => import('./marker-provider.tsx'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.map.role.map',
     'org.dxos.role.article',
@@ -44,14 +44,14 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.section',
   ],
 });
-export const MapSettings = AppCapability.settings(() => import('./settings'), {
+export const MapSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [MapCapabilities.Settings],
 });
 export const MapState = Capability.lazyModule(
   'MapState',
   { provides: [MapCapabilities.State], activatesOn: MapEvents.Start },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

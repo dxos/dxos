@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3 } from '../../engine';
-import { angleBetween, slerp, toGeo } from '../../sim';
+import { type Vec3 } from '../../engine/index.ts';
+import { angleBetween, slerp, toGeo } from '../../sim/index.ts';
 
 /**
  * Equirectangular map units: one unit is one degree, with the origin at 180°W/90°N. Using degrees

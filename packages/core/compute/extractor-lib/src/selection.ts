@@ -5,7 +5,7 @@
 import { type IdentityIndex } from '@dxos/extractor';
 import { type Message, Organization } from '@dxos/types';
 
-import { normalizeEmail } from './identity';
+import { normalizeEmail } from './identity.ts';
 
 /**
  * Local parts that are never a person: automated senders and bounce handlers. The separator inside

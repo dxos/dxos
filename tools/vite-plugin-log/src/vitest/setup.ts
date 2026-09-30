@@ -4,7 +4,7 @@
 
 import { afterAll } from 'vitest';
 
-import { closeTestLogSink, ensureTestLogSink } from './sink';
+import { closeTestLogSink, ensureTestLogSink } from './sink.ts';
 
 ensureTestLogSink();
 

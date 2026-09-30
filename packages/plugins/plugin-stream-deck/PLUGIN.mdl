@@ -21,9 +21,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -167,38 +167,38 @@ feat F-4: The bridge
 ## Acceptance
 
 ```mdl
-test T-1: Favorites appear in a stable order
+scenario T-1: Favorites appear in a stable order
   given: a space with objects tagged `favorite`, one of them added after the others
   then: the keys are ordered by label, and adding a favorite does not reorder the others by chance
 ```
 
 ```mdl
-test T-2: A provider tag does not masquerade as the favorite tag
+scenario T-2: A provider tag does not masquerade as the favorite tag
   given: a tag labelled "favorite" carrying a foreign key
   then: no favorites are shown
 ```
 
 ```mdl
-test T-3: A running task takes over the strip
+scenario T-3: A running task takes over the strip
   given: a pending or running progress task and a space with statistics
   then: the first segment shows the task with a bar, and the remaining segments are cleared
 ```
 
 ```mdl
-test T-4: The device shows the offline state when Composer is absent
+scenario T-4: The device shows the offline state when Composer is absent
   given: the device plugin running with no client connected
   then: every placed key and dial renders the offline state
 ```
 
 ```mdl
-test T-5: A press reaches Composer with its slot
+scenario T-5: A press reaches Composer with its slot
   given: two Favorite keys placed at columns 0 and 1
   when: the key at column 1 is pressed
   then: Composer receives a keyDown for slot 1 and opens the object that key was showing
 ```
 
 ```mdl
-test T-6: An incompatible device plugin does not loop
+scenario T-6: An incompatible device plugin does not loop
   given: a device plugin announcing a different protocol version
   then: the bridge reports `incompatible` and makes no further connection attempts
 ```
@@ -207,11 +207,11 @@ test T-6: An incompatible device plugin does not loop
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: A favorite appears on the virtual deck
+test QA-1: A favorite appears on the virtual deck
   desc: |
     The part of the round-trip observable without Stream Deck hardware: tag an object as a
     favorite and confirm it renders on `VirtualStreamDeck`, the on-screen replica that is sent
@@ -226,10 +226,10 @@ flow QA-1: A favorite appears on the virtual deck
     - plugin-stream-deck is enabled — it is `isDev`-gated both for availability and in defaults
       (`plugin-defs.tsx`: `isDev && StreamDeckPlugin.make()`), so it is OFF outside dev builds
     - document: a Document named "QA Favorite" already exists in the space, with no `favorite`
-      tag on it — ABORT rather than tagging or deleting one this flow did not create
+      tag on it — ABORT rather than tagging or deleting one this test did not create
     - favoriteTag: a keyless Tag object labelled "favorite" (query for one before creating
       another, per `SpaceOperation.AddTag`'s own guidance)
-  test:
+  steps:
     - name: Tag the document as a favorite
       do: Right-click "QA Favorite" in the navtree and choose "Add to favorites" (or apply the
         `favorite` tag from the tag picker).
@@ -258,7 +258,7 @@ flow QA-1: A favorite appears on the virtual deck
 ```
 
 ```mdl
-flow QA-2: Real hardware round-trip
+test QA-2: Real hardware round-trip
   desc: The device-attached path — a real Stream Deck key press reaching Composer.
   actors: human
   covers: [F-4.1, F-4.5, T-5]
@@ -267,7 +267,7 @@ flow QA-2: Real hardware round-trip
     - the `@dxos/composer-stream-deck` Elgato plugin is installed and a physical Stream Deck is
       attached
     - Composer is running with plugin-stream-deck enabled and has at least one favorite placed
-  test:
+  steps:
     - name: Press a physical key
       do: Press the key showing a favorite on the physical device.
       expect: Composer receives the keyDown for that slot and opens the object that key was
@@ -275,7 +275,7 @@ flow QA-2: Real hardware round-trip
       blocked: |
         Requires physical Stream Deck hardware and the separate Elgato-hosted process holding the
         HID device (F-4.1) — neither the debug port nor this repo's dev tooling can simulate a
-        HID key press. Per Execution Rule 9, the flow's status is `blocked`, not `failing`.
+        HID key press. Per Execution Rule 9, the test's status is `blocked`, not `failing`.
   after:
     - name: No teardown
       do: No ECHO state is created by a key press; nothing to undo.
@@ -291,7 +291,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -302,7 +302,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -311,8 +311,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]
@@ -323,7 +323,7 @@ ext test
 
 ```mdl
 ext component
-  uri: dxos.spec/ext/component@1.0
+  uri: org.dxos.mdl.component@1.0
   desc: A UI component with a described purpose.
   fields:
     desc?: Prose

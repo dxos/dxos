@@ -8,8 +8,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { Suspense } from 'solid-js';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { defaultRegistry } from '../registry';
-import { useAtomSuspense } from './useAtomSuspense';
+import { defaultRegistry } from '../registry.ts';
+import { useAtomSuspense } from './useAtomSuspense.ts';
 
 describe('useAtomSuspense', () => {
   beforeEach(() => {

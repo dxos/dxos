@@ -15,8 +15,8 @@ import { userEvent } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { runCommand, waitForTerminal } from '../../testing';
-import { Terminal } from './Terminal';
+import { runCommand, waitForTerminal } from '../../testing.ts';
+import { Terminal } from './Terminal.tsx';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -31,16 +31,16 @@ const RESET = '\x1b[0m';
 const greet = Command.make(
   'greet',
   {
-    name: Args.string('name'),
-    loud: Options.boolean('loud').pipe(Options.withDescription('Shout the greeting.')),
+    name: Args.String('name'),
+    loud: Options.Boolean('loud').pipe(Options.withDefault(false), Options.withDescription('Shout the greeting.')),
   },
   ({ name, loud }) => Console.log(loud ? `HELLO, ${name.toUpperCase()}!` : `Hello, ${name}.`),
 ).pipe(Command.withDescription('Greet someone by name.'));
 
 const ask = Command.make('ask', {}, () =>
   Effect.gen(function* () {
-    const name = yield* Prompt.text({ message: 'What is your name?' });
-    const color = yield* Prompt.select({
+    const name = yield* Prompt.String({ message: 'What is your name?' });
+    const color = yield* Prompt.Select({
       message: 'Pick a color',
       choices: [
         { title: 'Cyan', value: CYAN },
@@ -60,7 +60,23 @@ const colors = Command.make('colors', {}, () =>
   ),
 ).pipe(Command.withDescription('Show that ANSI styling renders.'));
 
-const demo = Command.make('demo').pipe(Command.withSubcommands([greet, ask, colors]));
+// Printed as the string a service returns, which is how a JSON response usually reaches the console.
+const json = Command.make('json', {}, () =>
+  Console.log(
+    JSON.stringify({
+      status: 'ok',
+      count: 2,
+      cached: false,
+      next: null,
+      items: [
+        { id: 'a1', title: 'Roast the beans', done: true, estimate: 1.5 },
+        { id: 'b2', title: 'Ship: the label', done: false, estimate: -1 },
+      ],
+    }),
+  ),
+).pipe(Command.withDescription('Print a JSON response, highlighted by the terminal.'));
+
+const demo = Command.make('demo').pipe(Command.withSubcommands([greet, ask, colors, json]));
 
 const DefaultStory = () => {
   const command = useMemo(() => demo, []);
@@ -70,7 +86,7 @@ const DefaultStory = () => {
       command={command}
       layer={Layer.empty}
       name='demo'
-      banner={`${BOLD}Effect CLI in the browser${RESET}\n${DIM}Try: greet world --loud · ask · colors · help${RESET}`}
+      banner={`${BOLD}Effect CLI in the browser${RESET}\n${DIM}Try: greet world --loud · ask · colors · json · help${RESET}`}
     />
   );
 };
@@ -110,5 +126,10 @@ export const Spec: Story = {
     // The shell survives the failure and keeps accepting commands.
     await runCommand(canvasElement, 'greet again', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'Hello, again.');
+
+    // A JSON response is printed indented, one key per line, rather than as the one-line string.
+    await runCommand(canvasElement, 'json', userEvent.keyboard);
+    await waitForTerminal(canvasElement, '  "status": "ok",');
+    await waitForTerminal(canvasElement, '      "title": "Ship: the label",');
   },
 };

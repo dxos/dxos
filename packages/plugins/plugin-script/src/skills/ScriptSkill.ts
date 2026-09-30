@@ -16,7 +16,7 @@ import {
   QueryDeployedFunctions,
   Read,
   Update,
-} from './functions';
+} from './functions/index.ts';
 
 const SKILL_KEY = 'org.dxos.skill.script';
 

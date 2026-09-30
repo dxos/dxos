@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './Graph';
-export * from './Mesh';
-export * from './SVG';
-export * from './Tree';
+export * from './Graph/index.ts';
+export * from './Mesh/index.ts';
+export * from './SVG/index.ts';
+export * from './Tree/index.ts';

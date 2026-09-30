@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { MailboxFilter } from './MailboxFilter';
+import { MailboxFilter } from './MailboxFilter.tsx';
 
 // Sample tags so the `#` autocomplete has something to offer, created at render time to avoid
 // Storybook serialization issues with ECHO objects (see the QueryEditor story for the same pattern).

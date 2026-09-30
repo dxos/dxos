@@ -9,14 +9,13 @@ import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { Banner, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Empty } from '@dxos/react-ui-list';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
 import { meta } from '#meta';
 import { Booking, BookingOperation, BookingSearch, Segment, TripCapabilities } from '#types';
 
-import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
+import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment.ts';
 
 /** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */
 const SEARCH_LAYOUT = trim`
@@ -222,7 +221,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
               </Select.Root>
             )}
             <Form.Layout template={SEARCH_LAYOUT} />
-            <Form.Error>{error}</Form.Error>
+            <Form.ErrorText>{error}</Form.ErrorText>
             <Form.Submit
               icon='ph--magnifying-glass--regular'
               label={pending ? t('booking.searching.label') : t('booking.search.label')}
@@ -237,7 +236,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
         <>
           <Separator />
           {flightOffers.length === 0 ? (
-            <Empty label={t('booking.no-offers.message')} />
+            <Banner.Empty label={t('booking.no-offers.message')} />
           ) : (
             <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
           )}

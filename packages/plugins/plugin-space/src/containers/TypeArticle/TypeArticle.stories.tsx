@@ -15,7 +15,6 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-lib';
 import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -32,9 +31,9 @@ import { SpaceOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
 import { SpaceCapabilities } from '#types';
 
-import { MergePreview } from '../MergePreview/MergePreview';
-import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
-import { TypeArticle } from './TypeArticle';
+import { MergePreview } from '../MergePreview/MergePreview.tsx';
+import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack.tsx';
+import { TypeArticle } from './TypeArticle.tsx';
 
 /**
  * Type that opts in to a content preview card via `CardAnnotation`.
@@ -44,7 +43,7 @@ class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.ca
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cards--regular', hue: 'emerald' }),
     CardAnnotation.set(true),
   ),
@@ -151,7 +150,6 @@ const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) =>
 /** Ephemeral state the toolbar and the merge preview read; normally contributed by `state.ts`. */
 const ephemeralState = () =>
   Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    awaiting: undefined,
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},

@@ -6,7 +6,7 @@ import { render } from '@solidjs/testing-library';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { RegistryProvider, defaultRegistry, useRegistry } from './registry';
+import { RegistryProvider, defaultRegistry, useRegistry } from './registry.ts';
 
 describe('registry', () => {
   beforeEach(() => {

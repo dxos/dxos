@@ -82,6 +82,14 @@ export interface AutomergeReplicatorContext {
   onConnectionOpen(connection: AutomergeReplicatorConnection): void;
   onConnectionClosed(connection: AutomergeReplicatorConnection): void;
   onConnectionAuthScopeChanged(connection: AutomergeReplicatorConnection): void;
+
+  /**
+   * Re-run the peer's transport handshake on a connection that stays open, so the peer id and the
+   * sync state keyed by it survive a remote that lost its session but not the link (DX-1275).
+   *
+   * @returns `false` when the peer has no open connection, so the caller can fall back to a restart.
+   */
+  onConnectionTransportReset(connection: AutomergeReplicatorConnection): boolean;
 }
 
 export interface AutomergeReplicatorConnection {

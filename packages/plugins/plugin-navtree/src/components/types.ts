@@ -10,7 +10,7 @@ import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 
 import { NavTreeNode } from '#types';
 
-import type { L1PanelProps } from './Sidebar';
+import type { L1PanelProps } from './Sidebar/index.ts';
 
 export type NavTreeContextValue = {
   model: TreeModel<NavTreeNode.NavTreeItemGraphNode>;
@@ -19,7 +19,7 @@ export type NavTreeContextValue = {
   onTabChange?: (node: NavTreeNode.NavTreeItemGraphNode) => void;
 } & Pick<
   TreeProps<NavTreeNode.NavTreeItemGraphNode>,
-  'blockInstruction' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect' | 'onItemHover'
+  'canDrop' | 'canSelect' | 'getDropKind' | 'onOpenChange' | 'onSelect' | 'onItemHover'
 > &
   Pick<L1PanelProps, 'onBack'>;
 

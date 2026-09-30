@@ -11,48 +11,50 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckOperation from '@dxos/plugin-deck/DeckOperation';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { PresenterOperation } from '#types';
 
-import { getPresentationPath } from '../paths';
+import { getPresentationPath, isPresenting } from '../paths.ts';
+
+/** The open plank showing the object, if any; its companions are the ones the graph has resolved. */
+const findPlank = Effect.fnUntraced(function* (object: Obj.Unknown) {
+  const { active } = yield* DeckCapabilities.getDeck();
+  return active.find((id) => Attention.getSegmentId(id) === object.id);
+});
 
 /**
- * Enters or exits presentation for the given object. Entering fullscreens the presenter companion;
- * exiting reverts fullscreen and re-opens the source object.
+ * Enters or exits presentation for the given object by toggling the deck's fullscreen overlay onto the
+ * presenter companion of the object's plank, opening the object first when no plank shows it. The
+ * overlay is independent of what is open, so presenting leaves the URL alone.
  */
 const handler: Operation.WithHandler<typeof PresenterOperation.SetPresenting> = PresenterOperation.SetPresenting.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ object, state }) {
-      const db = Obj.getDatabase(object);
-      if (!db) {
+      const ephemeral = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+      if (isPresenting(ephemeral, object) === state) {
         return;
       }
 
-      const objectPath = GraphPath.getObjectPathFromObject(object);
-      const presenterId = getPresentationPath(objectPath);
-      const ephemeral = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
-      const presenting = ephemeral.fullscreen === presenterId;
-      const next = state;
+      // `Adjust` toggles, and only clears fullscreen when `id` matches the plank that holds it.
+      if (!state) {
+        if (ephemeral.fullscreen) {
+          yield* Operation.invoke(DeckOperation.Adjust, { type: 'fullscreen' as const, id: ephemeral.fullscreen });
+        }
+        return;
+      }
 
-      if (next) {
-        if (!presenting) {
-          // Toggles ephemeral fullscreen from undefined to `presenterId`.
-          yield* Operation.invoke(DeckOperation.Adjust, { type: 'fullscreen' as const, id: presenterId });
-        }
+      let plank = yield* findPlank(object);
+      const db = Obj.getDatabase(object);
+      if (!plank && db) {
         yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [presenterId],
+          subject: [GraphPath.getObjectPathFromObject(object)],
           workspace: GraphPath.getSpacePath(db.spaceId),
         });
-      } else {
-        if (presenting) {
-          // Toggles ephemeral fullscreen back to undefined; `id` must match the currently-fullscreen
-          // plank for the toggle in `adjust.ts` to clear it rather than switching it.
-          yield* Operation.invoke(DeckOperation.Adjust, { type: 'fullscreen' as const, id: presenterId });
-        }
-        yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [objectPath],
-          workspace: GraphPath.getSpacePath(db.spaceId),
-        });
+        plank = yield* findPlank(object);
+      }
+      if (plank) {
+        yield* Operation.invoke(DeckOperation.Adjust, { type: 'fullscreen' as const, id: getPresentationPath(plank) });
       }
     }),
   ),

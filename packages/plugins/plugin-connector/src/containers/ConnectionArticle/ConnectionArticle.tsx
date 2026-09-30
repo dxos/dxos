@@ -16,8 +16,8 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargets, useTestConnection } from '#hooks';
 
-import * as Binding from '../../Binding';
-import { connectionsDeckSubject } from '../../constants';
+import * as Binding from '../../Binding.ts';
+import { connectionsDeckSubject } from '../../constants.ts';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
 
@@ -49,7 +49,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
     // Only the connection: its cursors are left dormant, holding the sync progress a later re-connect of
     // the same account resumes from.
     const spaceId = db?.spaceId;
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }).then(
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] }, { spaceId }).then(
       () =>
         // Fall back to the Connections section: this article's own subject stops resolving the
         // moment the connection is gone, which would otherwise leave the deck on a dead node.
@@ -63,9 +63,9 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
 
   const handleRemoveBinding = useCallback(
     (binding: Cursor.ExternalCursor) => {
-      void invokePromise(SpaceOperation.RemoveObjects, { objects: [binding] });
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: [binding] }, { spaceId: db?.spaceId });
     },
-    [invokePromise],
+    [invokePromise, db],
   );
 
   // Reads the live entity, as `describeConnection` is typed for, but is keyed on the snapshot so an

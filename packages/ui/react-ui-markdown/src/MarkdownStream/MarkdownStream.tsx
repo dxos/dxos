@@ -28,9 +28,9 @@ import {
   type AutoScrollProps,
   PROMPT_ELEMENT,
   ThemeExtensionsOptions,
+  type WidgetState,
+  type WidgetStateManager,
   type XmlTagsOptions,
-  type XmlWidgetState,
-  type XmlWidgetStateManager,
   createBasicExtensions,
   createThemeExtensions,
   createTurnSource,
@@ -39,27 +39,29 @@ import {
   extendedMarkdown,
   fader,
   lineSpacing,
+  objectLinks,
   scroller,
   turnFolding,
   typewriter,
   typewriterBypass,
+  widgetContextEffect,
+  widgetHost,
+  widgetResetEffect,
   xmlBlockDecoration,
   xmlFormatting,
-  xmlTagContextEffect,
-  xmlTagResetEffect,
   xmlTags,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { createMarkdownStreamController } from './create-controller';
-import { footer, setFooterVisibleEffect } from './footer';
-import { type StreamerOptions, createStreamer } from './stream';
+import { createMarkdownStreamController } from './create-controller.ts';
+import { footer, setFooterVisibleEffect } from './footer.ts';
+import { type StreamerOptions, createStreamer } from './stream.ts';
 
 /** Document offset range (CodeMirror positions). */
 export type DocumentRange = { from: number; to: number };
 
-export interface MarkdownStreamController extends XmlWidgetStateManager {
+export interface MarkdownStreamController extends WidgetStateManager {
   get length(): number | undefined;
   focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
@@ -185,7 +187,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // belongs to the host, not the document, so nulling it here would strand every widget in the
         // replacement document with `context: undefined`.
         viewRef.current.dispatch({
-          effects: [xmlTagContextEffect.of(pendingContextRef.current?.value ?? null), xmlTagResetEffect.of(null)],
+          effects: [widgetContextEffect.of(pendingContextRef.current?.value ?? null), widgetResetEffect.of(null)],
           changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
           annotations: typewriterBypass.of(true),
           selection: EditorSelection.cursor(text.length),
@@ -209,7 +211,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     useEffect(() => {
       const pending = pendingContextRef.current;
       if (view && pending) {
-        view.dispatch({ effects: xmlTagContextEffect.of(pending.value) });
+        view.dispatch({ effects: widgetContextEffect.of(pending.value) });
       }
     }, [view]);
 
@@ -271,7 +273,7 @@ type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'regis
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
-  widgets: XmlWidgetState[];
+  widgets: WidgetState[];
 };
 
 /**
@@ -291,7 +293,7 @@ const useMarkdownStreamTextEditor = (
   const { themeMode } = useThemeContext();
 
   // Active widgets.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Editor.
   const { view, parentRef } = useTextEditor(() => {
@@ -306,13 +308,7 @@ const useMarkdownStreamTextEditor = (
         !debug &&
           [
             extendedMarkdown({ registry }),
-            decorateMarkdown({
-              // xmlTags extension will handle `dxn:`/`echo:` links/images.
-              skip: (node) =>
-                (node.name === 'Link' || node.name === 'Image') &&
-                (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
-            }),
-            // TODO(burdon): Make optional; Removes need for '\n\n'.
+            decorateMarkdown(),
             lineSpacing(),
             xmlBlockDecoration({
               tag: 'prompt',
@@ -322,8 +318,9 @@ const useMarkdownStreamTextEditor = (
               lastLineClass: 'pb-1.5 rounded-b-sm',
               hideTags: true,
             }),
-            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            // TODO(burdon): Folding gets progressively off due to some widgets?
+            widgetHost({ setWidgets, bookmarks: ['prompt'] }),
+            xmlTags({ registry }),
+            objectLinks(),
             turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&

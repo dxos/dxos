@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOp
       );
       const space = channelSpace ?? eventSpace;
       invariant(space);
-      const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { space });
+      const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { db: space.db });
       // `event` is a Ref (works for feed/queue events, unlike a relation endpoint).
       const meeting = Obj.make(Meeting.Meeting, {
         name,

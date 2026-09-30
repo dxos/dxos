@@ -15,9 +15,9 @@ import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
-import { documentIdToSedimentreeIdHex } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { EchoHost } from './echo-host';
+import { documentIdToSedimentreeIdHex } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { EchoHost } from './echo-host.ts';
 
 const setup = async () => {
   const { runtime, dispose } = createTestSqliteRuntime();

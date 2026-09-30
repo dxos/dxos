@@ -5,8 +5,8 @@
 import { useRef } from 'react';
 
 // Imported from the module rather than the `scene` barrel, which would pull Babylon into this view.
-import { easeHeading } from '../../scene/heading';
-import { type SimObject } from '../../sim';
+import { easeHeading } from '../../scene/heading.ts';
+import { type SimObject } from '../../sim/index.ts';
 
 /**
  * Per-object headings eased toward the simulated bearing at each object kind's own turn rate — the

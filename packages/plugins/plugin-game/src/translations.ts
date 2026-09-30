@@ -27,6 +27,7 @@ export const translations = [
         'create-panel.variant.label': 'Select variant',
         'create-panel.variant.placeholder': 'Search variants...',
         'create-panel.submit.label': 'Create',
+        'create-panel.continue.label': 'Continue',
         'unsupported-variant.label': 'Unsupported game variant',
       },
     },

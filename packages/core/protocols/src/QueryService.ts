@@ -89,6 +89,18 @@ export const QueryResult = Schema.Struct({
    * Number of records in this record's group within the result set. Present iff the query has an aggregate clause.
    */
   groupCount: Schema.optional(Schema.Number),
+  /**
+   * JSON-encoded map of aggregate name to scalar value. Present iff this record stands for a whole
+   * group rather than one object: the query declared no `items` aggregate, so the host collapsed the
+   * group and no object fields (`documentJson`, `documentId`, `queueId`) are sent; `id` is then the
+   * serialized group key.
+   */
+  aggregates: Schema.optional(Schema.String),
+  /**
+   * JSON-encoded plain record for a result that is not an entity (an Automerge change selected by
+   * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
+   */
+  recordJson: Schema.optional(Schema.String),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 

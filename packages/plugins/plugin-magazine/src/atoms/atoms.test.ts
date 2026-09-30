@@ -11,10 +11,10 @@ import { StateMap, TagIndex } from '@dxos/schema';
 
 import { Magazine, Subscription } from '#types';
 
-import { postCurationAtom } from './post-curation';
-import { postDisplayAtom } from './post-display';
-import { postReadAtom } from './post-read';
-import { postTagsAtom } from './post-tags';
+import { postCurationAtom } from './post-curation.ts';
+import { postDisplayAtom } from './post-display.ts';
+import { postReadAtom } from './post-read.ts';
+import { postTagsAtom } from './post-tags.ts';
 
 describe('postReadAtom', () => {
   let builder: EchoTestBuilder;

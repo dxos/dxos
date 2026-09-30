@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { sourceHash } from './hash';
-import { type Range, type RawSegment, type Segment, type Segmentation } from './Segmentation';
+import { sourceHash } from './hash.ts';
+import { type Range, type RawSegment, type Segment, type Segmentation } from './Segmentation.ts';
 
 /**
  * Scans a text forward, never re-matching earlier ground. Two runs over the same text with the

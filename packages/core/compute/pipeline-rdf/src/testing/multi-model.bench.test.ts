@@ -15,8 +15,8 @@ import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { captureSink, instrument, renderBenchmark, runBenchmark } from '@dxos/pipeline/testing';
 
-import { type DocumentFacts, extractFactsStage } from '../stages';
-import { EVAL_DOCS, scoreAccuracy } from './multi-model.corpus';
+import { type DocumentFacts, extractFactsStage } from '../stages/index.ts';
+import { EVAL_DOCS, scoreAccuracy } from './multi-model.corpus.ts';
 
 // Compares pipeline-rdf fact extraction across models over the fixed gold corpus (multi-model.corpus),
 // scoring accuracy (precision/recall/F1 against the expected facts) alongside raw counts. Three local

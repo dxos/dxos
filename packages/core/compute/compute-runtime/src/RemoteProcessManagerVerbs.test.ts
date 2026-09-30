@@ -18,7 +18,7 @@ import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
-import * as RemoteProcessManager from './RemoteProcessManager';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
 
 describe('RemoteProcessManager control verbs', () => {
   test('spawns by key and reports the host state', async ({ expect }) => {

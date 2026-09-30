@@ -4,16 +4,18 @@
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
  * Curated set `composer.space` (and every iOS build) ships. Selection is build-time — swapping this
@@ -24,11 +26,13 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins({ ...config, externalPlugins: false }),
   // `Agent` and `Sequence` are unfinished, so the curated set does not offer creating them.
   AssistantPlugin.make({ experimentalTypes: false }),
+  IllustratorPlugin.make(),
   MarkdownPlugin.make(),
   ProjectsPlugin.make(),
   ReviewPlugin.make(),
   TasksPlugin.make(),
   ThreadPlugin.make(),
+  TldrawPlugin.make(),
   TranscriptionPlugin.make(),
 ];
 

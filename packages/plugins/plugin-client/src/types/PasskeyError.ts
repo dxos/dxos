@@ -4,13 +4,20 @@
 
 // @import-as-namespace
 
-import { BaseError } from '@dxos/errors';
+import { BaseError, type Cancellation, isCancellation } from '@dxos/errors';
+import { log } from '@dxos/log';
 
 /**
  * The platform prompt produced no assertion. WebAuthn reports a dismissed prompt and
  * "this device has no passkey for this site" identically, so the two cannot be told apart.
  */
-export class Dismissed extends BaseError.extend('PasskeyDismissedError', 'No passkey was presented') {}
+export class Dismissed
+  extends BaseError.extend('PasskeyDismissedError', 'No passkey was presented')
+  implements Cancellation
+{
+  /** Marks a dismissal as a cancellation so a generic reporter (the process runtime) can see it too. */
+  readonly cancellation = true as const;
+}
 
 /** The assertion was refused: the passkey is not registered as a recovery credential for any identity. */
 export class Rejected extends BaseError.extend('PasskeyRejectedError', 'Passkey was not accepted') {}
@@ -42,11 +49,26 @@ export const fromAssertion = (error: unknown): Dismissed | LoginFailed => {
  * Anything unrecognized is reported as a generic failure rather than swallowed.
  */
 export const classify = (error: unknown): Failure => {
-  if (Dismissed.is(error)) {
+  if (Dismissed.is(error) || isCancellation(error)) {
     return 'dismissed';
   }
   if (Rejected.is(error)) {
     return 'rejected';
   }
   return 'failed';
+};
+
+/**
+ * Report a failed redemption and classify it for the UI. A dismissed prompt is the user closing a
+ * dialog, so it reports at `info` — at `error` it swamps the production error stream (DX-1281).
+ */
+export const report = (error: unknown): Failure => {
+  const failure = classify(error);
+  if (failure === 'dismissed') {
+    log.info('passkey prompt dismissed', { error });
+  } else {
+    log.catch(error);
+  }
+
+  return failure;
 };

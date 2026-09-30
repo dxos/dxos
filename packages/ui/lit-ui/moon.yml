@@ -3,4 +3,5 @@ language: typescript
 tags:
   - dist-runtime
   - ts-compile
+  - ts-test
   - pack

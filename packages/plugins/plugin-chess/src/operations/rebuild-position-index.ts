@@ -13,7 +13,7 @@ import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
 import { Chess, ChessOperation, ChessPositionIndex } from '#types';
 
-import * as positionIndexInternal from '../internal/position-index';
+import * as positionIndexInternal from '../internal/position-index.ts';
 
 export default ChessOperation.RebuildPositionIndex.pipe(
   Operation.withHandler(

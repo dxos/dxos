@@ -11,8 +11,8 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { Database, Error, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
-import { DISCORD_API_BASE } from '../constants';
-import { makeEdgeProxyHttpClientLayer } from './proxy-http-client';
+import { DISCORD_API_BASE } from '../constants.ts';
+import { makeEdgeProxyHttpClientLayer } from './proxy-http-client.ts';
 
 /**
  * Build a `DiscordREST` layer pinned to a specific bot token.

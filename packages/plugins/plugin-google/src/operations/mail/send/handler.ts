@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -12,8 +13,8 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { GoogleMail } from '#apis';
 import { GoogleOperation } from '#types';
 
-import { GmailSendMessageInvalidError } from '../../../errors';
-import { GoogleCredentials } from '../../../services/google-credentials';
+import { GmailSendMessageInvalidError } from '../../../errors.ts';
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
 
 const handler = GoogleOperation.GmailSend.pipe(
   Operation.withHandler(({ userId = 'me', message, connection: connectionRef }) =>
@@ -57,7 +58,7 @@ const handler = GoogleOperation.GmailSend.pipe(
         // copy that will sync down.
         sentTag: { ...SystemTags.systemTagKey('sent'), label: SystemTags.SystemTag.sent.label },
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromConnection(connectionRef))),
+    }).pipe(Effect.provide(Layer.provideMerge(FetchHttpClient.layer, GoogleCredentials.fromConnection(connectionRef)))),
   ),
   Operation.opaqueHandler,
 );

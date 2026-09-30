@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { SchemaAST } from '@dxos/effect';
 
-import { FormatAnnotation, TypeFormat } from './types';
+import { FormatAnnotation, TypeFormat } from './types.ts';
 
 /**
  * Email address (RFC 5321)

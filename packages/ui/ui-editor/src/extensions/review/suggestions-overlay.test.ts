@@ -5,9 +5,9 @@
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { decorationSetToArray } from '../../util';
-import { type SuggestionSource } from './suggest';
-import { suggestionsOverlay } from './suggestions-overlay';
+import { decorationSetToArray } from '../../util/index.ts';
+import { type SuggestionSource } from './suggest.ts';
+import { suggestionsOverlay } from './suggestions-overlay.ts';
 
 const ORIGINAL = 'The quick brown fox jumps over the lazy dog.';
 // A pure insertion (adds "swiftly") relative to ORIGINAL, so the overlay renders one hunk.

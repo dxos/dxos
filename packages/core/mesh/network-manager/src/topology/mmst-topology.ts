@@ -2,13 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type SwarmController, type Topology } from './topology';
+import { type SwarmController, type Topology } from './topology.ts';
 
-const MIN_UPDATE_INTERVAL = 1000 * 10;
+export const MIN_UPDATE_INTERVAL = 1000 * 10;
 const MAX_CHANGES_PER_UPDATE = 1;
 
 export interface MMSTTopologyOptions {
@@ -33,11 +35,16 @@ export class MMSTTopology implements Topology {
   private readonly _maxPeers: number;
   private readonly _sampleSize: number;
 
+  private readonly _ctx = new Context();
+
   private _controller?: SwarmController;
 
   private _sampleCollected = false;
 
-  private _lastAction = new Date(0);
+  /** Epoch ms of the last connect or disconnect. */
+  private _lastAction = 0;
+
+  private _updatePending = false;
 
   constructor({ originateConnections = 2, maxPeers = 4, sampleSize = 10 }: MMSTTopologyOptions = {}) {
     this._originateConnections = originateConnections;
@@ -62,7 +69,7 @@ export class MMSTTopology implements Topology {
   }
 
   forceUpdate(): void {
-    this._lastAction = new Date(0);
+    this._lastAction = 0;
     this.update();
   }
 
@@ -75,7 +82,7 @@ export class MMSTTopology implements Topology {
   }
 
   async destroy(): Promise<void> {
-    // Nothing to do.
+    await this._ctx.dispose();
   }
 
   private _runAlgorithm(): void {
@@ -95,14 +102,12 @@ export class MMSTTopology implements Topology {
         log(`want to disconnect ${sorted.length} peers but limited to ${MAX_CHANGES_PER_UPDATE}`);
       }
 
-      if (Date.now() - this._lastAction.getTime() > MIN_UPDATE_INTERVAL) {
+      if (sorted.length > 0 && !this._rateLimited('disconnect')) {
         for (const peer of sorted.slice(0, MAX_CHANGES_PER_UPDATE)) {
           log(`Disconnect ${peer}.`);
           this._controller.disconnect(peer);
         }
-        this._lastAction = new Date();
-      } else {
-        log('rate limited disconnect');
+        this._lastAction = Date.now();
       }
     } else if (connected.length < this._originateConnections) {
       // Connect new peers to reach desired quota.
@@ -113,16 +118,38 @@ export class MMSTTopology implements Topology {
       if (sorted.length > MAX_CHANGES_PER_UPDATE) {
         log(`want to connect ${sorted.length} peers but limited to ${MAX_CHANGES_PER_UPDATE}`);
       }
-      if (Date.now() - this._lastAction.getTime() > MIN_UPDATE_INTERVAL) {
+      if (sorted.length > 0 && !this._rateLimited('connect')) {
         for (const peer of sorted.slice(0, MAX_CHANGES_PER_UPDATE)) {
           log(`Connect ${peer}.`);
           this._controller.connect(peer);
         }
-        this._lastAction = new Date();
-      } else {
-        log('rate limited connect');
+        this._lastAction = Date.now();
       }
     }
+  }
+
+  /**
+   * Returns true if MIN_UPDATE_INTERVAL has not elapsed, deferring one update() until it has.
+   */
+  private _rateLimited(action: 'connect' | 'disconnect'): boolean {
+    const wait = this._lastAction + MIN_UPDATE_INTERVAL - Date.now();
+    if (wait <= 0) {
+      return false;
+    }
+
+    log(`rate limited ${action}`, { wait, updatePending: this._updatePending });
+    if (!this._updatePending) {
+      this._updatePending = true;
+      scheduleTask(
+        this._ctx,
+        () => {
+          this._updatePending = false;
+          this.update();
+        },
+        wait,
+      );
+    }
+    return true;
   }
 
   toString(): string {
@@ -138,16 +165,16 @@ const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[]
   return sorted;
 };
 
-const distXor = (a: Buffer, b: Buffer) => {
+const distXor = (a: Uint8Array, b: Uint8Array) => {
   const maxLength = Math.max(a.length, b.length);
-  const result = Buffer.allocUnsafe(maxLength);
+  const result = new Uint8Array(maxLength);
   for (let i = 0; i < maxLength; i++) {
     result[i] = (a[i] || 0) ^ (b[i] || 0);
   }
   return result;
 };
 
-const compareXor = (a: Buffer, b: Buffer) => {
+const compareXor = (a: Uint8Array, b: Uint8Array) => {
   const maxLength = Math.max(a.length, b.length);
   for (let i = 0; i < maxLength; i++) {
     if ((a[i] || 0) === (b[i] || 0)) {

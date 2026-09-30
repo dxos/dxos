@@ -33,7 +33,11 @@ const serializeContent = (
   maxLength: number,
 ): { readonly serialized: string; readonly truncated: boolean } | undefined => {
   try {
+    // `JSON.stringify` yields `undefined` (not a string) for `undefined` and functions; nothing to stamp.
     const serialized = JSON.stringify(value());
+    if (serialized === undefined) {
+      return undefined;
+    }
     return { serialized: serialized.slice(0, maxLength), truncated: serialized.length > maxLength };
   } catch (err) {
     log.catch(err, { key });

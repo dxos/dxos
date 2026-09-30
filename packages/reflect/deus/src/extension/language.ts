@@ -5,8 +5,8 @@
 import { LanguageDescription, LanguageSupport } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 
-import { mdlFenceHighlight } from './fences';
-import { mdlBlockLanguage } from './syntax';
+import { mdlFenceHighlight } from './fences.ts';
+import { mdlBlockLanguage } from './syntax.ts';
 
 /**
  * LanguageDescription for MDL fenced block bodies.

@@ -13,6 +13,9 @@
       "path": "../packages/core/echo/echo"
     },
     {
+      "path": "../packages/core/protocols"
+    },
+    {
       "path": "../packages/sdk/client"
     },
     {

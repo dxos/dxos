@@ -8,10 +8,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
+
+/** Developer authority of the model ids this resolver serves. */
+const ANTHROPIC_DEVELOPER = 'com.anthropic';
 
 export const make = () =>
   AiModelResolver.resolver(
@@ -26,10 +29,11 @@ export const make = () =>
         if (options?.provider !== undefined && options.provider !== Provider.edge.id) {
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
-        // Edge models are served by Anthropic; the catalog supplies the back-end name, the output-token
-        // ceiling, and which models use adaptive thinking (Opus).
+        // The edge provider fronts several upstreams; this resolver claims the Anthropic ids. The
+        // catalog supplies the back-end name, the output-token ceiling, and which models use adaptive
+        // thinking (Opus).
         const info = Model.get(Provider.edge.id, model);
-        if (!info) {
+        if (!info || Model.developer(model) !== ANTHROPIC_DEVELOPER) {
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         const max_tokens = info.characteristics?.maxTokens;

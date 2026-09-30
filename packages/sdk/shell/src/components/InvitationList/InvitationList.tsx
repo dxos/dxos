@@ -7,9 +7,9 @@ import type { CancellableInvitationObservable } from '@dxos/react-client/invitat
 import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
-import { translationKey } from '../../translations';
-import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem';
-import { type SharedInvitationListProps } from './InvitationListProps';
+import { translationKey } from '../../translations.ts';
+import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem.tsx';
+import { type SharedInvitationListProps } from './InvitationListProps.ts';
 
 export interface InvitationListProps
   extends Omit<InvitationListItemProps, 'invitation' | 'value'>, Pick<SharedInvitationListProps, 'send'> {

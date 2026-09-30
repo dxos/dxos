@@ -22,10 +22,13 @@ import { Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
 import { ClientOperation } from '#operations';
+import { CliLogin } from '#types';
 
-import { printIdentity, waitForState } from '../../halo/util';
+import { CommandError } from '../../errors.ts';
+import { printIdentity, waitForState } from '../../halo/util.ts';
 import {
   ATMOSPHERE_INPUT_PROMPT,
   ATMOSPHERE_METHOD,
@@ -33,21 +36,32 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-} from '../util';
+} from '../util.ts';
 
-type LoginMethod = 'email' | 'passkey' | typeof ATMOSPHERE_METHOD | 'device-invitation' | 'recovery-code';
+type LoginMethod = 'email' | 'passkey' | typeof ATMOSPHERE_METHOD | 'composer' | 'device-invitation' | 'recovery-code';
 
-const LOGIN_METHODS: LoginMethod[] = ['email', 'passkey', ATMOSPHERE_METHOD, 'device-invitation', 'recovery-code'];
+const LOGIN_METHODS: LoginMethod[] = [
+  'email',
+  'passkey',
+  ATMOSPHERE_METHOD,
+  'composer',
+  'device-invitation',
+  'recovery-code',
+];
 
 const METHOD_CHOICES = [
   { title: 'Email', value: 'email' as const },
   { title: 'Passkey', value: 'passkey' as const },
   { title: ATMOSPHERE_METHOD_TITLE, value: ATMOSPHERE_METHOD },
+  { title: 'Approve in Composer', value: 'composer' as const },
   { title: 'Device invitation', value: 'device-invitation' as const },
   { title: 'Recovery code', value: 'recovery-code' as const },
 ];
 
-/** Absent for `passkey`, which identifies the holder from the credential rather than from input. */
+/**
+ * Absent for `passkey`, which identifies the holder from the credential rather than from input, and
+ * for `composer`, whose optional input (the Composer URL) has a default.
+ */
 const INPUT_PROMPT: Partial<Record<LoginMethod, string>> = {
   'email': 'Email address',
   [ATMOSPHERE_METHOD]: ATMOSPHERE_INPUT_PROMPT,
@@ -60,13 +74,13 @@ export const login = Command.make(
   {
     method: methodOption(LOGIN_METHODS, METHOD_ALIASES).pipe(
       Options.withDescription(
-        'Login method (email | passkey | atmosphere | device-invitation | recovery-code). Prompted if omitted.',
+        'Login method (email | passkey | atmosphere | composer | device-invitation | recovery-code). Prompted if omitted.',
       ),
       Options.optional,
     ),
-    input: Args.string('input').pipe(
+    input: Args.String('input').pipe(
       Args.withDescription(
-        'Method input: email address / Atmosphere handle / invitation code / recovery code. Unused by passkey.',
+        'Method input: email address / Atmosphere handle / Composer URL / invitation code / recovery code. Unused by passkey.',
       ),
       Args.optional,
     ),
@@ -81,19 +95,20 @@ export const login = Command.make(
 
     const resolvedMethod: LoginMethod = Option.isSome(method)
       ? method.value
-      : yield* Prompt.select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
+      : yield* Prompt.Select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
     const inputPrompt = INPUT_PROMPT[resolvedMethod];
     const resolvedInput = Option.isSome(input)
       ? input.value
       : inputPrompt
-        ? yield* Prompt.text({ message: `${inputPrompt}:` }).pipe(Prompt.run)
+        ? yield* Prompt.String({ message: `${inputPrompt}:` }).pipe(Prompt.run)
         : '';
 
     const identity = yield* Match.value(resolvedMethod).pipe(
       Match.when(ATMOSPHERE_METHOD, () => loginWithAtmosphere(client, resolvedInput)),
       Match.when('email', () => loginWithEmail(client, resolvedInput, invoke)),
       Match.when('passkey', () => loginWithPasskey(client)),
+      Match.when('composer', () => loginWithComposer(client, resolvedInput)),
       Match.when('recovery-code', () => loginWithRecoveryCode(client, resolvedInput)),
       Match.when('device-invitation', () => loginWithDeviceInvitation(client, resolvedInput)),
       Match.exhaustive,
@@ -169,17 +184,18 @@ const loginWithPasskey = (client: Client) =>
 
       const { token } = yield* server.waitForResult();
       if (!token) {
-        return yield* Effect.fail(new Error('The sign-in completed without returning a token.'));
+        return yield* Effect.fail(new CommandError({ message: 'The sign-in completed without returning a token.' }));
       }
 
       return yield* Effect.tryPromise({
         try: () => client.halo.recoverIdentity({ token }),
         catch: (cause) =>
-          new Error(
-            `Passkey login failed (${cause instanceof Error ? cause.message : String(cause)}). ` +
-              'EDGE admits a passkey only when it is registered as a recovery credential; add one from Composer ' +
-              'before logging in here.',
-          ),
+          new CommandError({
+            message:
+              'Passkey login failed. EDGE admits a passkey only when it is registered as a recovery credential; ' +
+              'add one from Composer before logging in here.',
+            cause,
+          }),
       });
     }).pipe(Effect.ensuring(server.stop()));
   });
@@ -203,7 +219,7 @@ const awaitLoginToken = (server: LocalCallbackServer) =>
     .waitForResult(LOGIN_TIMEOUT_MS)
     .pipe(
       Effect.flatMap(({ token }) =>
-        token ? Effect.succeed(token) : Effect.fail(new Error('The login link carried no token.')),
+        token ? Effect.succeed(token) : Effect.fail(new CommandError({ message: 'The login link carried no token.' })),
       ),
     );
 
@@ -249,20 +265,19 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
             hub.login(DxContext.default(), {
               email,
               identityDid: identity.did,
-              identityKey: identity.identityKey.toHex(),
+              identityKey: requirePublicKey(identity.identityKey).toHex(),
             }),
           catch: (cause) =>
-            new Error(
-              `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
-            ),
+            new CommandError({ message: `Login request failed. ${recovery}`, context: { email }, cause }),
         });
         if (!retry.admitted) {
           return yield* Effect.fail(
-            new Error(
-              `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
+            new CommandError({
+              message:
+                `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
                 'run `dx account signup <ACCESS-CODE>` to create one. ' +
                 recovery,
-            ),
+            }),
           );
         }
         yield* invoke(ClientOperation.CreateAgent);
@@ -274,10 +289,11 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
       // redirect, so the link lands on the web app and this command has nothing to wait for.
       if (!server) {
         return yield* Effect.fail(
-          new Error(
-            'Could not open a local callback server, so the emailed link has nowhere to return to. ' +
+          new CommandError({
+            message:
+              'Could not open a local callback server, so the emailed link has nowhere to return to. ' +
               'Free a loopback port and run the command again.',
-          ),
+          }),
         );
       }
       yield* Console.log('Open it on this machine to finish signing in.');
@@ -286,10 +302,65 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
     }).pipe(Effect.ensuring(server?.stop() ?? Effect.void));
   });
 
+/** Composer origin opened when `--method composer` names none; `DX_COMPOSER_URL` overrides it. */
+const DEFAULT_COMPOSER_URL = 'https://composer.space';
+
+/** How long the terminal waits for the user to approve in the browser. */
+const COMPOSER_APPROVAL_TIMEOUT_MS = 10 * 60 * 1000;
+
+/**
+ * Approve-in-Composer login: joins the identity already open in a Composer tab on this machine.
+ *
+ * The CLI opens Composer with a loopback callback and a one-time state; Composer shows the state,
+ * and on approval creates a known-public-key device invitation and hands its code to the callback.
+ * The keypair travels inside the code, so the join needs no auth code — which is also why Composer
+ * only ever sends it to a loopback address (see {@link CliLogin.parseCallback}).
+ *
+ * The Composer tab hosts the invitation, so it has to stay open until this command finishes.
+ */
+const loginWithComposer = (client: Client, composerUrl: string) =>
+  Effect.gen(function* () {
+    const state = CliLogin.createState();
+    const server = yield* startLocalCallbackServer(CliLogin.CALLBACK_PATH, {
+      successMessage: 'Invitation received. Return to your terminal; keep the Composer tab open until it finishes.',
+      accept: (params) => params[CliLogin.RESPONSE_STATE_PARAM] === state,
+    });
+
+    return yield* Effect.gen(function* () {
+      const url = yield* Effect.try({
+        try: () =>
+          CliLogin.createAuthorizeUrl(
+            composerUrl || process.env.DX_COMPOSER_URL || DEFAULT_COMPOSER_URL,
+            // The literal address the server binds, so a host resolving `localhost` to `::1` still reaches it.
+            `http://127.0.0.1:${server.port}${CliLogin.CALLBACK_PATH}`,
+            state,
+          ),
+        catch: (cause) => new CommandError({ message: `Not a valid Composer URL: ${composerUrl}`, cause }),
+      });
+
+      // Printed whether or not a browser opens: the approving tab may belong to another browser
+      // profile than the system default, and it has to be the one holding the identity.
+      yield* Console.log(`Open this on this machine to approve the login:\n\n  ${url.href}\n`);
+      yield* Console.log(`Composer should show the code: ${state}`);
+      yield* openBrowser(url.href).pipe(Effect.catch(() => Effect.void));
+
+      const params = yield* server.waitForResult(COMPOSER_APPROVAL_TIMEOUT_MS);
+      const code = params[CliLogin.INVITATION_CODE_PARAM];
+      if (!code) {
+        return yield* Effect.fail(new CommandError({ message: 'Composer returned no invitation code.' }));
+      }
+
+      yield* Console.log('Joining the identity...');
+      const invitation = client.halo.join(InvitationEncoder.decode(code));
+      yield* waitForState(invitation, Invitation_State.SUCCESS);
+      const identity = client.halo.identity.get();
+      invariant(identity, 'Device invitation completed but no identity is present.');
+      return identity;
+    }).pipe(Effect.ensuring(server.stop()));
+  });
+
 /**
  * Device-invitation login: joins an existing identity from another authorized device.
- *
- * NOTE: p2p networking does not work in bun — this method will likely hang waiting for the peer.
  */
 const loginWithDeviceInvitation = (client: Client, encoded: string) =>
   Effect.gen(function* () {
@@ -299,7 +370,7 @@ const loginWithDeviceInvitation = (client: Client, encoded: string) =>
     }
     const invitation = client.halo.join(InvitationEncoder.decode(code));
     yield* waitForState(invitation, Invitation_State.READY_FOR_AUTHENTICATION);
-    const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
+    const authCode = yield* Prompt.String({ message: 'Enter the authentication code' }).pipe(Prompt.run);
     yield* Effect.tryPromise(() => invitation.authenticate(authCode));
     yield* waitForState(invitation, Invitation_State.SUCCESS);
     const identity = client.halo.identity.get();

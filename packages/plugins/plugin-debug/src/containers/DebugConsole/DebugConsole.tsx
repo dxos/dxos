@@ -10,7 +10,7 @@ import { Terminal, type TerminalApi } from '@dxos/react-ui-terminal';
 
 import { meta } from '#meta';
 
-import { createDebugCli } from './cli';
+import { createDebugCli } from './cli.ts';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';

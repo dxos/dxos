@@ -33,5 +33,5 @@ export const FileUploadField = ({ data, onValueChange }: FileUploadFieldProps) =
     return null;
   }
 
-  return <FileInput schema={data.schema} onChange={handleChange} />;
+  return <FileInput onChange={handleChange} />;
 };

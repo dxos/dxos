@@ -16,7 +16,7 @@ import { toFrames } from '#render';
 import { type LaMetricTransport, discoverWidgetId, selectTransport, tauriFetch } from '#transport';
 import { LaMetricCapabilities } from '#types';
 
-import { Pusher } from './pusher';
+import { Pusher } from './pusher.ts';
 
 /** Matches the settings default; used when the stored value predates the field. */
 const DEFAULT_MIN_INTERVAL_MS = 5_000;
@@ -36,24 +36,22 @@ export default Capability.makeModule(
 
     const status = Atom.make<LaMetricCapabilities.PushStatus>({ state: 'idle' }).pipe(Atom.keepAlive);
     let pusher: Pusher | undefined;
-
-    const publish = () => {
-      if (!pusher) {
-        return;
-      }
-      const { stats, tasks } = registry.get(dashboard);
-      // MAX_FRAMES is this device's geometry, which is why the slot count is applied here rather
-      // than in the space's projection.
-      pusher.send({ frames: toFrames(toMetrics(tasks, stats, LaMetric.MAX_FRAMES)) });
-    };
+    let unsubscribeDashboard: (() => void) | undefined;
+    let generation = 0;
 
     // The address decides which transport is used, so a settings change rebuilds rather than mutates.
     const rebuild = () => {
+      const current = ++generation;
       pusher?.close();
       pusher = undefined;
+      unsubscribeDashboard?.();
+      unsubscribeDashboard = undefined;
       const config = registry.get(settings);
 
       const build = (widgetId: string | undefined) => {
+        if (current !== generation) {
+          return;
+        }
         const transport: LaMetricTransport | undefined = widgetId
           ? selectTransport({ ...config, widgetId }, tauriFetch)
           : undefined;
@@ -67,7 +65,14 @@ export default Capability.makeModule(
           minIntervalMs: config.minPushIntervalMs ?? DEFAULT_MIN_INTERVAL_MS,
           onStatus: (next) => registry.set(status, next),
         });
-        publish();
+        unsubscribeDashboard = registry.subscribe(
+          dashboard,
+          ({ stats, tasks }) =>
+            // MAX_FRAMES is this device's geometry, which is why the slot count is applied here rather
+            // than in the space's projection.
+            pusher?.send({ frames: toFrames(toMetrics(tasks, stats, LaMetric.MAX_FRAMES)) }),
+          { immediate: true },
+        );
       };
 
       // The DIY widget's UUID identifies one installation of the stock app and appears nowhere in
@@ -78,18 +83,23 @@ export default Capability.makeModule(
         void discoverWidgetId(config, tauriFetch)
           .then(build)
           .catch((error) => {
+            if (current !== generation) {
+              return;
+            }
             log('lametric could not read the device app list', { error });
             registry.set(status, { state: 'idle' });
           });
       }
     };
 
-    const unsubscribe = [registry.subscribe(settings, rebuild), registry.subscribe(dashboard, publish)];
+    const unsubscribeSettings = registry.subscribe(settings, rebuild);
     rebuild();
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        unsubscribe.forEach((fn) => fn());
+        generation++;
+        unsubscribeSettings();
+        unsubscribeDashboard?.();
         pusher?.close();
       }),
     );

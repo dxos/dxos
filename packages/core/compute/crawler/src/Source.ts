@@ -5,8 +5,8 @@
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
-import { type CrawlError } from './errors';
-import type * as Type from './types';
+import { type CrawlError } from './errors.ts';
+import type * as Type from './types.ts';
 
 /** A channel the source can enumerate. */
 export type ChannelInfo = {

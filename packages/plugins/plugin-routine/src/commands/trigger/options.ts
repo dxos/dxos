@@ -4,11 +4,14 @@
 
 import * as Options from 'effect/unstable/cli/Flag';
 
-export const TriggerId = Options.string('id').pipe(Options.withDescription('The id of the trigger.'));
+export const TriggerId = Options.String('id').pipe(Options.withDescription('The id of the trigger.'));
 
-export const Enabled = Options.boolean('enabled').pipe(Options.withDescription('Whether the trigger is enabled.'));
+export const Enabled = Options.Boolean('enabled').pipe(
+  Options.withDefault(false),
+  Options.withDescription('Whether the trigger is enabled.'),
+);
 
-export const Input = Options.keyValuePair('input').pipe(
+export const Input = Options.KeyValuePair('input').pipe(
   Options.withDescription("Input data to pass to the function. Must match the function's input schema."),
 );
 
@@ -16,15 +19,16 @@ export const Input = Options.keyValuePair('input').pipe(
 // Subscription
 //
 
-export const Typename = Options.string('typename').pipe(
+export const Typename = Options.String('typename').pipe(
   Options.withDescription('The type name to query for the subscription trigger.'),
 );
 
-export const Deep = Options.boolean('deep').pipe(
+export const Deep = Options.Boolean('deep').pipe(
+  Options.withDefault(false),
   Options.withDescription('Watch changes to nested properties (not just creation).'),
 );
 
-export const Delay = Options.integer('delay').pipe(
+export const Delay = Options.Int('delay').pipe(
   Options.withDescription('Debounce changes with a delay in milliseconds.'),
 );
 
@@ -32,7 +36,7 @@ export const Delay = Options.integer('delay').pipe(
 // Timer
 //
 
-export const Cron = Options.string('cron').pipe(
+export const Cron = Options.String('cron').pipe(
   Options.withDescription('The cron expression to use for the timer trigger.'),
 );
 
@@ -40,6 +44,6 @@ export const Cron = Options.string('cron').pipe(
 // Feed
 //
 
-export const Feed = Options.string('feed').pipe(
+export const Feed = Options.String('feed').pipe(
   Options.withDescription('The EID of the feed for the feed trigger (echo://<spaceId>/<objectId>).'),
 );

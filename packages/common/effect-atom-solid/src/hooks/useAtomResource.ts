@@ -7,7 +7,7 @@ import type * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { type Accessor, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 /**
  * Resource-like hook for atoms that contain Result values

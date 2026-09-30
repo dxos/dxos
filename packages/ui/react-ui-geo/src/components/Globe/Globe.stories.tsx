@@ -11,7 +11,7 @@ import { type Topology } from 'topojson-specification';
 import { useAsyncState } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { loadTopology } from '../../data';
+import { loadTopology } from '../../data.ts';
 import {
   type GlobeController,
   type Level,
@@ -23,11 +23,11 @@ import {
   useTopology,
   useTour,
   useWheel,
-} from '../../hooks';
-import { type LatLngLiteral } from '../../types';
-import { type StyleSet, closestPoint } from '../../util';
-import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe';
+} from '../../hooks/index.ts';
+import { type LatLngLiteral } from '../../types.ts';
+import { type StyleSet, closestPoint } from '../../util/index.ts';
+import { type ControlProps } from '../Toolbar/index.ts';
+import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe.tsx';
 
 const defaultStyles: StyleSet = {
   water: {
@@ -352,6 +352,18 @@ export const Mercator = () => {
       <Globe.Viewport>
         <Globe.Canvas topology={topology} projection='mercator' styles={monochrome} />
         <Globe.Zoom onAction={handleAction} />
+      </Globe.Viewport>
+    </Globe.Root>
+  );
+};
+
+/** The flat world map a world clock sits on: equirectangular, unrotated, no interaction. */
+export const Equirectangular = () => {
+  const topology = useTopology();
+  return (
+    <Globe.Root zoom={1}>
+      <Globe.Viewport>
+        <Globe.Canvas topology={topology} projection='equirectangular' fit='contain' styles={monochrome} />
       </Globe.Viewport>
     </Globe.Root>
   );

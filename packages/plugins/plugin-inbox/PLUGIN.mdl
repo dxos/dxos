@@ -23,11 +23,11 @@ Appendix; the app terms (`node`, `deck`, `plank`, `companion`, `surface`, `menu`
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
 | `node`      | `org.dxos.mdl.node@1.0`        |
 | `deck`      | `org.dxos.mdl.deck@1.0`        |
@@ -633,7 +633,7 @@ feat F-8: Related content
 ## Acceptance
 
 ```mdl
-test T-1: Sync Gmail into mailbox
+scenario T-1: Sync Gmail into mailbox
   given: a mailbox bound to a Gmail connection
   when: sync runs (locally or on EDGE)
   then:
@@ -642,7 +642,7 @@ test T-1: Sync Gmail into mailbox
 ```
 
 ```mdl
-test T-2: Save and apply filter
+scenario T-2: Save and apply filter
   given: a mailbox with tagged messages
   when: the user types a filter and saves it
   then:
@@ -650,7 +650,7 @@ test T-2: Save and apply filter
 ```
 
 ```mdl
-test T-3: Draft, send, reconcile
+scenario T-3: Draft, send, reconcile
   given: an open message
   when: the user replies and sends
   then:
@@ -658,7 +658,7 @@ test T-3: Draft, send, reconcile
 ```
 
 ```mdl
-test T-4: Reading chain
+scenario T-4: Reading chain
   given: a mailbox plank with messages
   when: the user opens message A then message B
   then:
@@ -666,7 +666,7 @@ test T-4: Reading chain
 ```
 
 ```mdl
-test T-5: Enrich cascade
+scenario T-5: Enrich cascade
   given: a synced mailbox
   when: enrich runs (or its routine fires)
   then:
@@ -674,7 +674,7 @@ test T-5: Enrich cascade
 ```
 
 ```mdl
-test T-6: Draft event round-trip
+scenario T-6: Draft event round-trip
   given: a calendar bound to Google
   when: the user creates and saves a draft event
   then:
@@ -682,14 +682,14 @@ test T-6: Draft event round-trip
 ```
 
 ```mdl
-test T-7: Interactive during initial sync
+scenario T-7: Interactive during initial sync
   given: an empty mailbox starting its first sync
   then:
     - the article stays interactive and never flashes an empty state once messages exist
 ```
 
 ```mdl
-test T-8: Unsubscribe
+scenario T-8: Unsubscribe
   given: a bulk-mail sender in Subscriptions
   when: the user unsubscribes
   then:
@@ -700,11 +700,11 @@ test T-8: Unsubscribe
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Add a mailbox, compose a draft, read it back
+test QA-1: Add a mailbox, compose a draft, read it back
   desc: The core inbox round-trip — add a Mailbox, compose a local draft into it, then read the
     feed back. plugin-inbox is ON by default; no enabling step is required.
   actors: both
@@ -714,8 +714,8 @@ flow QA-1: Add a mailbox, compose a draft, read it back
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no Mailbox named "QA Mailbox" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Mailbox named "QA Mailbox" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Add the mailbox
       do: In the navtree, click + on a collection and choose Mailbox. Name it "QA Mailbox".
       expect: a Mailbox named "QA Mailbox" appears under the collection, with an empty message list
@@ -756,7 +756,7 @@ flow QA-1: Add a mailbox, compose a draft, read it back
 ```
 
 ```mdl
-flow QA-2: Create a draft calendar event and save it to Google
+test QA-2: Create a draft calendar event and save it to Google
   desc: The two-way calendar round-trip. Blocked end-to-end without a live Google Connection —
     op:syncDraftEvents makes a real Google Calendar API call, which no fixture in this repo can
     stand up. Steps that only touch local ECHO state still run.
@@ -767,8 +767,8 @@ flow QA-2: Create a draft calendar event and save it to Google
     - an identity exists
     - space: a space is open
     - a Calendar exists in the space (added the same way a Mailbox is, via the collection + create menu)
-    - no draft event named "QA Event" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no draft event named "QA Event" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create a draft event
       do: On the CalendarArticle toolbar, click "Create event", name it "QA Event", set a start/end time.
       expect: a draft Event named "QA Event" appears on the grid, editable in EventArticle, with a Save action shown
@@ -823,8 +823,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

@@ -15,8 +15,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ChatEvent } from '../Chat';
-import { ChatActions, type ChatActionsProps } from './ChatActions';
+import { type ChatEvent } from '../Chat/index.ts';
+import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 
 type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug' | 'customActions'>;
 
@@ -130,7 +130,7 @@ const plainContributedActions = Atom.make<ActionGraphProps>({
 
 /**
  * Plain contributed items render `Toolbar.*` primitives, which need the roving-focus context from
- * the row's `Menu.Toolbar` — without it this story crashes the way the assistant companion did on
+ * the row's `ActionToolbar` — without it this story crashes the way the assistant companion did on
  * commentable objects.
  */
 export const ContributedPlainAction: Story = {

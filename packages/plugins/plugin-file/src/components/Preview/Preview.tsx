@@ -5,13 +5,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useHotkeys } from '@dxos/react-focus';
-import { Icon, Input, MediaPlayer, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Field, Icon, MediaPlayer, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { type PdfApi, PdfCanvas, type PdfCanvasState, type PdfFit } from '../PdfCanvas';
-import { PreviewContext, type PreviewPaged, usePreview } from './PreviewContext';
+import { type PdfApi, PdfCanvas, type PdfCanvasState, type PdfFit } from '../PdfCanvas/index.ts';
+import { PreviewContext, type PreviewPaged, usePreview } from './PreviewContext.ts';
 
 //
 // Root
@@ -156,8 +156,8 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             onClick={() => paged.api?.goToPage(paged.pageCount, 'instant')}
           />
           <Toolbar.Separator />
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               ref={searchRef}
               placeholder={t('search.placeholder')}
               value={query}
@@ -173,7 +173,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
                 }
               }}
             />
-          </Input.Root>
+          </Field.Root>
           {query.trim().length > 0 && (
             <>
               <Toolbar.Text classNames='shrink-0 overflow-visible text-nowrap tabular-nums'>

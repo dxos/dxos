@@ -5,7 +5,7 @@
 import { type TranscribeConfig, type TranscribeFn, Transcriber } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
-import { MediaStreamRecorder } from './media-stream-recorder';
+import { MediaStreamRecorder } from './media-stream-recorder.ts';
 
 // Recorder chunk interval (ms).
 const RECORD_INTERVAL = 200;

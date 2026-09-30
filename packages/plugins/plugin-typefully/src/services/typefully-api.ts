@@ -19,7 +19,7 @@ import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import * as Publisher from '@dxos/plugin-blogger/Publisher';
 
-import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
+import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
 
 // Typefully API v2 (v1 key access was disabled Dec 2025 — see the v1→v2 migration guide:
 // https://support.typefully.com/en/articles/13133296-typefully-api-v1-v2-migration-guide). Drafts are
@@ -122,14 +122,14 @@ const toDraftBody = (input: Publisher.PublisherDraftInput): Record<string, unkno
 
 type TypefullyEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.Failure,
   HttpClient.HttpClient | TypefullyCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.Failure,
 ): boolean => {
-  if (error instanceof Schema.SchemaError || error instanceof Publisher.PublisherError) {
+  if (error instanceof Schema.SchemaError || Publisher.isFailure(error)) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
@@ -176,15 +176,16 @@ const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema
         Effect.flatMap(response.text, (text) =>
           Effect.try({
             try: () => JSON.parse(text) as unknown,
-            catch: () => new Publisher.PublisherError(`Typefully returned non-JSON: ${text.slice(0, 500)}`),
+            catch: () =>
+              new Publisher.PublisherError({ message: `Typefully returned non-JSON: ${text.slice(0, 500)}` }),
           }).pipe(
             Effect.flatMap((json) =>
               Schema.decodeUnknownEffect(schema)(json).pipe(
                 Effect.mapError(
                   (error) =>
-                    new Publisher.PublisherError(
-                      `Typefully response did not match the expected shape (${error}); body: ${text.slice(0, 500)}`,
-                    ),
+                    new Publisher.PublisherError({
+                      message: `Typefully response did not match the expected shape (${error}); body: ${text.slice(0, 500)}`,
+                    }),
                 ),
               ),
             ),
@@ -227,7 +228,9 @@ const resolveSocialSetIdEffect = (): TypefullyEffect<string> =>
       const set = response.results.find((candidate) => candidate.team != null) ?? response.results[0];
       return set
         ? Effect.succeed(String(set.id))
-        : Effect.fail(new Publisher.PublisherError('No Typefully social set is available for this account.'));
+        : Effect.fail(
+            new Publisher.PublisherError({ message: 'No Typefully social set is available for this account.' }),
+          );
     }),
   );
 
@@ -314,17 +317,19 @@ const ProxyHttpLayer = FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(Fe
 const runConnection = <T>(connection: Ref.Ref<Connection.Connection>, program: TypefullyEffect<T>): Promise<T> => {
   const target = connection.target;
   if (!target) {
-    return Promise.reject(new Publisher.MissingCredentialError('Connection reference is not resolved.'));
+    return Promise.reject(new Publisher.MissingCredentialError({ message: 'Connection reference is not resolved.' }));
   }
   const db = Obj.getDatabase(target);
   if (!db) {
-    return Promise.reject(new Publisher.MissingCredentialError('Connection is not attached to a database.'));
+    return Promise.reject(
+      new Publisher.MissingCredentialError({ message: 'Connection is not attached to a database.' }),
+    );
   }
   return EffectEx.runPromise(
     program.pipe(
-      Effect.provide(fromConnection(connection)),
-      Effect.provide(ProxyHttpLayer),
-      Effect.provide(Database.layer(db)),
+      Effect.provide(
+        fromConnection(connection).pipe(Layer.provideMerge(ProxyHttpLayer), Layer.provideMerge(Database.layer(db))),
+      ),
     ),
   );
 };

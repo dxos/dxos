@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import React, { type PropsWithChildren } from 'react';
 
-import { CustomNode } from './CustomNode';
+import { CustomNode } from './CustomNode.tsx';
 
 // NOTE: Experimental (possible replacement for react-ui-canvas; additional possible use for entity relationships.)
 // TODO(burdon): Demo storybook using @dxos/schema/testing.

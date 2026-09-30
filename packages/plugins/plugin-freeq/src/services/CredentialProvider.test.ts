@@ -8,8 +8,8 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
-import { FreeqAuthError } from '../errors';
-import { makeAppPasswordCredentialProvider } from './CredentialProvider';
+import { FreeqAuthError } from '../errors.ts';
+import { makeAppPasswordCredentialProvider } from './CredentialProvider.ts';
 
 describe('AppPasswordCredentialProvider', () => {
   test('resolves DID + PDS, creates a session, and builds a base64url SASL response', async ({ expect }) => {

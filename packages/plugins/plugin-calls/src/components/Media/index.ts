@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './AudioStream';
-export * from './VideoObject';
+export * from './AudioStream.tsx';
+export * from './VideoObject.tsx';

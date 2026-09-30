@@ -13,8 +13,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { TriggerId } from './options';
-import { printTriggerRemoved, selectTrigger } from './util';
+import { TriggerId } from './options.ts';
+import { printTriggerRemoved, selectTrigger } from './util.ts';
 
 export const remove = Command.make(
   'remove',

@@ -1,0 +1,251 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { create } from '@bufbuild/protobuf';
+import { describe, expect, onTestFinished, test } from 'vitest';
+
+import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { CredentialGenerator, createDidFromIdentityKey, credentialPayload, verifyCredential } from '@dxos/credentials';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
+import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
+import { type HypercoreWrapper } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
+import { type PublicKey } from '@dxos/keys';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState, EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Runtime_Client_EdgeFeaturesSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { IdentityRecordSchema, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import {
+  AdmittedFeed_Designation,
+  AuthorizedDeviceSchema,
+  IdentityProfileSchema,
+  ProfileDocumentSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+
+import { Identity } from './Identity.ts';
+import { MetadataStore } from './internal/metadata/index.ts';
+import { valueEncoding } from './internal/pipeline/index.ts';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from './internal/space/index.ts';
+
+const createStores = () => {
+  const storage = createStorage({ type: StorageType.RAM });
+  const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
+
+  return {
+    storage,
+    metadataStore,
+  };
+};
+
+describe('identity/identity', () => {
+  test('create', async () => {
+    const setup = await setupIdentity();
+
+    await writeGenesisCredential(setup);
+
+    // Wait for identity to be ready.
+    await setup.identity.ready();
+    const identitySigner = setup.identity.getIdentityCredentialSigner();
+    const credential = await identitySigner.createCredential({
+      subject: setup.identityKey,
+      assertion: create(IdentityProfileSchema, {
+        profile: create(ProfileDocumentSchema, { displayName: 'Alice' }),
+      }),
+    });
+
+    expect(toPublicKey(credential.issuer)).toEqual(setup.identityKey);
+    expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
+  });
+
+  test('two devices', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
+    const owner = await setupIdentity({ signalContext });
+    await writeGenesisCredential(owner);
+    await owner.identity.ready();
+
+    const secondDevice = (
+      await setupIdentity({
+        signalContext,
+        spaceKey: owner.spaceKey,
+        identityKey: owner.identityKey,
+        genesisFeedKey: owner.controlFeed.key,
+      })
+    ).identity;
+
+    //
+    // Second device admission
+    //
+    {
+      const signer = owner.identity.getIdentityCredentialSigner();
+      void owner.identity.controlPipeline.writer.write(
+        credentialPayload(
+          await signer.createCredential({
+            subject: secondDevice.deviceKey,
+            assertion: create(AuthorizedDeviceSchema, {
+              identityKey: fromPublicKey(owner.identityKey),
+              deviceKey: fromPublicKey(secondDevice.deviceKey),
+            }),
+          }),
+        ),
+      );
+
+      await secondDevice.ready();
+    }
+
+    expect(Array.from(owner.identity.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
+    expect(Array.from(secondDevice.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
+  });
+
+  test('edge feed replicator', async () => {
+    let replicationStarted = false;
+    let status = EdgeStatus_ConnectionState.NOT_CONNECTED;
+    const listeners: Array<() => void> = [];
+    const setup = await setupIdentity({
+      edgeConnection: {
+        statusChanged: new Event(),
+        get status() {
+          return create(EdgeStatusSchema, { state: status });
+        },
+        onReconnected: (listener) => {
+          if (status === EdgeStatus_ConnectionState.CONNECTED) {
+            listener();
+          } else {
+            listeners.push(listener);
+          }
+          return () => {};
+        },
+        open: async () => {},
+        close: async () => {},
+        onMessage: (_: MessageListener): (() => void) => {
+          return () => {};
+        },
+        send: async (..._) => {
+          replicationStarted = true;
+        },
+      } as EdgeConnection,
+    });
+
+    await writeGenesisCredential(setup);
+    listeners.forEach((callback) => callback());
+    status = EdgeStatus_ConnectionState.CONNECTED;
+
+    await expect.poll(() => replicationStarted).toBeTruthy();
+  });
+
+  const setupIdentity = async (args?: {
+    signalContext?: MemorySignalManagerContext;
+    spaceKey?: PublicKey;
+    identityKey?: PublicKey;
+    genesisFeedKey?: PublicKey;
+    edgeConnection?: EdgeConnection;
+  }): Promise<TestIdentitySetup> => {
+    const { storage, metadataStore } = createStores();
+
+    const keyring = new Keyring();
+    const deviceKey = await keyring.createKey();
+    const identityKey = args?.identityKey ?? (await keyring.createKey());
+    const spaceKey = args?.spaceKey ?? (await keyring.createKey());
+
+    const hypercoreStore = new HypercoreStore<FeedMessage>({
+      factory: new HypercoreFactory<FeedMessage>({
+        root: storage.createDirectory(),
+        signer: keyring,
+        hypercore: {
+          valueEncoding,
+        },
+      }),
+    });
+
+    const createHypercore = async () => {
+      const feedKey = await keyring.createKey();
+      return hypercoreStore.openHypercore(feedKey, { writable: true });
+    };
+
+    const controlFeed = await createHypercore();
+    const dataFeed = await createHypercore();
+
+    const protocol = new SpaceProtocol({
+      topic: spaceKey,
+      swarmIdentity: {
+        peerKey: deviceKey,
+        identityKey,
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
+      },
+      networkManager: new SwarmNetworkManager({
+        signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
+        transportFactory: MemoryTransportFactory,
+        peerInfo: create(PeerSchema, { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() }),
+      }),
+    });
+
+    await metadataStore.setIdentityRecord(
+      create(IdentityRecordSchema, {
+        haloSpace: create(SpaceMetadataSchema, { key: fromPublicKey(spaceKey) }),
+        identityKey: fromPublicKey(identityKey),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
+    );
+    const space: Space = new Space({
+      id: await createIdFromSpaceKey(spaceKey),
+      spaceKey,
+      protocol,
+      genesisFeed: args?.genesisFeedKey ? await hypercoreStore.openHypercore(args.genesisFeedKey) : controlFeed,
+      feedProvider: (feedKey) => hypercoreStore.openHypercore(feedKey),
+      memberKey: identityKey,
+      metadataStore,
+      snapshotId: undefined,
+      onDelegatedInvitationStatusChange: async () => {},
+      onMemberRolesChanged: async () => {},
+    });
+    await space.setControlFeed(controlFeed);
+    await space.setDataFeed(dataFeed);
+
+    const identity = new Identity({
+      signer: keyring,
+      did: await createDidFromIdentityKey(identityKey),
+      identityKey,
+      deviceKey,
+      space,
+      edgeFeatures: args?.edgeConnection && create(Runtime_Client_EdgeFeaturesSchema, { feedReplicator: true }),
+      edgeConnection: args?.edgeConnection,
+    });
+
+    await identity.open(new Context());
+    await identity.joinNetwork(Context.default());
+    onTestFinished(() => identity.close(new Context()));
+    return { identity, identityKey, keyring, deviceKey, controlFeed, spaceKey, dataFeed };
+  };
+
+  const writeGenesisCredential = async (setup: TestIdentitySetup) => {
+    const generator = new CredentialGenerator(setup.keyring, setup.identityKey, setup.deviceKey);
+    const credentials = [
+      ...(await generator.createSpaceGenesis(setup.spaceKey, setup.controlFeed.key)),
+      await generator.createDeviceAuthorization(setup.deviceKey),
+      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed_Designation.DATA),
+    ];
+
+    for (const credential of credentials) {
+      await setup.identity.controlPipeline.writer.write(credentialPayload(credential));
+    }
+  };
+});
+
+type TestIdentitySetup = {
+  identity: Identity;
+  keyring: Keyring;
+  identityKey: PublicKey;
+  deviceKey: PublicKey;
+  spaceKey: PublicKey;
+  controlFeed: HypercoreWrapper<FeedMessage>;
+  dataFeed: HypercoreWrapper<FeedMessage>;
+};

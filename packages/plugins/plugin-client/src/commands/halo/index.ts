@@ -4,12 +4,12 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { credential } from './credential';
-import { identity } from './identity';
-import { keys } from './keys';
-import { seed } from './seed';
-import { share } from './share';
-import { update } from './update';
+import { credential } from './credential/index.ts';
+import { identity } from './identity/index.ts';
+import { keys } from './keys/index.ts';
+import { seed } from './seed/index.ts';
+import { share } from './share/index.ts';
+import { update } from './update/index.ts';
 
 // `create`, `join`, and `recover` are superseded by `dx account signup` / `dx account login`: a
 // local identity the hub has not authorized has no Account, so nothing it writes is admitted.

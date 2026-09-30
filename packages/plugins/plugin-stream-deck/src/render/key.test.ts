@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type Shortcut } from '@dxos/plugin-space/dashboard';
 
-import { renderEmptyKey, renderKey } from './key';
+import { renderEmptyKey, renderKey } from './key.ts';
 
 const spec: Shortcut = { target: 'eid:01J/abc', label: 'Notes', icon: 'ph--note--regular', hue: 'cyan' };
 

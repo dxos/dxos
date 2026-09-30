@@ -9,7 +9,7 @@ import { Filter } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 
-import { Task } from './schema';
+import { Task } from './schema.ts';
 
 export const App = () => {
   const [space] = useSpaces();

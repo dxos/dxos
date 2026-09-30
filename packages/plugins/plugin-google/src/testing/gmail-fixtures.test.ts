@@ -9,7 +9,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { GoogleMailApi } from '#services';
 
-import { generateGmailDataset } from './gmail-fixtures';
+import { generateGmailDataset } from './gmail-fixtures.ts';
 
 describe('generateGmailDataset + GoogleMailApi.mock', () => {
   test('generates a coherent, ascending-by-date dataset', ({ expect }) => {

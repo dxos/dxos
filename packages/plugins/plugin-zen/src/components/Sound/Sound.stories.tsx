@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Sequence } from '#types';
 
-import { Sound } from './Sound';
+import { Sound } from './Sound.tsx';
 
 const SampleStory = () => {
   const [sequence, setSequence] = useState(Sequence.makeSampleSequence('rain'));

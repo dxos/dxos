@@ -18,9 +18,9 @@ import {
 import { meta } from '#meta';
 import { SheetRange, SheetUtil } from '#types';
 
-import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetRoot';
-import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
+import { type SheetModel } from '../../model/index.ts';
+import { useSheetContext } from '../SheetRoot/index.ts';
+import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState.ts';
 
 export type AlignAction = { key: SheetRange.AlignKey; value: SheetRange.AlignValue };
 

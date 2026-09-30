@@ -9,13 +9,15 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as DeckSeed from '@dxos/plugin-deck/DeckSeed';
 import { Path } from '@dxos/react-ui-list/util';
 
 import { NavTreeCapabilities } from '#types';
 
-import { navTreeOpenAspect } from './nav-tree-view-state';
+import { navTreeOpenAspect } from './nav-tree-view-state.ts';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
 const defaultOpen = false;
@@ -36,10 +38,28 @@ export default Capability.makeModule(
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
     const viewState = yield* AttentionCapabilities.ViewState;
 
-    // Mirror of the layout's active planks. An item registers its path only on its first render, which
-    // can happen long after the layout change that made it current, so entries derive `current` from
-    // this at creation time rather than waiting for the next layout notification.
-    let activeIds: readonly string[] = registry.get(layoutAtom).active;
+    // Resolved once the graph is up; until then the seed rule below cannot apply.
+    let graph: AppGraph.ExpandableGraph | undefined;
+
+    // What the user navigated to, which is not always what the deck opened: a collection opens its
+    // documents in its own place, and lighting those up read as a multi-selection nobody made.
+    // A plank the user picked out of a seeded deck, held until the set of open planks changes: the
+    // deck does not change when an already-open plank is chosen, so nothing else would record it.
+    // Compared as a set: rearranging the open planks does not change which one was picked.
+    let picked: { id: string; active: ReadonlySet<string> } | undefined;
+    const currentIds = (active: readonly string[]): readonly string[] => {
+      if (picked && picked.active.size === active.length && active.every((id) => picked?.active.has(id))) {
+        return [picked.id];
+      }
+      picked = undefined;
+      const source = graph && DeckSeed.sourceOf(graph, active);
+      return source ? [source] : active;
+    };
+
+    // Mirror of the current items. An item registers its path only on its first render, which can
+    // happen long after the layout change that made it current, so entries derive `current` from this
+    // at creation time rather than waiting for the next layout notification.
+    let activeIds: readonly string[] = currentIds(registry.get(layoutAtom).active);
 
     /** Item state for a path not seen before: `current` follows the layout, `open` starts closed. */
     const initialItemState = (pathString: string): NavTreeCapabilities.NavTreeItemState => ({
@@ -98,10 +118,9 @@ export default Capability.makeModule(
       }
     };
 
-    // Subscribe to layout changes to update current state.
-    const unsubscribe = registry.subscribe(layoutAtom, (layout) => {
-      const removed = activeIds.filter((id) => !layout.active.includes(id));
-      activeIds = layout.active;
+    const updateCurrent = (nextIds: readonly string[]) => {
+      const removed = activeIds.filter((id) => !nextIds.includes(id));
+      activeIds = nextIds;
 
       const handleUpdate = () => {
         // Mark removed items as not current.
@@ -112,8 +131,8 @@ export default Capability.makeModule(
           });
         });
 
-        // Mark active items as current.
-        layout.active.forEach((id: string) => {
+        // Mark current items as current.
+        nextIds.forEach((id: string) => {
           const keys = Array.from(new Set([...backingState.keys(), id])).filter((key) => Path.last(key) === id);
           keys.forEach((key) => {
             setItem(Path.parts(key), 'current', true);
@@ -125,37 +144,61 @@ export default Capability.makeModule(
       // would set state during the tree's render pass). Items whose path is not registered yet no longer
       // need waiting out — they seed `current` from `activeIds` when they register.
       queueMicrotask(handleUpdate);
-    });
+    };
 
-    // Once graph is ready, expand every node marked open in state so the graph has children loaded for rendering.
+    // Subscribe to layout changes to update current state.
+    const unsubscribe = registry.subscribe(layoutAtom, (layout) => updateCurrent(currentIds(layout.active)));
+
+    const pick = (id: string): boolean => {
+      const { active } = registry.get(layoutAtom);
+      if (!active.includes(id)) {
+        return false;
+      }
+
+      picked = { id, active: new Set(active) };
+      updateCurrent([id]);
+      return true;
+    };
+
     yield* Effect.gen(function* () {
-      const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
-
-      // Always expand the active workspace so its subtree is initialized.
-      const layout = registry.get(layoutAtom);
-      if (layout.workspace) {
-        AppGraph.expandSync(graph, layout.workspace, 'child');
-      }
-
-      // Expand persisted open nodes, skipping inactive workspace tabs.
-      const openPaths = Array.from(backingState.entries())
-        .filter(([, state]) => state.open)
-        .map(([pathString]) => Path.parts(pathString))
-        .filter((path) => !isTopLevelPath(path));
-      for (const path of openPaths) {
-        const nodeId = path[path.length - 1];
-        if (!nodeId) {
-          continue;
+      const { graph: appGraph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+      graph = appGraph;
+      // Items registered before the graph was up derived `current` without the seed rule.
+      updateCurrent(currentIds(registry.get(layoutAtom).active));
+      // A workspace the deck left is released, so entering one re-expands it and the items the tree
+      // still remembers as open.
+      const reexpandWorkspace = (workspace: string | undefined) => {
+        if (!workspace) {
+          return;
         }
-        AppGraph.expandSync(graph, nodeId, 'child');
-      }
-    }).pipe(Effect.forkDetach);
+
+        AppGraph.expandSync(appGraph, workspace, 'child');
+        for (const [pathString, state] of backingState.entries()) {
+          const path = Path.parts(pathString);
+          const nodeId = path[path.length - 1];
+          if (state.open && !isTopLevelPath(path) && nodeId && GraphPath.getWorkspaceFromPath(nodeId) === workspace) {
+            AppGraph.expandSync(appGraph, nodeId, 'child');
+          }
+        }
+      };
+
+      let workspace = registry.get(layoutAtom).workspace;
+      reexpandWorkspace(workspace);
+      const unsubscribeWorkspace = registry.subscribe(layoutAtom, (layout) => {
+        if (layout.workspace !== workspace) {
+          workspace = layout.workspace;
+          reexpandWorkspace(workspace);
+        }
+      });
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribeWorkspace()));
+    }).pipe(Effect.forkScoped);
 
     yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
     return Capability.contribute(NavTreeCapabilities.State, {
       getItem,
       getItemAtom,
       setItem,
+      pick,
     });
   }),
 );

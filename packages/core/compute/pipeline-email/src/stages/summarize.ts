@@ -11,7 +11,7 @@ import { Stage } from '@dxos/pipeline';
 import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { EmailPipelineCtx, type Summary } from './context';
+import { EmailPipelineCtx, type Summary } from './context.ts';
 
 const SUMMARIZE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -54,7 +54,7 @@ export const summarizeStage: Stage.Stage<
     // Bound the LLM call: `orElse` only recovers failures, so without a timeout a hung/slow provider
     // would block the stage indefinitely. On timeout the effect fails, then `orElse` degrades to ''.
     const raw = yield* LanguageModel.generateText({ prompt: `${SUMMARIZE_PROMPT}\n\n${text}` }).pipe(
-      Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
+      Effect.provide(AiService.languageModel(SUMMARIZE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
       Effect.catch(() => Effect.succeed('')),

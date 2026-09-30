@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
-import { buildEntityIndex, reconcileFactEntities } from './fact-index';
+import { buildEntityIndex, reconcileFactEntities } from './fact-index.ts';
 
 const fact = (subjectLabel: string, objectLabel: string): RDF.Fact => ({
   id: 'f1',

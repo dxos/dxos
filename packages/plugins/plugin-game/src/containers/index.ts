@@ -4,5 +4,5 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const GameArticle: ComponentType<any> = lazy(() => import('./GameArticle'));
-export const GameCard: ComponentType<any> = lazy(() => import('./GameCard'));
+export const GameArticle: ComponentType<any> = lazy(() => import('./GameArticle/index.ts'));
+export const GameCard: ComponentType<any> = lazy(() => import('./GameCard/index.ts'));

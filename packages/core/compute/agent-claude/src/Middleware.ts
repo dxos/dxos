@@ -13,9 +13,9 @@ import * as path from 'node:path';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { AgentHostError } from './errors';
-import * as Host from './Host';
-import * as Wire from './Wire';
+import { AgentHostError } from './errors.ts';
+import * as Host from './Host.ts';
+import * as Wire from './Wire.ts';
 
 /** Path the host answers on; mounted into a dev server rather than bound to its own port. */
 export const PATH = '/api/agent-claude/run';

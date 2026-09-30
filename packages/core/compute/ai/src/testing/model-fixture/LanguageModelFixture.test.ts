@@ -18,10 +18,10 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 
-import * as AiService from '../../AiService';
-import { AiServiceTestingPreset } from '../test-layers';
-import { TestingToolkit, testingLayer } from '../toolkit';
-import * as LanguageModelFixture from './LanguageModelFixture';
+import * as AiService from '../../AiService.ts';
+import { AiServiceTestingPreset } from '../test-layers.ts';
+import { TestingToolkit, testingLayer } from '../toolkit.ts';
+import * as LanguageModelFixture from './LanguageModelFixture.ts';
 
 // Workaround: @effect/ai-anthropic v0.26.0 declares AnthropicWebSearch with
 // parameters: EmptyParams, but the API now sends { query: "..." } in tool_use.input,
@@ -51,7 +51,7 @@ const layerTest = DateToolkit.toLayer({
 const TestLayer = Layer.mergeAll(
   testingLayer,
   layerTest,
-  AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+  AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
 ).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('edge-remote')));
 
 class TestObjectReadToolkit extends Toolkit.make(
@@ -283,6 +283,35 @@ describe('dynamic value matching', () => {
     expect(serialized).not.toContain(SPACE_A);
   });
 
+  test('remaps an id the stored stream split across tool-parameter deltas', ({ expect }) => {
+    // A ref-keyed tool call streams its arguments in chunks that cut an entity id in two, so the id
+    // only exists once the deltas are joined.
+    const STORED_ID = '01JGFJJZ00G0WKQSJGMAKCNTN7';
+    const LIVE_ID = '01JGFJJZ00G0WKQSJGMAKCNTN4';
+    const checklist = (spaceId: string, id: string) => [
+      { role: 'user', content: [{ type: 'text', text: `1. [ ] Task\n   (ref: echo://${spaceId}/${id})` }] },
+    ];
+    const args = JSON.stringify({ task: { '/': `echo://${SPACE_A}/${STORED_ID}` } });
+    const storedResponse = [
+      { type: 'tool-params-start', id: 'call-1', name: 'update-tasks' },
+      { type: 'tool-params-delta', id: 'call-1', delta: args.slice(0, 40) },
+      { type: 'tool-params-delta', id: 'call-1', delta: args.slice(40) },
+      { type: 'tool-params-end', id: 'call-1' },
+    ];
+
+    const remapped = __testing.remapResponse(
+      checklist(SPACE_A, STORED_ID),
+      storedResponse,
+      checklist(SPACE_B, LIVE_ID),
+      [SPACE_ID_PATTERN, ENTITY_ID_PATTERN],
+    );
+
+    const deltas = remapped.filter((part) => (part as { type: string }).type === 'tool-params-delta');
+    expect(deltas).toEqual([
+      { type: 'tool-params-delta', id: 'call-1', delta: args.replace(SPACE_A, SPACE_B).replace(STORED_ID, LIVE_ID) },
+    ]);
+  });
+
   test('combined matcher preserves the uuid pattern case-insensitivity for uppercase hex', ({ expect }) => {
     // Regression: buildDynamicMatcher combined only `.source` and dropped per-pattern flags, so
     // UUID_PATTERN's uppercase-hex coverage was lost once combined.
@@ -335,7 +364,7 @@ describe('dynamic value matching', () => {
       Effect.provide(
         Layer.mergeAll(
           TestObjectReadToolkit.layer,
-          AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
         ).pipe(
           Layer.provideMerge(
             LanguageModelFixture.layerTest({

@@ -9,6 +9,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { INITIAL_FOCUS_ATTRIBUTE } from '@dxos/react-focus';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
@@ -37,7 +38,7 @@ import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
+import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
 export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;
@@ -172,6 +173,8 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         className={mx(editorClassNames(role), classNames)}
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
+        // Where focus lands when the article is entered as a whole: the document, not the toolbar.
+        {...{ [INITIAL_FOCUS_ATTRIBUTE]: '' }}
         ref={parentRef}
       />
     );

@@ -10,7 +10,9 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "imports": {
     "#translations": {
@@ -24,6 +26,20 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./next": {
+      "source": "./src/next/index.ts",
+      "types": "./dist/types/src/next/index.d.ts",
+      "import": "./dist/lib/next.mjs"
+    },
+    "./next/theme.css": {
+      "style": "./src/next/theme/index.css",
+      "default": "./src/next/theme/index.css"
+    },
+    "./next/testing": {
+      "source": "./src/next/testing/stories.tsx",
+      "types": "./dist/types/src/next/testing/stories.d.ts",
+      "import": "./dist/lib/next-testing.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -44,6 +60,7 @@
   "dependencies": {
     "@ark-ui/react": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
@@ -51,63 +68,41 @@
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-input": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@internationalized/date": "catalog:",
-    "@radix-ui/primitive": "catalog:",
-    "@radix-ui/react-alert-dialog": "catalog:",
-    "@radix-ui/react-checkbox": "catalog:",
-    "@radix-ui/react-compose-refs": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-context-menu": "catalog:",
-    "@radix-ui/react-dialog": "catalog:",
-    "@radix-ui/react-dismissable-layer": "catalog:",
-    "@radix-ui/react-focus-guards": "catalog:",
-    "@radix-ui/react-focus-scope": "catalog:",
-    "@radix-ui/react-id": "catalog:",
-    "@radix-ui/react-menu": "catalog:",
-    "@radix-ui/react-popper": "catalog:",
-    "@radix-ui/react-portal": "catalog:",
-    "@radix-ui/react-presence": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-select": "catalog:",
-    "@radix-ui/react-separator": "catalog:",
-    "@radix-ui/react-slider": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-toast": "catalog:",
-    "@radix-ui/react-toggle": "catalog:",
-    "@radix-ui/react-toggle-group": "catalog:",
-    "@radix-ui/react-toolbar": "catalog:",
-    "@radix-ui/react-tooltip": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
-    "@radix-ui/react-visually-hidden": "catalog:",
-    "aria-hidden": "catalog:",
+    "@zag-js/core": "catalog:",
+    "@zag-js/react": "catalog:",
     "date-fns": "catalog:",
     "dompurify": "catalog:",
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
     "react-aria-components": "catalog:",
     "react-error-boundary": "catalog:",
-    "react-i18next": "catalog:",
-    "react-remove-scroll": "catalog:"
+    "react-i18next": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tanstack/react-virtual": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@zag-js/core": "catalog:",
+    "@zag-js/react": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/ui-theme": "workspace:^",
+    "@effect/atom-react": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

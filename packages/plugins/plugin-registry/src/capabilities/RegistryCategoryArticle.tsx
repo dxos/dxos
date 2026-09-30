@@ -5,11 +5,13 @@
 import React, { useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { useSettingsDivergedKeys } from '@dxos/app-toolkit/ui';
 
 import { RegistryArticle } from '#containers';
 
-import { type PluginPredicate, getCategoryPredicate } from '../categories';
-import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
+import { type PluginPredicate, getCategoryPredicate } from '../categories.ts';
+import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks/index.ts';
 
 /**
  * Resolves the {@link PluginPredicate} for a registry category against the live plugin list.
@@ -40,7 +42,10 @@ export const RegistryCategoryArticle = ({ category }: RegistryCategoryArticlePro
   const filter = useCategoryPredicate(category);
   const { entries } = useRegistryPlugins();
   const extraTagsById = useAutoTags(entries);
+  const deviceOnlyIds = useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
   const filtered = useMemo(() => manager.getPlugins().filter(filter), [manager, filter]);
 
-  return <RegistryArticle id={category} plugins={filtered} extraTagsById={extraTagsById} />;
+  return (
+    <RegistryArticle id={category} plugins={filtered} extraTagsById={extraTagsById} deviceOnlyIds={deviceOnlyIds} />
+  );
 };

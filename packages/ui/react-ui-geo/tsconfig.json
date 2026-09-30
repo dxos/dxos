@@ -19,6 +19,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {

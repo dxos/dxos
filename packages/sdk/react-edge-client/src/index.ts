@@ -3,4 +3,4 @@
 //
 
 export { EdgeHttpClient } from '@dxos/edge-client';
-export * from './hooks';
+export * from './hooks/index.ts';

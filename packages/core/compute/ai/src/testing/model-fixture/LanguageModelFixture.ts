@@ -26,8 +26,8 @@ import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
-import * as AiService from '../../AiService';
-import { withoutToolCallParsing } from '../../util';
+import * as AiService from '../../AiService.ts';
+import { withoutToolCallParsing } from '../../util/index.ts';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
@@ -134,6 +134,17 @@ export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
 export const RESULT_PID_PATTERN = /<result pid=\d+>/;
 
 /**
+ * Matches the label of a markdown link whose text is an object mnemonic (the last 6 Crockford
+ * base-32 chars of an EntityId, uppercased) — the form task refs take in a rendered checklist.
+ * The mnemonic is a projection of an id that {@link ENTITY_ID_PATTERN} already canonicalizes, so
+ * it would otherwise drift with the id while its URI stayed normalized. The `](echo:/` lookahead
+ * keeps six ordinary uppercase letters, and any non-ECHO link, from matching — two unrelated links
+ * canonicalized to the same label would otherwise share a fixture key.
+ * @example [KCNT8N](echo:/
+ */
+export const MNEMONIC_LINK_LABEL_PATTERN = /\[[0-9A-HJKMNP-TV-Z]{6}\](?=\(echo:\/)/;
+
+/**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
  * deterministic id generation only holds the id sequence stable while the surrounding allocation
  * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
@@ -143,6 +154,7 @@ export const RESULT_PID_PATTERN = /<result pid=\d+>/;
  */
 export const DEFAULT_DYNAMIC_VALUE_PATTERNS: readonly RegExp[] = [
   RESULT_PID_PATTERN,
+  MNEMONIC_LINK_LABEL_PATTERN,
   SPACE_ID_PATTERN,
   ENTITY_ID_PATTERN,
   UUID_PATTERN,
@@ -274,8 +286,38 @@ const remapStoredResponse = (
     }
   }
 
-  return replaceTokens(storedResponse, mapping) as readonly unknown[];
+  // Coalesced first: a provider streams arguments in small chunks that split an id across deltas,
+  // and a token replaced per string never matches a split one.
+  return replaceTokens(
+    mapping.size > 0 ? coalesceDeltas(storedResponse) : storedResponse,
+    mapping,
+  ) as readonly unknown[];
 };
+
+const DELTA_TYPES = new Set(['text-delta', 'reasoning-delta', 'tool-params-delta']);
+
+/** Merges consecutive stream deltas of one part into a single delta; consumers concatenate them anyway. */
+const coalesceDeltas = (response: readonly unknown[]): unknown[] => {
+  const merged: unknown[] = [];
+  for (const part of response) {
+    const previous = merged.at(-1);
+    if (isDelta(part) && isDelta(previous) && previous.type === part.type && previous.id === part.id) {
+      merged[merged.length - 1] = { ...previous, delta: previous.delta + part.delta };
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged;
+};
+
+const isDelta = (part: unknown): part is { type: string; id: string; delta: string } =>
+  typeof part === 'object' &&
+  part !== null &&
+  'type' in part &&
+  typeof part.type === 'string' &&
+  DELTA_TYPES.has(part.type) &&
+  'delta' in part &&
+  typeof part.delta === 'string';
 
 /**
  * Internal seams exposed for unit testing the dynamic-value matching/substitution logic.
@@ -316,7 +358,8 @@ export type ServiceOptions = {
 
 /** Wraps an upstream {@link AiService.Service} so every model it builds replays through the fixture store. */
 export const makeService = (options: ServiceOptions): AiService.Service => ({
-  model: (model) =>
+  ...options.upstream,
+  languageModel: (model) =>
     Layer.provide(
       layer({
         modelName: model,
@@ -324,7 +367,7 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
         allowGeneration: options.allowGeneration,
         dynamicValuePatterns: options.dynamicValuePatterns,
       }),
-      options.upstream.model(model),
+      options.upstream.languageModel(model),
     ),
 });
 
@@ -389,7 +432,7 @@ export const layer = (
   );
 
 type MakeProps = {
-  upstreamModel: LanguageModel.Service;
+  upstreamModel: LanguageModel.LanguageModel;
   modelName: string;
   testFilePath: string;
   allowGeneration: boolean;
@@ -397,11 +440,11 @@ type MakeProps = {
 };
 
 /**
- * Builds the replaying {@link LanguageModel.Service}: each turn is looked up in the store by request
+ * Builds the replaying {@link LanguageModel.LanguageModel}: each turn is looked up in the store by request
  * hash and replayed; on a miss it errors, unless `allowGeneration` is set, when it calls the upstream
  * model and records the turn.
  */
-export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
+export const make = (options: MakeProps): Effect.Effect<LanguageModel.LanguageModel> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? DEFAULT_DYNAMIC_VALUE_PATTERNS);
   const store = new FixtureStore(options.testFilePath, dynamicMatcher);
 

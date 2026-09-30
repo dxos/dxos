@@ -16,7 +16,10 @@ import { ConfigService } from '@dxos/config';
 export const logout = Command.make(
   'logout',
   {
-    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
+    force: Options.Boolean('force').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Skip confirmation prompt.'),
+    ),
   },
   Effect.fnUntraced(function* ({ force }) {
     const fs = yield* FileSystem.FileSystem;
@@ -24,7 +27,7 @@ export const logout = Command.make(
     const { json, profile } = yield* CommandConfig;
     const path = config.values.runtime?.client?.storage?.dataRoot ?? getProfilePath(DX_DATA, profile);
     if (!force) {
-      const confirmed = yield* Prompt.confirm({
+      const confirmed = yield* Prompt.Confirm({
         message: `Log out of profile (${profile})? This removes the local identity and data; spaces re-sync on next login.`,
         initial: false,
       }).pipe(Prompt.run);

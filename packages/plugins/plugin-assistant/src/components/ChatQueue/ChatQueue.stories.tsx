@@ -11,7 +11,7 @@ import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ChatQueue } from './ChatQueue';
+import { ChatQueue } from './ChatQueue.tsx';
 
 const makeQueued = (text: string, index: number) =>
   Message.make({
@@ -31,7 +31,7 @@ const DefaultStory = ({ prompts = [], cancelable = true }: StoryArgs) => {
     setQueued((current) => current.filter((entry) => entry.id !== message.id));
   }, []);
 
-  return <ChatQueue queued={queued} onCancel={cancelable ? handleCancel : undefined} classNames='items-end' />;
+  return <ChatQueue messages={queued} onCancel={cancelable ? handleCancel : undefined} classNames='items-end' />;
 };
 
 const meta = {

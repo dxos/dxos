@@ -21,11 +21,11 @@ import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   decodeInvokeAck,
   decodeListAck,
-} from './core/actions';
-import { isComposerUrl } from './core/bridge/urls';
-import { runExtractor } from './core/extractors';
-import { pickSnapshot } from './core/picker';
-import { showDebugPreview } from './core/picker/debug-preview';
+} from './core/actions/index.ts';
+import { isComposerUrl } from './core/bridge/urls.ts';
+import { runExtractor } from './core/extractors/index.ts';
+import { showDebugPreview } from './core/picker/debug-preview.ts';
+import { pickSnapshot } from './core/picker/index.ts';
 import {
   PING_ACK_EVENT,
   PING_EVENT,
@@ -40,11 +40,11 @@ import {
   decodePingRequest,
   decodeRenderAck,
   decodeRenderRequest,
-} from './core/proxy';
+} from './core/proxy/index.ts';
 // Import specific `core/` submodules rather than the top-level barrel: this is the content
 // script injected into every page, so it deliberately avoids pulling in background-only weight
 // (e.g. `bridge/sender`'s tab APIs, the `image` edge-client action) via a barrel.
-import { DeveloperMode } from './core/state';
+import { DeveloperMode } from './core/state/index.ts';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM

@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 
 import { Notebook } from '#types';
 
-import { evalScript } from './eval';
-import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
+import { evalScript } from './eval.ts';
+import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser.ts';
 
 /**
  * Compute graph that evaluates the notebook cells.

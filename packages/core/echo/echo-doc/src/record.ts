@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 
 import { isNonNullable } from '@dxos/util';
 
-import * as Doc from './Doc';
+import * as Doc from './Doc.ts';
 
 // Strings longer than this have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;

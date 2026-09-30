@@ -9,8 +9,8 @@ import { type Attributes } from '@opentelemetry/api';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { type PushMetricExporter } from '@opentelemetry/sdk-metrics';
 
-import { OtelMetrics } from './metrics';
-import { type OtelDestination } from './otel';
+import { OtelMetrics } from './metrics.ts';
+import { type OtelDestination } from './otel.ts';
 
 export type Init = {
   type: 'otel-metrics-init';

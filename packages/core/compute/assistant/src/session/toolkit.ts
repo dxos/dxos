@@ -11,24 +11,24 @@ import type * as Skill from '@dxos/compute/Skill';
 import { invariant } from '@dxos/invariant';
 import { isTruthy } from '@dxos/util';
 
-export type CreateToolkitProps = {
-  toolkit?: OpaqueToolkit.Any;
+export type CreateToolkitProps<E = never, R = never> = {
+  toolkit?: OpaqueToolkit.Any<E, R>;
   skills?: readonly Skill.Skill[];
   /**
    * Self-contained with handlers toolkits.
    */
-  opaqueToolkits?: readonly OpaqueToolkit.Any[];
+  opaqueToolkits?: readonly OpaqueToolkit.Any<E, R>[];
 };
 
 /**
  * Build a combined toolkit from the skill tools and the provided toolkit.
  */
-export const createToolkit = ({
+export const createToolkit = <E = never, R = never>({
   toolkit: toolkitProp,
   skills = [],
   opaqueToolkits = [],
-}: CreateToolkitProps): Effect.Effect<
-  OpaqueToolkit.OpaqueToolkit,
+}: CreateToolkitProps<E, R>): Effect.Effect<
+  OpaqueToolkit.OpaqueToolkit<never, E, R>,
   AiToolNotFoundError,
   ToolResolverService | ToolExecutionService
 > =>
@@ -46,10 +46,9 @@ export const createToolkit = ({
     const duplicates = toolNames.filter((name, index) => toolNames.indexOf(name) !== index);
     invariant(duplicates.length === 0, `Duplicate tool names in session toolkit: ${duplicates.join(', ')}`);
     const mergedToolkit = Toolkit.merge(...toolkitDefs);
-    const combinedHandlerLayer = Layer.mergeAll(
-      Layer.succeedContext(skillToolHandler),
-      toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
-      opaqueToolkit.layer,
+    const combinedHandlerLayer = Layer.succeedContext(skillToolHandler).pipe(
+      Layer.provideMerge(toolkitProp?.layer ?? OpaqueToolkit.empty.layer),
+      Layer.provideMerge(opaqueToolkit.layer),
     );
-    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit;
-  }) as Effect.Effect<OpaqueToolkit.OpaqueToolkit, AiToolNotFoundError, ToolResolverService | ToolExecutionService>;
+    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer);
+  });

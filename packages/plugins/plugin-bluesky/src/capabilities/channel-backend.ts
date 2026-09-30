@@ -13,8 +13,9 @@ import { Message } from '@dxos/types';
 
 import { BlueskyChannel, makeBlueskyChannel } from '#types';
 
-import { ATPROTO_BACKEND_KIND, ATPROTO_POLL_INTERVAL } from '../constants';
-import { BlueskyApi } from '../services';
+import { ATPROTO_BACKEND_KIND, ATPROTO_POLL_INTERVAL } from '../constants.ts';
+import { BlueskySyncError } from '../operations/errors.ts';
+import { BlueskyApi } from '../services/index.ts';
 
 /** Maps an ATProto feed-view post to a transient (non-persisted) chat message. */
 const toMessage = (item: BlueskyApi.FeedViewPost): Message.Message =>
@@ -112,7 +113,7 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
       }
     };
   },
-  send: () => Effect.fail(new Error('Bluesky channels are read-only.')),
+  send: () => Effect.fail(new BlueskySyncError({ message: 'Bluesky channels are read-only.' })),
   readOnly: () => true,
 };
 

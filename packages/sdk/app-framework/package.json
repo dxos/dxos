@@ -144,6 +144,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -167,7 +168,7 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
+    "@dxos/brand": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@effect/atom-react": "catalog:",

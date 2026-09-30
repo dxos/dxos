@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import { Doc, FormBuilder } from '@dxos/cli-util';
 import { type AuthenticatingInvitationObservable, Invitation_State } from '@dxos/client/invitations';
 
+import { CommandError } from '../errors.ts';
+
 /**
  * Pretty prints an identity with ANSI colors.
  */
@@ -32,7 +34,9 @@ export const waitForState = (invitation: AuthenticatingInvitationObservable, sta
       if (inv.state === state) {
         resume(Effect.void);
       } else if (TERMINAL_FAILURE_STATES.has(inv.state!)) {
-        resume(Effect.fail(new Error(`Invitation failed with state: ${Invitation_State[inv.state!]}`)));
+        resume(
+          Effect.fail(new CommandError({ message: `Invitation failed with state: ${Invitation_State[inv.state!]}` })),
+        );
       }
     });
     return Effect.sync(() => subscription.unsubscribe());

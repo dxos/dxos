@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
@@ -38,7 +39,6 @@ export const judge = (rubric: string, content: string): Effect.Effect<JudgeVerdi
     `,
     schema: JudgeVerdict,
   }).pipe(
-    Effect.provide(AiService.model(JUDGE_MODEL)),
-    Effect.provide(AiServiceTestingPreset('direct')),
+    Effect.provide(Layer.provideMerge(AiService.languageModel(JUDGE_MODEL), AiServiceTestingPreset('direct'))),
     Effect.map((response) => response.value),
   );

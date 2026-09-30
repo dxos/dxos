@@ -4,7 +4,8 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-export const SETTINGS_ID = GraphPath.pinnedWorkspaceId('dxos:settings');
+/** Pinned (non-space) workspace ID anchoring the settings graph subtree, and its URL workspace token. */
+export const SETTINGS_ID = 'dxos:settings';
 export const SETTINGS_KEY = 'settings';
 
 /**
@@ -13,7 +14,3 @@ export const SETTINGS_KEY = 'settings';
  */
 export const getPluginSettingsSectionPath = (pluginId: string): string =>
   GraphPath.getSpacePath(SETTINGS_ID, `${SETTINGS_KEY}:${pluginId.replaceAll('/', ':')}`);
-
-/** Canonical qualified path to the plugin registry section in the settings workspace. */
-export const getPluginRegistrySectionPath = (): string =>
-  GraphPath.getSpacePath(SETTINGS_ID, `${SETTINGS_KEY}:plugins`);

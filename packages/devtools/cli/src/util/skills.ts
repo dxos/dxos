@@ -61,7 +61,7 @@ import {
   Task,
 } from '@dxos/types';
 
-import * as TestToolkit from './test-toolkit';
+import * as TestToolkit from './test-toolkit.ts';
 
 export const skillRegistry = makeRegistry({
   initial: [

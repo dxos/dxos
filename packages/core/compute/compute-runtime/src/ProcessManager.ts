@@ -31,25 +31,37 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Database } from '@dxos/echo';
 import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
-import { ProcessManagerService } from './process-manager-service';
-import { type PersistedProcess, ProcessStore } from './process-store';
-import { createProcessTraceService } from './process-trace';
-import * as ProcessHandle from './ProcessHandle';
-import * as ProcessOperationInvoker from './ProcessOperationInvoker';
-import { layer as storageServiceLayer } from './storage-service-layer';
+import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
+import { ProcessManagerService } from './process-manager-service.ts';
+import { type PersistedProcess, ProcessStore } from './process-store.ts';
+import { createProcessTraceService } from './process-trace.ts';
+import * as ProcessHandle from './ProcessHandle.ts';
+import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
+import { layer as storageServiceLayer } from './storage-service-layer.ts';
+
+/**
+ * The origin a process's database writes are attributed to. A process serving a conversation is an agent's work,
+ * not a person's, and its children inherit the conversation; any other process takes the origin it was spawned with.
+ */
+const resolveOrigin = (
+  environment: Process.Environment,
+  requested: Database.Origin | undefined,
+): Database.Origin | undefined => (environment.conversation != null ? 'system' : requested);
+
+const originContext = (origin: Database.Origin | undefined): Context.Context<never> =>
+  origin !== undefined ? Context.make(Database.Origin, origin) : Context.empty();
 
 export {
   type ProcessIdGenerator,
   SequentialProcessIdGenerator as SequentialIdGenerator,
   SequentialProcessIdGenerator,
   UUIDProcessIdGenerator,
-} from './process-id';
+} from './process-id.ts';
 
 export { ProcessOperationInvoker };
 
@@ -65,6 +77,8 @@ const makeLoopbackRpcClient = (
   scope: Scope.Scope,
 ): Effect.Effect<RpcClient.RpcClient<any>> =>
   RpcTest.makeClient(rpcs).pipe(Effect.provide(rpcHandlers), Effect.provideService(Scope.Scope, scope));
+
+const FINISHED_PROCESS_RETENTION = 200;
 
 /**
  * Shared no-op RPC client for handles that expose no live RPC surface (e.g. dormant persisted handles).
@@ -210,6 +224,12 @@ export interface SpawnOptions {
   readonly environment?: Process.Environment;
 
   /**
+   * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
+   * invokes. Persisted with the process, so a restored process keeps it.
+   */
+  readonly origin?: Database.Origin;
+
+  /**
    * User-facing notifications requested for this process's lifecycle phases.
    * Ergonomic shorthand folded into {@link Process.NotifyAnnotation} on the process annotations.
    */
@@ -326,7 +346,7 @@ export interface Manager {
 export { ProcessManagerService };
 export { ProcessManagerService as Service };
 
-export interface ProcessManagerImplOpts {
+export interface ImplOpts {
   registry: Registry.AtomRegistry;
   kvStore: KeyValueStore.KeyValueStore;
   traceSink: Trace.Sink;
@@ -342,9 +362,9 @@ export interface ProcessManagerImplOpts {
   runtimeName?: Trace.RuntimeName;
 }
 
-export class ProcessManagerImpl implements Manager {
+export class Impl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
-  readonly #handles = new Map<Process.ID, ProcessHandle.ProcessHandleImpl<any, any, any>>();
+  readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -353,6 +373,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #runtimeName: Trace.RuntimeName | undefined;
   readonly #store: ProcessStore;
 
+  readonly #finished: Process.Info[] = [];
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
   /**
@@ -364,7 +385,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #lifecycleSemaphore = Effect.runSync(Semaphore.make(1));
   #shutDown = false;
 
-  constructor(opts: ProcessManagerImplOpts) {
+  constructor(opts: ImplOpts) {
     this.#idGenerator = opts.idGenerator ?? UUIDProcessIdGenerator;
     this.#registry = opts.registry;
     this.#kvStore = opts.kvStore;
@@ -419,7 +440,7 @@ export class ProcessManagerImpl implements Manager {
 
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
-      if (handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle)) {
+      if (handle.parentId === parentPid && Impl.#isNonTerminal(handle)) {
         return true;
       }
     }
@@ -429,7 +450,7 @@ export class ProcessManagerImpl implements Manager {
   #terminateChildren(parentPid: Process.ID): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       const children = [...this.#handles.values()].filter(
-        (handle) => handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle),
+        (handle) => handle.parentId === parentPid && Impl.#isNonTerminal(handle),
       );
       for (const child of children) {
         log('lifecycle: terminate child', { parentPid, childPid: child.pid });
@@ -438,13 +459,30 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
-  static #isNonTerminal(handle: ProcessHandle.ProcessHandleImpl<any, any, any>): boolean {
+  static #isNonTerminal(handle: ProcessHandle.Impl<any, any, any>): boolean {
     const { state } = handle.snapshotStatus();
     return state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Info[] {
-    return [...this.#handles.values()].map((handle) => handle.snapshotProcessInfo());
+    return [...this.#finished, ...[...this.#handles.values()].map((handle) => handle.snapshotProcessInfo())];
+  }
+
+  #release(pid: Process.ID): void {
+    const handle = this.#handles.get(pid);
+    if (!handle) {
+      return;
+    }
+    this.#handles.delete(pid);
+    this.#finished.push(handle.snapshotProcessInfo());
+    if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
+      this.#finished.shift();
+    }
+    this.#refreshProcessTree();
+  }
+
+  #isFinished(pid: Process.ID): boolean {
+    return this.#finished.some((info) => info.pid === pid);
   }
 
   #refreshProcessTree(): void {
@@ -470,6 +508,7 @@ export class ProcessManagerImpl implements Manager {
           }
         }
         this.#handles.clear();
+        this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
         log('lifecycle: manager suspended', { suspended: handleCount });
@@ -525,7 +564,7 @@ export class ProcessManagerImpl implements Manager {
         process: id,
       };
 
-      let handleRef: ProcessHandle.ProcessHandleImpl<I, O, any> | null = null;
+      let handleRef: ProcessHandle.Impl<I, O, any> | null = null;
 
       const annotations = Annotation.buildDictionary((dictionary) => {
         if (options?.target != null) {
@@ -558,10 +597,11 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (timeout?: number) => handleRef?.requestAlarm(timeout) ?? Effect.void,
       };
 
-      // One controller per run, fired by {@link ProcessHandle.ProcessHandleImpl.terminate} — the
+      // One controller per run, fired by {@link ProcessHandle.Impl.terminate} — the
       // local counterpart of the EDGE-provided Cancellation service.
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      const origin = resolveOrigin(environment, options?.origin);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -589,6 +629,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
@@ -630,7 +671,7 @@ export class ProcessManagerImpl implements Manager {
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
-            } else {
+            } else if (!this.#isFinished(handle.parentId)) {
               log.warn('lifecycle: parent missing for child exit', {
                 parentPid: handle.parentId,
                 childPid: handle.pid,
@@ -644,8 +685,8 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
         setState: (state: Process.State) => this.#store.setState(id, state),
         removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
-        deleteRecord: () => this.#store.deleteProcess(id),
+        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
@@ -665,7 +706,7 @@ export class ProcessManagerImpl implements Manager {
       // process scope, dispatching to the handlers the process declared via `create()`.
       const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
 
-      const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
+      const handle = new ProcessHandle.Impl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
         callbacks,
@@ -701,6 +742,7 @@ export class ProcessManagerImpl implements Manager {
         params: { name: params.name ?? null, annotations: params.annotations },
         environment: { space: environment.space, conversation: environment.conversation },
         parentId: Option.getOrNull(parentOption),
+        ...(origin !== undefined ? { origin } : {}),
         state: Process.State.RUNNING,
         alarmDueAt: null,
         events: [],
@@ -724,7 +766,7 @@ export class ProcessManagerImpl implements Manager {
   #rehydrate(
     record: PersistedProcess,
     definition: Process.Process<any, any, any, any>,
-  ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
+  ): Effect.Effect<ProcessHandle.Impl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
@@ -749,7 +791,7 @@ export class ProcessManagerImpl implements Manager {
         process: id,
       };
 
-      let handleRef: ProcessHandle.ProcessHandleImpl<any, any, any> | null = null;
+      let handleRef: ProcessHandle.Impl<any, any, any> | null = null;
 
       const params: Process.Params = {
         name: record.params.name,
@@ -772,7 +814,8 @@ export class ProcessManagerImpl implements Manager {
       };
 
       const cancellation = new AbortController();
-      let builtinCtx = Context.empty().pipe(
+      const origin = resolveOrigin(environment, record.origin);
+      let builtinCtx = originContext(origin).pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -798,6 +841,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          origin,
           tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
@@ -846,8 +890,8 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
         setState: (state: Process.State) => this.#store.setState(id, state),
         removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
-        deleteRecord: () => this.#store.deleteProcess(id),
+        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
@@ -857,7 +901,7 @@ export class ProcessManagerImpl implements Manager {
 
       const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
 
-      const handle = new ProcessHandle.ProcessHandleImpl<any, any, any>(
+      const handle = new ProcessHandle.Impl<any, any, any>(
         id,
         Option.getOrNull(parentOption),
         callbacks,
@@ -1068,7 +1112,7 @@ export class ProcessManagerImpl implements Manager {
 
 /**
  * Read-only handle view of a persisted process that is not currently live.
- * Returned by {@link ProcessManagerImpl.list} until {@link Handle.hydrate} is called.
+ * Returned by {@link Impl.list} until {@link Handle.hydrate} is called.
  */
 class DormantHandle<I, O> implements Handle<I, O, any> {
   readonly pid: Process.ID;
@@ -1171,7 +1215,7 @@ export const layer = (opts?: {
       const registry = yield* Registry.AtomRegistry;
       const traceSink = yield* Trace.TraceSink;
 
-      const manager = new ProcessManagerImpl({
+      const manager = new Impl({
         registry,
         kvStore,
         traceSink,

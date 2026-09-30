@@ -11,9 +11,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as AiService from '../AiService';
-import { AiServiceTestingPreset } from './index';
-import { processMessages } from './index';
+import * as AiService from '../AiService.ts';
+import { AiServiceTestingPreset } from './index.ts';
+import { processMessages } from './index.ts';
 
 describe('effect AI tool calls', () => {
   it.effect(
@@ -34,7 +34,7 @@ describe('effect AI tool calls', () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-sonnet-5.default').pipe(
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),
         ),
@@ -82,7 +82,7 @@ describe('effect AI tool calls', () => {
         expect(messages.length).toBeGreaterThan(1);
       },
       Effect.provide(
-        AiService.model('com.anthropic.model.claude-sonnet-5.default').pipe(
+        AiService.languageModel('com.anthropic.model.claude-sonnet-5.default').pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),

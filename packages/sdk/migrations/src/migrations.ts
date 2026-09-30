@@ -11,8 +11,8 @@ import { Annotation, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
-import { MigrationVersionAnnotation } from './annotations';
-import { MigrationBuilder } from './migration-builder';
+import { MigrationVersionAnnotation } from './annotations.ts';
+import { MigrationBuilder } from './migration-builder.ts';
 
 export type MigrationContext = {
   space: Space;

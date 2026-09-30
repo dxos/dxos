@@ -22,15 +22,16 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
+import { Database } from '@dxos/echo';
 import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
-import type { ProcessNotFoundError } from './errors';
-import { ProcessManagerService } from './process-manager-service';
-import type * as ProcessManager from './ProcessManager';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
+import type { ProcessNotFoundError } from './errors.ts';
+import { ProcessManagerService } from './process-manager-service.ts';
+import type * as ProcessManager from './ProcessManager.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
 export interface OperationFiber<T> {
   pid: Process.ID;
@@ -85,8 +86,12 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
                 }
                 case Process.State.TERMINATED:
                   return yield* Effect.die('Operation was terminated');
-                default:
+                case Process.State.SUCCEEDED:
                   return yield* Effect.die('Process produced no output');
+                default:
+                  // Outputs close on a live process only when the manager suspends it (app shutdown):
+                  // the invocation was cut short rather than answered, which is an interruption.
+                  return yield* Effect.interrupt;
               }
             }),
         }),
@@ -117,6 +122,8 @@ export const make = (opts: {
   manager: ProcessManager.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
+  /** Who the processes this invoker spawns attribute their database writes to (see `Database.Origin`). */
+  origin?: Database.Origin;
   remoteInvoker?: RemoteOperationInvoker.Invoker;
   tracer: Tracer.Tracer;
 }): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
@@ -169,6 +176,7 @@ export const make = (opts: {
       const handle = yield* opts.manager.spawn(executable, {
         ...options,
         parentProcessId: options?.detached ? undefined : opts.parentProcessId,
+        origin: opts.origin,
         name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
       });
       log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
@@ -389,7 +397,15 @@ export const layer: Layer.Layer<
     // `RemoteOperationInvoker.Service` is present in context; otherwise edge invocations die.
     const remoteInvoker = yield* Effect.serviceOption(RemoteOperationInvoker.Service);
     const tracer = yield* Effect.tracer;
-    const service = make({ manager, handlerSet, remoteInvoker: Option.getOrUndefined(remoteInvoker), tracer });
+    // A host provides `Database.Origin` to label what its root invocations write, e.g. `user` for an app's UI.
+    const origin = yield* Database.Origin;
+    const service = make({
+      manager,
+      handlerSet,
+      origin,
+      remoteInvoker: Option.getOrUndefined(remoteInvoker),
+      tracer,
+    });
     return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
   }),
 );

@@ -14,7 +14,7 @@ import { random } from '@dxos/random';
 import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
 
 export type StorageAdaptorKind = 'idb' | 'node' | 'sqlite';
 

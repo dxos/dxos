@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as RemoteTriggerManager from './RemoteTriggerManager';
+import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
 
 describe('RemoteTriggerManager', () => {
   test('layerNoop yields no triggers', async ({ expect }) => {
@@ -20,8 +20,9 @@ describe('RemoteTriggerManager', () => {
     });
     const result = await EffectEx.runPromise(
       program.pipe(
-        Effect.provide(RemoteTriggerManager.layerNoop),
-        Effect.provide(Layer.succeed(Registry.AtomRegistry, registry)),
+        Effect.provide(
+          Layer.provideMerge(RemoteTriggerManager.layerNoop, Layer.succeed(Registry.AtomRegistry, registry)),
+        ),
       ),
     );
     expect(result).toEqual([]);

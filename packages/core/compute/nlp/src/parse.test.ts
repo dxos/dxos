@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { assembleDocument } from './align';
-import { type Parser } from './parse';
-import { stubParse } from './testing';
+import { assembleDocument } from './align.ts';
+import { type Parser } from './parse.ts';
+import { stubParse } from './testing/index.ts';
 
 describe('parser seam', () => {
   test('stubParse satisfies the Parser contract', async ({ expect }) => {

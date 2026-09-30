@@ -16,9 +16,9 @@ import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testi
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { useComputeGraph } from '../ComputeGraph';
-import { SheetRoot } from '../SheetRoot';
-import { SheetContent } from './SheetContent';
+import { useComputeGraph } from '../ComputeGraph/index.ts';
+import { SheetRoot } from '../SheetRoot/index.ts';
+import { SheetContent } from './SheetContent.tsx';
 
 export const Basic = () => {
   const [space] = useSpaces();

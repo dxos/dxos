@@ -8,10 +8,10 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Role from '@dxos/app-framework/Role';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
@@ -20,7 +20,7 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { StoryLayout } from './layout';
+import { StoryLayout } from './layout.ts';
 
 /** Props a resolved object cell's override component receives. */
 export type ResolvedCellProps = {
@@ -54,8 +54,19 @@ export type ModuleLayout = ModuleSpec[][];
 export type ModuleContainerProps = {
   /** Static layout; omit when a harness contributes a runtime layout via {@link StoryLayout.Atom}. */
   layout?: ModuleLayout;
+  /**
+   * Column track sizes, underscore-separated as in a Tailwind arbitrary value (e.g. `2fr_1fr`);
+   * defaults to equal columns.
+   */
+  columns?: string;
+  /** Row track sizes per column, in the same form; a column without an entry has equal rows. */
+  rows?: readonly (string | undefined)[];
   compact?: boolean;
 };
+
+/** Grid tracks from an underscore-separated size list, else `count` equal tracks. */
+const tracks = (sizes: string | undefined, count: number): string =>
+  sizes?.replaceAll('_', ' ') ?? `repeat(${count}, minmax(0, 1fr))`;
 
 /** Stable fallback so `useAtomValue` stays unconditional when no {@link StoryLayout.Atom} is contributed. */
 const emptyLayoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
@@ -143,7 +154,7 @@ const describeBinding = (value: unknown): string => {
  * or an unregistered subject type instead of staring at a blank cell.
  */
 const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> }) => (
-  <div className='grid place-items-center p-2 text-xs text-warning'>
+  <div className='grid place-items-center p-2 text-xs text-warning-text'>
     <div className='grid gap-1 rounded-sm border border-dashed border-separator p-2 font-mono'>
       <div className='font-medium'>⚠ No surface matched this binding</div>
       <div>role: {role}</div>
@@ -157,18 +168,26 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
 );
 
 /**
- * Dispatches a surface for a cell, falling back to {@link BindingDebug} once no registered surface
+ * Dispatches a surface for a cell, falling back to {@link BindingDebug} while no registered surface
  * matches the binding (after {@link BINDING_SETTLE_DELAY} to tolerate late surface registration).
+ *
+ * Subscribed to the role's candidates and its pending flag, because `useIsAvailable` reads them
+ * without subscribing and is itself what fires the demand that loads a role-gated module: the first
+ * miss is expected, and without the subscription nothing re-renders this cell when the contribution
+ * lands.
  */
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
   const isAvailable = Surface.useIsAvailable();
+  const surfaceManager = useSurfaceManager();
+  useAtomValue(surfaceManager.candidatesAtom(type.role));
+  const pending = useAtomValue(surfaceManager.pendingAtom(type.role));
   const [settled, setSettled] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setSettled(true), BINDING_SETTLE_DELAY);
     return () => clearTimeout(timer);
   }, []);
 
-  if (settled && !isAvailable({ type, data })) {
+  if (settled && !pending && !isAvailable({ type, data })) {
     return <BindingDebug role={type.role} data={data} />;
   }
 
@@ -188,21 +207,26 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
  * drive its layout with this container. Provide `withAttention()` (from `@dxos/react-ui-attention/testing`)
  * in the story decorators to make attention actually track focus.
  */
-export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProps) => {
+export const ModuleContainer = ({ layout, columns, rows, compact = false }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const { graph } = useAppGraph();
-  const [space] = useSpaces();
+  const spaces = useSpaces();
+  const [space] = spaces;
 
   // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
   const [layoutAtom] = useCapabilities(StoryLayout.Atom);
   const resolvedLayout = useAtomValue(layoutAtom ?? emptyLayoutAtom) ?? layout ?? [];
 
+  // Falls back to the first space only while the workspace names none that exists: a story may own
+  // the workspace itself (a space picker, say), and pinning the first space would undo its choice.
   useEffect(() => {
-    if (space && AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
+    const activeId = AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace);
+    const active = activeId && spaces.find((space) => space.id === activeId);
+    if (!active && space) {
       atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: GraphPath.getSpacePath(space.id) });
     }
-  }, [space, layoutState, atomRegistry]);
+  }, [spaces, space, layoutState, atomRegistry]);
 
   // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
   // the work the deck's navtree normally does on navigation.
@@ -214,7 +238,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
     : [];
   useEffect(() => {
     for (const path of objectPaths) {
-      NotFound.expandPath(graph, path);
+      AppGraph.expandPath(graph, path);
     }
   }, [graph, JSON.stringify(objectPaths)]);
 
@@ -225,13 +249,13 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   return (
     <div
       className={mx('dx-fill dx-fullscreen grid', !compact && 'gap-2 p-2')}
-      style={{ gridTemplateColumns: `repeat(${resolvedLayout.length}, minmax(0, 1fr))` }}
+      style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
     >
       {resolvedLayout.map((column, columnIndex) => (
         <div
           key={columnIndex}
           className={mx('dx-expand grid', !compact && 'gap-2')}
-          style={{ gridTemplateRows: `repeat(${column.length}, minmax(0, 1fr))` }}
+          style={{ gridTemplateRows: tracks(rows?.[columnIndex], column.length) }}
         >
           {column.map((spec, moduleIndex) => {
             const cell = normalizeCell(spec, space.id, `${columnIndex}:${moduleIndex}`);

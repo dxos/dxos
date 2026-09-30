@@ -57,6 +57,7 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
@@ -70,8 +71,8 @@ import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storyboo
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
-import { moduleSurfaces } from '../modules';
-import { CalculatorHandlers, CalculatorSkill } from './calculator';
+import { moduleSurfaces } from '../modules/index.ts';
+import { CalculatorHandlers, CalculatorSkill } from './calculator.ts';
 
 /** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
 export const storyParameters = {
@@ -128,7 +129,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
-  // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
+  // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
   const chats = useQuery(space?.db, Filter.type(Chat.Chat));
@@ -194,6 +195,9 @@ const toStoryDecoratorsProps = ({
     ...types,
   ],
   plugins: [
+    // Registers the document card surface. Without it a seeded `Markdown.Document` has no card of
+    // its own and falls through to `plugin-preview`'s JSON dump, which is the last-resort surface.
+    MarkdownPlugin.make(),
     PreviewPlugin.make(),
     RoutinePlugin.make(),
     AssistantPlugin.make(
@@ -288,7 +292,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
   Plugin.addModule(({ createAgent, onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.setup',
     // Runtime event: the space isn't available until the client observes it.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
     requires: [Capabilities.OperationInvoker, ClientCapabilities.Client, Capabilities.AtomRegistry],
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capabilities.OperationInvoker;

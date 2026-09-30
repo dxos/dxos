@@ -54,6 +54,9 @@
       "path": "../lit-ui"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {

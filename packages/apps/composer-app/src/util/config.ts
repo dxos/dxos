@@ -14,11 +14,16 @@ import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtens
 import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
 import { getHostPlatform, isNonNullable } from '@dxos/util';
 
-import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
+import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants.ts';
 
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
 export const PARAM_LOG_LEVEL = 'log';
+/**
+ * `?model=scripted` swaps every language model the assistant resolves for the offline script in
+ * `util/scripted-model.ts`, so the perf flow drives a whole agent loop without a provider.
+ */
+export const PARAM_MODEL = 'model';
 
 export const setSafeModeUrl = (on: boolean) => {
   const url = new URL(window.location.href);
@@ -112,6 +117,7 @@ export const initializeObservability = async (
         config,
         release: composerBuildVersion(config),
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
+        serviceName: 'composer',
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
         feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),
@@ -120,6 +126,8 @@ export const initializeObservability = async (
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),
     Observability.addDataProvider(ObservabilityProvider.Storage.provider),
+    Observability.addDataProvider(ObservabilityProvider.ObjectEvents.provider),
+    Observability.addDataProvider(ObservabilityProvider.SpaceEvents.provider),
     // Registered here rather than in plugin-observability because this runs in the dedicated
     // worker too, and the plugin's capability only runs in the tab — so the worker's own event
     // loop would otherwise never be measured.

@@ -9,8 +9,8 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText } from '../llm';
-import { type ModelVariant } from '../models';
+import { generateText } from '../llm.ts';
+import { type ModelVariant } from '../models.ts';
 
 /** A full multi-bullet summary vs a one-line category label (cheap, for org / bulk mail). */
 export type SummaryKind = 'summary' | 'label';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
@@ -51,9 +51,9 @@ PaneRoot.displayName = 'Pane.Root';
 //
 
 const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : 'div';
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...composableProps(props, {
         style: iconSize(5),
         classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
@@ -61,7 +61,7 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
       ref={forwardedRef}
     >
       <DensityProvider density='lg'>{children}</DensityProvider>
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -72,11 +72,10 @@ PaneToolbar.displayName = 'Pane.Toolbar';
 //
 
 const PaneContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : 'div';
   return (
-    <Comp {...composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -117,6 +116,7 @@ export type PaneTab = {
   icon: string;
   /** Already-localized label. */
   label: string;
+  testId?: string;
 };
 
 type PaneTabsProps = Merge<
@@ -143,13 +143,14 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
         className={mx('flex-1 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
         ref={forwardedRef}
       >
-        {tabs.map(({ id, icon, label }) => (
+        {tabs.map(({ id, icon, label, testId }) => (
           <IconButton
             key={id}
             role='tab'
             aria-selected={value === id}
             tabIndex={value === id ? 0 : -1}
             data-id={id}
+            data-testid={testId}
             icon={icon}
             iconOnly={tabs.length > maxTabs && value !== id}
             label={label}

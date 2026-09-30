@@ -1,0 +1,33 @@
+{
+  "name": "@dxos/perf-harness",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Stage-scoped browser performance and memory instrumentation for e2e flows.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

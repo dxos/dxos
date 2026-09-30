@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './cli';
+export * from './cli.ts';

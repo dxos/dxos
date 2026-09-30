@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
-import { useCapabilities, useCapability } from './useCapabilities';
+import { useCapabilities, useCapability } from './useCapabilities.ts';
 
 const TestCapability = Capability.makeSingleton<{ value: string }>()('org.dxos.test.capability');
 

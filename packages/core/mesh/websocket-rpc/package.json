@@ -26,6 +26,7 @@
     "README.md"
   ],
   "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",

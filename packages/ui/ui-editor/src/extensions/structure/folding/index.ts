@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './folding';
-export * from './turns';
+export * from './folding.ts';
+export * from './turns.ts';

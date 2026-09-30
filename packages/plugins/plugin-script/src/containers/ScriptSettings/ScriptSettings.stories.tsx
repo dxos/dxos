@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ScriptSettings } from './ScriptSettings';
+import { ScriptSettings } from './ScriptSettings.tsx';
 
 const meta = {
   title: 'plugins/plugin-script/containers/ScriptSettings',

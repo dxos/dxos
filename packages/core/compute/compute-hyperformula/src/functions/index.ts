@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './async-function';
-export * from './edge-function';
-export * from './function-defs';
+export * from './async-function.ts';
+export * from './edge-function.ts';
+export * from './function-defs.ts';

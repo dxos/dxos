@@ -17,12 +17,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -118,6 +120,11 @@
       "types": "./dist/types/src/types/DeckRole.d.ts",
       "import": "./dist/lib/DeckRole.mjs"
     },
+    "./DeckSeed": {
+      "source": "./src/seed/DeckSeed.ts",
+      "types": "./dist/types/src/seed/DeckSeed.d.ts",
+      "import": "./dist/lib/DeckSeed.mjs"
+    },
     "./DeckSchema": {
       "source": "./src/types/DeckSchema.ts",
       "types": "./dist/types/src/types/DeckSchema.d.ts",
@@ -156,6 +163,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -171,24 +179,21 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-focus": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
     "@tauri-apps/plugin-deep-link": "catalog:",
     "immer": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

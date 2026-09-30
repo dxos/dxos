@@ -14,23 +14,24 @@ import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
-import type * as Blob from './Blob';
-import type * as Entity from './Entity';
-import * as Error from './Error';
-import type * as Feed from './Feed';
-import type * as Filter from './Filter';
-import type * as Hypergraph from './Hypergraph';
-import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
+import type * as Blob from './Blob.ts';
+import type * as Change from './Change.ts';
+import type * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import type * as Feed from './Feed.ts';
+import type * as Filter from './Filter.ts';
+import type * as Hypergraph from './Hypergraph.ts';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types/index.ts';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
-import { isInstanceOf } from './internal/Entity/type-uri';
-import * as queryInternal from './internal/Query';
-import type { Ref } from './internal/Ref/ref';
-import type * as Obj from './Obj';
-import type * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import type * as Registry from './Registry';
-import type * as Type from './Type';
+import { isInstanceOf } from './internal/Entity/type-uri.ts';
+import * as queryInternal from './internal/Query/index.ts';
+import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
+import type * as Obj from './Obj.ts';
+import type * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import type * as Registry from './Registry.ts';
+import type * as Type from './Type.ts';
 
 /**
  * `query` API function declaration.
@@ -54,6 +55,41 @@ export type GetObjectByIdOptions = {
 
 export type ObjectPlacement = 'root-doc' | 'linked-doc';
 
+/**
+ * Whether a write was a person's own action, reported with ECHO's trace events. `system` is everything a person
+ * did not directly do: agents, syncs and imports, seeded content, migrations and automation. When no origin is
+ * given, an object with foreign keys was written by a sync or import (`system`) and anything else is `unknown`:
+ * a write path that still needs attributing.
+ */
+export type Origin = 'user' | 'system' | 'unknown';
+
+/**
+ * The {@link Origin} the Effect wrappers ({@link add}, {@link remove}, {@link addType}, {@link appendToFeed})
+ * attribute their writes to. Provided once around a unit of work, e.g. `system` around seeding code or an
+ * agent's operations, rather than at every write.
+ */
+export const Origin: Context.Reference<Origin | undefined> = Context.Reference<Origin | undefined>(
+  '@dxos/echo/Database/Origin',
+  { defaultValue: () => undefined },
+);
+
+/**
+ * The trace events ECHO emits on `trace.events` from `@dxos/tracing` for local writes, each with the write's
+ * {@link Origin}. Replicated writes are not reported.
+ */
+export const TraceEvents = {
+  objectAdd: 'echo.object.add',
+  objectRemove: 'echo.object.remove',
+  typeAdd: 'echo.type.add',
+  feedAppend: 'echo.feed.append',
+} as const;
+
+/** Options for writes that only carry attribution. */
+export type WriteOptions = {
+  /** See {@link Origin}. */
+  origin?: Origin;
+};
+
 export type AddOptions = {
   /**
    * Where to place the object in the Automerge document tree.
@@ -64,6 +100,9 @@ export type AddOptions = {
    * @default 'linked-doc'
    */
   placeIn?: ObjectPlacement;
+
+  /** See {@link Origin}. */
+  origin?: Origin;
 
   /**
    * Append the object to this feed instead of the automerge-backed space database. The object is
@@ -98,6 +137,12 @@ export type FlushOptions = {
   indexes?: boolean;
 
   /**
+   * Also wait for the secondary indexes (full text), which lag the primary pass by design.
+   * @default false
+   */
+  secondaryIndexes?: boolean;
+
+  /**
    * Flush pending updates to objects and queries.
    * @default false
    */
@@ -118,8 +163,12 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
 
 /**
  * Identifier denoting an ECHO Database.
+ *
+ * Namespaced (like `@dxos/echo/Database/Service` below) rather than the bare `@dxos/echo/Database`:
+ * that key belongs to the `[ObjectDatabaseId]` accessor every ECHO object carries, and a shared
+ * registry key would make `TypeId in obj` true for every object in the graph.
  */
-export const TypeId = Symbol.for('@dxos/echo/Database');
+export const TypeId = Symbol.for('@dxos/echo/Database/TypeId');
 export type TypeId = typeof TypeId;
 
 /**
@@ -182,13 +231,13 @@ export interface Database extends Queryable {
    * this space, the existing persisted entity is returned and no duplicate is created. This is
    * the only supported way to add Type entities — {@link add} rejects them.
    */
-  addType<T extends Type.AnyEntity>(type: T): Promise<T>;
+  addType<T extends Type.AnyEntity>(type: T, opts?: WriteOptions): Promise<T>;
 
   /**
    * Removes object from the database.
    */
   // TODO(burdon): Return true if removed (currently throws if not present).
-  remove(obj: Entity.Unknown): void;
+  remove(obj: Entity.Unknown, opts?: WriteOptions): void;
 
   /**
    * Appends entities to a feed.
@@ -196,7 +245,7 @@ export interface Database extends Queryable {
    * The feed must already be stored in the database (added via {@link add}); its underlying
    * queue is addressed by the feed object's URI.
    */
-  appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
+  appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[], opts?: WriteOptions): Promise<void>;
 
   /**
    * Removes entities from a feed.
@@ -227,6 +276,12 @@ export interface Database extends Queryable {
    * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
    */
   getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
+
+  /**
+   * The object's history, oldest first: one entry per document change that touched the object (or,
+   * given `property`, that property). Prefer `Obj.getChanges(obj, opts)`.
+   */
+  getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[];
 
   /** All branch names available for an object, including the implicit `'main'` (always first). */
   listBranches(objectId: string): string[];
@@ -293,6 +348,20 @@ export interface Database extends Queryable {
    * (`reason: 'backend-not-registered'` — the requested storage name has no registered backend).
    */
   createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
+
+  /**
+   * Adopts bytes already staged by a direct upload, returning an un-added Blob object.
+   *
+   * Unlike {@link createBlob} the bytes never enter this process: they were written straight to the
+   * store by whoever held the upload URL, which is the point — the uploader is typically an agent's
+   * shell moving a file far too large to pass through a model. Size and content type therefore come
+   * back from the store rather than from the caller.
+   *
+   * Rejects with `Error.BlobNotAvailableError` (`reason: 'backend-not-registered'` when the storage
+   * name has no backend, `'not-found'` when the backend cannot adopt uploads or the upload is gone)
+   * or `Error.BlobWriteError` if adoption fails.
+   */
+  createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob>;
 
   /**
    * Loads a blob's bytes. Rejects with `Error.BlobNotAvailableError` if the backend for the blob's
@@ -445,7 +514,12 @@ export const resolve: {
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
- * Loads an object reference.
+ * Loads an object reference. A deleted target reads as absent unless `{ deleted: 'include' }` asks
+ * for it.
+ *
+ * The options parameter means this cannot be passed point-free where the caller supplies a second
+ * argument — `Effect.forEach(refs, (ref) => load(ref))`, not `Effect.forEach(refs, load)`, since the
+ * iteratee index would land on `options`.
  *
  * Catching not found error:
  *
@@ -454,15 +528,14 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
-  function* (ref) {
-    const object = yield* Effect.promise(() => ref.tryLoad());
+export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, Error.EntityNotFoundError, never> =
+  Effect.fn('Database.load')(function* (ref, options) {
+    const object = yield* Effect.promise(() => ref.tryLoad(options));
     if (!object) {
       return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
     return object;
-  },
-);
+  });
 
 /**
  * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
@@ -480,6 +553,15 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundErro
 export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
 
 /**
+ * Makes a reference to an object addressed by URI, resolvable against this database.
+ * @see {@link Database.makeRef}
+ */
+export const makeRef = <T extends Entity.Unknown = Entity.Unknown>(
+  uri: URI.URI,
+): Effect.Effect<Ref<T>, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.makeRef<T>(uri))).pipe(Effect.withSpan('Database.makeRef'), withSpaceId);
+
+/**
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
@@ -487,34 +569,40 @@ export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
 // point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
 // iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'), withSpaceId);
+  Service.pipe(Effect.flatMap(({ db }) => Effect.map(Origin, (origin) => db.add<T>(obj, { origin })))).pipe(
+    Effect.withSpan('Database.add'),
+    withSpaceId,
+  );
 
 /**
  * Persists a Type definition to the database.
  * @see {@link Database.addType}
  */
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(
-    Effect.withSpan('Database.addType'),
-    withSpaceId,
-  );
+  Service.pipe(
+    Effect.flatMap(({ db }) => Effect.flatMap(Origin, (origin) => Effect.promise(() => db.addType(type, { origin })))),
+  ).pipe(Effect.withSpan('Database.addType'), withSpaceId);
 
 /**
  * Removes an object from the database.
  * @see {@link Database.remove}
  */
 export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'), withSpaceId);
+  Service.pipe(Effect.flatMap(({ db }) => Effect.map(Origin, (origin) => db.remove(obj, { origin })))).pipe(
+    Effect.withSpan('Database.remove'),
+    withSpaceId,
+  );
 
 /**
  * Appends entities to a feed.
  * @see {@link Database.appendToFeed}
  */
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities)))).pipe(
-    Effect.withSpan('Database.appendToFeed'),
-    withSpaceId,
-  );
+  Service.pipe(
+    Effect.flatMap(({ db }) =>
+      Effect.flatMap(Origin, (origin) => Effect.promise(() => db.appendToFeed(feed, entities, { origin }))),
+    ),
+  ).pipe(Effect.withSpan('Database.appendToFeed'), withSpaceId);
 
 /**
  * Removes entities from a feed.
@@ -677,6 +765,8 @@ export interface HostLoadedStats {
   readonly documentsTotal: number;
   /** Active reactive queries registered with the host, across every space. */
   readonly queriesTotal: number;
+  /** Documents something on the host is using right now, across every space; the rest of `documentsTotal` is idle cache. */
+  readonly leases: number;
 }
 
 /**

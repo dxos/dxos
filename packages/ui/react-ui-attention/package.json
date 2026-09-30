@@ -35,15 +35,13 @@
     "src"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

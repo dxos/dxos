@@ -23,7 +23,7 @@ import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { type AiChatServices, skillRegistry } from '../../util';
+import { type AiChatServices, skillRegistry } from '../../util/index.ts';
 
 export type ChatProcessorOptions = {
   runtime: Context.Context<AiChatServices>;
@@ -67,7 +67,7 @@ export class ChatProcessor {
   ) {
     const fiber = request.pipe(
       Effect.provide(
-        Layer.mergeAll(AiService.model(DXN.getName(model)), ToolExecutionServices).pipe(
+        Layer.mergeAll(AiService.languageModel(DXN.getName(model)), ToolExecutionServices).pipe(
           Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
           Layer.provideMerge(OperationHandlerSet.provide(this._functions)),
         ),

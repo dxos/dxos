@@ -23,7 +23,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Assistant } from '#types';
 
-import { AiChatProcessor, type AiServicePreset } from '../processor';
+import { AiChatProcessor, type AiServicePreset } from '../processor/index.ts';
 
 export type UseChatProcessorProps = {
   db?: Database.Database;
@@ -65,7 +65,9 @@ export const useChatProcessor = ({
       runtime,
       registry: observableRegistry,
     });
+    const openedAt = performance.now();
     await session.open();
+    log('session opened', { chat: chat.id, duration: Math.round(performance.now() - openedAt) });
     setSession(session);
     return () => {
       void session.close();

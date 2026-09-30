@@ -11,24 +11,25 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type DeleteSpaceResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { CliError } from '../../../util/errors.ts';
+import { AdminApiError, adminRequest, formatAdminError } from '../util.ts';
 
 export const del = Command.make(
   'delete',
   {
-    spaceId: Args.string('spaceId'),
-    force: Options.boolean('force').pipe(
+    spaceId: Args.String('spaceId'),
+    force: Options.Boolean('force').pipe(
       Options.withDescription('Confirm irreversible deletion.'),
       Options.withDefault(false),
     ),
   },
   Effect.fn(function* ({ spaceId, force }) {
     if (!force) {
-      return yield* Effect.fail(new Error('This action is irreversible. Pass --force to confirm.'));
+      return yield* Effect.fail(new CliError({ message: 'This action is irreversible. Pass --force to confirm.' }));
     }
 
     const result = yield* adminRequest<DeleteSpaceResponse>('DELETE', `/admin/spaces/${spaceId}`).pipe(
-      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
     );
 
     if (yield* CommandConfig.isJson) {

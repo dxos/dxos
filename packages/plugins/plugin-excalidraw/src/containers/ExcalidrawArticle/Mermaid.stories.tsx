@@ -5,15 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { type ContentMap, Mermaid } from '@dxos/diagram';
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type ContentMap, Mermaid } from '@dxos/plugin-illustrator/model';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { applyCommands } from '#model';
 import { Excalidraw } from '#types';
 
-import { ExcalidrawArticle } from './ExcalidrawArticle';
+import { ExcalidrawArticle } from './ExcalidrawArticle.tsx';
 
 const FLOWCHART = `
 flowchart TB

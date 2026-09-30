@@ -6,21 +6,23 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+// Loaded only through the lazy registry containers, so Next's CSS stays out of the boot graph.
+import '@dxos/react-ui/next/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import { EffectEx } from '@dxos/effect';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
 
-import { useDisableConfirmation } from '../../hooks';
-import { getPluginPath } from '../../paths';
+import { useDisableConfirmation } from '../../hooks/index.ts';
+import { getPluginPath } from '../../paths.ts';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
   const haystack = `${plugin.meta.profile.name ?? ''} ${plugin.meta.profile.key}`.toLowerCase();
@@ -47,6 +49,7 @@ export type BaseRegistryArticleProps = {
   | 'updateAvailableIds'
   | 'extraTagsById'
   | 'failuresById'
+  | 'deviceOnlyIds'
   | 'onInstall'
   | 'onUpdate'
 >;
@@ -64,6 +67,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       updateAvailableIds,
       extraTagsById,
       failuresById,
+      deviceOnlyIds,
       onInstall,
       onUpdate,
       ...props
@@ -75,6 +79,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
+    const settingsSync = useOptionalCapability(AppCapabilities.SettingsSync);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {
@@ -134,46 +139,42 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>{t('filter.label')}</Input.Label>
-              <Input.TextInput
-                placeholder={t('filter.placeholder')}
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Input.Root>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              {filtered.length > 0 ? (
-                <PluginList
-                  plugins={filtered}
-                  enabled={enabled}
-                  installed={installed}
-                  installing={installing}
-                  updating={updating}
-                  updateAvailableIds={updateAvailableIds}
-                  extraTagsById={extraTagsById}
-                  failuresById={failuresById}
-                  onClick={handleClick}
-                  onChange={handleChange}
-                  onInstall={onInstall}
-                  onUpdate={onUpdate}
-                  hasSettings={hasSettings}
-                  onSettings={handleSettings}
-                />
-              ) : (
-                empty
-              )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-      </Panel.Root>
+      <Next.Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Input
+              aria-label={t('filter.label')}
+              placeholder={t('filter.placeholder')}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body>
+          {filtered.length > 0 ? (
+            <PluginList
+              plugins={filtered}
+              enabled={enabled}
+              installed={installed}
+              installing={installing}
+              updating={updating}
+              updateAvailableIds={updateAvailableIds}
+              extraTagsById={extraTagsById}
+              failuresById={failuresById}
+              deviceOnlyIds={deviceOnlyIds}
+              onClick={handleClick}
+              readOnly={settingsSync === undefined}
+              onChange={handleChange}
+              onInstall={onInstall}
+              onUpdate={onUpdate}
+              hasSettings={hasSettings}
+              onSettings={handleSettings}
+            />
+          ) : (
+            empty
+          )}
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 );

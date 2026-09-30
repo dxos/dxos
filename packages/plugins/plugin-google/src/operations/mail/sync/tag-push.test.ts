@@ -21,10 +21,10 @@ import { Message } from '@dxos/types';
 
 import { type GmailDataset, GoogleMailApi } from '#services';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { GoogleApiError } from '../../../errors';
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { runGoogleSync } from '../../../testing/sync-fixture';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import { GoogleApiError } from '../../../errors.ts';
+import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
+import { runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /**
  * Bidirectional tag sync against the mock provider — the local → provider half that

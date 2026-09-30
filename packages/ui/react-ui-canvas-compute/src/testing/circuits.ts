@@ -32,10 +32,14 @@ import {
   createTemplate,
   createText,
   createTextToImage,
-} from '../shapes';
+} from '../shapes/index.ts';
 
 //
 // Circuits
+//
+// Every circuit is laid out around the origin: the extent of its node centres is centred on (0, 0) to
+// within half a cell, so a scene opens on its content rather than off to one side. `circuits.test.ts`
+// holds the layouts to it.
 //
 
 export const createEmptyCircuit = () => {
@@ -45,10 +49,10 @@ export const createEmptyCircuit = () => {
 export const createBasicCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
-    const a = model.createNode(createSwitch(position({ x: -4, y: 0 })));
-    const b = model.createNode(createBeacon(position({ x: 4, y: 0 })));
-    const c = model.createNode(createBeacon(position({ x: 4, y: 4 })));
-    const d = model.createNode(createNot(position({ x: 0, y: 4 })));
+    const a = model.createNode(createSwitch(position({ x: -4, y: -2 })));
+    const b = model.createNode(createBeacon(position({ x: 4, y: -2 })));
+    const c = model.createNode(createBeacon(position({ x: 4, y: 2 })));
+    const d = model.createNode(createNot(position({ x: 0, y: 2 })));
 
     model.createEdge({ source: a.id, target: b.id });
     model.createEdge({ source: d.id, target: c.id });
@@ -60,14 +64,14 @@ export const createBasicCircuit = () => {
 export const createTransformCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
-    const a = model.createNode(createRandom(position({ x: -8, y: -3 })));
-    const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...position({ x: -8, y: 2 }) }));
-    const c = model.createNode(createJsonTransform(position({ x: 0, y: 0 })));
-    const d = model.createNode(createBeacon(position({ x: 8, y: 0 })));
+    const a = model.createNode(createRandom(position({ x: -8, y: -1 })));
+    const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...position({ x: -8, y: 4 }) }));
+    const c = model.createNode(createJsonTransform(position({ x: 0, y: 2 })));
+    const d = model.createNode(createBeacon(position({ x: 8, y: 2 })));
 
     // TODO(burdon): Make id optional.
     model.createNode(
-      createNote({ id: EntityId.random(), text: 'Random number generator', ...position({ x: 0, y: -6 }) }),
+      createNote({ id: EntityId.random(), text: 'Random number generator', ...position({ x: 0, y: -4 }) }),
     );
     model.createEdge({ source: a.id, target: c.id });
     model.createEdge({ source: b.id, target: c.id, input: 'expression' });
@@ -80,12 +84,12 @@ export const createTransformCircuit = () => {
 export const createLogicCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
-    const a1 = model.createNode(createSwitch(position({ x: -4, y: -4 })));
-    const a2 = model.createNode(createSwitch(position({ x: -4, y: 0 })));
-    const a3 = model.createNode(createSwitch(position({ x: -4, y: 4 })));
-    const b1 = model.createNode(createAnd(position({ x: 0, y: -2 })));
-    const c1 = model.createNode(createOr(position({ x: 4, y: 0 })));
-    const d1 = model.createNode(createBeacon(position({ x: 8, y: 0 })));
+    const a1 = model.createNode(createSwitch(position({ x: -6, y: -4 })));
+    const a2 = model.createNode(createSwitch(position({ x: -6, y: 0 })));
+    const a3 = model.createNode(createSwitch(position({ x: -6, y: 4 })));
+    const b1 = model.createNode(createAnd(position({ x: -2, y: -2 })));
+    const c1 = model.createNode(createOr(position({ x: 2, y: 0 })));
+    const d1 = model.createNode(createBeacon(position({ x: 6, y: 0 })));
 
     model.createEdge({ source: a1.id, target: b1.id, input: 'a' });
     model.createEdge({ source: a2.id, target: b1.id, input: 'b' });
@@ -100,15 +104,15 @@ export const createLogicCircuit = () => {
 export const createControlCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
-    const s = model.createNode(createSwitch(position({ x: -9, y: -1 })));
-    const c1 = model.createNode(createConstant({ value: 'hello', ...position({ x: -10, y: -10 }) }));
-    const c2 = model.createNode(createConstant({ value: 'world', ...position({ x: -10, y: -5 }) }));
-    const c3 = model.createNode(createConstant({ value: true, ...position({ x: -10, y: 3 }) }));
-    const if1 = model.createNode(createIf(position({ x: 0, y: 1 })));
-    const if2 = model.createNode(createIfElse(position({ x: 0, y: -8 })));
-    const b1 = model.createNode(createBeacon(position({ x: 9, y: -1 })));
-    const b2 = model.createNode(createBeacon(position({ x: 9, y: 3 })));
-    const j = model.createNode(createJson(position({ x: 12, y: -8 })));
+    const s = model.createNode(createSwitch(position({ x: -10, y: 2 })));
+    const c1 = model.createNode(createConstant({ value: 'hello', ...position({ x: -11, y: -7 }) }));
+    const c2 = model.createNode(createConstant({ value: 'world', ...position({ x: -11, y: -2 }) }));
+    const c3 = model.createNode(createConstant({ value: true, ...position({ x: -11, y: 6 }) }));
+    const if1 = model.createNode(createIf(position({ x: -1, y: 4 })));
+    const if2 = model.createNode(createIfElse(position({ x: -1, y: -5 })));
+    const b1 = model.createNode(createBeacon(position({ x: 8, y: 2 })));
+    const b2 = model.createNode(createBeacon(position({ x: 8, y: 6 })));
+    const j = model.createNode(createJson(position({ x: 11, y: -5 })));
 
     model.createEdge({ source: s.id, target: if1.id, input: 'condition' });
     model.createEdge({ source: s.id, target: if2.id, input: 'condition' });
@@ -128,10 +132,10 @@ export const createTemplateCircuit = () => {
 
   // Gpt
   {
-    const chat = model.createNode(createChat(position({ x: -12, y: 6 })));
-    const template = model.createNode(createTemplate(position({ x: -12, y: -4 })));
-    const gpt = model.createNode(createGpt(position({ x: 0, y: 0 })));
-    const text = model.createNode(createText(position({ x: 14, y: 0 })));
+    const chat = model.createNode(createChat(position({ x: -13, y: -10 })));
+    const template = model.createNode(createTemplate(position({ x: -13, y: -20 })));
+    const gpt = model.createNode(createGpt(position({ x: -1, y: -16 })));
+    const text = model.createNode(createText(position({ x: 13, y: -16 })));
 
     model.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
     model.createEdge({ source: gpt.id, target: text.id, output: 'text' });
@@ -141,12 +145,12 @@ export const createTemplateCircuit = () => {
   // Text
   {
     const text = model.createNode(
-      createConstant({ value: 'DXOS', ...position({ x: -12, y: 15, width: 8, height: 4 }) }),
+      createConstant({ value: 'DXOS', ...position({ x: -13, y: -1, width: 8, height: 4 }) }),
     );
     const template = model.createNode(
-      createTemplate({ valueType: 'string', text: 'Hello, {{name}}!', ...position({ x: 0, y: 15 }) }),
+      createTemplate({ valueType: 'string', text: 'Hello, {{name}}!', ...position({ x: -1, y: -1 }) }),
     );
-    const view = model.createNode(createSurface(position({ x: 14, y: 15 })));
+    const view = model.createNode(createSurface(position({ x: 13, y: -1 })));
     model.createEdge({ source: text.id, target: template.id, input: 'name' });
     model.createEdge({ source: template.id, target: view.id });
   }
@@ -154,13 +158,13 @@ export const createTemplateCircuit = () => {
   // Json
   {
     const sender = model.createNode(
-      createConstant({ value: 'alice@example.com', ...position({ x: -12, y: 24, width: 8, height: 4 }) }),
+      createConstant({ value: 'alice@example.com', ...position({ x: -13, y: 8, width: 8, height: 4 }) }),
     );
     const body = model.createNode(
-      createConstant({ value: 'Hello', ...position({ x: -12, y: 29, width: 8, height: 4 }) }),
+      createConstant({ value: 'Hello', ...position({ x: -13, y: 13, width: 8, height: 4 }) }),
     );
     const meta = model.createNode(
-      createConstant({ value: { location: 'Tokyo' }, ...position({ x: -12, y: 35, width: 8, height: 6 }) }),
+      createConstant({ value: { location: 'Tokyo' }, ...position({ x: -13, y: 19, width: 8, height: 6 }) }),
     );
     const template = model.createNode(
       createTemplate({
@@ -176,10 +180,10 @@ export const createTemplateCircuit = () => {
           null,
           2,
         ),
-        ...position({ x: 0, y: 30 }),
+        ...position({ x: -1, y: 14 }),
       }),
     );
-    const view = model.createNode(createSurface(position({ x: 14, y: 30 })));
+    const view = model.createNode(createSurface(position({ x: 13, y: 14 })));
     model.createEdge({ source: sender.id, target: template.id, input: 'recipient' });
     model.createEdge({ source: body.id, target: template.id, input: 'greeting' });
     model.createEdge({ source: meta.id, target: template.id, input: 'meta' });
@@ -195,13 +199,13 @@ export const createArtifactCircuit = () => {
     const prompt = model.createNode(
       createTemplate({
         text: createSystemPrompt({}),
-        ...position({ x: -10, y: -5, width: 8, height: 18 }),
+        ...position({ x: -13, y: -7, width: 8, height: 18 }),
       }),
     );
-    const chat = model.createNode(createChat(position({ x: -10, y: 8, width: 8, height: 6 })));
-    const gpt = model.createNode(createGpt(position({ x: 0, y: 0 })));
-    const text = model.createNode(createText(position({ x: 16, y: 8, width: 16, height: 6 })));
-    const surface = model.createNode(createSurface(position({ x: 16, y: -5, width: 16, height: 18 })));
+    const chat = model.createNode(createChat(position({ x: -13, y: 6, width: 8, height: 6 })));
+    const gpt = model.createNode(createGpt(position({ x: -3, y: -2 })));
+    const text = model.createNode(createText(position({ x: 13, y: 6, width: 16, height: 6 })));
+    const surface = model.createNode(createSurface(position({ x: 13, y: -7, width: 16, height: 18 })));
     model.createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' });
     model.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
     model.createEdge({ source: gpt.id, target: text.id, output: 'text' });
@@ -221,9 +225,9 @@ export const createGptCircuit = (options: {
 }) => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
-    const gpt = model.createNode(createGpt(position({ x: 0, y: -14 })));
-    const chat = model.createNode(createChat(position({ x: -18, y: -2 })));
-    const text = model.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
+    const gpt = model.createNode(createGpt(position({ x: -1, y: -9 })));
+    const chat = model.createNode(createChat(position({ x: -19, y: 3 })));
+    const text = model.createNode(createText(position({ x: 18, y: 8, width: 10, height: 10 })));
     model.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
     model.createEdge({ source: gpt.id, target: text.id, output: 'text' });
 
@@ -231,12 +235,12 @@ export const createGptCircuit = (options: {
       const queue = model.createNode(
         createConstant({
           value: EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() }),
-          ...position({ x: -18, y: 5, width: 8, height: 6 }),
+          ...position({ x: -19, y: 10, width: 8, height: 6 }),
         }),
       );
 
-      const thread = model.createNode(createFeed(position({ x: -3, y: 3, width: 14, height: 10 })));
-      const append = model.createNode(createAppend(position({ x: 10, y: 6 })));
+      const thread = model.createNode(createFeed(position({ x: -4, y: 8, width: 14, height: 10 })));
+      const append = model.createNode(createAppend(position({ x: 9, y: 11 })));
 
       model.createEdge({ source: queue.id, target: thread.id });
       model.createEdge({ source: queue.id, target: append.id, input: 'id' });
@@ -247,7 +251,7 @@ export const createGptCircuit = (options: {
       const prompt = model.createNode(
         createTemplate({
           text: createSystemPrompt({}),
-          ...position({ x: -18, y: -12, width: 8, height: 10 }),
+          ...position({ x: -19, y: -7, width: 8, height: 10 }),
         }),
       );
 
@@ -255,23 +259,23 @@ export const createGptCircuit = (options: {
     }
 
     if (options.artifact) {
-      const artifact = model.createNode(createSurface(position({ x: 17, y: -10, width: 14, height: 14 })));
+      const artifact = model.createNode(createSurface(position({ x: 16, y: -5, width: 14, height: 14 })));
 
       model.createEdge({ source: gpt.id, target: artifact.id, output: 'artifact' });
     }
 
     if (options.cot) {
-      const cot = model.createNode(createText(position({ x: 0, y: -10, width: 8, height: 10 })));
+      const cot = model.createNode(createText(position({ x: -1, y: -5, width: 8, height: 10 })));
       model.createEdge({ source: gpt.id, target: cot.id, output: 'cot' });
     }
 
     if (options.db) {
-      const database = model.createNode(createDatabase(position({ x: -10, y: 4 })));
+      const database = model.createNode(createDatabase(position({ x: -11, y: 9 })));
       model.createEdge({ source: database.id, target: gpt.id, input: 'tools' });
     }
 
     if (options.image) {
-      const tool = model.createNode(createTextToImage(position({ x: -8, y: -16 })));
+      const tool = model.createNode(createTextToImage(position({ x: -9, y: -11 })));
       model.createEdge({ source: tool.id, target: gpt.id, input: 'tools' });
     }
   }
@@ -288,8 +292,8 @@ export const createGPTRealtimeCircuit = () => {
 export const createAudioCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
-    const a = model.createNode(createAudio(position({ x: -4, y: -4 })));
-    const b = model.createNode(createScope(position({ x: 4, y: -4 })));
+    const a = model.createNode(createAudio(position({ x: -4, y: 0 })));
+    const b = model.createNode(createScope(position({ x: 4, y: 0 })));
     model.createEdge({ source: a.id, target: b.id });
   }
 

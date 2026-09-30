@@ -13,7 +13,7 @@ import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
 
-import { factLine, toCompactFact } from './facts';
+import { factLine, toCompactFact } from './facts.ts';
 
 export default BrainOperation.SummarizeSubject.pipe(
   Operation.withHandler(
@@ -65,7 +65,7 @@ export const summarizeSubject = ({
     // LLM failures (provider error, 30s hang) are defects, not domain errors: the store query is the
     // recoverable part; a broken model configuration should surface loudly rather than as ''.
     const summary = yield* LanguageModel.generateText({ prompt: summarizePrompt(subject, focus, lines) }).pipe(
-      Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
+      Effect.provide(AiService.languageModel(SUMMARIZE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
       Effect.orDie,

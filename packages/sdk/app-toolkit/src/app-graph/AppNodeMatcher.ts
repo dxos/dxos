@@ -9,7 +9,9 @@ import * as Option from 'effect/Option';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Entity, Obj, type Type } from '@dxos/echo';
-import type * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+
+import * as GraphPath from '../app/GraphPath.ts';
 
 /** A matcher over app-graph nodes. */
 type Matcher<TData> = GraphNodeMatcher.NodeMatcher<TData, AppGraphNode.Node>;
@@ -205,3 +207,10 @@ export const whenEchoTypeMatches =
  */
 export const whenEchoObjectMatches = (node: AppGraphNode.Node): Option.Option<AppGraphNode.Node> =>
   Obj.isObject(node.data) ? Option.some(node) : Option.none();
+
+/**
+ * Match the hidden `debug` category node under the graph root — the root of the debug panel's
+ * tree. Developer tools attach here instead of a space's System group so they never show in the
+ * main navtree or open as deck planks.
+ */
+export const whenDebugGroup = GraphNodeMatcher.whenNodeType(GraphPath.GroupTypes.debug);

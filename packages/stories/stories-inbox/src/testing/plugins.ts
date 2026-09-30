@@ -15,7 +15,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN } from '@dxos/keys';
 
-import { TRIP_LEGS } from './trip';
+import { TRIP_LEGS } from './trip.ts';
 
 /** Resolve the canned structured output for the trip extractor from the prompt (contains the body). */
 const resolvePayload = (prompt: string): unknown => {
@@ -51,15 +51,18 @@ export const StoryTripAiPlugin = Plugin.define(
         Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
-            Layer.succeed(AiService.AiService, {
-              model: () =>
-                Layer.succeed(LanguageModel.LanguageModel, {
-                  generateText: () => Effect.succeed({ text: 'Mock summary.', content: [] }),
-                  generateObject: (options: any) =>
-                    Effect.succeed({ value: resolvePayload(String(options?.prompt ?? '')), content: [] }),
-                  streamText: () => Stream.empty,
-                } as any),
-            }),
+            Layer.succeed(
+              AiService.AiService,
+              AiService.make({
+                languageModel: () =>
+                  Layer.succeed(LanguageModel.LanguageModel, {
+                    generateText: () => Effect.succeed({ text: 'Mock summary.', content: [] }),
+                    generateObject: (options: any) =>
+                      Effect.succeed({ value: resolvePayload(String(options?.prompt ?? '')), content: [] }),
+                    streamText: () => Stream.empty,
+                  } as any),
+              }),
+            ),
           ),
         ),
       ]),

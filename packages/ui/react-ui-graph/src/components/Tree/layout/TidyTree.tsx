@@ -9,10 +9,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type TreeNode } from '../types';
-import { buildHierarchy, isCollapsed, isLeaf } from './hierarchy';
-import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots';
-import { useContainerSize } from './useContainerSize';
+import { type TreeNode } from '../types.ts';
+import { buildHierarchy, isCollapsed, isLeaf } from './hierarchy.ts';
+import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots.ts';
+import { useContainerSize } from './useContainerSize.ts';
 
 const TRANSITION_MS = 350;
 

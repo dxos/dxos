@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './package-dependency-builder';
-export * from './project-processor';
-export * from './workspace-processor';
+export * from './package-dependency-builder.ts';
+export * from './project-processor.ts';
+export * from './workspace-processor.ts';

@@ -15,7 +15,7 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util';
+import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -45,7 +45,8 @@ export default Capability.makeModule(
         }
 
         const typename = Entity.getTypename(object);
-        if (!typename) {
+        const typeUri = Entity.getTypeURI(object);
+        if (!typename || !typeUri) {
           return [];
         }
 
@@ -65,7 +66,8 @@ export default Capability.makeModule(
           ...(collectionPath ? [{ path: collectionPath, label, type: typename }] : []),
           ...(sectionPath ? [{ path: sectionPath, label, type: typename }] : []),
           {
-            path: GraphPath.getObjectPath(db.spaceId, typename, object.id),
+            // Type nodes are keyed by slug, which for a stored schema is its entity id, not its typename.
+            path: GraphPath.getObjectPath(db.spaceId, GraphPath.getTypeSlugFromUri(typeUri), object.id),
             label,
             type: typename,
             position: Position.last,

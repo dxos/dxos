@@ -20,13 +20,14 @@
 // unmounting it, so neither ever claims a row of its own.
 
 import { Editable as EditablePrimitive, useEditableContext } from '@ark-ui/react/editable';
-import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useEffect, useRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon } from '../Icon';
-import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable';
+import { createContext } from '@dxos/react-hooks';
+
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable.ts';
 
 const EDITABLE_NAME = 'Editable.Root';
 const EDITABLE_PREVIEW_NAME = 'Editable.Preview';
@@ -151,6 +152,6 @@ export const Editable = {
 };
 
 export { useEditableContext };
-export * from './useEditable';
+export * from './useEditable.ts';
 
 export type { EditableInputProps, EditablePreviewProps, EditableRootProps };

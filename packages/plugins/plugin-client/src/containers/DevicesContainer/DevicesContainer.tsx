@@ -3,7 +3,6 @@
 //
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { QR } from 'react-qr-rounded';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
@@ -12,7 +11,7 @@ import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Clipboard, Flex, Icon, IconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, IconButton, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -46,65 +45,67 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
   );
 
   return (
-    <Clipboard.Provider>
-      <Form.Root variant='settings'>
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.Section
-              title={t('devices-verbose.label', { ns: meta.profile.key })}
-              description={t('devices.description', { ns: meta.profile.key })}
-            >
-              <Form.Group>
-                <div role='group' className='min-w-0'>
-                  <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
-                  <Listbox.Root>
-                    <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
-                      {devices.map((device: Identity.DeviceInfo) => (
-                        <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
-                      ))}
-                    </Listbox.Content>
-                  </Listbox.Root>
-                </div>
-                {createInvitationUrl && (
-                  <div role='group' className='min-w-0'>
-                    <h3 className='text-lg mb-2'>{t('add-device.label')}</h3>
-                    <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-                  </div>
-                )}
-              </Form.Group>
-            </Form.Section>
-            <Form.Section title={t('logout-section.title')} description={t('logout-section.description')}>
-              <Form.Row label={t('logout.label')} description={t('logout.description')}>
-                <Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
-                  {t('logout.label')}
-                </Button>
-              </Form.Row>
-            </Form.Section>
-            {identityTestActions && (
-              <Form.Section
-                title={t('identity-test-section.title')}
-                description={t('identity-test-section.description')}
-              >
-                <Form.Row label={t('recover-identity.label')} description={t('recover-identity.description')}>
-                  <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                    {t('recover-identity.label')}
-                  </Button>
-                </Form.Row>
-                <Form.Row label={t('join-new-identity.label')} description={t('join-new-identity.description')}>
-                  <Button
-                    variant='destructive'
-                    onClick={handleJoinNewIdentity}
-                    data-testid='devicesContainer.joinExisting'
-                  >
-                    {t('join-new-identity.label')}
-                  </Button>
-                </Form.Row>
-              </Form.Section>
+    <Form.Root variant='settings'>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet
+            label={t('devices-verbose.label', { ns: meta.profile.key })}
+            description={t('devices.description', { ns: meta.profile.key })}
+          >
+            <Form.FieldSet appearance='section' label={t('devices.label', { ns: meta.profile.key })}>
+              <Listbox.Root>
+                <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
+                  {devices.map((device: Identity.DeviceInfo) => (
+                    <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            </Form.FieldSet>
+            {createInvitationUrl && (
+              <Form.FieldSet appearance='section' label={t('add-device.label')}>
+                <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+              </Form.FieldSet>
             )}
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Clipboard.Provider>
+          </Form.FieldSet>
+          <Form.FieldSet label={t('logout-section.title')} description={t('logout-section.description')}>
+            <Form.Field standalone label={t('logout.label')} description={t('logout.description')}>
+              <Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
+                {t('logout.label')}
+              </Button>
+            </Form.Field>
+          </Form.FieldSet>
+          {identityTestActions && (
+            <Form.FieldSet
+              label={t('identity-test-section.title')}
+              description={t('identity-test-section.description')}
+            >
+              <Form.Field
+                standalone
+                label={t('recover-identity.label')}
+                description={t('recover-identity.description')}
+              >
+                <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+                  {t('recover-identity.label')}
+                </Button>
+              </Form.Field>
+              <Form.Field
+                standalone
+                label={t('join-new-identity.label')}
+                description={t('join-new-identity.description')}
+              >
+                <Button
+                  variant='destructive'
+                  onClick={handleJoinNewIdentity}
+                  data-testid='devicesContainer.joinExisting'
+                >
+                  {t('join-new-identity.label')}
+                </Button>
+              </Form.Field>
+            </Form.FieldSet>
+          )}
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
@@ -257,16 +258,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-description'>
-            <QR
-              rounding={100}
-              backgroundColor='transparent'
-              color='currentColor'
-              aria-labelledby={qrLabel}
-              errorCorrectionLevel='Q'
-              cutout={true}
-            >
-              {url ?? 'never'}
-            </QR>
+            <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
             <Centered>
               <Emoji text={emoji} />
             </Centered>
@@ -279,7 +271,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       {/* TODO(burdon): Factor out button bar */}
       <Flex justify='center'>
         <Flex gap='sm'>
-          <Clipboard.Button value={url ?? 'never'} />
+          <SystemIconButton.Clipboard value={url ?? 'never'} />
           <Button variant='ghost' onClick={onCancel}>
             {t('cancel.label')}
           </Button>

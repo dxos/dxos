@@ -12,7 +12,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type EdgeServiceClient, type EdgeServiceError } from './edge-service';
+import { type EdgeServiceClient, type EdgeServiceError } from './edge-service.ts';
 
 /** Hosted image returned by the service: a CDN `url` and its storage `id`. */
 export const Result = Schema.Struct({

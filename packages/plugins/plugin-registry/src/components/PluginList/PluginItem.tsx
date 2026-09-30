@@ -6,25 +6,14 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import {
-  Button,
-  type ChromaticPalette,
-  Icon,
-  IconButton,
-  Input,
-  Link,
-  type NeutralPalette,
-  Tag,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
-import { mx } from '@dxos/ui-theme';
-import { getStyles } from '@dxos/ui-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
+import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
@@ -38,6 +27,8 @@ export type PluginItemProps = {
    * Not persisted to plugin meta; computed per-render by the container.
    */
   extraTags?: readonly string[];
+  /** Whether this device's answer for this plugin differs from the account's. */
+  deviceOnly?: boolean;
   onClick?: (id: string) => void;
   onChange?: (id: string, enabled: boolean) => void;
   /**
@@ -61,6 +52,7 @@ export type PluginItemProps = {
    * phase, reason, and error message.
    */
   failure?: PluginManager.PluginFailure;
+  readOnly?: boolean;
 };
 
 export const PluginItem = ({
@@ -69,6 +61,7 @@ export const PluginItem = ({
   installing,
   enabled = [],
   extraTags,
+  deviceOnly,
   onClick,
   onChange,
   onInstall,
@@ -78,11 +71,11 @@ export const PluginItem = ({
   hasSettings: hasSettingsProp,
   onSettings,
   failure,
+  readOnly,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
   const icon = rawIcon?.key ?? 'ph--circle--regular';
-  const iconHue = rawIcon?.hue ?? 'neutral';
   const displayTags = useMemo(() => {
     if (!extraTags || extraTags.length === 0) {
       return tags ?? [];
@@ -99,18 +92,9 @@ export const PluginItem = ({
   const isUpdating = updating?.includes(id) ?? false;
   const showInstallButton = !!onInstall && !isInstalled;
   const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
-  const inputId = `${id}-input`;
-  const descriptionId = `${id}-description`;
+  const hasSettings = hasSettingsProp?.(id) ?? false;
   const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
-
-  const handleChange = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onChange?.(id, !isEnabled);
-    },
-    [id, isEnabled, onChange],
-  );
-
+  const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
   const handleInstall = useCallback(
     (event: MouseEvent) => {
       event.stopPropagation();
@@ -118,7 +102,6 @@ export const PluginItem = ({
     },
     [id, onInstall],
   );
-
   const handleUpdate = useCallback(
     (event: MouseEvent) => {
       event.stopPropagation();
@@ -127,99 +110,51 @@ export const PluginItem = ({
     [id, onUpdate],
   );
 
-  const hasSettings = hasSettingsProp?.(id) ?? false;
-  const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
-  const styles = getStyles(iconHue);
-  const gridCols = 'grid grid-cols-[5rem_1fr]';
-  const gridRows = 'grid grid-cols-1 grid-rows-[40px_1fr_min-content_40px]';
-
   return (
-    <Listbox.Item
-      id={id}
-      data-testid={`pluginList.${id}`}
-      aria-describedby={descriptionId}
-      classNames={mx(
-        gridCols,
-        // Override `Listbox.Item`'s default row chrome (flex/items-center/padding/cursor) so the
-        // bespoke card grid stretches both columns to full height and controls its own padding.
-        // `dx-card-surface` (raised) reads as a card against the panel's base surface; `dx-modal-surface`
-        // (overlay, one step higher, meant for dialogs/sheets) was too close in tone to show contrast.
-        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 dx-card-surface rounded-md overflow-hidden',
+    <Listbox.Item id={id} data-testid={`pluginList.${id}`}>
+      <Listbox.ItemIcon icon={icon} />
+      <Listbox.ItemText />
+      {description && <Listbox.ItemDescription>{description}</Listbox.ItemDescription>}
+      {failure && <PluginFailureBadge failure={failure} />}
+      {deviceOnly && <Next.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' />}
+      {displayTags.map((tag) => (
+        <Next.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
+          {tag}
+        </Next.Tag>
+      ))}
+      <Next.Button variant='ghost' iconOnly icon='ph--info--regular' label={t('details.label')} onClick={handleClick} />
+      <Next.Button
+        variant='ghost'
+        iconOnly
+        icon='ph--gear--regular'
+        label={t('plugin-settings.label')}
+        disabled={!hasSettings}
+        onClick={handleSettings}
+      />
+      {isUpdating ? (
+        <Next.Button variant='primary' disabled label={t('updating.label')} />
+      ) : showUpdateButton ? (
+        <Next.Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
+      ) : showInstallButton ? (
+        <Next.Button
+          variant='primary'
+          disabled={isInstalling}
+          label={isInstalling ? t('installing.label') : t('install.label')}
+          onClick={handleInstall}
+        />
+      ) : (
+        <Next.Switch
+          aria-label={name ?? id}
+          checked={isEnabled}
+          disabled={readOnly}
+          onCheckedChange={({ checked }) => onChange?.(id, checked)}
+        />
       )}
-    >
-      <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
-        <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
-          <Icon classNames={styles.fg} icon={icon} size={14} />
-        </div>
-      </div>
-
-      <div className={mx(gridRows, 'min-w-0')}>
-        <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
-          <span className='text-lg truncate'>{name ?? id}</span>
-          {failure && <PluginFailureBadge failure={failure} />}
-        </div>
-
-        <div>
-          <p className='text-description line-clamp-4 min-w-0'>{description}</p>
-        </div>
-
-        <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
-          {displayTags.map((tag: string) => (
-            <Tag key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
-              {tag}
-            </Tag>
-          ))}
-        </div>
-
-        <div className='flex gap-2 items-center text-sm'>
-          <IconButton
-            aria-describedby={descriptionId}
-            classNames='cursor-pointer'
-            icon='ph--gear--regular'
-            label={t('plugin-settings.label')}
-            iconOnly
-            size={4}
-            onClick={handleSettings}
-            disabled={!hasSettings}
-          />
-
-          <Link aria-describedby={descriptionId} classNames='text-description cursor-pointer' onClick={handleClick}>
-            {t('details.label')}
-          </Link>
-
-          <div className='grow' />
-          <div className='pe-1'>
-            {isUpdating ? (
-              <Button aria-describedby={descriptionId} density='md' variant='primary' disabled>
-                {t('updating.label')}
-              </Button>
-            ) : showUpdateButton ? (
-              <Button aria-describedby={descriptionId} density='md' variant='primary' onClick={handleUpdate}>
-                {t('update.label')}
-              </Button>
-            ) : showInstallButton ? (
-              <Button
-                aria-describedby={descriptionId}
-                density='md'
-                variant='primary'
-                disabled={isInstalling}
-                onClick={handleInstall}
-              >
-                {isInstalling ? t('installing.label') : t('install.label')}
-              </Button>
-            ) : (
-              <Input.Root id={inputId}>
-                <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
-              </Input.Root>
-            )}
-          </div>
-        </div>
-      </div>
     </Listbox.Item>
   );
 };
 
-const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
+const tagColors: Record<RegistryTagType, Next.TagHue> = {
   new: 'rose',
   // Tier hues ramp green -> blue -> purple so the ordering reads without knowing the labels.
   beta: 'green',

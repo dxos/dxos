@@ -2,13 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, type URI } from '@dxos/keys';
 
-import { QueryError } from './errors';
-import { QueryPlan } from './plan';
+import { QueryError } from './errors.ts';
+import { QueryPlan } from './plan.ts';
+import { compilePlan as compileToSql, planDeclinedByCompiler } from './sql/index.ts';
 
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
@@ -27,8 +30,19 @@ const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
   });
 };
 
+/**
+ * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
+ * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
+ * index tables. `memory` is the default; the host resolves where the choice comes from.
+ */
+export type QueryExecutorMode = 'sql' | 'memory';
+
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
+  /** Evaluation path the plan targets, which decides what {@link QueryPlanner.createPlan} returns. */
+  executor?: QueryExecutorMode;
+  /** Builds the statement's fragments; required for `sql`, which has nothing to compile without it. */
+  sql?: SqlClient.SqlClient;
   /**
    * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
    * Use when executing against an in-memory working set without SQL index access.
@@ -39,6 +53,7 @@ export type QueryPlannerOptions = {
 
 const DEFAULT_OPTIONS: QueryPlannerOptions = {
   defaultTextSearchKind: 'full-text',
+  executor: 'memory',
 };
 
 /**
@@ -47,6 +62,8 @@ const DEFAULT_OPTIONS: QueryPlannerOptions = {
 // TODO(dmaretskyi): Implement inefficient versions of complex queries.
 export class QueryPlanner {
   private readonly _options: QueryPlannerOptions;
+  /** Passed to the compiler, which plans `in-query` subqueries through it rather than importing this module. */
+  readonly #planSubquery = (query: QueryAST.Query): QueryPlan.Plan => this.#buildSteps(query);
 
   constructor(options?: Partial<QueryPlannerOptions>) {
     this._options = {
@@ -55,15 +72,152 @@ export class QueryPlanner {
     };
   }
 
+  /**
+   * The plan the executor runs. Under `sql` the steps are compiled into one
+   * {@link QueryPlan.SqlStep}, except where {@link planDeclinedByCompiler} sends the plan to the
+   * in-memory executor instead. Synchronous: compiling reads nothing, it only builds the statement.
+   */
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    const plan = this.#buildSteps(query);
+    const sql = this._options.sql;
+    if (this._options.executor !== 'sql' || sql === undefined || planDeclinedByCompiler(plan, this.#planSubquery)) {
+      return plan;
+    }
+    return compileToSql(sql, plan, this.#planSubquery).plan;
+  }
+
+  /** The uncompiled steps. Pure, so the compiler recurses through it for `in-query` subqueries. */
+  #buildSteps(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
     this._validateAggregatePlacement(query);
+    const selectsChanges = queryContainsChanges(query);
+    if (selectsChanges) {
+      this._validateChangesFilters(query);
+    }
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
+    if (selectsChanges) {
+      return this._routeChanges(plan, query);
+    }
     plan = this._optimizeLimits(plan);
+    plan = this._optimizeBareAggregate(plan);
     return plan;
+  }
+
+  private _validateChangesFilters(query: QueryAST.Query): void {
+    QueryAST.visit(query, (node) => {
+      if (
+        (node.type === 'filter' && filterContainsChanges(node.filter)) ||
+        (node.type === 'select' && node.filter.type !== 'changes' && filterContainsChanges(node.filter))
+      ) {
+        throw new QueryError({
+          message: 'Filter.changes() cannot be combined with other filters, traversals or unions.',
+          context: { query: Query.pretty(Query.fromAst(query)) },
+        });
+      }
+    });
+  }
+
+  private _routeChanges(plan: QueryPlan.Plan, query: QueryAST.Query): QueryPlan.Plan {
+    const fail = (message: string): never => {
+      throw new QueryError({ message, context: { query: Query.pretty(Query.fromAst(query)) } });
+    };
+    const [select, ...rest] = plan.steps;
+    if (select?._tag !== 'SelectStep' || select.selector._tag !== 'ChangesSelector') {
+      return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
+    }
+    if (!select.scope.every((scope) => scope._tag === 'space')) {
+      return fail('Filter.changes() selects from spaces, not feeds.');
+    }
+    for (const step of rest) {
+      switch (step._tag) {
+        case 'LimitStep':
+        case 'SkipStep':
+          break;
+        case 'OrderStep':
+          if (!step.order.every((order) => order.kind === 'natural' || order.kind === 'property')) {
+            return fail('Changes can only be ordered by a property or naturally (by time).');
+          }
+          break;
+        case 'AggregateStep': {
+          const unsupported = step.aggregates.find(
+            (aggregate) => aggregate.kind === 'items' || aggregate.kind === 'type' || aggregate.kind === 'timestamp',
+          );
+          if (unsupported) {
+            const name =
+              unsupported.kind === 'timestamp'
+                ? unsupported.field === 'updatedAt'
+                  ? 'updated'
+                  : 'created'
+                : unsupported.kind;
+            return fail(`Aggregate.${name}() does not apply to changes.`);
+          }
+          break;
+        }
+        default:
+          return fail('Filter.changes() cannot be combined with other filters, traversals or unions.');
+      }
+    }
+
+    const indexAnswers = activityIndexAnswers(rest);
+    if (!indexAnswers && select.selector.targets === undefined) {
+      return fail(
+        "A space-wide Filter.changes() query must aggregate with only Aggregate.time('time', …), " +
+          "Aggregate.group('source'), Aggregate.count() and Aggregate.sum('ops'); pass targets to Filter.changes() " +
+          'for anything else.',
+      );
+    }
+    return QueryPlan.Plan.make([
+      { ...select, selector: { ...select.selector, source: indexAnswers ? 'index' : 'replay' } },
+      ...rest,
+    ]);
+  }
+
+  /**
+   * Marks the select of a plan that only counts objects by index fields as {@link QueryPlan.SelectStep.bare},
+   * so the executor groups index rows instead of loading documents. Eligible shape: a space-scoped
+   * wildcard, type or timestamp select, then deleted handling, a plain typename re-check and natural
+   * ordering in any order, ending in an aggregate of `count`, `type` and `timestamp` only.
+   */
+  private _optimizeBareAggregate(plan: QueryPlan.Plan): QueryPlan.Plan {
+    if (this._options.noIndexes) {
+      return plan;
+    }
+    const [select, ...rest] = plan.steps;
+    const aggregate = rest.at(-1);
+    if (
+      select?._tag !== 'SelectStep' ||
+      aggregate?._tag !== 'AggregateStep' ||
+      select.limit !== undefined ||
+      select.feedCursorRange !== undefined ||
+      !select.scope.every((scope) => scope._tag === 'space' && !scope.includeAllFeeds) ||
+      (select.selector._tag !== 'WildcardSelector' &&
+        select.selector._tag !== 'TimestampSelector' &&
+        (select.selector._tag !== 'TypeSelector' || select.selector.inverted)) ||
+      !aggregate.aggregates.every(
+        (entry) => entry.kind === 'count' || entry.kind === 'type' || entry.kind === 'timestamp',
+      )
+    ) {
+      return plan;
+    }
+    const readsOnlyIndexFields = rest.slice(0, -1).every(
+      (step) =>
+        step._tag === 'FilterDeletedStep' ||
+        // A metadata predicate reads keys an index row does not carry, so it has to load documents.
+        (step._tag === 'FilterStep' &&
+          isTrivialTypenameFilter(step.filter) &&
+          step.filter.type === 'object' &&
+          step.filter.metaKey === undefined) ||
+        (step._tag === 'OrderStep' &&
+          step.limit === undefined &&
+          step.order.every((order) => order.kind === 'natural')),
+    );
+    if (!readsOnlyIndexFields) {
+      return plan;
+    }
+    return QueryPlan.Plan.make([{ ...select, bare: true }, ...rest]);
   }
 
   private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
@@ -331,6 +485,40 @@ export class QueryPlanner {
         ]);
       }
 
+      case 'changes': {
+        if (context.selectionInverted) {
+          throw queryTooComplexError(context.originalQuery);
+        }
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: { _tag: 'ChangesSelector', targets: filter.targets, source: 'replay' },
+          },
+        ]);
+      }
+
+      // Mnemonic and annotation — local predicates on the object's own id or meta, so they run as a
+      // filter step over a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
+      case 'annotation':
+      case 'mnemonic': {
+        const planned: QueryAST.Filter = context.selectionInverted ? { type: 'not', filter } : filter;
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: planned,
+          },
+        ]);
+      }
+
       // HasParent — a local predicate on the object's own parent slot, so inversion folds into
       // the value rather than costing a negated plan.
       case 'has-parent': {
@@ -373,9 +561,10 @@ export class QueryPlanner {
         const flatFilters = _flattenAnd(filter.filters);
         const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
         const childOfFilters = flatFilters.filter((f): f is QueryAST.FilterChildOf => f.type === 'child-of');
-        const hasParentFilters = flatFilters.filter((f): f is QueryAST.FilterHasParent => f.type === 'has-parent');
+        // has-parent and (negated) annotation predicates are local checks, planned as post-filters.
+        const localFilters = flatFilters.filter((f) => f.type === 'has-parent' || _isAnnotationPredicate(f));
         const otherFilters = flatFilters.filter(
-          (f) => f.type !== 'timestamp' && f.type !== 'child-of' && f.type !== 'has-parent',
+          (f) => f.type !== 'timestamp' && f.type !== 'child-of' && !localFilters.includes(f),
         );
 
         if (timestampFilters.length > 0 && context.selectionInverted) {
@@ -390,7 +579,7 @@ export class QueryPlanner {
           timestampFilters.length > 0 &&
           otherFilters.length <= 1 &&
           childOfFilters.length === 0 &&
-          hasParentFilters.length === 0
+          localFilters.length === 0
         ) {
           const innerFilter = otherFilters[0];
           const innerPlan = innerFilter
@@ -425,7 +614,7 @@ export class QueryPlanner {
           ]);
         }
 
-        if (timestampFilters.length > 0 && childOfFilters.length === 0 && hasParentFilters.length === 0) {
+        if (timestampFilters.length > 0 && childOfFilters.length === 0 && localFilters.length === 0) {
           throw new QueryError({
             message:
               'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
@@ -433,9 +622,9 @@ export class QueryPlanner {
           });
         }
 
-        // child-of and has-parent both plan as post-filters appended to the remaining filters'
+        // child-of and the local filters plan as post-filters appended to the remaining filters'
         // plan, so `and(type(X), hasParent(false))` keeps its type-indexed select.
-        if (childOfFilters.length > 0 || hasParentFilters.length > 0) {
+        if (childOfFilters.length > 0 || localFilters.length > 0) {
           // A negated conjunction cannot distribute over its conjuncts (`not(and(a, b))` is not
           // `not(a) && b`), so under inversion the WHOLE negated AND becomes one post-filter —
           // possible only when every conjunct is root-executable (child-of is not).
@@ -471,7 +660,7 @@ export class QueryPlanner {
                     ...this._generateDeletedHandlingSteps(context),
                   ]);
 
-          const postFilterSteps: QueryPlan.Step[] = [...childOfFilters, ...hasParentFilters].map((f) => ({
+          const postFilterSteps: QueryPlan.Step[] = [...childOfFilters, ...localFilters].map((f) => ({
             _tag: 'FilterStep' as const,
             filter: f,
           }));
@@ -821,7 +1010,7 @@ export class QueryPlanner {
    * pagination clauses `limit()`/`skip()` may wrap it. At most one `aggregate` may appear anywhere
    * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so an
    * aggregated subquery would otherwise produce an unsupported double-`aggregate`). The DSL's types
-   * can't enforce this (`Query<AggregateResult & ...>` still exposes `orderBy`/`select`/etc.), so
+   * can't enforce this (`Query<RecordResult & ...>` still exposes `orderBy`/`select`/etc.), so
    * it's validated here at plan time.
    *
    * `limit`/`skip` above an `aggregate` page over whole groups (see the group-aware `LimitStep`/
@@ -975,6 +1164,12 @@ export class QueryPlanner {
         return processedPlan;
       }
       if (OBJECT_SET_CHANGERS.has(step._tag)) {
+        // An outgoing reference traversal emits each anchor's refs in array order, which is the only
+        // order a ref array has. Order the anchors instead, so the result stays deterministic.
+        if (isOutgoingReferenceTraversal(step)) {
+          const anchor = this._ensureOrderStep(QueryPlan.Plan.make(processedPlan.steps.slice(0, i)));
+          return QueryPlan.Plan.make([...anchor.steps, ...processedPlan.steps.slice(i)]);
+        }
         break;
       }
     }
@@ -1085,14 +1280,21 @@ export class QueryPlanner {
       return QueryPlan.Plan.make(processedSteps);
     }
 
+    // A feed scan can be ordered and capped by the storage layer itself, so it takes the limit in
+    // either natural direction — which is the point: a bounded feed query must read bounded work.
+    const feedScan =
+      selectStepIndex !== -1
+        ? feedScanForLimit(processedSteps, selectStepIndex, orderStepIndex, limitStepIndex)
+        : undefined;
+
     // Pushing the limit into the SelectStep is only sound when the scan enumerates candidates in the
-    // requested order, so that the first N of the scan are the first N of the result. The scan runs
-    // in ascending natural order (by id / queue position). A content-based reorder (property or
-    // system timestamp) or a descending natural order does not match that scan order, so slicing at
-    // select time would keep the wrong N; those need the FULL candidate set and only the OrderStep
-    // may apply the limit. Ascending natural and rank (the FTS scan already returns by rank) stay
-    // consistent with the scan, so keep optimizing those.
-    if (orderStepIndex !== -1) {
+    // requested order, so that the first N of the scan are the first N of the result. Absent a feed
+    // scan the select runs in ascending natural order (by id / queue position). A content-based
+    // reorder (property or system timestamp) or a descending natural order does not match that scan
+    // order, so slicing at select time would keep the wrong N; those need the FULL candidate set and
+    // only the OrderStep may apply the limit. Ascending natural and rank (the FTS scan already
+    // returns by rank) stay consistent with the scan, so keep optimizing those.
+    if (orderStepIndex !== -1 && feedScan === undefined) {
       const orderStep = processedSteps[orderStepIndex];
       const scanOrderMismatch =
         orderStep._tag === 'OrderStep' &&
@@ -1130,6 +1332,7 @@ export class QueryPlanner {
       newSteps[selectStepIndex] = {
         ...selectStep,
         limit: limitValue + skipBetween(selectStepIndex),
+        ...(feedScan ? { feedScan } : {}),
       };
     }
 
@@ -1212,6 +1415,11 @@ const NOOP_FILTER: QueryAST.Filter = {
   props: {},
 };
 
+const isOutgoingReferenceTraversal = (step: QueryPlan.Step): boolean =>
+  step._tag === 'TraverseStep' &&
+  step.traversal._tag === 'ReferenceTraversal' &&
+  step.traversal.direction === 'outgoing';
+
 const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['direction']): QueryPlan.Step => ({
   _tag: 'TraverseStep',
   traversal: {
@@ -1221,15 +1429,146 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
 });
 
 /**
- * Returns true if the filter is `child-of` or `has-parent` — the post-select pruning filters —
+ * The scan shape that lets a feed-only SelectStep apply the query's `limit` itself, or `undefined`
+ * when it may not: a bounded feed query is the whole point of pushing the limit into storage, but
+ * a page capped before a step that prunes it would come back short of what the caller asked for.
+ *
+ * Sound only when every step between the select and the limit is one the scan reproduces:
+ * the deleted filter (folded into the returned scan), a residual filter the selector already
+ * enforces, a skip (the caller inflates the limit by it), and the order step the scan matches.
+ */
+const feedScanForLimit = (
+  steps: readonly QueryPlan.Step[],
+  selectStepIndex: number,
+  orderStepIndex: number,
+  limitStepIndex: number,
+): QueryPlan.FeedScan | undefined => {
+  const selectStep = steps[selectStepIndex];
+  if (selectStep._tag !== 'SelectStep') {
+    return undefined;
+  }
+  // Only a feed scan orders and caps its own rows; a space scan has no ordering to cap against,
+  // and a mixed scope has no single ordering at all.
+  if (selectStep.scope.length === 0 || !selectStep.scope.every((scope) => scope._tag === 'feed')) {
+    return undefined;
+  }
+  // A cursor read is already windowed by position, which is a different ordering.
+  if (selectStep.feedCursorRange !== undefined) {
+    return undefined;
+  }
+  // The index seeks by id or type; every other selector reaches rows the window cannot order.
+  if (selectStep.selector._tag !== 'WildcardSelector' && selectStep.selector._tag !== 'TypeSelector') {
+    return undefined;
+  }
+
+  const direction = feedScanDirection(steps, orderStepIndex);
+  if (direction === undefined) {
+    return undefined;
+  }
+
+  let deleted: boolean | undefined;
+  for (let index = selectStepIndex + 1; index < limitStepIndex; index++) {
+    const step = steps[index];
+    switch (step._tag) {
+      case 'FilterDeletedStep':
+        deleted = step.mode === 'only-deleted';
+        break;
+      case 'FilterStep':
+        if (!isSelectorResidualFilter(step.filter, selectStep.selector)) {
+          return undefined;
+        }
+        break;
+      case 'OrderStep':
+        // Only the step `direction` was derived from; a second one would reorder the capped page.
+        if (index !== orderStepIndex) {
+          return undefined;
+        }
+        break;
+      case 'SkipStep':
+        // A skip below the order composes the other way round: the plan drops rows in scan order
+        // and orders what is left, where an inflated scan limit orders first and drops from that.
+        if (orderStepIndex !== -1 && index < orderStepIndex) {
+          return undefined;
+        }
+        break;
+      default:
+        return undefined;
+    }
+  }
+
+  return deleted === undefined ? { direction } : { direction, deleted };
+};
+
+/**
+ * The natural direction a feed scan must run to satisfy the plan's ordering, or `undefined` when
+ * the ordering is not one the scan can produce (a content-based reorder needs the full candidate
+ * set). An absent order step means natural ascending, which is what the planner inserts.
+ */
+const feedScanDirection = (
+  steps: readonly QueryPlan.Step[],
+  orderStepIndex: number,
+): QueryPlan.FeedScan['direction'] | undefined => {
+  if (orderStepIndex === -1) {
+    return 'asc';
+  }
+  const orderStep = steps[orderStepIndex];
+  if (orderStep._tag !== 'OrderStep') {
+    return undefined;
+  }
+  if (orderStep.order.length === 0) {
+    return 'asc';
+  }
+  // Entity ids are unique, so a secondary order could only break ties the scan never produces.
+  if (orderStep.order.length !== 1 || orderStep.order[0].kind !== 'natural') {
+    return undefined;
+  }
+  return orderStep.order[0].direction === 'desc' ? 'desc' : 'asc';
+};
+
+/**
+ * Whether a residual FilterStep can only re-check what the selector already enforced, so capping
+ * the scan before it cannot drop a row it would have kept. True for the empty filter, and for the
+ * typename re-check `_generateSelectionFromFilter` emits alongside a TypeSelector — the index
+ * matches the same typenames, versioned or not, that `compareTypenameStrings` accepts.
+ */
+const isSelectorResidualFilter = (filter: QueryAST.Filter, selector: QueryPlan.Selector): boolean => {
+  if (filter.type !== 'object') {
+    return false;
+  }
+  const hasOnlyTypename =
+    (filter.id === undefined || filter.id.length === 0) &&
+    (filter.props === undefined || Object.keys(filter.props).length === 0) &&
+    (filter.foreignKeys === undefined || filter.foreignKeys.length === 0) &&
+    filter.metaKey === undefined;
+  if (!hasOnlyTypename) {
+    return false;
+  }
+  if (filter.typename === null) {
+    return true;
+  }
+  return (
+    selector._tag === 'TypeSelector' &&
+    !selector.inverted &&
+    selector.typename.length === 1 &&
+    selector.typename[0] === filter.typename
+  );
+};
+
+const _isAnnotationPredicate = (filter: QueryAST.Filter): boolean =>
+  filter.type === 'annotation' || (filter.type === 'not' && filter.filter.type === 'annotation');
+
+/**
+ * Returns true if the filter is `annotation`, `child-of`, `has-parent` or `mnemonic` — the post-select pruning filters —
  * or composes one via `and` / `or` / `not`. Their FilterSteps genuinely subtract from the
  * SelectStep's candidates (the step is not a re-check of the selector's own predicate), so a
  * limit must never be pushed past them.
  */
 const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
+    case 'annotation':
     case 'child-of':
     case 'has-parent':
+    case 'mnemonic':
       return true;
     case 'not':
       return _filterContainsPostSelectPrune(filter.filter);
@@ -1239,6 +1578,50 @@ const _filterContainsPostSelectPrune = (filter: QueryAST.Filter): boolean => {
     default:
       return false;
   }
+};
+
+/** Whether hourly activity buckets answer the steps after a changes select as individual changes would. */
+const activityIndexAnswers = (steps: readonly QueryPlan.Step[]): boolean => {
+  const aggregateIndex = steps.findIndex((step) => step._tag === 'AggregateStep');
+  const aggregate = steps[aggregateIndex];
+  return (
+    aggregate?._tag === 'AggregateStep' &&
+    steps.slice(0, aggregateIndex).every(isNaturalOrderStep) &&
+    aggregate.aggregates.every(readsOnlyBucketFields)
+  );
+};
+
+const isNaturalOrderStep = (step: QueryPlan.Step): boolean =>
+  step._tag === 'OrderStep' && step.order.every((order) => order.kind === 'natural');
+
+const readsOnlyBucketFields = (aggregate: QueryAST.GroupAggregate): boolean =>
+  aggregate.kind === 'count' ||
+  (aggregate.kind === 'sum' && aggregate.property === 'ops') ||
+  (aggregate.kind === 'time' && aggregate.property === 'time') ||
+  (aggregate.kind === 'group' && aggregate.properties.length === 1 && aggregate.properties[0] === 'source');
+
+const filterContainsChanges = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'changes':
+      return true;
+    case 'not':
+      return filterContainsChanges(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(filterContainsChanges);
+    default:
+      return false;
+  }
+};
+
+export const queryContainsChanges = (query: QueryAST.Query): boolean => {
+  let found = false;
+  QueryAST.visit(query, (node) => {
+    if ((node.type === 'select' || node.type === 'filter') && filterContainsChanges(node.filter)) {
+      found = true;
+    }
+  });
+  return found;
 };
 
 /**
@@ -1396,7 +1779,9 @@ const isRootExecutable = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {
     case 'object':
     case 'tag':
+    case 'annotation':
     case 'has-parent':
+    case 'mnemonic':
       return true;
     case 'not':
       return isRootExecutable(filter.filter);

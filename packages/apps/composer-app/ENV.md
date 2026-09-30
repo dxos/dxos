@@ -5,12 +5,12 @@ time with `wrangler deploy --env <env>` — see [`wrangler.jsonc`](./wrangler.js
 name and bindings, and [`.github/workflows/env/*`](../../../.github/workflows/env) for the build-time
 variables (`DX_EDGE_BASE_URL`, `DX_HUB_URL`, PostHog keys, …).
 
-| Environment  | Worker             | URL                         | EDGE         | Deployed                            |
-| ------------ | ------------------ | --------------------------- | ------------ | ----------------------------------- |
-| `dev`        | `composer-dev`     | `composer-dev.…workers.dev` | EDGE preview | on demand                           |
-| `preview`    | `composer-preview` | `preview.composer.space`    | EDGE prod    | daily, 07:00 UTC, from `main`'s tip |
-| `staging`    | `composer-staging` | `staging.composer.space`    | EDGE prod    | on demand (kept, unused)            |
-| `production` | `composer`         | `composer.space`            | EDGE prod    | on demand; cuts a release           |
+| Environment  | Worker             | URL                      | EDGE         | Deployed                            |
+| ------------ | ------------------ | ------------------------ | ------------ | ----------------------------------- |
+| `dev`        | `composer-dev`     | `dev.composer.space`     | EDGE preview | on demand                           |
+| `preview`    | `composer-preview` | `preview.composer.space` | EDGE prod    | daily, 07:00 UTC, from `main`'s tip |
+| `staging`    | `composer-staging` | `staging.composer.space` | EDGE prod    | on demand (kept, unused)            |
+| `production` | `composer`         | `composer.space`         | EDGE prod    | on demand; cuts a release           |
 
 **`preview` titles that environment and nothing else.** Per-PR deploys are Cloudflare Worker preview
 versions of the `dev` env, so `--preview-alias` and the workflows' own internals still say preview —

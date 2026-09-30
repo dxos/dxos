@@ -6,7 +6,11 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
-import { type MenuActionProperties } from '@dxos/ui-types';
+import {
+  type DropdownMenuItemGroupProperties,
+  type MenuActionProperties,
+  type ToggleGroupMenuItemGroupProperties,
+} from '@dxos/ui-types';
 
 export type MenuAction<P extends {} = {}> = AppGraphNode.Action<P & MenuActionProperties>;
 
@@ -49,20 +53,25 @@ export type AddMenuItemsProps = {
 export type MenuItems = Omit<AddMenuItemsProps, 'priority'> & { priority: number };
 export type MenuItemsMap = Map<string, MenuItems>;
 
-export type MenuContextValue = {
+/** How an action runs when a builder invokes it; overrides the node's own Effect. */
+export type MenuActionsOptions = {
+  onAction?: ActionExecutor;
+  /** Identifies the component that owns the menu (passed to action handlers). */
+  caller?: string;
+  iconSize?: IconButtonProps['size'];
+};
+
+/**
+ * Everything a builder needs to render a menu: where its items come from, how they run, and the
+ * registry other components contribute to. Produced by `useMenuActions` and its wrappers, spread
+ * onto `ActionToolbar` / `ActionMenu`.
+ */
+export type MenuActions = MenuActionsOptions & {
   /** Atom-family accessor for base menu items, keyed by group (similar to Tree model). */
   items: MenuItemsAccessor;
-  iconSize: IconButtonProps['size'];
-  attendableId?: string;
-  /** TODO(burdon): Remove and assume always active if attendableId is undefined. */
-  /** If true, the menu is always active regardless of attention state. */
-  alwaysActive?: boolean;
-  /** Atom holding the current set of imperatively added menu items. */
-  menuItemsAtom: Atom.Atom<MenuItemsMap>;
-  /** Imperatively add menu items to the nearest MenuProvider. */
-  addMenuItems: (props: AddMenuItemsProps) => void;
-  /** Remove previously added menu items by id. */
-  removeMenuItems: (id: string) => void;
-  /** Optional action executor. If provided, will be used instead of default execution. */
-  onAction?: ActionExecutor;
+  /** The set of imperatively contributed items (see `useMenuContribution`). */
+  contributions: Atom.Writable<MenuItemsMap>;
 };
+
+/** The group variants a toolbar renders: a dropdown trigger or a toggle group. */
+export type ToolbarMenuActionGroupProperties = DropdownMenuItemGroupProperties | ToggleGroupMenuItemGroupProperties;

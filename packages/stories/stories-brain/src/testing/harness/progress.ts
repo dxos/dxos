@@ -9,7 +9,7 @@ import { dirname } from 'node:path';
 
 import { Progress, ProgressReporter } from '@dxos/pipeline';
 
-import { PROGRESS_PATH } from './config';
+import { PROGRESS_PATH } from './config.ts';
 
 /**
  * Merges a snapshot's tasks into the shared `progress.json` by task name (read-modify-write). Safe

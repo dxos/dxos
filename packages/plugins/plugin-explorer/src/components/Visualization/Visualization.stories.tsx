@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import '@dxos/react-ui-graph/styles/graph.css';
 
-import { type VisualizationVariantId } from './variants';
-import { Visualization } from './Visualization';
+import { type VisualizationVariantId } from './variants.ts';
+import { Visualization } from './Visualization.tsx';
 
 // Synthetic neighbourhood: inbound sources → focus (left), focus → near → far (right, outgoing).
 const NODES: SpaceGraphNode[] = [

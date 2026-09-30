@@ -8,7 +8,7 @@ import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 
-import { ProcessStore } from './process-store';
+import { ProcessStore } from './process-store.ts';
 
 describe('ProcessStore', () => {
   it.effect(

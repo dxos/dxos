@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import * as OpaqueToolkit from './OpaqueToolkit';
+import * as OpaqueToolkit from './OpaqueToolkit.ts';
 
 const AgeToolkit = Toolkit.make(
   Tool.make('age', {

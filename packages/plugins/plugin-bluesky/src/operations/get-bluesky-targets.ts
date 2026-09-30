@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -12,9 +13,9 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { BLUESKY_TARGET } from '../constants';
-import { BlueskyApi } from '../services';
-import { GetBlueskyTargets } from './definitions';
+import { BLUESKY_TARGET } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
+import { GetBlueskyTargets } from './definitions.ts';
 
 /**
  * Fixed self-targets every Bluesky integration exposes. The remote-id is the
@@ -30,7 +31,7 @@ const SELF_TARGETS = [
 const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTargets.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ connection: connectionRef }) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
+      const config = yield* Capability.get(ClientCapabilities.Config);
       const connection = yield* Database.load(connectionRef);
       if (!Obj.getDatabase(connection)) {
         return yield* Effect.fail(new SyncDatabaseMissingError());
@@ -41,8 +42,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
-        Effect.provide(FetchHttpClient.layer),
+        Effect.provide(Layer.provideMerge(BlueskyApi.fromConnection(connectionRef, config), FetchHttpClient.layer)),
         Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });

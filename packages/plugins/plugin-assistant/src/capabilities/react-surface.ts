@@ -14,6 +14,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { Position } from '@dxos/util';
 
@@ -24,7 +25,10 @@ import {
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
+  ObjectCardSurface,
   PluginPrompt,
+  PluginUrlPrompt,
+  QuestionSurface,
   SpaceHomePrompt,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
@@ -36,7 +40,10 @@ import {
   SpaceHomeSuggestionsSurface,
   TracePanelSurface,
   TriggerStatusSurface,
-} from './AssistantSurfaces';
+} from './AssistantSurfaces.tsx';
+
+const isUnprovisionedAssistantCompanion = (data: { subject?: unknown; variant?: unknown }) =>
+  data.subject == null && data.variant === ASSISTANT_COMPANION_VARIANT;
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -92,7 +99,9 @@ export default Capability.makeModule(() =>
         id: 'companionChat',
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
+          (data) =>
+            Obj.isObject(data.companionTo) &&
+            (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
@@ -146,6 +155,30 @@ export default Capability.makeModule(() =>
         component: PluginPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
         props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
+      }),
+      Surface.create({
+        id: 'pluginUrlPrompt',
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
+        component: PluginUrlPrompt,
+        // `data.data` is model-supplied JSON (untyped); narrow before use.
+        props: ({ data }) => ({ url: nonBlank(data.data?.url), name: nonBlank(data.data?.name) }),
+      }),
+      // `<surface role='card' data='{"id":"echo://…"}'>`: the object as its card.
+      Surface.create({
+        id: 'objectCard',
+        filter: Surface.makeFilter(
+          ChatSurface.ChatSurface,
+          (data) => data.role === 'card' && EID.tryParse(nonBlank(data.data?.id) ?? '') !== undefined,
+        ),
+        component: ObjectCardSurface,
+        props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
+      }),
+      Surface.create({
+        id: 'question',
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
+        component: QuestionSurface,
+        // `data.data` is model-supplied JSON (untyped); narrow the ids before use.
+        props: ({ data }) => ({ task: nonBlank(data.data?.task), question: nonBlank(data.data?.question) }),
       }),
       Surface.create({
         id: 'triggerStatus',

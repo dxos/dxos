@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 
-import { type File, type Storage, StorageType } from '../common';
+import { type File, type Storage, StorageType } from '../common/index.ts';
 
 export const randomText = () => uuid.v4();
 

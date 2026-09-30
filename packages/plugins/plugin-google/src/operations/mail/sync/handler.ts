@@ -15,7 +15,7 @@ import { runMailSync } from '@dxos/plugin-inbox/sync';
 import { GoogleCredentials, GoogleMailApi } from '#services';
 import { GoogleOperation } from '#types';
 
-import { googleMailSyncProvider } from './sync-provider';
+import { googleMailSyncProvider } from './sync-provider.ts';
 
 const handler = GoogleOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ connection, priority, userId = 'me', label = 'all' }) =>

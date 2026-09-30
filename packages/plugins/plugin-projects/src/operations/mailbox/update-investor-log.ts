@@ -22,7 +22,7 @@ import {
   messagesAscending,
   senderMatches,
   setDocumentContent,
-} from './helpers';
+} from './helpers.ts';
 
 /** The artifact the pipeline owns; regenerated wholesale each run. */
 export const INVESTOR_LOG_NAME = 'Investor Conversations';
@@ -97,7 +97,7 @@ const handler = ProjectMailboxOperation.UpdateInvestorLog.pipe(
         const summary = summarize
           ? yield* LanguageModel.generateText({ prompt: `${SUMMARY_PROMPT}\n\n${threadText(thread)}` }).pipe(
               Effect.map((response) => response.text.trim()),
-              Effect.provide(AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
+              Effect.provide(AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
               // Summaries are advisory: a failed generation degrades to the digest, never the run.
               Effect.orElseSucceed(() => threadDigest(thread)),
             )

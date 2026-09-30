@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { Note } from './Note';
+import { Note } from './Note.ts';
 
 /**
  * Ordered collection of notes associated with a single Track. Has a fixed length (in beats);

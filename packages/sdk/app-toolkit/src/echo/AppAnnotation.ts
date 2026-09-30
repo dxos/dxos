@@ -6,15 +6,35 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref } from '@dxos/echo';
 
 // The module, not the barrel: the barrel pulls in `AppNode`, which imports this file back, and the
 // annotation below reads the schema at module-init time.
-import * as DeckSpec from '../app-graph/DeckSpec';
+import * as DeckSpec from '../app-graph/DeckSpec.ts';
+import * as AppSettings from '../types/AppSettings.ts';
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
   id: 'org.dxos.space.rootCollection',
   schema: Ref.Ref(Collection.Collection),
+});
+
+/** Adds a space's root collection as a `system` write: it is scaffolding, never a person's action. */
+export const addRootCollection = (db: Database.Database): Collection.Collection =>
+  db.add(Collection.make(), { origin: 'system' });
+
+/** The settings space's settings object. */
+export const AppSettingsAnnotation = Annotation.make({
+  id: 'org.dxos.space.appSettings',
+  schema: Ref.Ref(AppSettings.AppSettings),
+});
+
+/**
+ * Id of the {@link AppCapabilities.SpaceTemplate} a space was created from, recorded on its
+ * `properties`.
+ */
+export const SpaceTemplateAnnotation = Annotation.make({
+  id: 'org.dxos.space.spaceTemplate',
+  schema: Schema.String,
 });
 
 /**

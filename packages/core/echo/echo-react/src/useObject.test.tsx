@@ -12,7 +12,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { useObject } from './useObject';
+import { useObject } from './useObject.ts';
 
 const createWrapper = (registry: AtomRegistry.AtomRegistry) => {
   return ({ children }: PropsWithChildren) => (

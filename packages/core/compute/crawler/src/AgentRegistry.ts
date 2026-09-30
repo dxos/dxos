@@ -9,11 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { type SqlTransaction } from '@dxos/sql-sqlite';
-
-import { StateError } from './errors';
-import { makeSql, migrate } from './internal/agent-registry-sql';
-import type * as Type from './types';
+import { StateError } from './errors.ts';
+import { makeSql, migrate } from './internal/agent-registry-sql.ts';
+import type * as Type from './types.ts';
 
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
 export type Identifier = {
@@ -70,16 +68,15 @@ export class AgentRegistry extends Context.Service<AgentRegistry, Service>()('@d
 export const layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
 
 /** SQLite-backed registry over a shared SqlClient. */
-export const layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-  Layer.effect(
-    AgentRegistry,
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-      yield* migrate().pipe(Effect.orDie);
-      return makeSql(sql);
-    }),
-  );
+export const layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient> = Layer.effect(
+  AgentRegistry,
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+    yield* migrate().pipe(Effect.orDie);
+    return makeSql(sql);
+  }),
+);
 
 export const resolve = (...args: Parameters<Service['resolve']>) =>
   AgentRegistry.use((registry) => registry.resolve(...args));

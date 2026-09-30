@@ -10,8 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { type JSX } from 'solid-js';
 
-import { type Theme, theme } from '../theme';
-import { type LogBuffer } from '../util';
+import { type Theme, theme } from '../theme.ts';
+import { type LogBuffer } from '../util/index.ts';
 
 export type RenderOptions = {
   /**

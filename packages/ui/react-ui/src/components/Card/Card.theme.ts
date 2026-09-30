@@ -3,13 +3,15 @@
 //
 
 import { mx } from '@dxos/ui-theme';
-import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
+import { type ComponentFunction, type Density, type Surface, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../Column/withColumn';
+import { withColumn } from '../Column/withColumn.ts';
 
 export type CardStyleProps = {
-  border?: boolean;
   fullWidth?: boolean;
+  border?: boolean;
+  /** An explicit level, from `elevation`; the card then paints that level instead of `raised`. */
+  surface?: Surface;
   srOnly?: boolean;
   variant?: 'default' | 'subtitle' | 'description';
   density?: Density;
@@ -20,14 +22,15 @@ const subgrid = 'col-span-3 grid grid-cols-subgrid gap-x-1 items-center';
 
 // Row gap comes from `Column.Root`'s `gap` prop (Card.Root defaults it to `sm`); only the
 // column gap is set here — the axes are separate tailwind-merge groups, so they compose.
-const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
+const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth, surface }, ...etc) =>
   mx(
-    'dx-card dx-card-surface min-h-(--dx-rail-item) p-1 gap-x-1',
+    'dx-card min-h-(--dx-rail-item) p-1 gap-x-1',
+    'group/card relative shrink-0 overflow-hidden',
     // fullWidth tracks the container in both directions: the min floor would overflow containers
     // narrower than --spacing-card-min-width (phones).
     fullWidth ? 'w-full min-w-0' : 'dx-card-min-width dx-card-max-width',
-    'group/card relative shrink-0 overflow-hidden',
-    border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
+    !surface && 'dx-card-surface',
+    border && 'shadow-md rounded-md dx-focus-ring-group-y-indicator',
     ...etc,
   );
 
@@ -52,7 +55,7 @@ const textSpan: ComponentFunction<CardStyleProps> = ({ variant = 'default', trun
   mx(variant === 'description' && 'text-sm text-description line-clamp-3', truncate && 'truncate', ...etc);
 
 const poster: ComponentFunction<CardStyleProps> = (_, ...etc) =>
-  mx('dx-card__poster col-span-3 max-h-[200px] select-none pointer-events-none', ...etc);
+  mx('dx-card__poster col-span-3 max-h-[200px] __select-none __pointer-events-none', ...etc);
 
 const posterIcon: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);

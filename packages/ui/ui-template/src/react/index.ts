@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Splitter';
-export * from './renderer';
-export * from './useSystem';
+export * from './Splitter.tsx';
+export * from './renderer.tsx';
+export * from './useSystem.ts';

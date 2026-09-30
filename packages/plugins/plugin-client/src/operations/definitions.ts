@@ -104,6 +104,8 @@ export const ResetStorage = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     mode: Schema.optional(Schema.String),
+    /** Device invitation to accept once the identity is deleted (`join-new-identity` only). */
+    invitationCode: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });

@@ -33,10 +33,13 @@ import {
   type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
-} from './opfs-pragmas';
-import { logSqliteQuery, summarizeLoggedParams } from './query-log';
+} from './opfs-pragmas.ts';
+import { recordSqliteQueryMetrics, summarizeLoggedParams } from './query-log.ts';
+import { readRow } from './row-decode.ts';
+import { instantiateSqliteModule } from './sqlite-module.ts';
+import { instrumentVfs } from './vfs-metrics.ts';
 
-export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas';
+export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
 
 /** Config for in-process OPFS SQLite (worker-only, no MessagePort). */
 export interface OpfsConfig extends WasmSqliteClient.SqliteClientMemoryConfig {
@@ -61,7 +64,7 @@ const ATTR_DB_SYSTEM_NAME = 'db.system.name';
 
 const DEFAULT_VFS_DIRECTORY = 'opfs';
 
-const initModule = Effect.runSync(Effect.cached(Effect.promise(() => SQLiteESMFactory())));
+const initModule = Effect.runSync(Effect.cached(Effect.promise(() => instantiateSqliteModule(SQLiteESMFactory))));
 
 const initEffect = Effect.runSync(Effect.cached(initModule.pipe(Effect.map((module) => WaSqlite.Factory(module)))));
 
@@ -98,33 +101,6 @@ const importDatabase = (
   });
 };
 
-const recordSqliteQueryMetrics = (
-  sql: string,
-  params: ReadonlyArray<unknown>,
-  resultCount: number,
-  begin: number,
-): void => {
-  const end = performance.now();
-  logSqliteQuery({ sql, params, results: resultCount, time: end - begin });
-  performance.measure(sql.slice(0, 128), {
-    start: begin,
-    end: end,
-    detail: {
-      devtools: {
-        dataType: 'track-entry',
-        track: 'Query',
-        trackGroup: 'SQlite',
-        color: 'tertiary-dark',
-        properties: [
-          ['sql', sql],
-          ['params', params],
-          ['resultCount', resultCount],
-        ],
-      },
-    },
-  });
-};
-
 /** In-process OPFS SQLite client for dedicated worker contexts (no MessagePort). */
 export const makeOpfs = (
   options: OpfsConfig,
@@ -145,6 +121,11 @@ export const makeOpfs = (
         registeredVfs.add(vfsDirectory);
         const factory = yield* initModule;
         const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create(vfsDirectory, factory));
+        // Instrumented BEFORE registration: `vfs_register` hands the object to wasm, so wrapping
+        // afterwards would leave the registered methods unwrapped. This is the only place in the
+        // codebase where SQLite's disk I/O carries a byte count — nothing in CDP reports read/write
+        // bytes, and `Storage.getUsageAndQuota` gives a stored level rather than operations.
+        instrumentVfs(vfs);
         // AccessHandlePoolVFS is an untyped wa-sqlite example; vfs_register expects its VFS shape.
         sqlite3.vfs_register(vfs as any, false);
       }
@@ -187,12 +168,13 @@ export const makeOpfs = (
               // wa-sqlite bind_collection is typed for SQLiteCompatibleType[] only.
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                columns = columns ?? sqlite3.column_names(stmt);
-                const row = sqlite3.row(stmt);
+                const decoded = readRow(sqlite3, stmt, sql, columns);
+                columns = decoded.columns;
+                const row = decoded.row;
                 if (rowMode === 'object') {
                   const obj: Record<string, unknown> = {};
-                  for (let index = 0; index < columns!.length; index++) {
-                    obj[columns![index]] = row[index];
+                  for (let index = 0; index < columns.length; index++) {
+                    obj[columns[index]] = row[index];
                   }
                   results.push(obj);
                 } else {
@@ -235,11 +217,12 @@ export const makeOpfs = (
               let columns: Array<string> | undefined;
               sqlite3.bind_collection(stmt, params as any);
               while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
-                columns = columns ?? sqlite3.column_names(stmt);
-                const row = sqlite3.row(stmt);
+                const decoded = readRow(sqlite3, stmt, sql, columns);
+                columns = decoded.columns;
+                const row = decoded.row;
                 const obj: Record<string, unknown> = {};
-                for (let index = 0; index < columns!.length; index++) {
-                  obj[columns![index]] = row[index];
+                for (let index = 0; index < columns.length; index++) {
+                  obj[columns[index]] = row[index];
                 }
                 resultCount++;
                 yield obj;

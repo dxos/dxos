@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 
-import { PluginItem, type PluginItemProps } from './PluginItem';
+import { PluginItem, type PluginItemProps } from './PluginItem.tsx';
 
 export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags' | 'hasUpdate' | 'failure'> & {
   plugins?: readonly Plugin.Plugin[];
@@ -27,6 +27,8 @@ export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags' | 'ha
    * badge next to the plugin name. Sourced from `PluginManager.failed`.
    */
   failuresById?: Record<string, PluginManager.PluginFailure>;
+  /** Ids whose value on this device differs from the account's. */
+  deviceOnlyIds?: ReadonlySet<string>;
 };
 
 export const PluginList = ({
@@ -34,14 +36,20 @@ export const PluginList = ({
   extraTagsById,
   updateAvailableIds,
   failuresById,
+  deviceOnlyIds,
   ...props
 }: PluginListProps) => {
+  const items = useMemo(
+    () =>
+      plugins.map((plugin) => ({
+        value: plugin.meta.profile.key,
+        label: plugin.meta.profile.name ?? plugin.meta.profile.key,
+      })),
+    [plugins],
+  );
   return (
-    <Listbox.Root>
-      <Listbox.Content
-        aria-label='plugins'
-        classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] auto-rows-[max-content] gap-4 p-4'
-      >
+    <Listbox.Root items={items}>
+      <Listbox.Content aria-label='plugins' scroll={false}>
         {plugins.map((plugin) => (
           <PluginItem
             key={plugin.meta.profile.key}
@@ -49,6 +57,7 @@ export const PluginList = ({
             extraTags={extraTagsById?.[plugin.meta.profile.key]}
             hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
             failure={failuresById?.[plugin.meta.profile.key]}
+            deviceOnly={deviceOnlyIds?.has(plugin.meta.profile.key)}
             {...props}
           />
         ))}

@@ -4,11 +4,21 @@
 
 import { ProjectCapabilities } from '#types';
 
-import { defaultTemplate } from './default';
-import { inboxResearch } from './inbox-research';
+import { composerPlugin } from './composer-plugin.ts';
+import { defaultTemplate } from './default.ts';
+import { inboxResearch } from './inbox-research.ts';
 
-export * from './inbox-research';
-export * from './scaffold';
+export {
+  GUIDE,
+  IDS,
+  PARENT_INSTRUCTIONS,
+  type Variant,
+  makeComposerPlugin,
+  readGuide,
+  writePlugin,
+} from './composer-plugin.ts';
+export * from './inbox-research.ts';
+export * from './scaffold.ts';
 
 /**
  * Templates contributed by plugin-projects itself. `inboxResearch` lives here rather than in
@@ -17,4 +27,9 @@ export * from './scaffold';
  */
 export { defaultTemplate };
 
-export const defaultTemplates: ProjectCapabilities.Template[] = [defaultTemplate, inboxResearch];
+/** The Composer Plugin template joins them only where it can run (see {@link composerPlugin}). */
+export const defaultTemplates: ProjectCapabilities.Template[] = [
+  defaultTemplate,
+  inboxResearch,
+  ...[composerPlugin()].filter((template) => template !== undefined),
+];

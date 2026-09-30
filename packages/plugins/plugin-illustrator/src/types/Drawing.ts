@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { CardAnnotation, CollectionItemAnnotation } from '@dxos/schema';
+import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { CardAnnotation } from '@dxos/schema';
 
 /**
  * Canvas content shared by every renderer: an opaque map of record id → record, managed by the
@@ -22,7 +22,7 @@ export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canv
   Schema.Struct({
     schema: Schema.String.pipe(Schema.optional),
     content: Schema.Record(Schema.String, Schema.Any),
-  }).pipe(HiddenAnnotation.set(true)),
+  }),
 ) {}
 
 export type MakeCanvasOptions = Omit<Partial<Obj.MakeProps<typeof Canvas>>, 'schema'> & {
@@ -52,7 +52,7 @@ export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.dr
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),
 ) {}
 

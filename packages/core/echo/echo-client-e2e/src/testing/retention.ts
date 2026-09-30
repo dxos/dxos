@@ -41,10 +41,12 @@ export type ReportScale = {
 /**
  * Repeated collection with a macrotask turn between passes: a single `gc()` leaves
  * `FinalizationRegistry` callbacks and `WeakRef` clears pending, so a reading taken straight after
- * it still counts collected objects as live.
+ * it still counts collected objects as live. One pass per link of the release chain, and an object
+ * loaded on demand hangs off a longer one than an eagerly linked object did — the count is what the
+ * assertion is about, so the passes have to outlast the chain rather than measure it.
  */
 export const settle = async (): Promise<void> => {
-  for (let iteration = 0; iteration < 3; iteration++) {
+  for (let iteration = 0; iteration < 6; iteration++) {
     global.gc?.();
     await new Promise((resolve) => setImmediate(resolve));
   }

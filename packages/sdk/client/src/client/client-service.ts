@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { ConfigService } from '@dxos/config';
 
-import { Client } from './client';
+import { Client } from './client.ts';
 // import { CommandConfig } from './command-config';
 
 // TODO(wittjosiah): Factor out.

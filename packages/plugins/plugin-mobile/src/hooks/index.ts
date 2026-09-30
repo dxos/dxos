@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './useMobileActions';
-export * from './useMobileAppBar';
-export * from './useMobileStack';
+export * from './useMobileActions.ts';
+export * from './useMobileAppBar.ts';
+export * from './useMobileStack.ts';

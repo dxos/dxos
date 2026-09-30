@@ -10,8 +10,8 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 // Person is referenced in Actor.Actor's inferred type; importing it keeps that type nameable.
 import { Actor, type Person } from '@dxos/types';
 
-import * as TestCase from './TestCase';
-import * as TestPlan from './TestPlan';
+import * as TestCase from './TestCase.ts';
+import * as TestPlan from './TestPlan.ts';
 
 /** What a run was executed against — structured, because this is what a reader filters on later. */
 export const Target = Schema.Struct({
@@ -92,7 +92,7 @@ export class TestRun extends Type.makeObject<TestRun>(DXN.make('org.dxos.type.qa
     finishedAt: Schema.optional(Schema.String),
     results: Schema.mutable(Schema.Array(Result)),
     summary: Schema.optional(Schema.String),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--play-circle--regular', hue: 'green' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--play-circle--regular', hue: 'green' }), Annotation.UserType.set()),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof TestRun>): TestRun => Obj.make(TestRun, props);

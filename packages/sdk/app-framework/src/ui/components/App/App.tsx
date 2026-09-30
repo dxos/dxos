@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Capabilities } from '../../../common';
-import { topologicalSort } from '../../../helpers';
+import { Capabilities } from '../../../common/index.ts';
+import { topologicalSort } from '../../../helpers.ts';
 import {
   FIRST_INTERACTIVE_EVENT,
   LoadingState,
@@ -13,8 +13,8 @@ import {
   type UseAppOptions,
   useCapabilities,
   useLoading,
-} from '../../hooks';
-import { bootLoader } from './loader';
+} from '../../hooks/index.ts';
+import { bootLoader } from './loader.ts';
 
 export type AppProps = Pick<UseAppOptions, 'debounce' | 'verboseStatus'> & {
   ready: boolean;

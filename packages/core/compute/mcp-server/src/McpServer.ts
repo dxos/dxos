@@ -22,15 +22,15 @@ import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
-import { ToolFailure, failure } from './internal/failure';
-import * as iconInternal from './internal/icon';
-import * as identityInternal from './internal/identity';
-import * as inputInternal from './internal/input';
-import * as snapshotInternal from './internal/snapshot';
-import * as spaceInternal from './internal/space';
-import * as viewInternal from './internal/view';
-import * as wireInternal from './internal/wire';
+export { ToolFailure, type ToolFailureCode, failure } from './internal/failure.ts';
+import { ToolFailure, failure } from './internal/failure.ts';
+import * as iconInternal from './internal/icon.ts';
+import * as identityInternal from './internal/identity.ts';
+import * as inputInternal from './internal/input.ts';
+import * as snapshotInternal from './internal/snapshot.ts';
+import * as spaceInternal from './internal/space.ts';
+import * as viewInternal from './internal/view.ts';
+import * as wireInternal from './internal/wire.ts';
 
 //
 // Host contract.
@@ -58,8 +58,33 @@ export type InvokeRequest = {
   readonly spaceId?: string;
 };
 
+/**
+ * Where a session's loaded skills are recorded, which is what {@link invoke} checks an operation's
+ * owners against. Host-supplied because a host whose requests land on different processes (EDGE's
+ * isolates) needs storage they share; a failure to read or write is the host's to absorb.
+ */
+export type SkillLedger = {
+  /** Prompt names of the skills loaded so far. */
+  readonly loaded: Effect.Effect<ReadonlySet<string>>;
+  readonly record: (name: string) => Effect.Effect<void>;
+};
+
+/** A ledger in this process's memory — right for a host that serves one session per process (stdio). */
+export const memorySkillLedger = (): SkillLedger => {
+  const loaded = new Set<string>();
+  return {
+    loaded: Effect.sync(() => loaded),
+    record: (name) =>
+      Effect.sync(() => {
+        loaded.add(name);
+      }),
+  };
+};
+
 export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
+  /** Omitted, the surface keeps one {@link memorySkillLedger} for as long as it is built. */
+  readonly skillLedger?: SkillLedger;
   /**
    * Spaces this session may address. No member is a default: a call that names none is refused.
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
@@ -101,7 +126,8 @@ export const LoadSkill = Tool.make('loadSkill', {
     'Loads a skill: the instructions for a multi-tool workflow hosted on this server. Call this ' +
     'before first invoking any operation whose queryOperations row names a skill, and follow the ' +
     'returned instructions — they define required setup, argument conventions, and ordering that ' +
-    'operation descriptions alone do not carry. Omit the skill argument to list every skill this ' +
+    'operation descriptions alone do not carry; invokeOperation refuses such an operation until one ' +
+    'of its skills has been loaded in this session. Omit the skill argument to list every skill this ' +
     'server offers. The same skills are exposed to users as prompts; loading one here brings the ' +
     'identical text into context without user action. No side effects.',
   parameters: Schema.Struct({
@@ -175,7 +201,8 @@ export const QueryOperations = Tool.make('queryOperations', {
         name: Schema.optional(Schema.String),
         description: Schema.optional(Schema.String),
         skills: Schema.Array(Schema.String).annotate({
-          description: 'Skills this operation belongs to; load one with loadSkill before invoking.',
+          description:
+            'Skills this operation belongs to; invokeOperation refuses it until one is loaded with loadSkill.',
         }),
         requiresSpace: Schema.Boolean.annotate({
           description: 'Whether the operation acts on a space, making invokeOperation spaceId load-bearing.',
@@ -218,7 +245,8 @@ export const InvokeOperation = Tool.make('invokeOperation', {
   description:
     'Invokes an operation by key — how every read and write on this server is performed. Find the ' +
     'key with queryOperations and fetch its input schema (queryOperations with keys) before the ' +
-    "first call; input must match that schema. Check the operation's mutation class in its row " +
+    'first call; input must match that schema. An operation whose row names skills is refused until ' +
+    "one of them has been loaded with loadSkill in this session. Check the operation's mutation class in its row " +
     'before invoking: this tool is as destructive as whatever it is asked to run. References ' +
     'between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes — pass them back ' +
     'exactly as received.',
@@ -267,10 +295,12 @@ export const loadSkillByName = (
   catchCollision(
     viewInternal.mcpSkills(registry).pipe(
       Effect.flatMap((projected) => {
+        // `description` is spread in only when it resolved, for the reason `operationView` gives:
+        // an explicit `undefined` survives encoding and MCP's structured content must be JSON.
         const summarize = (candidate: viewInternal.McpSkill) => ({
           name: candidate.promptName,
           key: candidate.key,
-          description: candidate.description,
+          ...(candidate.description === undefined ? {} : { description: candidate.description }),
         });
         if (skill == null) {
           return Effect.succeed<SkillListing>({ skills: projected.map(summarize) });
@@ -288,6 +318,21 @@ export const loadSkillByName = (
         }
         return Effect.succeed<SkillListing>({ skills: [summarize(match)], instructions: match.instructions });
       }),
+    ),
+  );
+
+/**
+ * Answers one `loadSkill` call, recording a loaded skill in the ledger so its operations unlock. A
+ * listing records nothing, since it carries no instructions.
+ */
+export const loadSkill = (
+  registry: Registry.Registry,
+  ledger: SkillLedger,
+  skill: string | undefined,
+): Effect.Effect<SkillListing, ToolFailure> =>
+  loadSkillByName(registry, skill).pipe(
+    Effect.tap(({ skills, instructions }) =>
+      instructions === undefined || skills.length === 0 ? Effect.void : ledger.record(skills[0].name),
     ),
   );
 
@@ -346,7 +391,10 @@ const encodeInput = (
     return Effect.succeed(arguments_);
   }
 
-  return Schema.decodeUnknownEffect(codec.decode)(arguments_).pipe(
+  // The published schema says `additionalProperties: false`, and the default `ignore` policy drops
+  // an undeclared property instead: a misspelled `text` left `space-query-objects` with no search
+  // term at all and its handler answered with the whole space, as a success.
+  return Schema.decodeUnknownEffect(codec.decode, { onExcessProperty: 'error', errors: 'all' })(arguments_).pipe(
     Effect.flatMap(Schema.encodeUnknownEffect(codec.encode)),
     Effect.mapError((error) =>
       failure(
@@ -359,7 +407,54 @@ const encodeInput = (
 };
 
 /**
- * Dispatches one `invokeOperation` call: validate the input, resolve the space, invoke, qualify refs.
+ * Runs an operation the caller has already resolved: encode the input, resolve the space, invoke,
+ * qualify refs. Shared by {@link invoke} and {@link invokeHosted}, which differ only in governance.
+ */
+const dispatch = (
+  host: HostShape,
+  record: Operation.PersistentOperation,
+  operationKey: string,
+  { input, spaceId }: { input?: Record<string, unknown>; spaceId?: SpaceId },
+): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+  Effect.gen(function* () {
+    // Encoded before the space is resolved, because the wire form is where a reference argument
+    // states which space it belongs to.
+    const arguments_ = input ?? {};
+    const wire = yield* encodeInput(record, arguments_, operationKey);
+
+    // Only what names a space counts; there is no session default to fall back to.
+    const declared = inputInternal.declaresSpaceId(record) ? arguments_.spaceId : undefined;
+    const named = spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);
+    const resolvedSpaceId = yield* spaceInternal.resolveId(host.spaceIds, named, {
+      required: viewInternal.requiresSpace(record),
+    });
+
+    const output = yield* host
+      .invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId })
+      .pipe(Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)));
+
+    // `structuredContent` must be a JSON value, so the output travels as the JSON its text block carries.
+    const text: string | undefined = yield* Effect.try({
+      try: () => JSON.stringify(output),
+      catch: (error) =>
+        failure('operation_failed', `${operationKey} returned a result that is not JSON: ${String(error)}`),
+    });
+    if (text === undefined) {
+      return {};
+    }
+    const json: unknown = JSON.parse(text);
+
+    // Nothing to qualify against when the call named no space: a space-less result carries no
+    // same-space references.
+    const result = resolvedSpaceId === undefined ? json : spaceInternal.qualifyRefs(json, resolvedSpaceId);
+    return result !== null && typeof result === 'object' && !Array.isArray(result)
+      ? (result as Record<string, unknown>)
+      : { output: result };
+  });
+
+/**
+ * Dispatches one `invokeOperation` call: check a skill governing it was loaded, validate the input,
+ * resolve the space, invoke, qualify refs.
  *
  * The input arrives as raw JSON rather than through a per-operation tool schema, so validating it
  * here is what turns a malformed call into an error naming the offending field instead of a
@@ -371,6 +466,7 @@ export const invoke = (
   registry: Registry.Registry,
   host: HostShape,
   { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
+  loadedSkills: ReadonlySet<string>,
 ): Effect.Effect<Record<string, unknown>, ToolFailure> =>
   catchCollision(
     Effect.gen(function* () {
@@ -382,12 +478,8 @@ export const invoke = (
       const governedName = record != null ? viewInternal.toolNameOf(record) : undefined;
       // Skills are the unit of governance: an operation in the registry but named by no opted-in
       // skill is exactly as uninvocable as one that does not exist.
-      if (
-        record == null ||
-        operationKey == null ||
-        governedName == null ||
-        !viewInternal.ownersOf(skills).has(governedName)
-      ) {
+      const owners = governedName != null ? viewInternal.ownersOf(skills).get(governedName) : undefined;
+      if (record == null || operationKey == null || owners == null) {
         return yield* Effect.fail(
           failure(
             'invalid_request',
@@ -396,31 +488,143 @@ export const invoke = (
         );
       }
 
-      // Encoded before the space is resolved, because the wire form is where a reference argument
-      // states which space it belongs to.
-      const arguments_ = input ?? {};
-      const wire = yield* encodeInput(record, arguments_, operationKey);
+      // Refused before any input is examined: the skill is what says how the input should be built.
+      if (!owners.some((name) => loadedSkills.has(name))) {
+        const options = owners.map((name) => `'${name}'`).join(' or ');
+        return yield* Effect.fail(
+          failure(
+            'skill_not_loaded',
+            `${operationKey} belongs to the ${options} skill, which this session has not loaded. ` +
+              `Call loadSkill with skill: '${owners[0]}', follow the instructions it returns, then retry this call.`,
+          ),
+        );
+      }
 
-      // Only what names a space counts; there is no session default to fall back to.
-      const declared = inputInternal.declaresSpaceId(record) ? arguments_.spaceId : undefined;
-      const named =
-        spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);
-      const resolvedSpaceId = yield* spaceInternal.resolveId(host.spaceIds, named, {
-        required: viewInternal.requiresSpace(record),
-      });
-
-      const output = yield* host
-        .invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId })
-        .pipe(Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)));
-
-      // Nothing to qualify against when the call named no space: a space-less result carries no
-      // same-space references.
-      const result = resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId);
-      return result !== null && typeof result === 'object' && !Array.isArray(result)
-        ? (result as Record<string, unknown>)
-        : { output: result };
+      return yield* dispatch(host, record, operationKey, { input, spaceId });
     }),
   );
+
+/** Answers one `invokeOperation` call against the skills the ledger has recorded. */
+export const invokeWithLedger = (
+  registry: Registry.Registry,
+  host: HostShape,
+  ledger: SkillLedger,
+  request: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
+): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+  ledger.loaded.pipe(Effect.flatMap((loaded) => invoke(registry, host, request, loaded)));
+
+/**
+ * Runs an operation on behalf of a host's own tool, without the skill check {@link invoke} applies.
+ *
+ * For operations a host tool needs but a model must not call directly (e.g. `file.resolveDownload`,
+ * whose result is only useful once the host has signed a URL for it), so no skill lists them.
+ */
+export const invokeHosted = (
+  registry: Registry.Registry,
+  host: HostShape,
+  { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
+): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+  catchCollision(
+    Effect.gen(function* () {
+      const record = viewInternal.lookup(registry, key);
+      const operationKey = record != null ? viewInternal.nsid(Operation.getKey(record) ?? '') : undefined;
+      if (record == null || operationKey == null) {
+        return yield* Effect.fail(failure('operation_failed', `This host does not provide the ${key} operation.`));
+      }
+      return yield* dispatch(host, record, operationKey, { input, spaceId });
+    }),
+  );
+
+//
+// Downloads.
+//
+// The reverse of each host's `createUpload`: a file in a space becomes a short-lived URL an agent's
+// shell fetches, so its bytes reach disk without passing through the model. The tool is declared
+// here, once, because both hosts must describe it identically; each signs URLs its own way.
+//
+
+/** Key of the host-internal operation that names a file's bytes to the host. */
+export const RESOLVE_DOWNLOAD_KEY = 'org.dxos.operation.file.resolveDownload';
+
+/** What `file.resolveDownload` returns: an id only its host can sign, plus what the caller is told. */
+const ResolvedDownload = Schema.Struct({
+  downloadId: Schema.String,
+  name: Schema.optional(Schema.String),
+  type: Schema.String,
+  size: Schema.Number,
+});
+export type ResolvedDownload = Schema.Schema.Type<typeof ResolvedDownload>;
+
+export const CreateDownload = Tool.make('createDownload', {
+  description:
+    'Returns a short-lived URL for downloading a file object from a space straight to local disk, ' +
+    'bypassing the conversation entirely. Use this to save a file (an image, recording, PDF, log) ' +
+    'to disk; run the returned command in a shell. To look at a file yourself instead, read it with ' +
+    'the file.read operation. The URL expires in minutes: get it, use it, and do not save it for later.',
+  parameters: Schema.Struct({
+    file: Schema.Struct({ '/': Schema.String }).annotate({
+      description: 'Reference to the file object, exactly as another tool returned it.',
+    }),
+    spaceId: spaceInternal.idParameter,
+  }),
+  failure: ToolFailure,
+  success: Schema.Struct({
+    url: Schema.String,
+    method: Schema.Literal('GET'),
+    expiresAt: Schema.String.annotate({ description: 'ISO 8601 instant after which the URL is refused.' }),
+    name: Schema.String.annotate({ description: 'File name the command saves to.' }),
+    type: Schema.String,
+    size: Schema.Number,
+    command: Schema.String.annotate({ description: 'Ready-to-run download command.' }),
+  }),
+})
+  // Mints a credential and writes nothing to the space.
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
+
+export const DownloadToolkit = Toolkit.make(CreateDownload);
+
+/** Resolves a file reference through the host to the id the host signs a download URL for. */
+export const resolveDownload = (
+  registry: Registry.Registry,
+  host: HostShape,
+  { file, spaceId }: { file: { '/': string }; spaceId?: string },
+): Effect.Effect<ResolvedDownload, ToolFailure> =>
+  Effect.gen(function* () {
+    const resolvedSpaceId = yield* spaceInternal.resolveId(
+      host.spaceIds,
+      spaceId ?? spaceInternal.hintFromInput(file),
+      {
+        required: true,
+      },
+    );
+    const output = yield* invokeHosted(registry, host, {
+      key: RESOLVE_DOWNLOAD_KEY,
+      input: { file },
+      spaceId: resolvedSpaceId,
+    });
+    return yield* Schema.decodeUnknownEffect(ResolvedDownload)(output).pipe(
+      Effect.mapError((error) =>
+        failure('operation_failed', `${RESOLVE_DOWNLOAD_KEY} returned an unexpected result: ${String(error)}`),
+      ),
+    );
+  });
+
+/** The file name a download is saved under: a bare name, so the command never writes outside the working directory. */
+export const downloadFileName = ({ name, downloadId }: ResolvedDownload): string => {
+  const base = (name ?? '').split(/[\\/]/).pop()?.replace(/^\.+/, '') ?? '';
+  return base.length > 0 ? base : `download-${downloadId.slice(0, 12)}`;
+};
+
+/** Single-quotes a word for a POSIX shell, so a name with spaces, quotes or `$` stays one argument. */
+export const shellQuote = (word: string): string => `'${word.replaceAll("'", `'\\''`)}'`;
+
+/**
+ * `--fail` rather than the upload's `--fail-with-body`: with `-o`, the latter saves the error page
+ * as the file, which a caller then reads as the download.
+ */
+export const downloadCommand = (url: string, name: string): string =>
+  `curl --fail -sS -o ${shellQuote(`./${name}`)} ${shellQuote(url)}`;
 
 //
 // Layers.
@@ -440,10 +644,11 @@ const surfaceLayer: Layer.Layer<never, never, Registry.Service | Host> = McpServ
       Effect.gen(function* () {
         const registry = yield* Registry.Service;
         const host = yield* Host;
+        const ledger = host.skillLedger ?? memorySkillLedger();
         return ServerToolkit.of({
           queryOperations: (query) => queryOperations(registry, query),
-          invokeOperation: (request) => invoke(registry, host, request),
-          loadSkill: ({ skill }) => loadSkillByName(registry, skill),
+          invokeOperation: (request) => invokeWithLedger(registry, host, ledger, request),
+          loadSkill: ({ skill }) => loadSkill(registry, ledger, skill),
         });
       }),
     ),
@@ -523,46 +728,125 @@ export const stdio: Layer.Layer<EffectStdio.Stdio, never, EffectStdio.Stdio> = L
   ),
 );
 
-/**
- * The same passes over an HTTP response body, plus the batch unwrap the transport requires, for a
- * host that owns its own transport (effect's `McpServer.layerHttp` behind a worker's fetch handler).
- *
- * `serverInfo` is merged into the `initialize` result on top of the shared identity: the MCP
- * `Implementation` may carry `title`, `websiteUrl` and `icons`, and effect's `McpServer` offers no way to
- * supply them. Pass `icons` here — they need an origin, which only the host knows.
- */
-export const normalizeResponse = async (
-  response: Response,
-  options: { readonly serverInfo?: Record<string, unknown> } = {},
-): Promise<Response> => {
-  if (!response.headers.get('content-type')?.includes('application/json')) {
-    return response;
-  }
-  const text = await response.text();
-  const unwrapped = unwrapBatch(text);
-  const normalized = wireInternal.normalizeText(unwrapped, options);
-  const headers = new Headers(response.headers);
-  // The passes above change the body length, so an upstream `Content-Length` now describes a body
-  // that no longer exists; a client that trusts it truncates the response.
-  headers.delete('content-length');
-  return new Response(normalized ?? unwrapped, { status: response.status, headers });
+export type NormalizeResponseOptions = {
+  readonly serverInfo?: Record<string, unknown>;
+  /** An event stream is collapsed only when this is a POST other than `subscriptions/listen`, whose stream never ends. */
+  readonly request?: Pick<Request, 'method' | 'headers'>;
 };
 
 /**
- * Unwraps a single-element JSON-RPC batch.
+ * The same passes over an HTTP response body, for a host that owns its own transport (effect's
+ * `McpServer.layerHttp` behind a worker's fetch handler).
  *
- * Effect's RPC HTTP transport always answers with an array, while MCP's Streamable HTTP transport
- * requires a lone JSON-RPC object for a single request — and a client that gets the array does not
- * recognise the server's tools at all. Spec compliance rather than host policy, so every HTTP host
- * needs it and none should have to know that.
+ * `serverInfo` is merged into the server's `Implementation` wherever a result names it, on top of the
+ * shared identity: the MCP `Implementation` may carry `title`, `websiteUrl` and `icons`, and effect's
+ * `McpServer` offers no way to supply them. Pass `icons` here — they need an origin, which only the
+ * host knows.
+ *
+ * A finite event stream collapses to its lone response, since effect streams any reply carrying a
+ * stray `list_changed`.
  */
-const unwrapBatch = (text: string): string => {
-  try {
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) && parsed.length === 1 ? JSON.stringify(parsed[0]) : text;
-  } catch {
-    return text;
+export const normalizeResponse = async (
+  response: Response,
+  { request, ...options }: NormalizeResponseOptions = {},
+): Promise<Response> => {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('text/event-stream')) {
+    const finite = request?.method === 'POST' && request.headers.get('mcp-method') !== 'subscriptions/listen';
+    return finite ? collapseEventStream(response, options) : response;
   }
+  if (!contentType.includes('application/json')) {
+    return response;
+  }
+  const text = await response.text();
+  return withBody(response, wireInternal.normalizeText(text, options) ?? text);
+};
+
+/** Passes the stream through unchanged when it holds anything but notifications and one response. */
+const collapseEventStream = async (
+  response: Response,
+  options: Pick<NormalizeResponseOptions, 'serverInfo'>,
+): Promise<Response> => {
+  const bytes = await response.arrayBuffer();
+  const unchanged = new Response(bytes, response);
+  const events = eventData(new TextDecoder().decode(bytes));
+  if (events == null) {
+    return unchanged;
+  }
+
+  const responses: string[] = [];
+  for (const data of events) {
+    const kind = messageKind(data);
+    if (kind === 'response') {
+      responses.push(data);
+    } else if (kind !== 'notification') {
+      return unchanged;
+    }
+  }
+
+  if (responses.length > 1) {
+    return unchanged;
+  }
+  if (responses.length === 0) {
+    return withBody(response, null, 202);
+  }
+  const [data] = responses;
+  return withBody(response, wireInternal.normalizeText(data, options) ?? data, response.status, 'application/json');
+};
+
+/** The `data` of each server-sent event, or `undefined` when the stream ends mid-event. */
+const eventData = (text: string): string[] | undefined => {
+  const events: string[] = [];
+  let data: string[] = [];
+  for (const line of text.split(/\r\n|\r|\n/)) {
+    if (line === '') {
+      if (data.length > 0) {
+        events.push(data.join('\n'));
+        data = [];
+      }
+      continue;
+    }
+    const colon = line.indexOf(':');
+    const field = colon < 0 ? line : line.slice(0, colon);
+    if (field === 'data') {
+      data.push(colon < 0 ? '' : line.slice(colon + 1).replace(/^ /, ''));
+    }
+  }
+  return data.length > 0 ? undefined : events;
+};
+
+const messageKind = (data: string): 'response' | 'notification' | undefined => {
+  let message: unknown;
+  try {
+    message = JSON.parse(data);
+  } catch {
+    return undefined;
+  }
+  if (message === null || typeof message !== 'object' || Array.isArray(message)) {
+    return undefined;
+  }
+  if ('method' in message) {
+    return 'id' in message ? undefined : 'notification';
+  }
+  // Exactly one outcome: a message carrying both is malformed, and the stream is left alone.
+  return 'id' in message && 'result' in message !== 'error' in message ? 'response' : undefined;
+};
+
+/** Rebuilds a response around a new body, which no upstream `Content-Length` describes. */
+const withBody = (
+  response: Response,
+  body: string | null,
+  status = response.status,
+  contentType?: string,
+): Response => {
+  const headers = new Headers(response.headers);
+  headers.delete('content-length');
+  if (body == null) {
+    headers.delete('content-type');
+  } else if (contentType != null) {
+    headers.set('content-type', contentType);
+  }
+  return new Response(body, { status, headers });
 };
 
 //
@@ -587,8 +871,8 @@ export const refEnvelope = (id: string): { '/': string } => ({ '/': id });
 export const identity = identityInternal.identity;
 export const icons = iconInternal.icons;
 export const iconResponse = iconInternal.iconResponse;
-export const ICON_LIGHT_PATH = iconInternal.ICON_LIGHT_PATH;
-export const ICON_DARK_PATH = iconInternal.ICON_DARK_PATH;
+export const ICON_PATH = iconInternal.ICON_PATH;
+export const FAVICON_PATH = iconInternal.FAVICON_PATH;
 
 //
 // Registry construction for hosts without one.

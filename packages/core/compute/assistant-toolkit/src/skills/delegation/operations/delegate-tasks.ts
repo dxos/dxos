@@ -11,7 +11,8 @@ import { Database, Obj } from '@dxos/echo';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { DelegateTasks } from './definitions';
+import { ToolkitError } from '../../../errors.ts';
+import { DelegateTasks } from './definitions.ts';
 
 /**
  * Delegates existing checklist tasks: each selected task is assigned to an agent and queued, and
@@ -23,13 +24,13 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ tasks: selectors }) {
       if (selectors.length === 0) {
-        return yield* Effect.fail(new Error('Select at least one task (ordinal or title).'));
+        return yield* Effect.fail(new ToolkitError({ message: 'Select at least one task (ordinal or title).' }));
       }
 
       const chat = yield* Harness.getChat;
       const all = yield* Chat.loadTasks(chat);
       if (all.length === 0) {
-        return yield* Effect.fail(new Error('The conversation has no tasks to delegate.'));
+        return yield* Effect.fail(new ToolkitError({ message: 'The conversation has no tasks to delegate.' }));
       }
 
       const selected = new Map<string, Task.Task>();
@@ -47,7 +48,9 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
       }
       if (unmatched.length > 0) {
         return yield* Effect.fail(
-          new Error(`No matching task for: ${unmatched.join(', ')}. Select by 1-based ordinal or exact title.`),
+          new ToolkitError({
+            message: `No matching task for: ${unmatched.join(', ')}. Select by 1-based ordinal or exact title.`,
+          }),
         );
       }
 

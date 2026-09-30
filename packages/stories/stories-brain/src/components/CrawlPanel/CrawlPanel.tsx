@@ -117,7 +117,7 @@ export const CrawlPanel = ({
         <Form.Root schema={CrawlOptions} values={options} fieldMap={fieldMap} onValuesChanged={onValuesChanged}>
           <Form.Viewport>
             <Form.Content>
-              <Form.FieldSet />
+              <Form.Fields />
             </Form.Content>
           </Form.Viewport>
         </Form.Root>
@@ -125,9 +125,7 @@ export const CrawlPanel = ({
       {(error || status) && (
         <Panel.Statusbar asChild>
           <Toolbar.Root classNames='bg-transparent'>
-            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued-text']}>
-              {error ?? status}
-            </Toolbar.Text>
+            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued']}>{error ?? status}</Toolbar.Text>
           </Toolbar.Root>
         </Panel.Statusbar>
       )}

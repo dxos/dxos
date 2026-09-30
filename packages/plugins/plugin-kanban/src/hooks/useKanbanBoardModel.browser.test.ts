@@ -16,7 +16,7 @@ import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/sc
 
 import { Kanban } from '#types';
 
-import { useKanbanBoardModel } from './useKanbanBoardModel';
+import { useKanbanBoardModel } from './useKanbanBoardModel.ts';
 
 // TODO(wittjosiah): Consider adding single-select to TestSchema.Task and using that instead.
 const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0'))(

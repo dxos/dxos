@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Flashcard';
-export * from './ReaderPane';
-export * from './WordList';
+export * from './Flashcard/index.ts';
+export * from './ReaderPane/index.ts';
+export * from './WordList/index.ts';

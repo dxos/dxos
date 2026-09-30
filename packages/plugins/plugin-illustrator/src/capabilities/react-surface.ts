@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { DrawingArticle, DrawingCard } from '#containers';
+import { DrawingArticle, DrawingCard, DrawingScores } from '#containers';
 import { Drawing } from '#types';
 
 export default Capability.makeModule(() =>
@@ -24,6 +24,15 @@ export default Capability.makeModule(() =>
         ),
         component: DrawingArticle,
         props: ({ role, data: { subject, attendableId, extrinsic } }) => ({ role, subject, attendableId, extrinsic }),
+      }),
+      Surface.create({
+        id: 'companion.scores',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'scores'),
+          AppSurface.companion(AppSurface.Article, Drawing.Drawing),
+        ),
+        component: DrawingScores,
+        props: ({ role, data: { companionTo } }) => ({ role, drawing: companionTo }),
       }),
       Surface.create({
         id: 'drawingCard',

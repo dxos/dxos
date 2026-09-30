@@ -10,10 +10,10 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { AiService } from '@dxos/ai';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
-import * as AgentRegistry from '../AgentRegistry';
-import { type Page, Source, type SourceApi, type ThreadRef } from '../Source';
-import * as StateStore from '../StateStore';
-import type * as Type from '../types';
+import * as AgentRegistry from '../AgentRegistry.ts';
+import { type Page, Source, type SourceApi, type ThreadRef } from '../Source.ts';
+import * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
 // --- Fixture shape (a lean subset of plugin-discord's DiscordChannelFixture) -----------------------
 
@@ -254,17 +254,20 @@ const extractFromPrompt = (prompt: string) => {
  */
 // TODO(dmaretskyi): Extract to ai package as MockAiServiceLayer -- where you're able to configure prebaked replies in options. See about unifiying with scripted model.
 export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
-  Layer.succeed(AiService.AiService, {
-    // The @effect/ai LanguageModel surface is large and external; a test/offline fake fills only
-    // the methods the pipeline calls.
-    model: () =>
-      Layer.succeed(LanguageModel.LanguageModel, {
-        generateText: () => Effect.succeed({ text: '', content: [] }),
-        generateObject: (request: { prompt: string }) =>
-          Effect.succeed({ value: extractFromPrompt(request.prompt), content: [] }),
-        streamText: () => Stream.empty,
-      } as any),
-  });
+  Layer.succeed(
+    AiService.AiService,
+    AiService.make({
+      // The @effect/ai LanguageModel surface is large and external; a test/offline fake fills only
+      // the methods the pipeline calls.
+      languageModel: () =>
+        Layer.succeed(LanguageModel.LanguageModel, {
+          generateText: () => Effect.succeed({ text: '', content: [] }),
+          generateObject: (request: { prompt: string }) =>
+            Effect.succeed({ value: extractFromPrompt(request.prompt), content: [] }),
+          streamText: () => Stream.empty,
+        } as any),
+    }),
+  );
 
 // --- Composed test layer + synthetic fixtures -----------------------------------------------------
 

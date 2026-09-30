@@ -3,40 +3,58 @@
 //
 
 import * as Effect from 'effect/Effect';
+import type * as Layer from 'effect/Layer';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { type ClientServicesHost, makeWorkerRuntime } from '@dxos/client-services';
+import { WorkerRuntime } from '@dxos/client-services';
+import { LayerStack } from '@dxos/compute-runtime';
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as Worker from '@dxos/worker-framework/Worker';
 
-import { STORAGE_LOCK_KEY } from '../../lock-key';
+import { STORAGE_LOCK_KEY } from '../../lock-key.ts';
 
 export type RunDedicatedWorkerOptions = {
   /** Called with the worker config before the runtime starts. Use to e.g. initialize observability in the worker. */
   onBeforeStart?: (config: Config) => Promise<void>;
-  /** Runs once the runtime has started, with the host it serves from. */
-  onStart?: (host: ClientServicesHost) => Promise<void>;
+  /** Runs once the runtime has started, with the effect context of the stack it serves. */
+  onStart?: (stack: LayerStack.LayerStack) => Promise<void>;
+  /** Storage for the runtime; OPFS-backed SQLite by default. */
+  sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };
 
+const OPFS_PROBE_FILE = '.dxos-opfs-probe';
+
+class OpfsUnavailableError extends BaseError.extend('OpfsUnavailableError', 'OPFS storage is unusable.') {}
+
+/** Only the WebWorker lib declares this method, and this package compiles against DOM. */
+type SyncAccessFileHandle = FileSystemFileHandle & { createSyncAccessHandle(): Promise<{ close(): void }> };
+
+const hasSyncAccessHandle = (file: FileSystemFileHandle): file is SyncAccessFileHandle =>
+  'createSyncAccessHandle' in file && typeof file.createSyncAccessHandle === 'function';
+
 /**
- * Probes whether OPFS is available in this worker (it is not, e.g., in private-browsing contexts),
- * gating persistent indexing.
+ * Takes and releases the kind of handle the SQLite VFS opens, so an OPFS that cannot serve one is
+ * reported here rather than failing every database open for the life of the page. There is no
+ * in-memory fallback: it would show none of the stored data and keep nothing written to it.
  */
-const probeOpfsAvailable = async (): Promise<boolean> => {
-  try {
-    if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
-      await navigator.storage.getDirectory();
-      return true;
+const probeOpfs = Effect.tryPromise({
+  try: async () => {
+    const root = await navigator.storage.getDirectory();
+    const file = await root.getFileHandle(OPFS_PROBE_FILE, { create: true });
+    if (!hasSyncAccessHandle(file)) {
+      throw new Error('OPFS has no sync access handles.');
     }
-  } catch {
-    log.warn('OPFS not available, disabling persistent indexing');
-  }
-  return false;
-};
+    const handle = await file.createSyncAccessHandle();
+    handle.close();
+    await root.removeEntry(OPFS_PROBE_FILE).catch((err) => log.warn('OPFS probe file not removed', { err }));
+  },
+  catch: OpfsUnavailableError.wrap(),
+}).pipe(Effect.orDie);
 
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
@@ -45,21 +63,10 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
     createRuntime: ({ config: configValues, requestShutdown }) =>
       Effect.gen(function* () {
         const config = new Config(configValues ?? {});
-        log('dedicated-worker: probing OPFS availability');
-        const opfsAvailable = yield* Effect.promise(() => probeOpfsAvailable());
-        log('dedicated-worker: OPFS probe complete', { opfsAvailable });
-
-        const runtime = makeWorkerRuntime({
-          configProvider: async () => config,
-          onStop: async () => {
-            log('dedicated-worker: WorkerRuntime onStop, closing self');
-            requestShutdown();
-          },
-          acquireLock: async () => {},
-          releaseLock: () => {},
-          automaticallyConnectWebrtc: false,
-          sqliteLayer: opfsAvailable ? undefined : layerMemory,
-        });
+        if (!options.sqliteLayer) {
+          log('dedicated-worker: probing OPFS');
+          yield* probeOpfs;
+        }
 
         if (options.onBeforeStart) {
           log('dedicated-worker: running onBeforeStart');
@@ -68,18 +75,23 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
 
         log('dedicated-worker: starting WorkerRuntime');
-        yield* runtime.start();
+        const runtime = yield* WorkerRuntime.makeWorkerRuntime({
+          configProvider: Effect.succeed(config),
+          requestShutdown: Effect.sync(() => {
+            log('dedicated-worker: WorkerRuntime requested shutdown');
+            requestShutdown();
+          }),
+          automaticallyConnectWebrtc: false,
+          sqliteLayer: options.sqliteLayer,
+        });
         log('dedicated-worker: WorkerRuntime started');
         if (options.onStart) {
-          yield* Effect.promise(() => options.onStart!(runtime.host));
+          yield* Effect.promise(() => options.onStart!(runtime.stack()));
         }
 
         return {
-          stop: async () => EffectEx.runPromise(runtime.stop()),
-          // The framework hands the session the forward (tab→worker) and reverse (worker→tab) protocol
-          // layers via effect context. The WorkerRuntime session manages its own lifecycle (it closes
-          // when the tab-liveness lock releases), so the effect opens the session then blocks — the
-          // framework runs it for the session's lifetime.
+          // The framework hands the session its protocol layers via effect context and owns its
+          // lifetime: the session scope closes when the tab goes away.
           createSession: ({ clientId, isOwner }) =>
             Effect.gen(function* () {
               const appProtocol = yield* RpcServer.Protocol;
@@ -88,9 +100,8 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
               if (isOwner) {
                 performance.mark('dedicated-worker:session-ready');
                 log('dedicated-worker: connecting webrtc bridge to owning client', { clientId });
-                yield* runtime.connectWebrtcBridge(session);
+                yield* runtime.connectWebrtc(session);
               }
-              return yield* Effect.never;
             }),
         };
       }),
