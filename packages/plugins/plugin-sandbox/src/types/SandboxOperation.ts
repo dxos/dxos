@@ -34,10 +34,17 @@ export const CreateSandbox = Operation.make({
     baseImage: Schema.optional(Schema.String).annotate({
       description: 'Base container image to use. Defaults to the service default.',
     }),
+    accountAccess: Schema.optional(Schema.Boolean).annotate({
+      description:
+        "Give the sandbox an API token that acts as the user's account, exported to every command as DX_API_TOKEN, so `dx` in it can publish as them. Defaults to true; pass false for a sandbox that runs code you do not trust.",
+    }),
   }),
   output: Schema.Struct({
     sandboxId: Schema.String.annotate({
       description: 'The ECHO object ID of the created sandbox (also used as the sandbox service ID).',
+    }),
+    accountTokenEnv: Schema.optional(Schema.String).annotate({
+      description: 'The environment variable the account token is exported as; absent when none was minted.',
     }),
   }),
   services: [Database.Service, SandboxService.Service],
@@ -155,8 +162,7 @@ export const ACCOUNT_TOKEN_ENV = 'DX_API_TOKEN';
 /**
  * Lets commands in a sandbox act as the reader's account: mints an API token bound to their identity,
  * expiring with the sandbox, and exports it to every command as {@link ACCOUNT_TOKEN_ENV}.
- *
- * Not a skill tool: a credential that acts as the reader is theirs to hand over, so only their click grants it.
+ * {@link CreateSandbox} does this itself; this re-grants a sandbox that has no token or an expired one.
  */
 export const GrantAccountAccess = Operation.make({
   meta: {
