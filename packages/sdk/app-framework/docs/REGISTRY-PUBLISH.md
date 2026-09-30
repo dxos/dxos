@@ -129,8 +129,9 @@ expired mid-write can only touch its own, never-served prefix. The public URL st
 release, so Composer's `UrlLoader` sees no difference: `GET /modules/:key/:version/*` resolves the
 release's published `attemptId` from D1 and reads that prefix, falling back to the legacy
 `modules/<key>/<version>/` prefix for releases uploaded through `/upload`. The lookup is cacheable
-indefinitely because a published release never changes. Unpublished attempt prefixes are deleted by
-a periodic sweep.
+indefinitely because a published release never changes. A periodic sweep deletes an attempt
+prefix only when it is neither the release's published `attemptId` nor its current `leaseId` with an
+unexpired lease, so it never removes a live upload or a served bundle.
 
 ### Ownership
 
