@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
  */
 export const Command = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^\/(?:[a-z0-9-]+(?:\/[a-z0-9-]+)*)?$/)),
-  Schema.brand('Command'),
+  Schema.brand('@dxos/permission/Command'),
   Schema.annotate({
     title: 'Command',
     description: 'A /-separated command path; a prefix covers its descendants.',
