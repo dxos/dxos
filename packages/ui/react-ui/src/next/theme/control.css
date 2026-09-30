@@ -412,7 +412,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--nx-control-inset);
+    /* A full gap between a leading option icon and its label, as in Button. */
+    gap: var(--nx-gap-size);
     width: 100%;
     min-width: 0;
     background: var(--color-input-surface);
@@ -449,7 +450,7 @@
   }
   .nx-select-trigger[data-fit='options'] > .nx-icon {
     grid-column: 1;
-    margin-inline-end: var(--nx-control-inset);
+    margin-inline-end: var(--nx-gap-size);
   }
   .nx-select-trigger[data-fit='options'] > [data-part='value-text'] {
     grid-column: 2;
@@ -469,7 +470,7 @@
   .nx-select-value-sizer > * {
     display: flex;
     align-items: center;
-    gap: var(--nx-control-inset);
+    gap: var(--nx-gap-size);
     white-space: nowrap;
   }
 

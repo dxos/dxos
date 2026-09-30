@@ -359,6 +359,12 @@ export const Test: Story = {
     // An option's description renders under its text, growing the row by a line.
     const status = byTestId(canvasElement, 'status-md');
     await expect(status).toHaveTextContent('In review');
+    // The value button sets its option icon a full gap from the label, as a Button does.
+    const statusIcon = status.querySelector('svg')?.getBoundingClientRect();
+    const statusText = status.querySelector('[data-part="value-text"]')?.getBoundingClientRect();
+    const statusGap = parseFloat(getComputedStyle(status).columnGap);
+    await expect(statusGap).toBeGreaterThan(GEOMETRY.md.inset);
+    await expect((statusText?.left ?? 0) - (statusIcon?.right ?? 0)).toBeCloseTo(statusGap, 0);
     await userEvent.click(status);
     const statusPopup = await body.findByTestId('status-popup-md');
     const review = within(statusPopup).getByRole('option', { name: /In review/ });
@@ -423,6 +429,14 @@ export const Test: Story = {
     const anchored = await body.findByTestId('anchored-md');
     await expectAnchoredBelow(byTestId(canvasElement, 'anchor-md'), anchored);
     await expectPopupSize(anchored, 'md');
+    // Wider than its few-pixel anchor: every option's label fits, unclipped.
+    await expect(anchored.getBoundingClientRect().width).toBeGreaterThan(
+      byTestId(canvasElement, 'anchor-md').getBoundingClientRect().width,
+    );
+    for (const option of within(anchored).getAllByRole('option')) {
+      const text = option.querySelector<HTMLElement>('[data-part="item-text"]') ?? option;
+      await expect(text.scrollWidth, option.textContent ?? '').toBeLessThanOrEqual(text.clientWidth + 1);
+    }
     const mention = within(anchored).getByRole('combobox', { name: 'Mention' });
     await waitFor(() => expect(mention).toHaveFocus());
     await userEvent.keyboard('car{Enter}');

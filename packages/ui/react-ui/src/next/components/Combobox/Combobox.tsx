@@ -138,7 +138,9 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
         // Mounting the popup on open keeps it out of a modal Dialog's one-time `aria-hidden` sweep of its siblings.
         lazyMount={lazyMount}
         unmountOnExit={unmountOnExit}
-        positioning={popupPositioning(POPUP_GUTTER, positioning)}
+        // zag pins the popup to its anchor's width by default; like Select's, it is at least that wide and grows to its
+        // options (a virtual anchor such as a caret can be a few pixels wide), keeping its start edge on the anchor.
+        positioning={popupPositioning(POPUP_GUTTER, { sameWidth: false, placement: 'bottom-start', ...positioning })}
         // Typing highlights the first match, so Enter picks it without an arrow key first.
         inputBehavior={inputBehavior}
         // Arrow keys stop at the first and last option rather than wrapping, as in Select and Listbox.
