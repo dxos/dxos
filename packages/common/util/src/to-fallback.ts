@@ -63,13 +63,16 @@ export const idHue = [
 ];
 
 /**
- * Palette seed for an id.
+ * Palette seed for an id, reproducing the fold these palettes were mapped through.
  *
- * `Math.abs` of the *signed* digest rather than the unsigned one {@link fnv1a32} returns: the two
- * disagree for every input whose top bit is set, and the mapping these palettes produce has
- * shipped — so the fold stays exactly as it was rather than quietly recolouring half the ids.
+ * `Math.abs` of the *signed* digest, not the unsigned one {@link fnv1a32} returns — the two
+ * disagree for every input whose top bit is set. The empty string is its own case because the
+ * unfolded offset basis never passed through `Math.imul`, so it was never narrowed to int32.
  */
-const paletteSeed = (id: string): number => Math.abs(fnv1a32(id) | 0);
+const paletteSeed = (id: string): number => {
+  const digest = fnv1a32(id);
+  return id.length === 0 ? digest : Math.abs(digest | 0);
+};
 
 /**
  * Deterministic palette hue for an arbitrary id string that isn't hex-parseable (e.g. an identity

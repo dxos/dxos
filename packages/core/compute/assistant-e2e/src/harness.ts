@@ -37,8 +37,7 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
-import { trim } from '@dxos/util';
-import { fnv1a32 } from '@dxos/util';
+import { fnv1a32, trim } from '@dxos/util';
 
 import { AssistantE2eError } from './errors.ts';
 
