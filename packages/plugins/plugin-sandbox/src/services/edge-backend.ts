@@ -47,6 +47,8 @@ export const makeEdgeBackend = (resolve: () => EdgeContext): SandboxService.Back
       request((sandboxClient) => sandboxClient.writeFile(spaceId, sandboxId, path, new TextDecoder().decode(content))),
     listFiles: (spaceId, sandboxId, path) =>
       request((sandboxClient) => sandboxClient.listFiles(spaceId, sandboxId, path)),
+    setRepositories: (spaceId, sandboxId, repositories) =>
+      request((sandboxClient) => sandboxClient.setRepositories(spaceId, sandboxId, repositories)),
   };
 };
 
