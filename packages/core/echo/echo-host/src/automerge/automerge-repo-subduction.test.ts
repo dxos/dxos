@@ -37,6 +37,7 @@ import {
   findInStates,
   reconnectAdapters,
   shutdownRepo,
+  waitForDoc,
   waitForQueryState,
   waitForSubductionSave,
 } from './subduction-test-utils.ts';
@@ -87,7 +88,7 @@ describe('AutomergeRepo with Subduction', () => {
     const repo = createRepo({ network: [], storage });
     const handle = await repo.find<{ value: number }>(url);
     await handle.whenReady(['ready']);
-    await expect.poll(() => handle.doc()?.value, { timeout: 5_000 }).toEqual(2);
+    await waitForDoc(handle, (doc) => doc?.value === 2, { timeout: 5_000 });
   });
 
   test('documents on disk go to ready state', async () => {
@@ -240,9 +241,9 @@ describe('AutomergeRepo with Subduction', () => {
       const handle = author.create<{ count: number }>({ count: 0 });
       await waitForSubductionSave(repos);
       const relayed = await findInStates<{ count: number }>(relay, handle.url, FIND_STATES);
-      await expect.poll(() => relayed.doc()?.count, { timeout: SYNC_WINDOW_MS }).toEqual(0);
+      await waitForDoc(relayed, (doc) => doc?.count === 0);
       const received = await findInStates<{ count: number }>(receiver, handle.url, FIND_STATES);
-      await expect.poll(() => received.doc()?.count, { timeout: SYNC_WINDOW_MS }).toEqual(0);
+      await waitForDoc(received, (doc) => doc?.count === 0);
 
       // One change at a time, each saved before the next, as the soak's replicants write.
       let count = 0;
@@ -255,7 +256,7 @@ describe('AutomergeRepo with Subduction', () => {
       } while (!A.getHeads(handle.doc()).some((head) => head.startsWith('00')) && count < 2_000);
       await waitForSubductionSave(repos);
 
-      await expect.poll(() => received.doc()?.count, { timeout: SYNC_WINDOW_MS }).toEqual(count);
+      await waitForDoc(received, (doc) => doc?.count === count);
     });
 
     test('client creates doc and Repo persists it to disk', async () => {

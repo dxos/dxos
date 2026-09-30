@@ -491,7 +491,11 @@ describe('AutomergeHost', () => {
   test('data stored for a removed document does not fault it back in', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
-    const host = new AutomergeHost({ runtime, useSubduction: true });
+    const host = new AutomergeHost({
+      runtime,
+      useSubduction: true,
+      residency: { evictionDelay: 0, minResidentDocuments: 0 },
+    });
     await host.open();
     onTestFinished(async () => {
       if (host.isOpen) {
@@ -499,16 +503,21 @@ describe('AutomergeHost', () => {
       }
     });
 
-    const handle = await host.createDoc<any>({ value: 1 });
-    const { documentId } = handle;
+    const removed = await host.createDoc<any>({ value: 1 });
+    const evicted = await host.createDoc<any>({ value: 2 });
     await host.flush(Context.default());
-    handle[Symbol.dispose]();
-    await host.removeDocument(documentId);
+    removed[Symbol.dispose]();
+    evicted[Symbol.dispose]();
+    await host.removeDocument(removed.documentId);
+    await waitForEviction(expect, host, evicted.documentId);
 
+    // The listener runs synchronously, so the evicted document faulting back in shows the event was
+    // handled, and the removed one staying out shows it was refused rather than not yet reached.
     const repo = (host as any)._repo;
-    repo.emit('subduction-detached-data', { documentId });
-    await sleep(100);
-    expect(repo.handles[documentId]).toBeUndefined();
+    repo.emit('subduction-detached-data', { documentId: removed.documentId });
+    repo.emit('subduction-detached-data', { documentId: evicted.documentId });
+    expect(host.loadedDocumentIds).toContain(evicted.documentId);
+    expect(host.loadedDocumentIds).not.toContain(removed.documentId);
   });
 
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,

@@ -27,7 +27,14 @@ import { AutomergeHost } from './automerge-host.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 import { deleteSubductionRemoteHeads } from './subduction-migrations/0001_delete_remote_heads.ts';
-import { NO_TRAFFIC_WINDOW_MS, SYNC_WINDOW_MS, createDenyGate, waitForEviction } from './subduction-test-utils.ts';
+import {
+  NO_TRAFFIC_WINDOW_MS,
+  SYNC_WINDOW_MS,
+  createDenyGate,
+  waitForDoc,
+  waitForEviction,
+  waitForHostHeads,
+} from './subduction-test-utils.ts';
 
 describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
@@ -152,7 +159,7 @@ describe('AutomergeHost with Subduction', () => {
 
       const mirrored = await host2.loadDoc<any>(Context.default(), documentId);
       invariant(mirrored);
-      await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
+      await waitForDoc(mirrored, (doc) => doc?.text === 'first');
       mirrored[Symbol.dispose]();
       await waitForEviction(expect, host2, documentId);
 
@@ -161,10 +168,9 @@ describe('AutomergeHost with Subduction', () => {
       });
       await host1.flush(Context.default());
       const [expected] = await host1.getHeads([documentId]);
+      invariant(expected);
 
-      await expect
-        .poll(async () => (await host2.getHeads([documentId]))[0], { timeout: SYNC_WINDOW_MS })
-        .toEqual(expected);
+      await waitForHostHeads(host2, documentId, expected);
     } finally {
       await host1.close();
       await host2.close();
