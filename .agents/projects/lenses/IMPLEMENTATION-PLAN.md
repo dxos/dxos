@@ -59,6 +59,35 @@ that does not have the app's code. Declarative lenses are the ones data can expr
    object read-only.
 4. Multi-object migrations (fan-out, fan-in, array split) on convergence keys.
 
+**Step 1 status (2026-09-30): implemented on this branch.**
+
+| Piece                                                                                                                                                                              | Where                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Declarative lenses (`rename`, `add`, `remove`), keyed by their definition                                                                                                          | `@dxos/echo` `VersionLens.ts`                                         |
+| Reserved `@v<version>` branch entries, hidden from `listBranches`, with the version's type URI                                                                                     | `echo-protocol` `document-structure.ts`, `entity-manager.ts`          |
+| Roots derived from the object's creation in its origin document; translation of data (through the lenses), meta and deletion; designation by the lens digest recorded in each root | `echo-client` `version-documents/version-translation.ts`              |
+| `db.syncVersions` / `db.watchVersions`: create missing versions, merge duplicate documents into the registry's winner, translate; `links` names the oldest version                 | `version-documents/version-runner.ts`, `database.ts`                  |
+| Routing: an object reads at the newest version whose type the client's lenses know; the update listener moves with it; index hits from its other versions are dropped quietly      | `entity-manager.ts`, `echo-client.ts`                                 |
+| Host resolution: `QueryOptions.versions` adds a `ResolveVersionsStep` after every selection (SQL and in memory) and blocks limit pushdown past it                                  | `echo-host` `query-planner.ts`, `sql/compile.ts`, `query-executor.ts` |
+
+Tests: `version-translation.test.ts` (12, pure), `version-documents.test.ts` (6, one database), e2e
+`version-documents.test.ts` (concurrent creation while partitioned; an old peer and a new peer editing one
+object), planner test for the step. Red-checked: designation, the wait for missing ancestor images, the
+loser merge, the listener move, and host resolution on both executor paths.
+
+Not yet done:
+
+- A query that names an older version returns nothing when the client knows a newer one; `db.version(obj, v)`
+  bindings (as `db.branch`) are the way to read another version.
+- Branches of versioned objects (decision 4 in DESIGN.md §12.5).
+- `getDocumentHeads` and `waitUntilHeadsReplicated` cover linked documents only, not version documents
+  (branch documents have the same gap).
+- Deriving a version for an object with a long history translates every edit since creation.
+- `watchVersions` is not yet wired into plugin-client, and lenses are code only.
+- A released app that still runs an in-place migration for a versioned type would rewrite the linked
+  document in place; types move to version documents only once no released app migrates them.
+- The host takes the versions from the query until #13284 lands, then from the client's registry.
+
 **Carried over from the in-place work:** per-edit translation and list/text rebasing (`fold-edit.ts`),
 byte-identical authoring (`ObjectCore.sharedChangeAt`), originals-only folding and ancestor-image forks,
 convergence keys and the convergence-key merger, `Lens` (compose, invert, path finding), and the lessons

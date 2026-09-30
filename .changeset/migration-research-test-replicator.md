@@ -1,5 +1,8 @@
 ---
 '@dxos/echo': minor
+'@dxos/echo-client': minor
+'@dxos/echo-host': minor
+'@dxos/echo-protocol': minor
 '@dxos/plugin-client': patch
 ---
 
@@ -12,4 +15,5 @@ Make ECHO schema migrations coordination-free. Each peer migrates on its own and
 - **Multi-object migrations.** `Migration.defineFanIn`, `Migration.defineStampElementIds`, `Migration.defineArrayFanOut` and `Migration.findOrphanedChildren`. `ConvergenceKeyMerger` now replays a losing duplicate's edits onto the winner, so an edit made before the merge is kept.
 - **Lenses.** `Lens` moves from `@dxos/echo-panproto` to `@dxos/echo` and gains `compose`, `invert` and version-aware `findPath`/`resolveView`. `Migration.fromLens` derives a migration from a lens and checks for unreviewed drops.
 - **Fixes.** `waitUntilHeadsReplicated` no longer hangs when the awaited change merges without a patch. A nested element no longer keeps a stale `id` after a remote change removes it. `TestReplicationNetwork` supports partition and heal.
+- **Version documents.** `VersionLens.make` defines a reversible lens between two versions of a type from `rename`, `add` and `remove` steps. `db.syncVersions` and `db.watchVersions` keep one document per version for each object of those types, record them under reserved `@v<version>` branch names that released hosts already replicate, and translate every edit between them, so an app that knows only an older version keeps reading and editing the object. A client reads each object at the newest version its lenses know and sends those versions with its queries (`QueryOptions.versions`), and the host returns each object once. Branch names starting with `@` are reserved.
 - **plugin-client.** Every space is migrated and watched once it is ready, including spaces created or joined later.

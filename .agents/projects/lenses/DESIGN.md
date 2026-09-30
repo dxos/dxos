@@ -1238,6 +1238,20 @@ returns each object at the newest version the reader knows.
      evaluates the same way; the reclamation closure follows only the registry's visible values.
    - Edits a device made into its losing document before it saw the winner are carried by the merge.
 
+### 12.6 As built (2026-09-30)
+
+- **Legacy version.** `links` names the oldest version in the type's lens chain, so a chain starts at the
+  version released apps read. An object an app creates at a newer version is linked at the oldest once
+  its versions exist.
+- **Registry.** Every version, the linked one included, is recorded as `branches[id]['@v<version>']` with the
+  version's type URI (`BranchRecord.type`), so a reader picks a version without loading documents.
+- **Designation.** A derived root records the digest of the lens keys from its origin; a device whose
+  lenses give a different digest does not translate. Lenses with the same definition have the same key,
+  so builds that agree need no designation.
+- **Host resolution** reads only the index: it drops a document row when another document of the same
+  object holds a newer version the reader lists. User branch documents share their main document's type
+  and are left to the client's routing, as before.
+
 ## 13. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·
