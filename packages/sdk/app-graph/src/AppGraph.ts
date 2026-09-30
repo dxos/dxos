@@ -18,7 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, shallowEqual } from '@dxos/util';
 
-import { flushBeforePaint, scheduleTask } from '#scheduler';
+import { scheduleTask } from '#scheduler';
 
 import * as Node from './AppGraphNode.ts';
 import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
@@ -663,12 +663,6 @@ export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> 
       return Effect.sync(() => unsubscribe());
     });
   });
-
-/**
- * Call from the handler of a user action, before its writes: graph updates those writes cause flush
- * before the next paint instead of waiting out the frame budget.
- */
-export { flushBeforePaint };
 
 /**
  * Implementation helper for expandSync.

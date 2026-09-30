@@ -4,9 +4,9 @@
 
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { flushBeforePaint, frameBudget } from './scheduler.browser.ts';
+import { makeFrameBudget } from './scheduler.browser.ts';
 
-describe('frameBudget', () => {
+describe('FrameBudget', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -14,14 +14,15 @@ describe('frameBudget', () => {
   test('flushBeforePaint lifts the budget until the current task ends', async ({ expect }) => {
     // Spending asks for a frame to reset the budget on; node has none.
     vi.stubGlobal('requestAnimationFrame', () => 0);
-    frameBudget.spend(100);
-    expect(frameBudget.hasTime()).toBe(false);
+    const budget = makeFrameBudget();
+    budget.spend(100);
+    expect(budget.hasTime()).toBe(false);
 
-    flushBeforePaint();
-    expect(frameBudget.hasTime()).toBe(true);
+    budget.flushBeforePaint();
+    expect(budget.hasTime()).toBe(true);
     await Promise.resolve();
-    expect(frameBudget.hasTime()).toBe(true);
+    expect(budget.hasTime()).toBe(true);
 
-    await expect.poll(() => frameBudget.hasTime()).toBe(false);
+    await expect.poll(() => budget.hasTime()).toBe(false);
   });
 });

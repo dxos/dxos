@@ -12,6 +12,7 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
@@ -95,7 +96,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const [isLg] = useMediaQuery('lg');
     const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
-    const { graph } = useAppGraph();
+    const appGraph = useAppGraph();
+    const { graph } = appGraph;
     // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
     // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
     // the message and the sidebar is never blank.
@@ -259,7 +261,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const target = location.current.dropTargets[0];
           const instruction: Instruction | null = extractInstruction(target.data);
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
-            AppGraph.flushBeforePaint();
+            AppGraphBuilder.flushBeforePaint(appGraph);
             const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetPath = target.data.path as string[];
@@ -296,7 +298,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           }
         },
       });
-    }, [graph]);
+    }, [graph, appGraph]);
 
     // Group nodes are always expanded and have no toggle, so they never trigger AppGraph.expand through
     // user interaction. Watch the workspace's children reactively and mark any group nodes as open

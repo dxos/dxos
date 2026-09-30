@@ -19,7 +19,10 @@ export const yieldOrContinue = async (_priority: 'smooth' | 'interactive' | 'idl
   await Promise.resolve();
 };
 
-export const frameBudget: GraphBuilder.FrameBudget | undefined = undefined;
+/** A frame budget that a user action can lift until its task ends. */
+export type FrameBudget = GraphBuilder.FrameBudget & {
+  /** Lets update flushes ignore the budget until the current task ends. */
+  flushBeforePaint(): void;
+};
 
-/** Update flushes have no budget here, so there is nothing to lift. */
-export const flushBeforePaint = (): void => {};
+export const makeFrameBudget = (): FrameBudget | undefined => undefined;
