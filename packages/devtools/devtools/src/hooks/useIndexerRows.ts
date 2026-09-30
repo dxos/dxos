@@ -13,7 +13,7 @@ import { type IndexerHeadsResponse } from '@dxos/protocols';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, useSpaces } from '@dxos/react-client/echo';
 
-import { getSpaceDisplayName } from './space-display-name.ts';
+import { getSpaceDisplayName } from './getSpaceDisplayName.ts';
 
 /** Polled rather than subscribed: the indexer has no push channel to the client. */
 const POLL_INTERVAL = 5_000;
@@ -23,7 +23,6 @@ export type IndexerRow = {
   name: string;
   /** Local documents whose heads the indexer has not indexed (missing, behind, or diverged). */
   unindexed: number;
-  indexingInProgress: boolean;
   error?: string;
 };
 
@@ -42,7 +41,6 @@ const compareHeads = (
     name: getSpaceDisplayName(space),
     unindexed: Object.keys(local).filter((documentId) => !sameHeads(local[documentId], indexedHeads.get(documentId)))
       .length,
-    indexingInProgress: remote.indexingInProgress,
   };
 };
 
@@ -76,7 +74,6 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
             spaceId: space.id,
             name: getSpaceDisplayName(space),
             unindexed: 0,
-            indexingInProgress: false,
             error,
           };
           return { row, raw: { error } };

@@ -13,7 +13,7 @@ import {
   useSyncState,
 } from '@dxos/react-client/echo';
 
-import { getSpaceDisplayName } from './space-display-name.ts';
+import { getSpaceDisplayName } from './getSpaceDisplayName.ts';
 
 export type SyncRow = {
   spaceId: string;

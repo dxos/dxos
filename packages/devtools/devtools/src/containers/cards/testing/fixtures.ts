@@ -206,19 +206,16 @@ export const indexerRows: IndexerRow[] = [
     spaceId: SpaceId.random(),
     name: 'Personal Space',
     unindexed: 0,
-    indexingInProgress: false,
   },
   {
     spaceId: SpaceId.random(),
     name: 'Acme Robotics',
     unindexed: 37,
-    indexingInProgress: true,
   },
   {
     spaceId: SpaceId.random(),
     name: 'New space',
     unindexed: 0,
-    indexingInProgress: false,
     error: 'Request failed: 503',
   },
 ];
