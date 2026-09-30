@@ -28,7 +28,7 @@ import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 const POPUP_GUTTER = 2;
 
 /** Short enough to feel responsive, long enough that sweeping the pointer across a toolbar shows nothing. */
-const OPEN_DELAY = 300;
+const OPEN_DELAY = 600;
 
 export type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
 
