@@ -155,7 +155,9 @@ describe('version documents across peers', () => {
     expect(seen.id).toBe(created.id);
     expect(seen.title).toBe('Fresh');
     expect([...seen.tags]).toEqual(['new']);
-    expect(await old.query(Filter.type(TaskV3)).run()).toHaveLength(0);
+    // Without lenses, the object's live instance reads the version `links` names.
+    const type = Obj.getType(seen);
+    expect(type && Type.getURI(type)).toBe(Type.getURI(TaskV1));
 
     Obj.update(seen, (seen) => {
       seen.tags.push('old');

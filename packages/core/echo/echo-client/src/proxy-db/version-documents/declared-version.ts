@@ -9,7 +9,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { SchemaValidator, getReferenceAst } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
-import { getEchoDatabase, getObjectCore } from '../../echo-handler/index.ts';
+import { getEchoDatabase, getObjectCore, isEchoObject } from '../../echo-handler/index.ts';
 
 //
 // A query's result type is part of the query: `Query.select(Filter.type(TaskV1))` returns TaskV1, and a
@@ -68,7 +68,7 @@ const referenceTargetType = (owner: string, property: string, registry: Registry
 
 /** `object` at the version `query` declares for its results, once that version is bound. */
 export const toDeclaredVersion = async (object: Entity.Unknown, query: QueryAST.Query): Promise<Entity.Unknown> => {
-  const database = getEchoDatabase(getObjectCore(object));
+  const database = isEchoObject(object) ? getEchoDatabase(getObjectCore(object)) : undefined;
   const type = database && declaredResultType(query, database.graph.registry);
   return type && database ? database._versionOfType(object, type) : object;
 };
@@ -82,6 +82,6 @@ export const peekDeclaredVersion = (
   type: string | undefined,
   onLoad: () => void,
 ): Entity.Unknown | undefined => {
-  const database = getEchoDatabase(getObjectCore(object));
+  const database = isEchoObject(object) ? getEchoDatabase(getObjectCore(object)) : undefined;
   return type && database ? database._peekVersionOfType(object, type, onLoad) : object;
 };
