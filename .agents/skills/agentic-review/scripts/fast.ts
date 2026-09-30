@@ -37,7 +37,7 @@ const store = join(root, REVIEWS_DIR, slug);
 const script = (name: string): string => join(import.meta.dir, name);
 
 if (!dryRun && !process.env.TYPESAFE_API_KEY) {
-  console.error('fast: TYPESAFE_API_KEY is not set — read it with `op` (see the 1password skill), or pass --dry-run.');
+  console.error('fast: TYPESAFE_API_KEY is not set — export it (see the 1password skill), or pass --dry-run.');
   process.exit(1);
 }
 
