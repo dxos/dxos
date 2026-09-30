@@ -94,9 +94,14 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionChat',
+        // Also matches the assistant companion before its chat exists: the provisioner creates it in the
+        // background, and rendering the shell meanwhile keeps the toolbar and prompt from popping in.
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
+          (data) =>
+            Obj.isObject(data.companionTo) &&
+            (Obj.instanceOf(Chat.Chat, data.subject) ||
+              (data.subject == null && data.variant === ASSISTANT_COMPANION_VARIANT)),
         ),
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({

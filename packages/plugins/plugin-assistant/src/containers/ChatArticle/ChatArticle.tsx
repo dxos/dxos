@@ -24,7 +24,9 @@ import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectio
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
-  AppSurface.ObjectSectionProps<ChatType.Chat> & {
+  Omit<AppSurface.ObjectSectionProps<ChatType.Chat>, 'subject'> & {
+    /** Undefined while a companion's chat is still being provisioned; the shell renders without it. */
+    subject?: ChatType.Chat;
     companionTo?: Obj.Unknown;
   },
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
@@ -41,7 +43,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
     const stateAtom = useCapability(AssistantCapabilities.State);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
-    const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
+    const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
 
     const { preset, ...chatProps } = usePresets(settings, chat);
@@ -69,7 +71,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // plank. Filtered to the prompt surface for the same reason the id is: an action on the chat
     // acts on the chat, and only some of those belong beside the text being composed.
     const { graph } = useAppGraph();
-    const actionNodeId = nodeId ?? Obj.getURI(chat);
+    const actionNodeId = nodeId ?? (chat && Obj.getURI(chat));
     const customActions = useMemo(
       () => Atom.make((get) => graphActions(graph, get, actionNodeId, { filter: isPromptAction })),
       [graph, actionNodeId],

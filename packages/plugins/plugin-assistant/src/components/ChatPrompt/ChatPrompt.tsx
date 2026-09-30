@@ -222,18 +222,16 @@ export const ChatPrompt = ({
 
       {db && settings && (
         <div className='flex items-center overflow-hidden p-1.5'>
-          {/* Both edit the processor's context binder, which exists once the session has opened. */}
-          {processor && (
-            <ChatOptions
-              db={db}
-              chat={chat}
-              registry={processor.registry}
-              context={processor.context}
-              preset={preset}
-              presets={presets}
-              onPresetChange={onPresetChange}
-            />
-          )}
+          {/* Disabled until the session has opened: both controls edit the processor's context binder. */}
+          <ChatOptions
+            db={db}
+            chat={chat}
+            registry={processor?.registry}
+            context={processor?.context}
+            preset={preset}
+            presets={presets}
+            onPresetChange={onPresetChange}
+          />
 
           <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
             {processor && <ChatReferences db={db} context={processor.context} />}

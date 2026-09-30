@@ -42,7 +42,8 @@ const styles = {
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
   chat?: ChatModule.Chat;
-  context: AiContext.Binder;
+  /** Undefined until the chat's session has opened; both controls render disabled until then. */
+  context?: AiContext.Binder;
   registry?: Registry.Registry;
 };
 
@@ -56,13 +57,17 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
     <div className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
+          <IconButton
+            variant='ghost'
+            icon='ph--plus--regular'
+            iconOnly
+            label={t('context-objects.button')}
+            disabled={!context}
+          />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={styles.panel}>
-            <Popover.Viewport>
-              <ObjectsPanel db={db} context={context} />
-            </Popover.Viewport>
+            <Popover.Viewport>{context && <ObjectsPanel db={db} context={context} />}</Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
@@ -76,6 +81,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             iconOnly
             label={t('context-settings.button')}
             data-testid='assistant.options'
+            disabled={!context}
           />
         </Popover.Trigger>
         <Popover.Portal>
@@ -87,7 +93,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
-                    <SkillsPanel registry={registry} db={db} context={context} />
+                    {context && <SkillsPanel registry={registry} db={db} context={context} />}
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
