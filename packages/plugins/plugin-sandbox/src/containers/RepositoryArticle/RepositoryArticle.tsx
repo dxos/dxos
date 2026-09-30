@@ -151,21 +151,34 @@ export const RepositoryArticle = ({ role, subject: repository }: RepositoryArtic
     };
   }, [invoke, repositoryRef, currentRef, selectedPath, refreshKey]);
 
+  // The latest history request; a page is appended only while no other request is pending, so two
+  // load-more calls cannot append the same page and one cannot supersede a refresh's first page.
+  const commitsRequest = useRef(0);
+  const commitsInFlight = useRef(false);
+
   const loadCommits = useCallback(
     async (offset: number) => {
-      if (!currentRef) {
+      if (!currentRef || (offset > 0 && commitsInFlight.current)) {
         return;
       }
       const current = generation.current;
-      const result = await invoke(RepositoryOperation.GetLog, {
-        repository: repositoryRef,
-        ref: currentRef,
-        limit: PAGE_SIZE,
-        offset,
-      });
-      if (result && current === generation.current) {
-        setCommits((previous) => (offset === 0 ? result.commits : [...previous, ...result.commits]));
-        setHasMoreCommits(result.commits.length === PAGE_SIZE);
+      const request = ++commitsRequest.current;
+      commitsInFlight.current = true;
+      try {
+        const result = await invoke(RepositoryOperation.GetLog, {
+          repository: repositoryRef,
+          ref: currentRef,
+          limit: PAGE_SIZE,
+          offset,
+        });
+        if (result && current === generation.current && request === commitsRequest.current) {
+          setCommits((previous) => (offset === 0 ? result.commits : [...previous, ...result.commits]));
+          setHasMoreCommits(result.commits.length === PAGE_SIZE);
+        }
+      } finally {
+        if (request === commitsRequest.current) {
+          commitsInFlight.current = false;
+        }
       }
     },
     [invoke, repositoryRef, currentRef],
