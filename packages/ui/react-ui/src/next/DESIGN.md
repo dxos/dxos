@@ -573,7 +573,9 @@ From the react-ui-form Form spike (`react-ui-form/src/next/SPIKE.md`) and its us
     only its parent's content track and inherits that track's edge lines, so its fields keep the `content` placement
     (and any interior column line, such as the settings `control` line). Its 1px separator border and `--nx-gap-size`
     padding indent it one step per depth. It stays on its host's surface: stepping a level per depth does not scale,
-    since the `+1` ladder runs out at popup. Rows keep their gap through subgrids (`row-gap: inherit`).
+    since the `+1` ladder runs out at popup. A grid set or Collapsible Content keeps its parent's row gap (`row-gap: inherit`),
+    except an inset set, which spaces its fields at half the size's `--nx-gap-size` (4px at md, against the form's 8px),
+    so they read as one group.
 61. **Row fields** (Phase 4 decision 3). `Field.Root layout='row'` is a subgrid row of its parent's `columns`: header
     and helper before the interior `control` line, the control after it, stacked below the collapse width.
     `level='+1'` draws the bordered settings card.

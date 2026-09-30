@@ -16,14 +16,14 @@ import { makeNestedSchema } from './testing.ts';
 
 const DEPTH = 5;
 
-type StoryArgs = PaneArgs & { fields?: number };
+type StoryArgs = PaneArgs & { fields?: number; size?: Next.PanelRootProps['size'] };
 
 /** Nested objects as nested Fieldsets, each a subgrid of the form, five levels deep. */
-const DefaultStory = ({ fields = 2 }: StoryArgs) => {
+const DefaultStory = ({ fields = 2, size }: StoryArgs) => {
   const schema = useMemo(() => makeNestedSchema(DEPTH, fields), [fields]);
   const [values, setValues] = useState({});
   return (
-    <Next.Panel.Root>
+    <Next.Panel.Root size={size}>
       <Next.Panel.Body>
         <Form.Root schema={schema} values={values} onValuesChanged={(next) => setValues(next)}>
           <Form.Content>
@@ -161,11 +161,45 @@ export const Test: Story = {
       await expect(cellRight).toBeCloseTo(legend.right, 0);
     }
 
-    // 6. Folding a group hides its fields.
+    // 6. Fields inside a group sit closer than the form's own fields.
+    await expectGroupedGap(canvasElement);
+
+    // 7. Folding a group hides its fields.
     await userEvent.click(canvas.getByRole('button', { name: `Level ${DEPTH}` }));
     await waitFor(() => expect(canvas.getAllByRole('textbox')).toHaveLength(2));
   },
 };
+
+/** The space between two consecutive field rows. */
+const rowGap = (first: Element, second: Element) =>
+  second.getBoundingClientRect().top - first.getBoundingClientRect().bottom;
+
+/** A group's fields are spaced by a tighter gap than the form's top-level fields, so they read as one group. */
+const expectGroupedGap = async (canvasElement: HTMLElement) => {
+  const form = canvasElement.querySelector<HTMLElement>('[role="form"]')!;
+  const [topFirst, topSecond] = form.querySelectorAll(':scope > [data-scope="field"][data-part="root"]');
+  const content = form.querySelector('[data-inset] > [data-scope="collapsible"][data-part="content"]')!;
+  const [groupFirst, groupSecond] = content.querySelectorAll(':scope > [data-scope="field"][data-part="root"]');
+  const top = rowGap(topFirst, topSecond);
+  const grouped = rowGap(groupFirst, groupSecond);
+  await expect(grouped).toBeGreaterThan(0);
+  await expect(grouped).toBeLessThan(top);
+  return { top, grouped };
+};
+
+/** 1. The grouped gap at every size. */
+const groupedGapAt = (size: NonNullable<StoryArgs['size']>): Story => ({
+  args: { size },
+  play: async ({ canvasElement }) => {
+    await expectGroupedGap(canvasElement);
+  },
+});
+
+export const TestGapXs = groupedGapAt('xs');
+export const TestGapSm = groupedGapAt('sm');
+export const TestGapMd = groupedGapAt('md');
+export const TestGapLg = groupedGapAt('lg');
+export const TestGapXl = groupedGapAt('xl');
 
 type Summary = Record<Impl, { mount: number; layout: number; keystroke: number }>;
 

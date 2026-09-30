@@ -238,6 +238,10 @@ Added in review (DESIGN follow-ups 60–64):
   Body's viewport was 768px tall and held a 1289px column, so the row stayed 768px and the column overflowed it centred,
   252px above the top, where no scroll position could reach it. Scrolling row viewports now use `auto` rows, and
   side-by-side columns use `align='start'`. Asserted in SideBySide `TestPerson` and Panel `Test`.
+- **Tighter gap inside a group.** An inset group spaces its fields at half the size's gap: 4px at md, down from the 8px
+  it inherited from the form, which stays 8px. At xs and sm the group gap is 2px. The label-to-control gap inside a field
+  is unchanged. The Location lat/long pair is a row with a column gap, so it has no vertical gap to change. The Nested
+  `Test` and `TestGapXs` to `TestGapXl` assert the group gap is positive and smaller than the top-level gap at every size.
 - **ZIP code** in the shared `Person` schema is a string (`^\d{5}(-\d{4})?$`) with a description, so both Forms render
   a text input. No fixture or test used a numeric zip.
 - **Label colours** (dark theme, ui-theme `roles.css`): labels are `--color-subdued` (neutral-600) and descriptions

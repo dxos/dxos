@@ -28,6 +28,8 @@
    */
   .nx-fieldset.nx-grid[data-inset] {
     grid-column: content;
+    /* Half the size's gap, tighter than the form's own rows, so a group's fields read as one; its Content inherits it. */
+    row-gap: calc(var(--nx-gap-size) / 2);
     padding: var(--nx-gap-size);
     border: 1px solid var(--color-separator);
     border-radius: var(--radius-md, 0.375rem);
