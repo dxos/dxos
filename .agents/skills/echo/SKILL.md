@@ -166,6 +166,28 @@ export const make = (props: Obj.MakeProps<typeof Person>): Person => Obj.make(Pe
 export const make = (props: Obj.MakeProps<typeof Person>): Type.InstanceType<typeof Person> => Obj.make(Person, props);
 ```
 
+## Device-scoped annotations — `storage: 'device'`
+
+Per-device UI state that belongs to an object (collapsed, scroll position, last-viewed) is an
+annotation declared with `storage: 'device'`. It is read and written with the usual `Annotation.get`
+/ `Annotation.set` / `Annotation.update`, and matched by `Filter.annotation`, but the value never
+enters the object's document: each device keeps its own in its local SQLite and it never replicates.
+
+```ts
+const Collapsed = Annotation.make({ id: 'org.dxos.annotation.collapsed', schema: Schema.Boolean, storage: 'device' });
+Obj.update(object, (object) => Annotation.set(object, Collapsed, true));
+```
+
+The value rides the same `DataService` stream as the object's document, so it is present when the
+object is, and `db.flush()` covers the write. `'identity'` storage is reserved and throws.
+
+## Reference availability — `ref.hint`
+
+`ref.hint` is `'available'`, `'deleted'` or `'dangling'` without loading the target: from the target
+when it is loaded, otherwise from the host's index, whose answer arrives with the object holding the
+ref. `undefined` means unknown. It is a hint — the index can lag replication — so gate rendering on
+it, never correctness.
+
 ## Owned children — `Annotation.SetParent`
 
 Declare ownership on the ref field rather than calling `Obj.setParent` next to every write. Writing a

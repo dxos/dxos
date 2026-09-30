@@ -10,7 +10,7 @@ import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
@@ -260,6 +260,39 @@ describe('IndexEngine', () => {
         queues: null,
       });
       expect(ftsResults2.length).toBeGreaterThan(0);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'reports availability of indexed, deleted, and unknown objects',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+      const makeObject = (id: EntityId, deleted: boolean): IndexerObject => ({
+        spaceId,
+        documentId: `doc-${id}`,
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id, [ATTR_TYPE]: TYPE_DEFAULT, ...(deleted ? { [ATTR_DELETED]: true } : {}) },
+      });
+      const liveId = EntityId.random();
+      const deletedId = EntityId.random();
+      const unknownId = EntityId.random();
+      dataSource.push([makeObject(liveId, false), makeObject(deletedId, true)]);
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+      const availability = yield* engine.queryAvailability(spaceId, [liveId, deletedId, unknownId]);
+      expect(availability.get(liveId)).toBe('available');
+      expect(availability.get(deletedId)).toBe('deleted');
+      expect(availability.get(unknownId)).toBe('dangling');
+
+      // Scoped to the space: the same id elsewhere is unknown.
+      const elsewhere = yield* engine.queryAvailability(SpaceId.random(), [liveId]);
+      expect(elsewhere.get(liveId)).toBe('dangling');
     }, Effect.provide(TestLayer)),
   );
 

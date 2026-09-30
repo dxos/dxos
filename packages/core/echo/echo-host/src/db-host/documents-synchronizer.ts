@@ -3,16 +3,18 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
+import { type DocumentId, isValidDocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler, asyncTimeout } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { EID, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
+import { type DocumentSidecar, collectDocumentReferences } from './document-sidecar.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
@@ -32,6 +34,10 @@ const RELOAD_TIMEOUT = 10_000;
 
 export type DocumentsSynchronizerProps = {
   automergeHost: AutomergeHost;
+  /** Space the subscription serves; space-less references in its documents resolve against it. */
+  spaceId?: SpaceId;
+  /** Source of the device annotations and reference hints sent with each document; none are sent without one. */
+  sidecar?: DocumentSidecar;
   sendUpdates: (updates: DataService.BatchedDocumentUpdates) => void;
   /** Override of {@link MAX_BATCH_BYTES}. */
   maxBatchBytes?: number;
@@ -47,6 +53,10 @@ interface DocSyncState {
    * that: the host's residency policy decides, and each send re-leases it for the duration of a read.
    */
   initialLease?: DocumentLease<DatabaseDirectory>;
+  /** Reference targets the document held as of the last send, for re-sending their hints. */
+  references?: ReadonlySet<URI.URI>;
+  /** Entity ids of {@link references}, to match an index pass against without re-parsing them. */
+  referencedIds?: ReadonlySet<string>;
 }
 
 /**
@@ -66,6 +76,12 @@ export class DocumentsSynchronizer extends Resource {
    * Cleared per-flush in `_checkAndSendUpdates`.
    */
   private readonly _pendingRequesting = new Set<DocumentId>();
+
+  /** Documents whose device annotations changed since their last send. */
+  private readonly _pendingDeviceAnnotations = new Set<DocumentId>();
+
+  /** Documents whose reference targets may have changed availability since their last send. */
+  private readonly _pendingRefHints = new Set<DocumentId>();
 
   /**
    * Job that schedules if there are pending updates.
@@ -179,6 +195,8 @@ export class DocumentsSynchronizer extends Resource {
       this._syncStates.delete(documentId);
       this._pendingUpdates.delete(documentId);
       this._pendingRequesting.delete(documentId);
+      this._pendingDeviceAnnotations.delete(documentId);
+      this._pendingRefHints.delete(documentId);
     }
   }
 
@@ -195,6 +213,26 @@ export class DocumentsSynchronizer extends Resource {
       this._pendingUpdates.add(documentId);
       this._sendUpdatesJob?.trigger();
     });
+    // Another client on this device (or this one) wrote device annotations to a document it holds.
+    this._params.sidecar?.deviceAnnotationsChanged.on(this._ctx, ({ documentIds }) => {
+      for (const documentId of documentIds) {
+        if (this._syncStates.get(documentId)?.lastSentHead) {
+          this._pendingDeviceAnnotations.add(documentId);
+        }
+      }
+      this._sendUpdatesJob?.trigger();
+    });
+    // An index pass may have created, deleted or first recorded a target this client holds a reference to.
+    this._params.sidecar?.availabilityChanged.on(this._ctx, (objectIds) => {
+      for (const [documentId, { referencedIds }] of this._syncStates) {
+        if (referencedIds && intersects(referencedIds, objectIds)) {
+          this._pendingRefHints.add(documentId);
+        }
+      }
+      if (this._pendingRefHints.size > 0) {
+        this._sendUpdatesJob?.trigger();
+      }
+    });
   }
 
   protected override async _close(): Promise<void> {
@@ -206,15 +244,15 @@ export class DocumentsSynchronizer extends Resource {
   }
 
   async update(ctx: Context, updates: DataService.DocumentUpdate[]): Promise<void> {
-    for (const { documentId, mutation } of updates) {
-      // Inbound (client -> worker) updates are always mutation-bearing; the
-      // `mutation`-less variant is only used for worker -> client transition
-      // signals (e.g. `requesting`). Defensive skip here to satisfy the
-      // optional proto field.
-      if (!mutation) {
-        continue;
+    for (const { documentId, mutation, deviceAnnotations } of updates) {
+      invariant(isValidDocumentId(documentId), `Invalid document id: ${documentId}`);
+      // Before the annotations: a write may annotate an object this same mutation creates.
+      if (mutation) {
+        await this._writeMutation(ctx, documentId, mutation);
       }
-      await this._writeMutation(ctx, documentId as DocumentId, mutation);
+      if (deviceAnnotations?.length) {
+        await this._writeDeviceAnnotations(documentId, deviceAnnotations);
+      }
     }
     // TODO(mykola): This should not be required.
     await this._params.automergeHost.flush(ctx, {
@@ -231,12 +269,16 @@ export class DocumentsSynchronizer extends Resource {
     const maxDocuments = this._params.maxBatchDocuments ?? MAX_BATCH_DOCUMENTS;
     let bytes = 0;
 
+    // Documents this batch delivers for the first time, which carry their whole sidecar.
+    const initial = new Set<DocumentId>();
+
     // Consumed one at a time so whatever does not fit stays pending for the next tick.
     for (const documentId of this._pendingUpdates) {
       if (updates.length >= maxDocuments || bytes >= maxBytes) {
         break;
       }
       this._pendingUpdates.delete(documentId);
+      const isInitial = this._syncStates.get(documentId)?.lastSentHead === undefined;
       const update = await this._getPendingChanges(documentId);
       if (update) {
         updates.push({
@@ -244,8 +286,15 @@ export class DocumentsSynchronizer extends Resource {
           mutation: update,
         });
         bytes += update.byteLength;
+        if (isInitial) {
+          initial.add(documentId);
+        }
+        // The reference set may have changed with the document.
+        this._pendingRefHints.add(documentId);
       }
     }
+
+    await this._attachSidecar(updates, initial);
     if (this._pendingUpdates.size > 0) {
       this._sendUpdatesJob!.trigger();
     }
@@ -270,6 +319,95 @@ export class DocumentsSynchronizer extends Resource {
     if (updates.length > 0) {
       this._params.sendUpdates({ updates });
     }
+  }
+
+  /**
+   * Adds device annotations and reference hints to the batch: for documents it delivers for the first
+   * time, and for documents whose sidecar changed since their last send.
+   */
+  private async _attachSidecar(updates: DataService.DocumentUpdate[], initial: ReadonlySet<DocumentId>): Promise<void> {
+    const sidecar = this._params.sidecar;
+    if (!sidecar) {
+      this._pendingDeviceAnnotations.clear();
+      this._pendingRefHints.clear();
+      return;
+    }
+    // Only documents the client already holds: a snapshot for one not yet delivered would be dropped.
+    const delivered = (documentId: DocumentId) => this._syncStates.get(documentId)?.lastSentHead !== undefined;
+
+    // Values are scoped by space, so a subscription that names none has none to send.
+    const annotated = this._params.spaceId
+      ? [...new Set([...initial, ...this._pendingDeviceAnnotations])].filter(delivered)
+      : [];
+    this._pendingDeviceAnnotations.clear();
+    const hinted = [...this._pendingRefHints].filter(
+      (documentId) => delivered(documentId) && this._syncStates.get(documentId)?.references !== undefined,
+    );
+    this._pendingRefHints.clear();
+
+    const sidecars = new Map<string, Pick<DataService.DocumentUpdate, 'deviceAnnotations' | 'refHints'>>();
+    try {
+      if (annotated.length > 0 && this._params.spaceId) {
+        const values = await sidecar.readDeviceAnnotations(this._params.spaceId, annotated);
+        for (const documentId of annotated) {
+          const annotations = values.get(documentId) ?? [];
+          // An empty snapshot on first delivery says nothing the client does not already assume.
+          if (annotations.length > 0 || !initial.has(documentId)) {
+            sidecars.set(documentId, { deviceAnnotations: annotations });
+          }
+        }
+      }
+      // Space-less references resolve against the subscription's space; without one there is nothing to resolve.
+      const spaceId = this._params.spaceId;
+      if (hinted.length > 0 && spaceId) {
+        const referencesByDocument = hinted.map(
+          (documentId) => [documentId, this._syncStates.get(documentId)?.references ?? new Set<URI.URI>()] as const,
+        );
+        // One lookup for the whole batch: a first sync hints hundreds of documents at once.
+        const hints = new Map(
+          (
+            await sidecar.readRefHints(
+              spaceId,
+              new Set(referencesByDocument.flatMap(([, references]) => [...references])),
+            )
+          ).map((hint) => [hint.uri, hint]),
+        );
+        for (const [documentId, references] of referencesByDocument) {
+          const refHints = [...references].flatMap((uri) => hints.get(uri) ?? []);
+          sidecars.set(documentId, { ...sidecars.get(documentId), refHints });
+        }
+      }
+    } catch (err) {
+      // The document bytes still go out; its sidecar is retried on the next pass.
+      log.warn('failed to read document sidecar', { err });
+      annotated.forEach((documentId) => this._pendingDeviceAnnotations.add(documentId));
+      hinted.forEach((documentId) => this._pendingRefHints.add(documentId));
+      this._sendUpdatesJob?.trigger();
+      return;
+    }
+
+    updates.forEach((update, index) => {
+      const extra = sidecars.get(update.documentId);
+      if (extra) {
+        updates[index] = { ...update, ...extra };
+        sidecars.delete(update.documentId);
+      }
+    });
+    for (const [documentId, extra] of sidecars) {
+      updates.push({ documentId, ...extra });
+    }
+  }
+
+  private async _writeDeviceAnnotations(
+    documentId: DocumentId,
+    entries: readonly DataService.DeviceAnnotation[],
+  ): Promise<void> {
+    const spaceId = this._params.spaceId;
+    if (!this._params.sidecar || !spaceId) {
+      log.warn('dropping device annotations: subscription has no sidecar', { documentId });
+      return;
+    }
+    await this._params.sidecar.writeDeviceAnnotations(spaceId, documentId, entries);
   }
 
   private async _getPendingChanges(documentId: DocumentId): Promise<Uint8Array | undefined> {
@@ -304,6 +442,17 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     syncState.lastSentHead = A.getHeads(doc);
+    if (this._params.sidecar) {
+      const references = collectDocumentReferences(doc);
+      syncState.references = references;
+      syncState.referencedIds = new Set(
+        [...references].flatMap((uri) => {
+          const eid = EID.tryParse(uri);
+          const entityId = eid && EID.getEntityId(eid);
+          return entityId ? [entityId] : [];
+        }),
+      );
+    }
     return mutation;
   }
 
@@ -331,3 +480,13 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 }
+
+const intersects = (a: ReadonlySet<string>, b: ReadonlySet<string>): boolean => {
+  const [smaller, larger] = a.size <= b.size ? [a, b] : [b, a];
+  for (const item of smaller) {
+    if (larger.has(item)) {
+      return true;
+    }
+  }
+  return false;
+};

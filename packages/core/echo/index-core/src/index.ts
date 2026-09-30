@@ -3,10 +3,15 @@
 //
 
 export { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
-export { IndexEngine, type IndexingResult } from './index-engine.ts';
+export { type EntityAvailability, IndexEngine, type IndexingResult } from './index-engine.ts';
 export { IndexedObjectSource } from './indexed-object-source.ts';
 export { type IndexCursor, IndexTracker } from './index-tracker.ts';
 export { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
+export {
+  type DeviceAnnotationRow,
+  DeviceAnnotationStore,
+  type DeviceAnnotationWrite,
+} from './device-annotation-store.ts';
 export { ActivityIndex, type ActivityRow } from './indexes/activity-index.ts';
 export { type ChangeSummary, type DocumentActivity, type Index, type IndexerObject } from './indexes/interface.ts';
 export { FtsIndex, type FtsQuery, buildFtsCondition } from './indexes/fts-index.ts';

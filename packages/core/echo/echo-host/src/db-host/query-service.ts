@@ -14,12 +14,14 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
+import { SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryService } from '@dxos/protocols/rpc';
+import { type DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge/index.ts';
 import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
+import { collectReferences } from './document-sidecar.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
 import type { SpaceStateManager } from './space-state-manager.ts';
 
@@ -48,6 +50,9 @@ export type QueryServiceProps = {
   executor?: QueryExecutorMode;
   /** Resolved lazily, like `indexEngine`: the client exists only once the host is open. */
   sql: () => SqlClient.SqlClient;
+
+  /** Availability of reference targets, attached to results that ship their object's JSON. */
+  readRefHints?: (spaceId: SpaceId, uris: Iterable<URI.URI>) => Promise<DataService.RefHint[]>;
 };
 
 /**
@@ -96,6 +101,48 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
 
   'getQueryTraces'(): ExecutionTrace[] {
     return Array.from(this._queries, (query) => query.executor.trace);
+  }
+
+  /**
+   * Attaches reference hints to feed results, which ship their object as JSON rather than as a
+   * document on `DataService`. One index lookup per space covers the whole result set.
+   */
+  async #withRefHints(results: QueryService.QueryResult[]): Promise<QueryService.QueryResult[]> {
+    const readRefHints = this._params.readRefHints;
+    if (!readRefHints) {
+      return results;
+    }
+    const referencesByResult = new Map<QueryService.QueryResult, Set<URI.URI>>();
+    const referencesBySpace = new Map<SpaceId, Set<URI.URI>>();
+    for (const result of results) {
+      if (!result.queueId || !result.documentJson || !SpaceId.isValid(result.spaceId)) {
+        continue;
+      }
+      const references = collectReferences(JSON.parse(result.documentJson));
+      if (references.size === 0) {
+        continue;
+      }
+      referencesByResult.set(result, references);
+      const spaceReferences = referencesBySpace.get(result.spaceId) ?? new Set();
+      references.forEach((uri) => spaceReferences.add(uri));
+      referencesBySpace.set(result.spaceId, spaceReferences);
+    }
+    if (referencesByResult.size === 0) {
+      return results;
+    }
+    const hintsBySpace = new Map<SpaceId, Map<string, DataService.RefHint>>();
+    for (const [spaceId, references] of referencesBySpace) {
+      const hints = await readRefHints(spaceId, references);
+      hintsBySpace.set(spaceId, new Map(hints.map((hint) => [hint.uri, hint])));
+    }
+    return results.map((result) => {
+      const references = referencesByResult.get(result);
+      const hints = SpaceId.isValid(result.spaceId) ? hintsBySpace.get(result.spaceId) : undefined;
+      if (!references || !hints) {
+        return result;
+      }
+      return { ...result, refHints: [...references].flatMap((uri) => hints.get(uri) ?? []) };
+    });
   }
 
   /** Cached once true: the store only ever finishes filling, so the check need not repeat. */
@@ -312,7 +359,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
           query.dirty = false;
           if (changed || query.firstResult) {
             query.firstResult = false;
-            query.sendResults(query.executor.getResults());
+            query.sendResults(await this.#withRefHints(query.executor.getResults()));
           }
         } catch (err) {
           log.catch(err, {

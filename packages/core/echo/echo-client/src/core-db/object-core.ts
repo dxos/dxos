@@ -153,6 +153,12 @@ export class ObjectCore {
    */
   #refreshedDuringWrite = false;
 
+  /**
+   * Device-scoped annotation values written before the object was bound to a database; handed to the
+   * document handle on {@link bind}.
+   */
+  #unboundDeviceAnnotations = new Map<string, unknown>();
+
   #refresh(): void {
     this.#refreshedDuringWrite = true;
     this.refreshTargets?.(this.#refreshScope);
@@ -277,7 +283,44 @@ export class ObjectCore {
       });
     }
 
+    for (const [key, value] of this.#unboundDeviceAnnotations) {
+      this.docHandle.setDeviceAnnotation(this.id, key, value);
+    }
+    this.#unboundDeviceAnnotations.clear();
+
     this.notifyUpdate();
+  }
+
+  /**
+   * Values of the object's device-scoped annotations, which live on this device only and never enter
+   * its document.
+   */
+  getDeviceAnnotations(): Readonly<Record<string, unknown>> {
+    return this.docHandle
+      ? this.docHandle.getDeviceAnnotations(this.id)
+      : Object.fromEntries(this.#unboundDeviceAnnotations);
+  }
+
+  /**
+   * Writes a device-scoped annotation value; `undefined` deletes it.
+   */
+  setDeviceAnnotation(key: string, value: unknown): void {
+    if (this.docHandle) {
+      this.docHandle.setDeviceAnnotation(this.id, key, value);
+    } else if (value === undefined) {
+      this.#unboundDeviceAnnotations.delete(key);
+    } else {
+      this.#unboundDeviceAnnotations.set(key, value);
+    }
+    this.notifyUpdate();
+  }
+
+  /**
+   * Availability of a reference target held by this object's document, as the host's index last
+   * reported it.
+   */
+  getRefHint(uri: string): 'available' | 'deleted' | 'dangling' | undefined {
+    return this.docHandle?.getRefHint(uri);
   }
 
   getDoc(): AutomergeDoc<unknown> {

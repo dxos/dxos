@@ -62,21 +62,55 @@ const entityMetaAccessor: FilterRecordAccessor<EntityMeta> = {
 };
 
 /**
+ * Values of an object's device-scoped annotations, keyed by annotation key. They are stored apart from
+ * every representation below, so a matcher is given them alongside the record.
+ */
+export type DeviceAnnotationValues = Readonly<Record<string, unknown>>;
+
+type WithDeviceAnnotations<T> = { record: T; device: DeviceAnnotationValues | undefined };
+
+/** An accessor whose meta also carries the record's device-scoped annotation values. */
+const withDeviceAnnotations = <T>(
+  accessor: FilterRecordAccessor<T>,
+): FilterRecordAccessor<WithDeviceAnnotations<T>> => ({
+  getId: ({ record }) => accessor.getId(record),
+  getTypeURI: ({ record }) => accessor.getTypeURI(record),
+  getProps: ({ record }) => accessor.getProps(record),
+  getMeta: ({ record, device }) => {
+    const meta = accessor.getMeta(record);
+    return device === undefined ? meta : { ...meta, annotations: { ...meta.annotations, ...device } };
+  },
+  hasParent: ({ record }) => accessor.hasParent(record),
+  matchTextSearch: (filter, { record }) => accessor.matchTextSearch(filter, record),
+});
+
+const matchDoc = makeFilterMatcher(withDeviceAnnotations(docAccessor));
+const matchObjectJSON = makeFilterMatcher(withDeviceAnnotations(objectJSONAccessor));
+const matchEntityMeta = makeFilterMatcher(withDeviceAnnotations(entityMetaAccessor));
+
+/**
  * Matches a filter against an object structure as stored in automerge.
  */
-export const filterMatchDoc: (filter: QueryAST.Filter, obj: MatchedDoc) => boolean = makeFilterMatcher(docAccessor);
+export const filterMatchDoc = (filter: QueryAST.Filter, obj: MatchedDoc, device?: DeviceAnnotationValues): boolean =>
+  matchDoc(filter, { record: obj, device });
 
 /**
  * Matches a filter against the JSON form of an object.
  */
-export const filterMatchObjectJSON: (filter: QueryAST.Filter, obj: ObjectJSON) => boolean =
-  makeFilterMatcher(objectJSONAccessor);
+export const filterMatchObjectJSON = (
+  filter: QueryAST.Filter,
+  obj: ObjectJSON,
+  device?: DeviceAnnotationValues,
+): boolean => matchObjectJSON(filter, { record: obj, device });
 
 /**
  * Matches a filter against an object's index row.
  */
-export const filterMatchEntityMeta: (filter: QueryAST.Filter, meta: EntityMeta) => boolean =
-  makeFilterMatcher(entityMetaAccessor);
+export const filterMatchEntityMeta = (
+  filter: QueryAST.Filter,
+  meta: EntityMeta,
+  device?: DeviceAnnotationValues,
+): boolean => matchEntityMeta(filter, { record: meta, device });
 
 /** The type URI an index row records, or `undefined` for an untyped object. */
 export const getEntityMetaTypeURI = (meta: EntityMeta): string | undefined => entityMetaAccessor.getTypeURI(meta);

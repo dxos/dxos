@@ -102,6 +102,11 @@ export type Target<R extends Unknown> = R extends refInternal.Ref<infer T> ? T :
  */
 export type Resolver = refInternal.RefResolver;
 
+/**
+ * Whether a reference target exists, as this device last learned it; read with `ref.hint`.
+ */
+export type Hint = refInternal.RefHint;
+
 export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef;
 
 /**

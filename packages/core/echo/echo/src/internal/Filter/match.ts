@@ -9,6 +9,7 @@ import { DXN, EID, EntityId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import { getTypeURI } from '../Annotation/annotations.ts';
+import { getDeviceState } from '../common/api/device-state.ts';
 import { getMetaChecked } from '../common/api/meta.ts';
 import { type AnyEntity, ParentId } from '../common/types/index.ts';
 import { type InternalObjectProps } from '../Entity/model.ts';
@@ -394,11 +395,13 @@ const entityAccessor: FilterRecordAccessor<AnyEntity> = {
   },
   getMeta: (entity) => {
     const meta = getMetaChecked(entity);
+    // Device-scoped values live outside the document meta; they are matched in their encoded form.
+    const deviceAnnotations = getDeviceState(entity)?.getAnnotations();
     return {
       keys: meta.keys,
       key: meta.key,
       version: meta.version,
-      annotations: meta.annotations,
+      annotations: deviceAnnotations ? { ...meta.annotations, ...deviceAnnotations } : meta.annotations,
       // Lazy: meta tags surface as `Ref`s on a live proxy and only the `tag` arm needs them encoded.
       get tags() {
         return meta.tags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));

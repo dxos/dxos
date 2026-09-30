@@ -138,6 +138,12 @@ export class RepoProxy extends Resource {
   #draining = false;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+
+  /** Device-scoped annotation values of a document's objects changed, locally or from the host. */
+  readonly deviceAnnotationsChanged = new Event<DeviceAnnotationsChangedEvent>();
+
+  /** The host delivered new reference availability hints for a document. */
+  readonly refHintsChanged = new Event<{ documentId: DocumentId }>();
   private _lastSaveStateKey = '';
 
   constructor(
@@ -185,6 +191,8 @@ export class RepoProxy extends Resource {
     // Every listener, not just this class's: the entity manager subscribes to each handle too, and a
     // released handle must not keep either alive.
     handle.off('change');
+    handle.off('device-annotations');
+    handle.off('ref-hints');
     delete this._handles[documentId];
     this._pendingAddIds.delete(documentId);
     this._pendingRemoveIds.add(documentId);
@@ -529,6 +537,7 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ documentId, onDelete: cleanup });
     handle.on('change', onChange);
+    this.#forwardSidecarEvents(handle);
     this._handles[documentId] = handle;
 
     // A queued unsubscribe for this id would otherwise travel in the same batch as this subscribe,
@@ -581,6 +590,7 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
     handle.on('change', onChange);
+    this.#forwardSidecarEvents(handle);
     const request = () => {
       const creation: Promise<void> = runServiceCall(
         this._runtime,
@@ -636,6 +646,31 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
+  /**
+   * Queues a handle's local device-annotation writes for sending, and surfaces its sidecar changes on
+   * this proxy.
+   */
+  #forwardSidecarEvents(handle: DocHandleProxy<any>): void {
+    handle.on('device-annotations', ({ objectIds, source }) => {
+      const documentId = handle.documentId;
+      if (!documentId) {
+        // Sent once the host assigns an id: creation queues the document for its first update.
+        return;
+      }
+      if (source === 'local') {
+        this._pendingUpdateIds.add(documentId);
+        this._sendUpdatesJob?.trigger();
+        this._emitSaveStateEvent();
+      }
+      this.deviceAnnotationsChanged.emit({ documentId, objectIds, source });
+    });
+    handle.on('ref-hints', () => {
+      if (handle.documentId) {
+        this.refHintsChanged.emit({ documentId: handle.documentId });
+      }
+    });
+  }
+
   /** Retries the releases refused while a write was in flight, now that the send has settled. */
   private _releaseDeferred(): void {
     for (const documentId of [...this._deferredReleaseIds]) {
@@ -686,7 +721,10 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting, unavailable }: DataService.DocumentUpdate, bulk: boolean): void {
+  #integrate(
+    { documentId, mutation, requesting, unavailable, deviceAnnotations, refHints }: DataService.DocumentUpdate,
+    bulk: boolean,
+  ): void {
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -706,6 +744,14 @@ export class RepoProxy extends Resource {
     if (unavailable) {
       log.warn('host cannot produce document', { documentId, spaceId: this._spaceId });
       handle._markUnavailable(documentId);
+    }
+
+    // Before the bytes: a listener woken by the document's change reads its objects' annotations.
+    if (deviceAnnotations) {
+      handle._integrateDeviceAnnotations(deviceAnnotations);
+    }
+    if (refHints) {
+      handle._integrateRefHints(refHints);
     }
 
     if (mutation) {
@@ -773,8 +819,9 @@ export class RepoProxy extends Resource {
             continue;
           }
           const mutation = handle._getPendingChanges();
-          if (mutation) {
-            updates.push({ documentId, mutation });
+          const deviceAnnotations = handle._getPendingDeviceAnnotations();
+          if (mutation || deviceAnnotations) {
+            updates.push({ documentId, mutation, deviceAnnotations });
           }
         }
       };
@@ -798,9 +845,14 @@ export class RepoProxy extends Resource {
           this._sendUpdatesJob?.trigger();
           return;
         }
-        for (const { documentId } of updates) {
+        for (const { documentId, mutation, deviceAnnotations } of updates) {
           // Handle may have been removed between RPC start and ack — skip silently.
-          this._handles[documentId]?._confirmSync();
+          if (mutation) {
+            this._handles[documentId]?._confirmSync();
+          }
+          if (deviceAnnotations) {
+            this._handles[documentId]?._confirmDeviceAnnotations();
+          }
         }
       }
 
@@ -842,6 +894,12 @@ export class RepoProxy extends Resource {
     this.saveStateChanged.emit({ unsavedDocuments });
   }
 }
+
+export type DeviceAnnotationsChangedEvent = {
+  documentId: DocumentId;
+  objectIds: ReadonlySet<string>;
+  source: 'local' | 'host';
+};
 
 export type SaveStateChangedEvent = {
   unsavedDocuments: DocumentId[];

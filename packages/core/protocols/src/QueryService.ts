@@ -8,6 +8,7 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import { RefHint } from './DataService.ts';
 import { serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
 
@@ -101,6 +102,11 @@ export const QueryResult = Schema.Struct({
    * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
    */
   recordJson: Schema.optional(Schema.String),
+  /**
+   * Availability of the reference targets held by `documentJson`, read from the index. Present only
+   * alongside `documentJson`: an automerge object's hints travel with its document on `DataService`.
+   */
+  refHints: Schema.optional(mutableArray(RefHint)),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 

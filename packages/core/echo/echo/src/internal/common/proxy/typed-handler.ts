@@ -17,7 +17,9 @@ import { getSchemaURI } from '../../Annotation/annotations.ts';
 import { isEntity } from '../../Entity/guard.ts';
 import { toEffectSchema } from '../../JsonSchema/json-schema.ts';
 import {
+  type EntityDeviceState,
   ObjectDeletedId,
+  ObjectDeviceStateId,
   ParentId,
   SchemaAstId,
   SchemaId,
@@ -214,6 +216,9 @@ const copyHiddenProperties = (source: any, target: any): void => {
  * doesn't perturb the target's own-property shape. Marked as a reactive prototype so the "plain
  * object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
  */
+/** Device-scoped annotation values of entities not yet in a database, by raw target. */
+const unboundDeviceAnnotations = new WeakMap<object, Map<string, unknown>>();
+
 const TypedObjectPrototype: object = Object.create(Object.prototype);
 defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
 
@@ -246,6 +251,31 @@ Object.defineProperties(TypedObjectPrototype, {
     get(this: ProxyTarget) {
       const target = getRawTarget(this);
       return () => (isEntity(target) ? Hash.hash(target.id) : Hash.random(target));
+    },
+  },
+  [ObjectDeviceStateId]: {
+    // An entity outside a database holds device-scoped values in memory; `db.add` hands them to the
+    // database-backed object, which stores them on the device.
+    get(this: ProxyTarget): EntityDeviceState | undefined {
+      const target = getRawTarget(this);
+      // Only a root entity owns an event; nested records share their root's.
+      const event = EventId in target ? target[EventId] : undefined;
+      if (!event || !isEntity(target)) {
+        return undefined;
+      }
+      return {
+        getAnnotations: () => Object.fromEntries(unboundDeviceAnnotations.get(target) ?? []),
+        setAnnotation: (key, value) => {
+          const values = unboundDeviceAnnotations.get(target) ?? new Map<string, unknown>();
+          if (value === undefined) {
+            values.delete(key);
+          } else {
+            values.set(key, value);
+          }
+          unboundDeviceAnnotations.set(target, values);
+          event.emit();
+        },
+      };
     },
   },
   [Equal.symbol]: {

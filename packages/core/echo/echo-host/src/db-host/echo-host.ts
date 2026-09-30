@@ -53,6 +53,7 @@ import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
+import { DocumentSidecar } from './document-sidecar.ts';
 import { FeedDataSource } from './feed-data-source.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
@@ -173,6 +174,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
+  private readonly _sidecar: DocumentSidecar;
   private readonly _spaceStateManager: SpaceStateManager;
   private readonly _echoDataMonitor: EchoDataMonitor;
 
@@ -286,11 +288,19 @@ export class EchoHost extends Resource {
         return this._sql;
       },
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      readRefHints: (spaceId, uris) => this._sidecar.readRefHints(spaceId, uris),
+    });
+
+    this._sidecar = new DocumentSidecar({
+      indexEngine: () => this.indexEngine,
+      runtime: this._runtime,
+      invalidateQueries: (hint) => this._queryService.invalidateQueries(hint),
     });
 
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
+      sidecar: this._sidecar,
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
       updateIndexes: (request) => this.updateIndexes({ ...request, reason: 'rpc-update-indexes' }),
@@ -1425,6 +1435,7 @@ export class EchoHost extends Resource {
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
+        this._sidecar.notifyIndexed(hint.objectIds);
       }
 
       return {

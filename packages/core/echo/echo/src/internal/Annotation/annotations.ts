@@ -483,6 +483,7 @@ interface MakeAnnoationsProps<T> {
   schema: Schema.Codec<T, any, never>;
   /** Skips the FQN format check on `id`, for a pre-existing id that may already be embedded in persisted schemas. */
   legacyId?: boolean;
+  storage?: Annotation.Storage;
 }
 
 // Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
@@ -499,9 +500,13 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
     );
   }
 
+  const storage = props.storage ?? 'space';
+  assertArgument(storage !== 'identity', 'storage', 'Identity-scoped annotation storage is not supported yet.');
+
   const annotation: Annotation.Annotation<T> = {
     [ANNOTATION_TYPE_ID]: { _Type: {} as T },
     key: props.id as Annotation.Key,
+    storage,
     schema: props.schema,
     get: (schema) => getFromAst(schema.ast, annotation),
     getFromAst: (ast) => getFromAst(ast, annotation),

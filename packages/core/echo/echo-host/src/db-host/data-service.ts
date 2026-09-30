@@ -16,12 +16,15 @@ import { toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
+import { type DocumentSidecar } from './document-sidecar.ts';
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
+  /** Device annotations and reference hints delivered with each document. */
+  sidecar?: DocumentSidecar;
   updateIndexes: (request: DataService.UpdateIndexesRequest) => Promise<void>;
   getSpaceStats: (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   runGarbageCollection: (
@@ -50,6 +53,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
+  private readonly '_sidecar': DocumentSidecar | undefined;
   private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   private readonly '_runGarbageCollection': (
@@ -60,6 +64,7 @@ export class DataServiceImpl implements DataService.Handlers {
   'constructor'(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
     this._spaceStateManager = params.spaceStateManager;
+    this._sidecar = params.sidecar;
     this._updateIndexes = params.updateIndexes;
     this._getSpaceStats = params.getSpaceStats;
     this._runGarbageCollection = params.runGarbageCollection;
@@ -71,6 +76,8 @@ export class DataServiceImpl implements DataService.Handlers {
     return EffectEx.streamFromEmitter<DataService.BatchedDocumentUpdates, Error>((emit) => {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
+        spaceId: SpaceId.isValid(request.spaceId) ? request.spaceId : undefined,
+        sidecar: this._sidecar,
         sendUpdates: (updates) => void emit.single(updates),
       });
       synchronizer

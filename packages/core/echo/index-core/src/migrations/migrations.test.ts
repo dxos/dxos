@@ -14,6 +14,8 @@ import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import activityInit from './activity/0001_init.sql?raw';
 import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
+import deviceAnnotationsInit from './device-annotations/0001_init.sql?raw';
+import { MIGRATIONS as DEVICE_ANNOTATIONS } from './device-annotations/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
@@ -29,6 +31,7 @@ const TestLayer = SqliteClient.layer({ filename: ':memory:' });
 
 const STORES = [
   { name: 'activity', init: activityInit, manifest: ACTIVITY },
+  { name: 'device-annotations', init: deviceAnnotationsInit, manifest: DEVICE_ANNOTATIONS },
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
   { name: 'fts', init: ftsInit, manifest: FTS },
   { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
