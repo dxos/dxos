@@ -135,6 +135,8 @@ export const RepositoryArticle = ({ role, subject: repository }: RepositoryArtic
     }
     let cancelled = false;
     const current = generation.current;
+    // Otherwise the previous file's content shows under the new path until the read lands.
+    setFile(undefined);
     void invoke(
       RepositoryOperation.ReadFile,
       { repository: repositoryRef, ref: currentRef, path: selectedPath },
