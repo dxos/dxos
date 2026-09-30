@@ -28,8 +28,8 @@ const BROKEN = 'data:image/png;base64,AAAA';
 
 type RowsCardProps = {
   size: Size;
-  /** `rail` (default) places icons and trailing actions in the rails; `md` keeps them in the content track. */
-  gutter?: CardRootProps['gutter'];
+  /** Places icons and trailing actions in the card's rails; without it they sit inline in each row. */
+  grid?: CardRootProps['grid'];
   /** Keeps the test ids and accessible names of the inline copy distinct. */
   prefix?: string;
   rows: number;
@@ -37,10 +37,10 @@ type RowsCardProps = {
 };
 
 /** A card of sections, rows, a link, a menu and a drag handle, in either placement of its leading and trailing cells. */
-const RowsCard = ({ size, gutter, prefix = '', rows, onInvite }: RowsCardProps) => {
+const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) => {
   const name = prefix ? 'Inline ' : '';
   return (
-    <Next.Card.Root gutter={gutter} data-testid={`${prefix}rows-card-${size}`}>
+    <Next.Card.Root grid={grid} data-testid={`${prefix}rows-card-${size}`}>
       <Next.Card.Header>
         <Next.DragHandle label={`${name}Drag`} data-testid={`${prefix}drag-${size}`} />
         <Next.Card.Title>{name}Project</Next.Card.Title>
@@ -79,7 +79,7 @@ const RowsCard = ({ size, gutter, prefix = '', rows, onInvite }: RowsCardProps) 
 
 /**
  * A poster card, a card with a header action and footer, and one with a broken poster; then a card of sections, rows,
- * a link, a menu and a drag handle, in rail mode and beside it inline (`gutter='md'`); a clickable, selected card with
+ * a link, a menu and a drag handle, as a `grid` card and beside it as a default (inline) one; a clickable, selected card with
  * a nested action; and a borderless card.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
@@ -129,8 +129,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         </Next.Card.Body>
       </Next.Card.Root>
 
-      <RowsCard size={size} rows={rows} onInvite={() => setRows((count) => count + 1)} />
-      <RowsCard size={size} gutter='md' prefix='inline-' rows={rows} onInvite={() => setRows((count) => count + 1)} />
+      <RowsCard size={size} grid rows={rows} onInvite={() => setRows((count) => count + 1)} />
+      <RowsCard size={size} prefix='inline-' rows={rows} onInvite={() => setRows((count) => count + 1)} />
 
       <Next.Card.Root selected onClick={() => setOpened((count) => count + 1)} data-testid={`clickable-${size}`}>
         <Next.Card.Header>
@@ -196,7 +196,8 @@ export const Default: Story = {};
  * shows the broken-image icon; a trailing icon-only Button in `Card.Header` shows its label in a Tooltip (left open).
  * A Section is a `group` named by its caption; Rows are block-tall, their icons in the start rail and trailing actions
  * and tags ending in the end rail, like the Header's drag handle and menu, with text at the content edge, truncating;
- * rails sit one gap inside the border, and `gutter='md'` keeps icons and actions inside the content column instead;
+ * that is a `grid` card, whose rails sit one gap inside the border; a default card creates no grid and keeps icons and
+ * actions inline in the content box;
  * a Row or Card with `onClick` is a button (Enter and Space), and a nested Action or Menu never activates it. A Link
  * opens in a new tab; a DragHandle is outside the tab order; `selected` and `border={false}` restyle the frame.
  */
@@ -216,12 +217,13 @@ export const Test: Story = {
     const footer = canvas.getByTestId('footer-md').getBoundingClientRect();
     await expect(description.left).toBeCloseTo(title.left, 0);
     await expect(footer.left).toBeCloseTo(title.left, 0);
-    // The header's trailing action sits in the end rail, past the footer's content edge.
+    // A default card is no grid: the header's trailing action ends where the footer's last action does.
+    await expect(getComputedStyle(card).display).not.toBe('grid');
+    await expect(card).not.toHaveAttribute('data-gutter');
     const more = canvas.getByRole('button', { name: 'More actions' }).getBoundingClientRect();
     const review = canvas.getByRole('button', { name: 'Review' }).getBoundingClientRect();
-    await expect(centreX(more)).toBeCloseTo(rails(card, 'md').end, 0);
-    await expect(more.left).toBeGreaterThanOrEqual(review.right);
-    // The content edge is inset from the card's own edge by the gutter.
+    await expect(more.right + GEOMETRY.md.inset).toBeCloseTo(review.right, 0);
+    // The content edge is inset from the card's own edge by its padding.
     await expect(title.left - card.getBoundingClientRect().left).toBeGreaterThan(8);
 
     const posterCard = canvas.getByTestId('poster-card-md');
@@ -295,11 +297,12 @@ export const Test: Story = {
     await waitFor(() => expect(clickable).toHaveTextContent('Opened 2'));
     await expect(getComputedStyle(canvas.getByTestId('borderless-md')).borderTopColor).toBe('rgba(0, 0, 0, 0)');
 
-    // Rail mode: leading and trailing cells sit in the card's rails at every size, the rails one gap inside the
+    // Grid: leading and trailing cells sit in the card's rails at every size, the rails one gap inside the
     // border; text starts at the content edge.
     for (const size of SIZES) {
       const rowsCard = byTestId(canvasElement, `rows-card-${size}`);
       await expect(rowsCard).toHaveAttribute('data-gutter', 'rail');
+      await expect(getComputedStyle(rowsCard).display).toBe('grid');
       const { padding, innerStart, innerEnd, start, end, contentStart } = rails(rowsCard, size);
       const border = rowsCard.getBoundingClientRect();
       const at = (testId: string, selector: string) =>
@@ -334,11 +337,17 @@ export const Test: Story = {
       await expect(border.right - remove.right, `${size} action inset`).toBeGreaterThan(padding);
     }
 
-    // Inline mode (`gutter='md'`): the drag handle, icons and trailing actions stay inside the content column, which
-    // the caption and icon cells start at, and icon rows' text aligns.
+    // Default (no grid): no grid on the root or its rows; the drag handle, icons and trailing actions stay inside the
+    // content box, which the caption and icon cells start at, and icon rows' text aligns.
     for (const size of SIZES) {
       const inline = byTestId(canvasElement, `inline-rows-card-${size}`);
-      await expect(inline).toHaveAttribute('data-gutter', 'md');
+      await expect(inline).not.toHaveAttribute('data-gutter');
+      await expect(getComputedStyle(inline).display, `${size} root`).not.toBe('grid');
+      for (const part of inline.querySelectorAll<HTMLElement>(
+        '[data-part="row"], [data-part="link"], [data-part="section"]',
+      )) {
+        await expect(getComputedStyle(part).display, `${size} ${part.dataset.part}`).not.toBe('grid');
+      }
       const rect = inline.getBoundingClientRect();
       const at = (testId: string, selector: string) =>
         byTestId(inline, testId).querySelector<HTMLElement>(selector)?.getBoundingClientRect() ?? new DOMRect();

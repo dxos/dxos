@@ -173,6 +173,10 @@ const rearmWatchPlugin = (): Plugin => ({
   apply: 'serve',
   configureServer: (server) => {
     server.watcher.on('change', (path) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (path.includes('\0') || !path.startsWith('/')) {
+        return;
+      }
       server.watcher.unwatch(path);
       server.watcher.add(path);
     });
