@@ -105,6 +105,23 @@ Follow-up (2026-09-29), superseding item 1:
     device reports it understands the new version, with an app-release cutoff for devices that never
     return. Migrations with no reverse mapping switch the type at once, as today.
 
+12. **Direction: version documents (prototype).** Keep every version (partial replication later trims it
+    per device): one logical object, one Automerge document per schema version. A device keeps the latest
+    version it understands plus newer ones it cannot read yet, and translates edits between the version
+    documents it holds. Rules, all deterministic so any number of devices can translate without
+    coordination: (1) a version document's root is derived from the object's origin root through the
+    lens chain with a content-derived actor, and each device then edits under its own actor; (2) only
+    original edits are translated, never translations, each directly through the composed lens chain,
+    so unused intermediate versions need no document and cost per edit is one translation per other
+    version in use; (3) a translation forks at the target's images of the edit's ancestors and is
+    authored with an actor derived from its ops; (4) a device translates only with the lens build the
+    space designates. `echo-client/src/proxy-db/version-documents/` (plain Automerge, no ECHO integration)
+    passes three versions edited concurrently on three devices, v2 dropped everywhere, six versions with
+    only v1 and v6 in use, concurrent text edits across versions, and an undesignated lens build; breaking
+    rule 1 or 3 fails every case and breaking rule 2 never settles. Open: translator liveness (EDGE or
+    election), lens identity and designation in the space, deterministic ECHO document ids, and query and
+    reference resolution by version.
+
 ## Where things live
 
 | Piece                                                                | Package                                                            |
