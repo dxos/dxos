@@ -1206,18 +1206,24 @@ returns each object at the newest version the reader knows.
 
 ### 12.5 Decisions (2026-09-30)
 
-1. **`links` points at the legacy version for every object.** For each type, the legacy version is the
-   newest version that existed before version documents shipped: the one released apps read. Existing
-   objects keep their document; objects created later get one at the legacy version too (phase 1
-   creates every version up front), so released apps see new objects. Every other version is reachable
-   only through the `versions` registry.
-2. **The reader's known versions travel with the query.** The host has no schema registry: types reach it
-   only as strings (`QueryServiceImpl` holds the index, SQL client, automerge host and space state; the
-   planner canonicalizes typenames to strings; the host never resolves a type to a schema). So "the newest
-   version the reader knows" must be sent: a field on `QueryAST.QueryOptions` (today `deleted` and
-   `debugLabel`) listing, per typename, the versions the reader's registry holds. The host resolves each
-   object id to one document with it, so results are never duplicated and limits are not shortchanged.
-   A query that names a version matches that version's documents directly.
+1. **`links` points at the legacy version for every object, and every version document replicates to
+   every peer.** For each type, the legacy version is the newest version that existed before version
+   documents shipped: the one released apps read. Existing objects keep their document; objects created
+   later get one at the legacy version too (phase 1 creates every version up front), so released apps see
+   new objects. Older apps also sync down newer version documents they cannot read, so those are already
+   present when the app upgrades. Released hosts replicate only `links` and the branch registry, so version
+   documents are recorded where they already look: under reserved branch names
+   (`branches[objectId]['@v<version>']`), which every release that ships branching replicates and never
+   materializes as extra objects. Releases older than branching cannot sync them.
+2. **The host resolves versions from the requesting client's registry.** Today the host has no schema
+   registry (types reach it only as strings). Open PR #13284 ("echo: index the client registry on the
+   host") pushes each client's registry to the host as an indexed data source, keyed by `clientId`,
+   with types identified by `name` and `version` as separate entries. With it, the query executor resolves
+   each object id to one document: the version the query names, else the newest version that the
+   requesting client's registry holds among those the object has. Results are never duplicated and limits
+   are not shortchanged. Resolve against the requesting client, not the host's union of clients: two tabs
+   of different app builds can share a host. Until #13284 lands, the same resolution runs with the
+   client's known versions sent in `QueryAST.QueryOptions`.
 3. **"Update to open" for unreadable newer versions is out of scope.**
 4. **Branches of a versioned object: the simplest rule.** A branch forks every version document of each
    member (registry `members[objectId]` becomes a per-version map), translation runs inside the branch as
