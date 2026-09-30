@@ -1091,16 +1091,24 @@ export class EntityManager implements IDatabaseBinding {
    * Works for a subtree root or any of its members (members inherit the root's branches).
    */
   listBranches(objectId: string): string[] {
-    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
-    return ['main', ...Object.keys((rootId && this.getBranchRegistry(rootId)) || {})];
+    const rootId = this._userBranches(objectId) ? objectId : this._findBranchRootFor(objectId);
+    return ['main', ...Object.keys((rootId && this._userBranches(rootId)) || {})];
+  }
+
+  /** The user branches of a subtree root, without the entries the runtime reserves (version documents). */
+  private _userBranches(rootObjectId: string): Record<string, BranchRecord> | undefined {
+    const entries = Object.entries(this.getBranchRegistry(rootObjectId) ?? {}).filter(
+      ([name]) => !DatabaseDirectory.isReservedBranchName(name),
+    );
+    return entries.length > 0 ? Object.fromEntries(entries) : undefined;
   }
 
   /** The subtree root that owns the branch set containing `objectId`, if any. */
   private _findBranchRootFor(objectId: string): string | undefined {
     const branches = this.getSpaceRootDocHandle().doc().branches ?? {};
     for (const [rootId, byName] of Object.entries(branches)) {
-      for (const record of Object.values(byName)) {
-        if (record.members[objectId]) {
+      for (const [name, record] of Object.entries(byName)) {
+        if (!DatabaseDirectory.isReservedBranchName(name) && record.members[objectId]) {
           return rootId;
         }
       }
@@ -1137,6 +1145,7 @@ export class EntityManager implements IDatabaseBinding {
   ): Promise<void> {
     invariant(name !== 'main', "'main' is the implicit default branch");
     invariant(!this.getBranchRegistry(rootObjectId)?.[name], `branch already exists: ${name}`);
+    invariant(!DatabaseDirectory.isReservedBranchName(name), `branch names starting with '@' are reserved: ${name}`);
     const rootCore = this._objects.get(rootObjectId) ?? (await this.loadObjectCoreById(rootObjectId)) ?? undefined;
     invariant(rootCore, 'root object not found');
 
