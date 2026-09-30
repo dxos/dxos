@@ -437,7 +437,7 @@ jobs:
         # Skip only when it was the "app targets this environment" check that failed — that's an invalid
         # app/environment combo caught before any deploy was attempted, not a real deploy failure. Anything
         # earlier (Checkout, Setup) leaves `validate` skipped and must still notify.
-        if: failure() && steps.validate.conclusion != 'failure'
+        if: failure() && !cancelled() && steps.validate.conclusion != 'failure'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}

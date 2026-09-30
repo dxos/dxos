@@ -5,9 +5,9 @@
 
 // Fast PR review: Jev (TypeSafe System One) alone, no subagents. Runs prepare (`--fast`, a
 // merge-aware diff against this branch's last review or its merge-base with main), fills every
-// group with System One, and finalizes, leaving REVIEW.md + RESOLUTION.md + SYSTEM-ONE.md in
-// `.agents/reviews/<short-sha>/` to commit. Pairs System One is unsure of, and `system-one: off`
-// rules, are recorded in SYSTEM-ONE.md and not reviewed — that is the trade for the speed.
+// group with System One, and finalizes, leaving a single REVIEW.md in `.agents/reviews/<short-sha>/`
+// to commit. Pairs System One is unsure of, and `system-one: off` rules, are counted in its appendix
+// and not reviewed — that is the trade for the speed.
 //
 // Usage:
 //   bun fast.ts [--main=origin/main] [--base=<ref>] [--dry-run]
@@ -76,6 +76,7 @@ rmSync(join(store, 'system-one.json'), { force: true });
 console.log(`
 Next:
   1. Fix each issue in ${REVIEWS_DIR}/${slug}/REVIEW.md, or dismiss it.
-  2. Set its row in ${REVIEWS_DIR}/${slug}/RESOLUTION.md to \`resolved\` or \`ignored\`.
+  2. Set its row in that file's \`## Index\` to \`resolved\` or \`ignored\`.
   3. Commit the store with your fixes. CI (Agentic Review) accepts the PR while less than 20% of
-     it has changed since this review; past that, run this script again.`);
+     it has changed since this review; past that, run this script again.
+Pairs Jev left uncertain stay unreviewed by design: do not spawn subagents for them.`);

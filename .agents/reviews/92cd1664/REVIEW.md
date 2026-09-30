@@ -12,6 +12,17 @@ reviewId: 92cd1664
 
 _1 error(s), 3 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 92cd1664-1 - resolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-sandbox/src/local/LocalSandboxBackend.test.ts:24
+- 92cd1664-2 - resolved - no-env-vars-in-low-level-modules - packages/plugins/plugin-sandbox/src/local/LocalSandboxBackend.ts:90
+- 92cd1664-3 - ignored - use-context-scoped-cancellation - packages/plugins/plugin-sandbox/src/local/LocalSandboxBackend.ts:450
+- 92cd1664-4 - resolved - errors-extend-base-error - packages/plugins/plugin-sandbox/src/types/SandboxService.ts:13
+
+## Issues
+
 # WARN 92cd1664-1 effect-fn-not-hand-wrapped-gen `packages/plugins/plugin-sandbox/src/local/LocalSandboxBackend.test.ts:24`
 
 System One judges this a likely violation of `effect-fn-not-hand-wrapped-gen` (Define Effect-returning functions with Effect.fn/fnUntraced, not a hand-wrapped Effect.gen), p=0.81. The likeliest place is lines 24-35 (`const PNG_BYTES = Uint8Array.from(`, location confidence 0.50). This is a single-shot classifier: confirm against the rule before acting.
@@ -27,3 +38,19 @@ System One judges this a likely violation of `use-context-scoped-cancellation` (
 # ERROR 92cd1664-4 errors-extend-base-error `packages/plugins/plugin-sandbox/src/types/SandboxService.ts:13`
 
 System One judges this a likely violation of `errors-extend-base-error` (Error classes are defined with `BaseError.extend`, never by subclassing `Error` or a tagged-error factory), p=0.95. The likeliest place is lines 13-18 (`export class SandboxError extends Data.TaggedError('SandboxError')<{ message:...`, location confidence 1.00). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `5662bbc3b0d2315aff7b697a0de1611f5f04fee7`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 4 violations written to fragments, 105 uncertain, 718 clean, 0 unanswered
+
+```text
+requests: 336 (78 verdicts re-asked with context the model requested)
+estimated input tokens: 1794947
+billed input tokens: 1663081 (cost $0.0698)
+measured chars per token: 3.24
+```
