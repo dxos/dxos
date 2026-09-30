@@ -27,33 +27,32 @@ const Echo = Capability.inlineModule(
     requires: [WorkerCapabilities.Host],
     provides: [Capabilities.LayerSpec],
   },
-  () =>
-    Effect.gen(function* () {
-      const host = yield* Capability.get(WorkerCapabilities.Host);
-      let sessions = 0;
-      yield* Hook.on(WorkerEvents.SessionOpened, () => Effect.sync(() => sessions++)).pipe(
-        Effect.provideService(Hook.Controller, host.hooks),
-      );
+  Effect.fnUntraced(function* () {
+    const host = yield* Capability.get(WorkerCapabilities.Host);
+    let sessions = 0;
+    yield* Hook.on(WorkerEvents.SessionOpened, () => Effect.sync(() => sessions++)).pipe(
+      Effect.provideService(Hook.Controller, host.hooks),
+    );
 
-      const spec = LayerSpec.make(
-        { affinity: 'application', requires: [RpcRouter.RpcRouter, ConfigService], provides: [], eager: true },
-        () =>
-          Layer.effectDiscard(
-            Effect.gen(function* () {
-              const config = yield* ConfigService;
-              yield* RpcRouter.serve('echo.', EchoRpcs).pipe(
-                Effect.provide(
-                  EchoRpcs.toLayer({
-                    'echo.echo': ({ text }) => Effect.succeed(`${config.get('runtime.app.org')}:${text}`),
-                    'echo.sessions': () => Effect.sync(() => sessions),
-                  }),
-                ),
-              );
-            }),
-          ),
-      );
-      return Capability.contribute(Capabilities.LayerSpec, spec);
-    }),
+    const spec = LayerSpec.make(
+      { affinity: 'application', requires: [RpcRouter.RpcRouter, ConfigService], provides: [], eager: true },
+      () =>
+        Layer.effectDiscard(
+          Effect.gen(function* () {
+            const config = yield* ConfigService;
+            yield* RpcRouter.serve('echo.', EchoRpcs).pipe(
+              Effect.provide(
+                EchoRpcs.toLayer({
+                  'echo.echo': ({ text }) => Effect.succeed(`${config.get('runtime.app.org')}:${text}`),
+                  'echo.sessions': () => Effect.sync(() => sessions),
+                }),
+              ),
+            );
+          }),
+        ),
+    );
+    return Capability.contribute(Capabilities.LayerSpec, spec);
+  }),
 );
 
 /** A worker plugin reached by URL: serves {@link EchoRpcs} and counts sessions off the hook bus. */

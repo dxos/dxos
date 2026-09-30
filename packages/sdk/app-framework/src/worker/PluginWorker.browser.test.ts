@@ -25,15 +25,14 @@ import { EchoRpcs, TabRpcs } from './testing/echo-rpcs.ts';
 import echoPluginUrl from './testing/echo-worker-plugin.ts?module-url';
 
 /** A client for the worker's echo RPCs over the tab's forward port. */
-const makeEchoClient = (port: MessagePort) =>
-  Effect.gen(function* () {
-    // Built into the caller's scope: `Effect.provide` would release the transport as soon as the
-    // client is made, interrupting every call on it.
-    const protocol = yield* Layer.build(
-      RpcClient.layerProtocolWorker({ size: 1 }).pipe(Layer.provide(BrowserWorker.layer(() => port))),
-    );
-    return yield* RpcClient.make(EchoRpcs).pipe(Effect.provideContext(protocol));
-  });
+const makeEchoClient = Effect.fnUntraced(function* (port: MessagePort) {
+  // Built into the caller's scope: `Effect.provide` would release the transport as soon as the
+  // client is made, interrupting every call on it.
+  const protocol = yield* Layer.build(
+    RpcClient.layerProtocolWorker({ size: 1 }).pipe(Layer.provide(BrowserWorker.layer(() => port))),
+  );
+  return yield* RpcClient.make(EchoRpcs).pipe(Effect.provideContext(protocol));
+});
 
 type EchoClient = Effect.Success<ReturnType<typeof makeEchoClient>>;
 

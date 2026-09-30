@@ -123,28 +123,27 @@ export const run = ({ storageLockKey, plugins: builtIn = [] }: RunOptions): void
 
         let sessions = 0;
         return {
-          createSession: ({ clientId, isOwner }) =>
-            Effect.gen(function* () {
-              const appProtocol = yield* RpcServer.Protocol;
-              const systemProtocol = yield* RpcClient.Protocol;
-              yield* router.attach(appProtocol);
-              sessions++;
-              yield* Effect.addFinalizer(() =>
-                Effect.gen(function* () {
-                  sessions--;
-                  yield* Hook.emit(WorkerEvents.SessionClosed, { clientId, isOwner }).pipe(provideHooks);
-                  if (sessions === 0) {
-                    requestShutdown();
-                  }
-                }),
-              );
-              yield* Hook.emit(WorkerEvents.SessionOpened, {
-                clientId,
-                isOwner,
-                systemProtocol,
-                scope: yield* Effect.scope,
-              }).pipe(provideHooks);
-            }),
+          createSession: Effect.fn('PluginWorker.createSession')(function* ({ clientId, isOwner }) {
+            const appProtocol = yield* RpcServer.Protocol;
+            const systemProtocol = yield* RpcClient.Protocol;
+            yield* router.attach(appProtocol);
+            sessions++;
+            yield* Effect.addFinalizer(() =>
+              Effect.gen(function* () {
+                sessions--;
+                yield* Hook.emit(WorkerEvents.SessionClosed, { clientId, isOwner }).pipe(provideHooks);
+                if (sessions === 0) {
+                  requestShutdown();
+                }
+              }),
+            );
+            yield* Hook.emit(WorkerEvents.SessionOpened, {
+              clientId,
+              isOwner,
+              systemProtocol,
+              scope: yield* Effect.scope,
+            }).pipe(provideHooks);
+          }),
         };
       }),
   });

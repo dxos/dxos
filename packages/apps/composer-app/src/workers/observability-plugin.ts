@@ -39,34 +39,33 @@ const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.composer.workerObservabil
 const Observability = Capability.inlineModule(
   'Observability',
   { activatesOn: WorkerEvents.Startup, requires: [WorkerCapabilities.Host], provides: [] },
-  () =>
-    Effect.gen(function* () {
-      const host = yield* Capability.get(WorkerCapabilities.Host);
-      const observability = initializeObservability(host.config, isTauri(), logStore, undefined, {
-        post: (message) => observabilityWorker.postMessage(message),
-      });
-      observability.catch((err) => log.catch(err));
-      // The stack this worker builds hosts echo, and automerge is slim-resolved: it must be
-      // initialized before the stack is built, which happens once every Startup module has activated.
-      yield* Effect.promise(() => initEchoHostWasm());
+  Effect.fnUntraced(function* () {
+    const host = yield* Capability.get(WorkerCapabilities.Host);
+    const observability = initializeObservability(host.config, isTauri(), logStore, undefined, {
+      post: (message) => observabilityWorker.postMessage(message),
+    });
+    observability.catch((err) => log.catch(err));
+    // The stack this worker builds hosts echo, and automerge is slim-resolved: it must be
+    // initialized before the stack is built, which happens once every Startup module has activated.
+    yield* Effect.promise(() => initEchoHostWasm());
 
-      yield* Hook.on(WorkerEvents.StackReady, ({ stack }) =>
-        Effect.gen(function* () {
-          const instance = yield* Effect.promise(() => observability);
-          if (!instance) {
-            return;
-          }
-          const identityManager = yield* stack
-            .getServiceResolver()
-            .resolve(IdentityContract.ManagerService, {})
-            .pipe(Effect.orDie, Effect.scoped);
-          yield* instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager));
-        }).pipe(
-          // Telemetry must never keep the worker from serving its tabs.
-          Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
-        ),
-      ).pipe(Effect.provideService(Hook.Controller, host.hooks));
-    }),
+    yield* Hook.on(WorkerEvents.StackReady, ({ stack }) =>
+      Effect.gen(function* () {
+        const instance = yield* Effect.promise(() => observability);
+        if (!instance) {
+          return;
+        }
+        const identityManager = yield* stack
+          .getServiceResolver()
+          .resolve(IdentityContract.ManagerService, {})
+          .pipe(Effect.orDie, Effect.scoped);
+        yield* instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager));
+      }).pipe(
+        // Telemetry must never keep the worker from serving its tabs.
+        Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
+      ),
+    ).pipe(Effect.provideService(Hook.Controller, host.hooks));
+  }),
 );
 
 /** Composer's worker observability: the log sink, telemetry, and the identity it reports under. */
