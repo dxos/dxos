@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, type ObjectCore, SYSTEM_NAMESPACE } from '../core-db/index.ts';
+import { type ChangeGraph, ancestorsOf, frontierOf } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { arrayFanOutSplitMessage, hasUnresolvedIdConflict } from './array-fan-out.ts';
 import {
@@ -25,7 +26,7 @@ import {
   removedOutputKeys,
 } from './encoded-value.ts';
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
-import { type ChangeGraph, ancestorsOf, applyStructuralEdit, frontierOf, isMapValue } from './fold-edit.ts';
+import { applyStructuralEdit, isMapValue } from './fold-edit.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey } from './migration-context.ts';
 import { replayLosingMigrations } from './migration-merge.ts';
 

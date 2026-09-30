@@ -11,15 +11,8 @@ import { type DatabaseDirectory, EncodedReference, SpaceDocVersion } from '@dxos
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import {
-  type VersionDoc,
-  creationChange,
-  deriveVersionDoc,
-  isDerived,
-  isTranslation,
-  translate,
-  versionOfDoc,
-} from './version-translation.ts';
+import { creationChange, isTranslation } from '../../core-db/index.ts';
+import { type VersionDoc, deriveVersionDoc, isDerived, translate, versionOfDoc } from './version-translation.ts';
 
 const TYPENAME = 'org.dxos.test.task';
 const OBJECT_ID = '01J00000000000000000000000';

@@ -107,6 +107,11 @@ export type BranchRecord = {
    * can route the object to a version it knows without loading the document.
    */
   type?: string;
+  /**
+   * For members stored as one document per schema version: the branch's document for each version,
+   * besides the one `members` names, which is the version released apps read.
+   */
+  versions?: { [objectId: string]: { [version: string]: string | RawString } };
 };
 
 const RESERVED_BRANCH_PREFIX = '@';
@@ -178,6 +183,11 @@ export const DatabaseDirectory = Object.freeze({
       for (const record of Object.values(byName)) {
         for (const url of Object.values(record.members ?? {})) {
           urls.push(url.toString());
+        }
+        for (const byVersion of Object.values(record.versions ?? {})) {
+          for (const url of Object.values(byVersion)) {
+            urls.push(url.toString());
+          }
         }
       }
     }

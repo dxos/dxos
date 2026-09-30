@@ -13,6 +13,7 @@ import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
+import { createBranch, mergeBranch, switchBranch } from '../../echo-handler/index.ts';
 import { EchoTestBuilder } from '../../testing/index.ts';
 import { type EchoDatabase } from '../database.ts';
 
@@ -286,5 +287,79 @@ describe('version documents', () => {
     } finally {
       unwatch();
     }
+  });
+});
+
+describe('version documents on branches', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  /** The data of the object in a branch document of `version`. */
+  const branchData = async (db: EchoDatabase, objectId: string, name: string, version: string) => {
+    const record = db._getSpaceRootDocHandle().doc().branches?.[objectId]?.[name];
+    const url =
+      version === '0.1.0' ? record?.members[objectId]?.toString() : record?.versions?.[objectId]?.[version]?.toString();
+    invariant(url && isValidAutomergeUrl(url), `no ${version} on ${name}`);
+    const handle = db._repo.find<DatabaseDirectory>(url);
+    await handle.whenReady();
+    return dataOf(handle.doc(), objectId);
+  };
+
+  const mainData = async (db: EchoDatabase, objectId: string, version: string) =>
+    dataOf((await versionDoc(db, objectId, version)).doc(), objectId);
+
+  test('a branch forks every version, translates within itself and merges back version by version', async () => {
+    const { db } = await builder.createDatabase({ types });
+    const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await db.syncVersions(lenses);
+    const [task] = await db.query(Filter.type(TaskV3)).run();
+
+    await createBranch(task, 'b1');
+    const record = db._getSpaceRootDocHandle().doc().branches?.[id]?.b1;
+    expect(Object.keys(record?.versions?.[id] ?? {}).sort()).toEqual(['0.2.0', '0.3.0']);
+
+    await switchBranch(task, 'b1');
+    expect(task.name).toBe('Plan');
+    Obj.update(task, (task) => {
+      task.labels.push('branch');
+    });
+    await db.flush();
+    await db.syncVersions(lenses);
+    expect((await branchData(db, id, 'b1', '0.1.0')).tags).toEqual(['branch']);
+    expect((await mainData(db, id, '0.1.0')).tags).toEqual([]);
+
+    await mergeBranch(task, 'b1');
+    await db.syncVersions(lenses);
+    expect((await mainData(db, id, '0.3.0')).labels).toEqual(['branch']);
+    expect((await mainData(db, id, '0.1.0')).tags).toEqual(['branch']);
+  });
+
+  test('a branch opened before an upgrade gains the new versions and merges back once', async () => {
+    const { db } = await builder.createDatabase({ types });
+    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await createBranch(task, 'b1');
+    await switchBranch(task, 'b1');
+    Obj.update(task, (task) => {
+      task.tags.push('branch');
+    });
+    await db.flush();
+
+    await db.syncVersions(lenses);
+    expect((await branchData(db, task.id, 'b1', '0.3.0')).labels).toEqual(['branch']);
+    expect((await mainData(db, task.id, '0.3.0')).labels).toEqual([]);
+
+    await mergeBranch(task, 'b1');
+    await db.syncVersions(lenses);
+    expect((await mainData(db, task.id, '0.1.0')).tags).toEqual(['branch']);
+    expect((await mainData(db, task.id, '0.3.0')).labels).toEqual(['branch']);
   });
 });

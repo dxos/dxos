@@ -9,8 +9,18 @@ import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 import { Type, VersionLens } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference } from '@dxos/echo-protocol';
 
+import {
+  type ChangeGraph,
+  ancestorsOf,
+  creationChange,
+  frontierOf,
+  isTranslation,
+  parseTranslation,
+  rootChangesOf,
+  translationMessage,
+} from '../../core-db/index.ts';
 import { encodedValuesEqual, isRecord } from '../encoded-value.ts';
-import { type ChangeGraph, ancestorsOf, applyStructuralEdit, frontierOf } from '../fold-edit.ts';
+import { applyStructuralEdit } from '../fold-edit.ts';
 
 //
 // One object stored as one Automerge document per schema version (`.agents/projects/lenses/DESIGN.md` §12).
@@ -48,17 +58,6 @@ const rootOf = (doc: VersionDoc): Root | undefined => {
   return parseRoot(root?.message ?? null);
 };
 
-/** The message a translation of `original` (an edit made in version `source`) is stamped with. */
-const translationMessage = (original: string, source: string): string => `translate: ${original} from ${source}`;
-
-const parseTranslation = (message: string | null): { original: string; source: string } | undefined => {
-  const match = message?.match(/^translate: (\S+) from (\S+)$/);
-  return match ? { original: match[1], source: match[2] } : undefined;
-};
-
-/** Whether a change message marks a translation. */
-export const isTranslation = (message: string | null): boolean => parseTranslation(message) !== undefined;
-
 const PROBE_ACTOR = '00000000000000000000000000000000';
 
 const digest = (seed: string): string => bytesToHex(sha256(utf8ToBytes(seed))).slice(0, 32);
@@ -95,13 +94,6 @@ const objectAt = (doc: VersionDoc, heads: Heads, objectId: string): Data | undef
   const entry: unknown = plain(A.view(doc, heads).objects?.[objectId]);
   return isRecord(entry) ? entry : undefined;
 };
-
-/**
- * The change that created the object in `doc`: the first, in causal order, whose state holds it. Only
- * that change's descendants can hold it, so the first found has no ancestor that does.
- */
-export const creationChange = (doc: VersionDoc, objectId: string): A.ChangeMetadata | undefined =>
-  A.getChangesMetaSince(doc, []).find((change) => objectAt(doc, [change.hash], objectId) !== undefined);
 
 /** The schema version of the object in `doc`, read from its type among the versions `lenses` know. */
 export const versionOfDoc = (
@@ -236,15 +228,6 @@ const movesOf = (doc: VersionDoc, change: A.ChangeMetadata, objectId: string, pa
       .filter((key) => !encodedValuesEqual(previous[key], next[key]))
       .map((key) => ({ at, key, previous: previous[key], next: next[key] }));
   });
-};
-
-/**
- * The changes of `doc` that stand for the object's creation: its root when derived, else its creation
- * change and every change before it.
- */
-const rootChangesOf = (doc: VersionDoc, objectId: string, graph: ChangeGraph): Set<string> => {
-  const creation = creationChange(doc, objectId);
-  return creation ? new Set([creation.hash, ...ancestorsOf(graph, creation.deps)]) : new Set();
 };
 
 /**

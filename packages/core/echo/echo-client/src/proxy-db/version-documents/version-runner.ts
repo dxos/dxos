@@ -258,12 +258,92 @@ const syncObject = async (
     onHandle?.(objectId, handle);
   }
 
-  let objectSettled = settled?.get(objectId);
-  if (settled && !objectSettled) {
-    objectSettled = new Set();
-    settled.set(objectId, objectSettled);
+  translateAll([...held.values()], objectId, typename, lenses, settledFor(settled, objectId));
+  await syncBranches(host, lenses, objectId, typename, origin, { settled, onHandle });
+};
+
+/** The edits already handled for one set of version documents, kept across passes. */
+const settledFor = (settled: VersionSettled | undefined, key: string): Set<string> | undefined => {
+  let set = settled?.get(key);
+  if (settled && !set) {
+    set = new Set();
+    settled.set(key, set);
   }
-  translateAll([...held.values()], objectId, typename, lenses, objectSettled);
+  return set;
+};
+
+/**
+ * Keeps the versions of the object on every user branch holding it as main's are kept: a branch opened
+ * before an upgrade gains the new versions, derived from the object's origin, so they share main's roots
+ * and merge back version by version; edits are translated among the branch's own documents.
+ */
+const syncBranches = async (
+  host: VersionDocumentsHost,
+  lenses: readonly VersionLens.VersionLens[],
+  objectId: string,
+  typename: string,
+  origin: Held | undefined,
+  { settled, onHandle }: Omit<SyncVersionsOptions, 'objectIds'>,
+): Promise<void> => {
+  const root = host._getSpaceRootDocHandle();
+  for (const [rootId, byName] of Object.entries(root.doc().branches ?? {})) {
+    for (const [name, record] of Object.entries(byName)) {
+      const memberUrl = record.members?.[objectId]?.toString();
+      if (DatabaseDirectory.isReservedBranchName(name) || !memberUrl) {
+        continue;
+      }
+      const member = await load(host, memberUrl);
+      const memberVersion = versionOfDoc(member.doc(), objectId, lenses);
+      if (!memberVersion) {
+        continue;
+      }
+      const held = new Map<string, Held>([[memberVersion, { version: memberVersion, handle: member }]]);
+      for (const [version, url] of Object.entries(record.versions?.[objectId] ?? {})) {
+        held.set(version, { version, handle: await load(host, url.toString()) });
+      }
+      for (const version of VersionLens.versionsOf(lenses, typename)) {
+        if (held.has(version) || !origin) {
+          continue;
+        }
+        const derived = deriveVersionDoc({
+          origin: origin.handle.doc(),
+          originVersion: origin.version,
+          version,
+          objectId,
+          typename,
+          lenses,
+        });
+        if (!derived) {
+          continue;
+        }
+        const handle = host._repo.import<DatabaseDirectory>(A.save(derived));
+        await handle.whenReady();
+        const url = handle.url;
+        if (!url) {
+          continue;
+        }
+        root.change((doc: DatabaseDirectory) => {
+          const branch = doc.branches?.[rootId]?.[name];
+          if (branch) {
+            branch.versions ??= {};
+            branch.versions[objectId] ??= {};
+            branch.versions[objectId][version] = new A.RawString(url);
+          }
+        });
+        held.set(version, { version, handle });
+      }
+      for (const { handle } of held.values()) {
+        onHandle?.(objectId, handle);
+      }
+      translateAll(
+        [...held.values()],
+        objectId,
+        typename,
+        lenses,
+        settledFor(settled, `${objectId} ${rootId}/${name}`),
+      );
+    }
+  }
 };
 
 /** Translates between every pair of held versions until a round writes nothing. */

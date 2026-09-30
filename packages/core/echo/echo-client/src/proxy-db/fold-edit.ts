@@ -16,32 +16,6 @@ import { encodedValuesEqual, isRecord } from './encoded-value.ts';
 // inputs, so every peer that folds the same late change writes the same ops.
 //
 
-/** Each change's deps, by change hash. */
-export type ChangeGraph = Map<string, readonly string[]>;
-
-/** `hashes` and every change they depend on. */
-export const ancestorsOf = (graph: ChangeGraph, hashes: Iterable<string>): Set<string> => {
-  const seen = new Set<string>();
-  const stack = [...hashes];
-  for (let hash = stack.pop(); hash !== undefined; hash = stack.pop()) {
-    if (!seen.has(hash)) {
-      seen.add(hash);
-      stack.push(...(graph.get(hash) ?? []));
-    }
-  }
-  return seen;
-};
-
-/** The heads `hashes` span: each one no other of them depends on, sorted so equal sets compare equal. */
-export const frontierOf = (graph: ChangeGraph, hashes: Iterable<string>): Heads => {
-  const unique = [...new Set(hashes)];
-  const covered = ancestorsOf(
-    graph,
-    unique.flatMap((hash) => graph.get(hash) ?? []),
-  );
-  return unique.filter((hash) => !covered.has(hash)).sort();
-};
-
 /** A record that is a map in the document, not an encoded reference. */
 export const isMapValue = (value: unknown): value is Record<string, unknown> =>
   isRecord(value) && !isEncodedReference(value) && !(value instanceof A.RawString) && !(value instanceof Uint8Array);

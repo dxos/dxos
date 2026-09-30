@@ -989,10 +989,16 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // A registry or link change is how a version document another peer created arrives.
     const root = this._getSpaceRootDocHandle();
     const onRootChange = (event: { patches: readonly A.Patch[] }) => {
+      const branches = root.doc().branches ?? {};
       schedule(
         event.patches
           .filter(({ path }) => (path[0] === 'branches' || path[0] === 'links') && typeof path[1] === 'string')
-          .map(({ path }) => String(path[1])),
+          .flatMap(({ path }) => {
+            const id = String(path[1]);
+            // A user branch is keyed by its subtree root; every member of it may have gained a document.
+            const members = Object.values(branches[id] ?? {}).flatMap((record) => Object.keys(record.members ?? {}));
+            return [id, ...members];
+          }),
       );
     };
     root.on('change', onRootChange);

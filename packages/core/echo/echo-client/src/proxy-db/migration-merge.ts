@@ -9,9 +9,10 @@ import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
+import { type ChangeGraph, ancestorsOf, frontierOf } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { encodedValuesEqual, isRecord } from './encoded-value.ts';
-import { type ChangeGraph, ancestorsOf, applyStructuralEdit, frontierOf } from './fold-edit.ts';
+import { applyStructuralEdit } from './fold-edit.ts';
 
 //
 // Peers that migrate one object before receiving each other's migration each write their own lists,

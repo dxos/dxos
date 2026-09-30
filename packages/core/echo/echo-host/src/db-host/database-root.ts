@@ -43,6 +43,14 @@ export class DatabaseRoot implements Disposable {
               record.members[objectId] = mapped;
             }
           }
+          for (const byVersion of Object.values(record.versions ?? {})) {
+            for (const [version, value] of Object.entries(byVersion)) {
+              const mapped = remap(value.toString());
+              if (mapped) {
+                byVersion[version] = mapped;
+              }
+            }
+          }
         }
       }
     });

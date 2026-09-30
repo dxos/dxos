@@ -5,6 +5,7 @@
 export { type BranchStore } from './branching.ts';
 export * from './entity-manager.ts';
 export * from './object-core.ts';
+export * from './version-history.ts';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.
 export {
