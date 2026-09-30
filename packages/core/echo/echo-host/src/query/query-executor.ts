@@ -17,7 +17,14 @@ import {
   QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import {
+  ATTR_KIND,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+  EntityKind,
+} from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import {
   type EntityMeta,
@@ -1185,6 +1192,13 @@ export class QueryExecutor extends Resource {
         throw new Error(`Unknown selector type: ${(step.selector as any)._tag}`);
     }
 
+    // Events live in their owner's feed (queue id = owner id), which feed-including selections would
+    // otherwise sweep up; they are reached only through an event traversal.
+    if (workingSet.some(isEventItem)) {
+      workingSet = workingSet.filter((item) => !isEventItem(item));
+      trace.objectCount = workingSet.length;
+    }
+
     // Apply limit if specified on the select step.
     if (step.limit !== undefined && workingSet.length > step.limit) {
       workingSet = workingSet.slice(0, step.limit);
@@ -1519,7 +1533,10 @@ export class QueryExecutor extends Resource {
           }
           case 'incoming': {
             const beginIndexQuery = performance.now();
-            const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
+            // An event may hold a ref, but it is reached only through an event traversal.
+            const metas = (await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property)).filter(
+              (meta) => meta.entityKind !== EntityKind.Event,
+            );
             trace.indexHits += metas.length;
             trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -1540,10 +1557,11 @@ export class QueryExecutor extends Resource {
         switch (step.traversal.direction) {
           case 'relation-to-source':
           case 'relation-to-target': {
+            const direction = step.traversal.direction;
             const refs = workingSet
               .map((item) => {
                 const dxn =
-                  step.traversal.direction === 'relation-to-source'
+                  direction === 'relation-to-source'
                     ? QueryItem.getRelationSource(item)
                     : QueryItem.getRelationTarget(item);
                 if (!dxn) {
@@ -1658,6 +1676,36 @@ export class QueryExecutor extends Resource {
             break;
           }
         }
+        break;
+      }
+      case 'EventTraversal': {
+        // An object's events are the rows of its event feed, whose queue id is the object's id.
+        const bySpace = new Map<SpaceId, EntityId[]>();
+        for (const item of workingSet) {
+          const existing = bySpace.get(item.spaceId);
+          if (existing) {
+            existing.push(item.objectId);
+          } else {
+            bySpace.set(item.spaceId, [item.objectId]);
+          }
+        }
+
+        const beginIndexQuery = performance.now();
+        const allMetas: EntityMeta[] = [];
+        for (const [spaceId, ownerIds] of bySpace) {
+          const events = await this._runInRuntime(this._indexEngine.queryEvents({ spaceId: [spaceId], ownerIds }));
+          allMetas.push(...events);
+        }
+        trace.indexHits += allMetas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterSqlQuery(allMetas);
+        trace.documentsLoaded += results.filter(isNonNullable).length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        newWorkingSet.push(...results.filter(isNonNullable));
+        trace.objectCount = newWorkingSet.length;
         break;
       }
       default:
@@ -2537,6 +2585,10 @@ const _inQueryCacheKey = (node: QueryAST.FilterInQuery): string => `${JSON.strin
  * document to derive it from. A collapsed group stands for its members, so it ships no object
  * fields and its id is the serialized group key.
  */
+/** Whether a working-set item is an event (see `Obj.appendEvents`). */
+const isEventItem = (item: QueryItem): boolean =>
+  item.meta?.entityKind === EntityKind.Event || item.data?.[ATTR_KIND] === EntityKind.Event;
+
 const compiledRowToItem = (row: CompiledRow): QueryItem => {
   const result: QueryService.QueryResult =
     row.aggregates !== null && row.groupKey !== null

@@ -6,9 +6,10 @@ import * as EffectContext from 'effect/Context';
 
 import { Event, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
+import { Error as EchoError, Event as EchoEvent, Entity, type Feed, Obj, type Ref } from '@dxos/echo';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import {
+  EventOwnerId,
   ObjectDatabaseId,
   type ObjectJSON,
   ParentId,
@@ -140,6 +141,11 @@ export class FeedHandle {
     private readonly _echoUri: EID.EID,
     private readonly _database: DatabaseImpl,
     private readonly _namespace: string = 'data',
+    /**
+     * An object's event feed (keyed by the object's id) rather than a `Feed.Feed`'s item feed: it
+     * holds only events, marks them with their owner instead of a parent, and never re-appends an id.
+     */
+    readonly events: boolean = false,
   ) {
     this._spaceId = EID.getSpaceId(_echoUri) ?? failedInvariant('Missing spaceId in EID');
     this._feedId = EID.getEntityId(_echoUri) ?? failedInvariant('Missing feedId in EID');
@@ -254,12 +260,30 @@ export class FeedHandle {
       }
     }
     items.forEach((item) => assertObjectModel(item));
+    for (const item of items) {
+      if (EchoEvent.isEvent(item) !== this.events) {
+        throw new EchoError.EventNotSupportedError(
+          this.events ? 'appending a non-event to an event feed' : 'appending an event to a feed; use Obj.appendEvents',
+        );
+      }
+      // Events are immutable, so a second append of an id would read as an update the model forbids.
+      if (
+        EchoEvent.isEvent(item) &&
+        (EchoEvent.getObjectURI(item) !== undefined ||
+          this.#cores.get(EntityId.make(item.id)) !== undefined ||
+          this.#objects.has(item.id))
+      ) {
+        throw new EchoError.EventNotSupportedError('appending an event that is already in the feed');
+      }
+    }
 
     return items.map((item) => {
       setRefResolverOnData(item, this._refResolver);
       defineHiddenProperty(item, SelfURIId, EID.make({ spaceId: this._spaceId, entityId: item.id }));
       defineHiddenProperty(item, ObjectDatabaseId, this._database);
-      if (this._parentEntity) {
+      if (this.events) {
+        defineHiddenProperty(item, EventOwnerId, this._echoUri);
+      } else if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
 
@@ -581,6 +605,9 @@ export class FeedHandle {
         database: this._database,
         parent: this._parentEntity,
       });
+      if (this.events) {
+        defineHiddenProperty(snapshot, EventOwnerId, this._echoUri);
+      }
       // Rewrap the decoded snapshot as a live reactive proxy so `Obj.update` mutates and notifies.
       const decoded = makeDecodedEntityLive(snapshot);
       invariant(Entity.isEntity(decoded), 'objectFromJSON produced an invalid entity');

@@ -122,6 +122,8 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return query.direction === 'to-parent'
         ? `${prettyQuery(query.anchor)}.parent()`
         : `${prettyQuery(query.anchor)}.children()`;
+    case 'event-traversal':
+      return `${prettyQuery(query.anchor)}.events()`;
     case 'union':
       return `Query.all(${query.queries.map(prettyQuery).join(', ')})`;
     case 'set-difference':

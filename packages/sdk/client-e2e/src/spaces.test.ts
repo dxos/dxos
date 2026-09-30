@@ -4,6 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
@@ -22,7 +23,7 @@ import {
   waitForSpace,
 } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
-import { Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Event as EchoEvent, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
@@ -37,6 +38,10 @@ import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { range } from '@dxos/util';
+
+class Viewed extends Type.makeEvent<Viewed>(DXN.make('com.example.type.viewed', '0.1.0'))(
+  Schema.Struct({ by: Schema.String }),
+) {}
 
 describe('Spaces', () => {
   test('no default space after identity creation', async () => {
@@ -852,6 +857,24 @@ describe('Spaces', () => {
     expect(messages.map((m: any) => m.name).sort()).toEqual(['msg-1', 'msg-2']);
   });
 
+  test('import space archive (JSON) with object events', { timeout: 5_000, retry: 1 }, async () => {
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
+
+    const space = await client1.spaces.create();
+    const doc = space.db.add(createDocument());
+    Obj.appendEvents(doc, [EchoEvent.make(Viewed, { by: 'alice' }), EchoEvent.make(Viewed, { by: 'bob' })]);
+    await space.db.flush();
+
+    // Events live in the feed-store under the object's id, so the archive carries them as a feed.
+    const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
+    const importedSpace = await client2.spaces.import(archive);
+
+    const importedDoc = await importedSpace.db.query(Filter.id(doc.id)).first();
+    const events = await importedSpace.db.query(Query.events(importedDoc, Viewed)).run();
+    expect(events.map((event) => event.by)).toEqual(['alice', 'bob']);
+  });
+
   test('import archive applies tags to the new space', { timeout: 5_000, retry: 1 }, async () => {
     const [client1, client2] = await createInitializedClients(2, { storage: true });
     [client1, client2].forEach(registerTypes);
@@ -1040,7 +1063,7 @@ describe('Spaces', () => {
   };
 
   const registerTypes = async (client: Client) => {
-    await client.addTypes([TestSchema$.Expando, TestSchema.DocumentType, TestSchema.TextV0Type, Feed.Feed]);
+    await client.addTypes([TestSchema$.Expando, TestSchema.DocumentType, TestSchema.TextV0Type, Feed.Feed, Viewed]);
   };
 
   const createDocument = (): TestSchema.DocumentType => {

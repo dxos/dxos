@@ -103,8 +103,8 @@ export const createObject: {
   // RelationSourceId-in-props check covers the legacy path where the schema
   // annotation isn't authoritative.
   const kind =
-    annotation.kind === EntityKind.Type
-      ? EntityKind.Type
+    annotation.kind === EntityKind.Type || annotation.kind === EntityKind.Event
+      ? annotation.kind
       : annotation.kind === EntityKind.Relation || RelationSourceId in props
         ? EntityKind.Relation
         : EntityKind.Object;

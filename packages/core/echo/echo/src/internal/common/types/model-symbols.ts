@@ -57,6 +57,28 @@ export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
 export const ObjectBranchId = Symbol.for('@dxos/echo/Branch');
 
 /**
+ * Property name for the entity kind when an event is serialized to JSON.
+ * Relations are recognised by their endpoints and objects are the default, so only events carry it.
+ */
+export const ATTR_KIND = '@kind';
+
+/**
+ * Property name for an event's creation time (unix ms) when it is serialized to JSON.
+ */
+export const ATTR_TIMESTAMP = '@timestamp';
+
+/**
+ * Hidden property on an event holding its creation time (unix ms), stamped once by `Event.make`.
+ */
+export const EventTimestampId: unique symbol = Symbol.for('@dxos/echo/EventTimestamp');
+
+/**
+ * Hidden property on an event holding the URI of the object whose feed it belongs to.
+ * Not a parent: the owner neither cascades deletion to the event nor lists it among its children.
+ */
+export const EventOwnerId: unique symbol = Symbol.for('@dxos/echo/EventOwner');
+
+/**
  * Property name for relation source when object is serialized to JSON.
  */
 export const ATTR_RELATION_SOURCE = '@relationSource';

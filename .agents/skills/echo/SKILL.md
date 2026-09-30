@@ -193,6 +193,28 @@ parent; call `Obj.setParent(child, undefined)` for that.
 Reverse edges (child holds the ref) and ref-in-annotation edges (e.g. `Chat.CompanionChatAnnotation`)
 still need `Obj.setParent`.
 
+## Object events — `Type.makeEvent` / `Obj.appendEvents`
+
+Every object (not a relation, not a `Feed.Feed`) has an append-only feed of immutable **events**,
+stored in the feed-store under the object's id. Use it for history that is appended and never edited
+(views, audit entries, notifications) instead of a `Feed.Feed` plus a ref field.
+
+```ts
+class Viewed extends Type.makeEvent<Viewed>(DXN.make('com.example.type.viewed', '0.1.0'))(
+  Schema.Struct({ by: Schema.String, subject: Ref.Ref(Person).pipe(Schema.optional) }),
+) {}
+
+Obj.appendEvents(doc, [Event.make(Viewed, { by: 'alice' })]); // sync; db.flush() confirms
+const views = await db.query(Query.events(doc, Viewed)).run();
+const allViews = await db.query(Query.type(Document).events(Viewed)).run(); // traversal
+```
+
+Events have an id, a type and `Event.getTimestamp`, and may hold refs; they cannot be updated, have
+no parent, cannot be referenced or be relation endpoints, and never appear in ordinary queries,
+`children()` or `referencedBy`. `db.add(event)` and `db.appendToFeed(feed, [event])` throw. Import
+`Event` from `@dxos/echo` alongside `@dxos/async`'s `Event` by aliasing one (`Event as AsyncEvent`).
+Design: `.agents/projects/echo-events/DESIGN.md`.
+
 ## Related docs in-repo
 
 - Effect runtime patterns: [.cursor/skills/effect/SKILL.md](../effect/SKILL.md).
