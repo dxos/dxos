@@ -127,7 +127,8 @@ export const versionOfDoc = (
 /** Whether `doc` was derived from another version document rather than created by an app. */
 export const isDerived = (doc: VersionDoc): boolean => rootOf(doc) !== undefined;
 
-const typeOfVersion = (
+/** The declared type of `version` of `typename` among `lenses`. */
+export const typeOfVersion = (
   lenses: readonly VersionLens.VersionLens[],
   typename: string,
   version: string,

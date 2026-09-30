@@ -3,7 +3,6 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -47,12 +46,16 @@ const lenses = [
 const versionUrl = (db: TestDatabase, objectId: string, version: string): string | undefined =>
   DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), objectId)[version];
 
+type DocumentUrl = Extract<Parameters<TestDatabase['_repo']['find']>[0], string>;
+
+const isDocumentUrl = (url: string): url is DocumentUrl => url.startsWith('automerge:');
+
 const versionDoc = async (db: TestDatabase, objectId: string, version: string) => {
   const url = versionUrl(db, objectId, version);
-  if (!url) {
+  if (!url || !isDocumentUrl(url)) {
     throw new Error(`no document for ${version}`);
   }
-  const handle = db._repo.find<DatabaseDirectory>(url as DocumentId);
+  const handle = db._repo.find<DatabaseDirectory>(url);
   await handle.whenReady();
   return handle;
 };
@@ -124,11 +127,49 @@ describe('version documents across peers', () => {
     });
 
     // Both edits reached the legacy version too, on both peers, once each.
-    await waitForCondition({
-      condition: () => [...task.tags].sort().join() === 'one,two',
-      timeout: 5_000,
+    for (const db of [db1, db2]) {
+      const v1 = await versionDoc(db, task.id, '0.1.0');
+      await waitForCondition({
+        condition: () => JSON.stringify(v1.doc().objects?.[task.id]?.data?.tags ?? []).includes('two'),
+        timeout: 5_000,
+      });
+      expect(JSON.parse(JSON.stringify(v1.doc().objects?.[task.id]?.data?.tags)).sort()).toEqual(['one', 'two']);
+    }
+  });
+
+  test('an old peer reads the version it knows and its edits reach a new peer', async () => {
+    const pair = await createPartitionedPair(builder, [TaskV1, TaskV2, TaskV3]);
+    network = pair.network;
+    const { peer1, peer2, syncAll } = pair;
+    const spaceKey = PublicKey.random();
+    // `fresh` runs the lenses; `old` never does, as an app released before version documents.
+    const fresh = await peer1.createDatabase(spaceKey);
+    const created = fresh.add(Obj.make(TaskV3, { name: 'Fresh', labels: ['new'], done: true }));
+    await fresh.flush();
+    await fresh.syncVersions(lenses);
+    await fresh.flush();
+    const old = await peer2.openDatabase(spaceKey, fresh.rootUrl!);
+    await syncAll(fresh, old);
+
+    const [seen] = await old.query(Filter.type(TaskV1)).run();
+    expect(seen.id).toBe(created.id);
+    expect(seen.title).toBe('Fresh');
+    expect([...seen.tags]).toEqual(['new']);
+    expect(await old.query(Filter.type(TaskV3)).run()).toHaveLength(0);
+
+    Obj.update(seen, (seen) => {
+      seen.tags.push('old');
     });
-    const [task2] = await db2.query(Filter.type(TaskV1)).run();
-    expect([...task2.tags].sort()).toEqual(['one', 'two']);
+    await old.flush();
+    await waitForCondition({
+      condition: async () => {
+        await fresh.syncVersions(lenses);
+        return [...created.labels].sort().join() === 'new,old';
+      },
+      interval: 200,
+      timeout: 10_000,
+    });
+    // `done` exists only in v3 and survives the old peer's edit.
+    expect(created.done).toBe(true);
   });
 });

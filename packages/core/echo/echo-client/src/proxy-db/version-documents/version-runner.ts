@@ -3,15 +3,22 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
+import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 
-import { VersionLens } from '@dxos/echo';
+import { Type, VersionLens } from '@dxos/echo';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
 import { type DocHandleProxy, type RepoProxy } from '../../automerge/index.ts';
 import { isRecord } from '../encoded-value.ts';
-import { type VersionDoc, deriveVersionDoc, isDerived, translate, versionOfDoc } from './version-translation.ts';
+import {
+  type VersionDoc,
+  deriveVersionDoc,
+  isDerived,
+  translate,
+  typeOfVersion,
+  versionOfDoc,
+} from './version-translation.ts';
 
 //
 // Keeps every version document of each versioned object present and in sync (DESIGN.md §12.5):
@@ -105,18 +112,37 @@ const recordedVersions = (root: DatabaseDirectory, objectId: string): Set<string
 };
 
 const load = async (host: VersionDocumentsHost, url: string): Promise<DocHandleProxy<DatabaseDirectory>> => {
-  const handle = host._repo.find<DatabaseDirectory>(url as DocumentId);
+  if (!isValidAutomergeUrl(url)) {
+    throw new TypeError(`not a document url: ${url}`);
+  }
+  const handle = host._repo.find<DatabaseDirectory>(url);
   await handle.whenReady();
   return handle;
 };
 
-const register = (host: VersionDocumentsHost, objectId: string, version: string, url: string): void => {
+/** Merges every duplicate document into `winner`: both share the same root, so the result is their union. */
+const mergeLosers = async (
+  host: VersionDocumentsHost,
+  winner: DocHandleProxy<DatabaseDirectory>,
+  losers: readonly string[],
+  accept: (doc: VersionDoc) => boolean = () => true,
+): Promise<void> => {
+  for (const url of losers) {
+    const loser = await load(host, url);
+    if (accept(loser.doc()) && !A.hasHeads(winner.doc(), A.getHeads(loser.doc()))) {
+      winner.update((doc) => A.merge(doc, loser.doc()));
+    }
+  }
+};
+
+const register = (host: VersionDocumentsHost, objectId: string, version: string, url: string, type: string): void => {
   host._getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
     // Assign through re-read proxies: a chained `??=` result is a detached literal under Automerge.
     doc.branches ??= {};
     doc.branches[objectId] ??= {};
     doc.branches[objectId][DatabaseDirectory.versionBranchName(version)] = {
       members: { [objectId]: new A.RawString(url) },
+      type,
     };
   });
 };
@@ -147,7 +173,9 @@ const syncObject = async (
   { settled, onHandle }: Omit<SyncVersionsOptions, 'objectIds'>,
 ): Promise<void> => {
   const root = host._getSpaceRootDocHandle();
-  const legacyUrl = root.doc().links?.[objectId]?.toString();
+  const [legacyUrl, ...legacyLosers] = [
+    ...new Set(alternativesAlong(root.doc(), ['links', objectId]).map((url) => String(url))),
+  ];
   if (!legacyUrl) {
     // Inline objects share the space root and have no document of their own to version.
     return;
@@ -160,37 +188,39 @@ const syncObject = async (
   if (!legacyVersion || !typename) {
     return;
   }
+  const typeOf = (version: string): string | undefined => {
+    const type = typeOfVersion(lenses, typename, version);
+    return type && Type.getURI(type);
+  };
+  await mergeLosers(host, legacy, legacyLosers, (doc) => versionOfDoc(doc, objectId, lenses) === legacyVersion);
   const held = new Map<string, Held>([[legacyVersion, { version: legacyVersion, handle: legacy }]]);
+  // The registry lists every version, the linked one included, so a reader can pick among them unloaded.
+  const legacyType = typeOf(legacyVersion);
+  if (legacyType && DatabaseDirectory.getVersionDocUrls(root.doc(), objectId)[legacyVersion] !== legacyUrl) {
+    register(host, objectId, legacyVersion, legacyUrl, legacyType);
+  }
 
   // Recorded versions: load the winner and fold every losing duplicate into it.
   for (const version of recordedVersions(root.doc(), objectId)) {
     const [winnerUrl, ...losers] = candidatesOf(root.doc(), objectId, DatabaseDirectory.versionBranchName(version));
-    if (!winnerUrl) {
+    if (!winnerUrl || version === legacyVersion) {
       continue;
     }
     const winner = await load(host, winnerUrl);
-    for (const loserUrl of losers) {
-      const loser = await load(host, loserUrl);
-      if (!A.hasHeads(winner.doc(), A.getHeads(loser.doc()))) {
-        winner.update((doc) => A.merge(doc, loser.doc()));
-      }
-    }
+    await mergeLosers(host, winner, losers);
     held.set(version, { version, handle: winner });
-  }
-
-  // Versions recorded only inside a hidden parent map lose their entry; record them again.
-  for (const version of recordedVersions(root.doc(), objectId)) {
-    const visible = DatabaseDirectory.getVersionDocUrls(root.doc(), objectId)[version];
-    const candidate = candidatesOf(root.doc(), objectId, DatabaseDirectory.versionBranchName(version))[0];
-    if (!visible && candidate) {
-      register(host, objectId, version, candidate);
+    // A version recorded only inside a map a concurrent write hid has no visible entry; record it again.
+    const type = typeOf(version);
+    if (!DatabaseDirectory.getVersionDocUrls(root.doc(), objectId)[version] && type) {
+      register(host, objectId, version, winnerUrl, type);
     }
   }
 
   // Missing versions are derived from the origin: the document the app created the object in.
   const origin = [...held.values()].find(({ handle }) => !isDerived(handle.doc()));
   for (const version of VersionLens.versionsOf(lenses, typename)) {
-    if (held.has(version) || !origin) {
+    const type = typeOf(version);
+    if (held.has(version) || !origin || !type) {
       continue;
     }
     const derived = deriveVersionDoc({
@@ -209,8 +239,19 @@ const syncObject = async (
     if (!handle.url) {
       continue;
     }
-    register(host, objectId, version, handle.url);
+    register(host, objectId, version, handle.url, type);
     held.set(version, { version, handle });
+  }
+
+  // Released apps follow only `links`, so it names the oldest version, including for an object an app
+  // created at a newer one.
+  const [oldest] = VersionLens.versionsOf(lenses, typename);
+  const oldestUrl = held.get(oldest)?.handle.url;
+  if (oldest !== legacyVersion && oldestUrl) {
+    root.change((doc: DatabaseDirectory) => {
+      doc.links ??= {};
+      doc.links[objectId] = new A.RawString(oldestUrl);
+    });
   }
 
   for (const { handle } of held.values()) {

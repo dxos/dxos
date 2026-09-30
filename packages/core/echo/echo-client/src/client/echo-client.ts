@@ -274,6 +274,10 @@ export class EchoClient extends Resource {
     }
 
     const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
+    if (documentId && objectDocId !== documentId && db._entityManager.isVersionDocumentOf(objectId, documentId)) {
+      // Another version of an object this client reads at its routed version; that document's hit stands for it.
+      return undefined;
+    }
     if (objectDocId !== documentId) {
       // Dropping the hit makes the result short, which reads to a caller as "no such object".
       log.warn('index hit dropped: the space root does not route the object to the indexed document', {

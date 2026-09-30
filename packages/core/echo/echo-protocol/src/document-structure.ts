@@ -102,6 +102,11 @@ export type BranchRecord = {
   baseHeads?: string[];
   /** Unix ms timestamp at branch creation. */
   createdAt?: number;
+  /**
+   * For a version branch (`@v<version>`), the URI of the schema version its document holds, so a reader
+   * can route the object to a version it knows without loading the document.
+   */
+  type?: string;
 };
 
 const RESERVED_BRANCH_PREFIX = '@';
@@ -192,6 +197,19 @@ export const DatabaseDirectory = Object.freeze({
    * @returns The object's version documents recorded in the registry, by schema version. The document
    * `links` points at is not among them.
    */
+  /**
+   * @returns The object's version documents recorded in the registry, by schema version, with the type
+   * URI each holds.
+   */
+  getVersionDocs: (doc: DatabaseDirectory, objectId: string): { version: string; url: string; type?: string }[] =>
+    Object.entries(doc.branches?.[objectId] ?? {}).flatMap(([name, record]) => {
+      const version = parseVersionBranch(name);
+      const url = record.members?.[objectId];
+      return version !== undefined && url != null
+        ? [{ version, url: url.toString(), ...(record.type != null ? { type: String(record.type) } : {}) }]
+        : [];
+    }),
+
   getVersionDocUrls: (doc: DatabaseDirectory, objectId: string): Record<string, string> => {
     const urls: Record<string, string> = {};
     for (const [name, record] of Object.entries(doc.branches?.[objectId] ?? {})) {

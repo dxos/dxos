@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -21,7 +21,7 @@ import {
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
-import { type Database, type Entity } from '@dxos/echo';
+import { type Database, type Entity, VersionLens } from '@dxos/echo';
 import { type BranchRecord, DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
@@ -125,6 +125,9 @@ export class EntityManager implements IDatabaseBinding {
    * Hydrated from {@link _branchStore} on open (if provided) and persisted on switch.
    */
   private readonly _currentBranches = new Map<string, string>();
+
+  /** Type URIs of the schema versions this client reads; each object routes to its newest one of them. */
+  #knownVersionTypes: ReadonlySet<string> = new Set();
 
   /** Optional device-local persistence for {@link _currentBranches} (survives reload, never syncs). */
   private readonly _branchStore?: BranchStore;
@@ -1533,9 +1536,13 @@ export class EntityManager implements IDatabaseBinding {
       added.forEach((objectId) => this.#linkedObjectIds.add(objectId));
       this._linksAddedEvent.emit(added);
     }
-    const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
-      this._objectsPendingDocumentLoad.has(objectId),
-    );
+    const spaceRootDoc = this._spaceRootDocHandle?.doc();
+    const linksAwaitingLoad = Object.entries(links)
+      .filter(([objectId]) => this._objectsPendingDocumentLoad.has(objectId))
+      .map(([objectId, url]): [string, string] => [
+        objectId,
+        (spaceRootDoc && this.#routedUrl(spaceRootDoc, objectId)) ?? url.toString(),
+      ]);
     if (linksAwaitingLoad.length > 0) {
       const groups = new Map<boolean, typeof linksAwaitingLoad>();
       for (const entry of linksAwaitingLoad) {
@@ -1653,7 +1660,85 @@ export class EntityManager implements IDatabaseBinding {
   private _getLinkedDocumentUrl(objectId: string): AutomergeUrl | undefined {
     const spaceRootDoc = this._spaceRootDocHandle?.doc();
     invariant(spaceRootDoc);
-    return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
+    return this.#routedUrl(spaceRootDoc, objectId);
+  }
+
+  /**
+   * The document an object is read from: of its version documents, the newest this client knows, else
+   * the document `links` names, which is the one released apps read.
+   */
+  #routedUrl(spaceRootDoc: DatabaseDirectory, objectId: string): AutomergeUrl | undefined {
+    const link = spaceRootDoc.links?.[objectId]?.toString();
+    const [newest] =
+      link === undefined || this.#knownVersionTypes.size === 0
+        ? []
+        : DatabaseDirectory.getVersionDocs(spaceRootDoc, objectId)
+            .filter(({ type }) => type !== undefined && this.#knownVersionTypes.has(type))
+            .sort((left, right) => VersionLens.compareVersions(right.version, left.version));
+    const url = newest?.url ?? link;
+    return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
+  }
+
+  /**
+   * Sets the schema versions this client reads, by type URI, and moves every loaded object to the
+   * newest of its version documents among them.
+   */
+  setKnownVersionTypes(types: Iterable<string>): void {
+    const next = new Set(types);
+    if (next.size === this.#knownVersionTypes.size && [...next].every((type) => this.#knownVersionTypes.has(type))) {
+      return;
+    }
+    this.#knownVersionTypes = next;
+    this.#rerouteObjects([...this._objects.keys()]);
+  }
+
+  /** Moves each loaded object whose routed document changed onto it, one at a time, in order. */
+  #rerouteObjects(objectIds: readonly string[]): void {
+    this.#rerouteChain = this.#rerouteChain
+      .then(async () => {
+        for (const objectId of objectIds) {
+          await this.#rerouteObject(objectId);
+        }
+      })
+      .catch((err) => log.catch(err));
+  }
+
+  #rerouteChain: Promise<void> = Promise.resolve();
+
+  async #rerouteObject(objectId: string): Promise<void> {
+    const core = this._objects.get(objectId);
+    const spaceRoot = this._spaceRootDocHandle;
+    if (!core || !spaceRoot || !core.docHandle || core.docHandle === spaceRoot || this._currentBranches.has(objectId)) {
+      return;
+    }
+    const url = this.#routedUrl(spaceRoot.doc(), objectId);
+    if (!url || url === core.docHandle.url) {
+      return;
+    }
+    const handle = this._repoProxy.find<DatabaseDirectory>(url);
+    await handle.whenReady();
+    if (this._objects.get(objectId) !== core || this.#routedUrl(spaceRoot.doc(), objectId) !== url) {
+      return;
+    }
+    // Only the bound document may carry the update listener: `_processDocumentUpdate` rebinds an object
+    // to whichever document fires a change holding it, and every version document holds it.
+    core.docHandle.off('change', this._onDocumentUpdate);
+    handle.off('change', this._onDocumentUpdate);
+    handle.on('change', this._onDocumentUpdate);
+    core.bind({ db: this, docHandle: handle, path: ['objects', objectId], assignFromLocalState: false });
+    this._onObjectBoundToDocument(handle, objectId);
+    this._emitObjectUpdateEvent([objectId]);
+    this._scheduleThrottledDbUpdate([objectId]);
+  }
+
+  /** Whether `documentId` is one of the documents holding a version of the object. */
+  isVersionDocumentOf(objectId: string, documentId: string): boolean {
+    const spaceRootDoc = this.getSpaceRootDocHandle().doc();
+    const urls = [
+      spaceRootDoc.links?.[objectId]?.toString(),
+      ...DatabaseDirectory.getVersionDocs(spaceRootDoc, objectId).map(({ url }) => url),
+    ];
+    return urls.some((url) => url !== undefined && isValidAutomergeUrl(url) && toDocumentId(url) === documentId);
   }
 
   private _loadLinkedObjects(links: SpaceDocumentLinks, opts: LoadObjectDocumentOptions = {}): void {
@@ -1849,7 +1934,12 @@ export class EntityManager implements IDatabaseBinding {
 
     const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
-    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
+    const linkedObjectIds = new Map(
+      Object.keys(spaceRootDoc.links ?? {}).flatMap((objectId) => {
+        const url = this.#routedUrl(spaceRootDoc, objectId);
+        return url === undefined ? [] : [[objectId, url] as const];
+      }),
+    );
 
     const objectsToRebind = new Map<string, { handle: DocHandleProxy<DatabaseDirectory>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootUrl, { handle: spaceRootDocHandle, objectIds: [] });
@@ -1875,7 +1965,7 @@ export class EntityManager implements IDatabaseBinding {
         }
         let newDocHandle: DocHandleProxy<DatabaseDirectory>;
         try {
-          newDocHandle = this._repoProxy.find<DatabaseDirectory>(newObjectDocUrl as DocumentId);
+          newDocHandle = this._repoProxy.find<DatabaseDirectory>(newObjectDocUrl);
         } catch (err) {
           if (!RepoClosedError.is(err)) {
             throw err;
@@ -1941,6 +2031,16 @@ export class EntityManager implements IDatabaseBinding {
 
   private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
     this._evictRemovedObjects(event);
+    if (event.handle === this._spaceRootDocHandle && this.#knownVersionTypes.size > 0) {
+      const rerouted = new Set(
+        event.patches
+          .filter(({ path }) => (path[0] === 'branches' || path[0] === 'links') && typeof path[1] === 'string')
+          .map(({ path }) => String(path[1])),
+      );
+      if (rerouted.size > 0) {
+        this.#rerouteObjects([...rerouted]);
+      }
+    }
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);

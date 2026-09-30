@@ -324,6 +324,11 @@ const combineSyncState = (
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta>; [key: string]: unknown };
 
+/** Every declared type the lenses connect, once each. */
+const versionTypesOf = (lenses: readonly VersionLens.VersionLens[]): Type.AnyObj[] => [
+  ...new Map(lenses.flatMap((lens) => [lens.from, lens.to]).map((type) => [Type.getURI(type), type])).values(),
+];
+
 /** Idle time after the last update before a watched fold-forward pass, so a burst folds once. */
 const FOLD_FORWARD_DEBOUNCE_MS = 2_000;
 
@@ -856,6 +861,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async syncVersions(lenses: readonly VersionLens.VersionLens[], options?: SyncVersionsOptions): Promise<void> {
+    this._entityManager.setKnownVersionTypes(versionTypesOf(lenses).map((type) => Type.getURI(type)));
     await this.#migrationLock.executeSynchronized(async () => {
       const objectIds = options?.objectIds ?? (await this.#versionedObjectIds(lenses));
       await syncVersionDocuments(this, lenses, objectIds, { settled: this.#versionSettled, ...options });
@@ -891,6 +897,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       clearTimeout(timer);
       timer = setTimeout(pass, options?.debounceMs ?? FOLD_FORWARD_DEBOUNCE_MS);
     };
+    this._entityManager.setKnownVersionTypes(versionTypesOf(getLenses()).map((type) => Type.getURI(type)));
     const unsubscribe = this._entityManager._updateEvent.on((event) => {
       schedule(event.itemsUpdated.map(({ id }) => id));
     });
@@ -918,9 +925,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** Ids of every object of a type the lenses cover. */
   async #versionedObjectIds(lenses: readonly VersionLens.VersionLens[]): Promise<string[]> {
-    const types = [
-      ...new Map(lenses.flatMap((lens) => [lens.from, lens.to]).map((type) => [Type.getURI(type), type])).values(),
-    ];
+    const types = versionTypesOf(lenses);
     if (types.length === 0) {
       return [];
     }
