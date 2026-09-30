@@ -9,6 +9,7 @@ import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
@@ -29,6 +30,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ReviewPlugin.make(),
   TasksPlugin.make(),
   ThreadPlugin.make(),
+  TldrawPlugin.make(),
   TranscriptionPlugin.make(),
 ];
 
