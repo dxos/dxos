@@ -53,6 +53,7 @@ import { Devtools } from '#types';
 
 import {
   EdgeCardSurface,
+  IndexerCardSurface,
   SurfaceProfilerCardSurface,
   SwarmTraceCardSurface,
   SyncCardSurface,
@@ -202,9 +203,15 @@ export default Capability.makeModule(
         component: SyncCardSurface,
       }),
       Surface.create({
-        id: 'card.timeSeries',
+        id: 'card.indexer',
         filter: devtoolsCard,
         position: 12,
+        component: IndexerCardSurface,
+      }),
+      Surface.create({
+        id: 'card.timeSeries',
+        filter: devtoolsCard,
+        position: 13,
         component: TimeSeriesCard,
       }),
 
