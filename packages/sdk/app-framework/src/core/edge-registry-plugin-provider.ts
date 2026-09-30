@@ -59,34 +59,44 @@ export type EdgeRegistryPluginProviderOptions = {
   catalog?: 'public' | 'private';
 };
 
+/** The slice of {@link EdgeHttpClient} the provider calls. */
+export type RegistryHttpClient = Pick<EdgeHttpClient, 'getRegistryPlugins' | 'getPrivateRegistryPlugins'>;
+
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
   #cachedPlugins: readonly Plugin.Meta[] = [];
   #cachedEntries: readonly PluginView[] = [];
   readonly #catalog: 'public' | 'private';
+  /** Bumped per {@link listPlugins}, so a slower earlier response cannot overwrite the cache a later one wrote. */
+  #request = 0;
 
   constructor(
-    private readonly _client: EdgeHttpClient,
+    private readonly _client: RegistryHttpClient,
     { catalog = 'public' }: EdgeRegistryPluginProviderOptions = {},
   ) {
     this.#catalog = catalog;
   }
 
   listPlugins(): Effect.Effect<readonly Plugin.Meta[], RegistryError> {
-    return Effect.tryPromise({
-      try: () =>
-        this.#catalog === 'private'
-          ? this._client.getPrivateRegistryPlugins(Context.default())
-          : this._client.getRegistryPlugins(Context.default()),
-      catch: RegistryError.wrap(),
-    }).pipe(
-      Effect.map((body) => {
-        this.#cachedEntries = body.plugins;
-        const plugins = body.plugins.map(toRegistryPlugin).filter((entry): entry is Plugin.Meta => entry !== null);
-        this.#cachedPlugins = plugins;
-        return plugins;
-      }),
-    );
+    return Effect.suspend(() => {
+      const request = ++this.#request;
+      return Effect.tryPromise({
+        try: () =>
+          this.#catalog === 'private'
+            ? this._client.getPrivateRegistryPlugins(Context.default())
+            : this._client.getRegistryPlugins(Context.default()),
+        catch: RegistryError.wrap(),
+      }).pipe(
+        Effect.map((body) => {
+          const plugins = body.plugins.map(toRegistryPlugin).filter((entry): entry is Plugin.Meta => entry !== null);
+          if (request === this.#request) {
+            this.#cachedEntries = body.plugins;
+            this.#cachedPlugins = plugins;
+          }
+          return plugins;
+        }),
+      );
+    });
   }
 
   listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error> {

@@ -18,6 +18,7 @@ import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawne
 
 import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin';
 import { type Client, ClientService } from '@dxos/client';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
@@ -33,6 +34,16 @@ const ManifestSchema = Schema.Struct({
   dependencies: Schema.optional(Schema.Record(Schema.String, Schema.String)),
 });
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
+
+/** The profile's own client unless `baseUrl` overrides its EDGE, which then needs the identity set on a client of its own. */
+const identityHttpClient = (client: Client, baseUrl: string): EdgeHttpClient => {
+  if (baseUrl === client.edge.http.baseUrl) {
+    return client.edge.http;
+  }
+  const http = new EdgeHttpClient(baseUrl);
+  http.setIdentity(createEdgeIdentity(client));
+  return http;
+};
 
 const ensureTrailingSlash = (url: string): string => (url.endsWith('/') ? url : `${url}/`);
 
@@ -154,7 +165,7 @@ export const publish = Command.make(
           }
           // An API token authenticates as the account that minted it, which is how a sandbox with no
           // identity of its own publishes for its user.
-          const http = token ? new EdgeHttpClient(baseUrl, { apiKey: token }) : client.edge.http;
+          const http = token ? new EdgeHttpClient(baseUrl, { apiKey: token }) : identityHttpClient(client, baseUrl);
           const files = yield* readBundleFiles(outdir);
           const { moduleUrl } = yield* Effect.tryPromise({
             try: () => http.uploadPrivatePluginBundle(Context.default(), { slug: key, version, files }),

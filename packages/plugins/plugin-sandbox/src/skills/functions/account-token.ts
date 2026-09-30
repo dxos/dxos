@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Context } from '@dxos/context';
@@ -37,12 +38,21 @@ export const mintAccountToken = Effect.fn(function* (sandbox: Sandbox.Sandbox) {
       token: minted.token,
     }),
   );
+  const previous = (sandbox.credentials ?? []).filter(({ env }) => env === SandboxOperation.ACCOUNT_TOKEN_ENV);
   Obj.update(sandbox, (sandbox) => {
     sandbox.credentials = [
       ...(sandbox.credentials ?? []).filter(({ env }) => env !== SandboxOperation.ACCOUNT_TOKEN_ENV),
       { env: SandboxOperation.ACCOUNT_TOKEN_ENV, token: Ref.make(accessToken) },
     ];
   });
+
+  // A replaced token left in the space is a live credential nothing references any more.
+  for (const { token } of previous) {
+    const stale = yield* Database.load(token).pipe(Effect.option);
+    if (Option.isSome(stale)) {
+      yield* Database.remove(stale.value);
+    }
+  }
 
   return SandboxOperation.ACCOUNT_TOKEN_ENV;
 });
