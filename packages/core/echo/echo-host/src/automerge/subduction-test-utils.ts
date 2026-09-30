@@ -74,10 +74,7 @@ export const waitForEviction = async (expect: ExpectStatic, host: AutomergeHost,
     .toBe(false);
 };
 
-/**
- * Resolves once the handle's document satisfies `predicate`, re-checked on each of its change events
- * rather than on a timer.
- */
+/** Resolves once the document satisfies `predicate`, re-checked on each change event. */
 export const waitForDoc = async <T>(
   handle: {
     doc(): T | undefined;
@@ -102,7 +99,7 @@ export const waitForDoc = async <T>(
   }
 };
 
-/** Resolves once `host` holds exactly `expected` heads for the document, woken by its heads-change events. */
+/** Resolves once `host` holds exactly `expected` heads for the document. */
 export const waitForHostHeads = async (
   host: AutomergeHost,
   documentId: DocumentId,
@@ -112,7 +109,7 @@ export const waitForHostHeads = async (
   const key = (heads: readonly string[]) => [...heads].sort().join(',');
   const matches = (heads: readonly string[] | undefined) => heads !== undefined && key(heads) === key(expected);
   const trigger = new Trigger();
-  // Subscribed before the first read, so a change landing between the two is not missed.
+  // Subscribed before reading, so no change is missed.
   const unsubscribe = host.documentHeadsChanged.on((event) => {
     if (event.documentId === documentId && matches(event.heads)) {
       trigger.wake();

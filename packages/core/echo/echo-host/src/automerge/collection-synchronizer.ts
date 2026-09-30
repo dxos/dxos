@@ -29,7 +29,7 @@ export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
   shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
-  /** Lets the diff tell a stale head a peer still advertises from a change this replica lacks. */
+  /** Tells an ancestor head from a missing change. */
   hasLocalChange?: HasLocalChange;
 };
 
@@ -447,10 +447,7 @@ type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
-/**
- * Whether two states name the same heads, compared as sets, for the same documents. Exact rather than
- * the diff's overlap rule: the dedupe relies on it, and a head added beside a shared one is a change.
- */
+/** Same documents and heads, as sets; exact because a head added beside a shared one is a change. */
 export const isCollectionStateEqual = (left: CollectionState, right: CollectionState): boolean =>
   isDiffEmpty(diffCollectionState(left, right, { exact: true }));
 
@@ -499,9 +496,8 @@ export const diffCollectionStateForPeer = (
 };
 
 export type DiffCollectionStateOptions = {
-  /** Lets the overlap rule tell a stale head a peer still advertises from a change this replica lacks. */
   hasLocalChange?: HasLocalChange;
-  /** Marks a document `different` whenever its head sets differ, instead of applying the overlap rule. */
+  /** Compares head sets exactly instead of applying the overlap rule. */
   exact?: boolean;
 };
 
@@ -535,7 +531,7 @@ export const diffCollectionState = (
       // it has no notion of fragments — so the two views can disagree on a doc's
       // head set even when every change byte is replicated. We treat the doc as in
       // sync as long as both sides agree on at least one head and the remote advertises no change
-      // the local replica lacks, which a shared stale tip would otherwise hide.
+      // the local replica lacks.
       different.push(documentId);
     }
   }
@@ -565,14 +561,12 @@ const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
   return false;
 };
 
-/** Whether two head lists name the same heads, compared as sets. */
 const headsEqual = (a: readonly string[], b: readonly string[]): boolean => {
   const aset = new Set(a);
   const bset = new Set(b);
   return aset.size === bset.size && [...bset].every((head) => aset.has(head));
 };
 
-/** True when `remote` names a head that is not a local head and that the local replica does not contain. */
 const advertisesMissingChange = (
   documentId: DocumentId,
   local: readonly string[],

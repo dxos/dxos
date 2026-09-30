@@ -381,8 +381,6 @@ describe('CollectionSynchronizer', () => {
       expect(diff.missingOnRemote).toEqual([]);
     });
 
-    // EDGE nightly soak: EDGE advertised a stale tip beside the fragment head of a newer commit, so
-    // every peer holding only the stale tip matched it and never fetched the commit.
     test('a superset that shares a head is different when another remote head is missing locally', ({ expect }) => {
       const [staleTip] = localHeads;
       const [newerCommit] = TEST_HEADS[1];
@@ -394,7 +392,7 @@ describe('CollectionSynchronizer', () => {
         documentId,
       ]);
 
-      // A remote head the local document already contains is an ancestor, not missing work.
+      // An ancestor the local document holds is not missing.
       const holdsAll = () => true;
       expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: holdsAll }).different).toEqual([]);
     });

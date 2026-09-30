@@ -47,7 +47,7 @@ export class EdgeFeedReplicator extends Resource {
    */
   private _pushMutex = new ComplexMap<PublicKey, Mutex>(PublicKey.hash);
 
-  /** Every block below this is held or requested on this connection, so it is neither scanned nor requested again. */
+  /** Every block below this is held or already requested on this connection. */
   private _requestedUpTo = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
   constructor({ messenger, spaceId }: EdgeFeedReplicatorProps) {
@@ -196,12 +196,11 @@ export class EdgeFeedReplicator extends Resource {
 
           using _guard = await this._getPushMutex(feed.key).acquire();
 
-          // Blocks EDGE pushed ahead of a reply computed before it wrote them are still blocks it holds.
+          // A reply computed before EDGE's latest push reports less than EDGE holds.
           const remoteLength = Math.max(this._remoteLength.get(feedKey) ?? 0, message.length);
           this._remoteLength.set(feedKey, remoteLength);
 
-          // A block pushed ahead of this reply is stored sparsely and advances `feed.length` past the
-          // blocks before it, so the length alone can report nothing missing while the feed has a gap.
+          // A sparse push moves `feed.length` past a gap, so compare block by block.
           const requestedUpTo = this._requestedUpTo.get(feedKey) ?? 0;
           const firstMissing = findFirstMissing(feed, requestedUpTo, message.length);
           this._requestedUpTo.set(feedKey, Math.max(requestedUpTo, firstMissing));
@@ -234,7 +233,7 @@ export class EdgeFeedReplicator extends Resource {
           }
 
           const blocksEnd = message.blocks.reduce((end, block) => Math.max(end, block.index + 1), 0);
-          // EDGE holds whatever it sends; raised before integrating, whose `append` would otherwise push them back.
+          // Raised before integrating, whose `append` would otherwise push these blocks back.
           this._remoteLength.set(feedKey, Math.max(this._remoteLength.get(feedKey) ?? 0, blocksEnd));
           await this._integrateBlocks(feed, message.blocks);
           await this._requestGapBelow(feed, blocksEnd);
@@ -271,7 +270,7 @@ export class EdgeFeedReplicator extends Resource {
       feedKey: feed.key.toHex(),
       blocks,
     });
-    // Monotonic: blocks EDGE pushed while this send was in flight have already raised it past `to`.
+    // A push received during the send may have raised it past `to`.
     this._remoteLength.set(feed.key, Math.max(this._remoteLength.get(feed.key) ?? 0, to));
   }
 
@@ -293,10 +292,7 @@ export class EdgeFeedReplicator extends Resource {
     }
   }
 
-  /**
-   * Requests the blocks missing below `to`, the end of the blocks just received, since a push only ever
-   * carries the newest blocks and nothing else would fetch the ones before them.
-   */
+  /** Requests the blocks missing below `to`; a push carries only the newest blocks. */
   private async _requestGapBelow(feed: HypercoreWrapper<any>, to: number): Promise<void> {
     if (!this._connectionCtx) {
       return;
@@ -320,7 +316,7 @@ export class EdgeFeedReplicator extends Resource {
     }
 
     const remoteLength = this._remoteLength.get(feed.key)!;
-    // A sparse put also emits `append`; pushing past a hole would await `feed.get` on a block that never arrives.
+    // A sparse put also emits `append`, and `feed.get` on a hole never resolves.
     if (remoteLength < feed.length && feed.has(remoteLength, feed.length)) {
       await this._pushBlocks(this._connectionCtx!, feed, remoteLength, feed.length);
     }

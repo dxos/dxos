@@ -57,7 +57,6 @@ describe('AutomergeRepo with Subduction', () => {
     expect(progress.peek().state).to.equal('loading');
   });
 
-  // A round with no peers delivers nothing, so stored blobs are the only source of the newer commit.
   test('a document opened with no peers applies what Subduction already stored', async () => {
     const storage = await createSqliteAdapter();
     let url: AutomergeUrl | undefined;
@@ -77,7 +76,7 @@ describe('AutomergeRepo with Subduction', () => {
       await waitForSubductionSave([repo]);
       await shutdownRepo(repo);
 
-      // The repo's own copy goes back to the first version; only Subduction storage holds the second.
+      // Repo storage holds only the first version.
       await storage.open();
       await storage.removeRange([documentId]);
       await storage.saveBatch(
@@ -225,8 +224,7 @@ describe('AutomergeRepo with Subduction', () => {
       await expect.poll(() => peer2Handle.doc(), { timeout: SYNC_WINDOW_MS }).toEqual(hostHandle.doc());
     });
 
-    // A change whose hash starts with a zero byte is a sedimentree fragment boundary, which Subduction
-    // ships as a fragment rather than a loose commit.
+    // A change hash starting with a zero byte is a fragment boundary, shipped as a fragment.
     test('a fragment-boundary change reaches a peer through a relay', async () => {
       const { repos, adapters, repoPairs } = await createRepoTopology({
         peers: ['author', 'relay', 'receiver'],
@@ -245,7 +243,6 @@ describe('AutomergeRepo with Subduction', () => {
       const received = await findInStates<{ count: number }>(receiver, handle.url, FIND_STATES);
       await waitForDoc(received, (doc) => doc?.count === 0);
 
-      // One change at a time, each saved before the next, as the soak's replicants write.
       let count = 0;
       do {
         count++;

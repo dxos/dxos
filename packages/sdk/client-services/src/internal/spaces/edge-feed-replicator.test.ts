@@ -213,7 +213,7 @@ describe('EdgeFeedReplicator', () => {
       return {
         replica,
         append,
-        /** Stores blocks in the replica directly, as a previous connection would have. */
+        /** Stores blocks as a previous connection would have. */
         store: async (indices: number[]) => {
           for (const index of indices) {
             const data = await source.get(index, { valueEncoding: 'binary' });
@@ -223,16 +223,12 @@ describe('EdgeFeedReplicator', () => {
         feedKey: source.key.toHex(),
         blockAt,
         blocksIn: ({ from, to }: BlockRange) => Promise.all(range(to - from, (offset) => blockAt(from + offset))),
-        // `get` on a sparse feed resolves when the block arrives, so this awaits delivery rather than polling;
-        // a test ends on it so no reply is still reading the source when its storage closes.
+        // Tests end on delivery, so no reply is still reading the source when its storage closes.
         holds: (indices: number[]) => Promise.all(indices.map((index) => replica.get(index))),
       };
     };
 
-    /**
-     * An EDGE whose replies the test scripts. Every message the client sends is queued, so a test awaits the
-     * next one instead of polling for state.
-     */
+    /** An EDGE whose replies the test scripts; each client message is queued for `next`. */
     const createScriptedEdge = async (reply: (message: ProtocolMessage) => Promise<ProtocolMessage | undefined>) => {
       const received: ProtocolMessage[] = [];
       const arrived = new Event();
@@ -257,14 +253,13 @@ describe('EdgeFeedReplicator', () => {
         endpoint,
         admitConnection,
         received,
-        /** The next message the client sends. */
         next: async (): Promise<ProtocolMessage> => {
           while (cursor === received.length) {
             await arrived.waitForCount(1);
           }
           return received[cursor++];
         },
-        /** Sends a message unprompted, as EDGE does when it broadcasts a feed's new blocks. */
+        /** Sends unprompted, as an EDGE broadcast. */
         send: (message: ProtocolMessage) => {
           invariant(address, 'the client has not sent anything to reply to');
           sendResponseMessage(address, encodeCbor(message));
@@ -281,12 +276,10 @@ describe('EdgeFeedReplicator', () => {
       return { messenger };
     };
 
-    // A sparse push moves `feed.length` past a hole that a length comparison cannot see.
     test('fetches the blocks below a block pushed ahead of the metadata reply', async () => {
       const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(3);
       const edge = await createScriptedEdge(async (message) => {
         if (message.type === 'get-metadata') {
-          // The push lands before the reply, as a broadcast racing the joiner's handshake does.
           edge.send({ type: 'data', feedKey, blocks: [await blockAt(2)] });
           await holds([2]);
           return { type: 'metadata', feedKey, length: 3 };
@@ -329,7 +322,6 @@ describe('EdgeFeedReplicator', () => {
         }
         if (message.type === 'request') {
           if (++requests === 1) {
-            // Blocks broadcast while the first request is still unanswered, as a busy feed does.
             for (const index of [3, 4]) {
               edge.send({ type: 'data', feedKey, blocks: [await blockAt(index)] });
             }
@@ -343,7 +335,7 @@ describe('EdgeFeedReplicator', () => {
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
       await holds([0, 1, 2]);
 
-      // The next request is the one this push causes: nothing was requested for the pushed blocks 3 and 4.
+      // Nothing is requested for the pushed blocks 3 and 4.
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(6)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 5, to: 7 } });
       await holds([5, 6]);
@@ -355,18 +347,15 @@ describe('EdgeFeedReplicator', () => {
         if (message.type === 'get-metadata') {
           edge.send({ type: 'data', feedKey, blocks: [await blockAt(7)] });
           await holds([7]);
-          // A reply computed before block 7 was written, then the next broadcast right behind it.
           const next = await blockAt(10);
           edge.send({ type: 'metadata', feedKey, length: 6 });
           edge.send({ type: 'data', feedKey, blocks: [next] });
         }
-        // Requests stay unanswered, so every one the client sends is still in flight.
         return undefined;
       });
       await startReplicator(edge.endpoint, replica, edge.admitConnection);
       expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 8 } });
-      // The metadata reply adds nothing: the next request is the gap below the block pushed behind it.
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 8, to: 11 } });
     });
 
@@ -377,7 +366,6 @@ describe('EdgeFeedReplicator', () => {
           return { type: 'metadata', feedKey, length: 3 };
         }
         if (message.type === 'request') {
-          // EDGE collects a reply's blocks concurrently, so their order is arbitrary.
           return { type: 'data', feedKey, blocks: (await blocksIn(message.range)).reverse() };
         }
       });
@@ -401,7 +389,6 @@ describe('EdgeFeedReplicator', () => {
         }
         if (message.type === 'request') {
           const blocks = await blocksIn(message.range);
-          // EDGE leaves out blocks it cannot find: block 1 of the first reply.
           return {
             type: 'data',
             feedKey,
@@ -414,7 +401,6 @@ describe('EdgeFeedReplicator', () => {
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
       await holds([0, 2]);
 
-      // Within the connection an omitted block is not asked for again, or a missing block would loop.
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(4)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 3, to: 5 } });
       await holds([3, 4]);
@@ -455,7 +441,6 @@ describe('EdgeFeedReplicator', () => {
         if (message.type === 'request' && (message.range.from === 0 || metadataReplies > 1)) {
           return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
         }
-        // The gap request on the first connection stays unanswered, so the hole persists.
         return undefined;
       });
       const { messenger } = await startReplicator(edge.endpoint, replica, edge.admitConnection);
@@ -463,8 +448,7 @@ describe('EdgeFeedReplicator', () => {
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 2 } });
       await holds([0, 1]);
 
-      // Block 4 lands above EDGE's reported length with 2 and 3 missing; its `append` must not start a
-      // push that waits on block 2, holding the feed's lock that the next metadata reply needs.
+      // A push waiting on missing block 2 would hold the lock the next metadata reply needs.
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(4)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 2, to: 5 } });
 
@@ -489,7 +473,6 @@ describe('EdgeFeedReplicator', () => {
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
       await holds([0, 1, 2]);
 
-      // A block written after the replica caught up extends it with no hole, so its `append` finds a range to push.
       await append();
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(3)] });
       await holds([3]);
@@ -506,7 +489,6 @@ describe('EdgeFeedReplicator', () => {
         if (message.type === 'get-metadata') {
           edge.send({ type: 'data', feedKey, blocks: await blocksIn({ from: 0, to: 4 }) });
           await holds([0, 1, 2, 3]);
-          // Computed before block 3 was written, so it reports less than EDGE has already sent.
           return { type: 'metadata', feedKey, length: 3 };
         }
         if (message.type === 'request') {
@@ -538,7 +520,6 @@ describe('EdgeFeedReplicator', () => {
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 48 } });
       await holds(range(48));
 
-      // Caught up on the new connection, so its metadata reply requests nothing.
       const has = vi.spyOn(replica, 'has');
       await updateIdentity(messenger);
       expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
@@ -550,15 +531,14 @@ describe('EdgeFeedReplicator', () => {
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 49, to: 51 } });
       await holds([49, 50]);
 
-      // Only the metadata reply's scan reaches block 0; each push scans from where the last scan stopped.
+      // Only the metadata reply's scan reaches block 0.
       expect(has.mock.calls.filter(([index]) => index === 0)).toHaveLength(1);
     });
 
     test('a push finishing after newer blocks arrive does not send them back', async () => {
       const { replica, append, store, feedKey, blockAt, holds } = await setupFeeds(5);
-      // The replica already holds blocks EDGE reports it lacks, as after EDGE lost them.
       await store(range(5));
-      // Three more, so blocks 5–7 extend the replica with no hole and are eligible to be pushed back.
+      // Blocks 5–7 then extend the replica with no hole, so they could be pushed back.
       for (const _ of range(3)) {
         await append();
       }
@@ -570,7 +550,6 @@ describe('EdgeFeedReplicator', () => {
         return undefined;
       });
       const { messenger } = await createClient(edge.endpoint);
-      // Hold the client's first push open, so EDGE's newer blocks land while it is in flight.
       const pushing = new Trigger();
       const release = new Trigger();
       // `createClient` already spies on `send`, so the original comes from the class.
@@ -597,7 +576,6 @@ describe('EdgeFeedReplicator', () => {
       release.wake();
 
       expect(await edge.next()).toMatchObject({ type: 'data', blocks: [{ index: 3 }, { index: 4 }] });
-      // The next message is the request this push causes, not blocks 5–7 pushed back.
       await append();
       await append();
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(9)] });

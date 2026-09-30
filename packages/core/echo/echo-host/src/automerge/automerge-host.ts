@@ -233,11 +233,7 @@ export class AutomergeHost extends Resource {
   });
 
   private _repo!: Repo;
-  /**
-   * Changes {@link _hasLocalChange} found in a resident document, so an evicted one answers without a load.
-   * Only heads a peer advertises beside a document's own land here; least recently confirmed documents go
-   * first past {@link MAX_CONFIRMED_DOCUMENTS}, and forgetting costs one load to check again.
-   */
+  /** Changes confirmed while resident, so an evicted document answers without a load; forgetting costs one load. */
   private readonly _confirmedChanges = new Map<DocumentId, Set<string>>();
 
   private _storage!: SqliteStorageAdapter;
@@ -297,8 +293,8 @@ export class AutomergeHost extends Resource {
    * backoff — so one call per observed head pair is the whole retry budget, and calling it again
    * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
    * rather than a plain "already tried" flag so that a genuine change on either side (the peer
-   * advanced, or we committed again) re-opens the retry. An evicted document spends the same budget on
-   * the load that faults it in, which is its round.
+   * advanced, or we committed again) re-opens the retry. An evicted document spends it on the load that
+   * faults it in.
    *
    * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
    * unambiguous, and cleanup compares the ids stored on each entry instead.
@@ -442,12 +438,9 @@ export class AutomergeHost extends Resource {
         }
       });
 
-      // Subduction stores a push for an evicted document without applying it; faulting the document
-      // in runs the load that applies it, and keeps it resident until that load has landed.
+      // Subduction stores a push for an evicted document without applying it; loading it applies it.
       Event.wrap<{ documentId: DocumentId }>(this._repo, 'subduction-detached-data').on(this._ctx, ({ documentId }) => {
-        // Storage migrations write while the host is still opening; a document's first load applies those.
-        // Garbage collection removes documents that left every collection, so the collections decide
-        // which pushes are worth a load, across restarts too.
+        // Opening applies migration writes itself, and garbage-collected documents are in no collection.
         if (this.isOpen && this._isInLocalCollection(documentId)) {
           this._leaseUntilSettled(documentId);
         }
@@ -1307,7 +1300,6 @@ export class AutomergeHost extends Resource {
     return null;
   }
 
-  /** Whether any registered local collection lists the document. */
   private _isInLocalCollection(documentId: DocumentId): boolean {
     return this._collectionSynchronizer
       .getRegisteredCollectionIds()
@@ -1512,14 +1504,9 @@ export class AutomergeHost extends Resource {
     }
   }
 
-  /**
-   * Whether the local replica holds a change, for the collection diff. A resident document is checked; an
-   * evicted one holds only the changes confirmed earlier, and anything else counts as missing so the collection
-   * sync loads it once per head pair to check.
-   */
+  /** For the collection diff: an evicted document holds only the changes confirmed while it was resident. */
   private _hasLocalChange(documentId: DocumentId, changeHash: string): boolean {
-    // Heads come from any peer and are only validated as strings; a malformed one is unanswerable,
-    // and reporting it missing would keep the document `different` for good.
+    // A malformed head is unanswerable, and calling it missing would keep the document `different` forever.
     if (!CHANGE_HASH_PATTERN.test(changeHash)) {
       return true;
     }
@@ -1538,7 +1525,7 @@ export class AutomergeHost extends Resource {
       confirmed.clear();
     }
     confirmed.add(changeHash);
-    // Re-inserted so the map iterates least recently confirmed first, which is the end the cap trims.
+    // Re-inserted so iteration starts at the least recently confirmed document, which the cap drops.
     this._confirmedChanges.delete(documentId);
     this._confirmedChanges.set(documentId, confirmed);
     if (this._confirmedChanges.size > MAX_CONFIRMED_DOCUMENTS) {

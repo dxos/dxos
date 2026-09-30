@@ -367,7 +367,6 @@ describe('AutomergeHost', () => {
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
   });
 
-  // EDGE can advertise a stale tip beside a newer commit, and sharing the tip must not hide the commit.
   test('a resident document is different when an overlapping remote head is missing locally', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -392,14 +391,13 @@ describe('AutomergeHost', () => {
     synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
     expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(1);
 
-    // Heads come from any peer and are only validated as strings; a malformed one is unanswerable, not fatal.
+    // A malformed head is ignored rather than fatal.
     synchronizer.onRemoteStateReceived(collectionId, peerId, {
       documents: { [documentId]: [localHead, 'not-a-hash'] },
     });
     expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(0);
   });
 
-  // An evicted document cannot be asked directly, so an unconfirmed head must fault it in to be fetched.
   test('an evicted document is different until an overlapping remote head is confirmed', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -431,7 +429,7 @@ describe('AutomergeHost', () => {
     const differentDocuments = async () =>
       (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
 
-    // Resident: the ancestor is checked against the document and confirmed.
+    // Resident: checked and confirmed.
     synchronizer.onRemoteStateReceived(collectionId, peerId, {
       documents: { [documentId]: [localHead, ancestorHead] },
     });
@@ -440,13 +438,12 @@ describe('AutomergeHost', () => {
     handle[Symbol.dispose]();
     await waitForEviction(expect, host, documentId);
 
-    // Evicted: the confirmed ancestor still counts as present, an unconfirmed head does not.
+    // Evicted: only a confirmed head counts as present.
     expect(await differentDocuments()).toEqual(0);
     synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
     expect(await differentDocuments()).toEqual(1);
   });
 
-  // A head no peer can deliver would otherwise fault the document in again after every eviction.
   test('an evicted document lacking a change stays different and is loaded once per head pair and connection', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -480,8 +477,7 @@ describe('AutomergeHost', () => {
       loads += id === documentId ? 1 : 0;
       leaseUntilSettled.call(host, id);
     };
-    // Counts the loads a change causes by the end of the pass that reacts to it; a scheduled pass that
-    // gets there first spends the same budget, so the count does not depend on which one ran.
+    // A scheduled pass may spend the budget first; the count is the same either way.
     const loadsAfter = async (change: () => void) => {
       const before = loads;
       change();
@@ -501,8 +497,7 @@ describe('AutomergeHost', () => {
     await waitForEviction(expect, host, documentId);
     expect(await loadsAfter(() => {})).toEqual(0);
 
-    // A reconnect, after which the peer sends its state again, is a fresh chance for the round that could not
-    // fetch the change.
+    // The peer resends its state after reconnecting.
     expect(
       await loadsAfter(() => {
         host['_onPeerDisconnected'](peerId);
@@ -511,7 +506,6 @@ describe('AutomergeHost', () => {
     ).toEqual(1);
   });
 
-  // Garbage collection deletes the document; a peer's later push must not bring it back.
   test('data stored for a document no collection references does not fault it in, across a restart', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
@@ -525,7 +519,7 @@ describe('AutomergeHost', () => {
     await before.flush(Context.default());
     removed[Symbol.dispose]();
     kept[Symbol.dispose]();
-    // Garbage collection removes documents that left the space, so no collection lists them.
+    // Garbage collection removes a document from every collection.
     await before.updateLocalCollectionState(collectionId, [kept.documentId]);
     await before.removeDocument(removed.documentId);
     await before.close();
@@ -539,8 +533,7 @@ describe('AutomergeHost', () => {
     });
     await host.updateLocalCollectionState(collectionId, [kept.documentId]);
 
-    // The listener runs synchronously, so the kept document faulting in shows the event was handled,
-    // and the removed one staying out shows it was refused rather than not yet reached.
+    // The listener is synchronous, so both outcomes are final here.
     const repo = host['_repo'];
     repo.emit('subduction-detached-data', { documentId: removed.documentId });
     repo.emit('subduction-detached-data', { documentId: kept.documentId });

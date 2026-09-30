@@ -139,7 +139,6 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
-  // Subduction stores a push for an evicted document without applying it, which leaves its heads behind.
   test('a change that arrives while the document is evicted is applied', async ({ expect }) => {
     const rt1 = createRuntime();
     onTestFinished(() => rt1.dispose());
@@ -157,7 +156,7 @@ describe('AutomergeHost with Subduction', () => {
       await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
       await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
 
-      // Only documents a local collection lists are loaded for a push, as a space's documents are.
+      // Pushes load only documents a local collection lists.
       await host2.updateLocalCollectionState('test-collection', [documentId]);
       const mirrored = await host2.loadDoc<any>(Context.default(), documentId);
       invariant(mirrored);
