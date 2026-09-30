@@ -6,16 +6,19 @@ import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 import { getPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, sleep, waitForCondition } from '@dxos/async';
+import { Event, Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
-import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
+import { HypercoreFactory, HypercoreStore, type HypercoreWrapper } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey, SpaceId } from '@dxos/keys';
 import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type FeedBlock, type ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { openAndClose } from '@dxos/test-utils';
 import { Timeframe } from '@dxos/timeframe';
@@ -191,104 +194,323 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => feedLength()).toEqual(1);
   });
 
-  // A sparse push moves `feed.length` past a hole that a length comparison cannot see.
-  test('fetches the blocks below a block pushed ahead of the metadata reply', async () => {
-    const source = await createNewFeed();
-    for (const _ of range(3)) {
-      await source.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
-    }
-    const blockAt = async (index: number) => {
-      const data = await source.get(index, { valueEncoding: 'binary' });
-      const proof = await source.proof(index);
-      return { index, data, nodes: proof.nodes, signature: proof.signature };
+  describe('gaps in a replica', () => {
+    type BlockRange = { from: number; to: number };
+    type ClientMessage = { type: string; feedKey: string; range?: BlockRange; blocks?: FeedBlock[] };
+
+    /** A source feed of `length` blocks and an empty sparse replica of it. */
+    const setupFeeds = async (length: number) => {
+      const source = await createNewFeed();
+      const replica = await openReplica(source.key);
+      const append = () => source.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
+      const blockAt = async (index: number): Promise<FeedBlock> => {
+        const data = await source.get(index, { valueEncoding: 'binary' });
+        const proof = await source.proof(index);
+        return { index, data, nodes: proof.nodes, signature: proof.signature };
+      };
+      for (const _ of range(length)) {
+        await append();
+      }
+      return {
+        replica,
+        append,
+        feedKey: source.key.toHex(),
+        blockAt,
+        blocksIn: ({ from, to }: BlockRange) => Promise.all(range(to - from, (offset) => blockAt(from + offset))),
+        // `get` on a sparse feed resolves when the block arrives, so this awaits delivery rather than polling.
+        holds: (indices: number[]) => Promise.all(indices.map((index) => replica.get(index))),
+      };
     };
 
-    const replica = await openReplica(source.key);
-    const port = await getPort({ host: 'localhost', port: 7300, portRange: [7300, 7399] });
-    const admitConnection = new Trigger();
-    const { cleanup, endpoint, sendResponseMessage } = await createTestEdgeWsServer(port, {
-      admitConnection,
-      payloadDecoder: decodeCbor,
-      messageHandler: async (message: any, request) => {
+    /**
+     * An EDGE whose replies the test scripts. Every message the client sends is queued, so a test awaits the
+     * next one instead of polling for state.
+     */
+    const createScriptedEdge = async (reply: (message: ClientMessage) => Promise<ProtocolMessage | undefined>) => {
+      const received: ClientMessage[] = [];
+      const arrived = new Event();
+      let cursor = 0;
+      let address: Message | undefined;
+      const port = await getPort({ host: 'localhost', port: 7300, portRange: [7300, 7499] });
+      const admitConnection = new Trigger();
+      const { cleanup, endpoint, sendResponseMessage } = await createTestEdgeWsServer(port, {
+        admitConnection,
+        payloadDecoder: decodeCbor,
+        messageHandler: async (message: ClientMessage, request) => {
+          address = request;
+          received.push(message);
+          arrived.emit();
+          const response = await reply(message);
+          return response && encodeCbor(response);
+        },
+      });
+      onTestFinished(cleanup);
+
+      return {
+        endpoint,
+        admitConnection,
+        received,
+        /** The next message the client sends. */
+        next: async (): Promise<ClientMessage> => {
+          while (cursor === received.length) {
+            await arrived.waitForCount(1);
+          }
+          return received[cursor++];
+        },
+        /** Sends a message unprompted, as EDGE does when it broadcasts a feed's new blocks. */
+        send: (message: ProtocolMessage) => {
+          invariant(address, 'the client has not sent anything to reply to');
+          sendResponseMessage(address, encodeCbor(message));
+        },
+      };
+    };
+
+    const startReplicator = async (endpoint: string, replica: HypercoreWrapper<any>, admitConnection: Trigger) => {
+      const { messenger } = await createClient(endpoint);
+      const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
+      await replicator.addHypercore(replica);
+      await openAndClose(replicator);
+      admitConnection.wake();
+      return { messenger };
+    };
+
+    // A sparse push moves `feed.length` past a hole that a length comparison cannot see.
+    test('fetches the blocks below a block pushed ahead of the metadata reply', async () => {
+      const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(3);
+      const edge = await createScriptedEdge(async (message) => {
         if (message.type === 'get-metadata') {
           // The push lands before the reply, as a broadcast racing the joiner's handshake does.
-          sendResponseMessage(
-            request,
-            encodeCbor({ type: 'data', feedKey: message.feedKey, blocks: [await blockAt(2)] }),
-          );
-          await waitForCondition({ condition: () => replica.has(2) });
-          return encodeCbor({ type: 'metadata', feedKey: message.feedKey, length: source.length });
+          edge.send({ type: 'data', feedKey, blocks: [await blockAt(2)] });
+          await holds([2]);
+          return { type: 'metadata', feedKey, length: 3 };
         }
         if (message.type === 'request') {
-          const blocks = await Promise.all(
-            range(message.range.to - message.range.from, (offset) => blockAt(message.range.from + offset)),
-          );
-          return encodeCbor({ type: 'data', feedKey: message.feedKey, blocks });
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
         }
-      },
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+
+      await holds([0, 1, 2]);
     });
-    onTestFinished(cleanup);
 
-    const { messenger } = await createClient(endpoint);
-    const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
-    await replicator.addHypercore(replica);
-    await openAndClose(replicator);
-    admitConnection.wake();
-
-    await expect.poll(() => range(3).every((index) => replica.has(index))).toBe(true);
-  });
-
-  test('does not re-request blocks already requested when later blocks are pushed', async () => {
-    const source = await createNewFeed();
-    for (const _ of range(5)) {
-      await source.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
-    }
-    const blockAt = async (index: number) => {
-      const data = await source.get(index, { valueEncoding: 'binary' });
-      const proof = await source.proof(index);
-      return { index, data, nodes: proof.nodes, signature: proof.signature };
-    };
-
-    const replica = await openReplica(source.key);
-    const requests: { from: number; to: number }[] = [];
-    const port = await getPort({ host: 'localhost', port: 7400, portRange: [7400, 7499] });
-    const admitConnection = new Trigger();
-    const { cleanup, endpoint, sendResponseMessage } = await createTestEdgeWsServer(port, {
-      admitConnection,
-      payloadDecoder: decodeCbor,
-      messageHandler: async (message: any, request) => {
+    test('requests the gap below a block pushed after the metadata reply', async () => {
+      const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(5);
+      const edge = await createScriptedEdge(async (message) => {
         if (message.type === 'get-metadata') {
-          return encodeCbor({ type: 'metadata', feedKey: message.feedKey, length: 3 });
+          return { type: 'metadata', feedKey, length: 2 };
         }
         if (message.type === 'request') {
-          requests.push(message.range);
-          if (requests.length === 1) {
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+        }
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 2 } });
+      await holds([0, 1]);
+
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(4)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 2, to: 5 } });
+      await holds([2, 3, 4]);
+    });
+
+    test('does not request blocks it already holds or has requested', async () => {
+      const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(7);
+      let requests = 0;
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          if (++requests === 1) {
             // Blocks broadcast while the first request is still unanswered, as a busy feed does.
             for (const index of [3, 4]) {
-              sendResponseMessage(
-                request,
-                encodeCbor({ type: 'data', feedKey: message.feedKey, blocks: [await blockAt(index)] }),
-              );
+              edge.send({ type: 'data', feedKey, blocks: [await blockAt(index)] });
             }
-            await waitForCondition({ condition: () => replica.has(4) });
+            await holds([3, 4]);
           }
-          const blocks = await Promise.all(
-            range(message.range.to - message.range.from, (offset) => blockAt(message.range.from + offset)),
-          );
-          return encodeCbor({ type: 'data', feedKey: message.feedKey, blocks });
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
         }
-      },
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      await holds([0, 1, 2]);
+
+      // The next request is the one this push causes: nothing was requested for the pushed blocks 3 and 4.
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(6)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 5, to: 7 } });
     });
-    onTestFinished(cleanup);
 
-    const { messenger } = await createClient(endpoint);
-    const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
-    await replicator.addHypercore(replica);
-    await openAndClose(replicator);
-    admitConnection.wake();
+    test('does not repeat a request still in flight when the metadata reply arrives', async () => {
+      const { replica, feedKey, blockAt, holds } = await setupFeeds(11);
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          edge.send({ type: 'data', feedKey, blocks: [await blockAt(7)] });
+          await holds([7]);
+          // A reply computed before block 7 was written, then the next broadcast right behind it.
+          const next = await blockAt(10);
+          edge.send({ type: 'metadata', feedKey, length: 6 });
+          edge.send({ type: 'data', feedKey, blocks: [next] });
+        }
+        // Requests stay unanswered, so every one the client sends is still in flight.
+        return undefined;
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 8 } });
+      // The metadata reply adds nothing: the next request is the gap below the block pushed behind it.
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 8, to: 11 } });
+    });
 
-    await expect.poll(() => range(5).every((index) => replica.has(index))).toBe(true);
-    expect(requests.filter(({ from }) => from < 3)).toHaveLength(1);
+    test('does not request again after a complete reply in any order', async () => {
+      const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(6);
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          // EDGE collects a reply's blocks concurrently, so their order is arbitrary.
+          return { type: 'data', feedKey, blocks: (await blocksIn(message.range!)).reverse() };
+        }
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      await holds([0, 1, 2]);
+
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(5)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 3, to: 6 } });
+    });
+
+    test('recovers blocks left out of a reply on the next connection, without re-requesting them before', async () => {
+      const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(5);
+      let metadataReplies = 0;
+      let requests = 0;
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: ++metadataReplies === 1 ? 3 : 5 };
+        }
+        if (message.type === 'request') {
+          const blocks = await blocksIn(message.range!);
+          // EDGE leaves out blocks it cannot find: block 1 of the first reply.
+          return {
+            type: 'data',
+            feedKey,
+            blocks: requests++ === 0 ? blocks.filter(({ index }) => index !== 1) : blocks,
+          };
+        }
+      });
+      const { messenger } = await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      await holds([0, 2]);
+
+      // Within the connection an omitted block is not asked for again, or a missing block would loop.
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(4)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 3, to: 5 } });
+      await holds([3, 4]);
+
+      await updateIdentity(messenger);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 1, to: 5 } });
+      await holds([1]);
+    });
+
+    test('an empty reply leaves the requested range to the next connection', async () => {
+      const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(5);
+      let requests = 0;
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          return { type: 'data', feedKey, blocks: requests++ === 0 ? [] : await blocksIn(message.range!) };
+        }
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(4)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 3, to: 5 } });
+      await holds([3, 4]);
+    });
+
+    test('a hole above the remote length does not block the feed', async () => {
+      const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(5);
+      let metadataReplies = 0;
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: ++metadataReplies === 1 ? 2 : 5 };
+        }
+        if (message.type === 'request' && (message.range!.from === 0 || metadataReplies > 1)) {
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+        }
+        // The gap request on the first connection stays unanswered, so the hole persists.
+        return undefined;
+      });
+      const { messenger } = await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 2 } });
+      await holds([0, 1]);
+
+      // Block 4 lands above EDGE's reported length with 2 and 3 missing; its `append` must not start a
+      // push that waits on block 2, holding the feed's lock that the next metadata reply needs.
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(4)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 2, to: 5 } });
+
+      await updateIdentity(messenger);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 2, to: 5 } });
+      await holds([2, 3]);
+    });
+
+    test('does not send blocks EDGE pushed back to EDGE', async () => {
+      const { replica, append, feedKey, blockAt, blocksIn, holds } = await setupFeeds(3);
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+        }
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      await holds([0, 1, 2]);
+
+      // A block written after the replica caught up extends it with no hole, so its `append` finds a range to push.
+      await append();
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(3)] });
+      await holds([3]);
+      await append();
+      await append();
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(5)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 4, to: 6 } });
+    });
+
+    test('does not send pushed blocks back when a metadata reply behind them arrives', async () => {
+      const { replica, append, feedKey, blockAt, blocksIn, holds } = await setupFeeds(4);
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          edge.send({ type: 'data', feedKey, blocks: await blocksIn({ from: 0, to: 4 }) });
+          await holds([0, 1, 2, 3]);
+          // Computed before block 3 was written, so it reports less than EDGE has already sent.
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range!) };
+        }
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+
+      await append();
+      await append();
+      edge.send({ type: 'data', feedKey, blocks: [await blockAt(5)] });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 4, to: 6 } });
+    });
   });
 
   const createEdge = async () => {
