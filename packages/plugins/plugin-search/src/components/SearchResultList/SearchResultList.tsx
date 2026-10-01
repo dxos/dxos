@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';

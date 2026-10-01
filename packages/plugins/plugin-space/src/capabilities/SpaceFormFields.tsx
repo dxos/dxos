@@ -11,8 +11,7 @@ import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { type FormFieldRendererProps } from '@dxos/react-ui-form';
-import { SelectField } from '@dxos/react-ui-form/next';
+import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { Next } from '@dxos/react-ui/next';
 

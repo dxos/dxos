@@ -13,7 +13,7 @@ import {
   type ToolbarMenuActionGroupProperties,
   createMenuAction,
   createMenuItemGroup,
-} from '@dxos/react-ui-menu/next';
+} from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { SheetRange, SheetUtil } from '#types';

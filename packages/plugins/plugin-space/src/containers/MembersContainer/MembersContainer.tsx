@@ -23,7 +23,7 @@ import {
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
 import { useId, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import {
   type ActionMenuItem,

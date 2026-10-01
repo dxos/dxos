@@ -9,8 +9,8 @@ import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

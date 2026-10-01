@@ -1,36 +1,30 @@
-import { createContext } from '@dxos/react-ui';
 //
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type ReorderActive,
-  type ReorderListController,
-  type UseListDisclosureReturn,
-  type UseListNavigationReturn,
-} from '../../hooks/index.ts';
+import { createContext } from '@dxos/react-ui';
+import { type Next } from '@dxos/react-ui/next';
 
-// Kept out of `OrderedListRoot.tsx`: react-refresh only fast-refreshes a module whose exports are
-// all components, so a context exported beside them forces a full page reload on every edit.
+import { type ReorderListController } from '../../hooks/index.ts';
 
-export type ListItemRecord = any;
+// Kept out of the component module: react-refresh only fast-refreshes a module whose exports are all components.
 
-export const ORDERED_LIST_NAME = 'OrderedList';
-
-export type OrderedListContextValue<T extends ListItemRecord> = {
-  reorder: ReorderListController<T>;
-  disclosure: UseListDisclosureReturn;
-  navigation: UseListNavigationReturn;
-  /** Mirrors the mode given to `useListNavigation`, so a row knows which aria grammar it is in. */
-  navigationMode: 'list' | 'listbox';
+export type OrderedListContextValue = {
+  reorder: ReorderListController<unknown>;
+  /** The listbox option of each row, by id. */
+  options: ReadonlyMap<string, Next.ListboxOption>;
   readonly?: boolean;
-  active: ReorderActive<T>;
-  /**
-   * Stable id accessor reused by items that want to look up their record (e.g. the
-   * `OrderedListItem` <-> `useReorderItem` plumbing).
-   */
-  getId: (item: T) => string;
+  /** Keyboard move from the row's DragHandle, resolved against the current order. */
+  move: (id: string, direction: Next.DragMoveDirection) => void;
 };
 
-export const [OrderedListProvider, useOrderedListContext] =
-  createContext<OrderedListContextValue<any>>(ORDERED_LIST_NAME);
+export const [OrderedListProvider, useOrderedListContext] = createContext<OrderedListContextValue>('OrderedList');
+
+export type OrderedListItemContextValue = {
+  id: string;
+  canDrag: boolean;
+  handleRef: (element: HTMLElement | null) => void;
+};
+
+export const [OrderedListItemProvider, useOrderedListItemContext] =
+  createContext<OrderedListItemContextValue>('OrderedList.Item');

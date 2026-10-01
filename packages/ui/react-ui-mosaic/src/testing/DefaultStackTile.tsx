@@ -5,7 +5,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 

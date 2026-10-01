@@ -9,7 +9,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { Flex, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { VariantGallery } from '#components';

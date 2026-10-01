@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Registry, type View } from '@dxos/echo';
-import { FieldEditor } from '@dxos/react-ui-form/next';
+import { FieldEditor } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { type ModalController, type TableModel } from '../../model/index.ts';

@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {

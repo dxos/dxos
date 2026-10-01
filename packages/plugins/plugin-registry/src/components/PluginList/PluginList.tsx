@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { PluginItem, type PluginItemProps } from './PluginItem.tsx';
 

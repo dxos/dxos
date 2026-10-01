@@ -9,8 +9,7 @@ import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
 import { composable, composableProps } from '@dxos/react-ui';
-import { createStaticTreeModel } from '@dxos/react-ui-list';
-import { Tree, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list/next';
+import { createStaticTreeModel, Tree, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { Unit } from '@dxos/util';
 

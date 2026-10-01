@@ -9,7 +9,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
-import { ActionMenu } from '@dxos/react-ui-menu/next';
+import { ActionMenu } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 

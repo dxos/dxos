@@ -9,7 +9,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu/next';
+import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';

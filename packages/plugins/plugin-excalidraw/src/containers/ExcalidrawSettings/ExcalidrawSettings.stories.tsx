@@ -59,7 +59,7 @@ export const Default: Story = {
 };
 
 /**
- * 1. Test: the settings render on `react-ui-form/next` as bordered two-track rows; the switch and the select edit
+ * 1. Test: the settings render on `react-ui-form` as bordered two-track rows; the switch and the select edit
  * the settings.
  */
 export const Test: Story = {

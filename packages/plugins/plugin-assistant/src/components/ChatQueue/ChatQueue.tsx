@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { Message } from '@dxos/types';
 

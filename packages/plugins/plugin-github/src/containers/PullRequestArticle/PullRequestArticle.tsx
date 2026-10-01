@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Flex, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { PullRequest } from '@dxos/types';
 import { type DiffLineTarget } from '@dxos/ui-editor';

@@ -9,7 +9,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { Loading } from '#components';

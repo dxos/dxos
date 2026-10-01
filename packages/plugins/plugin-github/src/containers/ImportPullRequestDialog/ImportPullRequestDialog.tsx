@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { Column, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

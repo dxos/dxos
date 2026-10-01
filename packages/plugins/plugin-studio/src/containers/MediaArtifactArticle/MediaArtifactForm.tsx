@@ -17,8 +17,8 @@ import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Flex, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form/next';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Form } from '@dxos/react-ui-form';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

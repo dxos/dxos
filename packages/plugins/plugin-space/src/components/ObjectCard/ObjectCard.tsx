@@ -9,7 +9,7 @@ import { AppSurface, CardIconSlot, CardMenuSlot, useCardPivot, useObjectMenuItem
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
-import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu/next';
+import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

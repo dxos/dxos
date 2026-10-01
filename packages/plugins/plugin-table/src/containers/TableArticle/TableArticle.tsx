@@ -16,7 +16,7 @@ import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { graphActions, isToolbarAction } from '@dxos/react-ui-menu/next';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
   Table as TableComponent,
   type TableController,

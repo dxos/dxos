@@ -11,8 +11,7 @@ import { type Database, type Entity, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { type FormFieldRendererProps } from '@dxos/react-ui-form';
-import { FormFieldRow, RefField } from '@dxos/react-ui-form/next';
+import { type FormFieldRendererProps, FormFieldRow, RefField } from '@dxos/react-ui-form';
 
 import { MediaArtifact } from '#types';
 

@@ -11,8 +11,8 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Tree, type TreeNode } from '@dxos/react-ui-list/next';
-import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu/next';
+import { Tree, type TreeNode } from '@dxos/react-ui-list';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 

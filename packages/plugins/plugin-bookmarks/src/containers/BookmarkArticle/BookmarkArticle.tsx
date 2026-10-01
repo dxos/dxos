@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Flex } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { Summary } from '#components';

@@ -13,7 +13,7 @@ import React, { ReactNode, useRef } from 'react';
 
 import { Flex } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 

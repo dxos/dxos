@@ -7,7 +7,7 @@ import React, { type FC, type KeyboardEvent, useCallback, useContext, useEffect,
 
 import { useObject } from '@dxos/echo-react';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Tree, type TreeDropEvent, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list/next';
+import { Tree, type TreeDropEvent, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { type Task } from '@dxos/types';
 

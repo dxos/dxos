@@ -8,7 +8,7 @@ import { type Database, Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { ActionToolbar, type ActionToolbarProps } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, type ActionToolbarProps } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';

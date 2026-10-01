@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { type DiscordPresence } from '#hooks';

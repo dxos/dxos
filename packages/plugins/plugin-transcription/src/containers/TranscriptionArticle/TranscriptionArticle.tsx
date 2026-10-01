@@ -8,7 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Transcription, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Next } from '@dxos/react-ui/next';
 import { Message, type Transcript } from '@dxos/types';

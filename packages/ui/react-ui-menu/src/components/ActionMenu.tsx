@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import React, {
@@ -13,9 +13,13 @@ import React, {
   useState,
 } from 'react';
 
-import { Icon, Menu, type MenuRootProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { keySymbols } from '@dxos/react-focus';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type MenuItemChrome } from '@dxos/ui-types';
+import { resolveKeyBinding } from '@dxos/util';
+
+import { translationKey } from '#translations';
 
 import { useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
@@ -28,32 +32,38 @@ import {
   isSeparator,
 } from '../types.ts';
 import { executeMenuAction } from '../util.ts';
-import { ActionLabel } from './ActionLabel.tsx';
+import { iconSizeOf } from './icon-size.ts';
 
 //
-// Items (private): the graph's items as `Menu` parts.
+// Items (private): the graph's items as `Next.Menu` parts.
 //
 
 const isMultiSelect = (group?: MenuGroupContext): boolean => group?.properties?.selectCardinality === 'multiple';
 
-const ActionMenuItem = ({
-  menu,
-  action,
-  group,
-}: {
-  menu: MenuActions;
-  action: MenuAction;
-  group?: MenuGroupContext;
-}) => {
-  const { onAction, caller, iconSize = 5 } = menu;
-  // An item that declares `checked` is a select-group member: expose the checked role + state to AT so
-  // the current value is announced, not conveyed by the trailing check icon alone. Mutually-exclusive
-  // (single-select) groups use radio semantics; multi-select groups use checkbox.
-  const checkable = typeof action.properties?.checked === 'boolean';
-  const multiple = isMultiSelect(group);
-  const role = multiple ? 'menuitemcheckbox' : 'menuitemradio';
+/** An action that declares `checked` is a select-group member (radio, or checkbox in a multi-select group). */
+const isCheckable = (item: MenuItem): item is MenuAction =>
+  !isSeparator(item) && !isMenuGroup(item) && typeof item.properties?.checked === 'boolean';
 
-  const handleClick = useCallback(
+/** The row data Next's item parts render: the localized label and the platform's shortcut glyphs. */
+const useItemData = (
+  id: string,
+  properties: Pick<MenuItemChrome, 'label' | 'icon' | 'disabled' | 'keyBinding'>,
+): Next.MenuOption => {
+  const { t } = useTranslation(translationKey);
+  const shortcut = resolveKeyBinding(properties.keyBinding);
+  return {
+    value: id,
+    label: toLocalizedString(properties.label, t),
+    icon: properties.icon,
+    shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
+    disabled: properties.disabled,
+  };
+};
+
+/** Runs the action on click, which zag also dispatches for Enter, so keyboard and pointer share one path. */
+const useInvoke = (menu: MenuActions, action: MenuAction, group?: MenuGroupContext) => {
+  const { onAction, caller } = menu;
+  return useCallback(
     (event: MouseEvent) => {
       if (action.properties?.disabled) {
         return;
@@ -68,53 +78,124 @@ const ActionMenuItem = ({
     },
     [action, group, caller, onAction],
   );
+};
 
-  // A multi-select group is set by toggling several members, so suppress the primitive's
-  // close-on-select; picking one value and closing is single-select behaviour.
-  const handleSelect = useCallback((event: Event) => multiple && event.preventDefault(), [multiple]);
+type ActionItemProps = {
+  menu: MenuActions;
+  action: MenuAction;
+  group?: MenuGroupContext;
+};
 
+const ItemIcon = ({ menu, action }: { menu: MenuActions; action: MenuAction | MenuItemGroup<MenuItemChrome> }) =>
+  action.properties?.icon ? (
+    <Next.Menu.ItemIcon
+      spin={action.properties.spin}
+      size={iconSizeOf(menu.iconSize)}
+      classNames={action.properties.iconClassNames}
+    />
+  ) : null;
+
+const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
+  const item = useItemData(action.id, action.properties);
+  const handleClick = useInvoke(menu, action, group);
   return (
-    <Menu.Item
+    <Next.Menu.Item
+      item={item}
       onClick={handleClick}
-      onSelect={handleSelect}
-      classNames='gap-2'
-      disabled={action.properties?.disabled}
-      {...(checkable && { role, 'aria-checked': !!action.properties?.checked })}
+      // Picking several values from a multi-select group should not close the menu after the first.
+      closeOnSelect={!isMultiSelect(group)}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      {action.properties?.icon && (
-        <Icon
-          icon={action.properties.icon}
-          size={iconSize}
-          classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
-        />
-      )}
-      <ActionLabel action={action} />
-      {/* Trailing check marks the current value of a single-select group (`checked`). */}
-      {action.properties?.checked && <Icon icon='ph--check--regular' size={iconSize} classNames='ms-auto' />}
-    </Menu.Item>
+      <ItemIcon menu={menu} action={action} />
+      <Next.Menu.ItemText />
+      {item.shortcut && <Next.Menu.ItemShortcut />}
+    </Next.Menu.Item>
+  );
+};
+
+const ActionCheckboxItem = ({ menu, action, group }: ActionItemProps) => {
+  const item = useItemData(action.id, action.properties);
+  const handleClick = useInvoke(menu, action, group);
+  return (
+    <Next.Menu.CheckboxItem
+      item={item}
+      // The graph owns the state: the action flips it and the item re-renders from `checked`.
+      checked={!!action.properties.checked}
+      onClick={handleClick}
+      closeOnSelect={false}
+      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+    />
+  );
+};
+
+const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
+  const item = useItemData(action.id, action.properties);
+  const handleClick = useInvoke(menu, action, group);
+  return (
+    <Next.Menu.RadioItem
+      item={item}
+      onClick={handleClick}
+      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+    />
   );
 };
 
 /** A group inside a menu is a submenu; its items resolve when it opens. */
 const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup<MenuItemChrome> }) => {
-  const { iconSize = 5 } = menu;
-  const { icon, testId } = group.properties;
+  const item = useItemData(group.id, group.properties);
   return (
-    <Menu.Sub>
-      <Menu.SubTrigger classNames='gap-2' {...(testId && { 'data-testid': testId })}>
-        {icon && <Icon icon={icon} size={iconSize} />}
-        <ActionLabel action={group} />
-        <Icon icon='ph--caret-right--regular' size={iconSize} classNames='ms-auto' />
-      </Menu.SubTrigger>
-      <Menu.Portal>
-        <Menu.SubContent>
-          <Menu.Viewport>
-            <ActionMenuItems menu={menu} group={group} />
-          </Menu.Viewport>
-        </Menu.SubContent>
-      </Menu.Portal>
-    </Menu.Sub>
+    <Next.Menu.Sub>
+      <Next.Menu.TriggerItem
+        item={item}
+        disabled={group.properties.disabled}
+        {...(group.properties.testId && { 'data-testid': group.properties.testId })}
+      >
+        <ItemIcon menu={menu} action={group} />
+        <Next.Menu.ItemText />
+        <Next.Icon icon='ph--caret-right--regular' />
+      </Next.Menu.TriggerItem>
+      <Next.Menu.Content>
+        <ActionMenuItems menu={menu} group={group} />
+      </Next.Menu.Content>
+    </Next.Menu.Sub>
+  );
+};
+
+type Segment = { kind: 'item'; item: MenuItem } | { kind: 'radio'; id: string; actions: MenuAction[] };
+
+/**
+ * Runs of checkable items in a single-select group become one radio group (Ark's radio items need one), whose value is
+ * the member marked `checked`.
+ */
+const segment = (items: MenuItem[], multiple: boolean): Segment[] =>
+  items.reduce<Segment[]>((segments, item) => {
+    const last = segments.at(-1);
+    if (multiple || !isCheckable(item)) {
+      segments.push({ kind: 'item', item });
+    } else if (last?.kind === 'radio') {
+      last.actions.push(item);
+    } else {
+      segments.push({ kind: 'radio', id: item.id, actions: [item] });
+    }
+    return segments;
+  }, []);
+
+const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuItem; group?: MenuGroupContext }) => {
+  if (isSeparator(item)) {
+    return <Next.Menu.Separator />;
+  }
+  if (isMenuGroup(item)) {
+    // A graph group's properties are an open record, validated by the plugin that contributed them.
+    return <ActionSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />;
+  }
+  const action = item as MenuAction;
+  if (action.properties?.hidden) {
+    return null;
+  }
+  return isCheckable(action) ? (
+    <ActionCheckboxItem menu={menu} action={action} group={group} />
+  ) : (
+    <ActionMenuItem menu={menu} action={action} group={group} />
   );
 };
 
@@ -128,16 +209,23 @@ const ActionMenuItems = ({
   actions?: MenuItem[];
 }) => {
   const items = useMenuItems(menu, group, actions);
+  const segments = useMemo(() => segment(items ?? [], isMultiSelect(group)), [items, group]);
   return (
     <>
-      {items?.map((item) =>
-        isSeparator(item) ? (
-          <Menu.Separator key={item.id} />
-        ) : isMenuGroup(item) ? (
-          // A graph group's properties are an open record, validated by the plugin that contributed them.
-          <ActionSubMenu key={item.id} menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />
+      {segments.map((entry) =>
+        entry.kind === 'radio' ? (
+          <Next.Menu.RadioItemGroup
+            key={entry.id}
+            value={entry.actions.find((action) => action.properties.checked)?.id ?? ''}
+          >
+            {entry.actions
+              .filter((action) => !action.properties.hidden)
+              .map((action) => (
+                <ActionRadioItem key={action.id} menu={menu} action={action} group={group} />
+              ))}
+          </Next.Menu.RadioItemGroup>
         ) : (
-          <ActionMenuItem key={item.id} menu={menu} action={item as MenuAction} group={group} />
+          <ActionMenuEntry key={entry.item.id} menu={menu} item={entry.item} group={group} />
         ),
       )}
     </>
@@ -148,38 +236,36 @@ const ActionMenuItems = ({
 // ActionMenu
 //
 
-export type ActionMenuProps = Partial<MenuActions> &
-  Pick<MenuRootProps, 'open' | 'defaultOpen' | 'onOpenChange'> & {
-    /** The group whose items the menu shows; the root's when omitted. */
-    group?: MenuGroupContext;
-    /** Explicit items in place of the group's own; contributions still apply. A thunk is called
-     * once the menu exists, so a deferred menu does not build its items until it is opened. */
-    actions?: MenuItem[] | (() => MenuItem[]);
-    /**
-     * Builds the menu on the trigger's first click rather than with the trigger.
-     *
-     * A menu carries a state machine, so a list that renders one per row builds one machine per row
-     * for menus nobody opens — the largest single cost in the task list's stages of the performance
-     * flow. Ignored for a controlled or virtually-anchored menu, which may be opened from anywhere
-     * and so cannot wait for its own trigger.
-     *
-     * Building the menu re-parents the trigger under it, so a caller holding the trigger's element
-     * has to re-read it afterwards.
-     */
-    deferUntilOpen?: boolean;
-    /** Anchors the content at an element that is not the trigger; the child is then optional. */
-    virtualRef?: RefObject<Element | null>;
-    disabled?: boolean;
-    /** Specify a container element to portal the content into. */
-    container?: HTMLElement | null;
-    /** The trigger. */
-    children?: ReactNode;
-  };
+export type ActionMenuProps = Partial<MenuActions> & {
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** The group whose items the menu shows; the root's when omitted. */
+  group?: MenuGroupContext;
+  /**
+   * Explicit items in place of the group's own; contributions still apply. A thunk is called once the menu exists, so
+   * a deferred menu does not build its items until it is opened.
+   */
+  actions?: MenuItem[] | (() => MenuItem[]);
+  /**
+   * Builds the menu on the trigger's first click rather than with the trigger, since each menu carries a state machine
+   * and a list renders one per row. Ignored for a controlled or virtually-anchored menu, which may be opened from
+   * anywhere and so cannot wait for its own trigger.
+   */
+  deferUntilOpen?: boolean;
+  /** Anchors the content at an element that is not the trigger (open it under control); the child is then optional. */
+  virtualRef?: RefObject<Element | null>;
+  disabled?: boolean;
+  /** Specify a container element to portal the content into. */
+  container?: HTMLElement | null;
+  /** The trigger. */
+  children?: ReactNode;
+};
 
 /**
- * A whole `Menu.Root` driven from a `MenuActions`: the child is the trigger, the items come from the
- * graph. Being complete, it drops into a hand-written `Toolbar.Root` beside plain buttons. Without a
- * `MenuActions` it is a menu of the explicit `actions` alone.
+ * A whole `Next.Menu.Root` driven from a `MenuActions`: the child is the trigger (`asChild`), the items come from the
+ * graph; groups become `Sub` menus, `checked` members radio or checkbox items. Without a `MenuActions` it is a menu of
+ * the explicit `actions` alone.
  */
 export const ActionMenu = ({
   items,
@@ -223,54 +309,55 @@ export const ActionMenu = ({
     ? children
     : undefined;
 
-  const handleDeferredOpenChange = useCallback(
+  const handleOpenChange = useCallback(
     (next: boolean) => {
-      setDeferredOpen(next);
+      if (deferred) {
+        setDeferredOpen(next);
+      }
       onOpenChange?.(next);
     },
-    [onOpenChange],
+    [deferred, onOpenChange],
   );
 
   const handleTriggerClick = useCallback(
     (event: MouseEvent) => {
       trigger?.props.onClick?.(event);
       setBuilt(true);
-      handleDeferredOpenChange(true);
+      handleOpenChange(true);
     },
-    [trigger, handleDeferredOpenChange],
+    [trigger, handleOpenChange],
   );
+
+  // Next's Content portals into a ref.
+  const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
+
+  const positioning = Next.useVirtualAnchor(virtualRef);
 
   if (deferred && !built && trigger) {
     return cloneElement(trigger, {
       'onClick': handleTriggerClick,
-      // The trigger announces itself as a menu button before the menu exists, since the
-      // `Menu.Trigger` that would say so is not above it yet.
+      // The trigger announces itself as a menu button before the `Menu.Trigger` that would say so exists.
       'aria-haspopup': 'menu',
       'aria-expanded': false,
     });
   }
 
   return (
-    <Menu.Root
+    <Next.Menu.Root
       open={deferred ? deferredOpen : open}
       defaultOpen={defaultOpen}
-      onOpenChange={deferred ? handleDeferredOpenChange : onOpenChange}
+      onOpenChange={({ open }) => handleOpenChange(open)}
+      positioning={positioning}
     >
-      {virtualRef ? <Menu.VirtualTrigger virtualRef={virtualRef} /> : null}
       {children && (
-        <Menu.Trigger asChild disabled={disabled}>
+        <Next.Menu.Trigger asChild disabled={disabled}>
           {children}
-        </Menu.Trigger>
+        </Next.Menu.Trigger>
       )}
-      <Menu.Portal container={container}>
-        <Menu.Content>
-          <Menu.Viewport>
-            <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
-          </Menu.Viewport>
-          <Menu.Arrow />
-        </Menu.Content>
-      </Menu.Portal>
-    </Menu.Root>
+      <Next.Menu.Content container={containerRef}>
+        <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
+      </Next.Menu.Content>
+    </Next.Menu.Root>
   );
 };
 

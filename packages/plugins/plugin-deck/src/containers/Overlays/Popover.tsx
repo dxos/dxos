@@ -9,7 +9,7 @@ import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxo
 import { Obj } from '@dxos/echo';
 import { toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu/next';
+import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';
 

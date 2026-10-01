@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { WordList } from '#components';

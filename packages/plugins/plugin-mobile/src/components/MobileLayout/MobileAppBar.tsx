@@ -8,7 +8,7 @@ import React, { Fragment } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu/next';
+import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 

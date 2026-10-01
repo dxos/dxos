@@ -11,7 +11,7 @@ import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { Channel } from '@dxos/types';
 

@@ -15,7 +15,7 @@ import { Flex, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionToolbar } from '@dxos/react-ui-menu/next';
+import { ActionToolbar } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { useVisibleMagazinePosts } from '#atoms';

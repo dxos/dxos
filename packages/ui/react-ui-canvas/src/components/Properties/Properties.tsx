@@ -12,8 +12,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormFieldMap, type FormFieldRenderer, Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 

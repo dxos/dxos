@@ -17,7 +17,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { ObjectProperties } from '@dxos/react-ui-form/next';
+import { ObjectProperties } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';

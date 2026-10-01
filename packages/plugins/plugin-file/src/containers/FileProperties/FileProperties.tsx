@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { File } from '@dxos/types';
 

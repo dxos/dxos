@@ -8,7 +8,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
-import type { MenuItem } from '@dxos/react-ui-menu/next';
+import type { MenuItem } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { Position } from '@dxos/util';
 

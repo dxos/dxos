@@ -9,7 +9,7 @@ import { useQuery } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { ObjectForm } from '@dxos/react-ui-form/next';
+import { ObjectForm } from '@dxos/react-ui-form';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';

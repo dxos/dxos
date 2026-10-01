@@ -16,7 +16,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 

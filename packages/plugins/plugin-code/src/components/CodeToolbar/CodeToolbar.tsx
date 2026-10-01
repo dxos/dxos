@@ -13,7 +13,7 @@ import {
   type ActionToolbarProps,
   createMenuAction,
   useMenuActions,
-} from '@dxos/react-ui-menu/next';
+} from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { CodeCapabilities } from '#types';

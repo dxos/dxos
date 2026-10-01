@@ -10,7 +10,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { Ibkr } from '#types';

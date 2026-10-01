@@ -10,7 +10,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface, SettingsScope, useUpdateRow } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';

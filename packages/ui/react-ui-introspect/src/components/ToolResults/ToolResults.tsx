@@ -15,7 +15,7 @@ import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 

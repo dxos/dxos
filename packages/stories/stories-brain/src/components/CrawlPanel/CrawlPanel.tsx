@@ -10,8 +10,7 @@ import React, { type ChangeEvent, type ComponentProps, useCallback, useMemo } fr
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type FormFieldMap } from '@dxos/react-ui-form';
-import { Form, createSelectField } from '@dxos/react-ui-form/next';
+import { type FormFieldMap, Form, createSelectField } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 export const CrawlOptions = Schema.Struct({

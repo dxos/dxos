@@ -7,7 +7,7 @@
 // pane, which lives in its own file, needs the same context the list provides.
 
 import { createContext } from '@dxos/react-ui';
-import type { MenuItem } from '@dxos/react-ui-menu/next';
+import type { MenuItem } from '@dxos/react-ui-menu';
 import { type Task } from '@dxos/types';
 
 import { type TaskPlacement } from './hierarchy.ts';

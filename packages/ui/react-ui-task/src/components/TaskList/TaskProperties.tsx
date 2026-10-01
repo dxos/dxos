@@ -7,7 +7,7 @@ import React, { type ReactNode } from 'react';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu/next';
+import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';

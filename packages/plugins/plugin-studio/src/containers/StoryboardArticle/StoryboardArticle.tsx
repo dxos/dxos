@@ -13,7 +13,7 @@ import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { FrameStack, StoryboardPlayer } from '#components';

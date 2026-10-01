@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -74,8 +74,13 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   detail,
 }: MasterDetailProps<T>) => {
   const list = (items.length === 0 && <Next.Empty>{emptyLabel}</Next.Empty>) || (
-    // The list carries a selection, so a reader arrows between entries rather than their menus.
-    <OrderedList.Root<T> items={items} navigationMode='listbox'>
+    // The list carries a selection, so a reader arrows between entries and Enter picks one.
+    <OrderedList.Root<T>
+      items={items}
+      getId={(item) => item.id}
+      value={selectedId}
+      onValueChange={(id) => onSelect?.(id)}
+    >
       {({ items }) => (
         <OrderedList.Content>
           {items.map((item) => (
@@ -161,19 +166,17 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   return (
     <OrderedList.Item
       id={item.id}
-      item={item}
       canDrag={false}
-      hover
-      selected={selected}
-      classNames='flex items-center cursor-pointer p-1'
-      onClick={() => onSelect?.(selected ? undefined : item.id)}
+      highlightOnHover
+      // A click on the selected row clears the selection; the list selects any other row itself.
+      onClick={() => selected && onSelect?.(undefined)}
     >
       {icon && (
-        <Next.Block>
+        <OrderedList.ItemIcon>
           <Next.Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
-        </Next.Block>
+        </OrderedList.ItemIcon>
       )}
-      <span className='grow truncate'>{label}</span>
+      <OrderedList.ItemText>{label}</OrderedList.ItemText>
       {adornment && (
         <Next.Tooltip.Trigger asChild side='bottom' content={adornment.label}>
           <Next.Icon icon={adornment.icon} />

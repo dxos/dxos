@@ -9,7 +9,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';

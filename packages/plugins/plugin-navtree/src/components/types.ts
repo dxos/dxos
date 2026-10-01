@@ -5,8 +5,7 @@
 import type { FC } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import type { TreeModel } from '@dxos/react-ui-list';
-import type { TreeRootProps } from '@dxos/react-ui-list/next';
+import type { TreeModel, TreeRootProps } from '@dxos/react-ui-list';
 
 import { NavTreeNode } from '#types';
 

@@ -8,7 +8,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { trim } from '@dxos/util';
 

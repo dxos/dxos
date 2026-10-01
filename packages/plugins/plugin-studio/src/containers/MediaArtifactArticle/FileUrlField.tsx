@@ -12,8 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { type FormFieldRendererProps } from '@dxos/react-ui-form';
-import { FormFieldRow, TextField } from '@dxos/react-ui-form/next';
+import { type FormFieldRendererProps, FormFieldRow, TextField } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

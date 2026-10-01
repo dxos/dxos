@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { generateName } from '@dxos/display-name';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { hexToFallback } from '@dxos/util';
 

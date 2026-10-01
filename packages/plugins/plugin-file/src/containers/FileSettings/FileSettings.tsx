@@ -8,7 +8,7 @@ import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

@@ -5,7 +5,7 @@
 import React, { type ReactNode, useCallback } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list/next';
+import { OrderedList } from '@dxos/react-ui-list';
 
 export type FrameStackItem = { id: string };
 

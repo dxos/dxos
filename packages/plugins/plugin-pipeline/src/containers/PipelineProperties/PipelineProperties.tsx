@@ -13,9 +13,8 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { FormFieldHeader } from '@dxos/react-ui-form';
-import { Form, ViewEditor } from '@dxos/react-ui-form/next';
-import { OrderedList } from '@dxos/react-ui-list/next';
+import { Form, ViewEditor } from '@dxos/react-ui-form';
+import { OrderedList } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -154,8 +153,10 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   }, [db, updateColumns]);
 
   return (
-    <Form.FieldSet>
-      <FormFieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
+    <Form.FieldSet
+      label={t('columns.label')}
+      actions={<Next.SystemButton.Add label={t('add-column.label')} onClick={handleAdd} />}
+    >
       <OrderedList.Root<Pipeline.Column>
         items={columns}
         getId={(column) => column.view.uri}

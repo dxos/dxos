@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName, useDefaultValue, useId, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 

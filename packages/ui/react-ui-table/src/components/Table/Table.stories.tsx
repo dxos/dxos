@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { ViewEditor } from '@dxos/react-ui-form/next';
+import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';

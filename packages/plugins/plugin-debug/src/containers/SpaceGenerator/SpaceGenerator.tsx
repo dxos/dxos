@@ -21,7 +21,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { Flex, ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';

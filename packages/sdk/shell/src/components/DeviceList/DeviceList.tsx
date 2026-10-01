@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { getSize, mx } from '@dxos/ui-theme';
 

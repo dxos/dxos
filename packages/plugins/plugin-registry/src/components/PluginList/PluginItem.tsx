@@ -7,7 +7,7 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { ACCENT_HUES } from '@dxos/ui-theme';
 

@@ -11,7 +11,7 @@
 import { useMachine } from '@zag-js/react';
 import React, { useMemo } from 'react';
 
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { type MultiSelectSchema, connect, multiSelectMachine } from '../../testing/index.ts';
 

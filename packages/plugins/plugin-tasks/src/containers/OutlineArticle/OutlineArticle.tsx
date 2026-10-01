@@ -11,9 +11,8 @@ import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Show, useTranslation } from '@dxos/react-ui';
-import { omitId } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { omitId, Form } from '@dxos/react-ui-form';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 

@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

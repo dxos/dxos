@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { composable, composableProps } from '@dxos/react-ui';
-import { ActionMenu } from '@dxos/react-ui-menu/next';
+import { ActionMenu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
 import { Next } from '@dxos/react-ui/next';

@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 

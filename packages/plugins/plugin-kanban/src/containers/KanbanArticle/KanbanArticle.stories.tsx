@@ -25,7 +25,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { ViewEditor } from '@dxos/react-ui-form/next';
+import { ViewEditor } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';

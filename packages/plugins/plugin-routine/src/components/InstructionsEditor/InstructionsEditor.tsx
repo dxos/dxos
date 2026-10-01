@@ -10,7 +10,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Entity, Obj, Type } from '@dxos/echo';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 
 const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 

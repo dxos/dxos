@@ -11,7 +11,7 @@ import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
-import type { MenuActions } from '@dxos/react-ui-menu/next';
+import type { MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { AppCapabilities } from '../../app-framework/index.ts';

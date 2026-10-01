@@ -22,7 +22,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { random } from '@dxos/random';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 import { Loading } from '@dxos/react-ui/testing';

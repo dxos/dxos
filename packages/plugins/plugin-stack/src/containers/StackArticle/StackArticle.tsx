@@ -12,7 +12,7 @@ import { type Collection, Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
 import { arrayMove, isNonNullable } from '@dxos/util';

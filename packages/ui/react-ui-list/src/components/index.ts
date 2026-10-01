@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Combobox/index.ts';
-export * from './DropIndicator/index.ts';
 export * from './Listbox/index.ts';
 export * from './MasterDetail/index.ts';
 export * from './OrderedList/index.ts';

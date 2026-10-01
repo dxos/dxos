@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/react-ui';
-import { createMenuAction } from '@dxos/react-ui-menu/next';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';

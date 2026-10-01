@@ -23,7 +23,7 @@ import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { CardMasonry } from '@dxos/plugin-space/components';
 import { Column, useTranslation } from '@dxos/react-ui';
-import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu/next';
+import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';

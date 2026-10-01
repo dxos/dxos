@@ -12,8 +12,7 @@
 
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
-import { type FormFieldRenderer } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormFieldRenderer, Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '../../model/types.ts';

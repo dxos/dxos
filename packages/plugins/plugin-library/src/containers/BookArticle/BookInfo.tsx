@@ -10,8 +10,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { useObject } from '@dxos/react-client/echo';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormUpdateMeta, omitId, Form } from '@dxos/react-ui-form';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Next } from '@dxos/react-ui/next';
 

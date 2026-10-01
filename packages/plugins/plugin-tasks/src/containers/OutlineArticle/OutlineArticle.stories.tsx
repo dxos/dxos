@@ -16,7 +16,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { createMenuAction } from '@dxos/react-ui-menu/next';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

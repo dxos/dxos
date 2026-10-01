@@ -16,7 +16,7 @@ import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 

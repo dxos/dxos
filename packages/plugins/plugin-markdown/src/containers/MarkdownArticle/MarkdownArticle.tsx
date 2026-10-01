@@ -26,7 +26,7 @@ import {
   defaultViewModeItems,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { graphActions, isToolbarAction } from '@dxos/react-ui-menu/next';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';

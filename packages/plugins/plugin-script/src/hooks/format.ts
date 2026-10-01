@@ -9,7 +9,7 @@ import prettierPluginTypescript from 'prettier/plugins/typescript';
 import type * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu/next';
+import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 

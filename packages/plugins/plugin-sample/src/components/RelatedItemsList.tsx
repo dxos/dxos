@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 
 export type RelatedItemsListProps = {

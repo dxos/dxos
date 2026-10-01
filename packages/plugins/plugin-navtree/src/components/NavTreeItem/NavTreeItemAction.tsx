@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { composable, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu/next';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

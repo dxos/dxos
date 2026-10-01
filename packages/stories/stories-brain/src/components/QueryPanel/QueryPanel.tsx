@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Format } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 // Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).

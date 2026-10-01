@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu/next';
+import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 /**
  * Body view modes, in menu order. The {@link ViewMode} type and the toolbar group's default both

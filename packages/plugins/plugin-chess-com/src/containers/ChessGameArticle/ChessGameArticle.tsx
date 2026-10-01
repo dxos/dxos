@@ -11,7 +11,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
 import { Flex, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionMenu } from '@dxos/react-ui-menu/next';
+import { ActionMenu } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

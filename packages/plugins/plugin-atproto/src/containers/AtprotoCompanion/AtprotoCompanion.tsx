@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { type PublishFieldNote } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';

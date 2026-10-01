@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu/next';
+import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { type Label } from '@dxos/ui-types';
 

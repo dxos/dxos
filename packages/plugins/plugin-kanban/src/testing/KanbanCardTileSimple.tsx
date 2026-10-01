@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
 

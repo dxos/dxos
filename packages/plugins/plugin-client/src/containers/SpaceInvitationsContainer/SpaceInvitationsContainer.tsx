@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useContacts, useInboxNotices } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { type SpaceInvitationEntry, SpaceInvitationList } from '@dxos/shell/react';
 
 import { meta } from '#meta';

@@ -7,7 +7,7 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 import { Obj } from '@dxos/echo';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { useTranslation } from '@dxos/react-ui';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { getHashStyles } from '@dxos/ui-theme';
 

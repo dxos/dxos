@@ -22,7 +22,7 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu/next';
+} from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
 import { Event } from '@dxos/types';

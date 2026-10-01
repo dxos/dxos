@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu/next';
+import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { type Formatting, Inline, addLink, removeLink, setStyle } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';

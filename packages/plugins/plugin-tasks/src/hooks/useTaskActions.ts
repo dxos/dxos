@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu/next';
+import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { type Task } from '@dxos/types';
 
 import { TasksCapabilities } from '#types';

@@ -7,8 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldProvider } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormFieldProvider, Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

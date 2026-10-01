@@ -28,7 +28,7 @@ import {
   useViewStateActions,
 } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { createMenuAction } from '@dxos/react-ui-menu/next';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import {
   type TaskCreateHandler,
   type TaskGroup,

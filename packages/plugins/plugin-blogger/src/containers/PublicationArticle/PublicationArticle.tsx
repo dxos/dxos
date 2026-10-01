@@ -15,9 +15,9 @@ import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useTranslation } from '@dxos/react-ui';
-import { ObjectForm } from '@dxos/react-ui-form/next';
+import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 import { PostCard } from '#components';

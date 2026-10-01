@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { Version } from '@dxos/versioning';
 

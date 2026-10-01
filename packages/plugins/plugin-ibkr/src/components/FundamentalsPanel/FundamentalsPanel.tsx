@@ -6,8 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldProvider } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormFieldProvider, Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { formatForDisplay } from '@dxos/schema';
 

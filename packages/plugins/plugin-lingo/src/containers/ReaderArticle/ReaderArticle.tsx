@@ -11,7 +11,7 @@ import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { sourceHash } from '@dxos/nlp';
 import { useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { HasSubject } from '@dxos/types';
 

@@ -11,8 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useGraphTreeModel } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
-import { Path } from '@dxos/react-ui-list';
-import { Tree, type TreeSelectEvent } from '@dxos/react-ui-list/next';
+import { Path, Tree, type TreeSelectEvent } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';

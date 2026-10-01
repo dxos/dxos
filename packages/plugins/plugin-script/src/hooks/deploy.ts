@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
 import { type TFunction } from '@dxos/react-ui';
-import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu/next';
+import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import { messageValence } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

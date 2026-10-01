@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { useConfig } from '@dxos/react-client';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';

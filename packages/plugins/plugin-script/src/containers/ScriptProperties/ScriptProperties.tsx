@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Script from '@dxos/compute/Script';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 
 import { FunctionBinding } from './FunctionBinding.tsx';
 import { FunctionPublishing } from './FunctionPublishing.tsx';

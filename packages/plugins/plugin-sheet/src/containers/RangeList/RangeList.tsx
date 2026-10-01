@@ -9,7 +9,7 @@ import '@dxos/react-ui/next/theme.css';
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list/next';
+import { OrderedList } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

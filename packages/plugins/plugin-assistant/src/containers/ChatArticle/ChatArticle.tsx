@@ -16,7 +16,7 @@ import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Flex } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
-import { graphActions, isPromptAction } from '@dxos/react-ui-menu/next';
+import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { Merge } from '@dxos/util';
 

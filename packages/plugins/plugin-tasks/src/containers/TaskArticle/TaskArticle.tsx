@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
 import { Column, useTranslation } from '@dxos/react-ui';
-import { ActionMenu } from '@dxos/react-ui-menu/next';
+import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';

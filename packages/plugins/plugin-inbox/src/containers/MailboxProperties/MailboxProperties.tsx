@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { useSyncTrigger } from '#hooks';

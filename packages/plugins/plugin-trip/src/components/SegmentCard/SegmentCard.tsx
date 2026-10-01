@@ -7,7 +7,7 @@ import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';

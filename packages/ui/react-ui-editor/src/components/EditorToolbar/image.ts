@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu/next';
+import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 import { translationKey } from '#translations';
 

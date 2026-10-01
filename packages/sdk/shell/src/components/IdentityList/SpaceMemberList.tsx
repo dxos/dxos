@@ -9,7 +9,7 @@ import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';

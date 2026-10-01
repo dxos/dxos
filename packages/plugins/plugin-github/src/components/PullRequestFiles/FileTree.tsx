@@ -5,8 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { createStaticTreeModel } from '@dxos/react-ui-list';
-import { Tree, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list/next';
+import { createStaticTreeModel, Tree, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

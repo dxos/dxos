@@ -9,7 +9,7 @@ import { Entity, Ref, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Label } from '@dxos/react-ui';
-import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form/next';
+import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { Next } from '@dxos/react-ui/next';
 import { type FieldProjection } from '@dxos/schema';

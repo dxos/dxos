@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback } from 'react';
 
-import { type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormFieldMap, type FormFieldRendererProps, Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { Terra } from '#types';

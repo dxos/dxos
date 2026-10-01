@@ -10,8 +10,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { EMAIL_REGEX, REF_REGEX } from '@dxos/react-ui-form';
-import { RefEditor } from '@dxos/react-ui-form/next';
+import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 

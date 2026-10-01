@@ -18,7 +18,7 @@ import {
   createMenuAction,
   createMenuItemGroup,
   useMenuActions,
-} from '@dxos/react-ui-menu/next';
+} from '@dxos/react-ui-menu';
 
 import { translationKey } from '#translations';
 

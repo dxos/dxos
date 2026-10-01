@@ -21,7 +21,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';

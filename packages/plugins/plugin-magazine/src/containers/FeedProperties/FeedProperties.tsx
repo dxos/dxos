@@ -14,7 +14,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

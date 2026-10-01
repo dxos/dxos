@@ -8,7 +8,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
 import { Next } from '@dxos/react-ui/next';
 

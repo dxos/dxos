@@ -8,8 +8,8 @@ import React, { useCallback, useState } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
 import { Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

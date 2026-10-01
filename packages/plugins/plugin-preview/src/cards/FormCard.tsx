@@ -11,8 +11,7 @@ import { useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
-import { Form } from '@dxos/react-ui-form/next';
+import { type FormPresentation, type FormUpdateMeta, getFormProperties, omitId, Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { type ProjectionModel } from '@dxos/schema';
 

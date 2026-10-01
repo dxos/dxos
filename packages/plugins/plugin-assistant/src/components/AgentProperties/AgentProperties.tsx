@@ -10,7 +10,7 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { isFeedOwnerSchema } from '@dxos/schema';
 

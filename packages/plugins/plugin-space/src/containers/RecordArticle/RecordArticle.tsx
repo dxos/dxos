@@ -19,7 +19,7 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu/next';
+} from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 

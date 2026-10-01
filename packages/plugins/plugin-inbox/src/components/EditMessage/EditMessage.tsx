@@ -8,11 +8,11 @@ import React, { type Ref, useCallback, useMemo, useRef, useState } from 'react';
 import { type Database, Obj } from '@dxos/echo';
 import { Column, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { EMAIL_REGEX } from '@dxos/react-ui-form';
-import { RefEditor } from '@dxos/react-ui-form/next';
+import { EMAIL_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { type Message as MessageType, Person } from '@dxos/types';
 import { type Extension, keymap } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -75,22 +75,24 @@ const RecipientEditor = ({
   classNames?: string;
   onChange: (value: string) => void;
 }) => (
-  <RefEditor
-    ref={editorRef}
-    extensions={extensions}
-    db={db}
-    type={Person.Person}
-    mode='email'
-    match={EMAIL_REGEX}
-    icon='ph--user--regular'
-    getLabel={getPersonLabel}
-    getValues={getPersonValues}
-    activateOnTyping
-    classNames={classNames}
-    placeholder={placeholder}
-    value={value}
-    onChange={onChange}
-  />
+  // The grid cell: the editor's frame takes no layout classes, so its placement in the header grid lives here.
+  <div className={mx('min-w-0', classNames)}>
+    <RefEditor
+      ref={editorRef}
+      extensions={extensions}
+      db={db}
+      type={Person.Person}
+      mode='email'
+      match={EMAIL_REGEX}
+      icon='ph--user--regular'
+      getLabel={getPersonLabel}
+      getValues={getPersonValues}
+      activateOnTyping
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+    />
+  </div>
 );
 
 export type EditMessageProps = {

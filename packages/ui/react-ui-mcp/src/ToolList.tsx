@@ -22,7 +22,7 @@ import React, {
 } from 'react';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 /**

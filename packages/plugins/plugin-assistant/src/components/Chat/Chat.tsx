@@ -32,7 +32,7 @@ import {
   isPrompt,
   useFeedModel,
 } from '@dxos/react-ui-feed';
-import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import { Next } from '@dxos/react-ui/next';
 import { Message, Task } from '@dxos/types';

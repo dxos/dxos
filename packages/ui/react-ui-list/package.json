@@ -17,11 +17,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./next": {
-      "source": "./src/next/index.ts",
-      "types": "./dist/types/src/next/index.d.ts",
-      "import": "./dist/lib/next.mjs"
-    },
     "./util": {
       "source": "./src/util/index.ts",
       "types": "./dist/types/src/util/index.d.ts",

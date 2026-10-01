@@ -15,7 +15,7 @@ import {
   type ActionToolbarProps,
   MenuBuilder,
   useMenuActions,
-} from '@dxos/react-ui-menu/next';
+} from '@dxos/react-ui-menu';
 import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { type EditorState, getSelectedObjectIds } from '../../tools/index.ts';

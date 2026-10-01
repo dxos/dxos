@@ -14,7 +14,7 @@ import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
 import { Next } from '@dxos/react-ui/next';

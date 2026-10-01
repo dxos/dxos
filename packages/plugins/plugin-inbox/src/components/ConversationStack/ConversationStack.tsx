@@ -16,7 +16,7 @@ import { createContext } from '@dxos/react-hooks';
 import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
-import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
 import { TagIndex } from '@dxos/schema';

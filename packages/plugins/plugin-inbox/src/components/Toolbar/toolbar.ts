@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { ActionGroupBuilder, ActionGroupBuilderFn } from '@dxos/react-ui-menu/next';
+import type { ActionGroupBuilder, ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 // Shared icons so the open/delete actions look identical across the Event and Message toolbars.
 const OPEN_ICON = 'ph--arrow-square-out--regular';

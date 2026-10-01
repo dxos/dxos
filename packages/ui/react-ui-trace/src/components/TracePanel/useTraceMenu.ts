@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { translationKey } from '../../translations.ts';
 import {

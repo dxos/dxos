@@ -1,5 +1,5 @@
 /*
- * Tree (`@dxos/react-ui-list/next`): rows are flat, one block tall and indented one block per level. Row states (hover,
+ * Tree (`@dxos/react-ui-list`): rows are flat, one block tall and indented one block per level. Row states (hover,
  * selected, focus, disabled, drag, the drop line) are the shared `nx-row` rules (row.css); this file keeps the tree's
  * layout, the `inside` ring and the line's indent.
  */

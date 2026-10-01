@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type DiscordPresence } from '#hooks';

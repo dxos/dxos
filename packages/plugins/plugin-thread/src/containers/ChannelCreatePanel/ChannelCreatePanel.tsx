@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Form } from '@dxos/react-ui-form/next';
+import { Form } from '@dxos/react-ui-form';
 
 import { ChannelBackend, ThreadCapabilities } from '#types';
 

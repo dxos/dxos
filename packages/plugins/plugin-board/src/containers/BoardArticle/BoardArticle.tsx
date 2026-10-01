@@ -23,7 +23,7 @@ import {
   resizeToFit,
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
-import { ObjectPicker, type ObjectPickerProps } from '@dxos/react-ui-form/next';
+import { ObjectPicker, type ObjectPickerProps } from '@dxos/react-ui-form';
 import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 

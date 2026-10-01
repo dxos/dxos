@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Next } from '@dxos/react-ui/next';
 
 export type EmptyPanelProps = {
