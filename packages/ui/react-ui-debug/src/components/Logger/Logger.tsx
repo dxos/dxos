@@ -15,7 +15,6 @@ import React, {
 import { logFileRegistry } from '@dxos/log';
 import {
   type ThemedClassName,
-  ToggleIconButton,
   composable,
   composableProps,
   parseCaptureOwnerStack,
@@ -247,13 +246,13 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         </Next.Select.Content>
       </Next.Select.Root>
       <LoggerLevels />
-      <ToggleIconButton
-        active={recording}
+      <Next.Toggle
+        pressed={recording}
+        onPressedChange={(pressed) => setRecording(() => pressed)}
         icon='ph--record--regular'
         activeIcon='ph--pause--regular'
         iconOnly
         label={t('record.label')}
-        onClick={() => setRecording((value) => !value)}
       />
       <Next.Button icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
       <Next.Button icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
