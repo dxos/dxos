@@ -9,14 +9,14 @@ import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { type ComboboxRootProps } from '@dxos/react-ui-list';
-import { useSearchListResults } from '@dxos/react-ui-search';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';
 
-const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
+const storybookItems = random.helpers
+  .uniqueArray(random.commerce.productName, 16)
+  .map((name) => ({ value: name, label: name }));
 
 type GridStoryArgs = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
@@ -33,8 +33,8 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
 
   // Multiselect
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [multiSelectValue, setInternalMultiselectValue] = useState('');
-  const setMultiselectValue = useCallback<NonNullable<ComboboxRootProps['onValueChange']>>((nextValue) => {
+  const [multiSelectValue, setInternalMultiselectValue] = useState<string[]>([]);
+  const setMultiselectValue = useCallback((nextValue: string[]) => {
     setInternalMultiselectValue(nextValue);
     setCells((cells) => {
       // TODO(burdon): How can we get the cell address to update?
@@ -87,32 +87,20 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
 
       {/* Multiselect */}
       <Next.Combobox.Root
+        items={storybookItems}
+        multiple
         open={popoverOpen}
-        onOpenChange={setPopoverOpen}
+        onOpenChange={({ open }) => setPopoverOpen(open)}
         value={multiSelectValue}
-        onValueChange={setMultiselectValue}
+        onValueChange={({ value }) => setMultiselectValue(value)}
         positioning={Next.virtualAnchor(triggerRef)}
       >
-        <ComboboxContentWithFiltering />
+        <Next.Combobox.Content>
+          <Next.Combobox.Input placeholder='Search...' />
+          <Next.Combobox.List />
+        </Next.Combobox.Content>
       </Next.Combobox.Root>
     </div>
-  );
-};
-
-const ComboboxContentWithFiltering = () => {
-  const { results, query, handleSearch } = useSearchListResults({
-    items: storybookItems,
-  });
-
-  return (
-    <Next.Combobox.Content>
-      <Next.Combobox.Input placeholder='Search...' value={query} onValueChange={handleSearch} />
-      <Next.Combobox.List>
-        {results.map((value) => (
-          <Next.Combobox.Item key={value} value={value} label={value} />
-        ))}
-      </Next.Combobox.List>
-    </Next.Combobox.Content>
   );
 };
 
