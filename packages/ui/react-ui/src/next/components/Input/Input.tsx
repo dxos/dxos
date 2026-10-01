@@ -11,8 +11,11 @@ import { useToolbarItem } from '../Toolbar/index.ts';
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   'data-testid'?: string;
-  /** `subdued` drops the well, for an input on a surface that already reads as editable. */
-  'variant'?: 'default' | 'subdued';
+  /**
+   * `subdued` drops the well, for an input on a surface that already reads as editable; `mono` sets the value in the
+   * monospace face, for an opaque identifier (a key, a hash).
+   */
+  'variant'?: 'default' | 'subdued' | 'mono';
   /** Ask password managers not to offer autofill (`data-1p-ignore`), e.g. for a search box. */
   'noAutoFill'?: boolean;
   /** Leading content inside the control row (an Icon, or short text such as a currency). */

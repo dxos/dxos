@@ -14,7 +14,7 @@ import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
-/** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
+/** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, `subdued` and `mono`. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Next.Input placeholder='Search' aria-label='Search' noAutoFill data-testid={`input-${size}`} />
@@ -33,6 +33,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
       data-testid={`button-end-${size}`}
     />
     <Next.Input variant='subdued' placeholder='Subdued' aria-label='Subdued' data-testid={`subdued-${size}`} />
+    <Next.Input variant='mono' defaultValue='a1b2-c3d4' aria-label='Key' data-testid={`mono-${size}`} />
   </>
 );
 
@@ -116,6 +117,11 @@ export const Test: Story = {
     await userEvent.type(find, 'abc');
     await expect(find).toHaveValue('abc');
     await expect(getComputedStyle(byTestId(canvasElement, 'subdued-md')).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    // `mono` sets the value in the monospace face.
+    await expect(getComputedStyle(byTestId(canvasElement, 'mono-md')).fontFamily).toMatch(/mono/i);
+    await expect(getComputedStyle(byTestId(canvasElement, 'mono-md')).fontFamily).not.toBe(
+      getComputedStyle(byTestId(canvasElement, 'subdued-md')).fontFamily,
+    );
 
     const disabled = canvas.getByRole('textbox', { name: 'Disabled' });
     await expect(disabled).toBeDisabled();

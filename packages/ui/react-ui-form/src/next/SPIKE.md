@@ -307,6 +307,48 @@ In focused PR-days, assuming the spike's code is the starting point.
 Total: about 18–23 days for M6–M10, plus M5. The risk sits in M9 (trigger mode's create row) and M10 (CodeMirror in a
 control frame); M6 and M7 are mostly done.
 
+## Milestones after the spike (AUDIT §7 Phase A item 2)
+
+This branch's base is `main` at the spike's start. The Next work still in PR #13549 (Combobox trigger mode) and the
+parallel Phase A item 1 work (Container `span`, per-cell rails, `ControlFrame`) are not on it. Where a milestone
+needs them, the gap is named below rather than worked around.
+
+### M6: core
+
+Applied from the 2026-10-01 decision review (AUDIT §6 group C):
+
+- **Blur:** the row marks a field touched only when focus leaves the row (`relatedTarget` outside `Field.Root`). No
+  control gained an `onBlur`.
+- **Mono input:** `Input variant='mono'` is added to react-ui, a monospace face for the input or its row's field
+  (covered by Input `Test`). `Format.Key` text fields use it.
+- **Test address:** the test schema's address is `Geo.PostalAddress`, titled in the test schema (City, State /
+  Region, Address line 2, Postal code, PO box). An optional field's own `annotate` does not reach its value's AST, so
+  each is re-wrapped. The titles are not added to `@dxos/types` itself, because its JSON schema appears in recorded
+  LLM fixtures (`ai` TestData, plugin-assistant traces) that a changed schema would invalidate. The ZIP pattern demo
+  is its own `zip` field.
+
+New renderers, each covered by the `Annotated` or `SelectOptionField` story's play test:
+
+- options lookup as a Select (`AsyncSelectField`): loads from its deps, shows a spinner on the trigger, and picks
+  the sole option;
+- options lookup as a Combobox in input mode (`ComboboxField`): suggestions narrowed by the typed text, with the text
+  itself offered as a free value;
+- `AutofillField`;
+- `HueField`: a Select of hue swatches, since `HuePicker` has no Next counterpart;
+- `InlineRefField`: the target's fields as a nested group writing back through `Obj.update`, tested on a local object
+  with no database;
+- `SelectOptionField`: OrderedList disclosure rows of hued Tags; add opens a new row, and rows can be edited,
+  recoloured, reordered and removed.
+
+The dispatcher routes lookup, autofill, hue and inline refs, and select options take the projection's titles.
+
+Not in M6:
+
+- `MarkdownField` waits for `ControlFrame` (Phase A item 1).
+- `TupleField` has no dispatcher route today.
+- `resolveFieldRenderer` keeps returning current components until the migration PR (spike 48), so the translation
+  table stays.
+
 ## Verification
 
 Run locally in this worktree (not the cloud sandbox), headless Chromium.

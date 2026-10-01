@@ -127,7 +127,12 @@ export const TestPerson: Story = {
     await expect(firstLabel(next).top).toBeGreaterThanOrEqual(top - 0.5);
     await expect(next.getBoundingClientRect().top).toBeCloseTo(current.getBoundingClientRect().top, 0);
 
-    // 3. The Body scrolls to the last field.
+    // 3. The address is `Geo.PostalAddress`, labelled where its keys read poorly; the ZIP demo is its own field.
+    for (const name of ['City', 'State / Region', 'Address line 2', 'Postal code', 'ZIP Code']) {
+      await expect(within(next).getByRole('textbox', { name })).toBeInTheDocument();
+    }
+
+    // 4. The Body scrolls to the last field.
     await expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
     body.scrollTop = body.scrollHeight;
     await waitFor(async () => {

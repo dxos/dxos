@@ -88,6 +88,10 @@
     min-width: 0;
     background: var(--color-input-surface);
   }
+  .nx-input[data-variant='mono'],
+  [data-variant='mono'] > .nx-input-field {
+    font-family: var(--font-mono);
+  }
   .nx-input[data-variant='subdued'] {
     background: transparent;
   }

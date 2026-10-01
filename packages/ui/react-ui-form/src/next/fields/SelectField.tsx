@@ -63,18 +63,20 @@ type SelectControlProps = {
   value?: string;
   placeholder?: string;
   readonly?: boolean;
+  /** Options are still loading: the trigger shows a spinner and is `aria-busy`. */
+  loading?: boolean;
   onValueChange: (value: string | undefined) => void;
 };
 
 /** The Select a field row holds: Ark reads the enclosing `Field.Root` for the label and state ids. */
-export const SelectControl = ({ items, value, placeholder, readonly, onValueChange }: SelectControlProps) => (
+export const SelectControl = ({ items, value, placeholder, readonly, loading, onValueChange }: SelectControlProps) => (
   <Next.Select.Root
     items={items}
     value={value === undefined ? [] : [value]}
     disabled={!!readonly}
     onValueChange={({ value: [next] }) => onValueChange(next)}
   >
-    <Next.Select.Trigger placeholder={placeholder} />
+    <Next.Select.Trigger placeholder={placeholder} loading={loading} />
     <Next.Select.Content>
       {items.map((item) => (
         <Next.Select.Item key={item.value} item={item} />

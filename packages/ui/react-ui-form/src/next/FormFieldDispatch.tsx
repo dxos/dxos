@@ -32,9 +32,14 @@ import { useFormContext, useFormFieldState, useFormValues } from '../hooks/index
 import { getSchemaAtPath } from '../util/index.ts';
 import {
   ArrayField,
+  AsyncSelectField,
+  AutofillField,
   BooleanField,
+  ComboboxField,
   DateField,
   GeoPointField,
+  HueField,
+  InlineRefField,
   NumberField,
   PasswordField,
   RefField,
@@ -172,6 +177,10 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     );
   }
 
+  if (resolution.kind === 'ref' && resolution.inline) {
+    return <InlineRefField {...fieldProps} db={db} useType={useType} onCreate={onCreate} />;
+  }
+
   const control = renderControl(resolution);
   if (control === undefined) {
     return null;
@@ -199,7 +208,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       binding={binding}
       standalone={scalar?.standalone}
       labelPlacement={scalar?.labelPlacement}
-      renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options) : undefined}
+      renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name) : undefined}
     >
       {control}
     </FormFieldRow>
@@ -212,12 +221,19 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         return ScalarField ? <ScalarField {...fieldProps} /> : undefined;
       }
       case 'select':
-        return <SelectField {...fieldProps} options={selectOptions(resolution.options)} />;
-      case 'ref':
-        return resolution.inline ? undefined : (
-          <RefField {...fieldProps} {...resolution.refProps} db={db} useType={useType} getOptions={getOptions} />
+        return <SelectField {...fieldProps} options={selectOptions(resolution.options, projection, name)} />;
+      case 'lookup':
+        return resolution.combobox ? (
+          <ComboboxField {...fieldProps} lookup={resolution.lookup} />
+        ) : (
+          <AsyncSelectField {...fieldProps} lookup={resolution.lookup} />
         );
-      // Lookup, autofill, hue and inline refs are not ported in the spike (SPIKE.md).
+      case 'autofill':
+        return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
+      case 'hue':
+        return <HueField {...fieldProps} />;
+      case 'ref':
+        return <RefField {...fieldProps} {...resolution.refProps} db={db} useType={useType} getOptions={getOptions} />;
       default:
         return undefined;
     }
@@ -226,11 +242,24 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
 
 FormFieldDispatch.displayName = 'Form.FieldDispatch';
 
-const selectOptions = (options: Format.Options[]) =>
-  options.map((option) => ({ value: option, label: option.toString() }));
+/** The literal options, labelled by the projection's option titles where it has them. */
+const selectOptions = (
+  options: Format.Options[],
+  projection: FormFieldDispatchProps['projection'],
+  name: string | null,
+) => {
+  const titles = projection?.getFieldProjections().find((candidate) => candidate.field.path === name)?.props.options;
+  return options.map((option) => ({
+    value: option,
+    label: titles?.find((candidate) => candidate.id === globalThis.String(option))?.title ?? option.toString(),
+  }));
+};
 
-const renderSelectStatic = (options: Format.Options[]) => (value: unknown) =>
-  selectOptions(options).find((candidate) => candidate.value === value)?.label ?? globalThis.String(value ?? '');
+const renderSelectStatic =
+  (options: Format.Options[], projection: FormFieldDispatchProps['projection'], name: string | null) =>
+  (value: unknown) =>
+    selectOptions(options, projection, name).find((candidate) => candidate.value === value)?.label ??
+    globalThis.String(value ?? '');
 
 //
 // Fields

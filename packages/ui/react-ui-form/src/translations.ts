@@ -84,6 +84,7 @@ export const translations = [
         // SelectOptionsField.
         'select-option.label': 'Label',
         'select-option-label.placeholder': 'Option label',
+        'select-option-color.label': 'Color',
         'select-option-delete.button': 'Delete',
         'select-option-add.button': 'Add option',
 

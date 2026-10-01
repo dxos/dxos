@@ -149,8 +149,17 @@ export const FormFieldRow = <T,>({
       invalid={!!error}
       required={!!required}
       readOnly={readonly}
-      // Focus leaving any part of the row (a segment, a stepper, a trigger) marks it touched, so controls need no onBlur.
-      onBlur={binding ? () => binding.onBlur() : undefined}
+      // Focus leaving the row (not moving between its segments, steppers or triggers) marks it touched, so controls need
+      // no onBlur of their own.
+      onBlur={
+        binding
+          ? (event) => {
+              if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) {
+                binding.onBlur(event);
+              }
+            }
+          : undefined
+      }
     >
       {showHeader && (
         <Next.Field.Header>

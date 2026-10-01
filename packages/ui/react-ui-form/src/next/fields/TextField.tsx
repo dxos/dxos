@@ -39,7 +39,7 @@ export const TextField = ({
       value={value}
       onBlur={onBlur}
       onChange={(event) => onValueChange(type, event.target.value)}
-      {...(key && { spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
+      {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />
   );
 };
