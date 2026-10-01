@@ -4,9 +4,17 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Field,
+  Toolbar,
+  type ToolbarRootProps,
+  Tooltip,
+  composable,
+  composableProps,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
 
@@ -72,7 +80,7 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   };
 
   return icon ? (
-    <Next.Button
+    <Toolbar.IconButton
       {...commonProps}
       icon={icon}
       size={iconSize}
@@ -81,9 +89,9 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
       label={actionLabel(action, t)}
     />
   ) : (
-    <Next.Button {...commonProps}>
+    <Toolbar.Button {...commonProps}>
       <ActionLabel action={action} />
-    </Next.Button>
+    </Toolbar.Button>
   );
 };
 
@@ -106,7 +114,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   }
 
   const switchInput = (
-    <Next.Switch
+    <Field.Switch
       checked={checked}
       disabled={disabled}
       aria-label={iconOnly ? labelStr : undefined}
@@ -116,16 +124,16 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   );
 
   return (
-    <Next.Field.Root>
+    <Field.Root>
       {iconOnly ? (
-        <Next.Tooltip.Trigger asChild content={labelStr}>
-          <Next.Block>{switchInput}</Next.Block>
-        </Next.Tooltip.Trigger>
+        <Tooltip.Trigger asChild content={labelStr}>
+          <Field.Block>{switchInput}</Field.Block>
+        </Tooltip.Trigger>
       ) : (
-        <Next.Block>{switchInput}</Next.Block>
+        <Field.Block>{switchInput}</Field.Block>
       )}
-      {!iconOnly && <Next.Field.Label>{labelStr}</Next.Field.Label>}
-    </Next.Field.Root>
+      {!iconOnly && <Field.Label>{labelStr}</Field.Label>}
+    </Field.Root>
   );
 };
 
@@ -151,7 +159,7 @@ const DropdownToolbarItem = ({ menu, group }: ItemProps<{ group: MenuItemGroup<D
   const labelAction = applyActive && activeItem ? activeItem : group;
 
   const trigger = icon ? (
-    <Next.Button
+    <Toolbar.IconButton
       variant='ghost'
       disabled={disabled}
       icon={icon}
@@ -163,14 +171,14 @@ const DropdownToolbarItem = ({ menu, group }: ItemProps<{ group: MenuItemGroup<D
       {...(testId && { 'data-testid': testId })}
     />
   ) : (
-    <Next.Button
+    <Toolbar.Button
       variant='ghost'
       disabled={disabled}
       caretDown={caretDown && !disabled}
       {...(testId && { 'data-testid': testId })}
     >
       <ActionLabel action={labelAction} />
-    </Next.Button>
+    </Toolbar.Button>
   );
 
   // No menu behind a disabled trigger, since `disabled` alone does not gate the machine's open handler and the
@@ -213,7 +221,7 @@ const ToggleGroupItem = ({
   };
 
   return hidden ? null : icon ? (
-    <Next.ToggleGroup.Item
+    <Toolbar.ToggleGroupIconItem
       {...commonProps}
       icon={icon}
       size={iconSize}
@@ -222,9 +230,9 @@ const ToggleGroupItem = ({
       label={actionLabel(action, t)}
     />
   ) : (
-    <Next.ToggleGroup.Item {...commonProps}>
+    <Toolbar.ToggleGroupItem {...commonProps}>
       <ActionLabel action={action} />
-    </Next.ToggleGroup.Item>
+    </Toolbar.ToggleGroupItem>
   );
 };
 
@@ -241,19 +249,19 @@ const ToggleGroupToolbarItem = ({
   ));
 
   return selectCardinality === 'multiple' ? (
-    <Next.Toolbar.ToggleGroup type='multiple' value={group.properties.value}>
+    <Toolbar.ToggleGroup type='multiple' value={group.properties.value}>
       {children}
-    </Next.Toolbar.ToggleGroup>
+    </Toolbar.ToggleGroup>
   ) : (
-    <Next.Toolbar.ToggleGroup type='single' value={group.properties.value}>
+    <Toolbar.ToggleGroup type='single' value={group.properties.value}>
       {children}
-    </Next.Toolbar.ToggleGroup>
+    </Toolbar.ToggleGroup>
   );
 };
 
 const ToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
-    return <Next.Toolbar.Separator variant={item.properties.variant} />;
+    return <Toolbar.Separator variant={item.properties.variant} />;
   }
 
   if (isMenuGroup(item)) {
@@ -293,7 +301,7 @@ const ActionToolbarItems = ({ menu }: { menu: MenuActions }) => {
 //
 
 export type ActionToolbarProps = Partial<MenuActions> &
-  Next.ToolbarRootProps & {
+  ToolbarRootProps & {
     /** The toolbar is enabled only while this attendable has attention, unless `alwaysActive`. */
     attendableId?: string;
     alwaysActive?: boolean;
@@ -325,14 +333,14 @@ export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
     const { hasAttention } = useAttention(attendableId);
 
     return (
-      <Next.Toolbar.Root
+      <Toolbar.Root
         {...composableProps(props, { classNames: attendableId })}
         disabled={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
         <ActionToolbarItems menu={menu} />
         {children}
-      </Next.Toolbar.Root>
+      </Toolbar.Root>
     );
   },
 );
