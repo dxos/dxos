@@ -1,8 +1,8 @@
-# Next cut-over: codemods applied (Phase C step 1)
+# Next cut-over (Phase C)
 
-Step 1 generated 2026-10-01 on the cut-over branch (draft PR against `claude/react-ui-next-design-4db6eb`). This step applies
-the Phase B codemods for real and measures what breaks; no residue is hand-fixed, the current components are not
-deleted and `@dxos/react-ui` still exports them by default. Plan: [AUDIT.md](AUDIT.md) §7.
+The cut-over branch (draft PR against `claude/react-ui-next-design-4db6eb`): the Phase B codemods applied for real, then
+fixed by hand batch by batch. The current components are not yet deleted and `@dxos/react-ui` still exports them by
+default. Plan: [AUDIT.md](AUDIT.md) §7.
 
 ## Status (step 2: codemod fixes, batch 1)
 
