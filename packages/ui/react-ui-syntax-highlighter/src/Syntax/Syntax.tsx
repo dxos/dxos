@@ -193,13 +193,12 @@ const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames
   return (
     <Next.Field.Root>
       <Next.NumberInput
-        classNames={['p-1 px-2 font-mono', classNames]}
-        variant='subdued'
+        classNames={['font-mono', classNames]}
         min={0}
         step={1}
         aria-label='Depth'
-        value={depth}
-        onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
+        value={String(depth)}
+        onValueChange={(_, valueAsNumber) => setDepth(Math.max(0, valueAsNumber || 0))}
         ref={forwardedRef}
       />
     </Next.Field.Root>
