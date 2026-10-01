@@ -889,7 +889,7 @@ variant='gap'`, Switch in the toolbar's roving focus, `Menu.TriggerItem disabled
 
 Each codemod reports what it could not convert; that list is the manual residue for Phase C.
 
-**Built** in `tools/codemorph` (transforms `renames`, `classnames`, `emphasis`, `imports`; the emphasis rename table is
+**Built** in `tools/codemorph` (transforms `renames`, `layout`, `classnames`, `emphasis`, `imports`; the emphasis rename table is
 empty until the names are decided). Dry-run counts and the residue summary: [MIGRATION-CODEMODS.md](MIGRATION-CODEMODS.md).
 
 ### Phase C: the cut-over PR (one long-lived branch, landed as one PR)
