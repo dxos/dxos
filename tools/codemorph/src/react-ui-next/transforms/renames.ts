@@ -143,13 +143,22 @@ const selectItem = ({ file, element }: RuleContext) => {
         ? value.initializer.expression.getText(file.sourceFile)
         : undefined
     : undefined;
+  // A lone `Select.ItemText` child carries the label: the Next item renders its own text.
+  const [only] = children;
+  const itemText =
+    children.length === 1 &&
+    ts.isJsxElement(only) &&
+    file.resolve(only.openingElement.tagName)?.path.join('.') === 'Select.ItemText'
+      ? only.children.filter((child) => !(ts.isJsxText(child) && child.containsOnlyTriviaWhiteSpaces))
+      : undefined;
+  const labelChildren = itemText ?? children;
   let label: string | undefined;
-  if (children.length === 0) {
-    label = valueText;
-  } else if (children.length === 1 && ts.isJsxText(children[0])) {
-    label = `'${children[0].text.trim().replaceAll("'", "\\'")}'`;
-  } else if (children.length === 1 && ts.isJsxExpression(children[0]) && children[0].expression) {
-    label = children[0].expression.getText(file.sourceFile);
+  if (labelChildren.length === 0) {
+    label = itemText ? undefined : valueText;
+  } else if (labelChildren.length === 1 && ts.isJsxText(labelChildren[0])) {
+    label = `'${labelChildren[0].text.trim().replaceAll("'", "\\'")}'`;
+  } else if (labelChildren.length === 1 && ts.isJsxExpression(labelChildren[0]) && labelChildren[0].expression) {
+    label = labelChildren[0].expression.getText(file.sourceFile);
   }
   if (!value || !valueText || !label) {
     renameElement(file, element, ['Select', 'Item']);
@@ -164,6 +173,13 @@ const selectItem = ({ file, element }: RuleContext) => {
   file.replace(element.node, `<${tagText(file, element, ['Select', 'Item'])} ${[...props, item].join(' ')} />`);
   file.claim(element.node);
   file.count('Select.Option → Select.Item item={…}');
+};
+
+/** A `Select.Item` still carrying the current `value` and children: the same conversion as `Select.Option`. */
+const selectItemValue = (ctx: RuleContext) => {
+  if (getAttr(ctx.element, 'value') && !getAttr(ctx.element, 'item')) {
+    selectItem(ctx);
+  }
 };
 
 /** Avatar.Root (ids only) + Avatar.Content → one Avatar.Root element. */
@@ -298,6 +314,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Select.Viewport': UNWRAP,
     'Select.Arrow': UNWRAP,
     'Select.Option': { apply: selectItem },
+    'Select.Item': { apply: selectItemValue },
     'Select.Group': { to: ['Select', 'ItemGroup'] },
     'Select.Root': { apply: selectRoot },
     // Menu.
@@ -563,6 +580,7 @@ export const hasRenameRule = (pkg: PackageName, key: string): boolean => RULES[p
 
 /** Rules that rebuild the whole element from its source text, so generic prop edits would overlap them. */
 const REBUILT = new Set<Rule['apply']>([
+  selectItemValue,
   avatarRoot,
   bannerEmpty,
   selectItem,

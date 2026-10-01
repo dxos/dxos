@@ -102,6 +102,25 @@ describe('collections', () => {
     expect(residue).toEqual([]);
   });
 
+  test('Select.Item with value and an ItemText child → item record', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Picker = ({ label }: { label: string }) => (
+          <Next.Select.Root>
+            <Next.Select.Item value='a'>
+              <Next.Select.ItemText>{label}</Next.Select.ItemText>
+            </Next.Select.Item>
+          </Next.Select.Root>
+        );
+      `,
+    );
+    expect(output).toContain(`<Next.Select.Root items={[{ value: 'a', label: label }]}>`);
+    expect(output).toContain(`<Next.Select.Item item={{ value: 'a', label: label }} />`);
+  });
+
   test('Listbox.Root (react-ui-list): items from Item ids and ItemText labels', () => {
     const { output, residue } = transformFixture(
       renames,

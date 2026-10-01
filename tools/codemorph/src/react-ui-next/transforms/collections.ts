@@ -137,11 +137,16 @@ const rootItems = (
 
 /** `<Select.Item item={…} />` is the option; a `Select.Option` the same run converts gives its value and label. */
 const selectOption = (file: CodeFile) => (item: Element) => {
-  if (item.identity.path.join('.') === 'Select.Item') {
-    return attrExpression(file, getAttr(item, 'item'));
+  const record = attrExpression(file, getAttr(item, 'item'));
+  if (record) {
+    return record;
   }
   const value = attrExpression(file, getAttr(item, 'value'));
-  const children = meaningfulChildren(item);
+  let children = meaningfulChildren(item);
+  const [only] = children;
+  if (children.length === 1 && ts.isJsxElement(only) && resolvesTo(file, only, 'Select.ItemText')) {
+    children = only.children.filter((child) => !(ts.isJsxText(child) && child.containsOnlyTriviaWhiteSpaces));
+  }
   const label = children.length === 0 ? value : children.length === 1 ? labelText(file, children[0]) : undefined;
   return value && label ? `{ value: ${value}, label: ${label} }` : undefined;
 };
