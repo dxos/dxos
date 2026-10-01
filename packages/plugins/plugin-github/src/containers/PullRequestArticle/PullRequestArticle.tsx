@@ -503,7 +503,9 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
     >
       <Next.Panel.Root role={role}>
         <Next.Panel.Header>
-          <ActionToolbar {...menuActions} attendableId={attendableId} />
+          {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and a disabled
+              Next toolbar disables every item in it. */}
+          <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
         </Next.Panel.Header>
         <Next.Panel.Body asChild>
           <Flex column>

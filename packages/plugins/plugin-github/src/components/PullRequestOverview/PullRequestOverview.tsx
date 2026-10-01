@@ -44,7 +44,7 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
   // rather than each nesting a gutter of its own.
   return (
     <Form.Root schema={PullRequestDetailsSchema} values={details} layout='static' readonly>
-      <Form.Viewport scroll>
+      <Form.Viewport scroll width='document'>
         <Form.Content>
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
