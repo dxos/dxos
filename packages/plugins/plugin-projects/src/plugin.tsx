@@ -11,6 +11,7 @@ import {
   OperationHandler,
   ReactSurface,
   Schema,
+  Settings,
   SkillDefinition,
   SubjectContext,
   TaskAction,
@@ -27,6 +28,7 @@ export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
+  Plugin.addModule(Settings),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SubjectContext),
   // Injects `Assign to agent`, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
