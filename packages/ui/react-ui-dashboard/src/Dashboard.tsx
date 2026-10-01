@@ -228,8 +228,8 @@ type DashboardRangeProps = ToggleGroupItemProps;
  * Individual range tab.
  */
 const DashboardRange = forwardRef<HTMLButtonElement, DashboardRangeProps>(
-  ({ variant = 'ghost', density = 'sm', ...props }, forwardedRef) => (
-    <Next.ToggleGroup.Item {...props} variant={variant} size={density} ref={forwardedRef} />
+  ({ variant = 'ghost', size = 'sm', ...props }, forwardedRef) => (
+    <Next.ToggleGroup.Item {...props} variant={variant} size={size} ref={forwardedRef} />
   ),
 );
 
