@@ -1299,7 +1299,30 @@ become one entity. A lens is to types what a relation is to objects: an edge bet
 7. **Trust.** Any member may store a lens. An existing object translates with the lens whose digest its
    root records, so a later lens cannot change it. A pair with two stored lenses of different digests
    derives no new versions on any host until one is removed, and devtools shows the conflict.
-8. **Storage.** Declarative lenses are stored in the space (decision 6).
+8. **Storage.** Declarative lenses are stored in the space (decision 6), with a stored kind of their own
+   (`system.kind: 'lens'`, decided 2026-10-01). Released clients assert the kind is object, relation or
+   type, so their queries throw on a space holding a lens; `'type'` was introduced the same way.
+
+### 12.8 One lens, as built (2026-10-01)
+
+- **Name and id.** A lens's identity is `name` (`<source URI> -> <target>`); `id` is an entity id stamped at
+  construction, as a type's is. `overlayKey` is the name, except that a composed lens keeps its last hop's.
+- **Digest.** Canonical JSON (not a hash: whatever records it hashes it) of the endpoints, every entry
+  described by behavior (a same-name match and an explicit same-name rename are the same entry), the
+  overlays and the resolved defaults. Inline code contributes its source text.
+- **Kind.** `EntityKind.Lens`. A lens made in code carries the kind and a `LensTypeId` marker, so
+  `Lens.isLens` means "runs here" and `Lens.isStored` means "a record in a space"; both have the kind.
+  `Type.AnyEntity` gains `Type.LensKind`, the schema kind stored lenses are instances of (`Lens.Stored`,
+  `org.dxos.type.lens@0.1.0`, registered by every hypergraph beside `Type.Type`).
+- **Stored lens.** Holds every resolved entry (same-name matches included), the overlays, the dropped
+  properties and the resolved defaults, so a peer can run it without the schemas it connects; `fromStored`
+  rehydrates it against the types and gets the stored digest back when they are unchanged.
+- **Registry.** `registry.add` accepts lenses and keeps them apart from entities (not in `list` or
+  queries); `lenses()`, `lensBetween(source, target)` and `lensesFrom(source)` read them, local shadowing
+  upstream by name. A different lens for a registered pair throws. The static `Lens.register` is gone;
+  `Lens.findPath`/`resolveView` take the lenses to walk.
+- **Persistence.** `db.addLens(lens)` stores it (reusing one with the same name and digest); `db.add`
+  rejects lenses at compile time and at run time, as it does types.
 
 ## 13. References
 

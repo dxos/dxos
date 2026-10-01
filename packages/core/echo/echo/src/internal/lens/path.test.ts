@@ -98,19 +98,26 @@ describe('Lens.invert', () => {
 });
 
 describe('Lens.findPath / Lens.resolveView', () => {
-  beforeEach(() => Lens.clear());
+  let lenses: Lens.Any[] = [];
+  const register = <L extends Lens.Any>(lens: L): L => {
+    lenses.push(lens);
+    return lens;
+  };
+  beforeEach(() => {
+    lenses = [];
+  });
 
   test('a 2-hop path via an inverted migration lens', ({ expect }) => {
-    const migration = Lens.register(migrationV1toV2());
-    const view = Lens.register(v1ToGtd());
+    const migration = register(migrationV1toV2());
+    const view = register(v1ToGtd());
 
-    const path = Lens.findPath(TaskV2, GtdTask);
+    const path = Lens.findPath(TaskV2, GtdTask, lenses);
     expect(path).to.exist;
     expect(path?.length).to.eq(2);
     expect(path?.[0].reverseOf).to.eq(migration);
     expect(path?.[1]).to.eq(view);
 
-    const resolved = Lens.resolveView(TaskV2, GtdTask);
+    const resolved = Lens.resolveView(TaskV2, GtdTask, lenses);
     expect(resolved).to.exist;
     if (!resolved) {
       return;
@@ -120,11 +127,11 @@ describe('Lens.findPath / Lens.resolveView', () => {
   });
 
   test('a direct lens, once registered, is simply the shorter path', ({ expect }) => {
-    Lens.register(migrationV1toV2());
-    Lens.register(v1ToGtd());
-    const direct = Lens.register(Lens.make(TaskV2, GtdTask, { summary: 'note' }));
+    register(migrationV1toV2());
+    register(v1ToGtd());
+    const direct = register(Lens.make(TaskV2, GtdTask, { summary: 'note' }));
 
-    const path = Lens.findPath(TaskV2, GtdTask);
+    const path = Lens.findPath(TaskV2, GtdTask, lenses);
     expect(path).to.deep.eq([direct]);
   });
 
@@ -143,12 +150,12 @@ describe('Lens.findPath / Lens.resolveView', () => {
     ) {}
 
     // Lens names come from their endpoints, and the path through Y1 sorts before the one through Y2.
-    const viaY1First = Lens.register(Lens.make(NodeX, NodeY1, {}));
-    const viaY1Second = Lens.register(Lens.make(NodeY1, NodeZ, {}));
-    const viaY2First = Lens.register(Lens.make(NodeX, NodeY2, {}));
-    const viaY2Second = Lens.register(Lens.make(NodeY2, NodeZ, {}));
+    const viaY1First = register(Lens.make(NodeX, NodeY1, {}));
+    const viaY1Second = register(Lens.make(NodeY1, NodeZ, {}));
+    const viaY2First = register(Lens.make(NodeX, NodeY2, {}));
+    const viaY2Second = register(Lens.make(NodeY2, NodeZ, {}));
 
-    const path = Lens.findPath(NodeX, NodeZ);
+    const path = Lens.findPath(NodeX, NodeZ, lenses);
     expect(path).to.deep.eq([viaY1First, viaY1Second]);
     expect(path).not.to.deep.eq([viaY2First, viaY2Second]);
   });
@@ -158,11 +165,11 @@ describe('Lens.findPath / Lens.resolveView', () => {
       Schema.Struct({ title: Schema.String }),
     ) {}
 
-    Lens.register(migrationV1toV2());
-    Lens.register(v1ToGtd());
+    register(migrationV1toV2());
+    register(v1ToGtd());
 
-    expect(Lens.findPath(Island, GtdTask)).to.be.undefined;
-    expect(Lens.resolveView(Island, GtdTask)).to.be.undefined;
+    expect(Lens.findPath(Island, GtdTask, lenses)).to.be.undefined;
+    expect(Lens.resolveView(Island, GtdTask, lenses)).to.be.undefined;
   });
 
   test('a non-invertible lens is not traversed backwards', ({ expect }) => {
@@ -170,7 +177,7 @@ describe('Lens.findPath / Lens.resolveView', () => {
       Schema.Struct({ initial: Schema.optional(Schema.String) }),
     ) {}
 
-    Lens.register(
+    register(
       Lens.make(TaskV1, Lossy, {
         initial: {
           from: ['title'],
@@ -181,14 +188,14 @@ describe('Lens.findPath / Lens.resolveView', () => {
     );
 
     // Forward is reachable; backward is not, because the lossy lens has no inverse edge.
-    expect(Lens.findPath(TaskV1, Lossy)).to.deep.eq([Lens.resolve(Lens.nameOf(TaskV1, Lossy))]);
-    expect(Lens.findPath(Lossy, TaskV1)).to.be.undefined;
+    expect(Lens.findPath(TaskV1, Lossy, lenses)).to.deep.eq([
+      lenses.find((lens) => lens.name === Lens.nameOf(TaskV1, Lossy)),
+    ]);
+    expect(Lens.findPath(Lossy, TaskV1, lenses)).to.be.undefined;
   });
 });
 
 describe('Lens.compose', () => {
-  beforeEach(() => Lens.clear());
-
   test('composes a chain into one lens with a minimal write set', ({ expect }) => {
     const migration = migrationV1toV2();
     const inverted = Lens.invert(migration);

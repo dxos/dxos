@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EntityId } from '@dxos/keys';
+
 import type * as Obj from '../../Obj.ts';
 import * as Type from '../../Type.ts';
+import { EntityKind, KindId } from '../common/types/index.ts';
 import { invert as invertPlan, project } from './codec.ts';
 import { canonical, nameOf } from './identity.ts';
 import { readSource } from './mapping.ts';
-import { type AnyLens, type Coverage, type Plan, type ResolvedEntry } from './types.ts';
+import { type AnyLens, type Coverage, LensTypeId, type Plan, type ResolvedEntry } from './types.ts';
 
 //
 // Composing two lenses end to end, `first.source -> first.target (= second.source) -> second.target`,
@@ -35,7 +38,7 @@ const chainedEntry = (first: AnyLens, second: AnyLens, entry: ResolvedEntry): Re
     const step = midEntry(first, name);
     if (!step) {
       throw new TypeError(
-        `Lens.compose: "${second.id}" reads "${name}" from "${first.id}", which has no plain mapping for it ` +
+        `Lens.compose: "${second.name}" reads "${name}" from "${first.name}", which has no plain mapping for it ` +
           '(only an overlay or an unmapped property) — composition needs a direct read path through every hop.',
       );
     }
@@ -95,13 +98,13 @@ const chainedEntry = (first: AnyLens, second: AnyLens, entry: ResolvedEntry): Re
 export const compose = (first: AnyLens, second: AnyLens): AnyLens => {
   if (!first.plan || !second.plan) {
     throw new TypeError(
-      `Lens.compose: "${first.id}" and "${second.id}" must both be declarative lenses; a coded lens has no ` +
+      `Lens.compose: "${first.name}" and "${second.name}" must both be declarative lenses; a coded lens has no ` +
         'per-property mapping to compose through.',
     );
   }
   const target = first.target;
   if (!Type.isType(target) || !Type.isObject(target) || Type.getURI(target) !== Type.getURI(second.source)) {
-    throw new TypeError(`Lens.compose: "${first.id}" targets a different type than "${second.id}" sources.`);
+    throw new TypeError(`Lens.compose: "${first.name}" targets a different type than "${second.name}" sources.`);
   }
 
   const entries = second.plan.entries.map((entry) => chainedEntry(first, second, entry));
@@ -129,7 +132,10 @@ export const compose = (first: AnyLens, second: AnyLens): AnyLens => {
   const plan: Plan = { entries, overlays: second.plan.overlays, coverage };
 
   return {
-    id: nameOf(first.source, second.target),
+    [LensTypeId]: LensTypeId,
+    [KindId]: EntityKind.Lens,
+    id: EntityId.random(),
+    name: nameOf(first.source, second.target),
     digest: canonical([first.digest, second.digest]),
     overlayKey: second.overlayKey,
     defaults: { ...first.defaults, ...second.defaults },

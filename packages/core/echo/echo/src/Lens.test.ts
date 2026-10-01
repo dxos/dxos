@@ -4,11 +4,12 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import { beforeEach, describe, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
+import * as Entity from './Entity.ts';
 import * as Lens from './Lens.ts';
 import * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
@@ -217,9 +218,9 @@ describe('overlay storage', () => {
     expect(view.waitingOn).to.eq('review');
 
     // ...and it lives in the base object's own metadata, not in a second object.
-    expect(Lens.getOverlays(task, lens.id)).to.deep.eq({ context: '@work', waitingOn: 'review' });
+    expect(Lens.getOverlays(task, lens.overlayKey)).to.deep.eq({ context: '@work', waitingOn: 'review' });
     expect(Option.getOrThrow(Annotation.get(task, Lens.OverlayAnnotation))).to.deep.eq({
-      [lens.id]: { context: '@work', waitingOn: 'review' },
+      [lens.overlayKey]: { context: '@work', waitingOn: 'review' },
     });
 
     // No stray property landed on the base object.
@@ -237,8 +238,8 @@ describe('overlay storage', () => {
     Lens.put(task, first, { waitingOn: 'first' });
     Lens.put(task, second, { waitingOn: 'second' });
 
-    expect(Lens.getOverlay(task, first.id, 'waitingOn')).to.eq('first');
-    expect(Lens.getOverlay(task, second.id, 'waitingOn')).to.eq('second');
+    expect(Lens.getOverlay(task, first.overlayKey, 'waitingOn')).to.eq('first');
+    expect(Lens.getOverlay(task, second.overlayKey, 'waitingOn')).to.eq('second');
   });
 
   test('writing undefined clears an overlay', ({ expect }) => {
@@ -247,7 +248,7 @@ describe('overlay storage', () => {
 
     Lens.put(task, lens, { context: '@home' });
     Lens.put(task, lens, { context: undefined });
-    expect(Lens.getOverlay(task, lens.id, 'context')).to.be.undefined;
+    expect(Lens.getOverlay(task, lens.overlayKey, 'context')).to.be.undefined;
   });
 });
 
@@ -360,23 +361,8 @@ describe('Lens.checkLaws', () => {
   });
 });
 
-describe('registry', () => {
-  beforeEach(() => Lens.clear());
-
-  test('resolves by source and by target', ({ expect }) => {
-    const lens = Lens.register(makeLens());
-
-    expect(Lens.resolve(lens.id)).to.eq(lens);
-    // "How else can I view this object?"
-    expect(Lens.lensesFor(Task)).to.deep.eq([lens]);
-    // "What can this interface accept?" — the reverse lookup that lets one UI serve many sources.
-    expect(Lens.sourcesFor(GtdTask)).to.deep.eq([lens]);
-    expect(Lens.sourcesFor(Task)).to.deep.eq([]);
-  });
-});
-
 describe('persistence', () => {
-  test('a declarative mapping serializes and rehydrates', ({ expect }) => {
+  test('a declarative mapping is stored as a lens-kind entity and rehydrates', ({ expect }) => {
     Lens.registerCodec('minutes-to-hours', Lens.scale(1 / 60));
     const lens = Lens.make(Task, GtdTask, {
       estimateHours: Lens.from('estimate', 'minutes-to-hours'),
@@ -384,29 +370,38 @@ describe('persistence', () => {
       stage: 'status',
     });
 
-    const stored = Lens.toObject(lens, { name: 'GTD' });
+    const stored = Lens.toStored(lens);
+    expect(Lens.isStored(stored)).to.be.true;
+    expect(Lens.isLens(stored)).to.be.false;
+    expect(stored[Entity.KindId]).to.eq(Entity.Kind.Lens);
+    expect(stored.name).to.eq(lens.name);
     expect(stored.source).to.eq(Type.getURI(Task));
     expect(stored.target).to.eq(Type.getURI(GtdTask));
-    // Automatic mappings are recomputed on load, so they are not stored.
-    expect(stored.entries.map((entry) => entry.property).sort()).to.deep.eq(['createdBy', 'estimateHours', 'stage']);
+    // Same-name matches are stored too, so the lens runs without its schemas.
+    expect(stored.entries.find((entry) => entry.property === 'title')).to.deep.eq({
+      property: 'title',
+      kind: 'rename',
+      from: 'title',
+    });
+    expect([...stored.overlays].sort()).to.deep.eq(['context', 'done', 'waitingOn']);
 
-    const rehydrated = Lens.fromObject(stored, Task, GtdTask);
+    const rehydrated = Lens.fromStored(stored, Task, GtdTask);
+    expect(rehydrated.digest).to.eq(lens.digest);
     const task = makeTask();
     const view = Lens.get(task, rehydrated);
     expect(view.estimateHours).to.eq(1.5);
     expect(view.stage).to.eq('in-progress');
-    // The automatic mappings came back.
     expect(view.title).to.eq('Write the design doc');
   });
 
   test('an inline mapping cannot be persisted, and says so', ({ expect }) => {
-    expect(() => Lens.toObject(makeLens())).to.throw(/inline mapping/);
+    expect(() => Lens.toStored(makeLens())).to.throw(/inline mapping/);
   });
 
   test('an unregistered codec name is caught at serialization', ({ expect }) => {
     const lens = Lens.make(Task, GtdTask, {
       estimateHours: Lens.from('estimate', 'no-such-codec'),
     });
-    expect(() => Lens.toObject(lens)).to.throw(/unregistered codec/);
+    expect(() => Lens.toStored(lens)).to.throw(/unregistered codec/);
   });
 });

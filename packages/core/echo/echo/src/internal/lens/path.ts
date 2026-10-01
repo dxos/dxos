@@ -7,13 +7,12 @@ import type * as Schema from 'effect/Schema';
 import * as Type from '../../Type.ts';
 import { compose } from './compose.ts';
 import { invert } from './invert.ts';
-import { all } from './registry.ts';
 import { type AnyLens } from './types.ts';
 
 //
 // The version graph: one node per `typename@version`, one edge per lens, plus (where `Lens.invert`
-// allows it) its reverse. Views walk every registered lens; version documents walk only the lenses
-// between versions of one type. An in-place migration never takes a discovered path, only an explicitly
+// allows it) its reverse, over the lenses a caller passes (normally a registry's). Version documents pass
+// only the lenses between versions of one type. An in-place migration never takes a discovered path, only an explicitly
 // declared one (DESIGN.md §10.7 q4).
 //
 
@@ -59,8 +58,8 @@ const buildGraph = (lenses: readonly AnyLens[]): Map<string, Edge[]> => {
 /** Lexicographic comparison of two equal-length lens-id sequences — the path tie-break. */
 const compareSequences = (a: readonly AnyLens[], b: readonly AnyLens[]): number => {
   for (let index = 0; index < a.length && index < b.length; index++) {
-    if (a[index].id !== b[index].id) {
-      return a[index].id < b[index].id ? -1 : 1;
+    if (a[index].name !== b[index].name) {
+      return a[index].name < b[index].name ? -1 : 1;
     }
   }
   return a.length - b.length;
@@ -78,7 +77,7 @@ const compareSequences = (a: readonly AnyLens[], b: readonly AnyLens[]): number 
 export const findPath = (
   from: Type.AnyObj,
   to: Type.AnyObj,
-  lenses: readonly AnyLens[] = all(),
+  lenses: readonly AnyLens[],
 ): readonly AnyLens[] | undefined => {
   const start = versionId(from);
   const goal = versionId(to);
@@ -120,8 +119,8 @@ export const findPath = (
 };
 
 /** The composed lens for the shortest path from `from` to `to`, or `undefined` when there is none. */
-export const resolveView = (from: Type.AnyObj, to: Type.AnyObj): AnyLens | undefined => {
-  const path = findPath(from, to);
+export const resolveView = (from: Type.AnyObj, to: Type.AnyObj, lenses: readonly AnyLens[]): AnyLens | undefined => {
+  const path = findPath(from, to, lenses);
   if (!path || path.length === 0) {
     return undefined;
   }

@@ -4,8 +4,11 @@
 
 import type * as Schema from 'effect/Schema';
 
+import { type EntityId } from '@dxos/keys';
+
 import type * as Obj from '../../Obj.ts';
 import type * as Type from '../../Type.ts';
+import { type EntityKind, type KindId } from '../common/types/index.ts';
 
 //
 // The object lens: one live ECHO object viewed through a second declared type. Unlike the wire lens
@@ -137,9 +140,18 @@ export type Plan = {
  * and so resolves the interfaces already written for it. A plain schema is allowed for shapes no
  * object is ever stored as (the rich-text block tree), and forfeits typename dispatch.
  */
+/** Marks a lens made in code, as distinct from a stored one (both have the lens kind). */
+export const LensTypeId = '~@dxos/echo/Lens' as const;
+export type LensTypeId = typeof LensTypeId;
+
 export type Lens<S = any, T = any> = {
+  readonly [LensTypeId]: LensTypeId;
+  /** Entity-kind brand: a lens is an edge between two types, as a relation is between two objects. */
+  readonly [KindId]: EntityKind.Lens;
+  /** Entity id, stamped at construction; not the lens's identity, which is {@link name}. */
+  readonly id: EntityId;
   /** Named by its endpoints (`<source> -> <target>`): there is at most one lens per pair of types. */
-  readonly id: string;
+  readonly name: string;
   /**
    * Identifies what the lens does: the canonical JSON of its resolved mapping and defaults, or, for code, of
    * the code.

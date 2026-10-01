@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { DXN, Filter, Lens, Obj, Query, Type } from '@dxos/echo';
+import { DXN, Filter, Lens, Obj, Query, type Registry, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
 
@@ -40,9 +40,10 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.lens-path
   }),
 ) {}
 
-const registerGraph = () => {
-  const migration = Lens.register(Lens.make(TaskV1, TaskV2, { note: 'description' }));
-  const view = Lens.register(Lens.make(TaskV1, GtdTask, { summary: 'description' }));
+const registerGraph = (registry: Registry.Registry) => {
+  const migration = Lens.make(TaskV1, TaskV2, { note: 'description' });
+  const view = Lens.make(TaskV1, GtdTask, { summary: 'description' });
+  registry.add([migration, view]);
   return { migration, view };
 };
 
@@ -50,25 +51,22 @@ describe('Lens.resolveView over a database-backed object', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
-    Lens.clear();
     builder = await new EchoTestBuilder().open();
   });
 
   afterEach(async () => {
     await builder.close();
-    Lens.clear();
   });
 
   test('a 2-hop resolved view reads and writes minimally on the base object', async ({ expect }) => {
-    registerGraph();
-
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TaskV2] });
     await using db = await peer.createDatabase(spaceKey);
+    registerGraph(db.registry);
 
     const task = db.add(Obj.make(TaskV2, { title: 'Ship the lens graph', note: 'first draft', archived: false }));
 
-    const resolved = Lens.resolveView(TaskV2, GtdTask);
+    const resolved = Lens.resolveView(TaskV2, GtdTask, db.registry.lenses());
     expect(resolved).to.exist;
     if (!resolved) {
       return;
@@ -93,15 +91,14 @@ describe('Lens.resolveView over a database-backed object', () => {
   });
 
   test('a lensed write is a single minimal change, visible on reload', async ({ expect }) => {
-    registerGraph();
-
     await using peer = await builder.createPeer({ types: [TaskV2] });
     await using db = await peer.createDatabase();
+    registerGraph(db.registry);
 
     const task = db.add(Obj.make(TaskV2, { title: 'Reload me', note: 'before', archived: false }));
     const taskId = task.id;
 
-    const resolved = Lens.resolveView(TaskV2, GtdTask);
+    const resolved = Lens.resolveView(TaskV2, GtdTask, db.registry.lenses());
     expect(resolved).to.exist;
     if (!resolved) {
       return;

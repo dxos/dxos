@@ -128,7 +128,7 @@ const lateRetiredWrites = (
 /**
  * The `lens`'s overlaid target properties whose overlay value changed between `base` and `current` —
  * an old client still lensing through it writes one into the object's annotation dictionary
- * (`meta.annotations[OverlayAnnotation.key][lens.id][property]`), a meta path the data-path diff
+ * (`meta.annotations[OverlayAnnotation.key][lens.overlayKey][property]`), a meta path the data-path diff
  * never sees. Compared by value, since an overlay write replaces the whole dictionary and so touches
  * every property's path.
  */
@@ -464,7 +464,7 @@ const foldStep = (
   const overlaid = migration.lens ? new Set(Lens.coverage(migration.lens).overlaid) : undefined;
   const overlayLateWrites =
     migration.lens && overlaid && overlaid.size > 0
-      ? lateOverlayWrites(doc, mountPath, base, currentHeads, migration.lens.id, overlaid)
+      ? lateOverlayWrites(doc, mountPath, base, currentHeads, migration.lens.overlayKey, overlaid)
       : new Set<string>();
 
   // Every change since the checkpoint is classified on its own, never by the net diff: a late write and
@@ -485,7 +485,7 @@ const foldStep = (
       if (dataWrites.has(property)) {
         continue;
       }
-      const value = Lens.getOverlay(object, migration.lens.id, property);
+      const value = Lens.getOverlay(object, migration.lens.overlayKey, property);
       for (const [key, encoded] of computeGuardedDataWrites(core, { [property]: value })) {
         dataWrites.set(key, encoded);
       }

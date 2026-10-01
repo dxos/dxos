@@ -282,9 +282,9 @@ export const EntityStructure = Object.freeze({
   /**
    * @throws On invalid object structure.
    */
-  getEntityKind: (object: EntityStructure): 'object' | 'relation' | 'type' => {
+  getEntityKind: (object: EntityStructure): 'object' | 'relation' | 'type' | 'lens' => {
     const kind = object.system?.kind ?? 'object';
-    invariant(kind === 'object' || kind === 'relation' || kind === 'type', 'Invalid kind');
+    invariant(kind === 'object' || kind === 'relation' || kind === 'type' || kind === 'lens', 'Invalid kind');
     return kind;
   },
 
@@ -459,10 +459,10 @@ export type EntityMeta = {
 export type EntitySystem = {
   /**
    * Entity kind. `'type'` covers persisted ECHO type definitions (instances of
-   * the `Type.Type` meta-schema); `'object'` / `'relation'` cover regular ECHO
-   * instances.
+   * the `Type.Type` meta-schema); `'lens'` covers stored lenses (edges between two
+   * types); `'object'` / `'relation'` cover regular ECHO instances.
    */
-  kind?: 'object' | 'relation' | 'type';
+  kind?: 'object' | 'relation' | 'type' | 'lens';
 
   /**
    * Object reference ('protobuf' protocol) type — DXN of the schema this

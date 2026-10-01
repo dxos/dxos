@@ -1113,7 +1113,7 @@ const validateSchema = (schema: Schema.Codec<any, any>) => {
   const dxn = getSchemaURI(schema);
   invariant(dxn, 'Schema must be defined via TypedObject.');
   const entityKind = getEntityKind(schema);
-  invariant(entityKind === 'object' || entityKind === 'relation' || entityKind === 'type');
+  invariant(entityKind === 'object' || entityKind === 'relation' || entityKind === 'type' || entityKind === 'lens');
   SchemaValidator.validateSchema(schema);
 };
 

@@ -67,11 +67,11 @@ const propertyNames = (type: Type.AnyObj): Set<string> =>
  */
 export const versionStep = (lens: AnyLens): Step => {
   if (!isVersionLens(lens)) {
-    throw new TypeError(`Lens: "${lens.id}" does not connect an older version of one type to a newer one.`);
+    throw new TypeError(`Lens: "${lens.name}" does not connect an older version of one type to a newer one.`);
   }
   const { plan, source, target } = lens;
   if (!plan) {
-    throw new TypeError(`Lens: "${lens.id}" is coded; version documents need a declarative lens.`);
+    throw new TypeError(`Lens: "${lens.name}" is coded; version documents need a declarative lens.`);
   }
   const defaults = resolveDefaults(source, target, plan, lens.defaults);
   const problems: string[] = [];
@@ -105,7 +105,7 @@ export const versionStep = (lens: AnyLens): Step => {
     }
   }
   if (problems.length > 0) {
-    throw new TypeError(`Lens: "${lens.id}" cannot translate version documents: ${problems.join('; ')}.`);
+    throw new TypeError(`Lens: "${lens.name}" cannot translate version documents: ${problems.join('; ')}.`);
   }
 
   const sourceNames = propertyNames(source);

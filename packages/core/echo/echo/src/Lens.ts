@@ -12,7 +12,7 @@
 // serialization boundary to a foreign record.
 
 import { get as project } from './internal/lens/codec.ts';
-import { type AnyLens, type Codec, type Lens as LensShape, type Write } from './internal/lens/types.ts';
+import { type AnyLens, type Codec, type Lens as LensShape, LensTypeId, type Write } from './internal/lens/types.ts';
 import { applyWrites } from './internal/lens/write.ts';
 import type * as Obj from './Obj.ts';
 
@@ -20,7 +20,8 @@ export { type TargetOf, coded, make } from './internal/lens/codec.ts';
 export { compose } from './internal/lens/compose.ts';
 export { invert } from './internal/lens/invert.ts';
 export { findPath, resolveView, versionId } from './internal/lens/path.ts';
-export { nameOf } from './internal/lens/identity.ts';
+export { endpointOf, nameOf } from './internal/lens/identity.ts';
+export { LensSet, between, from as lensesFrom, shadow } from './internal/lens/lens-set.ts';
 export {
   type Data as VersionData,
   type VersionPath,
@@ -37,9 +38,8 @@ export { applyWrites } from './internal/lens/write.ts';
 export { lookup, registerCodec, scale } from './internal/lens/codecs.ts';
 export { compatible } from './internal/lens/mapping.ts';
 export { type LawCheckResult, type LawViolation, checkLaws, readsOf, sourceFor } from './internal/lens/laws.ts';
-export { all, clear, lensesFor, register, resolve, sourcesFor } from './internal/lens/registry.ts';
 export { OverlayAnnotation, getOverlay, getOverlays } from './internal/lens/overlay.ts';
-export { Lens as Object, fromObject, toObject } from './internal/lens/entity.ts';
+export { Stored, fromStored, isStored, toStored } from './internal/lens/entity.ts';
 export {
   type Codec,
   type Coverage,
@@ -50,6 +50,10 @@ export {
   type SerializedEntry,
   type Write,
 } from './internal/lens/types.ts';
+
+/** Whether `value` is a lens. */
+export const isLens = (value: unknown): value is Any =>
+  typeof value === 'object' && value !== null && LensTypeId in value;
 
 /** A lens binding a source ECHO type to a declared target type. */
 export type Lens<S = any, T = any> = LensShape<S, T>;

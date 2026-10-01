@@ -886,7 +886,7 @@ describe('fold-forward: lens overlay properties', () => {
 
     // The migration promotes the overlay into a real property but does not delete the source-side
     // annotation — it is what an old client, still lensing through `taskLens`, keeps writing to.
-    expect(Lens.getOverlays(task, taskLens.id).priority).to.eq('high');
+    expect(Lens.getOverlays(task, taskLens.overlayKey).priority).to.eq('high');
   });
 
   test('a late overlay write folds into the promoted property, and a second pass is a no-op', async () => {
@@ -925,7 +925,7 @@ describe('fold-forward: lens overlay properties', () => {
 
     // Straight to the annotation dictionary, bypassing `Lens.put` entirely.
     Obj.update(task, (task) => {
-      Annotation.set(task, Lens.OverlayAnnotation, { [taskLens.id]: { priority: 'urgent' } });
+      Annotation.set(task, Lens.OverlayAnnotation, { [taskLens.overlayKey]: { priority: 'urgent' } });
     });
     await db.flush();
     expect(Obj.getValue(task, ['priority'])).to.eq(undefined); // not yet folded.

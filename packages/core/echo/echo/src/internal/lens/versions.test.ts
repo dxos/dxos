@@ -98,7 +98,7 @@ describe('lenses between versions', () => {
   test('the digest follows what the lens does, not how it was declared', () => {
     const again = Lens.make(TaskV1, TaskV2, { name: 'title' }, { defaults: { done: false } });
     expect(again.digest).toBe(v1v2.digest);
-    expect(again.id).toBe(v1v2.id);
+    expect(again.name).toBe(v1v2.name);
     expect(Lens.make(TaskV1, TaskV2, { name: 'title' }, { defaults: { done: true } }).digest).not.toBe(v1v2.digest);
 
     // The same version, changed without a version bump, maps by name differently: a different digest.

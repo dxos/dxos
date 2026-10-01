@@ -264,12 +264,10 @@ export const diffBlocks = (previous: readonly Block[], next: readonly Block[]): 
 };
 
 /** `Text` → `RichText`. */
-export const RichTextLens: Lens.Lens<Text.Text, RichText> = Lens.register(
-  Lens.coded(Text.Text, RichText, {
-    get: (text) => ({ blocks: parseBlocks(text.content ?? '') }),
-    put: (next, previous) => diffBlocks(previous.blocks, next.blocks ?? previous.blocks),
-  }),
-);
+export const RichTextLens: Lens.Lens<Text.Text, RichText> = Lens.coded(Text.Text, RichText, {
+  get: (text) => ({ blocks: parseBlocks(text.content ?? '') }),
+  put: (next, previous) => diffBlocks(previous.blocks, next.blocks ?? previous.blocks),
+});
 
 export const DEMO_MARKDOWN = [
   '# One object, two editors',

@@ -337,11 +337,23 @@ export const makeRelation: {
 export type AnyType = Type<unknown>;
 
 /**
- * Any ECHO type-entity — one of the three sibling kinds: object-kind, relation-kind,
- * or type-kind (the meta-schema). APIs that want "any ECHO type" use this union;
- * the underlying Effect Schema is retrieved via `Type.getSchema`.
+ * A type whose instances are lenses: the schema stored lenses are instances of (`Lens.Stored`).
+ * Sibling of {@link Type} for the fourth entity kind.
  */
-export type AnyEntity = AnyObj | AnyRelation | AnyType;
+export interface LensKind<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKind<typeof EntityModule.Kind.Lens>> {
+  /** Schema-kind brand: instances are lenses. */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Lens;
+
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
+}
+
+/**
+ * Any ECHO type-entity — one of the sibling kinds: object-kind, relation-kind, type-kind (the
+ * meta-schema), or lens-kind. APIs that want "any ECHO type" use this union; the underlying Effect
+ * Schema is retrieved via `Type.getSchema`.
+ */
+export type AnyEntity = AnyObj | AnyRelation | AnyType | LensKind<unknown>;
 
 /**
  * Type guard: narrows a `Type.AnyEntity` to an object-kind entity. Checks
@@ -654,7 +666,9 @@ export type InstanceType<T extends AnyEntity> =
           ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
           : T extends Type<infer A>
             ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
-            : never;
+            : T extends LensKind<infer A>
+              ? A & EntityModule.OfKind<typeof EntityModule.Kind.Lens>
+              : never;
 
 /**
  * Returns the Effect Schema for a type entity.

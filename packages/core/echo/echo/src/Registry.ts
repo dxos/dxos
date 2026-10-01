@@ -11,6 +11,7 @@ import type * as Database from './Database.ts';
 import * as Entity from './Entity.ts';
 import type * as Filter from './Filter.ts';
 import * as registryAtoms from './internal/Registry/atoms.ts';
+import type * as Lens from './Lens.ts';
 import type * as Query from './Query.ts';
 
 /**
@@ -64,7 +65,9 @@ export interface Registry {
   /**
    * Add or replace one or more entities in the local registry.
    * Existing entries with the same id are replaced.
-   * Also indexes type entities by DXN for fast lookup.
+   * Also indexes type entities by DXN for fast lookup, and lenses by name. A lens replaces one of the same
+   * name only when they do the same thing (equal digests); there is at most one lens per pair of types,
+   * so a different lens for a registered pair throws.
    */
   add(entities: readonly Entity.Unknown[]): void;
 
@@ -99,6 +102,19 @@ export interface Registry {
    * Local entities take precedence over upstream entities with the same id.
    */
   list(): Entity.Unknown[];
+
+  /**
+   * Every lens, local and upstream; a local lens takes precedence over an upstream one of the same name.
+   * Lenses are registered with {@link add} like any entity, but are kept out of {@link list} and queries
+   * until queries can traverse them.
+   */
+  lenses(): readonly Lens.Any[];
+
+  /** The lens from the type with URI `source` to the one with URI (or identifier) `target`. */
+  lensBetween(source: string, target: string): Lens.Any | undefined;
+
+  /** Every lens whose source is the type with URI `source`. */
+  lensesFrom(source: string): readonly Lens.Any[];
 
   /**
    * Run an ECHO query against the registry's entities (implements {@link Database.Queryable}).

@@ -269,7 +269,7 @@ export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectM
   const { target } = lens;
   if (!Type.isType(target)) {
     throw new Error(
-      `Migration.fromLens: "${lens.id}" targets a plain schema; a migration target must be a declared ECHO object type.`,
+      `Migration.fromLens: "${lens.name}" targets a plain schema; a migration target must be a declared ECHO object type.`,
     );
   }
 
@@ -277,11 +277,11 @@ export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectM
   const toSchema = Type.getSchema(target);
   const fromType = getSchemaURI(fromSchema);
   if (!fromType) {
-    throw new Error(`Migration.fromLens: "${lens.id}" has an invalid source schema.`);
+    throw new Error(`Migration.fromLens: "${lens.name}" has an invalid source schema.`);
   }
   const toType = getSchemaURI(toSchema);
   if (!toType) {
-    throw new Error(`Migration.fromLens: "${lens.id}" has an invalid target schema.`);
+    throw new Error(`Migration.fromLens: "${lens.name}" has an invalid target schema.`);
   }
 
   const allowDropped = new Set(options.allowDropped ?? []);
@@ -289,7 +289,7 @@ export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectM
   const unexpectedDropped = [...coverage.dropped].filter((property) => !allowDropped.has(property)).sort();
   if (unexpectedDropped.length > 0) {
     throw new Error(
-      `Migration.fromLens: "${lens.id}" drops source ${unexpectedDropped.length === 1 ? 'property' : 'properties'} ` +
+      `Migration.fromLens: "${lens.name}" drops source ${unexpectedDropped.length === 1 ? 'property' : 'properties'} ` +
         `[${unexpectedDropped.join(', ')}] with no counterpart on the target. Pass allowDropped to accept the loss.`,
     );
   }
@@ -297,7 +297,7 @@ export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectM
     const detail = [...coverage.suspicious]
       .map(({ property, candidates }) => `${property} (candidates: [${candidates.join(', ')}])`)
       .join('; ');
-    throw new Error(`Migration.fromLens: "${lens.id}" has unresolved suspicious mappings: ${detail}.`);
+    throw new Error(`Migration.fromLens: "${lens.name}" has unresolved suspicious mappings: ${detail}.`);
   }
 
   const sourceKeys = new Set([...(lens.plan?.entries.flatMap((entry) => entry.from) ?? []), ...coverage.dropped]);
@@ -322,7 +322,7 @@ export const fromLens = (lens: Lens.Any, options: FromLensOptions = {}): ObjectM
       const lawCheck = Lens.checkLaws(from, lens);
       if (!lawCheck.holds) {
         const detail = lawCheck.violations.map((violation) => `${violation.property} (${violation.path})`).join('; ');
-        throw new Error(`Migration.fromLens: "${lens.id}" fails the GetPut law for object ${String(id)}: ${detail}.`);
+        throw new Error(`Migration.fromLens: "${lens.name}" fails the GetPut law for object ${String(id)}: ${detail}.`);
       }
 
       const { id: _id, ...output } = Lens.get(from, lens);

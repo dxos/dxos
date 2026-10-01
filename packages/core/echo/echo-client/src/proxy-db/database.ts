@@ -631,6 +631,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    invariant(!Lens.isLens(obj) && !Lens.isStored(obj), 'use db.addLens() to persist lenses');
     if (opts?.to) {
       // Synchronous feed append: registers the object as a live feed object and schedules the
       // background write. Returns the same instance; confirm persistence with `db.flush()`.
@@ -664,6 +665,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // can only be typed as `Type.AnyEntity`; the caller's `T` is verified by the `Type.isType`
     // invariant inside `_addPersistentSchema`, not by the compiler.
     return this._addPersistentSchema(type) as T;
+  }
+
+  async addLens(lens: Lens.Any): Promise<Lens.Stored> {
+    const stored = await this.query(Filter.type(Lens.Stored)).run();
+    const match = stored.find((candidate) => candidate.name === lens.name && candidate.digest === lens.digest);
+    return match ?? this._addObject(Lens.toStored(lens));
   }
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
@@ -1123,7 +1130,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
       // An overlay value lives in the object's meta, which the data-only transform input omits.
       if (migration.lens && output) {
-        const overlays = Lens.getOverlays(object, migration.lens.id);
+        const overlays = Lens.getOverlays(object, migration.lens.overlayKey);
         for (const property of Lens.coverage(migration.lens).overlaid) {
           if (output[property] === undefined && overlays[property] !== undefined) {
             output[property] = overlays[property];

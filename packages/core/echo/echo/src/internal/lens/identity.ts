@@ -80,7 +80,14 @@ export const planDigest = (
     source: Type.getURI(source),
     target: endpointOf(target),
     entries: plan.entries
-      .map(({ property, from, origin, serialized, code }) => ({ property, from, origin, serialized, code }))
+      .map(({ property, from, serialized, code }) => ({
+        property,
+        from,
+        // Described by behavior: a same-name match and an explicit rename to the same name are one entry.
+        kind: serialized?.kind ?? (code === undefined ? 'rename' : 'code'),
+        codec: serialized?.kind === 'converted' ? serialized.codec : undefined,
+        code,
+      }))
       .sort((left, right) => (left.property < right.property ? -1 : 1)),
     overlays: [...plan.overlays].sort(),
     defaults: resolveDefaults(source, target, plan, defaults),

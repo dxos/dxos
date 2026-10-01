@@ -4,8 +4,11 @@
 
 import type * as Schema from 'effect/Schema';
 
+import { EntityId } from '@dxos/keys';
+
 import * as Obj from '../../Obj.ts';
 import * as Type from '../../Type.ts';
+import { EntityKind, KindId } from '../common/types/index.ts';
 import { canonical, endpointOf, nameOf, planDigest } from './identity.ts';
 import { plan as compile, readSource } from './mapping.ts';
 import { getOverlay } from './overlay.ts';
@@ -13,6 +16,7 @@ import {
   type AnyLens,
   type CodedMapping,
   type Lens,
+  LensTypeId,
   type MakeOptions,
   type Mapping,
   type Plan,
@@ -94,19 +98,22 @@ export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
   mapping: Mapping<Type.InstanceType<S>, TargetOf<T>> = {},
   options: MakeOptions = {},
 ): Lens<Type.InstanceType<S>, TargetOf<T>> => {
-  const id = nameOf(source, target);
+  const name = nameOf(source, target);
   const plan = compile(source, target, mapping as Mapping);
   const defaults = options.defaults ?? {};
   return {
-    id,
+    [LensTypeId]: LensTypeId,
+    [KindId]: EntityKind.Lens,
+    id: EntityId.random(),
+    name,
     digest: planDigest(source, target, plan, defaults),
-    overlayKey: id,
+    overlayKey: name,
     defaults,
     source,
     target,
     plan,
-    get: (obj) => project(obj, id, plan) as TargetOf<T>,
-    put: (view, obj) => invert(view as Record<string, unknown>, obj, id, plan),
+    get: (obj) => project(obj, name, plan) as TargetOf<T>,
+    put: (view, obj) => invert(view as Record<string, unknown>, obj, name, plan),
   };
 };
 
@@ -119,16 +126,19 @@ export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>
   target: T,
   mapping: CodedMapping<Type.InstanceType<S>, TargetOf<T>>,
 ): Lens<Type.InstanceType<S>, TargetOf<T>> => {
-  const id = nameOf(source, target);
+  const name = nameOf(source, target);
   return {
-    id,
+    [LensTypeId]: LensTypeId,
+    [KindId]: EntityKind.Lens,
+    id: EntityId.random(),
+    name,
     digest: canonical({
       source: Type.getURI(source),
       target: endpointOf(target),
       version: mapping.version ?? null,
       code: `${mapping.get}\n${mapping.put}`,
     }),
-    overlayKey: id,
+    overlayKey: name,
     defaults: {},
     source,
     target,
