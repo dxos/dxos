@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { type ComponentPropsWithoutRef } from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useTranslation } from '@dxos/react-ui';
@@ -10,14 +10,10 @@ import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
-// Mirrors react-ui `Icon`'s `size` prop literal subset; kept inline so we don't
-// have to add `@dxos/ui-types` as a dep just for one type alias.
-type IconSize = 4 | 5 | 6 | 8;
-
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
-  /** Visual size of the warning icon (passed through to react-ui `<Icon />`). */
-  size?: IconSize;
+  /** Size of the warning icon. */
+  size?: ComponentPropsWithoutRef<typeof Next.Button>['iconSize'];
 };
 
 /**
@@ -38,7 +34,7 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
           icon='ph--warning--bold'
           iconOnly
           showTooltip={false}
-          size={size}
+          iconSize={size}
           label={t('failure-badge.label')}
           data-testid={`pluginFailureBadge.${failure.id}`}
           onClick={(event) => event.stopPropagation()}

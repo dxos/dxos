@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React from 'react';
+import React, { type ComponentPropsWithoutRef } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -178,22 +178,27 @@ export const Toolbar = ({
 
 Toolbar.displayName = 'MeetingToolbar';
 
-type ToolbarButtonProps = Pick<Next.ButtonProps, 'disabled'> & {
+type ButtonProps = ComponentPropsWithoutRef<typeof Next.Button>;
+
+type ToggleButtonState = Pick<ButtonProps, 'icon' | 'label' | 'onClick'> & { classNames?: string };
+
+type ToolbarButtonProps = Pick<ButtonProps, 'disabled'> & {
   active?: boolean;
   state: {
-    on: Pick<Next.ButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
-    off: Pick<Next.ButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+    on: ToggleButtonState;
+    off: ToggleButtonState;
   };
 };
 
-const defaultButtonProps: Partial<Next.ButtonProps> = {
-  size: 5,
+const defaultButtonProps = {
+  iconSize: 'lg',
   iconOnly: true,
-};
+} as const satisfies Partial<ButtonProps>;
 
-const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
+const ToggleButton = ({ active, disabled, state }: ToolbarButtonProps) => (
   <Next.Button
     {...defaultButtonProps}
+    disabled={disabled}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}

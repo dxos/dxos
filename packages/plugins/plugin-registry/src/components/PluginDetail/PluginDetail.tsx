@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
@@ -135,6 +135,15 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     const iconHue = rawIcon?.hue ?? 'neutral';
     const styles = getStyles(iconHue);
 
+    const versionItems = useMemo(
+      () =>
+        (versions ?? []).map(({ version }) => ({
+          value: version,
+          label: installedVersionTag === version ? `${version} (${t('installed.label')})` : version,
+        })),
+      [versions, installedVersionTag, t],
+    );
+
     const resolvedScreenshots = (screenshots ?? [])
       .map((entry) => (themeMode === 'dark' ? (entry.dark ?? entry.light) : (entry.light ?? entry.dark)))
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
@@ -158,9 +167,8 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             classNames='dx-document gap-x-4 p-4'
           >
             <Next.Icon
-              classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)}
+              classNames={mx('row-start-1 p-1 rounded-md', isMobile ? 'size-8' : 'size-14', styles.bg, styles.fg)}
               icon={iconKey}
-              size={isMobile ? 8 : 14}
             />
 
             <Grid
@@ -170,7 +178,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             >
               <div className='flex items-center gap-2'>
                 <h2 className='text-xl'>{name}</h2>
-                {failure && <PluginFailureBadge failure={failure} size={5} />}
+                {failure && <PluginFailureBadge failure={failure} size='lg' />}
               </div>
               {onInstall ? (
                 <Next.Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
@@ -181,7 +189,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   <Next.Switch
                     classNames='self-center'
                     checked={enabled}
-                    onCheckedChange={({ checked }) => onEnabledChange(checked)}
+                    onCheckedChange={({ checked }) => onEnabledChange?.(checked)}
                   />
                 </Next.Field.Root>
               )}
@@ -288,16 +296,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Body>
                   <div className='flex gap-2 items-center'>
                     <Next.Select.Root
-                      value={[selectedVersionTag]}
-                      onValueChange={({ value: [value] }) => onVersionChange(value)}
+                      items={versionItems}
+                      value={selectedVersionTag ? [selectedVersionTag] : []}
+                      onValueChange={({ value: [value] }) => value && onVersionChange?.(value)}
                     >
                       <Next.Select.Trigger classNames='min-w-32' />
                       <Next.Select.Content>
-                        {versions.map((versionEntry) => (
-                          <Next.Select.Item key={versionEntry.version} value={versionEntry.version}>
-                            {versionEntry.version}
-                            {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
-                          </Next.Select.Item>
+                        {versionItems.map((item) => (
+                          <Next.Select.Item key={item.value} item={item} />
                         ))}
                       </Next.Select.Content>
                     </Next.Select.Root>
