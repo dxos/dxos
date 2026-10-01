@@ -11,19 +11,13 @@ import { useObject } from '@dxos/echo-react';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { osTranslations } from '@dxos/ui-theme';
 
 import { translations as sheetTranslations } from '#translations';
 import { Sheet, SheetUtil } from '#types';
 
 import { RangeList } from './RangeList.tsx';
 
-// The app provides the os labels; stories provide their own.
-const translations = [
-  ...sheetTranslations,
-  ...uiTranslations,
-  { 'en-US': { [osTranslations]: { 'drag-handle.label': 'Drag to rearrange' } } },
-];
+const translations = [...sheetTranslations, ...uiTranslations];
 
 /** A detached sheet with three ranges; later ranges take precedence, which is what reordering changes. */
 const createSheet = () => {

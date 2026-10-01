@@ -10,8 +10,7 @@ import '@dxos/react-ui/next/theme.css';
 import { Next } from '@dxos/react-ui/next';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { osTranslations } from '@dxos/ui-theme';
+import { translations } from '@dxos/react-ui/translations';
 import { arrayMove } from '@dxos/util';
 
 import { OrderedList } from './OrderedList.tsx';
@@ -28,11 +27,6 @@ const ITEMS: Item[] = [
 
 const LONG: Item[] = Array.from({ length: 40 }, (_, index) => ({ id: `item-${index}`, label: `Item ${index + 1}` }));
 
-// The app provides the os labels; stories provide their own.
-const translations = [
-  ...uiTranslations,
-  { 'en-US': { [osTranslations]: { 'drag-handle.label': 'Drag to rearrange' } } },
-];
 
 const getId = (item: { id: string }) => item.id;
 

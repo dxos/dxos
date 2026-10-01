@@ -24,8 +24,8 @@ export type DragMoveDirection = 'up' | 'down';
 //
 
 type DragHandleProps = {
-  /** Names the handle for assistive tech (e.g. "Drag to rearrange"). */
-  'label': string;
+  /** Names the handle for assistive tech; the translated "Drag to rearrange" by default. */
+  'label'?: string;
   /**
    * Moves the item one place; makes the handle a tab stop with a keyboard contract: Alt+ArrowUp/Down move at once,
    * Space or Enter grabs so ArrowUp/Down move, and Space, Enter, Escape or leaving the handle drops. Without it the
@@ -94,7 +94,7 @@ export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
       <ToolbarContext.Provider value={undefined}>
         <Button
           icon='ph--dots-six-vertical--regular'
-          label={label}
+          label={label ?? t('drag-handle.label')}
           iconOnly
           showTooltip={false}
           variant='ghost'

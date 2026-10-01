@@ -11,6 +11,8 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'empty.label': 'No items',
+        'drag-handle.label': 'Drag to rearrange',
+        'remove.label': 'Delete',
 
         'toolbar-menu.label': 'Action menu',
         'toolbar-drag-handle.label': 'Drag to rearrange',

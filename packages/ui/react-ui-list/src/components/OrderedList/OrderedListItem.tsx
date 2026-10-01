@@ -24,6 +24,7 @@ import {
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
+import { translationKey as uiTranslationKey } from '@dxos/react-ui/translations';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useListGrid, useReorderItem } from '../../hooks/index.ts';
@@ -177,7 +178,7 @@ export type OrderedListDragHandleProps = PropsWithChildren<{
 export const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps) => {
   const { readonly } = useOrderedListContext('OrderedListDragHandle');
   const { canDrag, handleRef } = useOrderedListItemContext('OrderedListDragHandle');
-  const { t } = useTranslation(osTranslations);
+  const { t } = useTranslation(uiTranslationKey);
   const disabled = readonly || !canDrag;
   if (asChild) {
     return (
@@ -269,14 +270,14 @@ export const OrderedListDeleteButton = ({
   ...props
 }: Partial<Pick<IconButtonProps, 'icon'>> &
   Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = useTranslation(uiTranslationKey);
   return (
     <OrderedListIconButton
       {...props}
       autoHide={autoHide}
       disabled={disabled}
       icon={icon}
-      label={label ?? t('delete.label')}
+      label={label ?? t('remove.label')}
       classNames={classNames}
     />
   );

@@ -13,9 +13,8 @@ import React, {
   useRef,
 } from 'react';
 
-import { type ComposableProps, composable, useTranslation } from '@dxos/react-ui';
+import { type ComposableProps, composable } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
-import { osTranslations } from '@dxos/ui-theme';
 
 import { useListDisclosure, useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import {
@@ -194,12 +193,10 @@ const OrderedListItem = ({ id, canDrag = true, children, ...props }: OrderedList
  * moves. Disabled when the list is readonly or the row opts out.
  */
 const OrderedListDragHandle = () => {
-  const { t } = useTranslation(osTranslations);
   const { readonly, move } = useOrderedListContext('OrderedList.DragHandle');
   const { id, canDrag, handleRef } = useOrderedListItemContext('OrderedList.DragHandle');
   return (
     <Next.DragHandle
-      label={t('drag-handle.label')}
       disabled={readonly || !canDrag}
       onMove={(direction) => move(id, direction)}
       ref={handleRef}
