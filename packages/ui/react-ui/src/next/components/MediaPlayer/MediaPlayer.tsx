@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type MediaKind, detectMediaKind, isEmbedUrl } from '../../../components/MediaPlayer/media-kind.ts';
 import { recipes } from '../../recipes.ts';
+import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
 
 export type MediaPlayerKind = MediaKind;
 

@@ -5,14 +5,17 @@
 import ErrorStackParser from 'error-stack-parser';
 import React, { type PropsWithChildren } from 'react';
 import { type FallbackProps } from 'react-error-boundary';
+import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 import { safeStringify } from '@dxos/util';
 
-import { type ParsedStackFrame } from '../../../components/ErrorFallback/parse-stack.ts';
+import { translationKey } from '#translations';
+
 import { recipes } from '../../recipes.ts';
 import { SystemButton } from '../SystemButton/index.ts';
+import { type ParsedStackFrame } from './parse-stack.ts';
 
 //
 // ErrorFallback
@@ -21,7 +24,7 @@ import { SystemButton } from '../SystemButton/index.ts';
 export type ErrorFallbackProps = ThemedClassName<
   PropsWithChildren<
     Pick<FallbackProps, 'error'> & {
-      /** Heading above the message; `Runtime Error` by default. */
+      /** Heading above the message; the translated "Runtime Error" by default. */
       title?: string;
       /** Context shown as JSON under a copyable `Data` section. */
       data?: unknown;
@@ -34,6 +37,7 @@ export type ErrorFallbackProps = ThemedClassName<
  * under a button that copies it.
  */
 export const ErrorFallback = ({ classNames, children, error, title, data }: ErrorFallbackProps) => {
+  const { t } = useTranslation(translationKey);
   const isDev = process.env.NODE_ENV === 'development';
   const message = error instanceof Error ? error.message : String(error);
 
@@ -46,20 +50,20 @@ export const ErrorFallback = ({ classNames, children, error, title, data }: Erro
       className={mx(recipes.errorFallback(), classNames)}
     >
       <h1 data-scope='error-fallback' data-part='title' className={recipes.errorFallbackTitle()}>
-        {title ?? 'Runtime Error'}
+        {title ?? t('error-fallback.title.label')}
       </h1>
       <p data-scope='error-fallback' data-part='message' className={recipes.errorFallbackMessage()}>
         {message}
       </p>
 
       {isDev && error instanceof Error && (
-        <ErrorFallbackSection title='Stack' onCopy={() => error.stack ?? error.message}>
+        <ErrorFallbackSection title={t('error-fallback.stack.label')} onCopy={() => error.stack ?? error.message}>
           <ErrorStack error={error} />
         </ErrorFallbackSection>
       )}
 
       {data !== undefined && (
-        <ErrorFallbackSection title='Data' onCopy={() => JSON.stringify(data, undefined, 2)}>
+        <ErrorFallbackSection title={t('error-fallback.data.label')} onCopy={() => JSON.stringify(data, undefined, 2)}>
           <pre data-scope='error-fallback' data-part='data' className={recipes.errorFallbackData()}>
             {safeStringify(data, undefined, 2)}
           </pre>
