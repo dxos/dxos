@@ -78,11 +78,22 @@ ToolbarRoot.displayName = 'Next.Toolbar.Root';
 // Separator
 //
 
-type ToolbarSeparatorProps = Omit<SeparatorProps, 'orientation'>;
+type ToolbarSeparatorProps = Omit<SeparatorProps, 'orientation'> & {
+  /** `gap` is an empty spacer that grows, pushing the items after it to the toolbar's end. */
+  variant?: 'line' | 'gap';
+};
 
-/** A rule across the toolbar's axis (vertical in a horizontal toolbar); not an item, so roving focus skips it. */
-const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>((props, forwardedRef) => {
+/**
+ * A rule across the toolbar's axis (vertical in a horizontal toolbar), or with `variant='gap'` a growing spacer; not an
+ * item, so roving focus skips it.
+ */
+const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>(({ variant, ...props }, forwardedRef) => {
   const api = useContext(ToolbarContext);
+  if (variant === 'gap') {
+    const { className, ...rest } = composableProps(props, { classNames: recipes.toolbarGap() });
+    return <div {...rest} role='none' data-scope='toolbar' data-part='gap' className={className} ref={forwardedRef} />;
+  }
+
   return (
     <Separator
       {...props}

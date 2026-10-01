@@ -42,3 +42,4 @@ export * from './ToggleGroup/index.ts';
 export * from './Toolbar/index.ts';
 export * from './Tooltip/index.ts';
 export * from './Typography/index.ts';
+export * from './VirtualAnchor/index.ts';

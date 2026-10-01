@@ -21,7 +21,8 @@ const OPTIONS: Next.SelectOption[] = [
 ];
 
 /**
- * A toolbar of every control kind; a non-looping toolbar with a drag handle, text and a link; and a disabled toolbar.
+ * A toolbar of every control kind; a non-looping toolbar with a drag handle, text and a link; a disabled toolbar; and
+ * a toolbar with a Switch and a `gap` separator pushing its last button to the end.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
@@ -75,6 +76,12 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       <Next.Input aria-label='Disabled search' />
       <Next.Toolbar.Link href='https://dxos.org'>Docs</Next.Toolbar.Link>
     </Next.Toolbar.Root>
+    <Next.Toolbar.Root data-testid={`settings-${size}`}>
+      <Next.Button data-testid={`bold-${size}`}>Bold</Next.Button>
+      <Next.Switch label='Wrap' data-testid={`wrap-${size}`} />
+      <Next.Toolbar.Separator variant='gap' data-testid={`gap-${size}`} />
+      <Next.Button data-testid={`done-${size}`}>Done</Next.Button>
+    </Next.Toolbar.Root>
   </>
 );
 
@@ -102,7 +109,8 @@ export const Default: Story = {};
  * A `Toolbar.ToggleGroup`'s items join the toolbar's roving focus, so the group adds no tab stop. A DragHandle is a
  * ghost icon-only Button outside the roving focus; Text truncates in the free space; a Link is an item. With
  * `loop={false}` arrows stop at the ends; a `disabled` toolbar disables every control and has no tab stop. Items that
- * overflow scroll sideways in a thin horizontal ScrollArea (no native bar) whose viewport is the toolbar.
+ * overflow scroll sideways in a thin horizontal ScrollArea (no native bar) whose viewport is the toolbar. A Switch's
+ * input joins the roving focus, and a `gap` separator grows to push the items after it to the end.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -119,7 +127,7 @@ export const Test: Story = {
 
     const canvas = within(canvasElement);
     const toolbars = canvas.getAllByRole('toolbar');
-    await expect(toolbars).toHaveLength(3 * SIZES.length);
+    await expect(toolbars).toHaveLength(4 * SIZES.length);
     for (const toolbar of toolbars) {
       await expect(toolbar).toHaveAttribute('aria-orientation', 'horizontal');
     }
@@ -222,5 +230,25 @@ export const Test: Story = {
     }
     await expect(disabled.querySelector('a')).toHaveAttribute('aria-disabled', 'true');
     await expect(disabled.querySelectorAll('[tabindex="0"]')).toHaveLength(0);
+
+    // Switch and gap.
+    const settings = byTestId(canvasElement, 'settings-md');
+    const done = byTestId(canvasElement, 'done-md');
+    const doneStyle = getComputedStyle(done);
+    await expect(settings.getBoundingClientRect().right - done.getBoundingClientRect().right).toBeCloseTo(
+      parseFloat(doneStyle.marginRight),
+      0,
+    );
+    await expect(byTestId(canvasElement, 'gap-md').getBoundingClientRect().width).toBeGreaterThan(100);
+    await expect(within(settings).queryByRole('separator')).toBeNull();
+    const wrap = within(settings).getByRole('switch', { name: 'Wrap' });
+    await userEvent.click(byTestId(canvasElement, 'bold-md'));
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(wrap).toHaveFocus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(done).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(wrap).toHaveFocus();
+    await expect(settings.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
   },
 };

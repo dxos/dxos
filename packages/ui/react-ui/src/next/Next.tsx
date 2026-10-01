@@ -48,6 +48,7 @@ import {
   Icon as NextIcon,
   type IconHue as NextIconHue,
   type IconProps as NextIconProps,
+  type IconTone as NextIconTone,
   type IconValence as NextIconValence,
   Image as NextImage,
   type ImageProps as NextImageProps,
@@ -95,7 +96,11 @@ import {
   Tooltip as NextTooltip,
   Typography as NextTypography,
   type TypographyProps as NextTypographyProps,
+  type TypographyTone as NextTypographyTone,
+  type VirtualAnchorPositioning as NextVirtualAnchorPositioning,
   dragScope as nextDragScope,
+  useVirtualAnchor as nextUseVirtualAnchor,
+  virtualAnchor as nextVirtualAnchor,
 } from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
@@ -114,9 +119,11 @@ export namespace Next {
   export const Icon = NextIcon;
   export type IconHue = NextIconHue;
   export type IconProps = NextIconProps;
+  export type IconTone = NextIconTone;
   export type IconValence = NextIconValence;
   export const Typography = NextTypography;
   export type TypographyProps = NextTypographyProps;
+  export type TypographyTone = NextTypographyTone;
   export const Group = NextGroup;
   export type GroupProps = NextGroupProps;
   export const Label = NextLabel;
@@ -193,4 +200,7 @@ export namespace Next {
   export type PanelRootProps = NextPanelRootProps;
   export const Separator = NextSeparator;
   export type SeparatorProps = NextSeparatorProps;
+  export const virtualAnchor = nextVirtualAnchor;
+  export const useVirtualAnchor = nextUseVirtualAnchor;
+  export type VirtualAnchorPositioning = NextVirtualAnchorPositioning;
 }
