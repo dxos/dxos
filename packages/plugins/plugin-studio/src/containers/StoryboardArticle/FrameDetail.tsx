@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
@@ -40,7 +40,7 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
           <span className='flex flex-col items-center gap-2'>
             {t('frame-empty.message')}
             {onAddArtifact && (
-              <Button
+              <Next.Button
                 icon='ph--plus--regular'
                 label={t('add-frame-artifact.label')}
                 onClick={() => onAddArtifact(frame)}

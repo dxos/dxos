@@ -42,7 +42,7 @@ export const StoryboardPlayer = ({
   onClose,
 }: StoryboardPlayerProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLButtonElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
   const isVideo = clip?.contentType?.startsWith('video/') ?? false;
@@ -62,7 +62,7 @@ export const StoryboardPlayer = ({
   }, [clip, isVideo, advance, stillMs]);
 
   // Opening the player unmounts whatever control opened it, which drops focus to the body; the
-  // toolbar takes it back so the plank stays attended (attention follows focus into an attendable)
+  // toolbar's first control takes it back so the plank stays attended (attention follows focus into an attendable)
   // and the transport is a key away. The attendable attributes mark the panel as that attention's
   // surface, which is what draws the attention ring.
   const attentionAttributes = useAttentionAttributes(attendableId);
@@ -77,7 +77,7 @@ export const StoryboardPlayer = ({
   return (
     <Next.Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
       <Next.Panel.Header>
-        <Next.Toolbar.Root ref={toolbarRef} tabIndex={-1} classNames='outline-none'>
+        <Next.Toolbar.Root>
           {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
               than a grid on the root: the root brackets its children with focus sentinels, which
               would take the first and last cells. */}
@@ -87,6 +87,7 @@ export const StoryboardPlayer = ({
                 iconOnly
                 icon='ph--caret-left--regular'
                 size='sm'
+                ref={toolbarRef}
                 label={t('previous-frame.label')}
                 disabled={index === 0}
                 onClick={() => setIndex((current) => Math.max(0, current - 1))}
