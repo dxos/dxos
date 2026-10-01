@@ -31,6 +31,10 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [ProjectCapabilities.Settings],
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
