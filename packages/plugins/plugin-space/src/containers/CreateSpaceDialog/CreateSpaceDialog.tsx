@@ -131,13 +131,16 @@ export const CreateSpaceDialog = () => {
                     <Listbox.Root
                       value={template}
                       onValueChange={setTemplate}
-                      items={templates.map(({ id, label, description, glyph }) => ({ value: id, label: id }))}
+                      items={templates.map(({ id, label, description, glyph }) => ({
+                        value: id,
+                        label,
+                        description,
+                        icon: glyph,
+                      }))}
                     >
                       <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
-                        {templates.map(({ id, label, description, glyph }) => (
-                          <Listbox.Item key={id} id={id}>
-                            <Listbox.ItemContent icon={glyph} title={label} description={description} />
-                          </Listbox.Item>
+                        {templates.map(({ id }) => (
+                          <Listbox.Item key={id} id={id} />
                         ))}
                       </Listbox.Content>
                     </Listbox.Root>

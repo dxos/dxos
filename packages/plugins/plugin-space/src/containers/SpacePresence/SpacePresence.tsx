@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { type ComponentProps, forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { generateName } from '@dxos/display-name';
@@ -11,14 +11,7 @@ import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
-import {
-  type AvatarContentProps,
-  type DxAvatar,
-  type Size,
-  type ThemedClassName,
-  useDefaultValue,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type ThemedClassName, useDefaultValue, useId, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
@@ -101,15 +94,17 @@ export type Member = Space.Member & {
   currentlyAttended: boolean;
 };
 
+type AvatarSize = ComponentProps<typeof Next.Avatar.Root>['size'];
+
 export type MemberPresenceProps = ThemedClassName<{
-  size?: Size;
+  size?: AvatarSize;
   members?: Member[];
   showCount?: boolean;
   onMemberClick?: (member: Member) => void;
 }>;
 
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 9, onMemberClick } = props;
+  const { size = 'md', onMemberClick } = props;
   const members = useDefaultValue(props.members, () => []);
 
   if (members.length === 0) {
@@ -138,15 +133,13 @@ export const FullPresence = (props: MemberPresenceProps) => {
       {members.length > 3 && (
         <Next.Popover.Root positioning={{ placement: 'bottom' }}>
           <Next.Popover.Trigger className='grid focus:outline-hidden'>
-            <Next.Avatar.Root>
-              {/* TODO(wittjosiah): Make text fit. */}
-              <Next.Avatar.Content
-                status='inactive'
-                style={{ zIndex: members.length - 4 }}
-                fallback={`+${members.length - 3}`}
-                size={size}
-              />
-            </Next.Avatar.Root>
+            {/* TODO(wittjosiah): Make text fit. */}
+            <Next.Avatar.Root
+              status='inactive'
+              style={{ zIndex: members.length - 4 }}
+              fallback={`+${members.length - 3}`}
+              size={size}
+            />
           </Next.Popover.Trigger>
           <Next.Popover.Content>
             <Next.Popover.Body classNames='max-h-56'>
@@ -176,35 +169,44 @@ export const FullPresence = (props: MemberPresenceProps) => {
   );
 };
 
-type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
+type PresenceAvatarProps = {
   member: Space.Member;
+  size?: AvatarSize;
   showName?: boolean;
   match?: boolean;
   index?: number;
   onClick?: () => void;
 };
 
-const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
+const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
   ({ member, showName, match, index, onClick, size }, forwardedRef) => {
     const status = match ? 'current' : 'active';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
-    return (
-      <Next.Avatar.Root>
-        <Next.Avatar.Content
-          status={status}
-          hue={member.data?.hue || fallbackValue.hue}
-          data-testid='spacePlugin.presence.member'
-          data-status={status}
-          size={size}
-          {...(index ? { style: { zIndex: index } } : {})}
-          onClick={onClick}
-          fallback={member.data?.emoji || fallbackValue.emoji}
-          ref={forwardedRef}
-        />
-        <Next.Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>
-          {getName(member)}
-        </Next.Avatar.Label>
-      </Next.Avatar.Root>
+    const name = getName(member);
+    const nameId = useId('presence-name');
+    const avatar = (
+      <Next.Avatar.Root
+        status={status}
+        hue={Next.toAvatarHue(member.data?.hue || fallbackValue.hue)}
+        data-testid='spacePlugin.presence.member'
+        data-status={status}
+        size={size}
+        {...(index ? { style: { zIndex: index } } : {})}
+        onClick={onClick}
+        fallback={member.data?.emoji || fallbackValue.emoji}
+        {...(showName ? { 'aria-labelledby': nameId } : { label: name })}
+        ref={forwardedRef}
+      />
+    );
+    return showName ? (
+      <>
+        {avatar}
+        <span id={nameId} className='text-sm truncate px-2'>
+          {name}
+        </span>
+      </>
+    ) : (
+      avatar
     );
   },
 );

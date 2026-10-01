@@ -15,7 +15,7 @@ import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { Next } from '@dxos/react-ui/next';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
@@ -77,7 +77,14 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
           <Next.Icon icon={item.icon} classNames={styles?.fg} />
         </Next.Block>
         <Next.Card.Title>{label}</Next.Card.Title>
-        <Next.Card.Menu items={archiveItem ? [archiveItem] : undefined} />
+        {archiveItem && (
+          <Next.Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+            <Next.Menu.Item
+              item={{ value: archiveItem.label, label: archiveItem.label, icon: archiveItem.icon }}
+              onClick={archiveItem.onClick}
+            />
+          </Next.Card.Menu>
+        )}
       </Next.Card.Header>
       {archived && (
         <Next.Card.Row>

@@ -114,7 +114,17 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             </CardIconSlot>
           </Next.Block>
           <Next.Card.Title>{label}</Next.Card.Title>
-          {menuItems.length > 0 && <Next.Card.Menu items={menuItems} />}
+          {menuItems.length > 0 && (
+            <Next.Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+              {menuItems.map((menuItem) => (
+                <Next.Menu.Item
+                  key={menuItem.label}
+                  item={{ value: menuItem.label, label: menuItem.label, icon: menuItem.icon }}
+                  onClick={menuItem.onClick}
+                />
+              ))}
+            </Next.Card.Menu>
+          )}
         </Next.Card.Header>
         {archived && (
           <Next.Card.Row>

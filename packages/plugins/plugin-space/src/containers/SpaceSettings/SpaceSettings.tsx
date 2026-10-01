@@ -57,10 +57,10 @@ export const SpaceSettings = ({
           <Form.FieldSet label={t('space-settings.label')} description={t('space-settings.description')}>
             <Form.Field label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
               <Next.Select.Root
-                value={[defaultSpaceId]}
-                onValueChange={({ value: [value] }) => onDefaultSpaceChange?.(value)}
+                value={defaultSpaceId ? [defaultSpaceId] : []}
+                onValueChange={({ value: [value] }) => value && onDefaultSpaceChange?.(value)}
                 disabled={!onDefaultSpaceChange}
-                items={eligibleDefaultSpaces.map((space) => ({
+                items={(eligibleDefaultSpaces ?? []).map((space) => ({
                   value: space.id,
                   label: toLocalizedString(getSpaceDisplayName(space), t),
                 }))}
@@ -82,7 +82,7 @@ export const SpaceSettings = ({
               description={t('settings.space-list.description')}
             >
               <Listbox.Root
-                items={spaces.map((space) => ({
+                items={(spaces ?? []).map((space) => ({
                   value: space.id,
                   label: toLocalizedString(getSpaceDisplayName(space), t),
                 }))}

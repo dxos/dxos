@@ -63,7 +63,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        <Next.Card.Root gutter='sm'>
+                        <Next.Card.Root>
                           <ObjectForm object={props.data} type={type} />
                         </Next.Card.Root>
                       </Mosaic.Tile>

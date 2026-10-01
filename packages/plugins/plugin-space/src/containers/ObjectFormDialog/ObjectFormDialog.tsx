@@ -339,7 +339,7 @@ export const ObjectFormDialog = ({
   return (
     // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
     // the overlay would discard it with no undo. Escape and the close button remain.
-    <Next.Dialog.Content onInteractOutside={(event) => event.preventDefault()}>
+    <Next.Dialog.Content closeOnInteractOutside={false}>
       <Next.Dialog.Header>
         <Next.Dialog.Title>
           {t('create-object-dialog.title', {

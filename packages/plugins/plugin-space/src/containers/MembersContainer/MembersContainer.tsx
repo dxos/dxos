@@ -174,16 +174,15 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
-            <Form.FieldSet appearance='section' label={t('members.label')}>
+            <Form.FieldSet label={t('members.label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </Form.FieldSet>
             {showContactPicker && (
-              <Form.FieldSet appearance='section' label={t('add-known-people.label')}>
+              <Form.FieldSet label={t('add-known-people.label')}>
                 <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
               </Form.FieldSet>
             )}
             <Form.FieldSet
-              appearance='section'
               label={t('invitations.label')}
               description={selectedInvitation ? undefined : t('space-invitation.description')}
             >
