@@ -12,6 +12,7 @@ import { DXN, type URI } from '@dxos/keys';
 import type * as Entity from './Entity.ts';
 import { ReferenceAnnotationId } from './internal/Annotation/index.ts';
 import type * as internal from './internal/index.ts';
+import * as RefAtoms from './internal/Ref/atoms.ts';
 import * as refInternal from './internal/Ref/index.ts';
 import type * as JsonSchema from './JsonSchema.ts';
 import type * as Obj from './Obj.ts';
@@ -123,6 +124,18 @@ export const hasEntityId = refInternal.Ref.hasEntityId;
  * Disposition of a deleted target. Defaults to `'exclude'`, matching the query option.
  */
 export type LoadOptions = refInternal.LoadOptions;
+
+/**
+ * Loads the targets of `refs` in ref order, omitting missing targets and, unless
+ * `{ deleted: 'include' }` asks for them, deleted ones.
+ */
+export const loadAll: <T>(refs: readonly Ref<T>[], options?: LoadOptions) => Promise<T[]> = refInternal.loadAll;
+
+/**
+ * Reactive counterpart of {@link Ref.load} for one ref and of {@link loadAll} for a ref array.
+ * Materialized targets are read synchronously; the rest join as they load.
+ */
+export const atom = RefAtoms.makeAtom;
 
 /**
  * The URI a reference property points at, or `undefined` when the node is not a reference.

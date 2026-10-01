@@ -617,7 +617,7 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   get atom(): Atom.Atom<T | undefined> {
-    return RefAtoms.refSimpleFamily(this);
+    return RefAtoms.refFamily([this, false]);
   }
 
   /**
