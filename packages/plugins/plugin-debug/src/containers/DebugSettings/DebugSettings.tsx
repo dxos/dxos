@@ -11,7 +11,7 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
@@ -220,12 +220,10 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
 
             {/* TODO(burdon): Move to layout? */}
             {toast && (
-              <Toast.Root>
-                <Toast.Title icon='ph--gift--duotone'>
-                  <span>{toast.title}</span>
-                </Toast.Title>
-                {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-              </Toast.Root>
+              <Next.Toast.Root defaultOpen duration={5_000} onOpenChange={(open) => !open && setToast(undefined)}>
+                <Next.Toast.Header icon='ph--gift--duotone'>{toast.title}</Next.Toast.Header>
+                {toast.description && <Next.Toast.Description>{toast.description}</Next.Toast.Description>}
+              </Next.Toast.Root>
             )}
 
             <Form.Field
