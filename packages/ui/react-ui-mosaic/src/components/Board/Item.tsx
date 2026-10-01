@@ -75,7 +75,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
             onClick={(event) => event.currentTarget.focus()}
           >
             <Next.Card.Header>
-              <Next.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
+              <Next.DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
               <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Next.Block rail='end'>

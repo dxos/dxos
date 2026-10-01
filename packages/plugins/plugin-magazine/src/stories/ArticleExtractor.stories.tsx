@@ -81,9 +81,7 @@ const DefaultStory = () => {
             }}
             items={SAMPLE_URLS.map((sample) => ({ value: sample, label: new URL(sample).hostname }))}
           >
-            <Next.Button asChild>
-              <Next.Select.Trigger placeholder='Sample URL' />
-            </Next.Button>
+            <Next.Select.Trigger placeholder='Sample URL' />
             <Next.Select.Content>
               {SAMPLE_URLS.map((sample) => (
                 <Next.Select.Item key={sample} item={{ value: sample, label: new URL(sample).hostname }} />

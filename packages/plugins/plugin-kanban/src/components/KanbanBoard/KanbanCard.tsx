@@ -64,7 +64,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         <Focus.Item asChild>
           <Next.Card.Root ref={forwardedRef} data-testid='board-item'>
             <Next.Card.Header ref={cardRef}>
-              <Next.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
+              <Next.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
               <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Next.Block rail='end'>

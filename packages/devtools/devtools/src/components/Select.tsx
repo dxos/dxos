@@ -15,9 +15,7 @@ export type SelectProps = SelectRootProps & {
 export const Select = ({ items = [], ...props }: SelectProps) => {
   return (
     <Next.Select.Root {...props}>
-      <Next.Button asChild>
-        <Next.Select.Trigger placeholder={'Select value'} />
-      </Next.Button>
+      <Next.Select.Trigger placeholder={'Select value'} />
       <Next.Select.Content>
         {items?.map(({ value, label }) => (
           <Next.Select.Item key={value} value={value}>

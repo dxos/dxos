@@ -317,9 +317,7 @@ const FeedPaginationStory = () => {
                 { value: 'word', label: 'Word' },
               ]}
             >
-              <Next.Button asChild>
-                <Next.Select.Trigger classNames='shrink-0' />
-              </Next.Button>
+              <Next.Select.Trigger classNames='shrink-0' />
               <Next.Select.Content>
                 <Next.Select.Item item={{ value: 'natural', label: 'Natural' }} />
                 <Next.Select.Item item={{ value: 'number', label: 'Number' }} />
@@ -334,9 +332,7 @@ const FeedPaginationStory = () => {
                 { value: 'desc', label: 'Descending' },
               ]}
             >
-              <Next.Button asChild>
-                <Next.Select.Trigger classNames='shrink-0' />
-              </Next.Button>
+              <Next.Select.Trigger classNames='shrink-0' />
               <Next.Select.Content>
                 <Next.Select.Item item={{ value: 'asc', label: 'Ascending' }} />
                 <Next.Select.Item item={{ value: 'desc', label: 'Descending' }} />

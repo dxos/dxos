@@ -120,7 +120,7 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <Next.DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
+          <Next.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
           <Next.Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
             {label}
           </Next.Toolbar.Text>
