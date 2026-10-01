@@ -119,7 +119,8 @@ export const createGeometryField =
             <div key={key}>
               <Next.Field.Root>
                 <Next.Field.Label>{LABELS[key] ?? key}</Next.Field.Label>
-                <Next.NumberInput
+                <Next.Input
+                  type='number'
                   step={grid}
                   disabled={!!readonly}
                   value={text[key] ?? ''}

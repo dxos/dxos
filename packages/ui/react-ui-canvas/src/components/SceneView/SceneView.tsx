@@ -777,12 +777,11 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         style={{ left: menu?.at.x ?? 0, top: menu?.at.y ?? 0 }}
       />
       <Next.Menu.Root
-        modal={false}
         open={menu !== undefined}
         onOpenChange={({ open }) => !open && closeMenu()}
-        positioning={Next.virtualAnchor(menuAnchorRef)}
+        positioning={{ ...Next.virtualAnchor(menuAnchorRef), placement: 'right', gutter: 4, overflowPadding: 8 }}
       >
-        <Next.Menu.Content side='right' sideOffset={4} collisionPadding={8}>
+        <Next.Menu.Content>
           {menu?.kind === 'point' && (
             <Next.Menu.Item
               data-testid='remove-point'
