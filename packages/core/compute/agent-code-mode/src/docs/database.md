@@ -84,13 +84,9 @@ the relations of an object is a query — see `queries.md`.
 
 ## Parents
 
-An object can have one parent. The parent must already hold a ref to the child, so add the child
-to the parent's ref field first, then set the parent:
+An object can have one parent. `Obj.setParent` sets it and `Obj.getParent` reads it back:
 
 ```js
-Obj.update(project, (project) => {
-  project.tasks = [...project.tasks, Ref.make(task)];
-});
 Obj.setParent(task, project);
 yield* print(Obj.getParent(task)?.name);
 ```

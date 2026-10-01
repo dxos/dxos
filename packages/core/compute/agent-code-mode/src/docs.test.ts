@@ -122,7 +122,6 @@ describe('DOCS', () => {
           Obj.update(created, (task) => { task.status = 'done'; });
           const owner = yield* Database.load(task.owner);
           yield* Database.add(Relation.make(Assigned, { [Relation.Source]: ada, [Relation.Target]: task, role: 'reviewer' }));
-          Obj.update(project, (project) => { project.tasks = [...project.tasks, Ref.make(task)]; });
           Obj.setParent(task, project);
           yield* Database.remove(created);
           yield* Database.flush();
@@ -179,7 +178,6 @@ describe('DOCS', () => {
         const output = yield* run(`
           ${SETUP}
           yield* Database.add(Relation.make(Assigned, { [Relation.Source]: ada, [Relation.Target]: other, role: 'reviewer' }));
-          Obj.update(project, (project) => { project.tasks = [...project.tasks, Ref.make(task)]; });
           Obj.setParent(task, project);
           yield* Database.flush();
 
