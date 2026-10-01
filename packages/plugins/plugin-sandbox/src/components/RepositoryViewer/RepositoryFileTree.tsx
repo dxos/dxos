@@ -5,8 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
+import { createStaticTreeModel } from '@dxos/react-ui-list';
+import { Tree, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list/next';
 
 import { meta } from '#meta';
 
@@ -86,7 +86,7 @@ export const RepositoryFileTree = ({
   );
 
   const handleSelect = useCallback(
-    ({ item }: { item: FileNode }) => {
+    ({ item }: TreeSelectEvent<FileNode>) => {
       if (item.type === 'directory') {
         onExpandedChange(item.path, !expanded.has(item.path));
       } else {
@@ -96,35 +96,34 @@ export const RepositoryFileTree = ({
     [expanded, onExpandedChange, onSelect],
   );
 
-  const renderIcon = useMemo<IconRenderer<FileNode>>(
-    () =>
-      ({ item }) => (
-        <Next.Icon
-          icon={
-            item.type === 'directory'
-              ? expanded.has(item.path)
-                ? 'ph--folder-open--regular'
-                : 'ph--folder--regular'
-              : item.type === 'submodule'
-                ? 'ph--git-fork--regular'
-                : 'ph--file--regular'
-          }
-          size='md'
-        />
-      ),
+  const renderRow = useCallback(
+    (node: TreeNode<FileNode>) => {
+      const item = node.item;
+      return (
+        <Tree.Item node={node}>
+          <Tree.ItemIndicator />
+          <Tree.ItemIcon
+            icon={
+              item?.type === 'directory'
+                ? expanded.has(item.path)
+                  ? 'ph--folder-open--regular'
+                  : 'ph--folder--regular'
+                : item?.type === 'submodule'
+                  ? 'ph--git-fork--regular'
+                  : 'ph--file--regular'
+            }
+          />
+          <Tree.ItemText />
+        </Tree.Item>
+      );
+    },
     [expanded],
   );
 
   return (
-    <Tree<FileNode>
-      id={root.id}
-      model={model}
-      ariaLabel={t('files-tree.label')}
-      classNames='text-sm'
-      size='sm'
-      renderIcon={renderIcon}
-      onOpenChange={handleOpenChange}
-      onSelect={handleSelect}
-    />
+    <Tree.Root id={root.id} model={model} size='sm' onOpenChange={handleOpenChange} onSelect={handleSelect}>
+      <Tree.Label srOnly>{t('files-tree.label')}</Tree.Label>
+      <Tree.Content>{renderRow}</Tree.Content>
+    </Tree.Root>
   );
 };

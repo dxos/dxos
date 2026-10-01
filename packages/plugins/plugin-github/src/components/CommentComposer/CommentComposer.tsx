@@ -93,9 +93,9 @@ export const LineCommentPopover = ({ open, anchorRef, ...props }: LineCommentPop
         props.onCancel();
       }
     }}
-    positioning={Next.virtualAnchor(anchorRef)}
+    positioning={{ ...Next.virtualAnchor(anchorRef), placement: 'bottom-start' }}
   >
-    <Next.Popover.Content side='bottom' align='start' classNames='w-[28rem] max-w-[90cqi]'>
+    <Next.Popover.Content classNames='w-[28rem] max-w-[90cqi]'>
       <Next.Popover.Body classNames='flex flex-col gap-2 p-2'>
         <CommentComposer {...props} />
       </Next.Popover.Body>

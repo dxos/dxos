@@ -59,7 +59,9 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root
+      items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}
+    >
       <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
         {sorted.map((run) => {
           const { icon, classNames } = outcomeIcon[run.outcome];
@@ -82,7 +84,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
               data-testid='pull-request.check'
               onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
             >
-              <Listbox.ItemIcon icon={icon} size='lg' classNames={classNames} />
+              <Listbox.ItemIcon icon={icon} classNames={classNames} />
               <Listbox.ItemText>{run.name}</Listbox.ItemText>
               <Listbox.ItemDescription>{[detail, outcome].filter(Boolean).join(' · ')}</Listbox.ItemDescription>
             </Listbox.Item>

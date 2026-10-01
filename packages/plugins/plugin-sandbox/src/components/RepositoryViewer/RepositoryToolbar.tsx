@@ -33,11 +33,14 @@ export const RepositoryToolbar = ({
 }: RepositoryToolbarProps) => {
   const { t } = useTranslation(meta.profile.key);
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
+  const commitItem = isCommit && currentRef ? { value: currentRef, label: currentRef.slice(0, 7) } : undefined;
+  const branchItems = branches.map((branch) => ({ value: branch.name, label: branch.name }));
   return (
     <Next.Toolbar.Root classNames='gap-1'>
       <Next.Select.Root
-        value={[currentRef]}
-        onValueChange={({ value: [value] }) => onRefChange(value)}
+        items={commitItem ? [commitItem, ...branchItems] : branchItems}
+        value={currentRef ? [currentRef] : []}
+        onValueChange={({ value: [value] }) => value && onRefChange(value)}
         disabled={branches.length === 0}
       >
         <Next.Select.Trigger
@@ -46,18 +49,9 @@ export const RepositoryToolbar = ({
           data-testid='repository.branch'
         />
         <Next.Select.Content>
-          {isCommit && currentRef && (
-            <Next.Select.Item
-              classNames='text-sm font-mono'
-              item={{ value: currentRef, label: currentRef.slice(0, 7) }}
-            />
-          )}
-          {branches.map((branch) => (
-            <Next.Select.Item
-              key={branch.name}
-              classNames='text-sm'
-              item={{ value: branch.name, label: branch.name }}
-            />
+          {commitItem && <Next.Select.Item classNames='text-sm font-mono' item={commitItem} />}
+          {branchItems.map((item) => (
+            <Next.Select.Item key={item.value} classNames='text-sm' item={item} />
           ))}
         </Next.Select.Content>
       </Next.Select.Root>
