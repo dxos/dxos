@@ -99,14 +99,14 @@ export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
   options: MakeOptions = {},
 ): Lens<Type.InstanceType<S>, TargetOf<T>> => {
   const name = nameOf(source, target);
-  const plan = compile(source, target, mapping as Mapping);
   const defaults = options.defaults ?? {};
+  const plan = compile(source, target, mapping as Mapping, defaults);
   return {
     [LensTypeId]: LensTypeId,
     [KindId]: EntityKind.Lens,
     id: EntityId.random(),
     name,
-    digest: planDigest(source, target, plan, defaults),
+    digest: planDigest(source, target, plan),
     overlayKey: name,
     defaults,
     source,

@@ -378,12 +378,13 @@ describe('persistence', () => {
     expect(stored.source).to.eq(Type.getURI(Task));
     expect(stored.target).to.eq(Type.getURI(GtdTask));
     // Same-name matches are stored too, so the lens runs without its schemas.
-    expect(stored.entries.find((entry) => entry.property === 'title')).to.deep.eq({
+    const plan = Lens.storedPlan(stored)?.plan;
+    expect(plan?.entries.find((entry) => entry.property === 'title')).to.deep.eq({
       property: 'title',
       kind: 'rename',
       from: 'title',
     });
-    expect([...stored.overlays].sort()).to.deep.eq(['context', 'done', 'waitingOn']);
+    expect([...(plan?.overlays ?? [])].sort()).to.deep.eq(['context', 'done', 'waitingOn']);
 
     const rehydrated = Lens.fromStored(stored, Task, GtdTask);
     expect(rehydrated.digest).to.eq(lens.digest);

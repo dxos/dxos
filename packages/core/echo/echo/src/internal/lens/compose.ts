@@ -129,7 +129,13 @@ export const compose = (first: AnyLens, second: AnyLens): AnyLens => {
     dropped: [...new Set([...droppedFromFirst, ...droppedViaSecond])].sort(),
   };
 
-  const plan: Plan = { entries, overlays: second.plan.overlays, coverage };
+  const plan: Plan = {
+    entries,
+    overlays: second.plan.overlays,
+    coverage,
+    defaults: second.plan.defaults,
+    required: { source: first.plan.required.source, target: second.plan.required.target },
+  };
 
   return {
     [LensTypeId]: LensTypeId,

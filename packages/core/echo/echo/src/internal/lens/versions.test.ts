@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import * as Lens from '../../Lens.ts';
+import * as Obj from '../../Obj.ts';
 import * as Type from '../../Type.ts';
 
 const TYPENAME = 'org.dxos.test.task';
@@ -77,7 +78,7 @@ describe('lenses between versions', () => {
     expect(Lens.isVersionLens(Lens.make(TaskV2, TaskV1, { title: 'name' }))).toBe(false);
   });
 
-  test('only renames and same-name matches translate version documents', () => {
+  test('an entry that runs code does not translate version documents', () => {
     const converted = Lens.make(
       TaskV1,
       TaskV2,
@@ -87,7 +88,7 @@ describe('lenses between versions', () => {
       { defaults: { done: false } },
     );
     expect(Lens.isVersionLens(converted)).toBe(true);
-    expect(() => Lens.versionEdge(converted)).toThrow(/"name" is not a rename or a same-name match/);
+    expect(() => Lens.versionEdge(converted)).toThrow(/"name" runs code/);
   });
 
   test('a required property only one side has needs a default', () => {
@@ -117,6 +118,128 @@ describe('lenses between versions', () => {
     expect(edge?.backward({ name: 'Plan', done: true, extra: 1 })).toEqual(
       fromCode.backward({ name: 'Plan', done: true, extra: 1 }),
     );
+  });
+
+  describe('nested values', () => {
+    const OrderV1 = Type.makeObject(DXN.make('org.dxos.test.order', '0.1.0'))(
+      Schema.Struct({
+        address: Schema.Struct({ street: Schema.String, city: Schema.String }),
+        items: Schema.Array(Schema.Struct({ sku: Schema.String, qty: Schema.Number })),
+        notes: Schema.Record(Schema.String, Schema.Struct({ body: Schema.String })),
+      }),
+    );
+    const OrderV2 = Type.makeObject(DXN.make('org.dxos.test.order', '0.2.0'))(
+      Schema.Struct({
+        address: Schema.Struct({ line1: Schema.String, city: Schema.String }),
+        items: Schema.Array(Schema.Struct({ sku: Schema.String, quantity: Schema.Number, gift: Schema.Boolean })),
+        notes: Schema.Record(Schema.String, Schema.Struct({ text: Schema.String })),
+      }),
+    );
+    const lens = Lens.make(OrderV1, OrderV2, {
+      address: Lens.within('address', { line1: 'street' }),
+      items: Lens.each('items', { quantity: 'qty' }, { gift: false }),
+      notes: Lens.values('notes', { text: 'body' }),
+    });
+    const v1 = {
+      address: { street: '1 Main', city: 'Springfield' },
+      items: [
+        { sku: 'a', qty: 1 },
+        { sku: 'b', qty: 2 },
+      ],
+      notes: { first: { body: 'hello' } },
+    };
+    const v2 = {
+      address: { line1: '1 Main', city: 'Springfield' },
+      items: [
+        { sku: 'a', quantity: 1, gift: false },
+        { sku: 'b', quantity: 2, gift: false },
+      ],
+      notes: { first: { text: 'hello' } },
+    };
+
+    test('a rename inside a struct, each list element and each record value runs both ways', () => {
+      const edge = Lens.versionEdge(lens);
+      expect(edge.forward(v1)).toEqual(v2);
+      expect(edge.backward(v2)).toEqual(v1);
+    });
+
+    test('a stored nested lens runs the same step, and rehydrates to the same digest', () => {
+      const stored = Lens.toStored(lens);
+      expect(Lens.storedVersionEdge(stored)?.forward(v1)).toEqual(v2);
+      expect(Lens.fromStored(stored, OrderV1, OrderV2).digest).toBe(lens.digest);
+    });
+
+    test('a view reads and writes through the nested mapping', () => {
+      const order = Obj.make(OrderV1, v1);
+      expect(Lens.get(order, lens)).toMatchObject(v2);
+      Lens.put(order, lens, { address: { line1: '2 Side', city: 'Springfield' } });
+      expect({ ...order.address }).toEqual({ street: '2 Side', city: 'Springfield' });
+    });
+
+    test('a required property one side of a nested struct alone declares needs a default', () => {
+      const missing = Lens.make(OrderV1, OrderV2, {
+        address: Lens.within('address', { line1: 'street' }),
+        items: Lens.each('items', { quantity: 'qty' }),
+        notes: Lens.values('notes', { text: 'body' }),
+      });
+      expect(() => Lens.versionEdge(missing)).toThrow(/"items\[\]\.gift" is required in the newer version/);
+    });
+  });
+
+  describe('one-way transforms', () => {
+    const PersonV1 = Type.makeObject(DXN.make('org.dxos.test.person', '0.1.0'))(
+      Schema.Struct({ first: Schema.String, last: Schema.String, status: Schema.String }),
+    );
+    const PersonV2 = Type.makeObject(DXN.make('org.dxos.test.person', '0.2.0'))(
+      Schema.Struct({ fullName: Schema.String, initial: Schema.String, active: Schema.Boolean, kind: Schema.String }),
+    );
+    const lens = Lens.make(
+      PersonV1,
+      PersonV2,
+      {
+        fullName: Lens.concat(['first', 'last'], ' '),
+        initial: Lens.part('first', '', 0),
+        active: Lens.mapValue('status', { open: true, closed: false }, false),
+        kind: Lens.constant('person'),
+      },
+      { defaults: { first: '', last: '', status: 'open' } },
+    );
+
+    test('forward computes the derived properties; backward leaves the older properties alone', () => {
+      const edge = Lens.versionEdge(lens);
+      expect(edge.forward({ first: 'Ada', last: 'Lovelace', status: 'closed' })).toEqual({
+        fullName: 'Ada Lovelace',
+        initial: 'A',
+        active: false,
+        kind: 'person',
+      });
+      // Going back, nothing is derived: the older version keeps what it holds, or starts at the defaults.
+      expect(edge.backward({ fullName: 'Grace Hopper', initial: 'G', active: true, kind: 'person' })).toEqual({
+        first: '',
+        last: '',
+        status: 'open',
+      });
+    });
+
+    test('a required input of a one-way transform needs a default for objects created at the newer version', () => {
+      const missing = Lens.make(PersonV1, PersonV2, {
+        fullName: Lens.concat(['first', 'last'], ' '),
+        initial: Lens.part('first', '', 0),
+        active: Lens.mapValue('status', { open: true }, false),
+        kind: Lens.constant('person'),
+      });
+      expect(() => Lens.versionEdge(missing)).toThrow(/"first" is required in the older version and has no default/);
+    });
+
+    test('one-way properties are read-only in a view, and the stored lens runs the same step', () => {
+      const person = Obj.make(PersonV1, { first: 'Ada', last: 'Lovelace', status: 'open' });
+      expect(Lens.get(person, lens)).toMatchObject({ fullName: 'Ada Lovelace', active: true });
+      expect(() => Lens.put(person, lens, { fullName: 'X' })).toThrow(/read-only/);
+      const stored = Lens.storedVersionEdge(Lens.toStored(lens));
+      expect(stored?.forward({ first: 'Ada', last: 'Lovelace', status: 'open' })).toEqual(
+        Lens.versionEdge(lens).forward({ first: 'Ada', last: 'Lovelace', status: 'open' }),
+      );
+    });
   });
 
   test('versions compare numerically', () => {

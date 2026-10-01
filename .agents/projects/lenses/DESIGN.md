@@ -1340,6 +1340,74 @@ become one entity. A lens is to types what a relation is to objects: an edge bet
   reads the versions its registry's version lenses connect (routing and `QueryOptions.versions`) and stores
   those lenses in its space; `db.flush()` waits for that store.
 
+### 12.9 Lens steps 2 and 3, as built (2026-10-01)
+
+- **Nested entries (step 2).** `Lens.within(property, mapping)`, `Lens.each(property, mapping)` and
+  `Lens.values(property, mapping)` map a struct, each element of a list of structs (by position) or each
+  value of a record of structs through an inner mapping that resolves as a top-level one does. Each takes
+  defaults for the inner properties one side alone declares. Translation needs nothing new below the lens:
+  `applyStructuralEdit` already rebases list, map and text edits element by element, so concurrent edits to
+  different elements in different versions both survive.
+- **One-way built-ins (step 3).** `Lens.concat`, `Lens.part`, `Lens.mapValue` and `Lens.constant` compute a
+  target property from source properties, stored as data so a host runs them; `readOnly` is the one-way copy.
+  Forward only: an edit in the older version recomputes the property, and an edit to it in the newer
+  version stays there. A source property only one-way entries read is not restored going back, so it needs
+  a default when required (objects created at the newer version derive their older document from it). In a
+  view the property is read-only. Arbitrary code transforms wait (decided 2026-10-01).
+- **Plan as data.** A stored lens holds its whole plan as one canonical JSON field (`SerializedPlan`), so
+  nested plans need no recursive ECHO schema; code lenses and stored lenses build version steps from the
+  same data. Version documents reject an entry that runs code, naming it by path (`items[].qty`).
+
+### 12.10 Multi-object migrations across versions (draft for review, 2026-10-01)
+
+The in-place work (§10.5) met fan-out, fan-in and array split as entity creation and destruction, with
+convergence keys and the merge engine to make concurrent creation converge. Version documents change two of
+the premises behind that design.
+
+- **Nothing is destroyed.** Every version stays, so fan-in never deletes the absorbed object: older readers
+  still read it. The "absorb first, delete later" hazard (§10.5) does not arise.
+- **Derived identity is safe again.** §10.5 rejected derived object ids because two documents created
+  concurrently under one id share no history, and the loser is orphaned. A document derived the way version
+  roots are — a deterministic first change from the parent's creation — shares its first change with every
+  concurrent copy, so the copies merge as duplicate version documents already do (the visible `links`
+  value wins, losers merge into it).
+
+**The proposal: a fan-out child is a derived document of its parent.** Extracting `Person@1.address` into an
+`Address` object gives the address a new object id, derived as `hash(parent id, lens digest, role)`, whose
+document's root is derived from the parent's creation change through the lens, exactly as a version root is.
+Translation then treats `(Person@1, data.address)` and `(Address, data)` as two views of the same history:
+images of ancestors, originals-only translation, designation by recorded digest and the duplicate rule all
+apply unchanged. What changes is that a lens edge may address part of an object (a property path) and a
+target object other than the source.
+
+| Shape                | Older version                           | Newer version                                       | Translation                                                                           |
+| -------------------- | --------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Fan-out, 1 → 1       | `Person@1 { address: {…} }`             | `Person@2 { address: Ref }` + derived `Address`     | `Person@1.address.*` ↔ `Address.*`; the ref is a constant of the derivation           |
+| Fan-in, 1 → 1        | `Person@1 { address: Ref }` + `Address` | `Person@2 { address: {…} }`                         | `Address.*` ↔ `Person@2.address.*`; `Person@2`'s root derives from both creations     |
+| Array fan-out, 1 → N | `Order@1 { items: [{ id, … }] }`        | `Order@2 { items: Ref[] }` + one `Item` per element | per element, keyed by the element's stamped id, never its position                    |
+| Relation fan-out     | `Task@1 { assignee: string }`           | `Task@2` + `Person` + `assignedTo`                  | later: a relation's endpoints must both exist before it surfaces (§10.5, "Relations") |
+
+Open questions, each to settle before building:
+
+1. **Fan-in roots have two origins.** `Person@2`'s root must be derived from `Person@1`'s creation and from the
+   `Address` state it absorbs, and the address may predate the person or be edited before derivation. The
+   image machinery maps one origin's history today; it would need a root that stands for changes of two
+   documents. The alternative is to support fan-out only, and treat fan-in as fan-out read from the other end
+   (the older version being the normalized one), which is the same edge.
+2. **Shared children in fan-in.** An `Address` referenced by three `Person`s becomes three embedded copies,
+   each a translation target. An edit to one copy reaches the others only through the `Address` document, so
+   the path runs across two objects. Rule 2 (translate originals directly from where they were made) holds,
+   but paths now cross objects.
+3. **Array fan-out needs element ids.** Position is not identity once elements become objects, so the older
+   version must carry stamped element ids (the id-stamping step of the in-place work). Should version lenses
+   require it, or stamp ids as a nested step first?
+4. **Where cross-object edges live.** A fan-out lens connects `Person@1` to two types. Either a lens may have
+   several targets, or a fan-out is two lenses (`Person@1 → Person@2`, `Person@1 → Address@1`) linked by a role.
+   The second keeps one lens per pair and needs no new identity rule.
+5. **Order of work.** Proposed: fan-out 1 → 1 first (it exercises cross-object edges and derived identity
+   without two-origin roots), then array fan-out on stamped ids, then fan-in (or its reading as reverse
+   fan-out), then relations.
+
 ## 13. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·

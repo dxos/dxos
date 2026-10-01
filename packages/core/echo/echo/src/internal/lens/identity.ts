@@ -4,10 +4,10 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import { SchemaAST } from '@dxos/effect';
 
 import * as Type from '../../Type.ts';
-import { type Plan } from './types.ts';
+import { type Plan, type ResolvedEntry } from './types.ts';
 
 //
 // A lens is named by the two types it connects and identified, separately, by a digest of what it does.
@@ -39,56 +39,23 @@ export const canonical = (value: unknown): string =>
       : inner,
   );
 
-const propertiesOf = (entity: Type.AnyObj | Schema.Top): SchemaEx.SchemaProperty[] =>
-  SchemaEx.getProperties((Type.isType(entity) ? Type.getSchema(entity) : entity).ast);
+/** An entry described by what it does: a same-name match and an explicit same-name rename are one entry. */
+const describe = (entry: ResolvedEntry): unknown =>
+  entry.origin === 'automatic'
+    ? { property: entry.property, kind: 'rename', from: entry.property }
+    : entry.serialized
+      ? { property: entry.property, ...entry.serialized }
+      : { property: entry.property, kind: 'code', from: entry.from, code: entry.code };
 
 /**
- * The value each property only one side declares starts at: an explicit default, else the schema's.
- * Target-only properties are read from the target schema, source-only (dropped) ones from the source.
+ * The digest of a declarative lens: its endpoints, every resolved entry (nested plans included) and the
+ * defaults it starts at, as canonical JSON. Whatever records it hashes it to the length it needs.
  */
-export const resolveDefaults = (
-  source: Type.AnyObj,
-  target: Type.AnyObj | Schema.Top,
-  plan: Plan,
-  defaults: Readonly<Record<string, unknown>>,
-): Record<string, unknown> => {
-  const schemaDefaults = (entity: Type.AnyObj | Schema.Top, names: readonly string[]) => {
-    const byName = new Map(propertiesOf(entity).map((property) => [String(property.name), property]));
-    return names.flatMap((name) => {
-      const type = byName.get(name)?.type;
-      const value = name in defaults ? defaults[name] : type && SchemaAST.getDefaultAnnotation(type);
-      return value === undefined ? [] : [[name, value] as const];
-    });
-  };
-  return Object.fromEntries([
-    ...schemaDefaults(target, plan.overlays),
-    ...schemaDefaults(source, plan.coverage.dropped),
-  ]);
-};
-
-/**
- * The digest of a declarative lens: its endpoints, every resolved entry and the defaults it starts at, as
- * canonical JSON. Whatever records it hashes it to the length it needs.
- */
-export const planDigest = (
-  source: Type.AnyObj,
-  target: Type.AnyObj | Schema.Top,
-  plan: Plan,
-  defaults: Readonly<Record<string, unknown>>,
-): string =>
+export const planDigest = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, plan: Plan): string =>
   canonical({
     source: Type.getURI(source),
     target: endpointOf(target),
-    entries: plan.entries
-      .map(({ property, from, serialized, code }) => ({
-        property,
-        from,
-        // Described by behavior: a same-name match and an explicit rename to the same name are one entry.
-        kind: serialized?.kind ?? (code === undefined ? 'rename' : 'code'),
-        codec: serialized?.kind === 'converted' ? serialized.codec : undefined,
-        code,
-      }))
-      .sort((left, right) => (left.property < right.property ? -1 : 1)),
+    entries: plan.entries.map(describe).sort((left, right) => (canonical(left) < canonical(right) ? -1 : 1)),
     overlays: [...plan.overlays].sort(),
-    defaults: resolveDefaults(source, target, plan, defaults),
+    defaults: plan.defaults,
   });

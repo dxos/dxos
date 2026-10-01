@@ -59,8 +59,47 @@ export type ReadOnly<S = any> = {
   readonly property: keyof S & string;
 };
 
+/** Where a nested mapping applies inside a property's value: the value itself, each list element, or each record value. */
+export type Shape = 'struct' | 'each' | 'values';
+
+/**
+ * `Lens.within`/`Lens.each`/`Lens.values` — a property whose value is mapped by an inner mapping: a struct,
+ * each element of a list of structs (element i to element i), or each value of a record of structs.
+ */
+export type Nested<S = any> = {
+  readonly kind: 'nested';
+  readonly property: keyof S & string;
+  readonly shape: Shape;
+  readonly mapping: Mapping;
+  /** Values for properties only one side of the inner structs declares; see {@link MakeOptions}. */
+  readonly defaults?: Readonly<Record<string, unknown>>;
+};
+
+/**
+ * A built-in transform stored as data, computed from source properties: forward only, so the target
+ * property is read-only and edits to it never reach the source.
+ */
+export type OneWaySpec =
+  | { readonly fn: 'concat'; readonly from: readonly string[]; readonly separator: string }
+  | { readonly fn: 'part'; readonly from: readonly [string]; readonly separator: string; readonly index: number }
+  | {
+      readonly fn: 'mapValue';
+      readonly from: readonly [string];
+      readonly table: Readonly<Record<string, unknown>>;
+      readonly fallback?: unknown;
+    }
+  | { readonly fn: 'constant'; readonly from: readonly []; readonly value: unknown };
+
+export type OneWay = { readonly kind: 'oneWay'; readonly spec: OneWaySpec };
+
 /** One target property's mapping. A bare string is the rename shorthand. */
-export type MappingEntry<S = any, V = any> = (keyof S & string) | Converted<S, V> | ReadOnly<S> | Derived<S, V, any>;
+export type MappingEntry<S = any, V = any> =
+  | (keyof S & string)
+  | Converted<S, V>
+  | ReadOnly<S>
+  | Derived<S, V, any>
+  | Nested<S>
+  | OneWay;
 
 /**
  * A partial mapping from target properties to the source. Every target property resolves as:
@@ -110,7 +149,17 @@ export type Coverage = {
 export type SerializedEntry =
   | { readonly kind: 'rename'; readonly from: string }
   | { readonly kind: 'readOnly'; readonly from: string }
-  | { readonly kind: 'converted'; readonly from: string; readonly codec: string };
+  | { readonly kind: 'converted'; readonly from: string; readonly codec: string }
+  | { readonly kind: 'nested'; readonly from: string; readonly shape: Shape; readonly inner: SerializedPlan }
+  | { readonly kind: 'oneWay'; readonly spec: OneWaySpec };
+
+/** A plan as data: every resolved entry (same-name matches as renames) and what each side alone declares. */
+export type SerializedPlan = {
+  readonly entries: readonly (SerializedEntry & { readonly property: string })[];
+  readonly overlays: readonly string[];
+  readonly dropped: readonly string[];
+  readonly defaults: Readonly<Record<string, unknown>>;
+};
 
 /** A normalized mapping entry, computed once when the lens is defined. */
 export type ResolvedEntry = {
@@ -124,6 +173,10 @@ export type ResolvedEntry = {
   readonly serialized?: SerializedEntry;
   /** The source text of an inline function the entry runs, so the lens digest changes with it. */
   readonly code?: string;
+  /** For a nested entry: where the inner plan applies, and the plan. */
+  readonly nested?: { readonly shape: Shape; readonly plan: Plan };
+  /** For a one-way entry: the transform. */
+  readonly oneWay?: OneWaySpec;
 };
 
 /** The compiled mapping: what to read, what to write, and what fell through to an overlay. */
@@ -131,6 +184,10 @@ export type Plan = {
   readonly entries: readonly ResolvedEntry[];
   readonly overlays: readonly string[];
   readonly coverage: Coverage;
+  /** The value each property only one side declares starts at: explicit, else the schema's default. */
+  readonly defaults: Readonly<Record<string, unknown>>;
+  /** The properties each side requires. */
+  readonly required: { readonly source: readonly string[]; readonly target: readonly string[] };
 };
 
 /**

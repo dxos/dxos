@@ -33,7 +33,7 @@ class MemoryStore implements VersionStore {
   readonly docs = new Map<string, VersionDoc>();
   readonly root: VersionDocHandle;
 
-  constructor(objectData: Record<string, unknown>) {
+  constructor(objectData: Record<string, unknown>, type: Type.AnyObj = TaskV1) {
     const origin = generateAutomergeUrl();
     this.docs.set(
       origin,
@@ -41,7 +41,7 @@ class MemoryStore implements VersionStore {
         draft.version = SpaceDocVersion.CURRENT;
         draft.objects = {
           [OBJECT_ID]: {
-            system: { kind: 'object', type: EncodedReference.fromURI(Type.getURI(TaskV1)) },
+            system: { kind: 'object', type: EncodedReference.fromURI(Type.getURI(type)) },
             meta: { keys: [] },
             data: objectData,
           },
@@ -75,6 +75,17 @@ class MemoryStore implements VersionStore {
       .map(([url, doc]) => `${url}:${A.getHeads(doc).join(',')}`)
       .sort()
       .join('\n');
+  }
+
+  /** Changes the object's data in the document recorded for `version`. */
+  edit(version: string, callback: (data: any) => void): void {
+    const url = DatabaseDirectory.getVersionDocUrls(this.root.doc(), OBJECT_ID)[version];
+    invariant(url, `no ${version}`);
+    this.#handle(url).change((doc) => {
+      const data = doc.objects?.[OBJECT_ID]?.data;
+      invariant(data, 'no object');
+      callback(data);
+    });
   }
 
   dataAt(version: string): unknown {
@@ -133,5 +144,81 @@ describe('version runner', () => {
     // A member stores a second lens for the same pair: the existing v2 still follows v1, with the first.
     await syncVersionDocuments(store, [edgeOf(false), edgeOf(true)], [OBJECT_ID]);
     expect(store.dataAt('0.2.0')).toEqual({ name: 'Plan', tags: ['late'], done: true });
+  });
+
+  test('an edit inside a nested list element reaches the other version element by element', async () => {
+    const OrderV1 = Type.makeObject(DXN.make('org.dxos.test.order', '0.1.0'))(
+      Schema.Struct({ items: Schema.Array(Schema.Struct({ sku: Schema.String, qty: Schema.Number })) }),
+    );
+    const OrderV2 = Type.makeObject(DXN.make('org.dxos.test.order', '0.2.0'))(
+      Schema.Struct({ items: Schema.Array(Schema.Struct({ sku: Schema.String, quantity: Schema.Number })) }),
+    );
+    const edges = [Lens.versionEdge(Lens.make(OrderV1, OrderV2, { items: Lens.each('items', { quantity: 'qty' }) }))];
+    const store = new MemoryStore(
+      {
+        items: [
+          { sku: 'a', qty: 1 },
+          { sku: 'b', qty: 2 },
+        ],
+      },
+      OrderV1,
+    );
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+
+    // Concurrent edits to different elements, one in each version, both survive in both.
+    store.edit('0.1.0', (data) => {
+      data.items[1].qty = 5;
+    });
+    store.edit('0.2.0', (data) => {
+      data.items[0].quantity = 9;
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.1.0')).toEqual({
+      items: [
+        { sku: 'a', qty: 9 },
+        { sku: 'b', qty: 5 },
+      ],
+    });
+    expect(store.dataAt('0.2.0')).toEqual({
+      items: [
+        { sku: 'a', quantity: 9 },
+        { sku: 'b', quantity: 5 },
+      ],
+    });
+  });
+
+  test('a one-way property follows the older version, and an edit to it stays in the newer one', async () => {
+    const PersonV1 = Type.makeObject(DXN.make('org.dxos.test.person', '0.1.0'))(
+      Schema.Struct({ first: Schema.String, last: Schema.String }),
+    );
+    const PersonV2 = Type.makeObject(DXN.make('org.dxos.test.person', '0.2.0'))(
+      Schema.Struct({ fullName: Schema.String }),
+    );
+    const edges = [
+      Lens.versionEdge(
+        Lens.make(
+          PersonV1,
+          PersonV2,
+          { fullName: Lens.concat(['first', 'last'], ' ') },
+          { defaults: { first: '', last: '' } },
+        ),
+      ),
+    ];
+    const store = new MemoryStore({ first: 'Ada', last: 'Lovelace' }, PersonV1);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.2.0')).toEqual({ fullName: 'Ada Lovelace' });
+
+    store.edit('0.1.0', (data) => {
+      data.last = 'King';
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.2.0')).toEqual({ fullName: 'Ada King' });
+
+    store.edit('0.2.0', (data) => {
+      data.fullName = 'Countess Lovelace';
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.1.0')).toEqual({ first: 'Ada', last: 'King' });
+    expect(store.dataAt('0.2.0')).toEqual({ fullName: 'Countess Lovelace' });
   });
 });

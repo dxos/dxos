@@ -2,16 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
-
-import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
 
 import * as Type from '../../Type.ts';
-import { StoredData } from './entity.ts';
-import { resolveDefaults } from './identity.ts';
-import { type AnyLens } from './types.ts';
+import { storedPlan } from './entity.ts';
+import { mapShape, serializePlan } from './mapping.ts';
+import { evaluate } from './one-way.ts';
+import { type AnyLens, type Plan, type SerializedPlan, type Shape } from './types.ts';
 
 //
 // A lens between two versions of one type also translates version documents (DESIGN.md §12.7): the same
@@ -58,15 +55,6 @@ export const isVersionLens = (lens: AnyLens): lens is AnyLens & { readonly targe
   );
 };
 
-/** What translating between two versions needs, as plain data. */
-type Spec = {
-  /** `[target property, source property]` for every property both versions hold. */
-  readonly pairs: readonly (readonly [string, string])[];
-  readonly targetOnly: readonly string[];
-  readonly sourceOnly: readonly string[];
-  readonly defaults: Readonly<Record<string, unknown>>;
-};
-
 /** One step between two versions of a type: a version-document lens as plain data. */
 export type VersionEdge = {
   readonly name: string;
@@ -82,43 +70,110 @@ export type VersionEdge = {
   readonly backward: (data: Data) => Data;
 };
 
+type Step = { readonly forward: (data: Data) => Data; readonly backward: (data: Data) => Data };
+
 // Defaults are copied per use: an array or record shared between two results would alias.
 const copy = (value: unknown): unknown => (value === undefined ? undefined : structuredClone(value));
 
-/** Properties neither version declares carry over unchanged, as they would in one document. */
-const run = (
-  data: Data,
-  known: ReadonlySet<string>,
-  mapped: readonly (readonly [string, string])[],
-  added: readonly string[],
-  defaults: Readonly<Record<string, unknown>>,
-): Data => {
-  const next: Data = Object.fromEntries(Object.entries(data).filter(([key]) => !known.has(key)));
-  for (const [to, from] of mapped) {
-    if (data[from] !== undefined) {
-      next[to] = data[from];
+/**
+ * The step a plan as data runs in each direction, or `undefined` when it converts a value through a codec,
+ * which is code. Properties neither version declares carry over unchanged, as they would in one document.
+ * A one-way entry (a built-in transform or a read-only projection) runs forward only: its target property is
+ * dropped going back, and the source properties only it reads keep the value the older version holds.
+ */
+const stepOf = (plan: SerializedPlan): Step | undefined => {
+  type Pair = { to: string; from: string; shape?: Shape; inner?: Step };
+  type Forward = { to: string; from: readonly string[]; compute: (data: Data) => unknown };
+  const pairs: Pair[] = [];
+  const oneWay: Forward[] = [];
+  for (const entry of plan.entries) {
+    switch (entry.kind) {
+      case 'rename':
+        pairs.push({ to: entry.property, from: entry.from });
+        break;
+      case 'nested': {
+        const inner = stepOf(entry.inner);
+        if (!inner) {
+          return undefined;
+        }
+        pairs.push({ to: entry.property, from: entry.from, shape: entry.shape, inner });
+        break;
+      }
+      case 'readOnly': {
+        const from = entry.from;
+        oneWay.push({ to: entry.property, from: [from], compute: (data) => data[from] });
+        break;
+      }
+      case 'oneWay': {
+        const spec = entry.spec;
+        oneWay.push({ to: entry.property, from: spec.from, compute: (data) => evaluate(spec, data) });
+        break;
+      }
+      case 'converted':
+        return undefined;
     }
   }
-  for (const name of added) {
-    if (next[name] === undefined && name in defaults) {
-      next[name] = copy(defaults[name]);
+  const paired = new Set(pairs.map(({ from }) => from));
+  const oneWayInputs = [...new Set(oneWay.flatMap(({ from }) => from))].filter((name) => !paired.has(name));
+  const sourceOnly = [...plan.dropped, ...oneWayInputs];
+  const sourceNames = new Set([...paired, ...sourceOnly]);
+  const targetNames = new Set([...pairs.map(({ to }) => to), ...oneWay.map(({ to }) => to), ...plan.overlays]);
+  const withDefaults = (next: Data, names: readonly string[]): Data => {
+    for (const name of names) {
+      if (next[name] === undefined && name in plan.defaults) {
+        next[name] = copy(plan.defaults[name]);
+      }
     }
-  }
-  return next;
+    return next;
+  };
+  const carried = (data: Data, known: ReadonlySet<string>): Data =>
+    Object.fromEntries(Object.entries(data).filter(([key]) => !known.has(key)));
+  return {
+    forward: (data) => {
+      const next = carried(data, sourceNames);
+      for (const { to, from, shape, inner } of pairs) {
+        const value = data[from];
+        if (value !== undefined) {
+          next[to] = shape && inner ? mapShape(shape, value, (element) => inner.forward(element)) : value;
+        }
+      }
+      for (const { to, compute } of oneWay) {
+        const value = compute(data);
+        if (value !== undefined) {
+          next[to] = value;
+        }
+      }
+      return withDefaults(next, plan.overlays);
+    },
+    backward: (data) => {
+      const next = carried(data, targetNames);
+      for (const { to, from, shape, inner } of pairs) {
+        const value = data[to];
+        if (value !== undefined) {
+          next[from] = shape && inner ? mapShape(shape, value, (element) => inner.backward(element)) : value;
+        }
+      }
+      return withDefaults(next, sourceOnly);
+    },
+  };
 };
 
 const edgeOf = (
   { name, source, target, digest }: { name: string; source: string; target: string; digest: string },
-  spec: Spec,
+  plan: SerializedPlan,
 ): VersionEdge | undefined => {
   const older = parseTypeURI(source);
   const newer = parseTypeURI(target);
-  if (!older || !newer || older.typename !== newer.typename || compareVersions(older.version, newer.version) >= 0) {
+  const step = stepOf(plan);
+  if (
+    !step ||
+    !older ||
+    !newer ||
+    older.typename !== newer.typename ||
+    compareVersions(older.version, newer.version) >= 0
+  ) {
     return undefined;
   }
-  const sourceNames = new Set([...spec.pairs.map(([, property]) => property), ...spec.sourceOnly]);
-  const targetNames = new Set([...spec.pairs.map(([property]) => property), ...spec.targetOnly]);
-  const reversed = spec.pairs.map(([property, from]) => [from, property] as const);
   return {
     name,
     typename: older.typename,
@@ -127,17 +182,52 @@ const edgeOf = (
     from: older.version,
     to: newer.version,
     digest,
-    forward: (data) => run(data, sourceNames, spec.pairs, spec.targetOnly, spec.defaults),
-    backward: (data) => run(data, targetNames, reversed, spec.sourceOnly, spec.defaults),
+    ...step,
   };
 };
 
-const requiredNames = (type: Type.AnyObj): Set<string> =>
-  new Set(
-    SchemaEx.getProperties(Type.getSchema(type).ast)
-      .filter((property) => !property.isOptional)
-      .map((property) => String(property.name)),
+/** What keeps `plan` out of version documents, naming each property by its path. */
+const problemsOf = (plan: Plan, path: string): string[] => {
+  const problems: string[] = [];
+  const readByPair = new Set<string>();
+  const readOneWay = new Set<string>();
+  for (const entry of plan.entries) {
+    const at = `"${path}${entry.property}"`;
+    if (entry.nested) {
+      problems.push(
+        ...problemsOf(entry.nested.plan, `${path}${entry.property}${entry.nested.shape === 'struct' ? '' : '[]'}.`),
+      );
+      entry.from.forEach((name) => readByPair.add(name));
+    } else if (entry.oneWay || entry.serialized?.kind === 'readOnly') {
+      entry.from.forEach((name) => readOneWay.add(name));
+    } else if (entry.origin === 'automatic' || entry.serialized?.kind === 'rename') {
+      const [from] = entry.from;
+      if (from === undefined || readByPair.has(from)) {
+        problems.push(`${at} reads a property another entry also maps`);
+      }
+      entry.from.forEach((name) => readByPair.add(name));
+    } else {
+      problems.push(`${at} runs code; version documents need a rename, a nested mapping or a built-in transform`);
+    }
+  }
+  for (const { property } of plan.coverage.suspicious) {
+    problems.push(`"${path}${property}" has the same name as a source property of an incompatible type`);
+  }
+  const missingDefault = (names: Iterable<string>, required: readonly string[], side: string) => {
+    for (const name of names) {
+      if (required.includes(name) && !(name in plan.defaults)) {
+        problems.push(`"${path}${name}" is required in the ${side} version and has no default`);
+      }
+    }
+  };
+  missingDefault(plan.overlays, plan.required.target, 'newer');
+  missingDefault(
+    [...plan.coverage.dropped, ...[...readOneWay].filter((name) => !readByPair.has(name))],
+    plan.required.source,
+    'older',
   );
+  return problems;
+};
 
 /**
  * The version-document step `lens` runs. Throws, naming every offending property, when the lens is not
@@ -151,40 +241,13 @@ export const versionEdge = (lens: AnyLens): VersionEdge => {
   if (!plan) {
     throw new TypeError(`Lens: "${lens.name}" is coded; version documents need a declarative lens.`);
   }
-  const defaults = resolveDefaults(source, target, plan, lens.defaults);
-  const problems: string[] = [];
-  const claimed = new Set<string>();
-  const pairs: (readonly [string, string])[] = [];
-  for (const entry of plan.entries) {
-    const [from] = entry.from;
-    const declarative = entry.origin === 'automatic' || entry.serialized?.kind === 'rename';
-    if (!declarative || entry.from.length !== 1 || from === undefined || claimed.has(from)) {
-      problems.push(`"${entry.property}" is not a rename or a same-name match`);
-      continue;
-    }
-    claimed.add(from);
-    pairs.push([entry.property, from]);
-  }
-  for (const { property } of plan.coverage.suspicious) {
-    problems.push(`"${property}" has the same name as a source property of an incompatible type`);
-  }
-  const targetRequired = requiredNames(target);
-  const sourceRequired = requiredNames(source);
-  for (const name of plan.overlays) {
-    if (targetRequired.has(name) && !(name in defaults)) {
-      problems.push(`"${name}" is required in ${Type.getURI(target)} and has no default`);
-    }
-  }
-  for (const name of plan.coverage.dropped) {
-    if (sourceRequired.has(name) && !(name in defaults)) {
-      problems.push(`"${name}" is required in ${Type.getURI(source)} and has no default`);
-    }
-  }
+  const problems = problemsOf(plan, '');
+  const serialized = serializePlan(plan);
   const edge =
-    problems.length === 0
+    problems.length === 0 && serialized
       ? edgeOf(
           { name: lens.name, source: Type.getURI(source), target: Type.getURI(target), digest: lens.digest },
-          { pairs, targetOnly: plan.overlays, sourceOnly: plan.coverage.dropped, defaults },
+          serialized,
         )
       : undefined;
   if (!edge) {
@@ -195,25 +258,12 @@ export const versionEdge = (lens: AnyLens): VersionEdge => {
 
 /**
  * The version-document step a stored lens runs, given its data as read from a document, or `undefined` when
- * the data is not a stored lens, does not connect an older version of one type to a newer one, or maps a
- * property other than by rename. Its subset was checked when it was stored from code.
+ * the data is not a stored lens, does not connect an older version of one type to a newer one, or converts a
+ * value through a codec. Its subset was checked when it was stored from code.
  */
 export const storedVersionEdge = (data: unknown): VersionEdge | undefined => {
-  const decoded = Schema.decodeUnknownOption(StoredData)(data);
-  if (Option.isNone(decoded)) {
-    return undefined;
-  }
-  const stored = decoded.value;
-  if (stored.entries.some((entry) => entry.kind !== 'rename')) {
-    return undefined;
-  }
-  const defaults: unknown = JSON.parse(stored.defaults);
-  return edgeOf(stored, {
-    pairs: stored.entries.map((entry) => [entry.property, entry.from] as const),
-    targetOnly: stored.overlays,
-    sourceOnly: stored.dropped,
-    defaults: typeof defaults === 'object' && defaults !== null ? { ...defaults } : {},
-  });
+  const decoded = storedPlan(data);
+  return decoded && edgeOf(decoded.stored, decoded.plan);
 };
 
 /** A composed mapping between two versions, and the digests of the steps it runs, in order. */

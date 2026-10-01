@@ -12,7 +12,16 @@
 // serialization boundary to a foreign record.
 
 import { get as project } from './internal/lens/codec.ts';
-import { type AnyLens, type Codec, type Lens as LensShape, LensTypeId, type Write } from './internal/lens/types.ts';
+import {
+  type AnyLens,
+  type Codec,
+  type Lens as LensShape,
+  LensTypeId,
+  type Mapping,
+  type Nested,
+  type OneWay,
+  type Write,
+} from './internal/lens/types.ts';
 import { applyWrites } from './internal/lens/write.ts';
 import type * as Obj from './Obj.ts';
 
@@ -41,15 +50,20 @@ export { lookup, registerCodec, scale } from './internal/lens/codecs.ts';
 export { compatible } from './internal/lens/mapping.ts';
 export { type LawCheckResult, type LawViolation, checkLaws, readsOf, sourceFor } from './internal/lens/laws.ts';
 export { OverlayAnnotation, getOverlay, getOverlays } from './internal/lens/overlay.ts';
-export { Stored, fromStored, isStored, toStored } from './internal/lens/entity.ts';
+export { Stored, fromStored, isStored, storedPlan, toStored } from './internal/lens/entity.ts';
 export {
   type Codec,
   type Coverage,
   type Derived,
   type MakeOptions,
   type Mapping,
+  type Nested,
+  type OneWay,
+  type OneWaySpec,
   type Plan,
   type SerializedEntry,
+  type SerializedPlan,
+  type Shape,
   type Write,
 } from './internal/lens/types.ts';
 
@@ -73,6 +87,56 @@ export const from = <P extends string, V>(
 
 /** `Lens.readOnly(property)` — projected for display, rejected on write. */
 export const readOnly = <P extends string>(property: P) => ({ kind: 'readOnly' as const, property });
+
+/**
+ * `Lens.within(property, mapping)` — a struct property mapped by an inner mapping, which resolves as a top-level
+ * one does (explicit entry, same-name match, default). `defaults` serve the inner properties one side alone declares.
+ */
+export const within = <P extends string>(
+  property: P,
+  mapping: Mapping,
+  defaults?: Readonly<Record<string, unknown>>,
+): Nested<Record<P, unknown>> => ({ kind: 'nested', property, shape: 'struct', mapping, defaults });
+
+/** `Lens.each(property, mapping)` — each element of a list of structs mapped by an inner mapping, by position. */
+export const each = <P extends string>(
+  property: P,
+  mapping: Mapping,
+  defaults?: Readonly<Record<string, unknown>>,
+): Nested<Record<P, unknown>> => ({ kind: 'nested', property, shape: 'each', mapping, defaults });
+
+/** `Lens.values(property, mapping)` — each value of a record of structs mapped by an inner mapping, by key. */
+export const values = <P extends string>(
+  property: P,
+  mapping: Mapping,
+  defaults?: Readonly<Record<string, unknown>>,
+): Nested<Record<P, unknown>> => ({ kind: 'nested', property, shape: 'values', mapping, defaults });
+
+/**
+ * One-way built-ins: a target property computed from source properties, stored as data so every device runs
+ * it. Read-only in a view; in version documents, edits flow from the older version only.
+ */
+
+/** `Lens.concat(properties, separator)` — the present source strings joined. */
+export const concat = (properties: readonly string[], separator: string): OneWay => ({
+  kind: 'oneWay',
+  spec: { fn: 'concat', from: properties, separator },
+});
+
+/** `Lens.part(property, separator, index)` — one part of a source string split by `separator`. */
+export const part = (property: string, separator: string, index: number): OneWay => ({
+  kind: 'oneWay',
+  spec: { fn: 'part', from: [property], separator, index },
+});
+
+/** `Lens.mapValue(property, table, fallback)` — a source value looked up in a table. */
+export const mapValue = (property: string, table: Readonly<Record<string, unknown>>, fallback?: unknown): OneWay => ({
+  kind: 'oneWay',
+  spec: { fn: 'mapValue', from: [property], table, fallback },
+});
+
+/** `Lens.constant(value)` — the same value for every object. */
+export const constant = (value: unknown): OneWay => ({ kind: 'oneWay', spec: { fn: 'constant', from: [], value } });
 
 /** Project the base object into the target shape, as a detached snapshot. */
 export const get: <S, T>(obj: Obj.Unknown, lens: Lens<S, T>) => T = project;

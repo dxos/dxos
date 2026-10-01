@@ -8,14 +8,40 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 import * as Type from '../../Type.ts';
 import { getCodec } from './codecs.ts';
-import { type Codec, type Converted, type Derived, type Mapping, type Plan, type ResolvedEntry } from './types.ts';
+import { evaluate } from './one-way.ts';
+import {
+  type Codec,
+  type Converted,
+  type Derived,
+  type Mapping,
+  type Nested,
+  type OneWay,
+  type Plan,
+  type ResolvedEntry,
+  type SerializedEntry,
+  type SerializedPlan,
+  type Shape,
+} from './types.ts';
 
-/** `id` is identity, never lensed, so it never participates in a mapping. */
+/** `id` is identity, never lensed, so it never participates in a top-level mapping. */
 const RESERVED = new Set(['id']);
 
 const properties = (entity: Type.AnyObj | Schema.Top): SchemaEx.SchemaProperty[] => {
   const schema = Type.isType(entity) ? Type.getSchema(entity) : entity;
   return SchemaEx.getProperties(schema.ast).filter((property) => !RESERVED.has(String(property.name)));
+};
+
+/** The struct a nested mapping applies to inside a property of type `ast`. */
+const innerAst = (ast: SchemaAST.AST, shape: Shape): SchemaAST.AST | undefined => {
+  const type = SchemaEx.unwrapOptional(ast);
+  switch (shape) {
+    case 'struct':
+      return type;
+    case 'each':
+      return SchemaEx.getArrayElementType(type);
+    case 'values':
+      return SchemaAST.isObjects(type) ? type.indexSignatures[0]?.type : undefined;
+  }
 };
 
 const literals = (ast: SchemaAST.AST): readonly SchemaAST.LiteralValue[] | undefined => {
@@ -86,6 +112,8 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
 };
 
 const isDerived = (entry: object): entry is Derived => 'from' in entry && 'get' in entry;
+const isNested = (entry: object): entry is Nested => 'kind' in entry && (entry as Nested).kind === 'nested';
+const isOneWay = (entry: object): entry is OneWay => 'kind' in entry && (entry as OneWay).kind === 'oneWay';
 const isConverted = (entry: object): entry is Converted => 'kind' in entry && (entry as Converted).kind === 'converted';
 const isReadOnly = (entry: object): entry is { kind: 'readOnly'; property: string } =>
   'kind' in entry && (entry as { kind: string }).kind === 'readOnly';
@@ -101,7 +129,135 @@ export const readSource = (read: (property: string) => unknown, from: readonly s
   return source;
 };
 
-const entryFor = (property: string, entry: MappingEntryLike): ResolvedEntry => {
+type Properties = ReadonlyMap<string, SchemaEx.SchemaProperty>;
+
+/** Applies `map` where `shape` says, to a value that has that shape; any other value passes through. */
+export const mapShape = (
+  shape: Shape,
+  value: unknown,
+  map: (inner: Record<string, unknown>, previous: Record<string, unknown> | undefined) => unknown,
+  previous?: unknown,
+): unknown => {
+  const record = (candidate: unknown): Record<string, unknown> | undefined =>
+    typeof candidate === 'object' && candidate !== null && !Array.isArray(candidate)
+      ? (candidate as Record<string, unknown>)
+      : undefined;
+  switch (shape) {
+    case 'struct': {
+      const inner = record(value);
+      return inner ? map(inner, record(previous)) : value;
+    }
+    case 'each':
+      return Array.isArray(value)
+        ? value.map((element, index) => {
+            const inner = record(element);
+            return inner ? map(inner, Array.isArray(previous) ? record(previous[index]) : undefined) : element;
+          })
+        : value;
+    case 'values': {
+      const values = record(value);
+      return values
+        ? Object.fromEntries(
+            Object.entries(values).map(([key, element]) => {
+              const inner = record(element);
+              return [key, inner ? map(inner, record(record(previous)?.[key])) : element];
+            }),
+          )
+        : value;
+    }
+  }
+};
+
+/** Projects plain source data through a plan; a target-only property reads its default. */
+export const projectPlain = (plan: Plan, source: Record<string, unknown>): Record<string, unknown> => {
+  const view: Record<string, unknown> = {};
+  for (const entry of plan.entries) {
+    const value = entry.get(readSource((property) => source[property], entry.from));
+    if (value !== undefined) {
+      view[entry.property] = value;
+    }
+  }
+  for (const property of plan.overlays) {
+    if (property in plan.defaults) {
+      view[property] = plan.defaults[property];
+    }
+  }
+  return view;
+};
+
+/** Writes a plain view back onto the source data it was projected from, keeping what the view drops. */
+const invertPlain = (
+  plan: Plan,
+  view: Record<string, unknown>,
+  previous: Record<string, unknown> | undefined,
+): Record<string, unknown> => {
+  const next: Record<string, unknown> = { ...previous };
+  for (const entry of plan.entries) {
+    if (entry.put && entry.property in view) {
+      Object.assign(
+        next,
+        entry.put(
+          view[entry.property],
+          readSource((property) => previous?.[property], entry.from),
+        ),
+      );
+    }
+  }
+  return next;
+};
+
+const entryFor = (
+  property: string,
+  entry: MappingEntryLike,
+  sourceProperties: Properties,
+  targetProperties: Properties,
+): ResolvedEntry => {
+  if (typeof entry === 'object' && isNested(entry)) {
+    const from = entry.property;
+    const source = sourceProperties.get(from);
+    const target = targetProperties.get(property);
+    const sourceInner = source && innerAst(source.type, entry.shape);
+    const targetInner = target && innerAst(target.type, entry.shape);
+    if (!sourceInner || !targetInner) {
+      throw new TypeError(
+        `Lens: "${property}" and "${from}" do not both hold the ${entry.shape} the mapping describes.`,
+      );
+    }
+    const inner = planOf(
+      SchemaEx.getProperties(sourceInner),
+      SchemaEx.getProperties(targetInner),
+      entry.mapping,
+      entry.defaults ?? {},
+      new Set(),
+    );
+    const serialized = serializePlan(inner);
+    const codes = inner.entries.flatMap((resolved) => (resolved.code === undefined ? [] : [resolved.code]));
+    return {
+      property,
+      from: [from],
+      get: (values) => mapShape(entry.shape, values[from], (value) => projectPlain(inner, value)),
+      put: (value, values) => ({
+        [from]: mapShape(entry.shape, value, (view, previous) => invertPlain(inner, view, previous), values[from]),
+      }),
+      origin: 'explicit',
+      serialized: serialized && { kind: 'nested', from, shape: entry.shape, inner: serialized },
+      code: codes.length > 0 ? codes.join('\n') : undefined,
+      nested: { shape: entry.shape, plan: inner },
+    };
+  }
+
+  if (typeof entry === 'object' && isOneWay(entry)) {
+    const { spec } = entry;
+    return {
+      property,
+      from: spec.from,
+      get: (source) => evaluate(spec, source),
+      origin: 'explicit',
+      serialized: { kind: 'oneWay', spec },
+      oneWay: spec,
+    };
+  }
+
   if (typeof entry === 'string') {
     return {
       property,
@@ -157,7 +313,24 @@ const entryFor = (property: string, entry: MappingEntryLike): ResolvedEntry => {
   throw new TypeError(`Lens: unrecognized mapping entry for "${property}".`);
 };
 
-type MappingEntryLike = string | Converted | Derived | { kind: 'readOnly'; property: string };
+type MappingEntryLike = string | Converted | Derived | Nested | OneWay | { kind: 'readOnly'; property: string };
+
+/**
+ * The plan as data, or `undefined` when an entry runs inline code. Same-name matches are written out as
+ * renames, so the data runs without the schemas the plan was compiled against.
+ */
+export const serializePlan = (plan: Plan): SerializedPlan | undefined => {
+  const entries: (SerializedEntry & { property: string })[] = [];
+  for (const entry of plan.entries) {
+    const serialized: SerializedEntry | undefined =
+      entry.origin === 'automatic' ? { kind: 'rename', from: entry.property } : entry.serialized;
+    if (!serialized) {
+      return undefined;
+    }
+    entries.push({ ...serialized, property: entry.property });
+  }
+  return { entries, overlays: plan.overlays, dropped: plan.coverage.dropped, defaults: plan.defaults };
+};
 
 /**
  * Compile a partial mapping into the plan the reader and writer run, plus the coverage report.
@@ -166,9 +339,30 @@ type MappingEntryLike = string | Converted | Derived | { kind: 'readOnly'; prope
  * else overlay. A name match with an incompatible type resolves to neither — it is reported as
  * suspicious and left unmapped, because overlaying it would duplicate a fact the source already holds.
  */
-export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, mapping: Mapping): Plan => {
-  const sourceProperties = new Map(properties(source).map((property) => [property.name as string, property]));
-  const targetProperties = properties(target);
+export const plan = (
+  source: Type.AnyObj,
+  target: Type.AnyObj | Schema.Top,
+  mapping: Mapping,
+  defaults: Readonly<Record<string, unknown>> = {},
+): Plan => planOf(properties(source), properties(target), mapping, defaults, RESERVED);
+
+const planOf = (
+  sourceList: readonly SchemaEx.SchemaProperty[],
+  targetList: readonly SchemaEx.SchemaProperty[],
+  mapping: Mapping,
+  explicitDefaults: Readonly<Record<string, unknown>>,
+  reserved: ReadonlySet<string>,
+): Plan => {
+  const sourceProperties = new Map(
+    sourceList
+      .filter((property) => !reserved.has(String(property.name)))
+      .map((property) => [String(property.name), property]),
+  );
+  const targetProperties = new Map(
+    targetList
+      .filter((property) => !reserved.has(String(property.name)))
+      .map((property) => [String(property.name), property]),
+  );
 
   const entries: ResolvedEntry[] = [];
   const explicit: string[] = [];
@@ -176,12 +370,11 @@ export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, mapp
   const overlays: string[] = [];
   const suspicious: { property: string; candidates: readonly string[] }[] = [];
 
-  for (const targetProperty of targetProperties) {
-    const name = targetProperty.name as string;
+  for (const [name, targetProperty] of targetProperties) {
     const declared = (mapping as Record<string, MappingEntryLike | undefined>)[name];
 
     if (declared !== undefined) {
-      const resolved = entryFor(name, declared);
+      const resolved = entryFor(name, declared, sourceProperties, targetProperties);
       for (const read of resolved.from) {
         if (!sourceProperties.has(read)) {
           throw new TypeError(`Lens: mapping for "${name}" reads unknown source property "${read}".`);
@@ -215,10 +408,34 @@ export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, mapp
 
   const read = new Set(entries.flatMap((entry) => entry.from));
   const dropped = [...sourceProperties.keys()].filter((name) => !read.has(name));
+  // Read only by a one-way entry, so going back nothing restores them.
+  const twoWay = new Set(
+    entries.filter((entry) => !entry.oneWay && entry.serialized?.kind !== 'readOnly').flatMap((entry) => entry.from),
+  );
+  const oneWayOnly = [...read].filter((name) => !twoWay.has(name));
+
+  // Properties only one side declares start at an explicit default, else the schema's.
+  const defaults: Record<string, unknown> = {};
+  for (const [names, byName] of [
+    [overlays, targetProperties],
+    [[...dropped, ...oneWayOnly], sourceProperties],
+  ] as const) {
+    for (const name of names) {
+      const type = byName.get(name)?.type;
+      const value = name in explicitDefaults ? explicitDefaults[name] : type && SchemaAST.getDefaultAnnotation(type);
+      if (value !== undefined) {
+        defaults[name] = value;
+      }
+    }
+  }
+  const requiredOf = (byName: Properties) =>
+    [...byName.values()].filter((property) => !property.isOptional).map((property) => String(property.name));
 
   return {
     entries,
     overlays,
     coverage: { explicit, automatic, overlaid: overlays, dropped, suspicious },
+    defaults,
+    required: { source: requiredOf(sourceProperties), target: requiredOf(targetProperties) },
   };
 };
