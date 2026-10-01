@@ -157,4 +157,10 @@ export const recipes = {
   toastFooter: () => 'nx-toast-footer',
   toastCloseTrigger: () => 'nx-toast-close-trigger',
   toastCountdown: () => 'nx-toast-countdown',
+  mainContent: () => 'nx-main-content',
+  mainSidebar: () => 'nx-main-sidebar',
+  mainSwipeArea: () => 'nx-main-swipe-area',
+  mainOverlay: () => 'nx-main-overlay',
+  mainDrawer: () => 'nx-main-drawer',
+  mainDrawerHandle: () => 'nx-main-drawer-handle',
 } as const;

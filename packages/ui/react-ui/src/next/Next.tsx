@@ -59,6 +59,14 @@ import {
   Listbox as NextListbox,
   type ListboxOption as NextListboxOption,
   type ListboxSelectionMode as NextListboxSelectionMode,
+  Main as NextMain,
+  MAIN_DRAWER_DEFAULT_HEIGHT as NextMAIN_DRAWER_DEFAULT_HEIGHT,
+  MAIN_DRAWER_MAX_HEIGHT as NextMAIN_DRAWER_MAX_HEIGHT,
+  MAIN_DRAWER_MIN_HEIGHT as NextMAIN_DRAWER_MIN_HEIGHT,
+  type MainContentProps as NextMainContentProps,
+  type MainDrawerState as NextMainDrawerState,
+  type MainRootProps as NextMainRootProps,
+  type MainSidebarState as NextMainSidebarState,
   Menu as NextMenu,
   type MenuOption as NextMenuOption,
   NumberInput as NextNumberInput,
@@ -109,6 +117,7 @@ import {
   Typography as NextTypography,
   type TypographyProps as NextTypographyProps,
   dragScope as nextDragScope,
+  useMainSidebars as nextUseMainSidebars,
 } from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
@@ -219,4 +228,13 @@ export namespace Next {
   export const Toast = NextToast;
   export type ToastRootProps = NextToastRootProps;
   export type ToastProviderProps = NextToastProviderProps;
+  export const Main = NextMain;
+  export const MAIN_DRAWER_DEFAULT_HEIGHT = NextMAIN_DRAWER_DEFAULT_HEIGHT;
+  export const MAIN_DRAWER_MAX_HEIGHT = NextMAIN_DRAWER_MAX_HEIGHT;
+  export const MAIN_DRAWER_MIN_HEIGHT = NextMAIN_DRAWER_MIN_HEIGHT;
+  export const useMainSidebars = nextUseMainSidebars;
+  export type MainRootProps = NextMainRootProps;
+  export type MainContentProps = NextMainContentProps;
+  export type MainSidebarState = NextMainSidebarState;
+  export type MainDrawerState = NextMainDrawerState;
 }
