@@ -685,9 +685,23 @@ describe('McpServer', () => {
       expect(JSON.parse((await result).output)).to.deep.equal({ answer: 42 });
     });
 
+    // Found by the code-mode eval: a pagination loop passes `{ after: undefined }` on its first call.
+    test('an undefined input field is dropped, as JSON would drop it', async ({ expect }) => {
+      const { invocations, result } = run(
+        trim`
+          yield* loadSkill('codeProject');
+          let after;
+          yield* invoke('${KEY}', { title: 'x', after });
+        `,
+        { spaceId: SPACE_A },
+      );
+      expect((await result).error).to.be.undefined;
+      expect(invocations[0]?.input).to.deep.equal({ title: 'x' });
+    });
+
     test('malformed invoke arguments fail with the call signature', async ({ expect }) => {
       const { result } = run(`yield* invoke(42);`);
-      expect((await result).error).to.include('invoke(key, input?, { spaceId }?)');
+      expect((await result).error).to.include('invoke(42, input?, { spaceId }?) was called wrongly');
     });
 
     test('a program that outruns its budget is abandoned with an error', async ({ expect }) => {

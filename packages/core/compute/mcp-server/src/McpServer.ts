@@ -647,7 +647,7 @@ export const runScript = (
       loadSkill: (skill?: unknown) =>
         skill === undefined || typeof skill === 'string'
           ? loadSkill(registry, ledger, skill)
-          : Effect.fail(failure('invalid_request', 'loadSkill takes a skill name.')),
+          : Effect.fail(failure('invalid_request', `loadSkill takes a skill name, not a ${typeof skill}.`)),
       /** Supplied by the wrapper, not by the script: runs its program and reports how it failed. */
       runEffect: (program: unknown): Promise<unknown> =>
         scriptInternal.isProgram(program)
@@ -656,7 +656,11 @@ export const runScript = (
                 ? exit.value
                 : Promise.reject(new Error(scriptInternal.describeFailure(Cause.squash(exit.cause)))),
             )
-          : Promise.reject(new Error('The script body must be an Effect.gen body; do not write the wrapper.')),
+          : Promise.reject(
+              new Error(
+                `The script produced a ${typeof program}, not an Effect: write the Effect.gen body only, not the wrapper.`,
+              ),
+            ),
     };
 
     const result = yield* sandbox.evaluate({ code: scriptInternal.wrap(code), bindings, timeout }).pipe(Effect.result);
@@ -677,16 +681,28 @@ const ScriptInvokeArguments = Schema.Struct({
   options: Schema.optional(Schema.Struct({ spaceId: Schema.optional(SpaceId) })),
 });
 
+/**
+ * Drops `undefined` fields, as the JSON a tool call carries would: a script writing
+ * `{ after: cursor }` with no cursor yet otherwise fails a schema that only makes `after` optional.
+ */
+const withoutUndefined = (input: unknown): unknown =>
+  input !== null && typeof input === 'object' && !Array.isArray(input)
+    ? Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined))
+    : input;
+
 /** Validates `invoke`'s positional arguments, which arrive untyped from the script. */
 const scriptRequest = (
   key: unknown,
   input: unknown,
   options: unknown,
 ): Effect.Effect<{ key: string; input?: Record<string, unknown>; spaceId?: SpaceId }, ToolFailure> =>
-  Schema.decodeUnknownEffect(ScriptInvokeArguments)({ key, input, options }).pipe(
+  Schema.decodeUnknownEffect(ScriptInvokeArguments)({ key, input: withoutUndefined(input), options }).pipe(
     Effect.map((decoded) => ({ key: decoded.key, input: decoded.input, spaceId: decoded.options?.spaceId })),
     Effect.mapError((error) =>
-      failure('invalid_request', `invoke(key, input?, { spaceId }?) was called wrongly: ${String(error)}`),
+      failure(
+        'invalid_request',
+        `invoke(${JSON.stringify(key)}, input?, { spaceId }?) was called wrongly: ${String(error)}`,
+      ),
     ),
   );
 
