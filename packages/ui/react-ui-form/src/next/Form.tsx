@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useRef } from 'react';
+import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
+
+import { useComposedRefs } from '@dxos/react-hooks';
 
 import { useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
@@ -61,12 +63,13 @@ export type FormContentProps = PropsWithChildren<{}>;
 
 /**
  * The `form` element: a subgrid of its host, or in the `settings` variant a fresh template of two tracks that every
- * settings row and section below it shares.
+ * settings row and section below it shares. Forwards its ref so a consumer can scope its own key handling to the form.
  */
-export const FormContent = ({ children }: FormContentProps) => {
+export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ children }, forwardedRef) => {
   const { form, testId, variant } = useFormContext('Form.Content');
-  const ref = useRef<HTMLDivElement>(null);
-  useKeyHandler(ref, form);
+  const localRef = useRef<HTMLDivElement>(null);
+  const ref = useComposedRefs(forwardedRef, localRef);
+  useKeyHandler(localRef, form);
   return (
     <Next.Container
       role='form'
@@ -79,7 +82,7 @@ export const FormContent = ({ children }: FormContentProps) => {
       {children}
     </Next.Container>
   );
-};
+});
 
 FormContent.displayName = 'Form.Content';
 
