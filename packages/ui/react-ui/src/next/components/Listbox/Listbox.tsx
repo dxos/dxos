@@ -3,7 +3,7 @@
 //
 
 import { createListCollection } from '@ark-ui/react/collection';
-import { Listbox as ListboxPrimitive, useListboxContext } from '@ark-ui/react/listbox';
+import { Listbox as ListboxPrimitive, type UseListboxContext, useListboxContext } from '@ark-ui/react/listbox';
 import React, {
   Children,
   type ComponentPropsWithoutRef,
@@ -571,6 +571,15 @@ const ListboxItemGroupLabel = forwardRef<HTMLDivElement, ListboxItemGroupLabelPr
 
 ListboxItemGroupLabel.displayName = 'Next.Listbox.ItemGroupLabel';
 
+//
+// useContext
+//
+
+type ListboxContext = UseListboxContext<ListboxOption>;
+
+/** Ark's listbox api (`value`, `selectedItems`, `setValue`, `clearValue`, …) for parts inside the Root, e.g. a detail pane. */
+const useListboxRootContext = (): ListboxContext => useListboxContext();
+
 export const Listbox = {
   Root: ListboxRoot,
   Label: ListboxLabel,
@@ -583,10 +592,12 @@ export const Listbox = {
   ItemIndicator: ListboxItemIndicator,
   ItemGroup: ListboxItemGroup,
   ItemGroupLabel: ListboxItemGroupLabel,
+  useContext: useListboxRootContext,
 };
 
 export type {
   ListboxContentProps,
+  ListboxContext,
   ListboxEmptyProps,
   ListboxItemDescriptionProps,
   ListboxItemGroupLabelProps,
