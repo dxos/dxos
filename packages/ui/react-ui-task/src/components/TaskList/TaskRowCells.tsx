@@ -127,7 +127,6 @@ export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => 
   <Next.SystemButton.Clipboard
     classNames='font-mono'
     size='sm'
-    variant='tag'
     // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
     hue={getHashHue(Obj.getMnemonic(task))}
     label={Obj.getMnemonic(task)}

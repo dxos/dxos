@@ -25,8 +25,8 @@ import {
   TREE_BLOCK,
   type TreeItemDataProps,
   type TreeModel,
+  Tree,
 } from '@dxos/react-ui-list';
-import { Tree } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 

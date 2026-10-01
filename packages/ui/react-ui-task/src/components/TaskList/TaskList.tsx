@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { TREE_BLOCK, useListDisclosure, Listbox } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 import { type Actor, PullRequest, Task } from '@dxos/types';
@@ -307,7 +306,22 @@ const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
     const { className, style, ...rest } = composableProps(props);
     // Whole rows only: a fractional count would cut through the next row.
     const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
-    return <>{children}</>;
+    return (
+      <Listbox.Viewport
+        {...rest}
+        classNames={mx('dx-shrink', className)}
+        // Each row is one control tall (the rail-item square every cell holds), and the tree's grid
+        // puts a `gap-0.5` (0.125rem) between rows; without the gaps the last row is cut short.
+        style={
+          rows === undefined
+            ? style
+            : { ...style, maxHeight: `calc(${rows} * var(--dx-control) + ${Math.max(rows - 1, 0)} * 0.125rem)` }
+        }
+        ref={forwardedRef}
+      >
+        {children}
+      </Listbox.Viewport>
+    );
   },
 );
 
@@ -686,7 +700,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
     return (
       <Next.Button
         {...anchor}
-        variant='tag'
+        hue='neutral'
         size='sm'
         // The anchor chip's outlined look (`.dx-tag--anchor`), so the pill matches a PR link in a description.
         classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'

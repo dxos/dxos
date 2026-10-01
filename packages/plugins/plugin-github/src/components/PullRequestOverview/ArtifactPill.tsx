@@ -62,7 +62,7 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
     <Next.Popover.Root autoFocus={false}>
       <Next.Popover.Trigger asChild>
         <Next.Button
-          variant='tag'
+          hue='neutral'
           size='sm'
           classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'
           icon={artifactIcon[artifact.kind]}
