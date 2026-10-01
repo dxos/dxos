@@ -12,6 +12,41 @@ reviewId: 9ad97b115e
 
 _0 error(s), 28 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 9ad97b115e-1 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components.stories.tsx:86
+- 9ad97b115e-2 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Button/Button.stories.tsx:37
+- 9ad97b115e-3 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Card/Card.stories.tsx:28
+- 9ad97b115e-4 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/Card/Card.stories.tsx:28
+- 9ad97b115e-5 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Checkbox/Checkbox.stories.tsx:16
+- 9ad97b115e-6 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/Collapsible/Collapsible.stories.tsx:14
+- 9ad97b115e-7 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Combobox/Combobox.stories.tsx:30
+- 9ad97b115e-8 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/Combobox/Combobox.stories.tsx:30
+- 9ad97b115e-9 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Container/Container.stories.tsx:50
+- 9ad97b115e-10 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/DateInput/DateInput.stories.tsx:16
+- 9ad97b115e-11 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Dialog/Dialog.stories.tsx:70
+- 9ad97b115e-12 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Field/Field.stories.tsx:21
+- 9ad97b115e-13 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/FieldSet/FieldSet.stories.tsx:21
+- 9ad97b115e-14 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/Group/Group.stories.tsx:19
+- 9ad97b115e-15 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/IconButton/IconButton.stories.tsx:45
+- 9ad97b115e-16 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Image/Image.stories.tsx:26
+- 9ad97b115e-17 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Input/Input.stories.tsx:20
+- 9ad97b115e-18 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Menu/Menu.stories.tsx:15
+- 9ad97b115e-19 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/ScrollArea/ScrollArea.stories.tsx:41
+- 9ad97b115e-20 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Select/Select.stories.tsx:34
+- 9ad97b115e-21 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Switch/Switch.stories.tsx:18
+- 9ad97b115e-22 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Tag/Tag.stories.tsx:35
+- 9ad97b115e-23 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Textarea/Textarea.stories.tsx:20
+- 9ad97b115e-24 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/ToggleIconButton/ToggleIconButton.stories.tsx:16
+- 9ad97b115e-25 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/ToggleIconButton/ToggleIconButton.stories.tsx:16
+- 9ad97b115e-26 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Toolbar/Toolbar.stories.tsx:22
+- 9ad97b115e-27 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Tooltip/Tooltip.stories.tsx:18
+- 9ad97b115e-28 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/Form.stories.tsx:22
+
+## Issues
+
 # WARN 9ad97b115e-1 no-styling-wrapper-divs `packages/ui/react-ui/src/next/components.stories.tsx:86`
 
 System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.85. The likeliest place is lines 86-93 (`const DefaultStory = () => (`, location confidence 0.93). This is a single-shot classifier: confirm against the rule before acting.
@@ -123,3 +158,19 @@ System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes co
 # WARN 9ad97b115e-28 design-tokens-not-raw-spacing-sizing `packages/ui/react-ui/src/next/Form.stories.tsx:22`
 
 System One judges this a likely violation of `design-tokens-not-raw-spacing-sizing` (Spacing and sizing come from the design system's tokens, not raw Tailwind or arbitrary values), p=0.86. The likeliest place is lines 22-33 (`const DefaultStory = () => (`, location confidence 0.97). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `8c645fb49e11d62b7edc27860310b65c28d861c7`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 28 violations written to fragments, 74 uncertain, 1271 clean, 0 unanswered
+
+```text
+requests: 500 (37 verdicts re-asked with context the model requested)
+estimated input tokens: 2643508
+billed input tokens: 2458311 (cost $0.1032)
+measured chars per token: 3.23
+```

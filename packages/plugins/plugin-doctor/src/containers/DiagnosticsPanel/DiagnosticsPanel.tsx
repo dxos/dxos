@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
-import { useClient } from '@dxos/react-client';
+import { useCapabilities, useCapability, usePluginManager } from '@dxos/app-framework/ui';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import {
   Banner,
   Button,
@@ -51,7 +51,8 @@ const SEVERITY_PALETTE: Record<DiagnosticSeverity, 'neutral' | 'amber' | 'rose'>
 
 export const DiagnosticsPanel = () => {
   const { t } = useTranslation(meta.profile.key);
-  const client = useClient();
+  const spaces = useCapability(ClientCapabilities.SpaceService);
+  const graph = useCapability(ClientCapabilities.Hypergraph);
   const manager = usePluginManager();
   const providers = useCapabilities(DoctorCapabilities.DiagnosticProvider);
   const [runState, setRunState] = useState<RunState>({ status: 'idle' });
@@ -72,7 +73,8 @@ export const DiagnosticsPanel = () => {
     setRunState({ status: 'running', current: 0, total: sortedProviders.length });
     try {
       const results = await runDiagnostics({
-        client,
+        spaces,
+        graph,
         capabilities: manager.capabilities,
         providers: sortedProviders,
         signal: controller.signal,
@@ -102,7 +104,7 @@ export const DiagnosticsPanel = () => {
         abortRef.current = undefined;
       }
     }
-  }, [client, manager, sortedProviders, t]);
+  }, [spaces, graph, manager, sortedProviders, t]);
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort();

@@ -5,14 +5,25 @@
 import { createListCollection } from '@ark-ui/react/collection';
 import { Combobox as ComboboxPrimitive, useComboboxContext } from '@ark-ui/react/combobox';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ReactNode, type RefObject, forwardRef, useEffect, useMemo, useState } from 'react';
+import React, {
+  type ReactNode,
+  type RefObject,
+  createContext,
+  forwardRef,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Icon } from '../Icon/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
+import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import { type SelectOption } from '../Select/index.ts';
 
 /** Gap between control and popup, in px (positioning takes a number, not a CSS variable). */
@@ -56,6 +67,7 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
       lazyMount = true,
       unmountOnExit = true,
       inputBehavior = 'autohighlight',
+      loopFocus = false,
       onInputValueChange,
       children,
       ...props
@@ -69,9 +81,11 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
         // Mounting the popup on open keeps it out of a modal Dialog's one-time `aria-hidden` sweep of its siblings.
         lazyMount={lazyMount}
         unmountOnExit={unmountOnExit}
-        positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+        positioning={popupPositioning(POPUP_GUTTER, positioning)}
         // Typing highlights the first match, so Enter picks it without an arrow key first.
         inputBehavior={inputBehavior}
+        // Arrow keys stop at the first and last option rather than wrapping, as in Select and Listbox.
+        loopFocus={loopFocus}
         collection={collection}
         onInputValueChange={(details) => {
           // Only typing narrows the list; a selection or clear fills the input but reopening should show every option.
@@ -115,33 +129,80 @@ const ComboboxLabel = forwardRef<HTMLLabelElement, ComboboxLabelProps>(({ classN
 ComboboxLabel.displayName = 'Next.Combobox.Label';
 
 //
-// Input
+// Control
 //
 
-type ComboboxInputProps = ThemedClassName<ComboboxPrimitive.InputProps> & {
-  'data-testid'?: string;
-};
+type ComboboxControlProps = ThemedClassName<ComboboxPrimitive.ControlProps>;
 
-/** A control-sized row holding the text input and a trailing caret trigger that toggles the listbox. */
-const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
-  ({ classNames, 'data-testid': testId, ...props }, forwardedRef) => (
-    <ComboboxPrimitive.Control data-testid={testId} className={mx(recipes.comboboxControl(), classNames)}>
-      <ComboboxPrimitive.Input {...props} className={recipes.comboboxInput()} ref={forwardedRef} />
-      <ComboboxPrimitive.Trigger className={recipes.comboboxTrigger()}>
-        <Icon icon='ph--caret-up-down--regular' />
-      </ComboboxPrimitive.Trigger>
+/** A control-sized row; without children it holds the text `Input` and a trailing caret `Trigger`. */
+const ComboboxControl = forwardRef<HTMLDivElement, ComboboxControlProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.Control {...props} className={mx(recipes.comboboxControl(), classNames)} ref={forwardedRef}>
+      {children ?? (
+        <>
+          <ComboboxInput />
+          <ComboboxTrigger />
+        </>
+      )}
     </ComboboxPrimitive.Control>
   ),
 );
 
+ComboboxControl.displayName = 'Next.Combobox.Control';
+
+//
+// Input
+//
+
+type ComboboxInputProps = ThemedClassName<ComboboxPrimitive.InputProps>;
+
+/** The text input, taking the Control's free space. */
+const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => (
+  <ComboboxPrimitive.Input {...props} className={mx(recipes.comboboxInput(), classNames)} ref={forwardedRef} />
+));
+
 ComboboxInput.displayName = 'Next.Combobox.Input';
+
+//
+// Trigger
+//
+
+type ComboboxTriggerProps = ThemedClassName<ComboboxPrimitive.TriggerProps>;
+
+/** A control-sized square that toggles the listbox; a caret by default. */
+const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.Trigger {...props} className={mx(recipes.comboboxTrigger(), classNames)} ref={forwardedRef}>
+      {children ?? <Icon icon='ph--caret-up-down--regular' />}
+    </ComboboxPrimitive.Trigger>
+  ),
+);
+
+ComboboxTrigger.displayName = 'Next.Combobox.Trigger';
+
+//
+// ClearTrigger
+//
+
+type ComboboxClearTriggerProps = ThemedClassName<ComboboxPrimitive.ClearTriggerProps>;
+
+/** A control-sized square that clears the value, shown only while there is one; an x by default. */
+const ComboboxClearTrigger = forwardRef<HTMLButtonElement, ComboboxClearTriggerProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.ClearTrigger {...props} className={mx(recipes.comboboxTrigger(), classNames)} ref={forwardedRef}>
+      {children ?? <Icon icon='ph--x--regular' />}
+    </ComboboxPrimitive.ClearTrigger>
+  ),
+);
+
+ComboboxClearTrigger.displayName = 'Next.Combobox.ClearTrigger';
 
 //
 // Content
 //
 
 type ComboboxContentProps = ThemedClassName<ComboboxPrimitive.ContentProps> & {
-  /** Portalled content leaves the control's sized scope, so it takes its own size. */
+  /** Overrides the size inherited from the control's nearest sized ancestor (Phase 4 decision 2). */
   size?: Size;
   /** Shown when no option matches. */
   empty?: ReactNode;
@@ -149,24 +210,35 @@ type ComboboxContentProps = ThemedClassName<ComboboxPrimitive.ContentProps> & {
   container?: RefObject<HTMLElement | null>;
 };
 
-/** Portalled listbox at `level='popup'`; without children it lists the options that match the typed text. */
+/**
+ * Ark's content as a composable part, so the ScrollArea viewport slot merges onto it (a plain Ark part gets the dev
+ * warning wrapper, which breaks the frame's child rules); it restates Ark's scope and part, which the slot's replace.
+ */
+const ComboboxViewport = composable<HTMLDivElement, ComboboxPrimitive.ContentProps>((props, forwardedRef) => (
+  <ComboboxPrimitive.Content {...composableProps(props)} data-scope='combobox' data-part='content' ref={forwardedRef} />
+));
+
+/**
+ * Portalled listbox at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the listbox itself; without
+ * children it lists the options that match the typed text.
+ */
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
-  ({ classNames, size, empty = 'No results', container, children, ...props }, forwardedRef) => (
-    <Portal container={container}>
-      <ComboboxPrimitive.Positioner>
-        <ComboboxPrimitive.Content
-          {...props}
-          data-surface='popup'
-          data-size={size}
-          className={mx(recipes.popup(), classNames)}
-          ref={forwardedRef}
-        >
-          {children ?? <ComboboxItems />}
-          <ComboboxPrimitive.Empty className={recipes.comboboxEmpty()}>{empty}</ComboboxPrimitive.Empty>
-        </ComboboxPrimitive.Content>
-      </ComboboxPrimitive.Positioner>
-    </Portal>
-  ),
+  ({ classNames, size, empty = 'No results', container, children, ...props }, forwardedRef) => {
+    const combobox = useComboboxContext();
+    const popupSize = usePopupSize(size, combobox.open, [combobox.getControlProps().id]);
+    return (
+      <Portal container={container}>
+        <ComboboxPrimitive.Positioner>
+          <PopupScroll size={popupSize} classNames={mx(classNames)}>
+            <ComboboxViewport {...props} ref={forwardedRef}>
+              {children ?? <ComboboxItems />}
+              <ComboboxPrimitive.Empty className={recipes.comboboxEmpty()}>{empty}</ComboboxPrimitive.Empty>
+            </ComboboxViewport>
+          </PopupScroll>
+        </ComboboxPrimitive.Positioner>
+      </Portal>
+    );
+  },
 );
 
 ComboboxContent.displayName = 'Next.Combobox.Content';
@@ -187,28 +259,167 @@ const ComboboxItems = () => {
 // Item
 //
 
-type ComboboxItemProps = ThemedClassName<Omit<ComboboxPrimitive.ItemProps, 'item' | 'children'>> & {
-  item: ComboboxOption;
+// The option an Item renders, so its parts default to the option's icon and label.
+const ItemContext = createContext<ComboboxOption | undefined>(undefined);
+
+const useItem = (part: string) => {
+  const item = useContext(ItemContext);
+  if (!item) {
+    throw new Error(`Next.Combobox.${part} must be inside Next.Combobox.Item`);
+  }
+  return item;
 };
 
-const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(({ classNames, item, ...props }, forwardedRef) => (
-  <ComboboxPrimitive.Item {...props} item={item} className={mx(recipes.selectItem(), classNames)} ref={forwardedRef}>
-    {item.icon && <Icon icon={item.icon} />}
-    <ComboboxPrimitive.ItemText>{item.label}</ComboboxPrimitive.ItemText>
-    <ComboboxPrimitive.ItemIndicator>
-      <Icon icon='ph--check--regular' />
-    </ComboboxPrimitive.ItemIndicator>
-  </ComboboxPrimitive.Item>
-));
+type ComboboxItemProps = ThemedClassName<Omit<ComboboxPrimitive.ItemProps, 'item' | 'children'>> & {
+  item: ComboboxOption;
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText` and `ItemIndicator`; the input still shows the label. */
+  children?: ReactNode;
+};
+
+/** A block-tall row: without children, the option's icon, its label and the check shown while it is selected. */
+const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
+  ({ classNames, item, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={item}>
+      <ComboboxPrimitive.Item
+        {...props}
+        item={item}
+        className={mx(recipes.selectItem(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            {item.icon && <ComboboxItemIcon />}
+            <ComboboxItemText />
+            <ComboboxItemIndicator />
+          </>
+        )}
+      </ComboboxPrimitive.Item>
+    </ItemContext.Provider>
+  ),
+);
 
 ComboboxItem.displayName = 'Next.Combobox.Item';
+
+//
+// ItemIcon
+//
+
+type ComboboxItemIconProps = Omit<IconProps, 'icon'> & {
+  /** Defaults to the option's `icon`. */
+  icon?: string;
+};
+
+/** The leading icon, in the option's `iconHue` unless given a `hue`. */
+const ComboboxItemIcon = forwardRef<SVGSVGElement, ComboboxItemIconProps>(({ icon, hue, ...props }, forwardedRef) => {
+  const item = useItem('ItemIcon');
+  const glyph = icon ?? item.icon;
+  return glyph ? <Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
+});
+
+ComboboxItemIcon.displayName = 'Next.Combobox.ItemIcon';
+
+//
+// ItemText
+//
+
+type ComboboxItemTextProps = ThemedClassName<ComboboxPrimitive.ItemTextProps>;
+
+/** The row's label, taking the free space; the option's `label` by default. */
+const ComboboxItemText = forwardRef<HTMLDivElement, ComboboxItemTextProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const item = useItem('ItemText');
+    return (
+      <ComboboxPrimitive.ItemText {...props} className={mx(classNames)} ref={forwardedRef}>
+        {children ?? item.label}
+      </ComboboxPrimitive.ItemText>
+    );
+  },
+);
+
+ComboboxItemText.displayName = 'Next.Combobox.ItemText';
+
+//
+// ItemIndicator
+//
+
+type ComboboxItemIndicatorProps = ThemedClassName<ComboboxPrimitive.ItemIndicatorProps>;
+
+/** Shown while its item is selected: a check by default. */
+const ComboboxItemIndicator = forwardRef<HTMLDivElement, ComboboxItemIndicatorProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.ItemIndicator {...props} className={mx(classNames)} ref={forwardedRef}>
+      {children ?? <Icon icon='ph--check--regular' />}
+    </ComboboxPrimitive.ItemIndicator>
+  ),
+);
+
+ComboboxItemIndicator.displayName = 'Next.Combobox.ItemIndicator';
+
+//
+// ItemGroup
+//
+
+type ComboboxItemGroupProps = ThemedClassName<ComboboxPrimitive.ItemGroupProps>;
+
+/**
+ * A `group` of options, named by the `ItemGroupLabel` inside it; order groups as the Root's `items` are ordered, or
+ * keyboard order and reading order diverge.
+ */
+const ComboboxItemGroup = forwardRef<HTMLDivElement, ComboboxItemGroupProps>(
+  ({ classNames, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.ItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
+  ),
+);
+
+ComboboxItemGroup.displayName = 'Next.Combobox.ItemGroup';
+
+//
+// ItemGroupLabel
+//
+
+type ComboboxItemGroupLabelProps = ThemedClassName<ComboboxPrimitive.ItemGroupLabelProps>;
+
+/** A small caption naming the group, like `Select.ItemGroupLabel`. */
+const ComboboxItemGroupLabel = forwardRef<HTMLDivElement, ComboboxItemGroupLabelProps>(
+  ({ classNames, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.ItemGroupLabel
+      {...props}
+      className={mx(recipes.popupGroupLabel(), classNames)}
+      ref={forwardedRef}
+    />
+  ),
+);
+
+ComboboxItemGroupLabel.displayName = 'Next.Combobox.ItemGroupLabel';
 
 export const Combobox = {
   Root: ComboboxRoot,
   Label: ComboboxLabel,
+  Control: ComboboxControl,
   Input: ComboboxInput,
+  Trigger: ComboboxTrigger,
+  ClearTrigger: ComboboxClearTrigger,
   Content: ComboboxContent,
   Item: ComboboxItem,
+  ItemIcon: ComboboxItemIcon,
+  ItemText: ComboboxItemText,
+  ItemIndicator: ComboboxItemIndicator,
+  ItemGroup: ComboboxItemGroup,
+  ItemGroupLabel: ComboboxItemGroupLabel,
 };
 
-export type { ComboboxContentProps, ComboboxInputProps, ComboboxItemProps, ComboboxLabelProps, ComboboxRootProps };
+export type {
+  ComboboxClearTriggerProps,
+  ComboboxContentProps,
+  ComboboxControlProps,
+  ComboboxInputProps,
+  ComboboxItemGroupLabelProps,
+  ComboboxItemGroupProps,
+  ComboboxItemIconProps,
+  ComboboxItemIndicatorProps,
+  ComboboxItemProps,
+  ComboboxItemTextProps,
+  ComboboxLabelProps,
+  ComboboxRootProps,
+  ComboboxTriggerProps,
+};

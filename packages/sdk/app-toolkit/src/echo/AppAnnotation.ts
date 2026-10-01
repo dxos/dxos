@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref } from '@dxos/echo';
 
 // The module, not the barrel: the barrel pulls in `AppNode`, which imports this file back, and the
 // annotation below reads the schema at module-init time.
@@ -17,6 +17,10 @@ export const RootCollectionAnnotation = Annotation.make({
   id: 'org.dxos.space.rootCollection',
   schema: Ref.Ref(Collection.Collection),
 });
+
+/** Adds a space's root collection as a `system` write: it is scaffolding, never a person's action. */
+export const addRootCollection = (db: Database.Database): Collection.Collection =>
+  db.add(Collection.make(), { origin: 'system' });
 
 /** The settings space's settings object. */
 export const AppSettingsAnnotation = Annotation.make({

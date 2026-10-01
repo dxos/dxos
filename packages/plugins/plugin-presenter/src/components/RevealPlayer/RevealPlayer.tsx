@@ -233,13 +233,14 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       <div
         {...composableProps(props, {
           classNames: [
-            'dx-expand overflow-hidden grid place-items-center bg-scrim-surface',
+            'dx-expand overflow-hidden grid place-items-center bg-scrim-surface [container-type:size]',
             fullscreen && 'dx-fullscreen',
           ],
         })}
         ref={forwardedRef}
       >
-        <div className='relative aspect-video dx-fill h-auto max-h-full overflow-hidden'>
+        {/* Sized from the container, not clamped by `max-h-full`: WebKit gives an inset child the unclamped height. */}
+        <div className='relative aspect-video w-[min(100cqw,calc(100cqh*16/9))] overflow-hidden'>
           <div ref={deckDivRef} className='dx-fullscreen reveal'>
             {/* React hoists these to <head>; they must not be wrapped in <style> (which only renders CSS text). */}
             <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />

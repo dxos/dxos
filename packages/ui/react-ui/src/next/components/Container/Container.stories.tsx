@@ -8,11 +8,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
@@ -66,9 +66,11 @@ const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/container',
+  title: 'ui/react-ui-core/next/components/Container',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[38rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[38rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<StoryArgs>;
 
@@ -87,7 +89,7 @@ export const Default: Story = {};
  * `gap` spaces rows only (0.75rem for `lg`), leaving the shared columns alone.
  */
 export const Test: Story = {
-  args: { narrow: true },
+  args: { allSizes: true, narrow: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const row = rect(canvasElement, `row-${size}`);

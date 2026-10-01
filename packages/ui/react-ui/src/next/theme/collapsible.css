@@ -19,15 +19,16 @@
     border: none;
     border-radius: var(--radius-sm, 0.25rem);
     background: none;
-    color: inherit;
+    color: var(--color-description);
     font: inherit;
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
     text-align: start;
     cursor: pointer;
   }
+  /* A disclosure row is text, not a control: hover strengthens the text (same hue) rather than filling a surface. */
   .nx-collapsible-trigger:hover {
-    background: var(--color-hover-surface);
+    color: var(--color-hover-fg);
   }
 
   .nx-collapsible-indicator {

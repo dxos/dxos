@@ -139,6 +139,39 @@ describe('PluginManager', () => {
     }),
   );
 
+  it.effect('activates a plugin added after startup whose id was already enabled', () =>
+    Effect.gen(function* () {
+      const testPlugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          provides: [String],
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
+        }),
+        Plugin.make,
+      )();
+      const urlLocator = 'https://example.com/manifest.json';
+      const urlLoader = Effect.fn(function* (locator: string) {
+        if (locator === urlLocator) {
+          return { plugin: testPlugin };
+        }
+        return yield* Effect.fail(new PluginManagerError({ message: `Unknown locator: ${locator}` }));
+      });
+
+      // The persisted enabled set outlives the plugin itself, as it does across sessions.
+      const manager = PluginManager.make({ pluginLoader: urlLoader, enabled: [testMeta.profile.key] });
+      yield* manager.start();
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
+
+      yield* manager.add(urlLocator);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['hello'],
+      );
+    }),
+  );
+
   it.effect('dev plugin shadows an existing plugin with the same id', () =>
     Effect.gen(function* () {
       const productionPlugin = Plugin.make(

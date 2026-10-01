@@ -7,11 +7,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button, Card, Field, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -28,7 +28,7 @@ import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
 
 export type PdsBrowserProps = {
   role?: string;
-  space: Space;
+  db: Database.Database;
 };
 
 type CollectionItem = { id: string };
@@ -39,12 +39,12 @@ type RecordItem = { id: string; record: AtprotoRepo.RepoRecord };
  * records → record. Reads any repo by handle (public). Collections that a plugin has a schema mapping
  * for are marked; their records preview as ECHO objects (readonly card surface) and can be imported.
  */
-export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
+export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const { t } = useTranslation(meta.profile.key);
   const readRepoLayer = useCapability(AtprotoCapabilities.ReadRepoLayer);
 
-  const connections = useQuery(space.db, Filter.type(Connection.Connection));
-  const tokens = useQuery(space.db, Filter.type(AccessToken.AccessToken));
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const connectedHandles = useMemo(
     () =>
       new Set(
@@ -57,7 +57,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
     [tokens],
   );
 
-  const mapped = useMemo(() => getMappedCollections(space), [space]);
+  const mapped = useMemo(() => getMappedCollections(db), [db]);
 
   const [handleInput, setHandleInput] = useState('');
   const [activeHandle, setActiveHandle] = useState<string | undefined>();
@@ -122,10 +122,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
   // Query the mapped type normally (resolving its schema) and check foreign keys in memory, rather than
   // a foreign-key index query — an index query over a code-defined (non-space-registered) schema logs
   // "unable to resolve schema" and yields unresolved objects.
-  const mappedObjects = useQuery(
-    space.db,
-    mappedForCollection ? Filter.type(mappedForCollection.type) : Filter.nothing(),
-  );
+  const mappedObjects = useQuery(db, mappedForCollection ? Filter.type(mappedForCollection.type) : Filter.nothing());
   const alreadyImported = !!recordUri && mappedObjects.some((object) => getAtprotoUris(object).includes(recordUri));
 
   // Decode the selected record to an in-memory ECHO object for mapped collections, and run the same
@@ -169,10 +166,10 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
         collection,
         record,
         connection,
-        db: space.db,
+        db,
       }),
     ).catch((err) => setError(err instanceof Error ? err.message : String(err)));
-  }, [record, mappedForCollection, collection, activeHandle, connectedHandles, connections, space]);
+  }, [record, mappedForCollection, collection, activeHandle, connectedHandles, connections, db]);
 
   const collectionItems: CollectionItem[] = useMemo(() => collections.map((nsid) => ({ id: nsid })), [collections]);
   const recordItems: RecordItem[] = useMemo(

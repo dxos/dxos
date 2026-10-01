@@ -36,6 +36,8 @@
     "@dxos/effect": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
+    "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/introspect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

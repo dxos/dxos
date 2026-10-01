@@ -1,0 +1,89 @@
+/*
+ * Spike styles for the next Tree. They belong in `@dxos/react-ui/next/theme` (as `listbox.css` does) once the Tree
+ * is adopted; kept beside the prototype so the spike touches no react-ui file.
+ */
+
+@layer dx-components {
+  .nx-tree {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    max-height: 100%;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+
+  .nx-tree > .nx-scroll-root {
+    flex: 1 1 auto;
+  }
+
+  .nx-tree-content:focus {
+    outline: none;
+  }
+
+  /* One block tall at every size: the row's auto rows are `minmax(block, auto)` and nothing in it exceeds a block. */
+  .nx-tree-item {
+    position: relative;
+    grid-auto-rows: var(--nx-block-size);
+    padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-block-size));
+    border-radius: var(--radius-sm, 0.25rem);
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+  }
+  /*
+   * A tree lives in narrow sidebars, where Container's `width < 24rem` query would stack a row's cells; the row keeps
+   * its fixed tracks at every width (the specificity beats the query's `.nx-grid[data-layout='row'] > *` rule).
+   */
+  .nx-tree-item.nx-grid[data-layout='row'] > :not([data-rail]) {
+    grid-column: auto;
+  }
+
+  .nx-tree-item:hover {
+    background: var(--color-hover-surface);
+  }
+  .nx-tree-item[data-selected] {
+    background: var(--color-current-surface);
+  }
+  .nx-tree-item:focus-visible {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+  .nx-tree-item[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .nx-tree-item[data-drop='inside'] {
+    box-shadow: inset 0 0 0 var(--nx-drop-indicator-width) var(--nx-drop-indicator-color);
+  }
+
+  .nx-tree-item[data-virtualize='css'] {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--nx-block-size);
+  }
+
+  .nx-tree-branch-trigger {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+  .nx-tree-branch-indicator {
+    display: grid;
+    place-items: center;
+    transition: transform 150ms;
+  }
+  .nx-tree-branch-indicator[data-state='open'] {
+    transform: rotate(90deg);
+  }
+
+  /* One segment per ancestor, centred under that ancestor's disclosure block; segments join across rows. */
+  .nx-tree-indent-guide {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc((var(--nx-tree-guide-level) + 0.5) * var(--nx-block-size));
+    width: 0;
+    border-inline-start: 1px solid var(--color-subdued-separator);
+    pointer-events: none;
+  }
+}

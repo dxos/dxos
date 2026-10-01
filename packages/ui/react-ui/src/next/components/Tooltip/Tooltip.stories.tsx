@@ -8,10 +8,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
+import { GEOMETRY, byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const LONG =
   'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';
@@ -33,9 +33,9 @@ const DefaultStory = ({ size }: SizeArgs) => (
         <Next.Tooltip.Trigger asChild>
           <Next.Button data-testid={`publish-${size}`}>Publish</Next.Button>
         </Next.Tooltip.Trigger>
-        <Next.Tooltip.Content>{LONG}</Next.Tooltip.Content>
+        <Next.Tooltip.Content size='lg'>{LONG}</Next.Tooltip.Content>
       </Next.Tooltip.Root>
-      <Next.Input aria-label={`Note ${size}`} data-testid={`note-${size}`} />
+      <Next.Input aria-label='Note' data-testid={`note-${size}`} />
     </Next.Group>
     <Next.Group>
       <Next.Tooltip.Trigger asChild content='Opens on the right' side='right'>
@@ -48,9 +48,11 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/tooltip',
+  title: 'ui/react-ui-core/next/components/Tooltip',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -58,16 +60,28 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** The computed colour of a ui-theme token, read from a probe beside `element` so it resolves in the same scope. */
+const tokenColour = (element: HTMLElement, property: 'background-color' | 'color', token: string) => {
+  const probe = element.ownerDocument.createElement('div');
+  probe.style.setProperty(property, `var(${token})`);
+  element.ownerDocument.body.append(probe);
+  const colour = getComputedStyle(probe).getPropertyValue(property);
+  probe.remove();
+  return colour;
+};
+
 export const Default: Story = {};
 
 /**
  * Keyboard focus shows the tooltip, linked to its trigger; tabbing straight to the next trigger swaps tooltips and the
  * second stays open past the open delay; tabbing off a trigger still closes its tooltip, although the close is deferred
- * by a task; hovering shows it after the delay, and long text wraps within the 20rem cap. `Tooltip.Trigger content`
+ * by a task; hovering shows it after the delay, and long text wraps within the 20rem cap. One line is a compact chip,
+ * shorter than the block. The tooltip takes its trigger row's size unless given its own. `Tooltip.Trigger content`
  * brings its own Root and Content, on `side`. A TextTooltip ellipsizes its text and shows it in full on hover only
- * while it is truncated. The story ends open.
+ * while it is truncated. The tooltip and its arrow use the inverted surface, not the popup level. The story ends open.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     const save = byTestId(canvasElement, 'save-xs');
@@ -81,9 +95,19 @@ export const Test: Story = {
     await expect(save).toHaveAccessibleDescription('Save changes (⌘S)');
 
     const content = body.getByTestId('save-tooltip-xs');
-    await expect(content).toHaveAttribute('data-surface', 'popup');
-    await expect(content).toHaveAttribute('data-size', 'sm');
+    await expect(content).not.toHaveAttribute('data-surface');
+    // Inherits the trigger's row size (Phase 4 decision 2).
+    await expect(content).toHaveAttribute('data-size', 'xs');
+    // The inverted surface, as the current Tooltip: not the popup level, and the arrow shares the fill.
+    const fill = getComputedStyle(content).backgroundColor;
+    await expect(fill).toBe(tokenColour(content, 'background-color', '--color-inverse-surface'));
+    await expect(getComputedStyle(content).color).toBe(tokenColour(content, 'color', '--color-inverse-fg'));
+    await expect(fill).not.toBe(tokenColour(content, 'background-color', '--dx-surface-popup'));
     await expectArrow(save, content);
+    // A one-line chip: its line plus one control inset above and below, shorter than the block.
+    const chip = content.getBoundingClientRect().height;
+    await expect(chip).toBeCloseTo(parseFloat(getComputedStyle(content).lineHeight) + 2 * GEOMETRY.xs.inset, 0);
+    await expect(chip).toBeLessThan(GEOMETRY.xs.block);
 
     await userEvent.tab();
     await expect(publish).toHaveFocus();
@@ -92,6 +116,8 @@ export const Test: Story = {
     const tooltips = body.getAllByRole('tooltip');
     await expect(tooltips).toHaveLength(1);
     await expect(tooltips[0]).toHaveTextContent('Publishing');
+    // An explicit size wins over the inherited one.
+    await expect(tooltips[0]).toHaveAttribute('data-size', 'lg');
     await expect(publish).toHaveAttribute('aria-describedby', tooltips[0].id);
 
     await userEvent.tab();
@@ -106,6 +132,7 @@ export const Test: Story = {
         side.getBoundingClientRect().right,
       ),
     );
+    await expect(body.getByRole('tooltip').getBoundingClientRect().height).toBeLessThan(GEOMETRY.md.block);
     await userEvent.unhover(side);
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 

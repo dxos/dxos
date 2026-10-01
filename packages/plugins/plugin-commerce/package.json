@@ -113,7 +113,6 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
@@ -138,6 +137,7 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",

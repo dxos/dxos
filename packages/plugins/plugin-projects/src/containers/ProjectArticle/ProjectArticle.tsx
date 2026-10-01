@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
@@ -33,7 +33,7 @@ import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation, ProjectView } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import { getProjectChatPath } from '../../paths.ts';
 
@@ -89,6 +89,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // `md` is the breakpoint plugin-deck calls "not mobile": below it the deck shows one plank at a
   // time, so a companion beside the project would be a pane the reader cannot see.
   const [isNotMobile] = useMediaQuery('md');
+  const settings = useAtomValue(useCapability(ProjectCapabilities.Settings));
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -322,7 +323,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     task opens as a plank of its own there. */}
                 <Surface.Surface
                   type={AppSurface.Section}
-                  data={{ subject: taskSet, attendableId, detail: isNotMobile ? 'companion' : 'plank' }}
+                  data={{
+                    subject: taskSet,
+                    attendableId,
+                    detail: isNotMobile ? 'companion' : 'plank',
+                    // Unset means shown: settings saved before the preference existed hold no key.
+                    showDescription: settings.showTaskDescriptions ?? true,
+                  }}
                   limit={1}
                 />
               </Splitter.Panel>
