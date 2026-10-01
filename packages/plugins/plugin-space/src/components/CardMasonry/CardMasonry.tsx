@@ -24,7 +24,6 @@ export type CardMasonryProps = Pick<
 
 type Tile = { kind: 'object'; object: Obj.Unknown } | { kind: 'pending'; pending: AppSurface.CardMasonryPending };
 
-/** The masonry fixes a tile's props to its own signature, so the host's card options reach tiles this way. */
 const CardOptionsContext = createContext<Pick<AppSurface.CardMasonryData, 'CardMenu' | 'detailOf'>>({});
 
 /**

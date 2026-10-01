@@ -42,7 +42,6 @@ export type EventArticleSurfaceProps = {
 /** Resolves the calendar an event belongs to; renders nothing when none is found. */
 export const EventArticleSurface = ({ role, subject, attendableId }: EventArticleSurfaceProps) => {
   const { graph } = useAppGraph();
-  // The event's node sits under its calendar's, as a plank or as the calendar's detail.
   const parentNode = useNode(graph, parentId(attendableId));
   const calendar = Calendar.instanceOf(parentNode?.data) ? parentNode.data : undefined;
   if (!calendar) {

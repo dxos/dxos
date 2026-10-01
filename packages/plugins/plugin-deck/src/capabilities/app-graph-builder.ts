@@ -20,7 +20,8 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
-import { detachDetail, detailName, updateActiveDeck } from '../util/index.ts';
+import { currentNavigation, navigateDeck } from '../url/index.ts';
+import { detailName } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -33,8 +34,6 @@ export default Capability.makeModule(
     const platformAtom = yield* Capability.atom(DeckCapabilities.Platform);
     const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
-    // The detail a plank shows in the flattened deck's companion, per plank so only that plank re-matches
-    // when its detail changes.
     const detailOf = Atom.family((id: string) =>
       Atom.make((get): string | undefined => {
         const [stateAtom] = get(deckStateAtom);
@@ -86,14 +85,12 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const deck = yield* DeckCapabilities.getDeck();
                 const attended = attention.getCurrent().at(-1);
-                const ids = deck.active.filter((id: string) => id !== attended) ?? [];
-                if (attended) {
-                  // Closing a plank closes its details, so the kept plank stops being one first.
-                  yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-                    updateActiveDeck(state, { plankNames: detachDetail(deck.plankNames, attended) }),
-                  );
-                }
-                yield* Operation.invoke(LayoutOperation.Close, { subject: ids });
+                const { workspace } = yield* currentNavigation();
+                yield* navigateDeck({
+                  workspace,
+                  active: deck.active.filter((id: string) => id === attended),
+                  companionPlanks: deck.companionPlanks,
+                });
               }),
               properties: {
                 label: ['close-others.label', { ns: meta.profile.key }],
@@ -145,8 +142,6 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      // The flattened deck's detail tab, on a plank that holds a detail (see `resolveDetailOpen`).
-      // Named for what it shows, so a mailbox's reads "Message" and a project's "Task".
       AppGraphBuilder.createExtension({
         id: 'detailCompanion',
         relation: AppNode.companion,

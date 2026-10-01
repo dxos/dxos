@@ -10,15 +10,13 @@ import { DeckSchema } from '#types';
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
-  /** A plank the first subject takes the place of, instead of inserting. */
   replaceId?: string;
 };
 
 /**
  * Computes the next `active` list for an `'add'` disposition {@link LayoutOperation.Open}: inserts
  * subjects immediately after `pivotId` when present, else appends them at the end. Subjects already
- * open keep their position; `replaceId` is replaced in place by the first subject so the deck reuses it
- * rather than growing.
+ * open keep their position.
  */
 export const addSubjectsToActiveDeck = (
   active: readonly string[],
@@ -34,7 +32,6 @@ export const addSubjectsToActiveDeck = (
     const openIndex = next.indexOf(entryId);
     if (index === 0 && replaceIndex !== -1) {
       if (openIndex !== -1) {
-        // Already open, so it keeps its own place and `replaceId` stays where it is.
         insertAt = openIndex + 1;
       } else {
         next[replaceIndex] = entryId;
@@ -87,10 +84,8 @@ export const incrementPlank = (deck: string[], adjustment: DeckSchema.DeckAction
 
 const DETAIL_NAME_PREFIX = 'detail:';
 
-/** The plank name `owner`'s detail holds: opening a detail of `owner` is a named open under it. */
 export const detailName = (owner: string): string => `${DETAIL_NAME_PREFIX}${owner}`;
 
-/** The details hanging off `id`, nearest first: its detail, that detail's detail, and so on. */
 export const detailChain = (names: Readonly<Record<string, string>>, id: string): string[] => {
   const chain: string[] = [];
   const seen = new Set([id]);
@@ -101,10 +96,6 @@ export const detailChain = (names: Readonly<Record<string, string>>, id: string)
   return chain;
 };
 
-/**
- * The plank names still in use: a name whose holder is open, and every detail name an open plank
- * reaches. The rest belong to planks that closed.
- */
 export const prunePlankNames = (
   names: Readonly<Record<string, string>>,
   active: readonly string[],
@@ -122,14 +113,7 @@ export const prunePlankNames = (
   return kept;
 };
 
-/** `names` with `id` no longer anyone's detail, so closing its owner leaves it open. */
-export const detachDetail = (names: Readonly<Record<string, string>>, id: string): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(names).filter(([name, holder]) => !(name.startsWith(DETAIL_NAME_PREFIX) && holder === id)),
-  );
-
-/** `names` with `detail` as `owner`'s detail; the chain hanging off its previous detail is dropped. */
-export const setDetail = (
+export const replaceDetail = (
   names: Readonly<Record<string, string>>,
   owner: string,
   detail: string,
@@ -148,48 +132,37 @@ export const setDetail = (
 export type DetailOpen = {
   next: string[];
   plankNames: Record<string, string>;
-  /** The flattened deck shows the detail beside its main plank rather than as a plank of its own. */
   inCompanion: boolean;
-  /** The plank the new detail took the place of. */
   replacedId?: string;
 };
 
-/**
- * Where a `'detail'` open of `subject` as `pivot`'s detail leaves the deck, or `undefined` when the
- * pivot is not open (the caller falls back to an ordinary add).
- *
- * - Flattened: the detail of the main plank shows in the companion. A detail opened from the detail in
- *   the companion moves that one into the main plank (the breadcrumb grows) and takes the companion.
- * - Otherwise (and on a mobile stack): the detail is a plank beside its pivot that replaces the pivot's
- *   previous detail; that one's own details close with it.
- */
-export const resolveDetailOpen = ({
-  active,
-  plankNames,
-  pivot,
-  subject,
-  flatten,
-  stack,
-}: {
+type DetailOpenInput = {
   active: readonly string[];
   plankNames: Readonly<Record<string, string>>;
   pivot: string;
   subject: string;
-  flatten?: boolean;
-  /** A mobile navigation stack, where a new plank goes on top. */
-  stack?: boolean;
-}): DetailOpen | undefined => {
-  if (flatten && !stack) {
-    const main = active.at(-1);
-    if (main && pivot === plankNames[detailName(main)]) {
-      return { next: [...active, pivot], plankNames: setDetail(plankNames, pivot, subject), inCompanion: true };
-    }
-    const index = active.indexOf(pivot);
-    return index === -1
-      ? undefined
-      : { next: active.slice(0, index + 1), plankNames: setDetail(plankNames, pivot, subject), inCompanion: true };
-  }
+};
 
+export const resolveFlattenedDetail = ({
+  active,
+  plankNames,
+  pivot,
+  subject,
+}: DetailOpenInput): DetailOpen | undefined => {
+  const main = active.at(-1);
+  if (main && pivot === plankNames[detailName(main)]) {
+    return { next: [...active, pivot], plankNames: replaceDetail(plankNames, pivot, subject), inCompanion: true };
+  }
+  const index = active.indexOf(pivot);
+  return index === -1
+    ? undefined
+    : { next: active.slice(0, index + 1), plankNames: replaceDetail(plankNames, pivot, subject), inCompanion: true };
+};
+
+const resolveDetailPlank = (
+  { active, plankNames, pivot, subject }: DetailOpenInput,
+  place: (previous: string | undefined, stale: ReadonlySet<string>) => string[],
+): DetailOpen | undefined => {
   if (!active.includes(pivot)) {
     return undefined;
   }
@@ -198,24 +171,39 @@ export const resolveDetailOpen = ({
     return { next: [...active], plankNames: { ...plankNames }, inCompanion: false };
   }
   const stale = new Set(previous ? [previous, ...detailChain(plankNames, previous)] : []);
-  let next: string[];
-  if (stack) {
-    next = pushSubjectsToStack(
-      active.filter((id) => !stale.has(id)),
-      [subject],
-    );
-  } else {
-    // The new detail takes the previous one's slot, so the planks beside it do not shift.
-    const replaceId = previous && active.includes(previous) ? previous : undefined;
-    next = addSubjectsToActiveDeck(
-      active.filter((id) => id === replaceId || !stale.has(id)),
-      [subject],
-      { pivotId: pivot, replaceId },
-    ).filter((id) => id === subject || !stale.has(id));
-  }
   const replacedId = previous && previous !== subject && active.includes(previous) ? previous : undefined;
-  return { next, plankNames: setDetail(plankNames, pivot, subject), inCompanion: false, replacedId };
+  return {
+    next: place(previous, stale),
+    plankNames: replaceDetail(plankNames, pivot, subject),
+    inCompanion: false,
+    replacedId,
+  };
 };
+
+export const resolveStackDetail = (input: DetailOpenInput): DetailOpen | undefined =>
+  resolveDetailPlank(input, (_previous, stale) =>
+    pushSubjectsToStack(
+      input.active.filter((id) => !stale.has(id)),
+      [input.subject],
+    ),
+  );
+
+export const resolveDeckDetail = (input: DetailOpenInput): DetailOpen | undefined =>
+  resolveDetailPlank(input, (previous, stale) => {
+    const replaceId = previous && input.active.includes(previous) ? previous : undefined;
+    return addSubjectsToActiveDeck(
+      input.active.filter((id) => id === replaceId || !stale.has(id)),
+      [input.subject],
+      { pivotId: input.pivot, replaceId },
+    ).filter((id) => id === input.subject || !stale.has(id));
+  });
+
+export const resolveDetailOpen = ({
+  flatten,
+  stack,
+  ...input
+}: DetailOpenInput & { flatten?: boolean; stack?: boolean }): DetailOpen | undefined =>
+  stack ? resolveStackDetail(input) : flatten ? resolveFlattenedDetail(input) : resolveDeckDetail(input);
 
 /**
  * Computes the next `active` list for a mobile {@link LayoutOperation.Open}: the list is a

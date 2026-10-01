@@ -227,7 +227,6 @@ export type TaskAttachmentsProps = {
   /** Omitted when files cannot be stored: the drop area is then not offered. */
   canAttach?: boolean;
   pending?: readonly PendingAttachment[];
-  /** The task's own plank: an attachment opens as its detail. */
   detailOf?: string;
 };
 

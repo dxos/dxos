@@ -48,7 +48,6 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   const [cardRef, pivotId] = useCardPivot();
   const objectMenuItems = useObjectMenuItems(subject, pivotId);
   const handleOpen = useObjectNavigate(subject, detailOf);
-  // `Card.Root` renders `role='button'` when clickable but has no key handling of its own.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (handleOpen && event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {

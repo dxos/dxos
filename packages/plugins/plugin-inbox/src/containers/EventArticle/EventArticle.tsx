@@ -5,10 +5,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
@@ -79,16 +78,6 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     [db, invokePromise],
   );
 
-  // The event's own node, as a plank or as its calendar's detail. Nothing expands a detail's actions,
-  // so expand them here for extensions (e.g. plugin-meeting's "Create meeting") to reach its toolbar.
-  const nodeId = attendableId;
-  useEffect(() => {
-    if (nodeId) {
-      void AppGraph.expandSync(graph, nodeId, 'action');
-    }
-  }, [graph, nodeId]);
-
-  // Opens the event as a plank of its own.
   const handleOpen = useCallback(() => {
     if (!db) {
       return;
@@ -106,7 +95,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   }, [invokePromise, event]);
 
   return (
-    <Event.Root event={event} attendableId={attendableId} nodeId={nodeId}>
+    <Event.Root event={event} attendableId={attendableId} nodeId={attendableId}>
       <ObjectArticle
         role={role}
         toolbar={

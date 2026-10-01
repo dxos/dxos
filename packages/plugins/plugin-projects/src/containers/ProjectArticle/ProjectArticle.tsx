@@ -313,7 +313,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             >
               <Splitter.Panel position='start'>
                 {/* TODO(burdon): Inline component for more control? */}
-                {/* Rows open their task as this project plank's detail (see `useDetailNavigation`). */}
                 <Surface.Surface
                   type={AppSurface.Section}
                   data={{

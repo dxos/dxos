@@ -38,11 +38,6 @@ const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 let generation = 0;
 let seededGeneration: number | undefined;
 
-/**
- * A project with two tasks: one carrying an answered and an open question plus an artifact, and one
- * whose description holds the link forms the task pane decorates. The layout is the deck's
- * master-detail: the project beside its detail, which shows whichever row is selected.
- */
 const seedProject = async ({ space }: { space: Space }) => {
   const storyGeneration = generation;
   const project = space.db.add(Project.make({ name: 'Project 1' }));
@@ -151,7 +146,6 @@ export const Default: Story = {
     // Scoped to the grid rather than the canvas: the ledger row carries a chip with the same text.
     const cards = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardMasonry"]');
     await waitFor(() => expect(cards()).toBeTruthy(), { timeout: 10_000 });
-    // Once only: the article shows the task's artifacts, and nothing beside it repeats them.
     await expect(canvasElement.querySelectorAll('[data-testid="cardMasonry"]')).toHaveLength(1);
     // The answered exchange reads as two lines of the log, with no controls.
     const history = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"]');

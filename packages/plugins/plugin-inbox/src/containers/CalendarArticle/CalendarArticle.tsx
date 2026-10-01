@@ -115,9 +115,6 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [id, invokePromise],
   );
 
-  // The same reading gesture as the mailbox and the task ledger: selecting the event is what drives
-  // `activeEvent` (which selects and scrolls the grid, below), and the event opens as this plank's
-  // detail.
   const handleNavigate = useDetailNavigation({
     contextId: id,
     getPath: (eventId) => getFeedObjectPath(id, eventId),

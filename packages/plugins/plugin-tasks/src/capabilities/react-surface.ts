@@ -32,10 +32,6 @@ import { Journal } from '#types';
 const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
   Role.make('org.dxos.role.section');
 
-/**
- * The section role, typed for an embedded task set: the host says whether rows show their
- * descriptions, since the host owns the preference.
- */
 const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { showDescription?: boolean }>> =
   Role.make('org.dxos.role.section');
 
@@ -94,7 +90,6 @@ export default Capability.makeModule(() =>
         component: TaskSetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      // Embedded in a host (the project's Tasks tab).
       Surface.create({
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),

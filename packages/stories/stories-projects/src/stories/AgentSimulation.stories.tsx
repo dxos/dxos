@@ -94,7 +94,6 @@ let seeded: { generation: number; space: Space; roots: Task.Task[] } | undefined
 /** The task the agent holds: resolved lazily, since the model is built before the graph is seeded. */
 const delegatedTask = () => seeded?.roots.find((task) => task.title === DELEGATED_TASK);
 
-/** Seeds the project and lays it out as the deck would: the project, and its selected task beside it. */
 const seedProject = async ({ space }: { space: Space }) => {
   const storyGeneration = generation;
   const project = space.db.add(Project.make({ name: PROJECT_NAME }));
@@ -163,7 +162,6 @@ const assignToAgent = async (canvas: ReturnType<typeof within>, title: string) =
   await userEvent.click(await screen.findByText('Assign to agent', undefined, { timeout: 10_000 }));
 };
 
-/** Opens the task's detail beside the project, so its history is on screen while the agent works it. */
 const selectTask = async (canvas: ReturnType<typeof within>, title: string) => {
   const labels = await canvas.findAllByText(title, undefined, { timeout: 10_000 });
   const label = labels.find((candidate: HTMLElement) => candidate.closest('[data-testid="taskList.item"]'));

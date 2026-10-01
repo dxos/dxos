@@ -13,10 +13,6 @@ import { useSelection } from '@dxos/react-ui-attention';
 import { type ResolvedCellProps } from '@dxos/storybook-testing';
 import { Task } from '@dxos/types';
 
-/**
- * The project ledger's selected task, standing in for the deck's detail tab: a story has no deck, so this
- * reads the selection the ledger publishes in the project plank's context.
- */
 export const TaskDetail = ({ object, attendableId }: ResolvedCellProps) => {
   const project = Obj.instanceOf(Project.Project, object) ? object : undefined;
   const taskSet = useResolveRef(project?.taskSet);

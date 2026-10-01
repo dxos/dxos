@@ -10,20 +10,16 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
+import { useNodeActionExpander } from '#hooks';
+
 export type DetailCompanionProps = {
   role: string;
-  /** Id of the detail node, as a plank would carry it. */
   detail: string;
 };
 
-/** The main plank's detail, rendered beside it the way it would render as a plank of its own. */
 export const DetailCompanion = ({ role, detail }: DetailCompanionProps) => {
-  const { graph } = useAppGraph();
-  // A detail restored from stored state was never opened this session, so nothing has built its node.
-  useEffect(() => {
-    AppGraph.expandPath(graph, detail);
-  }, [graph, detail]);
-  const node = useNode(graph, detail);
+  const node = useRestoredNode(detail);
+  useNodeActionExpander(node);
   const attentionAttrs = useAttentionAttributes(detail);
   const data = useMemo<AppSurface.ArticleData | undefined>(
     () => node && { attendableId: detail, nodeId: node.id, subject: node.data, properties: node.properties },
@@ -41,3 +37,11 @@ export const DetailCompanion = ({ role, detail }: DetailCompanionProps) => {
 };
 
 DetailCompanion.displayName = 'DetailCompanion';
+
+const useRestoredNode = (path: string) => {
+  const { graph } = useAppGraph();
+  useEffect(() => {
+    AppGraph.expandPath(graph, path);
+  }, [graph, path]);
+  return useNode(graph, path);
+};

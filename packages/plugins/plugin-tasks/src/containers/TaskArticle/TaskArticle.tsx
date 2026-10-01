@@ -24,8 +24,7 @@ import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskA
 export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
 
 /**
- * Article surface for a single {@link Task} — the detail a row opens, in the companion or as a plank
- * (see `plugin-projects/docs/TASK-DETAIL.md`).
+ * Article surface for a single {@link Task}.
  *
  * The pane is one column: a toolbar carrying what acts on the task, then the fields, the open
  * questions, the history and the artifacts, each starting at the same edge with its glyphs in the

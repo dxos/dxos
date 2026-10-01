@@ -298,7 +298,6 @@ export const MessageArticle = ({
         return;
       }
       if (mailbox && db) {
-        // The attachment is this message's detail: opening another one replaces it.
         void invoker.invokePromise(LayoutOperation.Open, {
           subject: [getMailboxAttachmentPath(db.spaceId, mailbox.id, message.id, index)],
           pivotId: attendableId,

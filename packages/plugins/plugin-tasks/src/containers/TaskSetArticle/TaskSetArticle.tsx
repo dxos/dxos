@@ -163,8 +163,6 @@ export const TaskSetArticle = ({
     spaceId,
   });
 
-  // A row opens its task as the host plank's detail. `attendableId` is the host's node — the
-  // project's inside its Tasks tab.
   const currentId = useSelection(attendableId, 'single');
   const openDetail = useDetailNavigation({
     contextId: attendableId,

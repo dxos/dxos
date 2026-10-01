@@ -294,9 +294,6 @@ export const MailboxArticle = ({
 
   const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
-  // The reading gesture the task ledger and the calendar share: the row becomes the list's selection
-  // and opens as this plank's detail. `MessageArticle` renders the whole thread; the conversation node
-  // lives under this mailbox view.
   const openDetail = useDetailNavigation({
     contextId: id,
     getPath: (messageId) => getFeedObjectPath(id, messageId),
@@ -317,9 +314,6 @@ export const MailboxArticle = ({
   const handleAction = useCallback<InboxStackActionHandler>(
     (action) => {
       switch (action.type) {
-        // A message click ('current') and a conversation click ('current-conversation') both open the
-        // one unified conversation (thread) view through `handleNavigate`; a single message is just a
-        // one-message conversation.
         case 'current':
         case 'current-conversation': {
           const message = messages.find((message) => message.id === action.messageId);

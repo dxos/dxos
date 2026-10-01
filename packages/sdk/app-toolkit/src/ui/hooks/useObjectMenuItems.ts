@@ -56,7 +56,6 @@ export const openObject = Effect.fnUntraced(
     const path = targets[0]?.path ?? GraphPath.getObjectPathFromObject(subject);
     yield* invoke(LayoutOperation.Open, { subject: [path], disposition: 'add', ...options });
   },
-  // A click must never throw, but a swallowed Open failure reads as "nothing happened" — leave a trace.
   (effect, subject) =>
     effect.pipe(
       Effect.tapCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
@@ -109,7 +108,6 @@ export const useObjectNavigate = (
       // `currentTarget` is only valid while the event is dispatching, so read the pivot before the
       // resolution the program awaits.
       const pivotId = detailOf ?? Attention.getRootAttendableId(event.currentTarget);
-      // As with a list row, a meta/ctrl-click opens a plank of its own rather than the detail.
       const { nativeEvent } = event;
       const keys = nativeEvent instanceof MouseEvent || nativeEvent instanceof KeyboardEvent ? nativeEvent : undefined;
       const modified = !!keys && (keys.metaKey || keys.ctrlKey);

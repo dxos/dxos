@@ -139,7 +139,6 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   const handleOpen = useCallback(
     (messageId: string) => {
       setSelected(messageId);
-      // The exact shape MailboxArticle dispatches (see `useDetailNavigation`): the row as this plank's detail.
       void invokePromise(LayoutOperation.Open, {
         subject: [`${launcherId}/${messageId}`],
         pivotId: launcherId,

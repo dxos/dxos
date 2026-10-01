@@ -6,17 +6,15 @@ import { describe, test } from 'vitest';
 
 import {
   addSubjectsToActiveDeck,
-  detachDetail,
   detailChain,
   detailName,
   matchOpenEntities,
   prunePlankNames,
   pushSubjectsToStack,
+  replaceDetail,
   resolveDetailOpen,
-  setDetail,
 } from './layout.ts';
 
-/** Plank names holding each owner's detail. */
 const details = (links: Record<string, string>): Record<string, string> =>
   Object.fromEntries(Object.entries(links).map(([owner, detail]) => [detailName(owner), detail]));
 
@@ -63,7 +61,6 @@ describe('addSubjectsToActiveDeck', () => {
   });
 
   test('an already-open first subject keeps its place and leaves `replaceId` open', ({ expect }) => {
-    // Only the first subject may replace, so `b` stays open and `c` inserts after `a`.
     expect(addSubjectsToActiveDeck(['a', 'b'], ['a', 'c'], { replaceId: 'b' })).toEqual(['a', 'c', 'b']);
   });
 
@@ -87,29 +84,21 @@ describe('details', () => {
     expect(detailChain(details({ a: 'b', b: 'a' }), 'a')).toEqual(['b']);
   });
 
-  test('setDetail drops the chain hanging off the previous detail', ({ expect }) => {
-    expect(setDetail(chain, 'inbox', 'msg-2')).toEqual(details({ inbox: 'msg-2' }));
+  test('replaceDetail drops the chain hanging off the previous detail', ({ expect }) => {
+    expect(replaceDetail(chain, 'inbox', 'msg-2')).toEqual(details({ inbox: 'msg-2' }));
   });
 
-  test('setDetail with the current detail keeps its chain', ({ expect }) => {
-    expect(setDetail(chain, 'inbox', 'msg-1')).toEqual(chain);
+  test('replaceDetail with the current detail keeps its chain', ({ expect }) => {
+    expect(replaceDetail(chain, 'inbox', 'msg-1')).toEqual(chain);
   });
 
-  test('detachDetail leaves the plank open when its owner closes', ({ expect }) => {
-    const names = detachDetail({ ...chain, preview: 'msg-1' }, 'msg-1');
-    expect(detailChain(names, 'inbox')).toEqual([]);
-    expect(detailChain(names, 'msg-1')).toEqual(['att-1']);
-    expect(names.preview).toBe('msg-1');
-  });
-
-  test('setDetail leaves other names alone', ({ expect }) => {
-    expect(setDetail({ ...chain, preview: 'doc' }, 'inbox', 'msg-2')).toEqual({
+  test('replaceDetail leaves other names alone', ({ expect }) => {
+    expect(replaceDetail({ ...chain, preview: 'doc' }, 'inbox', 'msg-2')).toEqual({
       ...details({ inbox: 'msg-2' }),
       preview: 'doc',
     });
   });
 
-  // Under flatten the detail is not open as a plank, so detail names are kept while an open plank reaches them.
   test('prunePlankNames keeps the details an open plank reaches', ({ expect }) => {
     expect(prunePlankNames({ ...chain, ...details({ gone: 'x' }) }, ['inbox'])).toEqual(chain);
     expect(prunePlankNames(chain, [])).toEqual({});
@@ -185,7 +174,6 @@ describe('resolveDetailOpen', () => {
       expect(result?.inCompanion).toBe(false);
     });
 
-    // Reading a second message must not leave the first one's attachment beside an unrelated message.
     test('a new detail replaces the previous one in place and closes its details', ({ expect }) => {
       const result = resolveDetailOpen({
         active: ['inbox', 'msg-1', 'att-1', 'doc'],

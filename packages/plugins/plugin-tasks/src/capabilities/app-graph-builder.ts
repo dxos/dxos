@@ -46,7 +46,6 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Hidden, so `…/<taskSetId>/<taskId>` resolves for the detail a row opens without listing tasks in the nav tree.
       AppGraphBuilder.createExtension({
         id: 'taskSetTasks',
         match: matchTaskSet,

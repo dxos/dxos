@@ -73,8 +73,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
       //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank inline references
       //   use this so they grow a sliding deck but replace a solo one.
-      // - 'detail': the subject is `pivotId`'s detail (see `resolveDetailOpen`); with no open pivot it
-      //   adds like 'add'.
       // Holding shift forces any disposition into an add (callers forward the raw modifier rather than
       // encoding the policy). Only 'auto' falls back to the attended plank; a shift-forced add from the
       // nav-tree (a 'solo' gesture with no pivot) appends at the end.
@@ -84,7 +82,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       let previouslyOpenIds: Set<string>;
       /** The plank the deck write below focuses, so the followups know whether one carried the intent. */
       let scrolled: string | undefined;
-      /** Whether the subject went into the companion, where there is no plank to scroll to or expose. */
       let shownInCompanion = false;
       {
         const before = yield* DeckCapabilities.getDeck();
@@ -102,7 +99,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const anchorToOrigin = disposition === 'auto';
         const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
-        // A list's selected row: it stands in for whatever the pivot last opened as its detail.
         const detailOpen =
           disposition === 'detail' && !shift && input.pivotId && input.subject[0]
             ? resolveDetailOpen({
@@ -114,7 +110,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
                 stack: platform === 'mobile',
               })
             : undefined;
-        // A detail whose pivot is not open has nothing to stand beside but the origin.
         const addBesideOrigin =
           shift || disposition === 'add' || disposition === 'detail' || (anchorToOrigin && sliding);
 
@@ -122,14 +117,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         if (detailOpen) {
           next = detailOpen.next;
         } else if (platform === 'mobile') {
-          // A stack has one open semantic: push (or surface) the subjects; solo-replace and pivots are
-          // deck-geometry concepts with no stack analog.
           next = pushSubjectsToStack(deck.active, input.subject);
         } else if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
-          // A named open reuses the plank already holding that name, the way a browser tab is reused; shift
-          // asks for a new plank, so it does not.
           const holder = input.name ? deck.plankNames[input.name] : undefined;
           const replaceId = !shift && holder && deck.active.includes(holder) ? holder : undefined;
           next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
@@ -157,7 +148,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           // scroll — a one-frame snap measured at exactly the lost width.
           companionPlanks = openCompanionPlank(companionPlanks, flatten, input.subject[0]);
         }
-        // The name follows whichever plank ended up holding it; `applyActive` prunes names whose plank closed.
         const holder = input.subject[0];
         const plankNames =
           detailOpen?.plankNames ??

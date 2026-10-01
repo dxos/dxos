@@ -18,7 +18,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const deck = yield* DeckCapabilities.getDeck();
       const { workspace } = yield* currentNavigation();
 
-      // A plank's details belong to it, so they close with it.
       const closing = input.subject.flatMap((id) => [id, ...detailChain(deck.plankNames, id)]);
       const active = closing.reduce((acc, id) => closeEntry(acc, id), deck.active);
       // No intent: the write focuses whichever plank attention falls to.
