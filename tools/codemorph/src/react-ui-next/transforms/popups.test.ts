@@ -166,4 +166,39 @@ describe('popups', () => {
       export const Handle = () => <Next.DragHandle data-testid='x' />;
     `);
   });
+
+  test('Button asChild around a Trigger is unwrapped', () => {
+    const { output, residue } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Picker = () => (
+          <Next.Select.Root items={[]}>
+            <Next.Button asChild>
+              <Next.Select.Trigger />
+            </Next.Button>
+            <Next.Button asChild>
+              <a href='x'>x</a>
+            </Next.Button>
+          </Next.Select.Root>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Picker = () => (
+        <Next.Select.Root items={[]}>
+            <Next.Select.Trigger />
+          <Next.Button asChild>
+            <a href='x'>x</a>
+          </Next.Button>
+        </Next.Select.Root>
+      );
+    `);
+    expect(residue).toEqual([
+      'Next.Button takes no asChild: use the child (a Trigger is a Button) or Link asChild by hand',
+    ]);
+  });
 });

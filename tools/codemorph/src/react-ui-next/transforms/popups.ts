@@ -5,7 +5,7 @@
 import ts from '@typescript/typescript6';
 
 import { type Element } from '../code-file.ts';
-import { addAttr, attrValue, calleeText, getAttr, removeAttr, renameAttr } from '../jsx.ts';
+import { addAttr, attrValue, calleeText, getAttr, meaningfulChildren, removeAttr, renameAttr, unwrap } from '../jsx.ts';
 import { type RuleContext } from './composites.ts';
 
 /**
@@ -170,4 +170,29 @@ export const blockEnd = ({ file, element }: RuleContext) => {
     renameAttr(file, end, 'rail');
     file.report(end, "Block end is computed; rail takes 'start' | 'end'");
   }
+};
+
+/**
+ * `<Button asChild><Select.Trigger /></Button>` → `<Select.Trigger />`: a Next popup Trigger is itself a Button, and
+ * Next.Button takes no `asChild`.
+ */
+export const buttonAroundTrigger = ({ file, element }: RuleContext) => {
+  const asChild = getAttr(element, 'asChild');
+  if (!asChild) {
+    return;
+  }
+  const children = meaningfulChildren(element);
+  const [child] = children;
+  const childIdentity =
+    children.length === 1 && child && (ts.isJsxElement(child) || ts.isJsxSelfClosingElement(child))
+      ? file.resolve(ts.isJsxElement(child) ? child.openingElement.tagName : child.tagName)
+      : undefined;
+  const others = element.opening.attributes.properties.filter((prop) => prop !== asChild);
+  if (childIdentity?.pkg !== 'react-ui' || childIdentity.path.at(-1) !== 'Trigger' || others.length > 0) {
+    file.report(asChild, 'Next.Button takes no asChild: use the child (a Trigger is a Button) or Link asChild by hand');
+    return;
+  }
+  unwrap(file, element);
+  file.release(element.identity.binding.local, element.closing ? 2 : 1);
+  file.count('Button asChild around a Trigger unwrapped');
 };
