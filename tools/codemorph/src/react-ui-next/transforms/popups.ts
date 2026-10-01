@@ -240,3 +240,38 @@ export const buttonTitleIcon = ({ file, element }: RuleContext) => {
   file.claim(element.node);
   file.count('Button title + Icon child → icon label iconOnly');
 };
+
+/**
+ * `<AlertDialog.Cancel asChild><Button …>Label</Button></AlertDialog.Cancel>` → `<AlertDialog.Cancel …>Label</…>`:
+ * Next's Cancel and Action are Buttons themselves, so the wrapped Button's props and label move onto the part.
+ */
+export const buttonPartAroundButton = ({ file, element }: RuleContext) => {
+  const asChild = getAttr(element, 'asChild');
+  if (!asChild || !ts.isJsxElement(element.node)) {
+    return;
+  }
+  const children = meaningfulChildren(element).filter((child) => !(ts.isJsxExpression(child) && !child.expression));
+  const [child] = children;
+  const opening =
+    child && ts.isJsxElement(child)
+      ? child.openingElement
+      : child && ts.isJsxSelfClosingElement(child)
+        ? child
+        : undefined;
+  const identity = opening ? file.resolve(opening.tagName) : undefined;
+  const others = element.opening.attributes.properties.filter((prop) => prop !== asChild);
+  if (children.length !== 1 || !opening || identity?.path.join('.') !== 'Button' || others.length > 0) {
+    file.report(asChild, `${element.identity.path.join('.')} is a Button: move the child's props onto it by hand`);
+    return;
+  }
+  const tag = element.opening.tagName.getText(file.sourceFile);
+  const attrs = opening.attributes.getText(file.sourceFile);
+  const inner =
+    child && ts.isJsxElement(child)
+      ? file.text.slice(child.openingElement.getEnd(), child.closingElement.getStart(file.sourceFile))
+      : '';
+  file.replace(element.node, inner ? `<${tag} ${attrs}>${inner}</${tag}>` : `<${tag} ${attrs} />`);
+  file.release(opening.tagName.getText(file.sourceFile).split('.')[0], child && ts.isJsxElement(child) ? 2 : 1);
+  file.claim(element.node);
+  file.count(`${element.identity.path.join('.')} asChild around a Button merged`);
+};

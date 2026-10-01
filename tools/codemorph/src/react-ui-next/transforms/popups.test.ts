@@ -289,4 +289,29 @@ describe('popups', () => {
       );
     `);
   });
+
+  test('AlertDialog.Cancel/Action asChild around a Button take its props', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Footer = ({ ok }: { ok: () => void }) => (
+          <>
+            <Next.AlertDialog.Cancel asChild>
+              <Next.Button>Cancel</Next.Button>
+            </Next.AlertDialog.Cancel>
+            <Next.AlertDialog.Action asChild>
+              {/* Confirms. */}
+              <Next.Button variant='destructive' onClick={ok}>
+                Delete
+              </Next.Button>
+            </Next.AlertDialog.Action>
+          </>
+        );
+      `,
+    );
+    expect(output).toContain(`<Next.AlertDialog.Cancel >Cancel</Next.AlertDialog.Cancel>`);
+    expect(output).toContain(`<Next.AlertDialog.Action variant='destructive' onClick={ok}>`);
+  });
 });

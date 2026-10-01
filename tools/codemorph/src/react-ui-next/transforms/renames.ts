@@ -34,6 +34,7 @@ import { buttonDensity, isButton } from './density.ts';
 import {
   blockEnd,
   buttonAroundTrigger,
+  buttonPartAroundButton,
   buttonTitleIcon,
   checkedChange,
   contentPlacement,
@@ -375,6 +376,8 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Dialog.Portal': UNWRAP,
     'Dialog.ActionIconButton': { apply: dialogActionButton },
     'AlertDialog.ActionBar': { to: ['AlertDialog', 'Footer'] },
+    'AlertDialog.Cancel': { apply: buttonPartAroundButton },
+    'AlertDialog.Action': { apply: buttonPartAroundButton },
     'AlertDialog.Overlay': UNWRAP,
     'AlertDialog.Portal': UNWRAP,
     // Popover, Tooltip.
@@ -695,6 +698,7 @@ export const hasRenameRule = (pkg: PackageName, key: string): boolean => RULES[p
 /** Rules that rebuild the whole element from its source text, so generic prop edits would overlap them. */
 const REBUILT = new Set<Rule['apply']>([
   selectItemValue,
+  buttonPartAroundButton,
   avatarRoot,
   bannerEmpty,
   selectItem,
