@@ -4,8 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { type Database, Type } from '@dxos/echo';
 import { type AtprotoPolicy, AtprotoPolicyAnnotation, type AtprotoRecord, AtprotoRecordAnnotation } from '@dxos/schema';
 
 export type MappedType = {
@@ -20,9 +19,9 @@ export type MappedType = {
  * plugin is active (and thus registered) appear — this is how the PDS browser distinguishes
  * collections it can map from plain ones.
  */
-export const getMappedCollections = (space: Space): Map<string, MappedType> => {
+export const getMappedCollections = (db: Database.Database): Map<string, MappedType> => {
   const map = new Map<string, MappedType>();
-  for (const type of space.db.graph.registry.list().filter(Type.isType)) {
+  for (const type of db.graph.registry.list().filter(Type.isType)) {
     if (!Type.isObject(type)) {
       continue;
     }

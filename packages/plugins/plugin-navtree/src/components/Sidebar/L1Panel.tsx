@@ -157,6 +157,7 @@ const L1PanelContent = ({
             rootId={item.id}
             path={path}
             draggable
+            compact
             gridTemplateColumns={`[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
             canDrop={navTreeContext.canDrop}

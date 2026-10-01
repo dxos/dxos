@@ -18,12 +18,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#local-backend": {
       "source": {
@@ -140,15 +142,17 @@
     "@carderne/sandbox-runtime": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tauri-apps/plugin-shell": "catalog:",
@@ -156,8 +160,6 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"

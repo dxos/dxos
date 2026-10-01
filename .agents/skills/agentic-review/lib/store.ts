@@ -42,9 +42,6 @@ type NodeErrnoError = { code?: string; message: string };
 const isNodeErrnoError = (error: unknown): error is NodeErrnoError =>
   typeof error === 'object' && error !== null && 'message' in error;
 
-/** Per-issue status ledger written by finalize; agents update statuses in place. */
-export { RESOLUTION_FILE } from './resolution.ts';
-
 /** Sentinel `base` when a run reviews the whole project rather than a diff. */
 export const FULL_BASE = 'full';
 

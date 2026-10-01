@@ -10,4 +10,10 @@ rules: []
 reviewId: beee1cfaab
 ---
 
-<!-- no diagnostics: clean -->
+_Clean: no issues._
+
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+<!-- no issues -->

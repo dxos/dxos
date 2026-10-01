@@ -1,0 +1,78 @@
+/*
+ * Collapsible: a block-row trigger with a turning caret over a section whose height animates from Ark's `--height`.
+ */
+
+@layer dx-components {
+  .nx-collapsible {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .nx-collapsible-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    width: 100%;
+    min-height: var(--nx-block-size);
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-sm, 0.25rem);
+    background: none;
+    color: var(--color-description);
+    font: inherit;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    text-align: start;
+    cursor: pointer;
+  }
+  /* A disclosure row is text, not a control: hover strengthens the text (same hue) rather than filling a surface. */
+  .nx-collapsible-trigger:hover {
+    color: var(--color-hover-fg);
+  }
+
+  .nx-collapsible-indicator {
+    display: grid;
+    place-items: center;
+    transition: transform 150ms ease-out;
+  }
+  .nx-collapsible-indicator[data-state='open'] {
+    transform: rotate(90deg);
+  }
+
+  .nx-collapsible-content {
+    overflow: hidden;
+  }
+  .nx-collapsible-content[data-state='open'] {
+    animation: nx-collapsible-open 150ms ease-out;
+  }
+  .nx-collapsible-content[data-state='closed'] {
+    animation: nx-collapsible-close 150ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-collapsible-indicator {
+      transition: none;
+    }
+    .nx-collapsible-content[data-state] {
+      animation: none;
+    }
+  }
+
+  @keyframes nx-collapsible-open {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--height);
+    }
+  }
+  @keyframes nx-collapsible-close {
+    from {
+      height: var(--height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}

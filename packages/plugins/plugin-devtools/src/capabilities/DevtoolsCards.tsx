@@ -10,12 +10,14 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   EdgeCard,
+  IndexerCard,
   type Stats,
   SurfaceProfilerCard,
   type SurfaceProfilerStats,
   SwarmTraceCard,
   SyncCard,
   useEdgeStatus,
+  useIndexerRows,
   useSwarmTrace,
   useSyncRows,
 } from '@dxos/devtools';
@@ -113,4 +115,9 @@ export const SwarmTraceCardSurface = () => {
 export const SyncCardSurface = () => {
   const { spaces, copy } = useSyncRows();
   return <SyncCard spaces={spaces} onCopy={copy} />;
+};
+
+export const IndexerCardSurface = () => {
+  const { spaces, refresh, copy } = useIndexerRows();
+  return <IndexerCard spaces={spaces} onRefresh={refresh} onCopy={copy} />;
 };

@@ -1,0 +1,52 @@
+/*
+ * Drag and drop (Phase 4 decision 5): the drop indicator is a line on a target row's edge in the focus-ring colour, and
+ * the drag preview is a block-tall chip at the source row's size and level.
+ */
+
+@layer dx-components {
+  :root {
+    --nx-drop-indicator-color: var(--nx-focus-ring-color);
+    --nx-drop-indicator-width: 2px;
+  }
+
+  .nx-drop-indicator {
+    position: absolute;
+    inset-inline: 0;
+    height: var(--nx-drop-indicator-width);
+    background: var(--nx-drop-indicator-color);
+    pointer-events: none;
+  }
+  .nx-drop-indicator[data-edge='top'] {
+    top: calc(var(--nx-drop-indicator-width) / -2);
+  }
+  .nx-drop-indicator[data-edge='bottom'] {
+    bottom: calc(var(--nx-drop-indicator-width) / -2);
+  }
+
+  /* A row (a Container, or a Collapsible holding a row and its detail) must contain its indicator; position moves nothing. */
+  :is(.nx-grid, .nx-collapsible):has(> .nx-drop-indicator) {
+    position: relative;
+  }
+
+  /* The source row stays in place, dimmed, while its preview is dragged. */
+  :is(.nx-grid, .nx-collapsible)[data-dragging] {
+    opacity: 0.5;
+  }
+
+  .nx-drag-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    height: var(--nx-block-size);
+    padding-inline: var(--nx-gap-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    white-space: nowrap;
+  }
+
+  /* A grabbed handle stays lit while the arrow keys move its item. */
+  .nx-button[data-drag-handle][data-grabbed] {
+    background: var(--color-hover-surface);
+  }
+}

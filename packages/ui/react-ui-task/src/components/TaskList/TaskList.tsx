@@ -313,16 +313,34 @@ TaskListRoot.displayName = 'TaskList.Root';
 // add row stays pinned while the rows scroll.
 //
 
-type TaskListViewportProps = ComposableProps;
+type TaskListViewportProps = ComposableProps<{
+  /** Caps the height at exactly this many rows, so a longer list scrolls without showing a partial row. */
+  rows?: number;
+}>;
 
-const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  return (
-    <Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} ref={forwardedRef}>
-      {children}
-    </Listbox.Viewport>
-  );
-});
+const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
+  ({ children, rows: rowsProp, ...props }, forwardedRef) => {
+    const { className, style, ...rest } = composableProps(props);
+    // Whole rows only: a fractional count would cut through the next row.
+    const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
+    return (
+      <Listbox.Viewport
+        {...rest}
+        classNames={mx('dx-shrink', className)}
+        // Each row is one control tall (the rail-item square every cell holds), and the tree's grid
+        // puts a `gap-0.5` (0.125rem) between rows; without the gaps the last row is cut short.
+        style={
+          rows === undefined
+            ? style
+            : { ...style, maxHeight: `calc(${rows} * var(--dx-control) + ${Math.max(rows - 1, 0)} * 0.125rem)` }
+        }
+        ref={forwardedRef}
+      >
+        {children}
+      </Listbox.Viewport>
+    );
+  },
+);
 
 TaskListViewport.displayName = 'TaskList.Viewport';
 

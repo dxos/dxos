@@ -172,6 +172,36 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
   });
 
+  test('a parent brings its subtasks, parent first', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const children = ['Read the guide', 'Write the plugin'].map((title) => Task.make({ title, status: 'todo' }));
+    const finished = Task.make({ title: 'Already shipped', status: 'done' });
+    const parent = space.db.add(
+      Task.make({
+        title: 'Build the plugin',
+        status: 'todo',
+        subtasks: [...children, finished].map((child) => Ref.make(child)),
+      }),
+    );
+    const sibling = space.db.add(Task.make({ title: 'Unrelated', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(parent)] }, { spaceId: space.id }),
+    );
+
+    // Ticking the parent is enough: the whole subtree joins the checklist, in tree order.
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([parent.id, ...children.map((child) => child.id)]);
+    expect(chat.name).toBe('Build the plugin');
+    expect([parent, ...children].map((task) => task.status)).toEqual(['started', 'started', 'started']);
+    expect(sibling.status).toBe('todo');
+    // A finished subtask is not reopened.
+    expect(finished.status).toBe('done');
+  });
+
   test('refuses a list spanning two projects', async ({ expect }) => {
     await using harness = await setup();
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));

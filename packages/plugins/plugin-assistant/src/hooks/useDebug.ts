@@ -13,8 +13,12 @@ import { type AiChatProcessor } from '../processor/index.ts';
  * and resolved tools to the browser console under a collapsible group.
  * Used by the chat's debug-toggle event handler.
  */
-export const useDebug = ({ processor }: { processor: AiChatProcessor }) => {
+export const useDebug = ({ processor }: { processor?: AiChatProcessor }) => {
   return useCallback(async () => {
+    if (!processor) {
+      return;
+    }
+
     const objects = processor.context.getObjects();
     const skills = processor.context.getSkills();
     const system = await processor.getSystemPrompt();

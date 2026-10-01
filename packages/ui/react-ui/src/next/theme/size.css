@@ -1,0 +1,146 @@
+/*
+ * Size metrics: the only source of truth for sizes (decision 2); every `.nx-*` part that takes a `size` sets
+ * `data-size` and inherits the rest. Controls are inset in the block (decision 12); one icon scale serves rail Blocks
+ * and controls. Labels read one text step below the body (`--nx-label-font-size`).
+ */
+
+@layer dx-components {
+  /* Defaults for parts rendered outside any sized scope (e.g. portalled popups). */
+  :root {
+    --nx-block-size: 2rem;
+    --nx-line-height: var(--text-base--line-height);
+    --nx-font-size: var(--text-base);
+    --nx-label-font-size: var(--text-sm);
+    --nx-label-line-height: var(--text-sm--line-height);
+    --nx-icon-size: 1rem;
+    --nx-gap-size: 0.5rem;
+    --nx-control-inset: 2px;
+    --nx-control-icon: 1rem;
+    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+  }
+
+  :is(
+    .nx-scope,
+    .nx-panel,
+    .nx-listbox,
+    .nx-drag-preview,
+    .nx-grid,
+    .nx-scroll-root,
+    .nx-toolbar,
+    .nx-popup,
+    .nx-field-header,
+    .nx-dialog,
+    .nx-fieldset-legend
+  )[data-size='xs'] {
+    --nx-block-size: 1.25rem;
+    --nx-line-height: var(--text-xs--line-height);
+    --nx-font-size: var(--text-xs);
+    --nx-label-font-size: var(--text-xs);
+    --nx-label-line-height: var(--text-xs--line-height);
+    --nx-icon-size: 0.75rem;
+    --nx-gap-size: 0.25rem;
+    --nx-control-inset: 1px;
+    --nx-control-icon: 0.75rem;
+    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+  }
+
+  :is(
+    .nx-scope,
+    .nx-panel,
+    .nx-listbox,
+    .nx-drag-preview,
+    .nx-grid,
+    .nx-scroll-root,
+    .nx-toolbar,
+    .nx-popup,
+    .nx-field-header,
+    .nx-dialog,
+    .nx-fieldset-legend
+  )[data-size='sm'] {
+    --nx-block-size: 1.5rem;
+    --nx-line-height: var(--text-sm--line-height);
+    --nx-font-size: var(--text-sm);
+    --nx-label-font-size: var(--text-xs);
+    --nx-label-line-height: var(--text-xs--line-height);
+    --nx-icon-size: 0.875rem;
+    --nx-gap-size: 0.25rem;
+    --nx-control-inset: 2px;
+    --nx-control-icon: 0.875rem;
+    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+  }
+
+  :is(
+    .nx-scope,
+    .nx-panel,
+    .nx-listbox,
+    .nx-drag-preview,
+    .nx-grid,
+    .nx-scroll-root,
+    .nx-toolbar,
+    .nx-popup,
+    .nx-field-header,
+    .nx-dialog,
+    .nx-fieldset-legend
+  )[data-size='md'] {
+    --nx-block-size: 2rem;
+    --nx-line-height: var(--text-base--line-height);
+    --nx-font-size: var(--text-base);
+    --nx-label-font-size: var(--text-sm);
+    --nx-label-line-height: var(--text-sm--line-height);
+    --nx-icon-size: 1rem;
+    --nx-gap-size: 0.5rem;
+    --nx-control-inset: 2px;
+    --nx-control-icon: 1rem;
+    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+  }
+
+  :is(
+    .nx-scope,
+    .nx-panel,
+    .nx-listbox,
+    .nx-drag-preview,
+    .nx-grid,
+    .nx-scroll-root,
+    .nx-toolbar,
+    .nx-popup,
+    .nx-field-header,
+    .nx-dialog,
+    .nx-fieldset-legend
+  )[data-size='lg'] {
+    --nx-block-size: 2.5rem;
+    --nx-line-height: var(--text-lg--line-height);
+    --nx-font-size: var(--text-lg);
+    --nx-label-font-size: var(--text-base);
+    --nx-label-line-height: var(--text-base--line-height);
+    --nx-icon-size: 1.25rem;
+    --nx-gap-size: 0.5rem;
+    --nx-control-inset: 3px;
+    --nx-control-icon: 1.25rem;
+    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+  }
+
+  :is(
+    .nx-scope,
+    .nx-panel,
+    .nx-listbox,
+    .nx-drag-preview,
+    .nx-grid,
+    .nx-scroll-root,
+    .nx-toolbar,
+    .nx-popup,
+    .nx-field-header,
+    .nx-dialog,
+    .nx-fieldset-legend
+  )[data-size='xl'] {
+    --nx-block-size: 3rem;
+    --nx-line-height: var(--text-xl--line-height);
+    --nx-font-size: var(--text-xl);
+    --nx-label-font-size: var(--text-lg);
+    --nx-label-line-height: var(--text-lg--line-height);
+    --nx-icon-size: 1.5rem;
+    --nx-gap-size: 0.5rem;
+    --nx-control-inset: 3px;
+    --nx-control-icon: 1.5rem;
+    --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+  }
+}

@@ -17,12 +17,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -105,11 +107,6 @@
       "source": "./src/samples/crm/PipelineSpace.ts",
       "types": "./dist/types/src/samples/crm/PipelineSpace.d.ts",
       "import": "./dist/lib/PipelineSpace.mjs"
-    },
-    "./PluginSpace": {
-      "source": "./src/samples/plugin/PluginSpace.ts",
-      "types": "./dist/types/src/samples/plugin/PluginSpace.d.ts",
-      "import": "./dist/lib/PluginSpace.mjs"
     },
     "./ReviewSpace": {
       "source": "./src/samples/review/ReviewSpace.ts",

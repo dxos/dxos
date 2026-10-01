@@ -64,7 +64,7 @@ const passkeyErrorKey = (error: WelcomeError, passkeyOnly: boolean): string =>
 const tabClassNames =
   'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
   'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
-  'data-[state=active]:border-white data-[state=active]:text-white';
+  'aria-selected:border-white aria-selected:text-white';
 
 const ComposerLogoMark = ({ classNames }: ThemedClassName) => (
   <span className={mx('font-["Poiret One"]', classNames)} style={{ fontFamily: 'Poiret One' }}>

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientService } from '@dxos/client';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 
 import { SandboxService } from '#types';
@@ -17,7 +16,7 @@ import { layerFromCapabilities } from '../services/layer.ts';
 const SandboxLayerSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [ClientService, Capability.Service],
+    requires: [Capability.Service],
     provides: [SandboxService.Service],
   },
   () => layerFromCapabilities,

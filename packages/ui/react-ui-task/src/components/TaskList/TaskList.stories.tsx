@@ -739,6 +739,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
+export const WithoutDescription: Story = {
+  args: {
+    showDescription: false,
+  },
+};
+
 /** A list long enough to scroll, group and number into double digits. */
 export const ManyTasks: Story = {
   args: {
@@ -1291,6 +1298,15 @@ export const TestEdit: Story = {
     await waitFor(async () => expect(title()).not.toEqual(document.activeElement));
     await expect(rows()).toHaveLength(before);
     await userEvent.clear(title());
+
+    // The mnemonic chip copies the task's reference; it does not select the row it sits in.
+    const mnemonic = rows()[0].querySelector<HTMLElement>('[data-testid="taskList.item.mnemonic"]');
+    if (!mnemonic) {
+      throw new Error('Task mnemonic not found.');
+    }
+    await userEvent.click(mnemonic);
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    await expect(title().value).toEqual('');
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];
