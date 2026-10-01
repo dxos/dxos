@@ -9,6 +9,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { EntityId, SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { SandboxClient } from './SandboxClient.ts';
 
@@ -37,7 +38,7 @@ describe.skipIf(!EDGE_URL)('SandboxClient against a deployed EDGE', { timeout: 5
         const { url } = yield* client.exposePort(spaceId, sandboxId, 8080, {
           command: 'python3 -m http.server 8080 --directory /root/site',
         });
-        console.log('exposed', url);
+        log.info('exposed', { url });
 
         // No credentials: the token in the URL is all a browser would have.
         const httpClient = yield* HttpClient.HttpClient;
