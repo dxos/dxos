@@ -217,33 +217,70 @@ This removes the package profile and all of its release records from your PDS. T
 ## Local development
 
 You don't need to publish to test your plugin against Composer. Composer loads a plugin from the URL of its
-**`manifest.json`**, so anything that serves a manifest and the entry module it names can be loaded:
+**`manifest.json`**, so anything that serves a manifest and the entry module it names can be loaded. There are
+two ways to do it.
 
-1. Serve the plugin. Either run your plugin's Vite dev server — `composerPlugin` serves a dev manifest at
-   `/manifest.json` (e.g. `http://localhost:3967/manifest.json`) — or serve a built `dist` directory, which
-   contains `manifest.json` and `index.mjs`.
-2. In Composer, open **Plugins**, click **Load from URL** (the cloud icon in the Plugins header) and paste
-   the manifest URL. An assistant that has built a plugin offers the same step inline: it shows a prompt with
-   the manifest URL, and the plugin loads when you click **Load plugin**.
+### From your plugin's dev server
+
+This is the loop to use while you work on a plugin. Run Vite's dev server in your plugin's directory:
+
+```bash
+vite --strictPort
+```
+
+`composerPlugin` binds it to port **3967** and serves a dev manifest at `http://localhost:3967/manifest.json`,
+which points at your unbundled source. `--strictPort` makes Vite fail when the port is taken; without it Vite
+moves to the next free port, and Composer keeps loading from 3967.
+
+In Composer, click **Plugin Settings** in the rail and open **Plugins**. Under **Dev Server**, the **Manifest URL** defaults to
+`http://localhost:3967/manifest.json`; change it only if you passed another `port` to `composerPlugin`. Click
+**Enable**. Composer loads the plugin and enables it in one step.
+
+- **It reloads with the app.** Dev Server stays on until you click Disable, and every reload of Composer loads
+  your plugin again from the dev server, so an edit is one reload away. React fast refresh does not reach a
+  plugin served from another origin, so reload the app rather than waiting for a hot update.
+- **It is never installed.** A dev plugin is not saved in your profile or in the offline cache. If the dev
+  server is down at boot, Composer logs a warning, shows it under Dev Server, and tries again on the next
+  reload.
+- **It can stand in for an installed plugin.** When your `dx.config.ts` key matches a plugin you already have,
+  from the registry or built in, the dev plugin takes its place for the session. Disable restores the original.
+
+### From a built bundle
+
+Build the plugin (see [the example](#example-a-plugin-with-its-own-navtree-group)) and serve its `dist`
+directory, which contains `manifest.json` and `index.mjs`, with CORS if it is on another origin. In Composer,
+open **Plugins**, click **Load from URL** (the cloud icon in the Plugins header) and paste the manifest URL.
+Unlike a dev plugin, a plugin loaded this way is installed: it stays in your profile and its files are cached
+for offline use.
 
 The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
 the entry it names.
 
+### With an assistant
+
 To have the assistant build one for you, create a project from the **Composer Plugin** template in the Composer
 desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk a chat through the example below
 in a sandbox on your computer, from fetching this guide to the load prompt; assign them to the agent to start
-it. (In a browser, the template comes from the Coding (Dev) plugin and needs a Composer served locally by
-`vite preview`.)
+it.
+
+In a browser, the template comes from the Coding (Dev) plugin and needs a Composer served locally by
+`vite preview`. There the chat writes the files and checks them against the plugin's dev server. The assistant
+cannot keep a dev server running, so start it yourself once the chat asks, from the Composer app directory:
+
+```bash
+node_modules/.bin/vite temp/plugins/world-clock --strictPort
+```
+
+When the chat says the plugin is ready, turn on **Dev Server** as above.
 
 The **Composer Plugin (Sandbox)** template, contributed by the Sandbox plugin, runs the same example against any
 bundled Composer, deployed ones included: the agent builds in an EDGE sandbox with `@dxos/*` installed from
 [pkg.pr.new](https://pkg.pr.new) at the commit the app was built from, serves `dist/` from the container, and
 offers the manifest URL of the port it exposed.
 
-> Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
-> app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and
-> `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
-> imports fail there.
+> Both ways need a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed app). A bundled
+> Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and `effect` imports to
+> the host's own copies; Composer's own Vite dev server has no import map, so those imports fail there.
 
 ### Example: a plugin with its own navtree group
 
