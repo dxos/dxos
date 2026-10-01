@@ -1,0 +1,103 @@
+/*
+ * Slider: an optional label above a block-tall control holding a 4px track and icon-sized thumbs. The machine centres
+ * each thumb on its value (`thumbAlignment='center'`), so the control is inset by half a thumb on its main axis to keep
+ * a thumb at either end inside the root, and pointer positions still map onto the track's own length.
+ */
+
+@layer dx-components {
+  .nx-slider {
+    --nx-slider-thumb: var(--nx-icon-size);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .nx-slider[data-disabled] {
+    opacity: 0.5;
+  }
+  .nx-slider[data-orientation='vertical'] {
+    height: 100%;
+    width: max-content;
+  }
+
+  .nx-slider-label {
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    color: var(--color-subdued);
+  }
+
+  .nx-slider-control {
+    display: flex;
+    align-items: center;
+    height: var(--nx-block-size);
+    margin-inline: calc(var(--nx-slider-thumb) / 2);
+  }
+  .nx-slider-control[data-orientation='vertical'] {
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: center;
+    width: var(--nx-block-size);
+    height: auto;
+    margin-inline: 0;
+    margin-block: calc(var(--nx-slider-thumb) / 2);
+  }
+
+  .nx-slider-track {
+    position: relative;
+    flex: 1 1 auto;
+    height: 4px;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: var(--color-input-surface);
+  }
+  .nx-slider-track[data-orientation='vertical'] {
+    width: 4px;
+    height: 100%;
+  }
+
+  .nx-slider-range {
+    background: var(--color-accent-bg);
+  }
+  .nx-slider-range[data-orientation='horizontal'] {
+    height: 100%;
+  }
+  .nx-slider-range[data-orientation='vertical'] {
+    width: 100%;
+  }
+
+  .nx-slider-thumb {
+    box-sizing: border-box;
+    width: var(--nx-slider-thumb);
+    height: var(--nx-slider-thumb);
+    border-radius: 9999px;
+    border: 2px solid var(--color-accent-bg);
+    background: var(--color-base-surface);
+    cursor: grab;
+    transition: background-color 120ms ease-out;
+  }
+  /* The machine sets the main-axis offset inline; the cross axis is ours. */
+  .nx-slider-thumb[data-orientation='horizontal'] {
+    top: calc((var(--nx-block-size) - var(--nx-slider-thumb)) / 2);
+  }
+  .nx-slider-thumb[data-orientation='vertical'] {
+    left: calc((var(--nx-block-size) - var(--nx-slider-thumb)) / 2);
+  }
+  .nx-slider-thumb:hover:not([data-disabled]) {
+    background: var(--color-hover-surface);
+  }
+  .nx-slider-thumb[data-dragging] {
+    cursor: grabbing;
+  }
+  .nx-slider-thumb[data-disabled] {
+    cursor: default;
+  }
+  /* A round thumb takes the ring outside its edge; the inset ring would vanish under the border. */
+  .nx-slider-thumb.nx-focus-ring:focus-visible {
+    box-shadow: 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-slider-thumb {
+      transition: none;
+    }
+  }
+}
