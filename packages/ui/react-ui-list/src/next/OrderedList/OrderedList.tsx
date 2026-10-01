@@ -61,14 +61,20 @@ type OrderedListRootProps<T> = Pick<NextRootProps, 'columns' | 'virtual' | 'size
    */
   dragPreview?: 'clone' | ((item: T) => ReactNode);
   readonly?: boolean;
+  /**
+   * The selected row's id (controlled). Supplying it or `onValueChange` makes the list single-selection: a click, or
+   * Enter on the highlighted row, selects; otherwise nothing is selected and zag only navigates.
+   */
+  value?: string;
+  onValueChange?: (id: string) => void;
   children: (props: { items: readonly T[] }) => ReactNode;
 };
 
 const noop = () => {};
 
 /**
- * A reorderable list on `Next.Listbox` (`selectionMode='none'`, so zag owns focus, navigation and typeahead): pragmatic-dnd
- * reorder (`useReorderList`) and keyboard moves from each row's DragHandle.
+ * A reorderable list on `Next.Listbox` (no selection unless `value`/`onValueChange` ask for one; zag owns focus,
+ * navigation and typeahead): pragmatic-dnd reorder (`useReorderList`) and keyboard moves from each row's DragHandle.
  */
 const OrderedListRoot = <T,>({
   items,
@@ -81,8 +87,11 @@ const OrderedListRoot = <T,>({
   virtual,
   size,
   loopFocus,
+  value,
+  onValueChange,
   children,
 }: OrderedListRootProps<T>) => {
+  const selectable = value !== undefined || onValueChange !== undefined;
   const entries = useMemo(
     () => items.map((item, index) => ({ id: getId ? getId(item) : defaultId(item, index), item })),
     [items, getId],
@@ -130,7 +139,9 @@ const OrderedListRoot = <T,>({
     <OrderedListProvider reorder={controller} options={optionsById} readonly={readonly} move={move}>
       <Next.Listbox.Root
         items={options}
-        selectionMode='none'
+        selectionMode={selectable ? 'single' : 'none'}
+        value={selectable ? (value === undefined ? [] : [value]) : undefined}
+        onValueChange={([selected]) => selected !== undefined && onValueChange?.(selected)}
         columns={columns}
         virtual={virtual}
         size={size}

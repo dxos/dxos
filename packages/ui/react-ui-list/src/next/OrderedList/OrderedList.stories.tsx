@@ -121,6 +121,26 @@ const PreviewHandleStory = () => {
   );
 };
 
+/** `value`/`onValueChange` make the list single-selection: a click or Enter on the highlighted row selects it. */
+const SelectableStory = () => {
+  const [items, , move] = useItems(ITEMS);
+  const [selected, setSelected] = useState<string>();
+  return (
+    <OrderedList.Root items={items} getLabel={getLabel} onMove={move} value={selected} onValueChange={setSelected}>
+      {({ items }) => (
+        <OrderedList.Content aria-label='Selectable'>
+          {items.map((item) => (
+            <OrderedList.Item key={item.id} id={item.id}>
+              <OrderedList.DragHandle />
+              <OrderedList.ItemText />
+            </OrderedList.Item>
+          ))}
+        </OrderedList.Content>
+      )}
+    </OrderedList.Root>
+  );
+};
+
 /** A long draggable list in a fixed-height host; the Content scrolls and auto-scrolls under a drag. */
 const ScrollableStory = () => {
   const [items, , move] = useItems(LONG);
@@ -324,6 +344,19 @@ export const Scrollable: Story = { render: () => <ScrollableStory /> };
 export const CheckboxWithRemove: Story = { render: () => <CheckboxWithRemoveStory /> };
 
 export const Nested: Story = { render: () => <NestedStory /> };
+
+export const Selectable: Story = {
+  render: () => <SelectableStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [first, second] = canvas.getAllByRole('option');
+    await userEvent.click(first);
+    await waitFor(() => expect(first).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    await waitFor(() => expect(second).toHaveAttribute('aria-selected', 'true'));
+    await expect(first).toHaveAttribute('aria-selected', 'false');
+  },
+};
 
 /** The child of `DragHandle asChild` is the row's drag source. */
 export const PreviewHandle: Story = {
