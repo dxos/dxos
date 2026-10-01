@@ -85,7 +85,7 @@ test.describe('Basic tests', () => {
     }
 
     await host.openPluginRegistry();
-    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await host.clickPluginToggle(StackPlugin.meta.profile.key);
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
     await host.page.goto(INITIAL_URL + '?throw');

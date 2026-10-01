@@ -119,7 +119,7 @@ test.describe('HALO tests', () => {
 
     await host.openRegistryCategory('recommended');
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
-    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await host.clickPluginToggle(StackPlugin.meta.profile.key);
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
     // 1. Sync: the host's decision replicates to the guest.
@@ -131,7 +131,7 @@ test.describe('HALO tests', () => {
     await guest.usePluginSetForThisDeviceOnly();
 
     await guest.openRegistryCategory('recommended');
-    await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await guest.clickPluginToggle(StackPlugin.meta.profile.key);
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
 
     // 3. The host keeps the account's decision.

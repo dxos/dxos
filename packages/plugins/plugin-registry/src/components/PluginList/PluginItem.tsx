@@ -144,6 +144,7 @@ export const PluginItem = ({
         />
       ) : (
         <Next.Switch
+          data-testid={`pluginList.${id}.toggle`}
           aria-label={name ?? id}
           checked={isEnabled}
           disabled={readOnly}

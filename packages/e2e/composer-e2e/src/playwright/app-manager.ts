@@ -735,6 +735,11 @@ export class AppManager {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 
+  /** Clicks the switch itself: its label covers the hidden input that {@link getPluginToggle} reads state from. */
+  async clickPluginToggle(plugin: string): Promise<void> {
+    await this.page.getByTestId(`pluginList.${plugin}.toggle`).click();
+  }
+
   async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {
