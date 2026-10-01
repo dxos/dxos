@@ -238,6 +238,13 @@ const review = (reasons: Record<string, string>): Rule => ({ review: reasons });
 
 const UNWRAP: Rule = { unwrap: true };
 
+/** The current presets' `active` is the Next toggle's `pressed` and the disclosure's `expanded`. */
+const SYSTEM_STATE_PROPS: Record<string, Record<string, string>> = {
+  Star: { active: 'pressed' },
+  Bookmark: { active: 'pressed' },
+  Disclosure: { active: 'expanded' },
+};
+
 /** Renames and drops by package and export path; recorded in AUDIT §7 Phase A item 4 and MIGRATION-INVENTORY §2. */
 const RULES: Record<PackageName, Record<string, Rule>> = {
   'react-ui': {
@@ -363,7 +370,13 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
         'Mic',
         'Star',
         'Upload',
-      ].map((name) => [`SystemIconButton.${name}`, { to: ['SystemButton', name], apply: buttonProps }]),
+      ].map((name) => [
+        `SystemIconButton.${name}`,
+        { to: ['SystemButton', name], props: SYSTEM_STATE_PROPS[name], apply: buttonProps },
+      ]),
+    ),
+    ...Object.fromEntries(
+      Object.entries(SYSTEM_STATE_PROPS).map(([name, props]) => [`SystemButton.${name}`, { props }]),
     ),
     // Phase A4 ports.
     'Tabs.Root': { apply: tabsRoot },

@@ -201,4 +201,30 @@ describe('popups', () => {
       'Next.Button takes no asChild: use the child (a Trigger is a Button) or Link asChild by hand',
     ]);
   });
+
+  test('SystemButton active → pressed / expanded', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Buttons = ({ on }: { on: boolean }) => (
+          <>
+            <Next.SystemButton.Star active={on} />
+            <Next.SystemButton.Disclosure active={on} />
+          </>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Buttons = ({ on }: { on: boolean }) => (
+        <>
+          <Next.SystemButton.Star pressed={on} />
+          <Next.SystemButton.Disclosure expanded={on} />
+        </>
+      );
+    `);
+  });
 });
