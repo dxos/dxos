@@ -101,6 +101,8 @@ export const useRefCandidates = (options: RefCandidatesOptions) => {
 
   return {
     typename,
+    entity,
+    results,
     options: candidates,
     createSchema,
     createLabel,

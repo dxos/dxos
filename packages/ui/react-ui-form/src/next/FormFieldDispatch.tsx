@@ -48,8 +48,8 @@ import {
   SelectField,
   TextAreaField,
   TextField,
+  getArrayPresentation,
 } from './fields/index.ts';
-import { TAG_TYPENAME } from './fields/ref-options.ts';
 import { FormFieldRow } from './FormField.tsx';
 import { FormFieldSet } from './FormFieldSet.tsx';
 import { FormLayout } from './FormLayout.tsx';
@@ -164,11 +164,28 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   if (resolution.kind === 'provided') {
     return resolution.element;
   }
-  // An array of tag refs (the meta tags) is one multiple selection rather than a row per element.
-  const refArray = resolution.kind === 'array' ? getRefProps(type) : undefined;
-  const tagArray = refArray?.isArray && refArray.typename === TAG_TYPENAME ? refArray : undefined;
-  if (resolution.kind === 'array' && !tagArray) {
+  // An array of refs the form does not own (`FormCreateAnnotation` targets render inline per element) is a
+  // RefArrayField: chips (`tag`) in a field row, or (`title`) rows under a header of their own.
+  const refProps = resolution.kind === 'array' ? getRefProps(type) : undefined;
+  const refArray =
+    refProps?.isArray && Option.isNone(Annotation.FormCreateAnnotation.getFromAst(type)) ? refProps : undefined;
+  if (resolution.kind === 'array' && !refArray) {
     return <ArrayField fieldProps={fieldState} label={label} {...props} />;
+  }
+  const refArrayField = refArray && (
+    <RefArrayField
+      {...fieldProps}
+      {...createOptionsFor(refArray.typename)}
+      elementType={refArray.ast}
+      db={db}
+      useType={useType}
+      getOptions={getOptions}
+      onCreate={onCreate}
+      resolveCreateEntry={resolveCreateEntry}
+    />
+  );
+  if (refArray && getArrayPresentation(type, refArray.typename).display === 'title') {
+    return refArrayField;
   }
   if (resolution.kind === 'object') {
     return (
@@ -220,7 +237,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       description={description}
       format={fieldProps.format}
       binding={binding}
-      standalone={tagArray ? true : scalar?.standalone}
+      standalone={refArray ? true : scalar?.standalone}
       labelPlacement={scalar?.labelPlacement}
       renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name) : undefined}
     >
@@ -254,20 +271,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       case 'hue':
         return <HueField {...fieldProps} />;
       case 'array':
-        return (
-          tagArray && (
-            <RefArrayField
-              {...fieldProps}
-              {...createOptionsFor(tagArray.typename)}
-              elementType={tagArray.ast}
-              db={db}
-              useType={useType}
-              getOptions={getOptions}
-              onCreate={onCreate}
-              resolveCreateEntry={resolveCreateEntry}
-            />
-          )
-        );
+        return refArrayField;
       case 'ref': {
         return (
           <RefField

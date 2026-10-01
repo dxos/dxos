@@ -3,10 +3,11 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type DragEvent, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Next } from '@dxos/react-ui/next';
 import { hues } from '@dxos/ui-types';
+import { arrayMove } from '@dxos/util';
 
 import { type CreateOptions, type RefOption } from '#types';
 
@@ -162,6 +163,8 @@ export type ObjectMultiPickerProps = Omit<PickerBaseProps, 'onCreate'> & {
   'value': string[];
   /** Shown in place of chips while nothing is selected. */
   'placeholder'?: string;
+  /** Chips reorder by drag, or Alt+ArrowLeft/Right on a focused chip. */
+  'ordered'?: boolean;
   'data-testid'?: string;
   'onValueChange': (ids: string[]) => void;
   /** Persists the create form's values and returns the new option's id, which is then selected. */
@@ -185,6 +188,7 @@ export const ObjectMultiPicker = ({
   onCreate,
   onValueChange,
   options,
+  ordered,
   'data-testid': testId,
 }: ObjectMultiPickerProps) => {
   const { creating, setCreating, items, open, handleOpenChange, startCreate } = usePickerState({
@@ -204,6 +208,7 @@ export const ObjectMultiPicker = ({
   );
 
   const selected = value.map((id) => options.find((option) => option.id === id) ?? { id, label: id });
+  const { chipProps } = useChipOrder({ value, onValueChange });
   return (
     <Next.Combobox.Root
       items={items}
@@ -225,6 +230,7 @@ export const ObjectMultiPicker = ({
             key={option.id}
             hue={hues.find((hue) => hue === option.hue)}
             onDelete={() => onValueChange(value.filter((id) => id !== option.id))}
+            {...(ordered && chipProps(option.id))}
           >
             {option.label}
           </Next.Tag>
@@ -251,3 +257,70 @@ export const ObjectMultiPicker = ({
     </Next.Combobox.Root>
   );
 };
+
+type ChipOrderOptions = Pick<ObjectMultiPickerProps, 'value' | 'onValueChange'>;
+
+/** The data attribute naming a chip's id, so focus can follow a moved chip. */
+const CHIP_ID = 'data-chip-id';
+
+/**
+ * Reordering for a wrapping row of chips: each chip is a native drag source and drop target (dropping moves the dragged
+ * chip to its place) and, focused, moves by Alt+ArrowLeft/Right, keeping focus as React moves its element.
+ */
+const useChipOrder = ({ value, onValueChange }: ChipOrderOptions) => {
+  const [focusId, setFocusId] = useState<string>();
+  const rowRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (focusId) {
+      rowRef.current?.querySelector<HTMLElement>(`[${CHIP_ID}="${CSS.escape(focusId)}"]`)?.focus();
+      setFocusId(undefined);
+    }
+  }, [focusId, value]);
+
+  const move = (id: string, to: number) => {
+    const from = value.indexOf(id);
+    if (from < 0 || to < 0 || to >= value.length || from === to) {
+      return;
+    }
+    const next = [...value];
+    arrayMove(next, from, to);
+    onValueChange(next);
+  };
+
+  const chipProps = (id: string) => ({
+    [CHIP_ID]: id,
+    'draggable': true,
+    'tabIndex': 0,
+    'aria-keyshortcuts': 'Alt+ArrowLeft Alt+ArrowRight',
+    'onKeyDown': (event: KeyboardEvent<HTMLElement>) => {
+      const step = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+      if (event.altKey && step !== 0 && event.target === event.currentTarget) {
+        event.preventDefault();
+        rowRef.current = event.currentTarget.parentElement;
+        move(id, value.indexOf(id) + step);
+        setFocusId(id);
+      }
+    },
+    'onDragStart': (event: DragEvent<HTMLElement>) => {
+      event.dataTransfer.setData(CHIP_MIME, id);
+      event.dataTransfer.effectAllowed = 'move';
+    },
+    'onDragOver': (event: DragEvent<HTMLElement>) => {
+      if (event.dataTransfer.types.includes(CHIP_MIME)) {
+        event.preventDefault();
+      }
+    },
+    'onDrop': (event: DragEvent<HTMLElement>) => {
+      const dragged = event.dataTransfer.getData(CHIP_MIME);
+      if (dragged) {
+        event.preventDefault();
+        move(dragged, value.indexOf(id));
+      }
+    },
+  });
+
+  return { chipProps };
+};
+
+/** The drag payload type of a chip, so a row only accepts its own chips. */
+const CHIP_MIME = 'application/x-dxos-chip';

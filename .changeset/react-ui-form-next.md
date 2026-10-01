@@ -3,6 +3,7 @@
 '@dxos/react-ui': minor
 '@dxos/effect': patch
 '@dxos/types': patch
+'@dxos/echo': minor
 ---
 
 `@dxos/react-ui-form/next` is a new subpath export: the `Form` namespace (`Root`, `Viewport`, `Content`, `FieldSet`,
@@ -26,3 +27,6 @@ built on `@dxos/react-ui/next` with the current Form's contract. The root export
 Address line 2, Postal code and PO box. `@dxos/effect` `SchemaEx.getProperties` now keeps the annotations of an
 annotated optional field (`Schema.optional(S).annotate(…)`), which it previously dropped along with the
 `S | undefined` union.
+
+`@dxos/echo` adds `Annotation.ArrayPresentationAnnotation` (`ordered`, `display: 'tag' | 'title'`, `description`), which
+`@dxos/react-ui-form/next` reads to present arrays of references as chips or title rows.

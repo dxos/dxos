@@ -378,14 +378,24 @@ The design branch (A1–A5) is merged in, so each now builds on its Next parts:
     the casts the current one needs.
   - **ObjectForm and ObjectProperties** (`ObjectForm.tsx`) share one form model (`useObjectFormModel`): the object's
     values plus its editable meta tags, writes through `Obj.update`, and a create handler honouring `FactoryAnnotation`.
-    The meta-tags row is one multiple selection (`RefArrayField` on `ObjectMultiPicker`): removable `Next.Tag` chips in
-    each tag's hue in a wrapping `Combobox.Control`, whose caret opens a search popup that toggles tags without
-    closing; `Add tag “…”` (tag icon) swaps the list for a create form seeded with the query, with a hue Select, and the
-    new tag joins the selection. `ObjectForm.stories.tsx` covers editing, toggling, creating and removing a chip. Only
-    arrays of Tag refs take this form: other ref arrays keep the ordered ArrayField rows, since their order can matter
-    (decision for review: extend it to unordered ref arrays). The form's create options (`createTypename`,
-    `createOptionLabel`, `createOptionIcon`, `createInitialValuePath`, `createFieldMap`) reach the next ref fields,
-    gated to `createTypename` as today. RefField and RefArrayField share their data path (`useRefCandidates`).
+    The meta tags are one multiple selection of chips (see "Ref arrays" below); `ObjectForm.stories.tsx` covers editing,
+    toggling, creating and removing a chip. The form's create options (`createTypename`, `createOptionLabel`,
+    `createOptionIcon`, `createInitialValuePath`, `createFieldMap`) reach the next ref fields, gated to `createTypename`
+    as today.
+  - **Ref arrays** (`fields/RefArrayField.tsx`, decided by the user): `Annotation.ArrayPresentationAnnotation` (in
+    `@dxos/echo`, beside `FormOrderedAnnotation`) carries two independent options, `ordered` (drag and keyboard reorder,
+    order persisted; `false` by default, or the older `FormOrderedAnnotation`) and `display` (`tag` | `title`, room for
+    `card`), plus `description`, a target property for the title row's second line. Defaults: Tag refs → `tag`, any
+    other ref → `title`; both unordered. Owned arrays (`FormCreateAnnotation`) keep the inline ArrayField.
+    - `tag`: removable chips in the targets' hues in a wrapping `Combobox.Control`; the caret's popup toggles tags and
+      creates one inline. Ordered chips are native drag sources and drop targets, and move by Alt+ArrowLeft/Right.
+    - `title`: an OrderedList row per target (the type's icon in its hue, the label, the description, a
+      `SystemButton.Remove` named "Delete <label>", a DragHandle only when ordered) under a header; clicking a row, or
+      Enter on the highlighted one, dispatches `DxAnchorActivate` as an anchor does, so the app opens the object. A
+      picker below (the targets not yet referenced) adds one, with inline create.
+    - `RefArrayField.stories.tsx` tests all four combinations. RefField and RefArrayField share their data path
+      (`useRefCandidates`). The description reads the target with `Ref.peek()`, so it is not reactive to the target's
+      own edits.
   - **ViewEditor** (`ViewEditor.tsx`) announces a read-only schema in a `Next.Banner` and lists the field projections
     on the Listbox-based `OrderedList`: drag/Alt+Arrow reorder, a `Next.Toggle` to hide or show, delete, and add,
     each row opening to the next FieldEditor. The `tag` mode's `QueryForm` is still the current component, in a
