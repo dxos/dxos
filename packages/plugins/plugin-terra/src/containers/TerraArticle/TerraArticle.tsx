@@ -411,8 +411,8 @@ const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelect
   const { t } = useTranslation(meta.profile.key);
   return (
     <Next.Select.Root
-      value={[value]}
-      onValueChange={({ value: [value] }) => onChange(value)}
+      value={value ? [value] : []}
+      onValueChange={({ value: [value] }) => value && onChange(value)}
       items={definitions.map((definition) => ({ value: definition.id, label: definition.name ?? definition.kind }))}
     >
       <Next.Select.Trigger

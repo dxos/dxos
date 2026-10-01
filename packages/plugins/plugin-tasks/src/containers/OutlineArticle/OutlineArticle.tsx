@@ -10,7 +10,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Show, useTranslation } from '@dxos/react-ui';
 import { omitId } from '@dxos/react-ui-form';
 import { Form } from '@dxos/react-ui-form/next';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
@@ -143,7 +143,7 @@ export const OutlineArticle = ({
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
         </Next.Panel.Header>
         <Next.Panel.Body>
-          <TaskForm task={task} classNames='dx-document' />
+          <TaskForm task={task} />
         </Next.Panel.Body>
       </Next.Panel.Root>
     );
@@ -180,7 +180,7 @@ export const OutlineArticle = ({
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) => {
+const TaskForm = ({ task }: { task: Task.Task }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
 
   const handleSave = useCallback(
@@ -198,7 +198,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
 
   return (
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
-      <Form.Viewport classNames={classNames} scroll>
+      <Form.Viewport scroll width='document'>
         <Form.Content>
           <Form.Fields />
         </Form.Content>

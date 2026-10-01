@@ -188,4 +188,4 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   );
 };
 
-const RobotAvatar = () => <Next.Avatar.Root size={6} variant='circle' icon='ph--drone--regular' />;
+const RobotAvatar = () => <Next.Avatar.Root size='sm' variant='circle' icon='ph--drone--regular' />;
