@@ -128,7 +128,6 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
             size='sm'
             variant='ghost'
             compact
-            iconEnd
             classNames='font-mono'
             label={row.spaceId.slice(0, 8)}
             onCopy={() => row.spaceId}

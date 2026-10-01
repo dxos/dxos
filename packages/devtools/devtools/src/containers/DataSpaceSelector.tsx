@@ -47,22 +47,22 @@ export const DataSpaceSelector = () => {
     return space?.isOpen ? (space?.properties.name ?? 'New space') : '(closed)';
   };
 
+  const items = spaces.map((space) => ({ value: space.id, label: `${space.id.slice(0, 6)} ${getLabel(space)}` }));
   return (
     <Next.Select.Root
-      value={[space?.id]}
+      items={items}
+      value={space ? [space.id] : []}
       onValueChange={({ value: [id] }) => {
-        id && handleSelect?.(id as SpaceId);
+        const selected = spaces.find((candidate) => candidate.id === id);
+        if (selected) {
+          handleSelect?.(selected.id);
+        }
       }}
     >
       <Next.Select.Trigger placeholder='Select space' />
       <Next.Select.Content>
-        {spaces.map((space) => (
-          <Next.Select.Item key={space.id} value={space.id}>
-            <div className='flex items-center gap-2'>
-              <span className='font-mono text-neutral-250'>{space.id.slice(0, 6)}</span>
-              {getLabel(space)}
-            </div>
-          </Next.Select.Item>
+        {items.map((item) => (
+          <Next.Select.Item key={item.value} item={item} />
         ))}
       </Next.Select.Content>
     </Next.Select.Root>

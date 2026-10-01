@@ -23,22 +23,22 @@ export const PublicKeySelector = ({
   value,
   onChange,
 }: PublicKeySelectorProps) => {
+  const items = removeDuplicates(keys).map((key) => ({
+    value: key.toHex(),
+    label: `${key.truncate()} ${getLabel(key)}`,
+  }));
   return (
     <Next.Select.Root
-      value={[value?.toHex()]}
+      items={items}
+      value={value ? [value.toHex()] : []}
       onValueChange={({ value: [id] }) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
       <Next.Select.Trigger placeholder={placeholder} />
       <Next.Select.Content>
-        {removeDuplicates(keys).map((key) => (
-          <Next.Select.Item key={key.toHex()} value={key.toHex()}>
-            <div className='flex items-center gap-2'>
-              <span className='font-mono text-neutral-250'>{key.truncate()}</span>
-              {getLabel(key)}
-            </div>
-          </Next.Select.Item>
+        {items.map((item) => (
+          <Next.Select.Item key={item.value} item={item} />
         ))}
       </Next.Select.Content>
     </Next.Select.Root>

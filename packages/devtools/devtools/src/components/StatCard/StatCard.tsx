@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentProps, type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { Flex, type ThemedClassName } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
-/** One hue per category of card, so a stack reads by colour before it reads by title. */
-type CardMenuProps = ComponentProps<typeof Next.Card.Menu>;
-type CardRootProps = ComponentProps<typeof Next.Card.Root>;
+/** An entry of a card's header menu. */
+export type StatCardMenuItem = { label: string; icon?: string; onClick: () => void };
 
+/** One hue per category of card, so a stack reads by colour before it reads by title. */
 export const STAT_CARD_HUES = {
   /** Rendering: surfaces, frame rate. */
   ui: 'violet',
@@ -27,11 +27,11 @@ export const STAT_CARD_HUES = {
 // Root
 //
 
-type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string; density?: CardRootProps['density'] }>>;
+type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
-const StatCardRoot = ({ id, density = 'sm', classNames, children }: StatCardRootProps) => (
-  <Next.Card.Root id={id} size={density} classNames={classNames}>
+const StatCardRoot = ({ id, classNames, children }: StatCardRootProps) => (
+  <Next.Card.Root id={id} size='sm' classNames={classNames}>
     {children}
   </Next.Card.Root>
 );
@@ -51,7 +51,7 @@ type StatCardHeaderProps = {
   info?: ReactNode;
   /** One control in the trailing gutter; several go in `menu` instead. */
   action?: ReactNode;
-  menu?: CardMenuProps['items'];
+  menu?: StatCardMenuItem[];
 };
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
@@ -64,7 +64,17 @@ const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeader
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
     </Flex>
     {action && <Next.Block rail='end'>{action}</Next.Block>}
-    {menu && <Next.Card.Menu items={menu} />}
+    {menu && (
+      <Next.Card.Menu label={title}>
+        {menu.map((item) => (
+          <Next.Menu.Item
+            key={item.label}
+            item={{ value: item.label, label: item.label, icon: item.icon }}
+            onClick={item.onClick}
+          />
+        ))}
+      </Next.Card.Menu>
+    )}
   </Next.Card.Header>
 );
 

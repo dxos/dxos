@@ -13,17 +13,28 @@ export type ControlledSelectorProps<T> = {
   placeholder?: string;
 };
 
-export const ControlledSelector = <T extends string>(props: ControlledSelectorProps<T>) => {
+export const ControlledSelector = <T extends string>({
+  values,
+  value,
+  setValue,
+  placeholder,
+}: ControlledSelectorProps<T>) => {
+  const items = values.map((mode) => ({ value: mode, label: mode }));
   return (
-    <Next.Select.Root value={[props.value]} onValueChange={({ value: [value] }) => props.setValue(value)}>
-      <Next.Select.Trigger placeholder={props.placeholder ?? 'Select space'} />
+    <Next.Select.Root
+      items={items}
+      value={[value]}
+      onValueChange={({ value: [next] }) => {
+        const mode = values.find((candidate) => candidate === next);
+        if (mode !== undefined) {
+          setValue(mode);
+        }
+      }}
+    >
+      <Next.Select.Trigger placeholder={placeholder ?? 'Select space'} />
       <Next.Select.Content>
-        {props.values.map((mode) => (
-          <Next.Select.Item key={mode} value={mode}>
-            <div className='flex items-center gap-2'>
-              <span className='font-mono text-neutral-250'>{mode}</span>
-            </div>
-          </Next.Select.Item>
+        {items.map((item) => (
+          <Next.Select.Item key={item.value} item={item} classNames='font-mono' />
         ))}
       </Next.Select.Content>
     </Next.Select.Root>

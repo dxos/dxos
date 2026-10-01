@@ -59,7 +59,6 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
                   size='sm'
                   variant='ghost'
                   compact
-                  iconEnd
                   classNames='justify-self-start font-mono'
                   label={row.spaceId.slice(0, 8)}
                   onCopy={() => row.spaceId}

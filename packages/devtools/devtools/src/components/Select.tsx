@@ -6,23 +6,27 @@ import React from 'react';
 
 import { Next } from '@dxos/react-ui/next';
 
-type SelectRootProps = React.ComponentProps<typeof Next.Select.Root>;
-
-export type SelectProps = SelectRootProps & {
-  items?: { value: string; label: string }[];
+export type SelectProps = {
+  items?: Next.SelectOption[];
+  value?: string;
+  onValueChange?: (value: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 };
 
-export const Select = ({ items = [], ...props }: SelectProps) => {
-  return (
-    <Next.Select.Root {...props}>
-      <Next.Select.Trigger placeholder={'Select value'} />
-      <Next.Select.Content>
-        {items?.map(({ value, label }) => (
-          <Next.Select.Item key={value} value={value}>
-            <span className='font-mono'>{label}</span>
-          </Next.Select.Item>
-        ))}
-      </Next.Select.Content>
-    </Next.Select.Root>
-  );
-};
+/** A single-value Select over `items`. */
+export const Select = ({ items = [], value, onValueChange, disabled, placeholder = 'Select value' }: SelectProps) => (
+  <Next.Select.Root
+    items={items}
+    value={value === undefined ? [] : [value]}
+    onValueChange={({ value: [next] }) => next !== undefined && onValueChange?.(next)}
+    disabled={disabled}
+  >
+    <Next.Select.Trigger placeholder={placeholder} />
+    <Next.Select.Content>
+      {items.map((item) => (
+        <Next.Select.Item key={item.value} item={item} classNames='font-mono' />
+      ))}
+    </Next.Select.Content>
+  </Next.Select.Root>
+);

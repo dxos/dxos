@@ -71,7 +71,6 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
                   size='sm'
                   variant='ghost'
                   compact
-                  iconEnd
                   classNames='justify-self-start font-mono'
                   label={row.spaceId.slice(0, 8)}
                   onCopy={() => row.spaceId}
