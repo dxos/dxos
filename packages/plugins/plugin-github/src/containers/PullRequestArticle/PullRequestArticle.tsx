@@ -32,7 +32,7 @@ import {
   WalkthroughPlaceholder,
   WalkthroughView,
 } from '../../components/index.ts';
-import { usePullRequestDiff, usePullRequestFiles } from '../../hooks/index.ts';
+import { usePullRequestDiff, usePullRequestFiles, useSyncPullRequest } from '../../hooks/index.ts';
 import { githubConnection } from '../../operations/pull-request.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 import { pullRequestFailureKey } from './failure.ts';
@@ -166,6 +166,8 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   useEffect(() => {
     void refreshStatus();
   }, [refreshStatus]);
+
+  useSyncPullRequest(pullRequest);
 
   const toast = useCallback(
     (id: string, title: string, success: boolean, description?: string) =>

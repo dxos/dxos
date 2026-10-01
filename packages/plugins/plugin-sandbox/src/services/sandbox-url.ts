@@ -9,6 +9,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 
+import { RepositoryClient } from './RepositoryClient.ts';
 import { SandboxClient } from './SandboxClient.ts';
 
 /** What reaching sandbox-service takes: the endpoint config and the identity to authenticate as. */
@@ -97,4 +98,10 @@ const createAuthHeaderProvider = (
 export const createSandboxClient = (context: EdgeContext): SandboxClient => {
   const url = getSandboxServiceUrl(context.config);
   return new SandboxClient(url, createAuthHeaderProvider(context, url));
+};
+
+/** Builds a {@link RepositoryClient}: the same service and credential as {@link createSandboxClient}. */
+export const createRepositoryClient = (context: EdgeContext): RepositoryClient => {
+  const url = getSandboxServiceUrl(context.config);
+  return new RepositoryClient(url, createAuthHeaderProvider(context, url));
 };

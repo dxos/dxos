@@ -5,8 +5,10 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { SandboxCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
@@ -32,3 +34,8 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});
+export const Translations = AppCapability.translations(translations);
