@@ -178,7 +178,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         <Next.Panel.Header>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
             <Next.Field.Root>
-              <Next.NumberInput
+              <Next.Input
                 placeholder='Count'
                 classNames='w-[4rem] text-right'
                 min={1}
@@ -186,6 +186,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 size={8}
                 value={count}
                 onChange={(event) => setCount(parseInt(event.target.value))}
+                type='number'
               />
             </Next.Field.Root>
           </ActionToolbar>

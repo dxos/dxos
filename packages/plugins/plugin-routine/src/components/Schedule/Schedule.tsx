@@ -339,7 +339,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.minute.label')}>
           <Next.Field.Root>
-            <Next.NumberInput
+            <Next.Input
               min={0}
               max={59}
               step={1}
@@ -349,6 +349,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 const minute = Math.min(59, Math.max(0, Math.round(Number(event.target.value) || 0)));
                 onChange({ kind: 'hourly', minute });
               }}
+              type='number'
             />
           </Next.Field.Root>
         </LabelledRow>
@@ -419,7 +420,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='flex items-center gap-3'>
           <LabelledRow label={t('schedule.day.label')}>
             <Next.Field.Root>
-              <Next.NumberInput
+              <Next.Input
                 min={1}
                 max={31}
                 step={1}
@@ -429,6 +430,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   const day = Math.min(31, Math.max(1, Math.round(Number(event.target.value) || 1)));
                   onChange({ ...value, day });
                 }}
+                type='number'
               />
             </Next.Field.Root>
           </LabelledRow>

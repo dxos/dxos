@@ -174,11 +174,12 @@ export const InputPanel = ({
                   <>
                     <Next.Toolbar.Separator />
                     <Next.Field.Root>
-                      <Next.NumberInput
+                      <Next.Input
                         min={1}
                         value={String(count)}
                         onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
                         classNames='w-20'
+                        type='number'
                       />
                     </Next.Field.Root>
                     <Next.Button disabled={busy} onClick={() => onLoadDataset(count)}>

@@ -1,26 +1,23 @@
 {
-  "generated": "2026-10-01T15:41:31.065Z",
+  "generated": "2026-10-01T15:47:53.235Z",
   "paths": ["packages"],
   "changed": [
-    "packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx",
-    "packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultDetail.tsx",
-    "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx",
-    "packages/ui/react-ui-canvas-compute/src/compute.stories.tsx",
-    "packages/ui/react-ui-canvas-compute/src/scene/compute.stories.tsx",
-    "packages/ui/react-ui-components/src/components/QueryForm/Picker.tsx",
-    "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx"
+    "packages/plugins/plugin-commerce/src/components/RangeField/RangeField.tsx",
+    "packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx",
+    "packages/plugins/plugin-routine/src/components/Schedule/Schedule.tsx",
+    "packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx",
+    "packages/stories/stories-brain/src/components/InputPanel/InputPanel.tsx",
+    "packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx"
   ],
   "transforms": [
     {
       "transform": "renames",
-      "filesScanned": 12349,
-      "filesChanged": 7,
+      "filesScanned": 12235,
+      "filesChanged": 6,
       "rules": {
-        "Select.Option → Select.Item": 10,
-        "SystemButton.Star active → pressed": 3,
-        "Select.Root items from its Items": 2,
-        "Select.Option → Select.Item item={…}": 4,
-        "Listbox.Viewport unwrapped": 1
+        "Select.Option → Select.Item": 9,
+        "NumberInput with onChange → Input type=number": 7,
+        "density= → size=": 1
       },
       "residue": [
         {
@@ -190,22 +187,6 @@
           "column": 5,
           "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
           "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.stories.tsx",
-          "line": 58,
-          "column": 35,
-          "reason": "ScrollContainer.Content thin → width",
-          "snippet": "thin"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.stories.tsx",
-          "line": 305,
-          "column": 43,
-          "reason": "ScrollContainer.Content thin → width",
-          "snippet": "thin"
         },
         {
           "transform": "renames",
@@ -1041,78 +1022,6 @@
         },
         {
           "transform": "renames",
-          "file": "packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx",
-          "line": 785,
-          "column": 9,
-          "reason": "Menu.Content side/sideOffset/collisionPadding → Menu.Root positioning ({ placement, gutter, overflowPadding }) by hand",
-          "snippet": "<Next.Menu.Content side='right' sideOffset={4} collisionPadding={8}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-components/src/components/ProgressMeter/ProgressMeter.tsx",
-          "line": 188,
-          "column": 15,
-          "reason": "TextCrawl textClassNames dropped",
-          "snippet": "textClassNames='text-xs text-description'"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-components/src/components/QueryForm/Picker.tsx",
-          "line": 32,
-          "column": 5,
-          "reason": "Select.Root items: Items are rendered by several expressions; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[value ?? NULL]} onValueChange={({ value: [value] }) => onChange?.(value === NULL ? null : v..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/DateField/DateField.tsx",
-          "line": 83,
-          "column": 11,
-          "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
-          "snippet": "<Next.Field.TriggerIcon />"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/DateField/DateField.tsx",
-          "line": 105,
-          "column": 11,
-          "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
-          "snippet": "<Next.Field.TriggerIcon />"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/SelectField/SelectField.tsx",
-          "line": 49,
-          "column": 5,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[value]} onValueChange={({ value: [value] }) => handleValueChange(value)} disabled={!!readon..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/SelectField/SelectField.tsx",
-          "line": 59,
-          "column": 13,
-          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
-          "snippet": "<Next.Select.Item key={String(value)} value={String(value)}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/SelectField/create-select-field.tsx",
-          "line": 62,
-          "column": 7,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root disabled={!!readonly} value={[value ?? sentinel]} // A choice is a commit: the select never blurs, ..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-form/src/components/ViewEditor/ViewEditor.tsx",
-          "line": 372,
-          "column": 17,
-          "reason": "OrderedList.DetailItem → Item collapsible + OrderedList.Detail",
-          "snippet": "<OrderedList.DetailItem<View.FieldType> key={field.id} id={field.id} item={field} canDrag={!readonly && !schemaReadon..."
-        },
-        {
-          "transform": "renames",
           "file": "packages/ui/react-ui-introspect/src/components/ToolResults/ToolResults.tsx",
           "line": 112,
           "column": 5,
@@ -1153,67 +1062,11 @@
         },
         {
           "transform": "renames",
-          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx",
-          "line": 285,
-          "column": 7,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx",
-          "line": 310,
-          "column": 7,
-          "reason": "Listbox.Viewport dropped: Listbox.Content scrolls (scroll={false} to defer to the host)",
-          "snippet": "<Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} // Each row is one control tall (the rail-item sq..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx",
-          "line": 310,
-          "column": 7,
-          "reason": "Listbox.Viewport unwrapped; its props need a new home (classNames, style, ref)",
-          "snippet": "<Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} // Each row is one control tall (the rail-item sq..."
-        },
-        {
-          "transform": "renames",
           "file": "packages/ui/react-ui-thread/src/Message/Message.tsx",
-          "line": 67,
-          "column": 7,
+          "line": 73,
+          "column": 11,
           "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-thread/src/Message/Message.tsx",
-          "line": 119,
-          "column": 5,
-          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
-          "snippet": "<Next.Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-trace/src/components/Timeline/Timeline.stories.tsx",
-          "line": 395,
-          "column": 43,
-          "reason": "ScrollContainer.Content thin → width",
-          "snippet": "thin"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-trace/src/components/TracePanel/TracePanel.tsx",
-          "line": 108,
-          "column": 13,
-          "reason": "Accordion items/getId render prop is not ported",
-          "snippet": "items={SECTIONS}"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-trace/src/components/TracePanel/TracePanel.tsx",
-          "line": 158,
-          "column": 59,
-          "reason": "ScrollContainer.Content thin → width",
-          "snippet": "thin"
+          "snippet": "<Next.Avatar.Root size={avatarSize} hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')} fallback={authorAvatarP..."
         },
         {
           "transform": "renames",

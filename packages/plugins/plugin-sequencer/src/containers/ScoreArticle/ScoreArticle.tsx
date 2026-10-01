@@ -448,11 +448,12 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <Next.Field.Root>
             <Next.Field.Label classNames='text-xs mr-1'>BPM</Next.Field.Label>
-            <Next.NumberInput
+            <Next.Input
               min={1}
               value={score.tempo}
               onChange={(event) => handleTempoChange(Number(event.target.value))}
               classNames='w-16'
+              type='number'
             />
           </Next.Field.Root>
         </ActionToolbar>
