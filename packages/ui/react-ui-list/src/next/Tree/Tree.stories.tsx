@@ -9,6 +9,7 @@ import { type Mock, expect, fn, userEvent, waitFor, within } from 'storybook/tes
 
 import '@dxos/react-ui/next/theme.css';
 import { random } from '@dxos/random';
+import { Next } from '@dxos/react-ui/next';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
@@ -102,6 +103,8 @@ type StoryArgs = SizeArgs & {
   animate?: boolean;
   /** Composes rows from parts instead of the default row. */
   composed?: boolean;
+  /** Rows with a custom icon cell and two trailing columns (the current Tree's `renderIcon` and `renderColumns`). */
+  columns?: boolean;
   /** Ids of rows that cannot be selected; activating such a branch toggles it. */
   unselectable?: string[];
   selectionFollowsFocus?: boolean;
@@ -175,6 +178,23 @@ const renderComposedRow = (node: TreeNode<TestItem>) => (
   </Tree.Item>
 );
 
+/** Trailing columns on the Root's template: a custom icon cell, the label, then a figure and a control per row. */
+const COLUMNS = 'var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) min-content min-content';
+
+const renderColumnsRow = (node: TreeNode<TestItem>) => (
+  <Tree.Item node={node}>
+    <Tree.ItemIndicator />
+    <Tree.ItemIcon>
+      <Next.Icon icon='ph--spinner-gap--regular' spin label='Running' />
+    </Tree.ItemIcon>
+    <Tree.ItemText />
+    <span className='text-description tabular-nums' data-testid='tree-figure'>
+      {node.depth}
+    </span>
+    <Next.Button icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
+  </Tree.Item>
+);
+
 const DefaultStory = ({
   size = 'md',
   tree,
@@ -184,6 +204,7 @@ const DefaultStory = ({
   indentGuides = true,
   animate,
   composed,
+  columns,
   unselectable,
   selectionFollowsFocus,
   dropAtEnd,
@@ -215,13 +236,14 @@ const DefaultStory = ({
         selectionFollowsFocus={selectionFollowsFocus}
         dropAtEnd={dropAtEnd}
         dropBelowExpanded={dropBelowExpanded}
+        columns={columns ? COLUMNS : undefined}
         canSelect={canSelect}
         onOpenChange={onOpenChange}
         onSelect={handleSelect}
         onDrop={onDrop}
       >
         <Tree.Label className='sr-only'>Tree</Tree.Label>
-        <Tree.Content>{composed ? renderComposedRow : undefined}</Tree.Content>
+        <Tree.Content>{columns ? renderColumnsRow : composed ? renderComposedRow : undefined}</Tree.Content>
         <Tree.Empty icon='ph--tree-structure--regular' />
       </Tree.Root>
     </div>
@@ -260,6 +282,17 @@ export const Large: Story = {
  */
 export const Draggable: Story = {
   args: { draggable: true, composed: true },
+};
+
+/** A custom icon cell and trailing columns on the Root's `columns`: every row's figure lines up in one track. */
+export const Columns: Story = {
+  args: { columns: true },
+  play: async ({ canvasElement }) => {
+    const figures = await within(canvasElement).findAllByTestId('tree-figure');
+    const lefts = new Set(figures.map((figure) => Math.round(figure.getBoundingClientRect().left)));
+    await expect(lefts.size).toBe(1);
+    await expect(within(canvasElement).getAllByRole('img', { name: 'Running' }).length).toBe(figures.length);
+  },
 };
 
 /** Section headers (`disposition: 'group'`) above their items; an empty section shows no header. */

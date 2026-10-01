@@ -1186,7 +1186,10 @@ TreeItemIndicator.displayName = 'Tree.ItemIndicator';
 // ItemIcon
 //
 
-type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Next.Icon>>;
+type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Next.Icon>> & {
+  /** Replaces the Icon in the cell, for a glyph that carries its own state (a tooltip, an animation, a per-state hue). */
+  children?: ReactNode;
+};
 
 const ICON_HUES: readonly string[] = ['neutral', 'success', 'info', 'warning', 'error', ...hues];
 
@@ -1194,16 +1197,18 @@ const ICON_HUES: readonly string[] = ['neutral', 'success', 'info', 'warning', '
 const isIconHue = (value: string | undefined): value is Next.IconHue => !!value && ICON_HUES.includes(value);
 
 /**
- * The icon cell: one block holding the row's icon (`itemProps.icon`, hued by `itemProps.iconHue`). Forwards Icon's
- * props, so `icon` and `hue` override the model's; the cell stays empty without an icon, keeping labels aligned.
+ * The icon cell: one block holding the row's icon (`itemProps.icon`, hued by `itemProps.iconHue`), or `children` in
+ * its place. Forwards Icon's props, so `icon` and `hue` override the model's; the cell stays empty without an icon,
+ * keeping labels aligned.
  */
-const TreeItemIcon = ({ icon, hue, ...props }: TreeItemIconProps) => {
+const TreeItemIcon = ({ icon, hue, children, ...props }: TreeItemIconProps) => {
   const { node } = useTreeItemContext('Tree.ItemIcon');
   const glyph = icon ?? node.props.icon;
   const iconHue = node.props.iconHue;
   return (
     <Next.Block classNames='nx-tree-item-icon'>
-      {glyph && <Next.Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />}
+      {children ??
+        (glyph && <Next.Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
     </Next.Block>
   );
 };
