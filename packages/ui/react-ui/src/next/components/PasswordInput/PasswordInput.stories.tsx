@@ -5,7 +5,7 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
@@ -89,5 +89,26 @@ export const Test: Story = {
     await expect(canvas.getByLabelText('API key')).toHaveAttribute('data-1p-ignore');
     await expect(canvas.getByLabelText('Locked')).toBeDisabled();
     await expect(within(byTestId(md, 'disabled-md')).getByRole('button', { name: 'Show password' })).toBeDisabled();
+  },
+};
+
+/** `onBlur` reports focus leaving the input, as a settings field commits its draft. */
+const BlurStory = () => {
+  const [blurred, setBlurred] = useState(0);
+  return (
+    <div className='flex flex-col gap-2'>
+      <Next.PasswordInput aria-label='Token' onBlur={() => setBlurred((count) => count + 1)} />
+      <span data-testid='blurred'>{blurred}</span>
+    </div>
+  );
+};
+
+export const BlurTest: Story = {
+  render: () => <BlurStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByLabelText('Token'));
+    await userEvent.tab();
+    await waitFor(() => expect(canvas.getByTestId('blurred')).toHaveTextContent('1'));
   },
 };
