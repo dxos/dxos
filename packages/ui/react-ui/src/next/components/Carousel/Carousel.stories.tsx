@@ -93,7 +93,9 @@ export const Test: Story = {
     // The slide in view is shown; the others are hidden from assistive tech.
     const slides = part(canvasElement, 'item');
     await expect(slides[0]).toHaveAttribute('aria-roledescription', 'slide');
-    await expect(within(slides[0]).getByRole('img', { name: 'Slide 1' })).toBeInTheDocument();
+    // The machine measures which slides are in view after mount, so every slide starts hidden.
+    await waitFor(() => expect(within(slides[0]).getByRole('img', { name: 'Slide 1' })).toBeInTheDocument());
+    await expect(slides[1]).toHaveAttribute('aria-hidden', 'true');
 
     await userEvent.click(next);
     await waitFor(() => expect(current()).toBe(1));
