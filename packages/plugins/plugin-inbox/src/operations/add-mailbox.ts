@@ -8,7 +8,6 @@ import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { InboxOperation } from '#types';
 
@@ -32,15 +31,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       }
 
       yield* DefaultParent.add({ object, target });
-
-      yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.object.add',
-        properties: {
-          spaceId: db.spaceId,
-          objectId: object.id,
-          typename: Obj.getTypename(object),
-        },
-      });
 
       return {
         id: Obj.getURI(object),

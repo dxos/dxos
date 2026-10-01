@@ -25,6 +25,11 @@ therefore costs the full 60 s. Observed triggers:
 Upstream asks (filed): progress-anchored deadlines / per-round re-ask, always-fail-on-removal, an
 abort API, message-level acks. Until then, everything downstream is worked around.
 
+A round used to wait for **every** peer, so one slow peer cost every round the full timeout even
+after another peer had delivered. The patch now asks each peer with `syncWithPeer` and settles the
+round 250 ms after a peer answers with what the document needs (§4). Heal retries run the same
+round, so nothing in the patch calls `syncWithAllPeers`.
+
 ## 2. O(N²) bulk sync — the cliff
 
 Per-document ingest cost on the DO grows **linearly with the number of docs already in the space**
@@ -39,6 +44,16 @@ round times out, heal retries re-run the same over-budget work, and sync **freez
 1000 docs works only because it finishes before the cliff. Retroactively: 100 ≈ 10 s, 1000 ≈
 35–75 s, 3000+ = wall. Mitigations at our layer: raise/adapt `syncMs`; coalesce more frames per WASM
 ingest. Real fix is upstream (per-ingest work independent of collection size).
+
+**One cause, found and fixed: the storage had no `containsSedimentreeId`.** Subduction checks
+whether a sedimentree is stored on its hydration hot path, and a storage without that method answers
+by listing every stored id through `loadAllSedimentreeIds`. That listing ran once per sync round of a
+document not stored yet, so a device pulling N documents it had never stored listed ids N times. The
+client bridge (automerge-repo patch) and the EDGE DO storage (`DurableObjectSedimentreeStorage`)
+both answer with one key lookup now, pinned by `subduction-id-lookup.test.ts` here and by the
+db-service `DurableObjectSedimentreeStorage id lookup` test. A Node client pulling a real space of
+about 1,300 documents from EDGE dev went from 36–40 s to 26–28 s. The EDGE side matters for
+documents pushed to it that it has never stored.
 
 ## 3. Connection replacement: **do not drain — close/evict immediately**
 
@@ -77,6 +92,32 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
   and `AutomergeHost` uses it to re-drive only the denied rounds.
 - **`lastSyncGeneration` is stamped at round _start_, not enqueue** — a round queued behind the gate
   across a reconnect must count against the generation it actually runs under.
+- **A round does not wait for its slowest peer**: `#syncWithConnectedPeers` settles
+  `LATE_PEER_GRACE_MS` (250 ms) after a peer's success brings data, or finds the document already
+  holding some; a request still pending then runs on, and `#applyLatePeerResult` loads its data when
+  it lands. Before any data exists, an empty success (a peer without the document) does not count,
+  or the first load reports the document `unavailable`. Requests to one peer are capped by
+  `MAX_IN_FLIGHT_PEER_SYNCS`, and a round joins a request not yet started rather than queueing
+  another. A document's request to a peer starts only once its previous one to that peer has
+  settled: rounds settle without the slow peer, so each edit's round would otherwise add a request to
+  the ones it has not answered, and a document edited over a slow link piled up to the cap. Found from a mesh peer: `MeshReplicatorConnection` awaits each `sendSyncMessage`
+  RPC, so its link carries one message per round trip (~10/s), and once it connected every round
+  waited on it and a space's initial sync fell from about 100 rounds a second to nearly none.
+- **Heal retries use the same round**: `SyncScheduler` runs `SubductionSource#syncHealRound`, not
+  `syncWithAllPeers`. A retry waiting on a silent peer used to hold its gate slot until the deadline,
+  so a wave of retries took every slot and stalled every other document's round. The retry now
+  waits outside the round for a peer still answering when the round settles: if that peer then
+  fails, the next retry is scheduled with backoff, as for a failed round, and the heal budget still
+  bounds them. Counting such a peer as done instead left it without the edits it missed.
+- **A document on disk loads before its first round**: `SubductionSource` loaded a document's
+  stored blobs only after a round succeeded. A document stored only as Subduction records (its data
+  arrived while it was not loaded, e.g. through a heal retry of an evicted document) has no
+  Automerge snapshot to load from, so it stayed `loading` until a peer answered, and went
+  `unavailable` with no peer at all. A heal retry that succeeds without new data does not mark the
+  entry succeeded either, so it did not help. Found in a user's profile: all six commits of a
+  missing document, including the head EDGE reported, were on disk while EDGE was not answering.
+  `#loadStoredBlobs` now loads the stored blobs into an empty handle once the entry's stored ids are
+  listed, and `unavailable` waits for that listing.
 
 Why the gate is a patch and not `SubductionPolicy`: policy hooks can only allow/deny (a deny is a
 _failure_ with heal-backoff, not queueing), fire mid-round after resources are committed, carry no

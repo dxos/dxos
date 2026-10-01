@@ -59,8 +59,7 @@ Each review run gets a slug directory:
 
 ```text
 .agents/reviews/<slug>/          # after finalize
-  REVIEW.md                      # frontmatter + merged, stamped diagnostics
-  RESOLUTION.md                  # issue status ledger
+  REVIEW.md                      # frontmatter, ## Index (status ledger), ## Issues, ## Appendix
 
 # prepare also writes (deleted by finalize):
 #   STAGING.md, groups.json, groups/NN.md
@@ -115,7 +114,7 @@ Column is optional.
   for readability, but finalize stamps every diagnostic in a group with the rule's
   severity from the run manifest (`groups.json`), so a subagent cannot change it.
 - **Finalize** rewrites each diagnostic as
-  `# SEVERITY <review_id>-<seq> <rule_id> \`file:line[:col]\``and writes`RESOLUTION.md` bullets
+  `# SEVERITY <review_id>-<seq> <rule_id> \`file:line[:col]\``and writes `## Index` bullets
 (`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>`,
 all seeded unresolved). `unresolved.ts` re-prints open issues across all runs
 (`--path`/`--rule`).
@@ -241,7 +240,7 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
 - Scripts are dependency-free TypeScript run with Bun (originally Node ESM `.mjs`) — a hand-rolled frontmatter parser
   is used because a standalone script can't resolve a pnpm-hoisted YAML package.
 - Subagents run on **Sonnet**.
-- Finalize keeps only `REVIEW.md` + `RESOLUTION.md`; staging/group intermediates
+- Finalize keeps only `REVIEW.md`; staging/group intermediates
   are deleted. `REVIEW.md` drives incremental base resolution.
 
 ## Status

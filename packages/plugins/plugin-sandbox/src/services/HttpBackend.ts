@@ -77,5 +77,9 @@ export const make = (url: string, token: string): SandboxService.Backend => {
     // The sidecar listens on loopback only, so there is no public address to hand out.
     exposePort: () =>
       Effect.fail(new SandboxService.SandboxError({ message: 'Local sandboxes cannot expose ports; use EDGE.' })),
+    publish: (spaceId, sandboxId, path) =>
+      call('publish', { spaceId, sandboxId, path }, Schema.Struct({ path: Schema.String })).pipe(
+        Effect.map(({ path: served }) => `${url.replace(/\/$/, '')}${served}`),
+      ),
   };
 };

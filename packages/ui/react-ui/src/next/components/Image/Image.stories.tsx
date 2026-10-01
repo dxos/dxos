@@ -5,11 +5,13 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import React, { useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
@@ -23,21 +25,40 @@ const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
 /** A malformed data URI fails to decode without any network request. */
 const BROKEN = 'data:image/png;base64,AAAA';
 
-const DefaultStory = () => (
-  <div className='grid grid-cols-2 gap-4 w-[36rem]'>
-    <Next.Image src={LANDSCAPE} alt='Mountains at dusk' data-testid='cover' />
-    <Next.Image src={LANDSCAPE} alt='Mountains, contained' aspectRatio='1' fit='contain' data-testid='contain' />
-    <Next.Image src={BROKEN} alt='Missing photo' data-testid='broken' />
-    <Next.Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid='square' />
-  </div>
-);
+/** Cover, contain, broken and square frames, and a clickable image. */
+const DefaultStory = ({ size }: SizeArgs) => {
+  const [clicks, setClicks] = useState(0);
+  return (
+    <div className='grid grid-cols-4 gap-2'>
+      <Next.Image src={LANDSCAPE} alt='Mountains at dusk' data-testid={`cover-${size}`} />
+      <Next.Image
+        src={LANDSCAPE}
+        alt='Mountains, contained'
+        aspectRatio='1'
+        fit='contain'
+        data-testid={`contain-${size}`}
+      />
+      <Next.Image src={BROKEN} alt='Missing photo' data-testid={`broken-${size}`} />
+      <Next.Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid={`square-${size}`} />
+      <Next.Image
+        src={LANDSCAPE}
+        alt='Open mountains'
+        onClick={() => setClicks((count) => count + 1)}
+        data-testid={`clickable-${size}`}
+      />
+      <Next.Typography data-testid={`clicks-${size}`}>Opened {clicks}</Next.Typography>
+    </div>
+  );
+};
 
 const meta = {
-  title: 'ui/react-ui-core/next/image',
+  title: 'ui/react-ui-core/next/components/Image',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[40rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -45,14 +66,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Frames keep their ratio, loaded images fill them, and a broken source shows the fallback icon. */
-export const Load: Story = {
+/**
+ * Frames keep their ratio, loaded images fill them, and a broken source shows the fallback icon. With `onClick` the
+ * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring.
+ */
+export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = within(sizeRow(canvasElement, 'md'));
     for (const [testId, ratio] of [
-      ['cover', 16 / 9],
-      ['contain', 1],
-      ['square', 1],
+      ['cover-md', 16 / 9],
+      ['contain-md', 1],
+      ['square-md', 1],
     ] as const) {
       const frame = canvas.getByTestId(testId);
       await waitFor(() => expect(frame).toHaveAttribute('data-status', 'loaded'));
@@ -64,7 +89,7 @@ export const Load: Story = {
     }
     await expect(canvas.getByRole('img', { name: 'Mountains at dusk' })).toHaveAttribute('loading', 'lazy');
 
-    const broken = canvas.getByTestId('broken');
+    const broken = canvas.getByTestId('broken-md');
     await waitFor(() => expect(broken).toHaveAttribute('data-status', 'error'));
     const icon = within(broken).getByRole('img', { name: 'Missing photo' });
     await expect(icon.tagName.toLowerCase()).toBe('svg');
@@ -73,5 +98,19 @@ export const Load: Story = {
     const glyph = icon.getBoundingClientRect();
     await expect(glyph.left + glyph.width / 2).toBeCloseTo(frame.left + frame.width / 2, 0);
     await expect(glyph.top + glyph.height / 2).toBeCloseTo(frame.top + frame.height / 2, 0);
+
+    const clickable = canvas.getByRole('button', { name: 'Open mountains' });
+    await expect(clickable).toBe(canvas.getByTestId('clickable-md'));
+    await userEvent.click(clickable);
+    await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 1'));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 2'));
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 3'));
+    await userEvent.tab({ shift: true });
+    await userEvent.tab();
+    await expect(clickable).toHaveFocus();
+    await expect(getComputedStyle(clickable).outlineStyle).toBe('solid');
+    await expect(canvas.getByTestId('cover-md')).not.toHaveAttribute('role');
   },
 };

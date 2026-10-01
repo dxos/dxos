@@ -35,6 +35,7 @@ import {
   InboxListResponseSchema,
   type InboxSendResponse,
   InboxSendResponseSchema,
+  type IndexerHeadsResponse,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -681,6 +682,15 @@ export class EdgeHttpClient extends BaseHttpClient {
       ...args,
       body,
       method: 'POST',
+      auth: true,
+    });
+  }
+
+  /** Heads of every document in the space as last indexed by EDGE. */
+  public async getIndexerHeads(ctx: Context, spaceId: SpaceId, args?: EdgeHttpCallArgs): Promise<IndexerHeadsResponse> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/indexer-heads`, this.baseUrl), {
+      ...args,
+      method: 'GET',
       auth: true,
     });
   }

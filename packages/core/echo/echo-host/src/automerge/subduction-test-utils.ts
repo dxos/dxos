@@ -7,6 +7,7 @@ import {
   type DocHandle,
   type DocumentId,
   type DocumentProgress,
+  type Heads,
   type Message,
   type PeerId,
   type QueryState,
@@ -17,12 +18,19 @@ import {
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, SedimentreeId } from '@automerge/automerge-subduction';
-import { onTestFinished } from 'vitest';
+import { type ExpectStatic, onTestFinished } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
+import {
+  TestAdapter,
+  type TestConnectionStateProvider,
+  type TestTransportOptions,
+  createTestSqliteStorageAdapter,
+} from '../testing/index.ts';
+import { type AutomergeHost } from './automerge-host.ts';
 
 export const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 export const SUBDUCTION_SERVICE_NAME = 'test-subduction-service';
@@ -49,6 +57,73 @@ export const SYNC_WINDOW_MS = 15_000;
  * assertion. Every other negative assertion waits for the refusal itself; see {@link createDenyGate}.
  */
 export const NO_TRAFFIC_WINDOW_MS = 500;
+
+/**
+ * Drains until the document is evicted: eviction waits out a sync round still pending on it, so one
+ * forced drain can leave it resident.
+ */
+export const waitForEviction = async (expect: ExpectStatic, host: AutomergeHost, documentId: DocumentId) => {
+  await expect
+    .poll(
+      async () => {
+        await host.drainEvictions();
+        return host.loadedDocumentIds.includes(documentId);
+      },
+      { timeout: SYNC_WINDOW_MS },
+    )
+    .toBe(false);
+};
+
+/** Resolves once the document satisfies `predicate`, re-checked on each change event. */
+export const waitForDoc = async <T>(
+  handle: {
+    doc(): T | undefined;
+    on(event: 'change', listener: () => void): unknown;
+    off(event: 'change', listener: () => void): unknown;
+  },
+  predicate: (doc: T | undefined) => boolean,
+  { timeout = SYNC_WINDOW_MS }: { timeout?: number } = {},
+): Promise<void> => {
+  const trigger = new Trigger();
+  const check = () => {
+    if (predicate(handle.doc())) {
+      trigger.wake();
+    }
+  };
+  handle.on('change', check);
+  try {
+    check();
+    await trigger.wait({ timeout });
+  } finally {
+    handle.off('change', check);
+  }
+};
+
+/** Resolves once `host` holds exactly `expected` heads for the document. */
+export const waitForHostHeads = async (
+  host: AutomergeHost,
+  documentId: DocumentId,
+  expected: Heads,
+  { timeout = SYNC_WINDOW_MS }: { timeout?: number } = {},
+): Promise<void> => {
+  const key = (heads: readonly string[]) => [...heads].sort().join(',');
+  const matches = (heads: readonly string[] | undefined) => heads !== undefined && key(heads) === key(expected);
+  const trigger = new Trigger();
+  // Subscribed before reading, so no change is missed.
+  const unsubscribe = host.documentHeadsChanged.on((event) => {
+    if (event.documentId === documentId && matches(event.heads)) {
+      trigger.wake();
+    }
+  });
+  try {
+    const [current] = await host.getHeads([documentId]);
+    if (!matches(current)) {
+      await trigger.wait({ timeout });
+    }
+  } finally {
+    unsubscribe();
+  }
+};
 
 // Subduction control-plane message type, sent by `NetworkAdapterTransport` from
 // `@automerge/automerge-repo/dist/subduction/network.js`. Not exported from the
@@ -159,6 +234,8 @@ export type ConnectedRepoOptions = {
   onMessageByConnection?: Record<number, (message: Message) => void>;
   /** Per-connection transport gates, keyed by index into `connections`; overrides `connectionStateProvider`. */
   connectionStateProviderByConnection?: Record<number, TestConnectionStateProvider>;
+  /** Per-connection transport behavior, keyed by index into `connections`. */
+  transportByConnection?: Record<number, TestTransportOptions>;
   subductionTimeouts?: NonNullable<ConstructorParameters<typeof Repo>[0]>['subductionTimeouts'];
 };
 
@@ -179,6 +256,7 @@ export const createRepoTopology = async <Peers extends string[], Peer extends st
     return TestAdapter.createPair(
       args.options?.connectionStateProviderByConnection?.[idx] ?? args.options?.connectionStateProvider,
       handler,
+      args.options?.transportByConnection?.[idx],
     ) as [TestAdapter, TestAdapter];
   });
   const repos = args.peers.map((peerId, peerIndex) => {
@@ -446,12 +524,17 @@ export const createCountingPolicy = (
  * Implemented here rather than imported so a future upstream refactor of
  * `helpers.js` cannot silently change the test's encoding assumptions.
  */
-export const documentIdToSedimentreeIdString = (documentId: DocumentId): string => {
-  const docIdBytes = documentIdToBinary(documentId)!;
+export const documentIdToSedimentreeId = (documentId: DocumentId): SedimentreeId => {
+  const docIdBytes = documentIdToBinary(documentId);
+  invariant(docIdBytes, `not a document id: ${documentId}`);
   const padded = new Uint8Array(32);
   padded.set(docIdBytes.subarray(0, 32));
-  return SedimentreeId.fromBytes(padded).toString();
+  return SedimentreeId.fromBytes(padded);
 };
+
+/** {@link documentIdToSedimentreeId} in the string form `SedimentreeId.toString()` produces. */
+export const documentIdToSedimentreeIdString = (documentId: DocumentId): string =>
+  documentIdToSedimentreeId(documentId).toString();
 
 /**
  * Build a per-sedimentree gate keyed by an allow-set of `SedimentreeId`

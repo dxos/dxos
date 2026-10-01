@@ -8,32 +8,29 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, centreY, expectScoped } from '../../testing.ts';
+import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
-const DefaultStory = () => (
-  <div className='nx-scope @container flex flex-col w-[28rem] border border-separator' data-size='md'>
-    {SIZES.map((size) => (
-      <Next.Container key={size} size={size} gutter='rail' level='base' data-testid={`host-${size}`}>
-        <Next.Checkbox label={`Subscribe ${size}`} defaultChecked data-testid={`checkbox-${size}`} />
-      </Next.Container>
-    ))}
-    <Next.Container gutter='rail' level='base'>
-      <Next.Checkbox label='Some selected' checked='indeterminate' />
-      <Next.Checkbox aria-label='Unlabelled' />
-      <Next.Checkbox label='Disabled' disabled />
-    </Next.Container>
-  </div>
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    <Next.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
+    <Next.Checkbox label='Some selected' checked='indeterminate' />
+    <Next.Checkbox aria-label='Unlabelled' />
+    <Next.Checkbox label='Disabled' disabled />
+  </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/checkbox',
+  title: 'ui/react-ui-core/next/components/Checkbox',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -41,8 +38,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** The box is icon-sized, centred in its block and in a block-sized cell at the content edge (follow-up 19). */
-export const Sizes: Story = {
+/**
+ * The box is icon-sized, centred in its block and in a block-sized cell at the content edge (follow-up 19); clicking
+ * the label toggles the hidden native checkbox, which carries the accessible name.
+ */
+export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const { block, icon } = GEOMETRY[size];
@@ -61,14 +62,9 @@ export const Sizes: Story = {
       await expect(cellWidth, `${size} cell`).toBeCloseTo(block, 0);
       await expect(cellLeft, `${size} cell left`).toBeCloseTo(root.left, 0);
     }
-  },
-};
 
-/** Clicking the label toggles the hidden native checkbox, which carries the accessible name. */
-export const Toggle: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const checkbox = canvas.getByRole('checkbox', { name: 'Subscribe md' });
+    const canvas = within(sizeRow(canvasElement, 'md'));
+    const checkbox = canvas.getByRole('checkbox', { name: 'Subscribe' });
     const control = byTestId(canvasElement, 'checkbox-md').querySelector('[data-part="control"]');
     await expect(checkbox).toBeChecked();
     await expect(control).toHaveAttribute('data-state', 'checked');

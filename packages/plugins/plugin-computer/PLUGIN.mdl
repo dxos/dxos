@@ -8,8 +8,9 @@ Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash 
 multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
 that runs a shell script under a configured root. Nothing is mounted outside a vite server.
 
-It also contributes the **Composer Plugin** project template: a project whose agent uses these tools to
-build a TypeScript Composer plugin on this machine and offer it back to load (QA-2).
+In a browser it also contributes the browser version of plugin-projects' **Composer Plugin** project template:
+a project whose agent uses these tools to build a TypeScript Composer plugin on this machine and offer it back
+to load (QA-2). The desktop app has no vite server, so it offers plugin-projects' own version instead.
 
 ## Extensions
 
@@ -183,8 +184,13 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
         navtree with its own; the guide now teaches a navtree group.
     - name: Add two timezones
       do: Click the plus, pick a timezone from the select and save; do it again with a second timezone.
-      expect: the row shows three clock cards, each ticking in its own timezone, and the plus card after them
+      expect: the row shows three clock cards sorted west to east, each ticking in its own timezone, with a pin on the map, and the plus card after them
       note: The timezones live on the space's `Clock` object, so they survive a reload.
+    - name: Select the clocks on the map, then on the globe
+      do: Click each clock in turn, then switch the map to the globe and click each clock again.
+      expect: |
+        the selected clock's card is outlined and its pin is highlighted; on the globe the earth turns about
+        its axis to the selected clock's meridian
   after:
     - name: Delete the project
       do: Right-click the "World Clock" project in the navtree and choose Delete.

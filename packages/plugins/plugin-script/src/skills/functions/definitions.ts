@@ -4,9 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, DXN, Ref } from '@dxos/echo';
+import { ConfigService } from '@dxos/config';
+import { Database, DXN, Hypergraph, Ref } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
+import { Identity } from '@dxos/halo';
 import { trim } from '@dxos/util';
 
 const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotate({
@@ -205,7 +207,7 @@ export const Deploy = Operation.make({
       description: 'The URL of the deployed function.',
     }),
   }),
-  services: [Database.Service, ClientService],
+  services: [Database.Service, EdgeHttpClientService, Identity.Service, ConfigService],
 });
 
 export const Invoke = Operation.make({
@@ -226,7 +228,7 @@ export const Invoke = Operation.make({
       description: 'The response from the function.',
     }),
   }),
-  services: [Database.Service, ClientService],
+  services: [Database.Service, EdgeHttpClientService],
 });
 
 const InvocationSpanSchema = Schema.Struct({
@@ -305,7 +307,7 @@ export const QueryDeployedFunctions = Operation.make({
       description: 'List of deployed functions.',
     }),
   }),
-  services: [ClientService],
+  services: [EdgeHttpClientService],
 });
 
 export const InstallFunction = Operation.make({
@@ -330,5 +332,5 @@ export const InstallFunction = Operation.make({
       description: 'Version of the installed function.',
     }),
   }),
-  services: [ClientService],
+  services: [Database.Service, Hypergraph.Service, EdgeHttpClientService],
 });

@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Sandbox, SandboxOperation } from '#types';
+import { RepositoryOperation, Sandbox, SandboxOperation } from '#types';
 
 const make = () =>
   Skill.make({
@@ -20,6 +20,13 @@ const make = () =>
         SandboxOperation.ExposePort,
         SandboxOperation.UploadFile,
         SandboxOperation.DownloadFile,
+        SandboxOperation.PublishFiles,
+        SandboxOperation.AttachRepository,
+        RepositoryOperation.CreateRepository,
+        RepositoryOperation.GetBranches,
+        RepositoryOperation.GetLog,
+        RepositoryOperation.GetTree,
+        RepositoryOperation.ReadFile,
       ],
     }),
     instructions: Template.make({
@@ -35,6 +42,19 @@ const make = () =>
         that serves it, for a public URL: the service starts the server, and starts it again whenever the
         container has slept, so the URL keeps answering. \`background: true\` starts any other command that
         must outlive its call and returns at once.
+        In the desktop app, with the Local backend, you can also publish a directory of a sandbox: it is served
+        read-only over HTTP on this machine, and the URL you get back is how this app loads what you built there.
+
+        A sandbox is ephemeral: its files go when it expires. A repository is durable, so keep what you build
+        in a sandbox by pushing it to a repository.
+        - Create a repository, then attach it to the sandbox (or pass it when creating the sandbox). Every
+          command in the sandbox then has it as a git remote named after the repository — the attach result
+          says which name — and credentials for it are already configured.
+        - Use plain git: \`git init\`, commit, \`git push <remote> HEAD:main\`; in a new sandbox, \`git init\`
+          and \`git pull <remote> main\` to continue from where an earlier one left off. \`$DX_REPOSITORIES\` lists
+          the remote names. Initialize git in the directory you mean to keep, and ignore \`node_modules\`.
+        - Branches, log, list files and read file show what a repository holds without a sandbox.
+        Only sandboxes on EDGE can reach repositories.
       `,
     }),
   });

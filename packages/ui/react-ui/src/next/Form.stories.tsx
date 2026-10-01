@@ -6,10 +6,14 @@ import './theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
+
+import { translations } from '#translations';
 
 import { withTheme } from '../testing/index.ts';
 import { Next } from './Next.tsx';
+import { expectAnchoredBelow } from './testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs } from './testing/stories.tsx';
 
 const ROLES: Next.SelectOption[] = [
   { value: 'owner', label: 'Owner' },
@@ -18,8 +22,8 @@ const ROLES: Next.SelectOption[] = [
 ];
 
 /** A basic form: each Field stacks its label above the control (decision 13). */
-const DefaultStory = () => (
-  <div className='nx-scope @container w-[30rem] border border-separator' data-size='md'>
+const DefaultStory = ({ size = 'md' }: SizeArgs) => (
+  <div className='nx-scope @container w-[30rem] border border-separator' data-size={size}>
     <Next.Container gutter='rail' level='base'>
       <Next.Field.Root data-testid='name'>
         <Next.Field.Header>
@@ -31,14 +35,14 @@ const DefaultStory = () => (
       <Next.Field.Root data-testid='email'>
         <Next.Field.Header>
           <Next.Field.Label>Email</Next.Field.Label>
-          <Next.IconButton icon='ph--info--regular' label='About email' data-testid='email-info' />
+          <Next.Button icon='ph--info--regular' label='About email' iconOnly data-testid='email-info' />
         </Next.Field.Header>
         <Next.Input type='email' placeholder='ada@example.com' />
         <Next.Field.HelperText>We never share your address.</Next.Field.HelperText>
       </Next.Field.Root>
 
       <Next.Field.Root data-testid='role'>
-        <Next.Select.Root items={ROLES} positioning={{ sameWidth: true }}>
+        <Next.Select.Root items={ROLES}>
           <Next.Field.Header>
             <Next.Select.Label>Role</Next.Select.Label>
             <Next.Block data-testid='role-lock'>
@@ -57,7 +61,7 @@ const DefaultStory = () => (
       <Next.Field.Root invalid data-testid='website'>
         <Next.Field.Header>
           <Next.Field.Label>Website</Next.Field.Label>
-          <Next.IconButton icon='ph--x--regular' label='Clear website' />
+          <Next.Button icon='ph--x--regular' label='Clear website' iconOnly />
         </Next.Field.Header>
         <Next.Input defaultValue='not a url' />
         <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
@@ -68,10 +72,8 @@ const DefaultStory = () => (
       </Next.Field.Root>
 
       <Next.Group justify='end' data-testid='actions'>
-        <Next.Button>Cancel</Next.Button>
-        <Next.Button type='submit' variant='primary'>
-          Save
-        </Next.Button>
+        <Next.SystemButton.Cancel iconOnly={false} />
+        <Next.SystemButton.Save iconOnly={false} type='submit' />
       </Next.Group>
     </Next.Container>
   </div>
@@ -80,9 +82,11 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-core/next/form',
   render: DefaultStory,
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   decorators: [withTheme()],
-  parameters: { layout: 'centered' },
-} satisfies Meta;
+  parameters: { layout: 'centered', translations },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -131,14 +135,14 @@ export const Layout: Story = {
     const boxMargin = boxElement ? parseFloat(getComputedStyle(boxElement).marginLeft) : Number.NaN;
     await expect((box?.left ?? Number.NaN) - boxMargin).toBeCloseTo(part(canvasElement, 'name', '.nx-input').left, 0);
 
-    // The label row is an sm block row; its trailing IconButton is inset in a block-sized cell ending at the control's edge.
+    // The label row is an sm block row; its trailing icon-only Button is inset in a block-sized cell ending at the control's edge.
     const header = canvasElement.querySelector('[data-testid="email"] [data-part="header"]')?.getBoundingClientRect();
     const info = canvas.getByRole('button', { name: 'About email' }).getBoundingClientRect();
     await expect(header?.height).toBeCloseTo(24, 0);
     await expect(info.height).toBeCloseTo(20, 0);
     await expect(info.right + 2).toBeCloseTo(part(canvasElement, 'email', '.nx-input').right, 0);
 
-    // A trailing Block (a static icon) takes the same box and cell as an IconButton, so both line up at the row's end.
+    // A trailing Block (a static icon) takes the same box and cell as an icon-only Button, so both line up at the row's end.
     const lock = canvas.getByTestId('role-lock').getBoundingClientRect();
     await expect(lock.width).toBeCloseTo(info.width, 0);
     await expect(lock.height).toBeCloseTo(info.height, 0);
@@ -160,11 +164,7 @@ export const Layout: Story = {
     const trigger = canvas.getByRole('combobox', { name: 'Role' });
     await userEvent.click(trigger);
     const listbox = await within(canvasElement.ownerDocument.body).findByRole('listbox');
-    await waitFor(async () => {
-      const gap = listbox.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom;
-      await expect(gap).toBeGreaterThanOrEqual(0);
-      await expect(gap).toBeLessThanOrEqual(3);
-    });
+    await expectAnchoredBelow(trigger, listbox);
     await userEvent.keyboard('{Escape}');
 
     // Form actions claim no toolbar keyboard contract.

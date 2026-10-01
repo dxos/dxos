@@ -3,8 +3,19 @@
  */
 
 @layer dx-components {
+  /* The frame of `PopupScroll`; a long menu scrolls in it (`.nx-popup` with a viewport, `control.css`). */
   .nx-menu {
     min-width: 10rem;
+  }
+  /*
+   * A submenu's frame overhangs its positioner by the viewport's block padding, so the first item (or, flipped, the
+   * last) lines up with the SubTrigger row that floating-ui aligns the positioner to.
+   */
+  .nx-submenu:has(> [data-placement$='-start']) {
+    margin-block-start: calc(-1 * var(--nx-control-inset));
+  }
+  .nx-submenu:has(> [data-placement$='-end']) {
+    margin-block-end: calc(-1 * var(--nx-control-inset));
   }
 
   .nx-menu-item {
@@ -37,20 +48,18 @@
     color: var(--color-description);
   }
 
-  .nx-menu-separator {
-    height: 1px;
-    margin-block: var(--nx-control-inset);
-    border: none;
-    background: var(--color-separator);
+  /* An icon-sized leading cell that keeps its place while unchecked, so option labels stay aligned. */
+  .nx-menu-indicator {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--nx-icon-size);
+    height: var(--nx-icon-size);
   }
-
-  .nx-menu-group-label {
-    display: flex;
-    align-items: center;
-    min-height: var(--nx-control-size);
-    padding-inline: var(--nx-gap-size);
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
-    color: var(--color-description);
+  .nx-menu-indicator[data-state='unchecked'] {
+    visibility: hidden;
+  }
+  .nx-menu-item[data-state='open'] {
+    background: var(--color-hover-surface);
   }
 }

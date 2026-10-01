@@ -58,9 +58,10 @@ export type UseReorderListOptions<T> = {
   /**
    * The native drag preview: `'clone'` snapshots the row itself into a detached container, a
    * renderer draws something else for the item. Either replaces the browser's own image, which for
-   * a row in a scrolling column can take the preceding siblings along.
+   * a row in a scrolling column can take the preceding siblings along. The renderer also receives the dragged row, so a
+   * portalled preview can copy its scope (e.g. `Next.DragPreview source`).
    */
-  dragPreview?: 'clone' | ((item: T) => ReactNode);
+  dragPreview?: 'clone' | ((item: T, source: HTMLElement) => ReactNode);
 };
 
 export type ReorderActive<T> = { id: string; item: T; container: HTMLElement } | null;
@@ -163,7 +164,7 @@ export const useReorderList = <T>({
         }
         const sourceIdx = findIndexFromPayload(source.data);
         const targetIdx = findIndexFromPayload(target.data);
-        if (sourceIdx < 0 || targetIdx < 0) {
+        if (sourceIdx < 0 || targetIdx < 0 || sourceIdx === targetIdx) {
           return;
         }
         const destinationIndex = getReorderDestinationIndex({
@@ -199,7 +200,16 @@ export const useReorderList = <T>({
           return () => {};
         }
         const allowedEdges: Edge[] = axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right'];
+        // pragmatic-drag-and-drop sets `dropEffect` only over a drop target and never `effectAllowed`, so over the source
+        // row (which rejects itself) the browser falls back to its copy cursor, which flickers as the pointer crosses rows.
+        const handleNativeDragStart = (event: DragEvent) => {
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+          }
+        };
+        refs.row.addEventListener('dragstart', handleNativeDragStart);
         return combine(
+          () => refs.row.removeEventListener('dragstart', handleNativeDragStart),
           draggable({
             element: refs.row,
             dragHandle: refs.handle,
@@ -229,7 +239,7 @@ export const useReorderList = <T>({
                       let root: Root | undefined;
                       if (typeof preview === 'function') {
                         root = createRoot(container);
-                        const element = preview(current.item);
+                        const element = preview(current.item, source.element);
                         flushSync(() => root?.render(element));
                       } else {
                         container.appendChild(source.element.cloneNode(true));
@@ -255,11 +265,13 @@ export const useReorderList = <T>({
               setActive(null);
             },
           }),
+          // The source row accepts itself (a drop there moves nothing) so the browser never gets an uncancelled
+          // `dragover` inside the list, which it answers with its own cursor; it keeps its dragging state throughout.
           dropTargetForElements({
             element: refs.row,
             canDrop: ({ source }) => {
               if (source.element === refs.row) {
-                return false;
+                return true;
               }
               if (canDropRef.current) {
                 return canDropRef.current({ source });
@@ -269,13 +281,21 @@ export const useReorderList = <T>({
             getData: ({ input }) =>
               attachClosestEdge({ [REORDER_LIST_KEY]: listId, id }, { element: refs.row, input, allowedEdges }),
             getIsSticky: () => true,
-            onDragEnter: ({ self }) => {
-              onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+            onDragEnter: ({ self, source }) => {
+              if (source.element !== refs.row) {
+                onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+              }
             },
-            onDrag: ({ self }) => {
-              onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+            onDrag: ({ self, source }) => {
+              if (source.element !== refs.row) {
+                onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+              }
             },
-            onDragLeave: () => onItemState(IDLE),
+            onDragLeave: ({ source }) => {
+              if (source.element !== refs.row) {
+                onItemState(IDLE);
+              }
+            },
             onDrop: () => onItemState(IDLE),
           }),
         );

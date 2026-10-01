@@ -116,6 +116,23 @@ describe('createProgressTraceSink', () => {
     expect(task?.current).toBe(1);
   });
 
+  test('a later run clears the failed run state', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'pull-request#walkthrough';
+
+    sink.write(statusMessage({ message: 'Walkthrough', progress: { key, current: 2, total: 5 } }));
+    sink.write(statusMessage({ message: PROGRESS_STATUS_FAILED, progress: { key, current: 5, total: 5 } }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
+
+    sink.write(statusMessage({ message: 'Walkthrough', progress: { key, current: 0, total: 5 } }));
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('running');
+    expect(task?.current).toBe(0);
+    expect(task?.error).toBeUndefined();
+  });
+
   test('notes and removes the monitor on Cancelled', () => {
     const registry = Registry.make();
     const progress = createProgressRegistry(registry);

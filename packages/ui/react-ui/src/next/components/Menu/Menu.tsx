@@ -2,16 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Menu as MenuPrimitive } from '@ark-ui/react/menu';
+import { Menu as MenuPrimitive, useMenuContext } from '@ark-ui/react/menu';
 import { Portal } from '@ark-ui/react/portal';
-import React, { forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+  type RefObject,
+  createContext,
+  forwardRef,
+  useContext,
+} from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Icon } from '../Icon/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
+import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -22,16 +31,37 @@ const POPUP_GUTTER = 2;
 
 type MenuRootProps = MenuPrimitive.RootProps;
 
-/** Ark menu; content mounts on open and unmounts on close unless the caller opts out. */
-const MenuRoot = ({ lazyMount = true, unmountOnExit = true, positioning, ...props }: MenuRootProps) => (
-  <MenuPrimitive.Root
-    {...props}
-    lazyMount={lazyMount}
-    unmountOnExit={unmountOnExit}
-    // Ark's 8px default reads as detached from the trigger.
-    positioning={{ gutter: POPUP_GUTTER, ...positioning }}
-  />
+/**
+ * The enclosing menu: its `onSelect`, so a nested menu reports its selections to the root by default, and whether it
+ * is a `Menu.Sub`, whose Content lines its first item up with the TriggerItem row.
+ */
+const MenuContext = createContext<{ onSelect?: MenuRootProps['onSelect']; sub: boolean }>({ sub: false });
+
+const MenuRootBase = ({
+  lazyMount = true,
+  unmountOnExit = true,
+  positioning,
+  onSelect,
+  sub,
+  ...props
+}: MenuRootProps & { sub: boolean }) => (
+  <MenuContext.Provider value={{ onSelect, sub }}>
+    <MenuPrimitive.Root
+      {...props}
+      onSelect={onSelect}
+      lazyMount={lazyMount}
+      unmountOnExit={unmountOnExit}
+      // Ark's 8px default reads as detached from the trigger.
+      positioning={popupPositioning(POPUP_GUTTER, positioning)}
+    />
+  </MenuContext.Provider>
 );
+
+/**
+ * Ark menu; content mounts on open and unmounts on close unless the caller opts out. With no Trigger (a virtual
+ * trigger), open it under control and anchor it with `positioning.getAnchorRect` (Ark has no virtual-trigger part).
+ */
+const MenuRoot = (props: MenuRootProps) => <MenuRootBase {...props} sub={false} />;
 
 MenuRoot.displayName = 'Next.Menu.Root';
 
@@ -41,7 +71,7 @@ MenuRoot.displayName = 'Next.Menu.Root';
 
 type MenuTriggerProps = MenuPrimitive.TriggerProps;
 
-/** Use `asChild` to open the menu from a `Next.Button` or `Next.IconButton`. */
+/** Use `asChild` to open the menu from a `Next.Button`. */
 const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => (
   <MenuPrimitive.Trigger {...props} ref={forwardedRef} />
 ));
@@ -49,31 +79,76 @@ const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forw
 MenuTrigger.displayName = 'Next.Menu.Trigger';
 
 //
+// ContextTrigger
+//
+
+type MenuContextTriggerProps = MenuPrimitive.ContextTriggerProps;
+
+/** Opens the menu at the pointer on right-click (or long-press); use `asChild` to make a region the target. */
+const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps>((props, forwardedRef) => (
+  <MenuPrimitive.ContextTrigger {...props} ref={forwardedRef} />
+));
+
+MenuContextTrigger.displayName = 'Next.Menu.ContextTrigger';
+
+//
 // Content
 //
 
 type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
-  /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
   size?: Size;
+  /** Point at the trigger with an arrow in the popup's surface colour, like Popover's; off by default for menus. */
+  arrow?: boolean;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
 };
 
-/** Portalled menu at `level='popup'`. */
+/**
+ * Ark's content as a composable part, so the ScrollArea viewport slot merges onto it (a plain Ark part gets the dev
+ * warning wrapper, which breaks the frame's child rules); it restates Ark's scope and part, which the slot's replace.
+ */
+const MenuViewport = composable<HTMLDivElement, MenuPrimitive.ContentProps>((props, forwardedRef) => (
+  <MenuPrimitive.Content {...composableProps(props)} data-scope='menu' data-part='content' ref={forwardedRef} />
+));
+
+/**
+ * Portalled menu at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the menu itself; a nested menu's
+ * Content is the same part inside a `Menu.Sub`.
+ */
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
-  ({ classNames, size = 'md', children, ...props }, forwardedRef) => (
-    <Portal>
-      <MenuPrimitive.Positioner>
-        <MenuPrimitive.Content
-          {...props}
-          data-surface='popup'
-          data-size={size}
-          className={mx(recipes.popup(), recipes.menuContent(), classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </MenuPrimitive.Content>
-      </MenuPrimitive.Positioner>
-    </Portal>
-  ),
+  ({ classNames, size, arrow = false, container, children, ...props }, forwardedRef) => {
+    const { sub } = useContext(MenuContext);
+    const menu = useMenuContext();
+    // A Sub's trigger is its item in the parent menu, so it inherits the parent popup's size.
+    const popupSize = usePopupSize(
+      size,
+      menu.open,
+      [menu.getTriggerProps().id, menu.getContextTriggerProps().id],
+      'md',
+    );
+    return (
+      <Portal container={container}>
+        <MenuPrimitive.Positioner>
+          <PopupScroll
+            size={popupSize}
+            classNames={mx(recipes.menuContent(), sub && recipes.submenuContent(), classNames)}
+            outside={
+              arrow && (
+                <MenuPrimitive.Arrow className={recipes.arrow()}>
+                  <MenuPrimitive.ArrowTip className={recipes.arrowTip()} />
+                </MenuPrimitive.Arrow>
+              )
+            }
+          >
+            <MenuViewport {...props} ref={forwardedRef}>
+              {children}
+            </MenuViewport>
+          </PopupScroll>
+        </MenuPrimitive.Positioner>
+      </Portal>
+    );
+  },
 );
 
 MenuContent.displayName = 'Next.Menu.Content';
@@ -82,29 +157,310 @@ MenuContent.displayName = 'Next.Menu.Content';
 // Item
 //
 
-type MenuItemProps = ThemedClassName<MenuPrimitive.ItemProps> & {
+/** What a row shows: its default layout renders the icon, label and shortcut. */
+export type MenuItemData = {
+  label: string;
   /** Leading icon. */
   icon?: string;
   /** Trailing keyboard hint, e.g. `⌘C`; display only. */
   shortcut?: string;
 };
 
-/** A block-tall row: optional leading Icon, the label, and an optional trailing shortcut. */
+export type MenuOption = MenuItemData & {
+  value: string;
+  disabled?: boolean;
+};
+
+// The row an item part belongs to; a TriggerItem is no Ark option, so its text cannot be Ark's ItemText.
+const ItemContext = createContext<{ data: MenuItemData; trigger: boolean } | undefined>(undefined);
+
+const useItem = (part: string) => {
+  const context = useContext(ItemContext);
+  if (!context) {
+    throw new Error(`Next.Menu.${part} must be inside a Next.Menu item`);
+  }
+  return context;
+};
+
+type MenuItemProps = ThemedClassName<Omit<MenuPrimitive.ItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText`, `ItemShortcut` and any trailing control. */
+  children?: ReactNode;
+};
+
+/** A block-tall row: without children, the option's leading icon, its label and its trailing shortcut. */
 const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
-  ({ classNames, icon, shortcut, children, ...props }, forwardedRef) => (
-    <MenuPrimitive.Item {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
-      {icon && <Icon icon={icon} />}
-      <MenuPrimitive.ItemText className={recipes.menuItemText()}>{children}</MenuPrimitive.ItemText>
-      {shortcut && (
-        <kbd aria-hidden className={recipes.menuShortcut()}>
-          {shortcut}
-        </kbd>
-      )}
-    </MenuPrimitive.Item>
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: false }}>
+      <MenuPrimitive.Item
+        {...props}
+        value={item.value}
+        disabled={disabled ?? item.disabled}
+        className={mx(recipes.menuItem(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            {item.icon && <MenuItemIcon />}
+            <MenuItemText />
+            {item.shortcut && <MenuItemShortcut />}
+          </>
+        )}
+      </MenuPrimitive.Item>
+    </ItemContext.Provider>
   ),
 );
 
 MenuItem.displayName = 'Next.Menu.Item';
+
+//
+// ItemIcon
+//
+
+type MenuItemIconProps = Omit<IconProps, 'icon'> & {
+  /** Defaults to the item's `icon`. */
+  icon?: string;
+};
+
+const MenuItemIcon = forwardRef<SVGSVGElement, MenuItemIconProps>(({ icon, ...props }, forwardedRef) => {
+  const { data } = useItem('ItemIcon');
+  const glyph = icon ?? data.icon;
+  return glyph ? <Icon {...props} icon={glyph} ref={forwardedRef} /> : null;
+});
+
+MenuItemIcon.displayName = 'Next.Menu.ItemIcon';
+
+//
+// ItemText
+//
+
+type MenuItemTextProps = ThemedClassName<MenuPrimitive.ItemTextProps>;
+
+/** The row's label, taking the free space and truncating; the item's `label` by default. */
+const MenuItemText = forwardRef<HTMLDivElement, MenuItemTextProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { data, trigger } = useItem('ItemText');
+    const className = mx(recipes.menuItemText(), classNames);
+    return trigger ? (
+      <div {...props} data-scope='menu' data-part='item-text' className={className} ref={forwardedRef}>
+        {children ?? data.label}
+      </div>
+    ) : (
+      <MenuPrimitive.ItemText {...props} className={className} ref={forwardedRef}>
+        {children ?? data.label}
+      </MenuPrimitive.ItemText>
+    );
+  },
+);
+
+MenuItemText.displayName = 'Next.Menu.ItemText';
+
+//
+// ItemShortcut
+//
+
+type MenuItemShortcutProps = ThemedClassName<ComponentPropsWithoutRef<'kbd'>>;
+
+/** A trailing keyboard hint in the description colour, hidden from assistive tech; the item's `shortcut` by default. */
+const MenuItemShortcut = forwardRef<HTMLElement, MenuItemShortcutProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { data } = useItem('ItemShortcut');
+    return (
+      <kbd
+        aria-hidden
+        {...props}
+        data-scope='menu'
+        data-part='item-shortcut'
+        className={mx(recipes.menuShortcut(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? data.shortcut}
+      </kbd>
+    );
+  },
+);
+
+MenuItemShortcut.displayName = 'Next.Menu.ItemShortcut';
+
+//
+// ItemIndicator
+//
+
+type MenuItemIndicatorProps = ThemedClassName<MenuPrimitive.ItemIndicatorProps>;
+
+/**
+ * The leading cell of a checkbox or radio item: icon-sized whether or not the item is checked, so labels align, and
+ * showing a check by default while it is.
+ */
+const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <MenuPrimitive.ItemIndicator
+      aria-hidden
+      // Kept in the layout while unchecked (styled by `data-state`), since preflight's `[hidden]` rule is `!important`.
+      hidden={false}
+      {...props}
+      className={mx(recipes.menuIndicator(), classNames)}
+      ref={forwardedRef}
+    >
+      {children ?? <Icon icon='ph--check--regular' />}
+    </MenuPrimitive.ItemIndicator>
+  ),
+);
+
+MenuItemIndicator.displayName = 'Next.Menu.ItemIndicator';
+
+//
+// CheckboxItem
+//
+
+type MenuCheckboxItemProps = ThemedClassName<Omit<MenuPrimitive.CheckboxItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIndicator`, `ItemText` and `ItemShortcut`. */
+  children?: ReactNode;
+};
+
+/** A `menuitemcheckbox` row: without children, a check cell, the label and the shortcut; selecting it toggles `checked`. */
+const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: false }}>
+      <MenuPrimitive.CheckboxItem
+        {...props}
+        value={item.value}
+        disabled={disabled ?? item.disabled}
+        className={mx(recipes.menuItem(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            <MenuItemIndicator />
+            <MenuItemText />
+            {item.shortcut && <MenuItemShortcut />}
+          </>
+        )}
+      </MenuPrimitive.CheckboxItem>
+    </ItemContext.Provider>
+  ),
+);
+
+MenuCheckboxItem.displayName = 'Next.Menu.CheckboxItem';
+
+//
+// RadioItemGroup
+//
+
+type MenuRadioItemGroupProps = ThemedClassName<MenuPrimitive.RadioItemGroupProps>;
+
+/** A group of radio items holding one `value`; name it with an `ItemGroupLabel` inside. */
+const MenuRadioItemGroup = forwardRef<HTMLDivElement, MenuRadioItemGroupProps>(
+  ({ classNames, ...props }, forwardedRef) => (
+    <MenuPrimitive.RadioItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
+  ),
+);
+
+MenuRadioItemGroup.displayName = 'Next.Menu.RadioItemGroup';
+
+//
+// RadioItem
+//
+
+type MenuRadioItemProps = ThemedClassName<Omit<MenuPrimitive.RadioItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIndicator` and `ItemText`. */
+  children?: ReactNode;
+};
+
+/** A `menuitemradio` row: without children, a dot in the indicator cell while it holds its group's value, and the label. */
+const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: false }}>
+      <MenuPrimitive.RadioItem
+        {...props}
+        value={item.value}
+        disabled={disabled ?? item.disabled}
+        className={mx(recipes.menuItem(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            <MenuItemIndicator>
+              <Icon icon='ph--dot-outline--fill' />
+            </MenuItemIndicator>
+            <MenuItemText />
+          </>
+        )}
+      </MenuPrimitive.RadioItem>
+    </ItemContext.Provider>
+  ),
+);
+
+MenuRadioItem.displayName = 'Next.Menu.RadioItem';
+
+//
+// Sub
+//
+
+type MenuSubProps = MenuRootProps;
+
+/**
+ * A nested menu: a Root inside a parent's Content, opened by its `TriggerItem` and placed beside it. Ark reports a
+ * nested item only to its own menu, so without an `onSelect` of its own a Sub forwards selections to its parent's.
+ */
+const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
+  const parent = useContext(MenuContext);
+  return (
+    <MenuRootBase
+      {...props}
+      sub
+      onSelect={onSelect ?? parent.onSelect}
+      positioning={{ placement: 'right-start', gutter: 0, getAnchorRect: parentEdgeRect, ...positioning }}
+    />
+  );
+};
+
+/**
+ * The trigger item's rect stretched to its menu's end edge, so a submenu opens beside the menu rather than over the
+ * thumb strip an overflowing menu reserves after its items.
+ */
+const parentEdgeRect = (element: unknown) => {
+  // A virtual anchor has no menu to measure, so zag falls back to its own rect.
+  if (!(element instanceof HTMLElement)) {
+    return null;
+  }
+  const item = element.getBoundingClientRect();
+  const frame = element.closest('.nx-popup')?.getBoundingClientRect();
+  return { x: item.x, y: item.y, width: (frame?.right ?? item.right) - item.x, height: item.height };
+};
+
+MenuSub.displayName = 'Next.Menu.Sub';
+
+//
+// TriggerItem
+//
+
+type MenuTriggerItemProps = ThemedClassName<Omit<MenuPrimitive.TriggerItemProps, 'children'>> & {
+  item: MenuItemData;
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText` and a trailing caret. */
+  children?: ReactNode;
+};
+
+/** An item row that opens its `Menu.Sub` (hover, ArrowRight or Enter): without children, icon, label and a caret. */
+const MenuTriggerItem = forwardRef<HTMLDivElement, MenuTriggerItemProps>(
+  ({ classNames, item, children, ...props }, forwardedRef) => (
+    <ItemContext.Provider value={{ data: item, trigger: true }}>
+      <MenuPrimitive.TriggerItem {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
+        {children ?? (
+          <>
+            {item.icon && <MenuItemIcon />}
+            <MenuItemText />
+            <Icon icon='ph--caret-right--regular' />
+          </>
+        )}
+      </MenuPrimitive.TriggerItem>
+    </ItemContext.Provider>
+  ),
+);
+
+MenuTriggerItem.displayName = 'Next.Menu.TriggerItem';
 
 //
 // Separator
@@ -112,8 +468,14 @@ MenuItem.displayName = 'Next.Menu.Item';
 
 type MenuSeparatorProps = ThemedClassName<MenuPrimitive.SeparatorProps>;
 
+/** Ark's separator (`role=separator`) with `Next.Separator`'s horizontal rule. */
 const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ classNames, ...props }, forwardedRef) => (
-  <MenuPrimitive.Separator {...props} className={mx(recipes.menuSeparator(), classNames)} ref={forwardedRef} />
+  <MenuPrimitive.Separator
+    {...props}
+    data-orientation='horizontal'
+    className={mx(recipes.separator(), classNames)}
+    ref={forwardedRef}
+  />
 ));
 
 MenuSeparator.displayName = 'Next.Menu.Separator';
@@ -139,7 +501,7 @@ type MenuItemGroupLabelProps = ThemedClassName<MenuPrimitive.ItemGroupLabelProps
 /** A small caption naming the group that follows. */
 const MenuItemGroupLabel = forwardRef<HTMLDivElement, MenuItemGroupLabelProps>(
   ({ classNames, ...props }, forwardedRef) => (
-    <MenuPrimitive.ItemGroupLabel {...props} className={mx(recipes.menuGroupLabel(), classNames)} ref={forwardedRef} />
+    <MenuPrimitive.ItemGroupLabel {...props} className={mx(recipes.popupGroupLabel(), classNames)} ref={forwardedRef} />
   ),
 );
 
@@ -148,19 +510,39 @@ MenuItemGroupLabel.displayName = 'Next.Menu.ItemGroupLabel';
 export const Menu = {
   Root: MenuRoot,
   Trigger: MenuTrigger,
+  ContextTrigger: MenuContextTrigger,
   Content: MenuContent,
   Item: MenuItem,
+  ItemIcon: MenuItemIcon,
+  ItemText: MenuItemText,
+  ItemShortcut: MenuItemShortcut,
+  ItemIndicator: MenuItemIndicator,
+  CheckboxItem: MenuCheckboxItem,
+  RadioItemGroup: MenuRadioItemGroup,
+  RadioItem: MenuRadioItem,
+  Sub: MenuSub,
+  TriggerItem: MenuTriggerItem,
   Separator: MenuSeparator,
   ItemGroup: MenuItemGroup,
   ItemGroupLabel: MenuItemGroupLabel,
 };
 
 export type {
+  MenuCheckboxItemProps,
   MenuContentProps,
+  MenuContextTriggerProps,
   MenuItemGroupLabelProps,
   MenuItemGroupProps,
+  MenuItemIconProps,
+  MenuItemIndicatorProps,
   MenuItemProps,
+  MenuItemShortcutProps,
+  MenuItemTextProps,
+  MenuRadioItemGroupProps,
+  MenuRadioItemProps,
   MenuRootProps,
   MenuSeparatorProps,
+  MenuSubProps,
+  MenuTriggerItemProps,
   MenuTriggerProps,
 };

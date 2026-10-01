@@ -13,6 +13,7 @@ import React, {
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
 import { type CSSVariables } from '../Container/index.ts';
 import { Icon } from '../Icon/index.ts';
@@ -33,7 +34,10 @@ export type ImageProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, '
     fit?: 'cover' | 'contain';
   };
 
-/** An `<img>` in a fixed-ratio frame that shows the well while loading and a broken-image icon on error. */
+/**
+ * An `<img>` in a fixed-ratio frame that shows the well while loading and a broken-image icon on error. With `onClick`
+ * the frame is a button named by `alt`, operable by Enter and Space.
+ */
 export const Image = forwardRef<HTMLDivElement, ImageProps>(
   (
     {
@@ -51,6 +55,8 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
       fit = 'cover',
       onLoad,
       onError,
+      onClick,
+      onKeyDown,
       ...props
     },
     forwardedRef,
@@ -63,12 +69,13 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
     return (
       <div
         {...props}
+        {...clickableProps(onClick, onKeyDown)}
         data-scope='image'
         data-part='root'
         data-fit={fit}
         data-status={status}
         style={{ ...aspectStyle, ...style }}
-        className={mx(recipes.image(), classNames)}
+        className={mx(recipes.image(), onClick && recipes.imageClickable(), classNames)}
         ref={forwardedRef}
       >
         {status === 'error' ? (

@@ -42,6 +42,11 @@
     grid-column: full;
     grid-template-columns: subgrid;
   }
+  /* Own columns start a fresh template inside the parent's content track (decision 5); no gutters of its own. */
+  .nx-grid[data-gutter='inherit'][data-columns] {
+    grid-column: content;
+    grid-template-columns: [full-start content-start] var(--nx-columns) [content-end full-end];
+  }
 
   .nx-grid > * {
     grid-column: content;
@@ -54,6 +59,20 @@
   }
   .nx-grid > [data-rail='end'] {
     grid-column: content-end / full-end;
+  }
+
+  /* Row gap only: the columns belong to the template (or the parent's, through subgrid). */
+  .nx-grid[data-gap='none'] {
+    row-gap: 0;
+  }
+  .nx-grid[data-gap='sm'] {
+    row-gap: 0.25rem;
+  }
+  .nx-grid[data-gap='md'] {
+    row-gap: 0.5rem;
+  }
+  .nx-grid[data-gap='lg'] {
+    row-gap: 0.75rem;
   }
 
   /* A row is at least one block tall so controls centre in it. */

@@ -5,11 +5,15 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import React, { useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
+import { type Size, SIZES } from '../../sizes.ts';
+import { GEOMETRY, byTestId, centreX, expectTooltip, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { type CardRootProps } from './Card.tsx';
 
 /** Inline SVG, so the story never fetches from the network. */
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
@@ -19,65 +23,166 @@ const POSTER = `data:image/svg+xml,${encodeURIComponent(
   </svg>`,
 )}`;
 
-type StoryArgs = {
-  /** Source of the first card's poster. */
-  poster?: string;
+/** A malformed data URI fails to decode without any network request. */
+const BROKEN = 'data:image/png;base64,AAAA';
+
+type RowsCardProps = {
+  size: Size;
+  /** Places icons and trailing actions in the card's rails; without it they sit inline in each row. */
+  grid?: CardRootProps['grid'];
+  /** Keeps the test ids and accessible names of the inline copy distinct. */
+  prefix?: string;
+  rows: number;
+  onInvite: () => void;
 };
 
-const DefaultStory = ({ poster = POSTER }: StoryArgs) => (
-  <div className='nx-scope @container w-[48rem] border border-separator' data-size='md'>
-    <Next.Container gutter='rail' level='base' data-testid='host'>
-      <div className='grid grid-cols-3 items-start gap-4 py-4'>
-        <Next.Card.Root data-testid='poster-card'>
-          <Next.Card.Poster src={poster} alt='Launch artwork' data-testid='poster' />
-          <Next.Card.Header>
-            <Next.Card.Title>Launch</Next.Card.Title>
-          </Next.Card.Header>
-          <Next.Card.Body>
-            <Next.Card.Description>The first public release, with sharing and sync.</Next.Card.Description>
-          </Next.Card.Body>
-          <Next.Card.Footer>
-            <Next.Button variant='primary'>Open</Next.Button>
-          </Next.Card.Footer>
-        </Next.Card.Root>
+/** A card of sections, rows, a link, a menu and a drag handle, in either placement of its leading and trailing cells. */
+const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) => {
+  const name = prefix ? 'Inline ' : '';
+  return (
+    <Next.Card.Root grid={grid} data-testid={`${prefix}rows-card-${size}`}>
+      <Next.Card.Header>
+        <Next.DragHandle label={`${name}Drag`} data-testid={`${prefix}drag-${size}`} />
+        <Next.Card.Title>{name}Project</Next.Card.Title>
+        <Next.Card.Menu label={`${name}Project actions`}>
+          <Next.Menu.Item item={{ value: 'archive', label: 'Archive' }} />
+        </Next.Card.Menu>
+      </Next.Card.Header>
+      <Next.Card.Section title={`${name}Members`} data-testid={`${prefix}section-${size}`}>
+        <Next.Card.Row
+          icon='ph--user--regular'
+          trailing={<Next.Tag hue='emerald'>Owner</Next.Tag>}
+          data-testid={`${prefix}row-${size}`}
+        >
+          Ada Lovelace
+        </Next.Card.Row>
+        <Next.Card.Row
+          icon='ph--user--regular'
+          trailing={<Next.Card.Action icon='ph--x--regular' label={`${name}Remove`} />}
+          data-testid={`${prefix}long-row-${size}`}
+        >
+          Charles Babbage, Lucasian Professor of Mathematics at Cambridge
+        </Next.Card.Row>
+        <Next.Card.Row icon='ph--plus--regular' onClick={onInvite} data-testid={`${prefix}add-row-${size}`}>
+          {name}Invite ({rows})
+        </Next.Card.Row>
+      </Next.Card.Section>
+      <Next.Card.Section>
+        <Next.Card.Link label={`${name}Project site`} href='https://dxos.org' data-testid={`${prefix}link-${size}`} />
+        <Next.Card.Text variant='description' data-testid={`${prefix}text-${size}`}>
+          Updated today.
+        </Next.Card.Text>
+      </Next.Card.Section>
+    </Next.Card.Root>
+  );
+};
 
-        <Next.Card.Root data-testid='card'>
-          <Next.Card.Header data-testid='header'>
-            <Next.Card.Title>Roadmap</Next.Card.Title>
-            <Next.IconButton icon='ph--dots-three--regular' label='More actions' />
-          </Next.Card.Header>
-          <Next.Card.Body data-testid='body'>
-            <Next.Card.Description>What ships next quarter and why.</Next.Card.Description>
-            <Next.Typography>Three milestones, each with an owner and a date.</Next.Typography>
-          </Next.Card.Body>
-          <Next.Card.Footer data-testid='footer'>
-            <Next.Button>Dismiss</Next.Button>
-            <Next.Button variant='primary'>Review</Next.Button>
-          </Next.Card.Footer>
-        </Next.Card.Root>
+/**
+ * A poster card, a card with a header action and footer, and one with a broken poster; then a card of sections, rows,
+ * a link, a menu and a drag handle, as a `grid` card and beside it as a default (inline) one; a clickable, selected card with
+ * a nested action; and a borderless card.
+ */
+const DefaultStory = ({ size = 'md' }: SizeArgs) => {
+  const [opened, setOpened] = useState(0);
+  const [starred, setStarred] = useState(0);
+  const [rows, setRows] = useState(0);
+  return (
+    <div className='grid grid-cols-3 items-start gap-4 py-4'>
+      <Next.Card.Root data-testid={`poster-card-${size}`}>
+        <Next.Card.Poster src={POSTER} alt='Launch artwork' data-testid={`poster-${size}`} />
+        <Next.Card.Header>
+          <Next.Card.Title>Launch</Next.Card.Title>
+        </Next.Card.Header>
+        <Next.Card.Body>
+          <Next.Card.Description>The first public release, with sharing and sync.</Next.Card.Description>
+        </Next.Card.Body>
+        <Next.Card.Footer>
+          <Next.Button variant='primary'>Open</Next.Button>
+        </Next.Card.Footer>
+      </Next.Card.Root>
 
-        <Next.Card.Root>
-          <Next.Card.Header>
-            <Next.Card.Title>Notes</Next.Card.Title>
-            <Next.Block>
-              <Next.Icon icon='ph--note--regular' />
-            </Next.Block>
-          </Next.Card.Header>
-          <Next.Card.Body>
-            <Next.Typography>A card with no footer.</Next.Typography>
-          </Next.Card.Body>
-        </Next.Card.Root>
-      </div>
-    </Next.Container>
-  </div>
-);
+      <Next.Card.Root data-testid={`card-${size}`}>
+        <Next.Card.Header>
+          <Next.Card.Title>Roadmap</Next.Card.Title>
+          <Next.Button icon='ph--dots-three--regular' label='More actions' iconOnly />
+        </Next.Card.Header>
+        <Next.Card.Body>
+          <Next.Card.Description>What ships next quarter and why.</Next.Card.Description>
+          <Next.Typography>Three milestones, each with an owner and a date.</Next.Typography>
+        </Next.Card.Body>
+        <Next.Card.Footer data-testid={`footer-${size}`}>
+          <Next.Button>Dismiss</Next.Button>
+          <Next.Button variant='primary'>Review</Next.Button>
+        </Next.Card.Footer>
+      </Next.Card.Root>
+
+      <Next.Card.Root>
+        <Next.Card.Poster src={BROKEN} alt='Missing artwork' data-testid={`broken-${size}`} />
+        <Next.Card.Header>
+          <Next.Card.Title>Notes</Next.Card.Title>
+          <Next.Block>
+            <Next.Icon icon='ph--note--regular' />
+          </Next.Block>
+        </Next.Card.Header>
+        <Next.Card.Body>
+          <Next.Typography>A card with a broken poster and no footer.</Next.Typography>
+        </Next.Card.Body>
+      </Next.Card.Root>
+
+      <RowsCard size={size} grid rows={rows} onInvite={() => setRows((count) => count + 1)} />
+      <RowsCard size={size} prefix='inline-' rows={rows} onInvite={() => setRows((count) => count + 1)} />
+
+      <Next.Card.Root selected onClick={() => setOpened((count) => count + 1)} data-testid={`clickable-${size}`}>
+        <Next.Card.Header>
+          <Next.Card.Title>Opened {opened}</Next.Card.Title>
+          <Next.Card.Action
+            icon='ph--star--regular'
+            label='Star'
+            onClick={() => setStarred((count) => count + 1)}
+            data-testid={`star-${size}`}
+          />
+        </Next.Card.Header>
+        <Next.Card.Body>
+          <Next.Card.Text data-testid={`starred-${size}`}>Starred {starred}</Next.Card.Text>
+        </Next.Card.Body>
+      </Next.Card.Root>
+
+      <Next.Card.Root border={false} data-testid={`borderless-${size}`}>
+        <Next.Card.Header>
+          <Next.Card.Title>Borderless</Next.Card.Title>
+        </Next.Card.Header>
+      </Next.Card.Root>
+    </div>
+  );
+};
+
+/**
+ * A rail card's geometry: its inner edges (inside the border and the inline padding), the centres of its block-wide
+ * start and end rails, and its content edge.
+ */
+const rails = (card: HTMLElement, size: Size) => {
+  const rect = card.getBoundingClientRect();
+  const style = getComputedStyle(card);
+  const inner = parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft);
+  const { block } = GEOMETRY[size];
+  return {
+    padding: parseFloat(style.paddingLeft),
+    innerStart: rect.left + inner,
+    innerEnd: rect.right - inner,
+    start: rect.left + inner + block / 2,
+    end: rect.right - inner - block / 2,
+    contentStart: rect.left + inner + block,
+  };
+};
 
 const meta = {
-  title: 'ui/react-ui-core/next/card',
+  title: 'ui/react-ui-core/next/components/Card',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[52rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
-} satisfies Meta<StoryArgs>;
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -85,59 +190,190 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** The card lifts one level above its host, and title, body and footer share the content edge. */
-export const Layout: Story = {
+/**
+ * The card lifts one level above its host, and title, body and footer share the content edge; the poster spans the
+ * card's full width at its aspect ratio, flush with the top edge, and a poster that fails to load keeps its frame and
+ * shows the broken-image icon; a trailing icon-only Button in `Card.Header` shows its label in a Tooltip (left open).
+ * A Section is a `group` named by its caption; Rows are block-tall, their icons in the start rail and trailing actions
+ * and tags ending in the end rail, like the Header's drag handle and menu, with text at the content edge, truncating;
+ * that is a `grid` card, whose rails sit one gap inside the border; a default card creates no grid and keeps icons and
+ * actions inline in the content box;
+ * a Row or Card with `onClick` is a button (Enter and Space), and a nested Action or Menu never activates it. A Link
+ * opens in a new tab; a DragHandle is outside the tab order; `selected` and `border={false}` restyle the frame.
+ */
+export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const host = canvas.getByTestId('host');
-    const card = canvas.getByTestId('card');
+    const row = sizeRow(canvasElement, 'md');
+    const canvas = within(row);
+    const card = canvas.getByTestId('card-md');
     await expect(card).toHaveAttribute('data-scope', 'card');
     await expect(card).toHaveAttribute('data-surface', '+1');
-    await expect(getComputedStyle(card).backgroundColor).not.toBe(getComputedStyle(host).backgroundColor);
+    await expect(getComputedStyle(card).backgroundColor).not.toBe(getComputedStyle(row).backgroundColor);
     await expect(getComputedStyle(card).borderTopStyle).toBe('solid');
 
     const title = canvas.getByRole('heading', { name: 'Roadmap' }).getBoundingClientRect();
     const description = canvas.getByText('What ships next quarter and why.').getBoundingClientRect();
-    const footer = canvas.getByTestId('footer').getBoundingClientRect();
+    const footer = canvas.getByTestId('footer-md').getBoundingClientRect();
     await expect(description.left).toBeCloseTo(title.left, 0);
     await expect(footer.left).toBeCloseTo(title.left, 0);
-    // The trailing action's block-sized cell ends where the footer's last action does.
+    // A default card is no grid: the header's trailing action ends where the footer's last action does.
+    await expect(getComputedStyle(card).display).not.toBe('grid');
+    await expect(card).not.toHaveAttribute('data-gutter');
     const more = canvas.getByRole('button', { name: 'More actions' }).getBoundingClientRect();
     const review = canvas.getByRole('button', { name: 'Review' }).getBoundingClientRect();
-    await expect(more.right + 2).toBeCloseTo(review.right, 0);
-    // The content edge is inset from the card's own edge by the gutter.
+    await expect(more.right + GEOMETRY.md.inset).toBeCloseTo(review.right, 0);
+    // The content edge is inset from the card's own edge by its padding.
     await expect(title.left - card.getBoundingClientRect().left).toBeGreaterThan(8);
-  },
-};
 
-/** The poster spans the card's full width at its aspect ratio, flush with the top edge. */
-export const Poster: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const card = canvas.getByTestId('poster-card');
-    const poster = canvas.getByTestId('poster');
+    const posterCard = canvas.getByTestId('poster-card-md');
+    const poster = canvas.getByTestId('poster-md');
     await waitFor(() => expect(poster).toHaveAttribute('data-status', 'loaded'));
-    const cardBox = card.getBoundingClientRect();
+    const cardBox = posterCard.getBoundingClientRect();
     const posterBox = poster.getBoundingClientRect();
-    const border = parseFloat(getComputedStyle(card).borderLeftWidth);
+    const border = parseFloat(getComputedStyle(posterCard).borderLeftWidth);
     await expect(posterBox.width).toBeCloseTo(cardBox.width - 2 * border, 0);
     await expect(posterBox.top).toBeCloseTo(cardBox.top + border, 0);
     await expect(posterBox.width / posterBox.height).toBeCloseTo(16 / 9, 1);
     await expect(parseFloat(getComputedStyle(poster).borderTopLeftRadius)).toBeGreaterThan(0);
-    const title = canvas.getByRole('heading', { name: 'Launch' }).getBoundingClientRect();
-    await expect(title.top).toBeGreaterThanOrEqual(posterBox.bottom - 0.5);
-  },
-};
+    const launch = canvas.getByRole('heading', { name: 'Launch' }).getBoundingClientRect();
+    await expect(launch.top).toBeGreaterThanOrEqual(posterBox.bottom - 0.5);
 
-/** A poster that fails to load keeps its frame and shows the broken-image icon. */
-export const BrokenPoster: Story = {
-  args: { poster: 'data:image/png;base64,AAAA' },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const poster = canvas.getByTestId('poster');
-    await waitFor(() => expect(poster).toHaveAttribute('data-status', 'error'));
-    await expect(within(poster).getByRole('img', { name: 'Launch artwork' }).tagName.toLowerCase()).toBe('svg');
-    const box = poster.getBoundingClientRect();
-    await expect(box.width / box.height).toBeCloseTo(16 / 9, 1);
+    const broken = canvas.getByTestId('broken-md');
+    await waitFor(() => expect(broken).toHaveAttribute('data-status', 'error'));
+    await expect(within(broken).getByRole('img', { name: 'Missing artwork' }).tagName.toLowerCase()).toBe('svg');
+    const brokenBox = broken.getBoundingClientRect();
+    await expect(brokenBox.width / brokenBox.height).toBeCloseTo(16 / 9, 1);
+
+    // Sections and rows.
+    await expect(canvas.getByRole('group', { name: 'Members' })).toBe(canvas.getByTestId('section-md'));
+    const rowBox = canvas.getByTestId('row-md').getBoundingClientRect();
+    await expect(rowBox.height).toBeCloseTo(GEOMETRY.md.block, 0);
+    const rowText = (testId: string) =>
+      canvas.getByTestId(testId).querySelector<HTMLElement>('[data-part="row-content"]');
+    await expect(rowText('row-md')?.getBoundingClientRect().left).toBeCloseTo(
+      rowText('long-row-md')?.getBoundingClientRect().left ?? 0,
+      0,
+    );
+    const long = rowText('long-row-md');
+    await expect(long && long.scrollWidth > long.clientWidth).toBe(true);
+    const tag = canvas.getByTestId('row-md').querySelector('[data-scope="tag"]')?.getBoundingClientRect();
+    await expect(tag?.right ?? 0).toBeLessThanOrEqual(rowBox.right + 0.5);
+    const caption = canvas.getByTestId('section-md').querySelector('[data-part="section-title"]');
+    await expect(rowText('row-md')?.getBoundingClientRect().left).toBeCloseTo(
+      caption?.getBoundingClientRect().left ?? 0,
+      0,
+    );
+    const addRow = canvas.getByRole('button', { name: /^Invite/ });
+    await expect(addRow).toBe(canvas.getByTestId('add-row-md'));
+    addRow.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(addRow).toHaveTextContent('Invite (1)'));
+    await expect(canvas.getByTestId('text-md')).toHaveAttribute('data-tone', 'description');
+
+    // Link, drag handle, menu.
+    const link = canvas.getByTestId('link-md');
+    await expect(link).toHaveAttribute('href', 'https://dxos.org');
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(canvas.getByTestId('drag-md').tabIndex).toBe(-1);
+    await userEvent.click(canvas.getByRole('button', { name: 'Project actions' }));
+    const body = within(canvasElement.ownerDocument.body);
+    const menu = await body.findByRole('menu');
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'Archive' }));
+    await waitFor(() => expect(body.queryByRole('menu')).toBeNull());
+
+    // A clickable card: Space activates it, its Action does not.
+    const clickable = canvas.getByTestId('clickable-md');
+    await expect(clickable).toHaveAttribute('role', 'button');
+    await expect(clickable).toHaveAttribute('aria-current', 'true');
+    await expect(getComputedStyle(clickable).borderTopColor).not.toBe(getComputedStyle(card).borderTopColor);
+    clickable.focus();
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(clickable).toHaveTextContent('Opened 1'));
+    await userEvent.click(canvas.getByTestId('star-md'));
+    await waitFor(() => expect(canvas.getByTestId('starred-md')).toHaveTextContent('Starred 1'));
+    await expect(clickable).toHaveTextContent('Opened 1');
+    await userEvent.click(clickable);
+    await waitFor(() => expect(clickable).toHaveTextContent('Opened 2'));
+    await expect(getComputedStyle(canvas.getByTestId('borderless-md')).borderTopColor).toBe('rgba(0, 0, 0, 0)');
+
+    // Grid: leading and trailing cells sit in the card's rails at every size, the rails one gap inside the
+    // border; text starts at the content edge.
+    for (const size of SIZES) {
+      const rowsCard = byTestId(canvasElement, `rows-card-${size}`);
+      await expect(rowsCard).toHaveAttribute('data-gutter', 'rail');
+      await expect(getComputedStyle(rowsCard).display).toBe('grid');
+      const { padding, innerStart, innerEnd, start, end, contentStart } = rails(rowsCard, size);
+      const border = rowsCard.getBoundingClientRect();
+      const at = (testId: string, selector: string) =>
+        byTestId(rowsCard, testId).querySelector<HTMLElement>(selector)?.getBoundingClientRect() ?? new DOMRect();
+      await expect(padding, `${size} card padding`).toBeGreaterThanOrEqual(4);
+      await expect(
+        at('row-' + size, '[data-rail="start"] svg').left - border.left,
+        `${size} icon inset`,
+      ).toBeGreaterThan(padding);
+      await expect(innerStart).toBeLessThan(start);
+      await expect(innerEnd).toBeGreaterThan(end);
+      await expect(centreX(at('row-' + size, '[data-rail="start"] svg')), `${size} row icon`).toBeCloseTo(start, 0);
+      await expect(centreX(at('link-' + size, '[data-rail="start"] svg')), `${size} link icon`).toBeCloseTo(start, 0);
+      await expect(centreX(byTestId(rowsCard, `drag-${size}`).getBoundingClientRect()), `${size} drag`).toBeCloseTo(
+        start,
+        0,
+      );
+      const menu = within(rowsCard).getByRole('button', { name: 'Project actions' }).getBoundingClientRect();
+      await expect(centreX(menu), `${size} menu`).toBeCloseTo(end, 0);
+      const remove = within(rowsCard).getByRole('button', { name: 'Remove' }).getBoundingClientRect();
+      await expect(centreX(remove), `${size} remove`).toBeCloseTo(end, 0);
+      const tag = at('row-' + size, '[data-scope="tag"]');
+      await expect(tag.right, `${size} tag end`).toBeCloseTo(remove.right, 0);
+      const title = within(rowsCard).getByRole('heading', { name: 'Project' }).getBoundingClientRect();
+      await expect(title.left, `${size} title`).toBeCloseTo(contentStart, 0);
+      await expect(at('row-' + size, '[data-part="row-content"]').left, `${size} row text`).toBeCloseTo(
+        contentStart,
+        0,
+      );
+      const caption = at('section-' + size, '[data-part="section-title"]');
+      await expect(caption.left, `${size} caption`).toBeCloseTo(contentStart, 0);
+      await expect(border.right - remove.right, `${size} action inset`).toBeGreaterThan(padding);
+    }
+
+    // Default (no grid): no grid on the root or its rows; the drag handle, icons and trailing actions stay inside the
+    // content box, which the caption and icon cells start at, and icon rows' text aligns.
+    for (const size of SIZES) {
+      const inline = byTestId(canvasElement, `inline-rows-card-${size}`);
+      await expect(inline).not.toHaveAttribute('data-gutter');
+      await expect(getComputedStyle(inline).display, `${size} root`).not.toBe('grid');
+      for (const part of inline.querySelectorAll<HTMLElement>(
+        '[data-part="row"], [data-part="link"], [data-part="section"]',
+      )) {
+        await expect(getComputedStyle(part).display, `${size} ${part.dataset.part}`).not.toBe('grid');
+      }
+      const rect = inline.getBoundingClientRect();
+      const at = (testId: string, selector: string) =>
+        byTestId(inline, testId).querySelector<HTMLElement>(selector)?.getBoundingClientRect() ?? new DOMRect();
+      const contentStart = at(`inline-section-${size}`, '[data-part="section-title"]').left;
+      const contentEnd = rect.right - (contentStart - rect.left);
+      await expect(contentStart - rect.left, `${size} inline gutter`).toBeGreaterThan(8);
+      // The drag handle leads the title inside the content column.
+      const drag = byTestId(inline, `inline-drag-${size}`).getBoundingClientRect();
+      const title = within(inline).getByRole('heading', { name: 'Inline Project' }).getBoundingClientRect();
+      await expect(drag.left, `${size} inline drag`).toBeGreaterThanOrEqual(contentStart - 0.5);
+      await expect(title.left).toBeGreaterThanOrEqual(drag.right);
+      const icon = at(`inline-row-${size}`, '[data-rail="start"]');
+      await expect(icon.left, `${size} inline icon`).toBeCloseTo(contentStart, 0);
+      const text = at(`inline-row-${size}`, '[data-part="row-content"]');
+      await expect(text.left, `${size} inline text`).toBeCloseTo(icon.right, 0);
+      await expect(text.left).toBeCloseTo(at(`inline-long-row-${size}`, '[data-part="row-content"]').left, 0);
+      const remove = within(inline).getByRole('button', { name: 'Inline Remove' }).getBoundingClientRect();
+      await expect(remove.right, `${size} inline action`).toBeLessThanOrEqual(contentEnd + 0.5);
+      await expect(remove.left).toBeGreaterThan(contentStart);
+      await expect(at(`inline-row-${size}`, '[data-scope="tag"]').right).toBeLessThanOrEqual(contentEnd + 0.5);
+      const menu = within(inline).getByRole('button', { name: 'Inline Project actions' }).getBoundingClientRect();
+      await expect(menu.right, `${size} inline menu`).toBeLessThanOrEqual(contentEnd + 0.5);
+    }
+
+    const moreButton = canvas.getByRole('button', { name: 'More actions' });
+    await userEvent.hover(moreButton);
+    await expectTooltip(moreButton, 'More actions');
   },
 };

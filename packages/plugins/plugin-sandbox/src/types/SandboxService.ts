@@ -10,6 +10,7 @@ import type * as Effect from 'effect/Effect';
 import { BaseError } from '@dxos/errors';
 
 import type {
+  AttachedRepository,
   ExecRequest,
   ExecResult,
   ExposedPort,
@@ -24,7 +25,12 @@ import type {
  */
 export class SandboxError extends BaseError.extend('SandboxError', 'Sandbox request failed.') {}
 
-export type CreateOptions = { name?: string; baseImage?: string; expiresIn?: number };
+export type CreateOptions = {
+  name?: string;
+  baseImage?: string;
+  expiresIn?: number;
+  repositories?: readonly AttachedRepository[];
+};
 
 /**
  * Runs sandboxes: EDGE's container service, or processes on this machine confined by the OS
@@ -48,6 +54,20 @@ export interface Backend {
     port: number,
     options?: ExposePortOptions,
   ): Effect.Effect<ExposedPort, SandboxError>;
+  /**
+   * Replaces the repositories attached to the sandbox: each is a git remote, named as given, in every
+   * later command. Only EDGE sandboxes can reach a repository; absent on every other backend.
+   */
+  setRepositories?(
+    spaceId: string,
+    sandboxId: string,
+    repositories: readonly AttachedRepository[],
+  ): Effect.Effect<SandboxRecord, SandboxError>;
+  /**
+   * Serves a directory of the sandbox read-only over HTTP on this machine and answers its base URL,
+   * ending in `/`. Only the desktop app's helper can; absent on every other backend.
+   */
+  publish?(spaceId: string, sandboxId: string, path: string): Effect.Effect<string, SandboxError>;
 }
 
 /** The sandbox backend, contributed to the process runtime by the plugin's layer spec. */

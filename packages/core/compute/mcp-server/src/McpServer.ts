@@ -35,11 +35,13 @@ import * as wireInternal from './internal/wire.ts';
 //
 // Host contract.
 //
-// The registry needs no wrapper: the surface reads operations and skills straight off echo's
-// `Registry.Service` with the standard query API. What remains host-specific is how a chosen
-// operation actually runs and which spaces the session may address — the `Host` service, and
-// nothing else. The CLI supplies its in-process invoke; EDGE supplies its service binding and the
-// grant's spaces, hydrating a registry from its RPC records (see {@link hydrateRegistry}).
+// The surface reads operations and skills off an echo registry with the standard query API, but
+// when that registry loads is the host's call: the tools resolve it per call through
+// `RegistrySource`, and prompts come from whatever registry the host hands `registerPrompts`, at
+// layer build or on a running server. The rest is how a chosen operation actually runs and which
+// spaces the session may address — the `Host` service. The CLI supplies its live registry and
+// in-process invoke (`layer`); EDGE supplies its service binding and the grant's spaces, hydrating
+// registries from its RPC records (see {@link hydrateRegistry}) only as far as each request needs.
 //
 
 /** Failure of the host's invoke seam — an outage or handler fault, not an authorship error. */
@@ -58,8 +60,33 @@ export type InvokeRequest = {
   readonly spaceId?: string;
 };
 
+/**
+ * Where a session's loaded skills are recorded, which is what {@link invoke} checks an operation's
+ * owners against. Host-supplied because a host whose requests land on different processes (EDGE's
+ * isolates) needs storage they share; a failure to read or write is the host's to absorb.
+ */
+export type SkillLedger = {
+  /** Prompt names of the skills loaded so far. */
+  readonly loaded: Effect.Effect<ReadonlySet<string>>;
+  readonly record: (name: string) => Effect.Effect<void>;
+};
+
+/** A ledger in this process's memory — right for a host that serves one session per process (stdio). */
+export const memorySkillLedger = (): SkillLedger => {
+  const loaded = new Set<string>();
+  return {
+    loaded: Effect.sync(() => loaded),
+    record: (name) =>
+      Effect.sync(() => {
+        loaded.add(name);
+      }),
+  };
+};
+
 export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
+  /** Omitted, the surface keeps one {@link memorySkillLedger} for as long as it is built. */
+  readonly skillLedger?: SkillLedger;
   /**
    * Spaces this session may address. No member is a default: a call that names none is refused.
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
@@ -101,7 +128,8 @@ export const LoadSkill = Tool.make('loadSkill', {
     'Loads a skill: the instructions for a multi-tool workflow hosted on this server. Call this ' +
     'before first invoking any operation whose queryOperations row names a skill, and follow the ' +
     'returned instructions — they define required setup, argument conventions, and ordering that ' +
-    'operation descriptions alone do not carry. Omit the skill argument to list every skill this ' +
+    'operation descriptions alone do not carry; invokeOperation refuses such an operation until one ' +
+    'of its skills has been loaded in this session. Omit the skill argument to list every skill this ' +
     'server offers. The same skills are exposed to users as prompts; loading one here brings the ' +
     'identical text into context without user action. No side effects.',
   parameters: Schema.Struct({
@@ -175,7 +203,8 @@ export const QueryOperations = Tool.make('queryOperations', {
         name: Schema.optional(Schema.String),
         description: Schema.optional(Schema.String),
         skills: Schema.Array(Schema.String).annotate({
-          description: 'Skills this operation belongs to; load one with loadSkill before invoking.',
+          description:
+            'Skills this operation belongs to; invokeOperation refuses it until one is loaded with loadSkill.',
         }),
         requiresSpace: Schema.Boolean.annotate({
           description: 'Whether the operation acts on a space, making invokeOperation spaceId load-bearing.',
@@ -218,7 +247,8 @@ export const InvokeOperation = Tool.make('invokeOperation', {
   description:
     'Invokes an operation by key — how every read and write on this server is performed. Find the ' +
     'key with queryOperations and fetch its input schema (queryOperations with keys) before the ' +
-    "first call; input must match that schema. Check the operation's mutation class in its row " +
+    'first call; input must match that schema. An operation whose row names skills is refused until ' +
+    "one of them has been loaded with loadSkill in this session. Check the operation's mutation class in its row " +
     'before invoking: this tool is as destructive as whatever it is asked to run. References ' +
     'between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes — pass them back ' +
     'exactly as received.',
@@ -290,6 +320,21 @@ export const loadSkillByName = (
         }
         return Effect.succeed<SkillListing>({ skills: [summarize(match)], instructions: match.instructions });
       }),
+    ),
+  );
+
+/**
+ * Answers one `loadSkill` call, recording a loaded skill in the ledger so its operations unlock. A
+ * listing records nothing, since it carries no instructions.
+ */
+export const loadSkill = (
+  registry: Registry.Registry,
+  ledger: SkillLedger,
+  skill: string | undefined,
+): Effect.Effect<SkillListing, ToolFailure> =>
+  loadSkillByName(registry, skill).pipe(
+    Effect.tap(({ skills, instructions }) =>
+      instructions === undefined || skills.length === 0 ? Effect.void : ledger.record(skills[0].name),
     ),
   );
 
@@ -410,7 +455,8 @@ const dispatch = (
   });
 
 /**
- * Dispatches one `invokeOperation` call: validate the input, resolve the space, invoke, qualify refs.
+ * Dispatches one `invokeOperation` call: check a skill governing it was loaded, validate the input,
+ * resolve the space, invoke, qualify refs.
  *
  * The input arrives as raw JSON rather than through a per-operation tool schema, so validating it
  * here is what turns a malformed call into an error naming the offending field instead of a
@@ -422,6 +468,7 @@ export const invoke = (
   registry: Registry.Registry,
   host: HostShape,
   { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
+  loadedSkills: ReadonlySet<string>,
 ): Effect.Effect<Record<string, unknown>, ToolFailure> =>
   catchCollision(
     Effect.gen(function* () {
@@ -433,12 +480,8 @@ export const invoke = (
       const governedName = record != null ? viewInternal.toolNameOf(record) : undefined;
       // Skills are the unit of governance: an operation in the registry but named by no opted-in
       // skill is exactly as uninvocable as one that does not exist.
-      if (
-        record == null ||
-        operationKey == null ||
-        governedName == null ||
-        !viewInternal.ownersOf(skills).has(governedName)
-      ) {
+      const owners = governedName != null ? viewInternal.ownersOf(skills).get(governedName) : undefined;
+      if (record == null || operationKey == null || owners == null) {
         return yield* Effect.fail(
           failure(
             'invalid_request',
@@ -447,9 +490,30 @@ export const invoke = (
         );
       }
 
+      // Refused before any input is examined: the skill is what says how the input should be built.
+      if (!owners.some((name) => loadedSkills.has(name))) {
+        const options = owners.map((name) => `'${name}'`).join(' or ');
+        return yield* Effect.fail(
+          failure(
+            'skill_not_loaded',
+            `${operationKey} belongs to the ${options} skill, which this session has not loaded. ` +
+              `Call loadSkill with skill: '${owners[0]}', follow the instructions it returns, then retry this call.`,
+          ),
+        );
+      }
+
       return yield* dispatch(host, record, operationKey, { input, spaceId });
     }),
   );
+
+/** Answers one `invokeOperation` call against the skills the ledger has recorded. */
+export const invokeWithLedger = (
+  registry: Registry.Registry,
+  host: HostShape,
+  ledger: SkillLedger,
+  request: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
+): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+  ledger.loaded.pipe(Effect.flatMap((loaded) => invoke(registry, host, request, loaded)));
 
 /**
  * Runs an operation on behalf of a host's own tool, without the skill check {@link invoke} applies.
@@ -575,51 +639,35 @@ export type LayerOptions = {
   readonly reservedPromptNames?: readonly string[];
 };
 
-/** The fixed tool surface, reading the registry and dispatching through the host per call. */
-const surfaceLayer: Layer.Layer<never, never, Registry.Service | Host> = McpServer$.toolkit(ServerToolkit).pipe(
-  Layer.provide(
-    ServerToolkit.toLayer(
-      Effect.gen(function* () {
-        const registry = yield* Registry.Service;
-        const host = yield* Host;
-        return ServerToolkit.of({
-          queryOperations: (query) => queryOperations(registry, query),
-          invokeOperation: (request) => invoke(registry, host, request),
-          loadSkill: ({ skill }) => loadSkillByName(registry, skill),
-        });
-      }),
-    ),
-  ),
+export type RegistrySourceShape = {
+  /**
+   * The registry one tool call reads. Resolved per call rather than at layer build, so the host
+   * decides when operations load and how long they are kept — a host whose registry sits behind an
+   * RPC (EDGE) must not pay for it on requests that list tools and never call one.
+   */
+  readonly registry: Effect.Effect<Registry.Registry, ToolFailure>;
+};
+
+/** Where the tool handlers get the registry; see {@link RegistrySourceShape}. */
+export class RegistrySource extends Context.Service<RegistrySource, RegistrySourceShape>()(
+  '@dxos/mcp-server/RegistrySource',
+) {}
+
+/** A {@link RegistrySource} over echo's {@link Registry.Service}, for a host holding a live registry. */
+export const registrySourceLayer: Layer.Layer<RegistrySource, never, Registry.Service> = Layer.effect(
+  RegistrySource,
+  Effect.map(Registry.Service, (registry) => RegistrySource.of({ registry: Effect.succeed(registry) })),
 );
 
 /**
- * Builds the prompt layers for opted-in skills. Prompts are captured at layer build — effect's
- * `McpServer` has no tool/prompt removal, so the prompt list cannot follow the registry live the
- * way the tool handlers do.
+ * The fixed tool surface — `queryOperations` / `invokeOperation` / `loadSkill` — reading the
+ * registry from {@link RegistrySource} and dispatching through {@link Host} per call. Building it
+ * touches neither, so `tools/list` is served without the registry.
  */
-export const promptsLayer = (skills: readonly viewInternal.McpSkill[]): Layer.Layer<never> =>
-  Layer.mergeAll(
-    Layer.empty,
-    ...skills.map((candidate) =>
-      McpServer$.prompt({
-        name: candidate.promptName,
-        description: candidate.description,
-        parameters: {},
-        content: () => Effect.succeed(candidate.instructions),
-      }),
-    ),
-  );
-
-/**
- * The whole projected surface — `queryOperations` / `invokeOperation` / `loadSkill` over the
- * operations opted-in skills name, plus those skills as prompts. Hosts provide echo's
- * {@link Registry.Service} (holding `PersistentOperation` and `Skill` entities) and {@link Host},
- * merge their own static toolkits alongside, and declare those names as reserved.
- */
-export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: LayerOptions = {}): Layer.Layer<
+export const toolsLayer = ({ reservedToolNames = [] }: Pick<LayerOptions, 'reservedToolNames'> = {}): Layer.Layer<
   never,
   never,
-  Registry.Service | Host
+  RegistrySource | Host
 > =>
   Effect.gen(function* () {
     const claimed = reservedToolNames.filter((name) => (TOOL_NAMES as readonly string[]).includes(name));
@@ -628,11 +676,78 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
       // leaving the server advertising one tool and dispatching the other.
       throw new Error(`MCP tool name collision: the host reserves names this server defines: ${claimed.join(', ')}.`);
     }
-    const registry = yield* Registry.Service;
-    // A collision throws as a defect here, at layer build — an authorship error, surfaced loudly.
-    const skills = yield* viewInternal.mcpSkills(registry, reservedPromptNames);
-    return Layer.mergeAll(surfaceLayer, promptsLayer(skills));
+    return McpServer$.toolkit(ServerToolkit).pipe(
+      Layer.provide(
+        ServerToolkit.toLayer(
+          Effect.gen(function* () {
+            const source = yield* RegistrySource;
+            const host = yield* Host;
+            const ledger = host.skillLedger ?? memorySkillLedger();
+            return ServerToolkit.of({
+              queryOperations: (query) =>
+                Effect.flatMap(source.registry, (registry) => queryOperations(registry, query)),
+              invokeOperation: (request) =>
+                Effect.flatMap(source.registry, (registry) => invokeWithLedger(registry, host, ledger, request)),
+              loadSkill: ({ skill }) =>
+                Effect.flatMap(source.registry, (registry) => loadSkill(registry, ledger, skill)),
+            });
+          }),
+        ),
+      ),
+    );
   }).pipe(Layer.unwrap);
+
+/**
+ * Registers the opted-in skills of `registry` as prompts on an already-running server. Needs skills
+ * only, never operations. Effect's `McpServer` can add prompts at runtime (and tells subscribers the
+ * list changed) but cannot remove them, so a skill dropped from the registry stays until the server
+ * is rebuilt. A prompt-name collision dies here, as the authorship error it is.
+ */
+export const registerPrompts = (
+  registry: Registry.Registry,
+  { reservedPromptNames = [] }: Pick<LayerOptions, 'reservedPromptNames'> = {},
+): Effect.Effect<void, never, McpServer$.McpServer> =>
+  viewInternal.mcpSkills(registry, reservedPromptNames).pipe(
+    Effect.flatMap((skills) =>
+      Effect.forEach(
+        skills,
+        (candidate) =>
+          McpServer$.registerPrompt({
+            name: candidate.promptName,
+            description: candidate.description,
+            parameters: {},
+            content: () => Effect.succeed(candidate.instructions),
+          }),
+        { discard: true },
+      ),
+    ),
+  );
+
+/**
+ * {@link registerPrompts} at layer build, for a host that has its skills before it serves anything.
+ * A host that fetches skills should keep them off the handshake and call {@link registerPrompts}
+ * when a prompt request first arrives instead.
+ */
+export const promptsLayer = (
+  registry: Registry.Registry,
+  options: Pick<LayerOptions, 'reservedPromptNames'> = {},
+): Layer.Layer<never> =>
+  Layer.effectDiscard(registerPrompts(registry, options)).pipe(Layer.provide(McpServer$.McpServer.layer));
+
+/**
+ * The whole projected surface built eagerly over a live {@link Registry.Service} — {@link toolsLayer}
+ * plus {@link promptsLayer} — for a host that holds its registry in process (the CLI, tests). A host
+ * that has to fetch its registry composes the two itself, choosing when each part loads.
+ */
+export const layer = ({ reservedToolNames, reservedPromptNames }: LayerOptions = {}): Layer.Layer<
+  never,
+  never,
+  Registry.Service | Host
+> =>
+  Layer.mergeAll(
+    toolsLayer({ reservedToolNames }).pipe(Layer.provide(registrySourceLayer)),
+    Effect.map(Registry.Service, (registry) => promptsLayer(registry, { reservedPromptNames })).pipe(Layer.unwrap),
+  );
 
 //
 // Transports.

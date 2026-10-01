@@ -14,11 +14,19 @@ import type * as HttpClientResponse from 'effect/unstable/http/HttpClientRespons
 
 import { EXEC_STREAM_CONTENT_TYPE, foldExecStream } from './exec-stream.ts';
 
+/** A repository attached to a sandbox, and the git remote name commands in it address it by. */
+export const AttachedRepository = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+});
+export type AttachedRepository = Schema.Schema.Type<typeof AttachedRepository>;
+
 export const SandboxRecord = Schema.Struct({
   id: Schema.String,
   spaceId: Schema.String,
   name: Schema.optional(Schema.String),
   baseImage: Schema.String,
+  repositories: Schema.optional(Schema.Array(AttachedRepository)),
   createdAt: Schema.String,
   expiresAt: Schema.String,
 });
@@ -102,7 +110,7 @@ export type SandboxRequestError =
   | Schema.SchemaError
   | Cause.TimeoutError;
 
-type RequestEffect<T> = Effect.Effect<T, SandboxRequestError, HttpClient.HttpClient>;
+export type RequestEffect<T> = Effect.Effect<T, SandboxRequestError, HttpClient.HttpClient>;
 
 /**
  * Supplies the `Authorization` header for a request, normally `EdgeHttpClient.getAuthHeader`.
@@ -140,22 +148,43 @@ export class SandboxClient {
   createSandbox(
     spaceId: string,
     sandboxId: string,
-    options?: { name?: string; baseImage?: string; expiresIn?: number },
+    options?: { name?: string; baseImage?: string; expiresIn?: number; repositories?: readonly AttachedRepository[] },
   ): RequestEffect<SandboxRecord> {
-    return this.#send(
+    return send(
       HttpClientRequest.put(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}`)),
       options ?? {},
       Schema.Struct({ sandbox: SandboxRecord }),
       CREATE_TIMEOUT,
+      this._authHeader,
     ).pipe(Effect.map((body) => body.sandbox));
   }
 
+  /**
+   * Replaces the repositories attached to a sandbox. Configuration of the sandbox, like its image:
+   * every later command in it gets each repository as a git remote named after it.
+   */
+  setRepositories(
+    spaceId: string,
+    sandboxId: string,
+    repositories: readonly AttachedRepository[],
+  ): RequestEffect<SandboxRecord> {
+    return send(
+      HttpClientRequest.put(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/repositories`)),
+      { repositories },
+      Schema.Struct({ success: Schema.Literal(true), data: SandboxRecord }),
+      METADATA_TIMEOUT,
+      this._authHeader,
+      { checkStatus: true },
+    ).pipe(Effect.map((body) => body.data));
+  }
+
   getSandbox(spaceId: string, sandboxId: string): RequestEffect<SandboxRecord> {
-    return this.#send(
+    return send(
       HttpClientRequest.get(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}`)),
       undefined,
       Schema.Struct({ sandbox: SandboxRecord }),
       METADATA_TIMEOUT,
+      this._authHeader,
     ).pipe(Effect.map((body) => body.sandbox));
   }
 
@@ -171,12 +200,13 @@ export class SandboxClient {
     const timeout = options.timeout ? Duration.millis(options.timeout + 30_000) : DEFAULT_TIMEOUT;
     const request = HttpClientRequest.post(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/exec`));
     if (options.background) {
-      return this.#send(request, options, ExecResult, timeout);
+      return send(request, options, ExecResult, timeout, this._authHeader);
     }
-    return this.#execute(
+    return execute(
       HttpClientRequest.setHeader(request, 'Accept', EXEC_STREAM_CONTENT_TYPE),
       options,
       timeout,
+      this._authHeader,
       (response) =>
         (response.headers['content-type'] ?? '').includes(EXEC_STREAM_CONTENT_TYPE)
           ? Effect.map(response.text, foldExecStream)
@@ -194,13 +224,14 @@ export class SandboxClient {
     path: string,
     options?: { encoding?: FileEncoding },
   ): RequestEffect<ReadFileResult> {
-    return this.#send(
+    return send(
       HttpClientRequest.get(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/files`)).pipe(
         HttpClientRequest.setUrlParams({ path, ...(options?.encoding ? { encoding: options.encoding } : {}) }),
       ),
       undefined,
       ReadFileResult,
       METADATA_TIMEOUT,
+      this._authHeader,
     );
   }
 
@@ -223,24 +254,26 @@ export class SandboxClient {
   }
 
   writeFile(spaceId: string, sandboxId: string, path: string, content: string): RequestEffect<void> {
-    return this.#send(
+    return send(
       HttpClientRequest.put(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/files`)).pipe(
         HttpClientRequest.setUrlParams({ path }),
       ),
       { content },
       Schema.Struct({ success: Schema.Boolean }),
       METADATA_TIMEOUT,
+      this._authHeader,
     ).pipe(Effect.asVoid);
   }
 
   listFiles(spaceId: string, sandboxId: string, path: string): RequestEffect<readonly FileEntry[]> {
-    return this.#send(
+    return send(
       HttpClientRequest.get(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/files/list`)).pipe(
         HttpClientRequest.setUrlParams({ path }),
       ),
       undefined,
       Schema.Struct({ entries: Schema.Array(FileEntry) }),
       METADATA_TIMEOUT,
+      this._authHeader,
     ).pipe(Effect.map((body) => body.entries));
   }
 
@@ -254,47 +287,58 @@ export class SandboxClient {
     port: number,
     options?: ExposePortOptions,
   ): RequestEffect<ExposedPort> {
-    return this.#send(
+    return send(
       HttpClientRequest.post(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/ports`)),
       { port, ...options },
       ExposedPort,
       METADATA_TIMEOUT,
+      this._authHeader,
     );
-  }
-
-  /**
-   * Executes one request whose JSON answer is decoded against `schema`.
-   */
-  #send<T>(
-    request: HttpClientRequest.HttpClientRequest,
-    body: unknown,
-    schema: Schema.Codec<T>,
-    timeout: Duration.Duration,
-  ): RequestEffect<T> {
-    return this.#execute(request, body, timeout, (response) =>
-      Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema)),
-    );
-  }
-
-  /**
-   * Executes one request: JSON body when there is one, answer read by `read`, bounded by `timeout`,
-   * and scoped so the response body is released even when the effect fails or is interrupted.
-   * Deliberately no retry — `exec` is not idempotent, and re-running a command that may already have
-   * taken effect is worse than reporting the failure.
-   */
-  #execute<T>(
-    request: HttpClientRequest.HttpClientRequest,
-    body: unknown,
-    timeout: Duration.Duration,
-    read: (response: HttpClientResponse.HttpClientResponse) => Effect.Effect<T, SandboxRequestError>,
-  ): RequestEffect<T> {
-    const authHeader = this._authHeader;
-    return Effect.gen(function* () {
-      const httpClient = yield* HttpClient.HttpClient;
-      const withBody = body === undefined ? request : yield* HttpClientRequest.bodyJson(request, body);
-      const header = yield* Effect.promise(authHeader);
-      const authorized = header ? HttpClientRequest.setHeader(withBody, 'Authorization', header) : withBody;
-      return yield* httpClient.execute(authorized).pipe(Effect.flatMap(read), Effect.timeout(timeout), Effect.scoped);
-    });
   }
 }
+
+/**
+ * Executes one request whose JSON answer is decoded against `schema`; see {@link execute}.
+ *
+ * With `checkStatus`, a non-2xx response fails as an `HttpClientError` carrying its status rather
+ * than as a body that does not decode — what lets a caller tell "not found" from "broken".
+ */
+export const send = <T>(
+  request: HttpClientRequest.HttpClientRequest,
+  body: unknown,
+  schema: Schema.Codec<T>,
+  timeout: Duration.Duration,
+  authHeader: AuthHeaderProvider,
+  options: { checkStatus?: boolean } = {},
+): RequestEffect<T> =>
+  execute(
+    request,
+    body,
+    timeout,
+    authHeader,
+    (response) => Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema)),
+    options,
+  );
+
+/**
+ * Executes one request: JSON body when there is one, answer read by `read`, bounded by `timeout`,
+ * and scoped so the response body is released even when the effect fails or is interrupted.
+ * Deliberately no retry — `exec` is not idempotent, and re-running a command that may already have
+ * taken effect is worse than reporting the failure.
+ */
+const execute = <T>(
+  request: HttpClientRequest.HttpClientRequest,
+  body: unknown,
+  timeout: Duration.Duration,
+  authHeader: AuthHeaderProvider,
+  read: (response: HttpClientResponse.HttpClientResponse) => Effect.Effect<T, SandboxRequestError>,
+  { checkStatus = false }: { checkStatus?: boolean } = {},
+): RequestEffect<T> =>
+  Effect.gen(function* () {
+    const httpClient = yield* HttpClient.HttpClient;
+    const client = checkStatus ? HttpClient.filterStatusOk(httpClient) : httpClient;
+    const withBody = body === undefined ? request : yield* HttpClientRequest.bodyJson(request, body);
+    const header = yield* Effect.promise(authHeader);
+    const authorized = header ? HttpClientRequest.setHeader(withBody, 'Authorization', header) : withBody;
+    return yield* client.execute(authorized).pipe(Effect.flatMap(read), Effect.timeout(timeout), Effect.scoped);
+  });

@@ -18,7 +18,11 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 // Browser-only: the variant supplies the React article/card components that render a drawing.
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
-  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
+  {
+    provides: [IllustratorCapabilities.VariantProvider],
+    activatesOn: IllustratorEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
   () => import('./drawing-variant.ts'),
 );
 

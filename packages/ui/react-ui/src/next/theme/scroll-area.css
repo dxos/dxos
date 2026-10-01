@@ -49,8 +49,41 @@
   }
   .nx-scroll-viewport[data-native]::-webkit-scrollbar {
     width: var(--nx-scroll-width);
+    height: var(--nx-scroll-width);
   }
   .nx-scroll-viewport[data-native]::-webkit-scrollbar-thumb {
     background: var(--color-scrollbar-thumb, gray);
+  }
+
+  /* Axis: a horizontal pane scrolls sideways only, so a native bar takes nothing out of the end track. */
+  .nx-scroll-root[data-orientation='horizontal'] > .nx-scroll-viewport {
+    --nx-scroll-reserve: 0px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* `stable` would still reserve an inline-end gutter for the hidden vertical axis. */
+    scrollbar-gutter: auto;
+  }
+  .nx-scroll-root[data-orientation='all'] > .nx-scroll-viewport {
+    overflow: auto;
+  }
+
+  /* Mandatory snapping on the scrolling axis; the children carry their own `scroll-snap-align`. */
+  .nx-scroll-root[data-snap][data-orientation='vertical'] > .nx-scroll-viewport {
+    scroll-snap-type: y mandatory;
+  }
+  .nx-scroll-root[data-snap][data-orientation='horizontal'] > .nx-scroll-viewport {
+    scroll-snap-type: x mandatory;
+  }
+  .nx-scroll-root[data-snap][data-orientation='all'] > .nx-scroll-viewport {
+    scroll-snap-type: both mandatory;
+  }
+
+  /* No bar at all: the native one is hidden too, and reserves no width. */
+  .nx-scroll-root[data-scrollbars='false'] > .nx-scroll-viewport {
+    --nx-scroll-reserve: 0px;
+    scrollbar-width: none;
+  }
+  .nx-scroll-root[data-scrollbars='false'] > .nx-scroll-viewport::-webkit-scrollbar {
+    display: none;
   }
 }
