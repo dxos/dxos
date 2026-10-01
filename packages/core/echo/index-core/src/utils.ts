@@ -83,8 +83,8 @@ export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE
 
 /**
  * The bound-variable limit chunked reads plan against. A reference rather than
- * {@link SQL_MAX_BOUND_VARIABLES} itself so tests can shrink it: node SQLite accepts far wider
- * statements, and only a small limit drives the multi-statement paths there.
+ * {@link SQL_MAX_BOUND_VARIABLES} itself so a host on a wider SQLite can raise it, as echo-host does
+ * on the client, and tests can shrink it to drive the multi-statement paths.
  */
 export const SqlBoundVariableLimit: Context.Reference<number> = Context.Reference<number>(
   '@dxos/index-core/SqlBoundVariableLimit',
@@ -119,16 +119,15 @@ export const measuredVariableCost =
     countBoundVariables(sql, build([item]));
 
 /**
- * Splits `items` into consecutive chunks whose summed `costOf` fits `budget`, so a list too wide for
- * one statement is read by several. No items plan no chunks: the caller answers empty rather than
- * degrade to `IN ()` or drop the condition and match everything.
+ * Splits `items` into consecutive chunks whose summed `costs` fit `budget`, filling each chunk before
+ * starting the next, which leaves the fewest chunks any consecutive split can.
  */
-export const planChunks = <T>(items: readonly T[], costOf: (item: T) => number, budget: number): T[][] => {
+const splitByCost = <T>(items: readonly T[], costs: readonly number[], budget: number): T[][] => {
   const chunks: T[][] = [];
   let chunk: T[] = [];
   let chunkCost = 0;
-  for (const item of items) {
-    const cost = costOf(item);
+  items.forEach((item, index) => {
+    const cost = costs[index];
     // Refused rather than emitted as one over-wide statement, which is how the 2026-09-22 outage shipped.
     invariant(cost <= budget, `one item binds ${cost} variables but a statement has ${budget} left`);
     if (chunkCost + cost > budget) {
@@ -138,10 +137,24 @@ export const planChunks = <T>(items: readonly T[], costOf: (item: T) => number, 
     }
     chunk.push(item);
     chunkCost += cost;
-  }
+  });
   if (chunk.length > 0) {
     chunks.push(chunk);
   }
+  return chunks;
+};
+
+/**
+ * Splits `items` into consecutive chunks whose summed `costOf` fits `budget`, so a list too wide for
+ * one statement is read by several. No items plan no chunks: the caller answers empty rather than
+ * degrade to `IN ()` or drop the condition and match everything.
+ */
+export const planChunks = <T>(items: readonly T[], costOf: (item: T) => number, budget: number): T[][] => {
+  const chunks = splitByCost(
+    items,
+    items.map((item) => costOf(item)),
+    budget,
+  );
   invariant(chunks.length <= MAX_CHUNKED_STATEMENTS, `a read needs ${chunks.length} statements`);
   return chunks;
 };
@@ -152,23 +165,65 @@ export type ChunkPlanInput<T> = {
   readonly costOf: (item: T) => number;
 };
 
+/** The fewest statements reading a prefix of the outer list, and the last outer chunk they end with. */
+type PrefixPlan = { readonly statements: number; readonly start: number; readonly cost: number };
+
 /**
  * Plans a read restricted by two lists at once: each chunk of `outer` pairs with every chunk of
  * `inner` planned in the budget that outer chunk leaves.
+ *
+ * The outer list is cut wherever the statements total fewest rather than packed full, since a full
+ * outer chunk leaves the inner list a few variables per statement.
  */
 export const planChunkPairs = <A, B>(
   outer: ChunkPlanInput<A>,
   inner: ChunkPlanInput<B>,
   budget: number,
 ): (readonly [A[], B[]])[] => {
-  const widestInner = inner.items.reduce((widest, item) => Math.max(widest, inner.costOf(item)), 0);
-  const pairs: (readonly [A[], B[]])[] = [];
-  for (const outerChunk of planChunks(outer.items, outer.costOf, budget - widestInner)) {
-    const outerCost = outerChunk.reduce((sum, item) => sum + outer.costOf(item), 0);
-    for (const innerChunk of planChunks(inner.items, inner.costOf, budget - outerCost)) {
-      pairs.push([outerChunk, innerChunk]);
-    }
+  if (outer.items.length === 0 || inner.items.length === 0) {
+    return [];
   }
+  // Measured once: each cost compiles a fragment, and the search revisits every outer item many times.
+  const outerCosts = outer.items.map((item) => outer.costOf(item));
+  const innerCosts = inner.items.map((item) => inner.costOf(item));
+  const widestInner = innerCosts.reduce((widest, cost) => Math.max(widest, cost), 0);
+
+  // How many chunks the inner list needs depends only on what the outer chunk beside it binds.
+  const innerChunkCounts = new Map<number, number>();
+  const innerChunkCount = (outerCost: number): number => {
+    let count = innerChunkCounts.get(outerCost);
+    if (count === undefined) {
+      count = splitByCost(inner.items, innerCosts, budget - outerCost).length;
+      innerChunkCounts.set(outerCost, count);
+    }
+    return count;
+  };
+
+  // `fewest[end]` reads the first `end` outer items: the best of every last chunk ending there that
+  // leaves the widest inner item room, after the fewest statements reading what precedes it.
+  const fewest: PrefixPlan[] = [{ statements: 0, start: 0, cost: 0 }];
+  for (let end = 1; end <= outerCosts.length; end++) {
+    let best: PrefixPlan | undefined;
+    let cost = 0;
+    for (let start = end - 1; start >= 0 && cost + outerCosts[start] + widestInner <= budget; start--) {
+      cost += outerCosts[start];
+      const statements = fewest[start].statements + innerChunkCount(cost);
+      if (best === undefined || statements < best.statements) {
+        best = { statements, start, cost };
+      }
+    }
+    // Refused rather than emitted as one over-wide statement, which is how the 2026-09-22 outage shipped.
+    invariant(best, `one item binds ${outerCosts[end - 1]} variables but a statement has ${budget - widestInner} left`);
+    fewest.push(best);
+  }
+
+  const outerChunks: { readonly items: A[]; readonly cost: number }[] = [];
+  for (let end = outerCosts.length; end > 0; end = fewest[end].start) {
+    outerChunks.unshift({ items: outer.items.slice(fewest[end].start, end), cost: fewest[end].cost });
+  }
+  const pairs = outerChunks.flatMap(({ items, cost }) =>
+    splitByCost(inner.items, innerCosts, budget - cost).map((innerChunk) => [items, innerChunk] as const),
+  );
   invariant(pairs.length <= MAX_CHUNKED_STATEMENTS, `a read needs ${pairs.length} statements`);
   return pairs;
 };

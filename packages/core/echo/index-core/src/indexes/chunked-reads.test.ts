@@ -255,7 +255,7 @@ describe('chunked reads', () => {
       const { meta } = yield* seed();
       let refused = 0;
       // Each phase fits the cap on its own at some of these widths while the two together do not.
-      for (let spaceCount = 16; spaceCount <= 24; spaceCount++) {
+      for (let spaceCount = 30; spaceCount <= 40; spaceCount++) {
         const { exit, statements } = yield* runWithLimit(
           meta.queryTypes({
             spaceIds: Array.from({ length: spaceCount }, () => SpaceId.random()),

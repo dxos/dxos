@@ -83,6 +83,8 @@ describe('chunk planning', () => {
 
   test('no items plan no chunks, so a caller answers empty rather than IN ()', ({ expect }) => {
     expect(planChunks([], unitCost, 5)).toEqual([]);
+    expect(planChunkPairs({ items: [], costOf: unitCost }, { items: [1], costOf: unitCost }, 5)).toEqual([]);
+    expect(planChunkPairs({ items: [1], costOf: unitCost }, { items: [], costOf: unitCost }, 5)).toEqual([]);
   });
 
   test('chunks fill up to the budget by summed cost', ({ expect }) => {
@@ -104,6 +106,10 @@ describe('chunk planning', () => {
     expect,
   }) => {
     expect(() => planChunks([1, 6], (cost) => cost, 5)).toThrow();
+    // Each fits alone, but no statement holds the outer item beside the widest inner one.
+    expect(() =>
+      planChunkPairs({ items: [6], costOf: (cost) => cost }, { items: [1, 5], costOf: (cost) => cost }, 10),
+    ).toThrow();
   });
 
   test('a pair of lists leaves each outer chunk room for the widest inner item', ({ expect }) => {
@@ -117,6 +123,55 @@ describe('chunk planning', () => {
     }
     // Every pairing of an outer item with an inner item is covered exactly once.
     expect(pairs.flatMap(([outer, inner]) => outer.flatMap(() => inner)).length).toBe(3 * 4);
+  });
+
+  test('a pair of lists is cut for the fewest statements rather than packing the outer list full', ({ expect }) => {
+    // Versionless types bind four variables and spaces one. `queryTypes` without a window binds
+    // nothing else; a full-text read also binds its match text.
+    const cases = [
+      { fixed: 0, types: 24, spaces: 100, statements: 4 },
+      { fixed: 0, types: 25, spaces: 250, statements: 11 },
+      { fixed: 0, types: 30, spaces: 300, statements: 15 },
+      { fixed: 1, types: 24, spaces: 100, statements: 4 },
+      { fixed: 1, types: 25, spaces: 250, statements: 11 },
+      { fixed: 1, types: 30, spaces: 300, statements: 16 },
+    ];
+    for (const { fixed, types, spaces, statements } of cases) {
+      const budget = SQL_MAX_BOUND_VARIABLES - fixed;
+      const typeIds = Array.from({ length: types }, (_, index) => index);
+      const spaceIds = Array.from({ length: spaces }, (_, index) => index);
+      const pairs = planChunkPairs({ items: typeIds, costOf: () => 4 }, { items: spaceIds, costOf: unitCost }, budget);
+
+      const label = `${types} types x ${spaces} spaces in ${budget} variables`;
+      expect(pairs, label).toHaveLength(statements);
+      for (const [outer, inner] of pairs) {
+        expect(outer.length * 4 + inner.length, label).toBeLessThanOrEqual(budget);
+      }
+      const covered = pairs.flatMap(([outer, inner]) =>
+        outer.flatMap((type) => inner.map((space) => `${type}/${space}`)),
+      );
+      expect(covered, label).toHaveLength(types * spaces);
+      expect(new Set(covered).size, label).toBe(types * spaces);
+    }
+  });
+
+  test('a mixed-cost outer list is cut where no single outer budget would cut it', ({ expect }) => {
+    // Versioned types bind one variable and versionless ones four. Filling every outer chunk to one
+    // budget needs at least 31 statements here; pairing the cuts to the costs needs 28.
+    const typeCost = (type: number): number => (type % 2 === 0 ? 1 : 4);
+    const typeIds = Array.from({ length: 16 }, (_, index) => index);
+    const spaceIds = Array.from({ length: 16 }, (_, index) => index);
+    const pairs = planChunkPairs({ items: typeIds, costOf: typeCost }, { items: spaceIds, costOf: unitCost }, 10);
+
+    expect(pairs).toHaveLength(28);
+    for (const [outer, inner] of pairs) {
+      expect(outer.reduce((sum, type) => sum + typeCost(type), 0) + inner.length).toBeLessThanOrEqual(10);
+    }
+    const covered = pairs.flatMap(([outer, inner]) =>
+      outer.flatMap((type) => inner.map((space) => `${type}/${space}`)),
+    );
+    expect(new Set(covered).size).toBe(covered.length);
+    expect(covered).toHaveLength(16 * 16);
   });
 
   test('a read needing more statements than the cap fails instead of issuing them', ({ expect }) => {
