@@ -148,4 +148,13 @@ export const recipes = {
   splitter: () => 'nx-splitter',
   splitterPanel: () => 'nx-splitter-panel',
   splitterResizeTrigger: () => 'nx-splitter-resize-trigger',
+  toaster: () => 'nx-toaster',
+  toast: () => 'nx-popup nx-toast',
+  toastHeader: () => 'nx-toast-header',
+  toastIcon: () => 'nx-toast-icon',
+  toastTitle: () => 'nx-toast-title',
+  toastDescription: () => 'nx-toast-description',
+  toastFooter: () => 'nx-toast-footer',
+  toastCloseTrigger: () => 'nx-toast-close-trigger',
+  toastCountdown: () => 'nx-toast-countdown',
 } as const;

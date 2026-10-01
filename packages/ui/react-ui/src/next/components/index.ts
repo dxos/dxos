@@ -38,6 +38,7 @@ export * from './SystemButton/index.ts';
 export * from './Tabs/index.ts';
 export * from './Tag/index.ts';
 export * from './Textarea/index.ts';
+export * from './Toast/index.ts';
 export * from './Toggle/index.ts';
 export * from './ToggleGroup/index.ts';
 export * from './Toolbar/index.ts';

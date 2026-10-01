@@ -97,6 +97,9 @@ import {
   type TextareaProps as NextTextareaProps,
   TextTooltip as NextTextTooltip,
   type TextTooltipProps as NextTextTooltipProps,
+  Toast as NextToast,
+  type ToastProviderProps as NextToastProviderProps,
+  type ToastRootProps as NextToastRootProps,
   Toggle as NextToggle,
   ToggleGroup as NextToggleGroup,
   type ToggleProps as NextToggleProps,
@@ -213,4 +216,7 @@ export namespace Next {
   export type SplitterRootProps = NextSplitterRootProps;
   export type SplitterMode = NextSplitterMode;
   export type SplitterOrientation = NextSplitterOrientation;
+  export const Toast = NextToast;
+  export type ToastRootProps = NextToastRootProps;
+  export type ToastProviderProps = NextToastProviderProps;
 }
