@@ -8,7 +8,7 @@ import * as Type from '../../Type.ts';
 import { storedPlan } from './entity.ts';
 import { mapShape, serializePlan } from './mapping.ts';
 import { evaluate } from './one-way.ts';
-import { type AnyLens, type Plan, type SerializedPlan, type Shape } from './types.ts';
+import { type AnyLens, type ExtractShape, type Plan, type SerializedPlan, type Shape } from './types.ts';
 
 //
 // A lens between two versions of one type also translates version documents (DESIGN.md §12.7): the same
@@ -68,9 +68,30 @@ export type VersionEdge = {
   readonly digest: string;
   readonly forward: (data: Data) => Data;
   readonly backward: (data: Data) => Data;
+  /** The structs the newer version keeps in objects of their own. */
+  readonly links: readonly VersionLink[];
 };
 
-type Step = { readonly forward: (data: Data) => Data; readonly backward: (data: Data) => Data };
+/**
+ * A struct of the older version that the newer version keeps in an object of its own: `property` of the
+ * newer version references a `child` object whose data `forward` derives from the struct `from`, or, for
+ * shape `each`, lists one reference per element of the list of structs `from`.
+ */
+export type VersionLink = {
+  readonly property: string;
+  readonly from: string;
+  readonly shape: ExtractShape;
+  /** URI of the child object's type. */
+  readonly child: URI.URI;
+  readonly forward: (struct: Data) => Data;
+  readonly backward: (data: Data) => Data;
+};
+
+type Step = {
+  readonly forward: (data: Data) => Data;
+  readonly backward: (data: Data) => Data;
+  readonly links: readonly VersionLink[];
+};
 
 // Defaults are copied per use: an array or record shared between two results would alias.
 const copy = (value: unknown): unknown => (value === undefined ? undefined : structuredClone(value));
@@ -86,8 +107,24 @@ const stepOf = (plan: SerializedPlan): Step | undefined => {
   type Forward = { to: string; from: readonly string[]; compute: (data: Data) => unknown };
   const pairs: Pair[] = [];
   const oneWay: Forward[] = [];
+  const links: VersionLink[] = [];
   for (const entry of plan.entries) {
     switch (entry.kind) {
+      case 'extract': {
+        const inner = stepOf(entry.inner);
+        if (!inner) {
+          return undefined;
+        }
+        links.push({
+          property: entry.property,
+          from: entry.from,
+          shape: entry.shape,
+          child: URI.make(entry.child),
+          forward: inner.forward,
+          backward: inner.backward,
+        });
+        break;
+      }
       case 'rename':
         pairs.push({ to: entry.property, from: entry.from });
         break;
@@ -114,10 +151,18 @@ const stepOf = (plan: SerializedPlan): Step | undefined => {
     }
   }
   const paired = new Set(pairs.map(({ from }) => from));
-  const oneWayInputs = [...new Set(oneWay.flatMap(({ from }) => from))].filter((name) => !paired.has(name));
+  // Read only one way: a one-way transform's inputs and an extracted struct, which the child carries.
+  const oneWayInputs = [...new Set([...oneWay.flatMap(({ from }) => from), ...links.map(({ from }) => from)])].filter(
+    (name) => !paired.has(name),
+  );
   const sourceOnly = [...plan.dropped, ...oneWayInputs];
   const sourceNames = new Set([...paired, ...sourceOnly]);
-  const targetNames = new Set([...pairs.map(({ to }) => to), ...oneWay.map(({ to }) => to), ...plan.overlays]);
+  const targetNames = new Set([
+    ...pairs.map(({ to }) => to),
+    ...oneWay.map(({ to }) => to),
+    ...links.map(({ property }) => property),
+    ...plan.overlays,
+  ]);
   const withDefaults = (next: Data, names: readonly string[]): Data => {
     for (const name of names) {
       if (next[name] === undefined && name in plan.defaults) {
@@ -129,6 +174,7 @@ const stepOf = (plan: SerializedPlan): Step | undefined => {
   const carried = (data: Data, known: ReadonlySet<string>): Data =>
     Object.fromEntries(Object.entries(data).filter(([key]) => !known.has(key)));
   return {
+    links,
     forward: (data) => {
       const next = carried(data, sourceNames);
       for (const { to, from, shape, inner } of pairs) {
@@ -193,7 +239,12 @@ const problemsOf = (plan: Plan, path: string): string[] => {
   const readOneWay = new Set<string>();
   for (const entry of plan.entries) {
     const at = `"${path}${entry.property}"`;
-    if (entry.nested) {
+    if (entry.extract) {
+      problems.push(
+        ...problemsOf(entry.extract.plan, `${path}${entry.property}${entry.extract.shape === 'each' ? '[]' : ''}->`),
+      );
+      entry.from.forEach((name) => readOneWay.add(name));
+    } else if (entry.nested) {
       problems.push(
         ...problemsOf(entry.nested.plan, `${path}${entry.property}${entry.nested.shape === 'struct' ? '' : '[]'}.`),
       );

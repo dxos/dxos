@@ -59,6 +59,15 @@ const PlanEntrySchema = Schema.Union([
     inner: Schema.suspend((): Schema.Codec<SerializedPlan> => PlanSchema),
   }),
   Schema.Struct({ property: Schema.String, kind: Schema.Literal('oneWay'), spec: OneWaySpecSchema }),
+  Schema.Struct({
+    property: Schema.String,
+    kind: Schema.Literal('extract'),
+    from: Schema.String,
+    shape: Schema.Literals(['struct', 'each']),
+    /** URI of the child object's type. */
+    child: Schema.String,
+    inner: Schema.suspend((): Schema.Codec<SerializedPlan> => PlanSchema),
+  }),
 ]);
 
 const PlanSchema: Schema.Codec<SerializedPlan> = Schema.Struct({
@@ -162,8 +171,8 @@ export const toStored = (lens: AnyLens): Stored => {
   });
 };
 
-/** The mapping that compiles back into `plan`. */
-const mappingOf = (plan: SerializedPlan): Mapping => {
+/** The mapping that compiles back into `plan`; `resolve` supplies the types extracted children have. */
+const mappingOf = (plan: SerializedPlan, resolve: (uri: string) => Type.AnyObj | undefined): Mapping => {
   const mapping: Record<string, MappingEntry> = {};
   for (const entry of plan.entries) {
     switch (entry.kind) {
@@ -181,10 +190,25 @@ const mappingOf = (plan: SerializedPlan): Mapping => {
           kind: 'nested',
           property: entry.from,
           shape: entry.shape,
-          mapping: mappingOf(entry.inner),
+          mapping: mappingOf(entry.inner, resolve),
           defaults: entry.inner.defaults,
         };
         break;
+      case 'extract': {
+        const child = resolve(entry.child);
+        if (!child) {
+          throw new TypeError(`Lens: no type ${entry.child} to extract "${entry.property}" into.`);
+        }
+        mapping[entry.property] = {
+          kind: 'extract',
+          property: entry.from,
+          shape: entry.shape,
+          child,
+          mapping: mappingOf(entry.inner, resolve),
+          defaults: entry.inner.defaults,
+        };
+        break;
+      }
       case 'oneWay':
         mapping[entry.property] = { kind: 'oneWay', spec: entry.spec };
         break;
@@ -197,10 +221,15 @@ const mappingOf = (plan: SerializedPlan): Mapping => {
  * Rehydrate a stored lens against the runtime types it names.
  *
  * The caller supplies the types because a lens references them by URI and the registry that resolves
- * those is the database's, not this package's. A lens rehydrated against the types it was stored with has
+ * those is the database's, not this package's; `resolve` finds the types of extracted children by URI. A lens rehydrated against the types it was stored with has
  * the stored digest; one whose types changed since has a different digest.
  */
-export const fromStored = (stored: Stored, source: Type.AnyObj, target: Type.AnyObj): AnyLens => {
+export const fromStored = (
+  stored: Stored,
+  source: Type.AnyObj,
+  target: Type.AnyObj,
+  resolve: (uri: string) => Type.AnyObj | undefined = () => undefined,
+): AnyLens => {
   // The caller supplies the types, so a mismatch would read the stored overlay values under mappings
   // that do not belong to them.
   if (Type.getURI(source) !== stored.source || Type.getURI(target) !== stored.target) {
@@ -212,5 +241,5 @@ export const fromStored = (stored: Stored, source: Type.AnyObj, target: Type.Any
   if (!decoded) {
     throw new TypeError(`Lens: stored lens "${stored.name}" holds no valid plan.`);
   }
-  return make(source, target, mappingOf(decoded.plan), { defaults: decoded.plan.defaults });
+  return make(source, target, mappingOf(decoded.plan, resolve), { defaults: decoded.plan.defaults });
 };

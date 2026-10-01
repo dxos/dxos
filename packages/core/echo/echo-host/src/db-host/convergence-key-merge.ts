@@ -18,6 +18,7 @@ import { type EntityMeta, type Referrer } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { isLinkConvergenceKey } from '../versions/index.ts';
 import { mergeCandidates } from './merge-core.ts';
 
 /**
@@ -304,7 +305,9 @@ export class ConvergenceKeyMerger {
       if (entity.data === undefined) {
         entity.data = {};
       }
-      for (const [field, value] of Object.entries(result.data)) {
+      // An extracted object's data converges by translation from every duplicate (`versions/version-links.ts`);
+      // a merge write would be an edit of its own, translated back into the parent.
+      for (const [field, value] of isLinkConvergenceKey(convergenceKey) ? [] : Object.entries(result.data)) {
         // Per-field writes, and only where the value differs, so a concurrent edit to a field the
         // merge never touched keeps its last-write-wins outcome.
         if (!_jsonEqual(entity.data[field], value)) {
@@ -348,14 +351,16 @@ export class ConvergenceKeyMerger {
     // the winner already defines — trivially true when a migration's fan-out wrote every field on
     // every duplicate — so a loser's unconflicted edit would otherwise vanish without this. Skipped
     // group-wide, falling back to the flat result above, when the winner's own creation heads can't
-    // be derived; skipped per-loser when that loser's can't.
-    const winnerCreationHeads = deriveCreationHeads(winner.handle.doc(), winner.objectId);
+    // be derived; skipped per-loser when that loser's can't. Skipped for an extracted object, as above.
+    const winnerCreationHeads = isLinkConvergenceKey(convergenceKey)
+      ? []
+      : deriveCreationHeads(winner.handle.doc(), winner.objectId);
     if (winnerCreationHeads === undefined) {
       log.debug('winner creation heads not found; falling back to the flat merge result', {
         convergenceKey,
         winnerId: winner.objectId,
       });
-    } else {
+    } else if (winnerCreationHeads.length > 0) {
       for (const loserId of result.losers) {
         const loser = byId.get(loserId);
         if (loser) {
@@ -562,7 +567,8 @@ export class ConvergenceKeyMerger {
 
     const currentHeads = A.getHeads(doc);
     let changedFields: string[] = [];
-    if (mergedAtHeads !== undefined && winnerLive) {
+    // An extracted object's late edits reach the winner by translation, as in `#mergeCandidates`.
+    if (mergedAtHeads !== undefined && winnerLive && !isLinkConvergenceKey(convergenceKey)) {
       const prefix = ['objects', loserId, 'data'];
       const changed = new Set<string>();
       for (const patch of A.diff(doc, mergedAtHeads, currentHeads)) {

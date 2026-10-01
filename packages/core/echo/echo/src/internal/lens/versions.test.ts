@@ -9,6 +9,7 @@ import { DXN } from '@dxos/keys';
 
 import * as Lens from '../../Lens.ts';
 import * as Obj from '../../Obj.ts';
+import * as Ref from '../../Ref.ts';
 import * as Type from '../../Type.ts';
 
 const TYPENAME = 'org.dxos.test.task';
@@ -238,6 +239,110 @@ describe('lenses between versions', () => {
       const stored = Lens.storedVersionEdge(Lens.toStored(lens));
       expect(stored?.forward({ first: 'Ada', last: 'Lovelace', status: 'open' })).toEqual(
         Lens.versionEdge(lens).forward({ first: 'Ada', last: 'Lovelace', status: 'open' }),
+      );
+    });
+  });
+
+  describe('extracted structs', () => {
+    const Address = Type.makeObject(DXN.make('org.dxos.test.address', '0.1.0'))(
+      Schema.Struct({ line1: Schema.String, city: Schema.String }),
+    );
+    const PersonV1 = Type.makeObject(DXN.make('org.dxos.test.person', '0.1.0'))(
+      Schema.Struct({ name: Schema.String, address: Schema.Struct({ street: Schema.String, city: Schema.String }) }),
+    );
+    const PersonV2 = Type.makeObject(DXN.make('org.dxos.test.person', '0.2.0'))(
+      Schema.Struct({ name: Schema.String, address: Ref.Ref(Address) }),
+    );
+    const lens = Lens.make(
+      PersonV1,
+      PersonV2,
+      { address: Lens.extract('address', Address, { line1: 'street' }) },
+      { defaults: { address: { street: '', city: '' } } },
+    );
+
+    test('the struct leaves the newer version and maps into the extracted object both ways', () => {
+      const edge = Lens.versionEdge(lens);
+      expect(edge.forward({ name: 'Ada', address: { street: '1 Main', city: 'London' } })).toEqual({ name: 'Ada' });
+      // Going back, the reference is dropped and the struct starts at its default until the object reaches it.
+      expect(edge.backward({ name: 'Ada', address: { '/': 'echo:@:01J00000000000000000000000' } })).toEqual({
+        name: 'Ada',
+        address: { street: '', city: '' },
+      });
+      const [link] = edge.links;
+      expect(link).toMatchObject({ property: 'address', from: 'address', child: Type.getURI(Address) });
+      expect(link.forward({ street: '1 Main', city: 'London' })).toEqual({ line1: '1 Main', city: 'London' });
+      expect(link.backward({ line1: '1 Main', city: 'London' })).toEqual({ street: '1 Main', city: 'London' });
+    });
+
+    test('a stored lens runs the same link, and rehydrates to the same digest', () => {
+      const stored = Lens.toStored(lens);
+      const [link] = Lens.storedVersionEdge(stored)?.links ?? [];
+      expect(link?.forward({ street: '1 Main', city: 'London' })).toEqual({ line1: '1 Main', city: 'London' });
+      const resolve = (uri: string) => (uri === Type.getURI(Address) ? Address : undefined);
+      expect(Lens.fromStored(stored, PersonV1, PersonV2, resolve).digest).toBe(lens.digest);
+    });
+
+    test('the extracted struct needs a default for objects created at the newer version', () => {
+      const missing = Lens.make(PersonV1, PersonV2, { address: Lens.extract('address', Address, { line1: 'street' }) });
+      expect(() => Lens.versionEdge(missing)).toThrow(/"address" is required in the older version and has no default/);
+    });
+
+    test('a required property only the extracted object has needs a default', () => {
+      const Located = Type.makeObject(DXN.make('org.dxos.test.address', '0.1.0'))(
+        Schema.Struct({ line1: Schema.String, city: Schema.String, country: Schema.String }),
+      );
+      const Target = Type.makeObject(DXN.make('org.dxos.test.person', '0.2.0'))(
+        Schema.Struct({ name: Schema.String, address: Ref.Ref(Located) }),
+      );
+      const missing = Lens.make(
+        PersonV1,
+        Target,
+        { address: Lens.extract('address', Located, { line1: 'street' }) },
+        { defaults: { address: { street: '', city: '' } } },
+      );
+      expect(() => Lens.versionEdge(missing)).toThrow(/"address->country" is required in the newer version/);
+    });
+
+    test('a view reads the reference as unset and rejects writing it', () => {
+      const person = Obj.make(PersonV1, { name: 'Ada', address: { street: '1 Main', city: 'London' } });
+      expect(Lens.get(person, lens).address).toBeUndefined();
+      expect(() => Lens.put(person, lens, { address: undefined })).toThrow(/read-only/);
+    });
+
+    test('each element of a list of structs maps into an object of its own', () => {
+      const Item = Type.makeObject(DXN.make('org.dxos.test.item', '0.1.0'))(
+        Schema.Struct({ sku: Schema.String, quantity: Schema.Number }),
+      );
+      const OrderV1 = Type.makeObject(DXN.make('org.dxos.test.order', '0.1.0'))(
+        Schema.Struct({ items: Schema.Array(Schema.Struct({ sku: Schema.String, qty: Schema.Number })) }),
+      );
+      const OrderV2 = Type.makeObject(DXN.make('org.dxos.test.order', '0.2.0'))(
+        Schema.Struct({ items: Schema.Array(Ref.Ref(Item)) }),
+      );
+      const each = Lens.make(
+        OrderV1,
+        OrderV2,
+        { items: Lens.extractEach('items', Item, { quantity: 'qty' }) },
+        { defaults: { items: [] } },
+      );
+      const edge = Lens.versionEdge(each);
+      expect(edge.forward({ items: [{ sku: 'a', qty: 1 }] })).toEqual({});
+      expect(edge.backward({ items: [] })).toEqual({ items: [] });
+      const [link] = edge.links;
+      expect(link).toMatchObject({ property: 'items', from: 'items', shape: 'each', child: Type.getURI(Item) });
+      expect(link.forward({ sku: 'a', qty: 1 })).toEqual({ sku: 'a', quantity: 1 });
+      expect(Lens.storedVersionEdge(Lens.toStored(each))?.links[0]?.shape).toBe('each');
+      expect(() => Lens.make(OrderV1, OrderV2, { items: Lens.extract('items', Item, { quantity: 'qty' }) })).toThrow(
+        /"items" is not a struct to extract/,
+      );
+      expect(() =>
+        Lens.make(PersonV1, PersonV2, { address: Lens.extractEach('address', Address, { line1: 'street' }) }),
+      ).toThrow(/"address" is not a list of structs to extract/);
+    });
+
+    test('the property must reference the extracted type', () => {
+      expect(() => Lens.make(PersonV1, PersonV2, { address: Lens.extract('address', TaskV1, {}) })).toThrow(
+        /is not a reference to org.dxos.test.task/,
       );
     });
   });

@@ -1387,26 +1387,73 @@ target object other than the source.
 | Array fan-out, 1 → N | `Order@1 { items: [{ id, … }] }`        | `Order@2 { items: Ref[] }` + one `Item` per element | per element, keyed by the element's stamped id, never its position                    |
 | Relation fan-out     | `Task@1 { assignee: string }`           | `Task@2` + `Person` + `assignedTo`                  | later: a relation's endpoints must both exist before it surfaces (§10.5, "Relations") |
 
-Open questions, each to settle before building:
+**Decisions (2026-10-01).**
 
-1. **Fan-in roots have two origins.** `Person@2`'s root must be derived from `Person@1`'s creation and from the
-   `Address` state it absorbs, and the address may predate the person or be edited before derivation. The
-   image machinery maps one origin's history today; it would need a root that stands for changes of two
-   documents. The alternative is to support fan-out only, and treat fan-in as fan-out read from the other end
-   (the older version being the normalized one), which is the same edge.
-2. **Shared children in fan-in.** An `Address` referenced by three `Person`s becomes three embedded copies,
-   each a translation target. An edit to one copy reaches the others only through the `Address` document, so
-   the path runs across two objects. Rule 2 (translate originals directly from where they were made) holds,
-   but paths now cross objects.
-3. **Array fan-out needs element ids.** Position is not identity once elements become objects, so the older
-   version must carry stamped element ids (the id-stamping step of the in-place work). Should version lenses
-   require it, or stamp ids as a nested step first?
-4. **Where cross-object edges live.** A fan-out lens connects `Person@1` to two types. Either a lens may have
-   several targets, or a fan-out is two lenses (`Person@1 → Person@2`, `Person@1 → Address@1`) linked by a role.
-   The second keeps one lens per pair and needs no new identity rule.
-5. **Order of work.** Proposed: fan-out 1 → 1 first (it exercises cross-object edges and derived identity
-   without two-origin roots), then array fan-out on stamped ids, then fan-in (or its reading as reverse
-   fan-out), then relations.
+1. **Children are ordinary objects.** A fan-out child gets a random id and a convergence key
+   `lens:<digest>:<parent id>:<property>`; concurrent duplicates collapse through the merge engine. Object ids
+   do not change. Consequences: the child's first change records the parent state it was derived from (the
+   parent document's change and the lens digest), and the merge engine's replay must skip a loser's change
+   that translates an original the winner already holds, or a list edit would apply twice. (As built, the
+   merge writes no data for these keys at all; §12.11.)
+2. **One lens, the child mapping embedded.** `Lens.extract(property, ChildType, mapping)` is an entry of the
+   parent's version lens; there is no separate child lens, the parent's digest covers the child mapping, and
+   the target property is the role.
+3. **Fan-in with restrictions.** `Lens.absorb` derives the embedding version's root from both creation
+   changes (the parent's and the absorbed object's). Repointing the reference is not translated: the embedded
+   copy keeps following the object it started from, and the repoint is logged. Shared children are allowed;
+   an edit to one embedded copy reaches the others directly, through the shared object's mapping.
+4. **(Folded into 3.)**
+5. **Array elements are keyed by Automerge element identity** (the element's insertion, read as a cursor in
+   the older version's document). A move, which ECHO makes by deleting and reinserting, gives the element a
+   new identity: the old child is marked deleted and a new one is created; an edit to the old child
+   concurrent with the move is lost. Non-destructive moves (an ordered collection keyed by stable id with an
+   order key per item) are a separate ECHO change, handed off on 2026-10-01.
+6. **Order:** `extract`, then `extractEach`, then `absorb`, then review; relations later.
+
+**One mechanism for both directions.** `extract` and `absorb` are the same link read from either end: an
+embedded struct in one version document of the parent, and a child object's data. Every derived root stands
+for the creations of all its origins, so roots map to roots and the image rules hold: a parent version derived
+from an object created at the other end (a person created at v2 with an address object, then derived back to
+v1) has a root standing for both creations, which is the two-origin root `absorb` needs anyway.
+
+### 12.11 `Lens.extract`, as built (2026-10-01)
+
+- **Lens side.** `Lens.extract(property, Child, mapping, defaults?)` is a version-lens entry whose target
+  property is a `Ref` to `Child`. The edge gains `links`: `{ property, from, child, forward, backward }`. The
+  struct leaves the newer version's data and the reference is dropped going back, so the struct counts as a
+  one-way input and needs a default when required. A view reads the property as unset and rejects writes.
+  Lens planning reads the declared (type-side) property AST, since the encoded side drops the `Ref` target.
+- **Creation** (`echo-host/src/versions/version-links.ts`). For each link the runner reads the reference in
+  the newer version document. With none, and no earlier change marked `lens-link <property>`, it creates the
+  object from the older version's root state through the link. The object gets a random id, the convergence key
+  `lens:<hash(edge digest)>:<parent id>:<property>`, and a first change `link-root <version> <heads>`. The
+  runner links it from the space root and writes the reference into the newer version under that message,
+  so a reference an app removes is not extracted again.
+- **Translation.** `translateBetween` generalizes the core: each side is `(doc, object id, label)`, labels are
+  versions or object ids, and a projection maps the source entry into the target's sections. The pairs are:
+  - every held parent version to the object: the struct through the lenses to the edge's older end, plus the
+    deletion. A version that holds the reference sends only the deletion.
+  - the object to every version embedding the struct: the version is at most the edge's older end.
+  - every object merged into the live one, to the live one and to the embedding versions.
+- **Fork rule change.** A change that moves nothing the target holds is walked past, a translation included;
+  before, a translation without an image waited. This also fixes a latent stall: in a chain v1–v2–v3, a v3
+  edit to a property v1 lacks reaches v2 as a translation, and a later v2 edit waited forever for a v1 image
+  that never comes.
+- **Merging duplicates (refines decision 1).** For a `lens:` key the merge engine writes no data: no flat
+  fold, no creation-heads replay, no late fold. It only redirects, tombstones and records `mergedFrom`. The
+  runner follows the newer version's reference through `mergedInto` and translates every loser's originals
+  into the winner and the parent. Skipping only the translations a winner already holds was not enough: a
+  replay is itself an original, so it would reach the parent a second time.
+- **Host.** Change detection also covers the extracted objects' documents (the `onHandle` set of the last
+  sync), so an edit to one triggers its parent's sync.
+- **Limits.**
+  - Main only: branches do not extract.
+  - A reference that names an object outside the convergence key is logged and left alone (`absorb`, M3).
+  - An object created at the newer version gets an extracted object built from the struct's default, unless
+    the app set the reference itself.
+  - A host too old to know `lens:` keys merges duplicates the old way, and its data fold reaches the parent
+    as an edit.
+  - `meta` is not translated.
 
 ## 13. References
 

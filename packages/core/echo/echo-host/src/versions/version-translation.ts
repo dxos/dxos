@@ -61,10 +61,11 @@ const rootOf = (doc: VersionDoc): Root | undefined => {
 
 const PROBE_ACTOR = '00000000000000000000000000000000';
 
-const digest = (seed: string): string => bytesToHex(sha256(utf8ToBytes(seed))).slice(0, 32);
+/** A short hex digest of `seed`, for actors and keys every device derives alike. */
+export const hashOf = (seed: string): string => bytesToHex(sha256(utf8ToBytes(seed))).slice(0, 32);
 
 /** The digest identifying the lenses a translation between two versions runs. */
-const lensDigest = (path: Lens.VersionPath): string => digest(JSON.stringify(path.digests));
+const lensDigest = (path: Lens.VersionPath): string => hashOf(JSON.stringify(path.digests));
 
 const plain = (value: unknown): unknown => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
 
@@ -143,7 +144,7 @@ export const deriveVersionDoc = ({
     access: plain(state.access),
     objects: { [objectId]: object },
   };
-  const actor = digest(`${creation.hash}:${version}:${JSON.stringify(root)}`);
+  const actor = hashOf(`${creation.hash}:${version}:${JSON.stringify(root)}`);
   const created = A.change(
     A.init<DatabaseDirectory>({ actor }),
     {
@@ -162,6 +163,121 @@ export const deriveVersionDoc = ({
   return A.clone(created);
 };
 
+//
+// A struct a newer version keeps in an object of its own (`Lens.extract`, DESIGN.md §12.10) is translated as
+// the versions are: the extracted object's first change holds the struct as a version of the parent held it at
+// its root, and its edits and the embedding versions' edits are translated into each other from where they
+// were made. Only the parent's deletion follows into the extracted object, never the reverse.
+//
+
+const LINK_ROOT_MESSAGE = 'link-root';
+
+/** The message of the change that creates an extracted object: the parent version and root it derives from. */
+const linkRootMessage = (version: string, heads: readonly string[]): string =>
+  `${LINK_ROOT_MESSAGE} ${version} ${heads.join(',')}`;
+
+/** Whether version `version` of the parent embeds the struct `edge` extracts: it is no newer than the edge's older end. */
+const embeds = (edge: Lens.VersionEdge, version: string): boolean => Lens.compareVersions(version, edge.from) <= 0;
+
+/**
+ * How version `version` of the parent reads in the object `link` extracts: the struct, through the lenses to
+ * the edge's older version and through the link (nothing, for a version holding the reference), and the
+ * parent's deletion.
+ */
+export const parentToLink = ({
+  edges,
+  edge,
+  link,
+  version,
+}: {
+  edges: readonly Lens.VersionEdge[];
+  edge: Lens.VersionEdge;
+  link: Lens.VersionLink;
+  version: string;
+}): ((entry: Data | undefined) => Section[]) => {
+  const path = embeds(edge, version) ? Lens.versionPath(edges, edge.typename, version, edge.from) : undefined;
+  return (entry) => {
+    const struct = path?.apply(isRecord(entry?.data) ? entry.data : {})[link.from];
+    return [{ at: ['data'], value: path ? link.forward(isRecord(struct) ? struct : {}) : {} }, deletionOf(entry)];
+  };
+};
+
+/**
+ * How the object `link` extracts reads in version `version` of the parent, or `undefined` when that version
+ * holds a reference rather than the struct.
+ */
+export const linkToParent = ({
+  edges,
+  edge,
+  link,
+  version,
+}: {
+  edges: readonly Lens.VersionEdge[];
+  edge: Lens.VersionEdge;
+  link: Lens.VersionLink;
+  version: string;
+}): ((entry: Data | undefined) => Section[]) | undefined => {
+  const path = embeds(edge, version) ? Lens.versionPath(edges, edge.typename, edge.from, version) : undefined;
+  return (
+    path &&
+    ((entry) => [
+      { at: ['data'], value: path.apply({ [link.from]: link.backward(isRecord(entry?.data) ? entry.data : {}) }) },
+    ])
+  );
+};
+
+/** An object's data as another object of the same type holds it: an extracted object merged into another. */
+export const dataOf = (entry: Data | undefined): Section[] => [
+  { at: ['data'], value: isRecord(entry?.data) ? entry.data : {} },
+];
+
+/**
+ * The document of the object `link` extracts from `parent`, version `version` of the parent object
+ * `objectId`: the struct as the parent held it at its root, as object `childId` under `convergenceKey`.
+ */
+export const deriveLinkDoc = ({
+  parent,
+  objectId,
+  version,
+  edges,
+  edge,
+  link,
+  childId,
+  convergenceKey,
+}: {
+  parent: VersionDoc;
+  objectId: string;
+  version: string;
+  edges: readonly Lens.VersionEdge[];
+  edge: Lens.VersionEdge;
+  link: Lens.VersionLink;
+  childId: string;
+  convergenceKey: string;
+}): VersionDoc | undefined => {
+  const graph: ChangeGraph = new Map(A.getChangesMetaSince(parent, []).map((change) => [change.hash, change.deps]));
+  const roots = rootChangesOf(parent, objectId, graph);
+  if (roots.size === 0) {
+    return undefined;
+  }
+  const heads = frontierOf(graph, roots);
+  const [data] = parentToLink({ edges, edge, link, version })(objectAt(parent, heads, objectId));
+  const state = A.view(parent, heads);
+  return A.change(A.init<DatabaseDirectory>(), { message: linkRootMessage(version, heads) }, (draft: Data) => {
+    for (const [key, value] of Object.entries({ version: plain(state.version), access: plain(state.access) })) {
+      if (value !== undefined) {
+        draft[key] = value;
+      }
+    }
+    draft.objects = {
+      [childId]: {
+        system: { kind: 'object', type: EncodedReference.fromURI(link.child) },
+        meta: { keys: [], convergenceKey },
+        data: data.value,
+      },
+    };
+  });
+};
+
 /** A document version and the lens path mapping data from it into the target. */
 export type TranslationSource = {
   doc: VersionDoc;
@@ -169,20 +285,22 @@ export type TranslationSource = {
 };
 
 /** The parts of an object translated into another version: data through the lenses, the rest as is. */
-const sectionsOf = (entry: Data | undefined, path: Lens.VersionPath): { at: string[]; value: Data }[] => {
+const sectionsOf = (entry: Data | undefined, path: Lens.VersionPath): Section[] => {
   const data = isRecord(entry?.data) ? entry.data : {};
   const meta = isRecord(entry?.meta) ? entry.meta : {};
+  return [{ at: ['data'], value: path.apply(data) }, { at: ['meta'], value: meta }, deletionOf(entry)];
+};
+
+/** The object's deletion, which follows it into every other version and into the objects extracted from it. */
+export const deletionOf = (entry: Data | undefined): Section => {
   const system = isRecord(entry?.system) ? entry.system : {};
-  return [
-    { at: ['data'], value: path.apply(data) },
-    { at: ['meta'], value: meta },
-    { at: ['system'], value: system.deleted === undefined ? {} : { deleted: system.deleted } },
-  ];
+  return { at: ['system'], value: system.deleted === undefined ? {} : { deleted: system.deleted } };
 };
 
 type Move = { at: string[]; key: string; previous: unknown; next: unknown };
 
-type Section = { at: string[]; value: Data };
+/** Part of an object's entry, at `at`, as the target of a translation holds it. */
+export type Section = { at: string[]; value: Data };
 
 /** What changes between two states, section by section. */
 const diffSections = (before: Section[], after: Section[]): Move[] =>
@@ -195,13 +313,7 @@ const diffSections = (before: Section[], after: Section[]): Move[] =>
 
 /**
  * Translates every original edit made in `source` that `target` lacks into `target`, and returns the
- * new target. An edit waits while the target lacks the image of one of its ancestors, since forking
- * without it would not be deterministic; `settled` records edits already handled, so each is examined
- * once per target.
- *
- * The work per edit is bounded by what the edit touches: the change graphs and images are built once and
- * kept current, an edit's ancestry is walked only down to its nearest translated ancestors, and while
- * translations form a chain each is authored on one working copy instead of a fresh copy of the history.
+ * new target, when the lenses between the two versions are the ones both documents were derived with.
  */
 export const translate = ({
   source,
@@ -222,10 +334,45 @@ export const translate = ({
   if (!path || !designates(source.doc, target.doc, edges, typename)) {
     return target.doc;
   }
+  return translateBetween({
+    source: { doc: source.doc, objectId, label: source.version },
+    target: { doc: target.doc, objectId, label: target.version },
+    project: (entry) => sectionsOf(entry, path),
+    settled,
+  });
+};
+
+/**
+ * One side of a translation: an object in a document, and the label the translations of its edits name
+ * it by (a version for an object's version documents, an object id for an object extracted from one).
+ */
+export type TranslationSide = { doc: VersionDoc; objectId: string; label: string };
+
+/**
+ * Translates every original edit made in `source` that `target` lacks into `target`, and returns the
+ * new target: `project` reads the source object's entry as the sections of the target it maps to. An edit
+ * waits while the target lacks the image of one of its ancestors, since forking without it would not be
+ * deterministic; `settled` records edits already handled, so each is examined once per target.
+ *
+ * The work per edit is bounded by what the edit touches: the change graphs and images are built once and
+ * kept current, an edit's ancestry is walked only down to its nearest translated ancestors, and while
+ * translations form a chain each is authored on one working copy instead of a fresh copy of the history.
+ */
+export const translateBetween = ({
+  source,
+  target,
+  project,
+  settled,
+}: {
+  source: TranslationSide;
+  target: TranslationSide;
+  project: (entry: Data | undefined) => Section[];
+  settled?: Set<string>;
+}): VersionDoc => {
   const sourceChanges = A.getChangesMetaSince(source.doc, []);
   const sourceByHash = new Map(sourceChanges.map((change) => [change.hash, change]));
   const sourceGraph: ChangeGraph = new Map(sourceChanges.map((change) => [change.hash, change.deps]));
-  const sourceRoots = rootChangesOf(source.doc, objectId, sourceGraph);
+  const sourceRoots = rootChangesOf(source.doc, source.objectId, sourceGraph);
 
   const targetChanges = A.getChangesMetaSince(target.doc, []);
   const targetGraph: ChangeGraph = new Map(targetChanges.map((change) => [change.hash, change.deps]));
@@ -236,7 +383,7 @@ export const translate = ({
       imageOf.set(translation.original, change.hash);
     }
   }
-  const rootFork = frontierOf(targetGraph, rootChangesOf(target.doc, objectId, targetGraph));
+  const rootFork = frontierOf(targetGraph, rootChangesOf(target.doc, target.objectId, targetGraph));
 
   // Source states by heads: in a chain of edits, one edit's state after is the next one's state before.
   const states = new Map<string, Section[]>();
@@ -244,7 +391,7 @@ export const translate = ({
     const key = [...heads].sort().join();
     let state = states.get(key);
     if (!state) {
-      state = sectionsOf(objectAt(source.doc, [...heads], objectId), path);
+      state = project(objectAt(source.doc, [...heads], source.objectId));
       states.set(key, state);
     }
     return state;
@@ -272,7 +419,7 @@ export const translate = ({
     }
   };
   for (const change of sourceChanges) {
-    const key = `${change.hash}>${target.version}`;
+    const key = `${change.hash}>${target.label}`;
     if (settled?.has(key) || sourceRoots.has(change.hash) || isTranslation(change.message)) {
       continue;
     }
@@ -287,7 +434,7 @@ export const translate = ({
       sourceRoots,
       imageOf,
       targetGraph,
-      targetVersion: target.version,
+      targetLabel: target.label,
       movesOf,
       rootFork,
     });
@@ -302,11 +449,11 @@ export const translate = ({
     const at = mirror.probeHead ? [mirror.probeHead] : fork;
     // The mirror's state is the state at `at`, so it is read as is rather than through a view of history.
     const live = mirror.doc;
-    const current = moves.map(({ at, key }) => plain(getDeep(live, ['objects', objectId, ...at, key])));
-    const message = translationMessage(change.hash, source.version);
+    const current = moves.map(({ at, key }) => plain(getDeep(live, ['objects', target.objectId, ...at, key])));
+    const message = translationMessage(change.hash, source.label);
     const probe = A.changeAt(mirror.doc, at, { message, time: 0 }, (draft) => {
       moves.forEach(({ at, key, previous, next }, index) => {
-        applyStructuralEdit(draft, ['objects', objectId, ...at, key], previous, next, current[index]);
+        applyStructuralEdit(draft, ['objects', target.objectId, ...at, key], previous, next, current[index]);
       });
     });
     const probeChange = probe.newHeads ? A.getLastLocalChange(probe.newDoc) : undefined;
@@ -319,7 +466,7 @@ export const translate = ({
       probeChange,
       fork,
       mirror.probes,
-      JSON.stringify({ original: change.hash, target: target.version, fork }),
+      JSON.stringify({ original: change.hash, target: target.label, fork }),
     );
     const { hash, actor, startOp } = A.decodeChange(translation);
     pending.push(translation);
@@ -340,7 +487,8 @@ export const translate = ({
 /**
  * Where a translation of `change` forks: the frontier of its ancestors' images in the target. The walk
  * stops at an ancestor with an image, since that image was forked at the images of the ancestor's own
- * ancestors; an original that moves nothing has no image, and its ancestors stand in for it.
+ * ancestors; a change that moves nothing the target holds has no image, and its ancestors stand in for it
+ * (a translation included, as one from a third side that touches only what the target lacks).
  */
 const forkOf = ({
   change,
@@ -348,7 +496,7 @@ const forkOf = ({
   sourceRoots,
   imageOf,
   targetGraph,
-  targetVersion,
+  targetLabel,
   movesOf,
   rootFork,
 }: {
@@ -357,7 +505,7 @@ const forkOf = ({
   sourceRoots: Set<string>;
   imageOf: Map<string, string>;
   targetGraph: ChangeGraph;
-  targetVersion: string;
+  targetLabel: string;
   movesOf: (change: A.ChangeMetadata) => Move[];
   rootFork: Heads;
 }): Heads | 'waiting' => {
@@ -375,10 +523,10 @@ const forkOf = ({
     }
     const translation = parseTranslation(meta.message);
     const original = translation?.original ?? meta.hash;
-    const image = translation?.source === targetVersion ? original : imageOf.get(original);
+    const image = translation?.source === targetLabel ? original : imageOf.get(original);
     if (image) {
       images.push(image);
-    } else if (translation || movesOf(meta).length > 0) {
+    } else if (movesOf(meta).length > 0) {
       return 'waiting';
     } else {
       stack.push(...meta.deps);
@@ -422,7 +570,7 @@ const authorShared = (
       invariant(actor !== undefined, 'probe op outside every probe');
       return `${counter}@${actor}`;
     });
-  const actor = digest(`${seed}:${rename('')}`);
+  const actor = hashOf(`${seed}:${rename('')}`);
   return A.encodeChange({ ...decoded, actor, seq: 1, deps: [...deps], ops: JSON.parse(rename(actor)) });
 };
 

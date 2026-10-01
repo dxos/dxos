@@ -15,6 +15,7 @@ import { get as project } from './internal/lens/codec.ts';
 import {
   type AnyLens,
   type Codec,
+  type Extract,
   type Lens as LensShape,
   LensTypeId,
   type Mapping,
@@ -24,6 +25,7 @@ import {
 } from './internal/lens/types.ts';
 import { applyWrites } from './internal/lens/write.ts';
 import type * as Obj from './Obj.ts';
+import type * as Type from './Type.ts';
 
 export { type TargetOf, coded, make } from './internal/lens/codec.ts';
 export { compose } from './internal/lens/compose.ts';
@@ -34,6 +36,7 @@ export { LensSet, between, from as lensesFrom, shadow } from './internal/lens/le
 export {
   type Data as VersionData,
   type VersionEdge,
+  type VersionLink,
   type VersionPath,
   compareVersions,
   isVersionLens,
@@ -55,6 +58,8 @@ export {
   type Codec,
   type Coverage,
   type Derived,
+  type Extract,
+  type ExtractShape,
   type MakeOptions,
   type Mapping,
   type Nested,
@@ -134,6 +139,30 @@ export const mapValue = (property: string, table: Readonly<Record<string, unknow
   kind: 'oneWay',
   spec: { fn: 'mapValue', from: [property], table, fallback },
 });
+
+/**
+ * `Lens.extract(property, Child, mapping)` — the struct `property` moved into a `Child` object of its own,
+ * which the target property references. Version documents create the child (with a convergence key, so
+ * concurrent creations merge) and keep the struct and the child in sync; a view reads the reference as unset.
+ */
+export const extract = <P extends string>(
+  property: P,
+  child: Type.AnyObj,
+  mapping: Mapping,
+  defaults?: Readonly<Record<string, unknown>>,
+): Extract<Record<P, unknown>> => ({ kind: 'extract', property, shape: 'struct', child, mapping, defaults });
+
+/**
+ * `Lens.extractEach(property, Child, mapping)` — each element of the list of structs `property` moved into a
+ * `Child` object of its own, which the target property's list of references names in order. An element is
+ * identified by its insertion, not its position, so a reorder (a delete and an insert) makes a new object.
+ */
+export const extractEach = <P extends string>(
+  property: P,
+  child: Type.AnyObj,
+  mapping: Mapping,
+  defaults?: Readonly<Record<string, unknown>>,
+): Extract<Record<P, unknown>> => ({ kind: 'extract', property, shape: 'each', child, mapping, defaults });
 
 /** `Lens.constant(value)` — the same value for every object. */
 export const constant = (value: unknown): OneWay => ({ kind: 'oneWay', spec: { fn: 'constant', from: [], value } });

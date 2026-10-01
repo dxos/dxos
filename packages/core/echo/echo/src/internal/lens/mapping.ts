@@ -7,12 +7,14 @@ import type * as Schema from 'effect/Schema';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 import * as Type from '../../Type.ts';
+import { getReferenceAst } from '../Ref/ref.ts';
 import { getCodec } from './codecs.ts';
 import { evaluate } from './one-way.ts';
 import {
   type Codec,
   type Converted,
   type Derived,
+  type Extract,
   type Mapping,
   type Nested,
   type OneWay,
@@ -26,9 +28,24 @@ import {
 /** `id` is identity, never lensed, so it never participates in a top-level mapping. */
 const RESERVED = new Set(['id']);
 
-const properties = (entity: Type.AnyObj | Schema.Top): SchemaEx.SchemaProperty[] => {
+/** A property, with the type it declares: the encoded type drops annotations, such as a reference's target. */
+type Property = SchemaEx.SchemaProperty & { readonly declared: SchemaAST.AST };
+
+const propertiesOf = (ast: SchemaAST.AST): Property[] => {
+  const declared = new Map(
+    SchemaAST.isObjects(ast)
+      ? ast.propertySignatures.map((signature) => [signature.name, SchemaEx.unwrapOptional(signature.type)])
+      : [],
+  );
+  return SchemaEx.getProperties(ast).map((property) => ({
+    ...property,
+    declared: declared.get(property.name) ?? property.type,
+  }));
+};
+
+const properties = (entity: Type.AnyObj | Schema.Top): Property[] => {
   const schema = Type.isType(entity) ? Type.getSchema(entity) : entity;
-  return SchemaEx.getProperties(schema.ast).filter((property) => !RESERVED.has(String(property.name)));
+  return propertiesOf(schema.ast).filter((property) => !RESERVED.has(String(property.name)));
 };
 
 /** The struct a nested mapping applies to inside a property of type `ast`. */
@@ -114,6 +131,7 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
 const isDerived = (entry: object): entry is Derived => 'from' in entry && 'get' in entry;
 const isNested = (entry: object): entry is Nested => 'kind' in entry && (entry as Nested).kind === 'nested';
 const isOneWay = (entry: object): entry is OneWay => 'kind' in entry && (entry as OneWay).kind === 'oneWay';
+const isExtract = (entry: object): entry is Extract => 'kind' in entry && entry.kind === 'extract';
 const isConverted = (entry: object): entry is Converted => 'kind' in entry && (entry as Converted).kind === 'converted';
 const isReadOnly = (entry: object): entry is { kind: 'readOnly'; property: string } =>
   'kind' in entry && (entry as { kind: string }).kind === 'readOnly';
@@ -129,7 +147,7 @@ export const readSource = (read: (property: string) => unknown, from: readonly s
   return source;
 };
 
-type Properties = ReadonlyMap<string, SchemaEx.SchemaProperty>;
+type Properties = ReadonlyMap<string, Property>;
 
 /** Applies `map` where `shape` says, to a value that has that shape; any other value passes through. */
 export const mapShape = (
@@ -224,8 +242,8 @@ const entryFor = (
       );
     }
     const inner = planOf(
-      SchemaEx.getProperties(sourceInner),
-      SchemaEx.getProperties(targetInner),
+      propertiesOf(sourceInner),
+      propertiesOf(targetInner),
       entry.mapping,
       entry.defaults ?? {},
       new Set(),
@@ -243,6 +261,48 @@ const entryFor = (
       serialized: serialized && { kind: 'nested', from, shape: entry.shape, inner: serialized },
       code: codes.length > 0 ? codes.join('\n') : undefined,
       nested: { shape: entry.shape, plan: inner },
+    };
+  }
+
+  if (typeof entry === 'object' && isExtract(entry)) {
+    const from = entry.property;
+    const source = sourceProperties.get(from);
+    const target = targetProperties.get(property);
+    const sourceInner = source && innerAst(source.type, entry.shape);
+    const declared =
+      target && (entry.shape === 'each' ? SchemaEx.getArrayElementType(target.declared) : target.declared);
+    const reference = declared && getReferenceAst(declared);
+    const what = entry.shape === 'each' ? 'a list of structs' : 'a struct';
+    if (!sourceInner || !SchemaAST.isObjects(sourceInner)) {
+      throw new TypeError(`Lens: "${from}" is not ${what} to extract.`);
+    }
+    if (!reference || reference.typename !== Type.getTypename(entry.child)) {
+      throw new TypeError(
+        `Lens: "${property}" is not ${entry.shape === 'each' ? 'a list of references' : 'a reference'} to ${Type.getTypename(entry.child)}.`,
+      );
+    }
+    const inner = planOf(
+      propertiesOf(sourceInner),
+      properties(entry.child),
+      entry.mapping,
+      entry.defaults ?? {},
+      RESERVED,
+    );
+    const serialized = serializePlan(inner);
+    return {
+      property,
+      from: [from],
+      // The child exists only once version documents create it; a view has no object to point at.
+      get: () => undefined,
+      origin: 'explicit',
+      serialized: serialized && {
+        kind: 'extract',
+        from,
+        shape: entry.shape,
+        child: Type.getURI(entry.child),
+        inner: serialized,
+      },
+      extract: { shape: entry.shape, child: entry.child, plan: inner },
     };
   }
 
@@ -313,7 +373,14 @@ const entryFor = (
   throw new TypeError(`Lens: unrecognized mapping entry for "${property}".`);
 };
 
-type MappingEntryLike = string | Converted | Derived | Nested | OneWay | { kind: 'readOnly'; property: string };
+type MappingEntryLike =
+  | string
+  | Converted
+  | Derived
+  | Nested
+  | OneWay
+  | Extract
+  | { kind: 'readOnly'; property: string };
 
 /**
  * The plan as data, or `undefined` when an entry runs inline code. Same-name matches are written out as
@@ -347,8 +414,8 @@ export const plan = (
 ): Plan => planOf(properties(source), properties(target), mapping, defaults, RESERVED);
 
 const planOf = (
-  sourceList: readonly SchemaEx.SchemaProperty[],
-  targetList: readonly SchemaEx.SchemaProperty[],
+  sourceList: readonly Property[],
+  targetList: readonly Property[],
   mapping: Mapping,
   explicitDefaults: Readonly<Record<string, unknown>>,
   reserved: ReadonlySet<string>,
@@ -410,7 +477,9 @@ const planOf = (
   const dropped = [...sourceProperties.keys()].filter((name) => !read.has(name));
   // Read only by a one-way entry, so going back nothing restores them.
   const twoWay = new Set(
-    entries.filter((entry) => !entry.oneWay && entry.serialized?.kind !== 'readOnly').flatMap((entry) => entry.from),
+    entries
+      .filter((entry) => !entry.oneWay && !entry.extract && entry.serialized?.kind !== 'readOnly')
+      .flatMap((entry) => entry.from),
   );
   const oneWayOnly = [...read].filter((name) => !twoWay.has(name));
 

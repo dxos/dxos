@@ -760,6 +760,40 @@ describe('ConvergenceKeyMerger creation-heads replay', () => {
     expect(entityOf(fixture, ID_B)?.data.note).toBe('loser edit');
   });
 
+  test("an extracted object's duplicates are redirected without a data write, which translation carries", async ({
+    expect,
+  }) => {
+    const key = `lens:${'0'.repeat(32)}:${ID_C}:address`;
+    const fixture = setup([
+      [ID_A, makeEntity(key, { city: 'London', title: 'winner' })],
+      [ID_B, makeEntity(key, { city: 'London' })],
+    ]);
+    edit(fixture, ID_B, (entity) => {
+      entity.data.city = 'Paris';
+      entity.data.extra = 'loser only';
+    });
+    const winner = fixture.handles.get(ID_A);
+    if (!winner) {
+      throw new Error('fixture is missing the handle');
+    }
+    const before = A.getHeads(winner.doc());
+
+    const merger = new ConvergenceKeyMerger(fixture.context);
+    expect(await merger.mergeGroup(Context.default(), SPACE_ID, key, fixture.group)).toBe(true);
+    expect(entityOf(fixture, ID_A)?.data).toEqual({ city: 'London', title: 'winner' });
+    expect(entityOf(fixture, ID_A)?.system?.mergedFrom).toEqual([ID_B]);
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
+    // The winner's only change records the merge: no replay change, no data fold.
+    expect(A.getChangesMetaSince(winner.doc(), before)).toHaveLength(1);
+
+    // A late edit to the redirected copy is not folded either.
+    edit(fixture, ID_B, (entity) => {
+      entity.data.city = 'Berlin';
+    });
+    await merger.mergeGroup(Context.default(), SPACE_ID, key, fixture.group);
+    expect(entityOf(fixture, ID_A)?.data.city).toBe('London');
+  });
+
   test('a field both sides edited becomes a real Automerge conflict on the winner', async ({ expect }) => {
     const fixture = setup([
       [ID_A, makeEntity(KEY, { note: 'baseline' })],

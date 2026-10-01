@@ -68,6 +68,8 @@ export class VersionTranslator {
   /** Per space: what each object looked like when it was last synced. */
   readonly #synced = new Map<SpaceId, Map<string, string>>();
   readonly #settled = new Map<SpaceId, VersionSettled>();
+  /** Per space: documents outside an object's own that its last sync read, such as the objects extracted from it. */
+  readonly #related = new Map<SpaceId, Map<string, Set<string>>>();
   #running: Promise<void> | undefined;
   #again = false;
 
@@ -167,10 +169,12 @@ export class VersionTranslator {
       this.#synced.set(spaceId, synced);
       const settled = this.#settled.get(spaceId) ?? new Map();
       this.#settled.set(spaceId, settled);
+      const related = this.#related.get(spaceId) ?? new Map<string, Set<string>>();
+      this.#related.set(spaceId, related);
       // Heads of the documents themselves: stored heads can lag a document that is loaded and changing.
       const stateOf = async (objectId: string): Promise<string> => {
         const parts = [lensesKey];
-        for (const url of documentsOf(root.doc(), objectId)) {
+        for (const url of new Set([...documentsOf(root.doc(), objectId), ...(related.get(objectId) ?? [])])) {
           parts.push(`${url}:${A.getHeads((await store.load(url)).doc()).join(',')}`);
         }
         return parts.join('\n');
@@ -183,7 +187,12 @@ export class VersionTranslator {
         if (synced.get(objectId) === before) {
           continue;
         }
-        await syncVersionDocuments(store, edges, [objectId], { settled });
+        const touched = new Set<string>();
+        await syncVersionDocuments(store, edges, [objectId], {
+          settled,
+          onHandle: (_, handle) => handle.url && touched.add(handle.url),
+        });
+        related.set(objectId, touched);
         synced.set(objectId, await stateOf(objectId));
       }
     } finally {

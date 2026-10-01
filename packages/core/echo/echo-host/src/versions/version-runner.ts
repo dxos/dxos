@@ -9,6 +9,7 @@ import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
 import { isRecord } from './encoded-value.ts';
+import { syncLinks } from './version-links.ts';
 import {
   type VersionDoc,
   derivedWith,
@@ -27,14 +28,15 @@ import {
 // - A missing version is derived from the object's origin document, so devices that create it
 //   concurrently create the same root under different document ids. The registry's visible value wins;
 //   a device holding a losing document merges it into the winner.
-// - Every original edit is translated into every other version this device holds.
+// - Every original edit is translated into every other version this device holds, and between the versions
+//   embedding a struct and the object a newer version extracts it into (`version-links.ts`).
 //
 
 /** A document the runner reads and writes. */
 export type VersionDocHandle = {
   readonly url: string | undefined;
   doc(): VersionDoc;
-  change(callback: A.ChangeFn<DatabaseDirectory>): void;
+  change(callback: A.ChangeFn<DatabaseDirectory>, options?: A.ChangeOptions<DatabaseDirectory>): void;
   /** Replaces the document with one built from it, as `A.merge` returns. */
   update(callback: (doc: VersionDoc) => VersionDoc): void;
 };
@@ -252,6 +254,15 @@ const syncObject = async (
   }
 
   translateAll([...held.values()], objectId, typename, edges, settledFor(settled, objectId));
+  await syncLinks({
+    store,
+    edges,
+    objectId,
+    typename,
+    parents: held,
+    settled: settledFor(settled, `${objectId} links`),
+    onHandle,
+  });
   await syncBranches(store, edges, conflicted.size > 0, objectId, typename, origin, { settled, onHandle });
 };
 
