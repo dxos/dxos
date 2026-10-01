@@ -142,4 +142,7 @@ export const recipes = {
   tabsTrigger: () => 'nx-tabs-trigger',
   tabsContent: () => `nx-tabs-content ${FOCUS_RING}`,
   tabsIndicator: () => 'nx-tabs-indicator',
+  progress: () => 'nx-progress',
+  progressTrack: () => 'nx-progress-track',
+  progressRange: () => 'nx-progress-range',
 } as const;

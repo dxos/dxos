@@ -28,6 +28,7 @@ export * from './Panel/index.ts';
 export * from './PasswordInput/index.ts';
 export * from './PinInput/index.ts';
 export * from './Popover/index.ts';
+export * from './Progress/index.ts';
 export * from './ScrollArea/index.ts';
 export * from './Select/index.ts';
 export * from './Separator/index.ts';

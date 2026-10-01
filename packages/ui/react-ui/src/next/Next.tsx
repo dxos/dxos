@@ -70,6 +70,8 @@ import {
   PinInput as NextPinInput,
   type PinInputProps as NextPinInputProps,
   Popover as NextPopover,
+  Progress as NextProgress,
+  type ProgressProps as NextProgressProps,
   ScrollArea as NextScrollArea,
   Select as NextSelect,
   type SelectOption as NextSelectOption,
@@ -201,4 +203,6 @@ export namespace Next {
   export type TabsTriggerProps = NextTabsTriggerProps;
   export type TabsOrientation = NextTabsOrientation;
   export type TabsSelectedVariant = NextTabsSelectedVariant;
+  export const Progress = NextProgress;
+  export type ProgressProps = NextProgressProps;
 }
