@@ -54,6 +54,7 @@ const DefaultStory = (_: PaneArgs) => {
                         type={Person.Person}
                         value={recipients}
                         start={<Next.Icon icon='ph--users--regular' />}
+                        classNames='attendees-frame'
                         onChange={setRecipients}
                         data-testid='attendees'
                       />
@@ -117,6 +118,8 @@ export const Test: Story = {
     const canvas = within(canvasElement);
     // The client creates its space asynchronously, which is slow under full-suite load.
     const attendees = await canvas.findByTestId('attendees', {}, { timeout: 15_000 });
+    // Layout classes reach the frame.
+    await expect(attendees).toHaveClass('attendees-frame');
     const title = canvas.getByRole('textbox', { name: 'Title' }).getBoundingClientRect();
 
     // 2. The markdown field is a multi-line frame on the control track, at least six lines tall, and edits the value.
