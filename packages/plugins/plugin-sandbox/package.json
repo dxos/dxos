@@ -180,6 +180,7 @@
   "dependencies": {
     "@carderne/sandbox-runtime": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",

@@ -29,6 +29,7 @@ import {
   type PullRequestDetailsValues,
   PullRequestFiles,
   PullRequestOverview,
+  PullRequestStatus,
   WalkthroughPlaceholder,
   WalkthroughView,
 } from '../../components/index.ts';
@@ -50,6 +51,8 @@ type Status = {
   ci: GitHubOperation.CiState;
   checks: GitHubOperation.CheckCounts;
   runs: readonly GitHubOperation.CheckRun[];
+  review: GitHubOperation.ReviewState;
+  approvals: number;
 };
 
 type Tab = 'overview' | 'walkthrough' | 'files';
@@ -159,7 +162,15 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       return;
     }
     if (data) {
-      setStatus({ state: data.state, body: data.body, ci: data.ci, checks: data.checks, runs: data.runs });
+      setStatus({
+        state: data.state,
+        body: data.body,
+        ci: data.ci,
+        checks: data.checks,
+        runs: data.runs,
+        review: data.review,
+        approvals: data.approvals,
+      });
     }
   }, [invokePromise, pullRequestRef, spaceId]);
 
@@ -495,6 +506,13 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Flex column>
+            <PullRequestStatus
+              reference={reference}
+              title={subject.title}
+              state={state}
+              review={status && { state: status.review, approvals: status.approvals }}
+              ci={status && { state: status.ci, checks: status.checks }}
+            />
             {composing && !lineTarget && <CommentBand {...composerProps} />}
             <LineCommentPopover
               {...composerProps}

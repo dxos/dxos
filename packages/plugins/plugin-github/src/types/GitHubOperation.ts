@@ -290,6 +290,13 @@ export const CheckCounts = Schema.Struct({
 });
 export interface CheckCounts extends Schema.Schema.Type<typeof CheckCounts> {}
 
+/**
+ * Where the reviews stand, from each reviewer's latest verdict: any outstanding request for changes
+ * outweighs approvals, and `none` means no reviewer has approved or asked for changes.
+ */
+export const ReviewState = Schema.Literals(['approved', 'changes_requested', 'none']);
+export type ReviewState = Schema.Schema.Type<typeof ReviewState>;
+
 /** How one check run ended, folded to what a reader acts on; `skipped` is neither passing nor failing. */
 export const CheckOutcome = Schema.Literals(['success', 'failure', 'pending', 'skipped', 'neutral']);
 export type CheckOutcome = Schema.Schema.Type<typeof CheckOutcome>;
@@ -312,7 +319,7 @@ export const GetPullRequestStatus = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.getPullRequestStatus'),
     name: 'Get Pull Request Status',
-    description: "Read a pull request's state and the CI status of its head commit.",
+    description: "Read a pull request's state, its review verdict and the CI status of its head commit.",
     icon: 'ph--git-pull-request--regular',
   },
   input: Schema.Struct({
@@ -327,6 +334,9 @@ export const GetPullRequestStatus = Operation.make({
     ci: CiState,
     checks: CheckCounts,
     runs: Schema.Array(CheckRun),
+    review: ReviewState,
+    /** Reviewers whose latest verdict is an approval. */
+    approvals: Schema.Number,
   }),
   types: [PullRequest.PullRequest],
 });
