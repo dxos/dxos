@@ -24,6 +24,8 @@
    `--line-height`, `--font-size`, `--icon-size`, `--gap-size`. `Container` only sets `data-size`; TS exports just
    the `Size` type and `SIZES` list. One icon scale serves rail Blocks and controls, with `md` at Tailwind's `size-4`:
    `--nx-icon-size` xs 0.75rem, sm 0.875rem, md 1rem, lg 1.25rem, xl 1.5rem. The metrics live in `theme/size.css`.
+   A Button (and so Toggle and `ToggleGroup.Item`) takes `size` too, setting `data-size` on itself alone, which
+   `theme/size.css` scopes like any sized part.
    Namespacing (provisional, to be renamed): rules match only `.nx-*` elements and variables are `--nx-*`, since
    `data-size`, `data-layout`, `--gutter`, `--icon-size` and `--line-height` are already used by current primitives.
 3. **Framework neutrality.** Design for Solid, build React only, following Ark's layering: behavior in framework-neutral
@@ -96,6 +98,16 @@
     flex stack placed in the content track: Label above the control, HelperText/ErrorText below. Labels do not share a
     column across fields; `columns` remains for other row layouts. Illustrated in `spike/Choices.stories.tsx`
     (FieldLayout).
+
+14. **Master-detail is composed, not a component.** Selection stays in the list's or tabs' Root context
+    (`Next.Listbox.useContext()`, `Next.Tabs.useContext()`); the layout is `Next.Splitter` with `collapseBelow`, a
+    controllable `mode`, and `resizable={false}` by default with a static divider
+    (`Splitter/MasterDetail.stories.tsx`).
+15. **One disclosure timing.** `--nx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under reduced
+    motion) with `--nx-disclosure-ease-open` (ease-out) and `--nx-disclosure-ease-close` (ease-in), shared by Tree,
+    Collapsible, Accordion, Main and Splitter; Main keeps its own ease-in-out curve.
+16. **Ref arrays in forms.** `ArrayPresentation({ ordered?: boolean; display?: 'tag' | 'title' })`; Tag refs default
+    to `'tag'`, other refs to `'title'`; `ordered` implies drag reorder.
 
 ## Spike findings
 

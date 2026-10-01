@@ -791,6 +791,23 @@ value adapter. The current (non-next) OrderedList keeps `DetailItem` until the c
 
 No open questions remain.
 
+### Decision review 2026-10-01 (follow-ups)
+
+- **Master-detail:** not a component. Selection stays in the list's or tabs' Root context (`Next.Listbox.useContext()`,
+  `Next.Tabs.useContext()`); the layout is `Next.Splitter` with `collapseBelow`, a controllable `mode`, and
+  `resizable={false}` by default with a static divider. `Splitter/MasterDetail.stories.tsx` is the approved pattern.
+  At the cut-over, react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton` are
+  removed; their callers (ChatOptions, Welcome, VideoArticle) compose Tabs + Splitter.
+- **Disclosure timing:** one duration, `--nx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under
+  reduced motion), with `--nx-disclosure-ease-open` (ease-out) and `--nx-disclosure-ease-close` (ease-in). Tree,
+  Collapsible, Accordion, Main and Splitter use it; Main keeps its own ease-in-out curve.
+- **Ref arrays in forms:** an `ArrayPresentation({ ordered?: boolean; display?: 'tag' | 'title' })` annotation
+  (`'card'` may come later). Tag refs default to `'tag'`, other refs to `'title'`; `ordered` implies drag reorder.
+- **Button `size`:** `xs`–`xl` on Button (so Toggle and `ToggleGroup.Item`) sets `data-size` on the button alone. The
+  `density` codemod reads the enclosing scope first: it drops `density` where that scope already yields it
+  (`fine`→`sm`, `coarse`→`md`), hoists a size shared by sibling buttons to the nearest scope element, and otherwise
+  sets `size` on the button; scopes it cannot see (another file) are reported.
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
@@ -883,7 +900,7 @@ variant='gap'`, Switch in the toolbar's roving focus, `Menu.TriggerItem disabled
 | Radix→Ark part names (`Dialog.Close`, `Select.TriggerButton`, `RadioGroup`, `SubTrigger`, `ItemLabel`, `Indicator`) | mechanical | per inventory §2  |
 | Remove `Tooltip.Provider`; unwrap Portal, Overlay, Arrow, Viewport                                                  | mechanical | per inventory §2  |
 | `Panel.Content`→`Body` (with `asChild`→ScrollArea residue)                                                          | semi       | 245 files         |
-| `density=`→`size=`, `Icon size=`                                                                                    | semi       | 66 + 161 elements |
+| `density=`→`size=` (scope-aware: drop, hoist, else Button `size`), `Icon size=`                                     | semi       | 66 + 161 elements |
 | Import rewrite `@dxos/react-ui` → Next exports (namespace flattening)                                               | mechanical | all               |
 | Text-emphasis class rename                                                                                          | regex      | 770 occurrences   |
 
