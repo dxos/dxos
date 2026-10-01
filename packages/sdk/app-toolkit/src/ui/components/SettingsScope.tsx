@@ -51,7 +51,7 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
 
   return (
     <>
-      <Next.ToggleGroup type='single' value={synced ? 'synced' : 'local'} onValueChange={handleValueChange}>
+      <Next.ToggleGroup.Root type='single' value={synced ? 'synced' : 'local'} onValueChange={handleValueChange}>
         <Next.ToggleGroup.Item
           value='synced'
           data-testid='settingsScope.synced'
@@ -66,7 +66,7 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
           label={t('settings-scope.local.label')}
           iconOnly
         />
-      </Next.ToggleGroup>
+      </Next.ToggleGroup.Root>
       <Next.AlertDialog.Root open={conflicts.length > 0} onOpenChange={({ open }) => !open && setConflicts([])}>
         <Next.AlertDialog.Content>
           <Next.AlertDialog.Body>

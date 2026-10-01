@@ -202,7 +202,7 @@ const DashboardRanges = forwardRef<HTMLDivElement, DashboardRangesProps>(
     );
 
     return (
-      <Next.ToggleGroup
+      <Next.ToggleGroup.Root
         {...props}
         type='single'
         value={range ?? ''}
@@ -211,7 +211,7 @@ const DashboardRanges = forwardRef<HTMLDivElement, DashboardRangesProps>(
         ref={forwardedRef}
       >
         {children}
-      </Next.ToggleGroup>
+      </Next.ToggleGroup.Root>
     );
   },
 );

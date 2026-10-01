@@ -33,7 +33,7 @@ export const PluginScope = ({ synced, onPin, onUnpin }: PluginScopeProps) => {
   );
 
   return (
-    <Next.ToggleGroup type='single' value={synced ? 'shared' : 'local'} onValueChange={handleValueChange}>
+    <Next.ToggleGroup.Root type='single' value={synced ? 'shared' : 'local'} onValueChange={handleValueChange}>
       <Next.ToggleGroup.Item
         value='shared'
         data-testid='pluginDetail.scope.shared'
@@ -48,7 +48,7 @@ export const PluginScope = ({ synced, onPin, onUnpin }: PluginScopeProps) => {
         label={t('plugin-scope.device-only.label')}
         iconOnly
       />
-    </Next.ToggleGroup>
+    </Next.ToggleGroup.Root>
   );
 };
 
