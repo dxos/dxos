@@ -14,7 +14,7 @@ import { Position } from '@dxos/util';
 import { IMPORT_PULL_REQUEST_DIALOG } from '#meta';
 import { Walkthrough } from '#types';
 
-import { GitHubCard } from '../cards/index.ts';
+import { GitHubCard, PullRequestCard } from '../cards/index.ts';
 import {
   ImportPullRequestDialog,
   PullRequestArticle,
@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         id: 'pullRequestCard',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, PullRequest.PullRequest),
-        component: GitHubCard,
+        component: PullRequestCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
