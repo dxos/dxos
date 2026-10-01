@@ -15,6 +15,7 @@ export * from './InlineRefField.tsx';
 export * from './MarkdownField.tsx';
 export * from './NumberField.tsx';
 export * from './PasswordField.tsx';
+export * from './RefArrayField.tsx';
 export * from './RefField.tsx';
 export * from './SelectField.tsx';
 export * from './SelectOptionField.tsx';

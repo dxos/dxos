@@ -13,7 +13,7 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
-import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
+import { type CreateOptions, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
 import * as Current from '../components/Form/FormField/fields/index.ts';
 import { FormFieldErrorBoundary } from '../components/Form/FormField/FormField.tsx';
@@ -29,7 +29,7 @@ import {
   useFormFieldsProperties,
 } from '../components/Form/FormFields/FormFields.tsx';
 import { useFormContext, useFormFieldState, useFormValues } from '../hooks/index.ts';
-import { getSchemaAtPath } from '../util/index.ts';
+import { getRefProps, getSchemaAtPath } from '../util/index.ts';
 import {
   ArrayField,
   AsyncSelectField,
@@ -43,11 +43,13 @@ import {
   MarkdownField,
   NumberField,
   PasswordField,
+  RefArrayField,
   RefField,
   SelectField,
   TextAreaField,
   TextField,
 } from './fields/index.ts';
+import { TAG_TYPENAME } from './fields/ref-options.ts';
 import { FormFieldRow } from './FormField.tsx';
 import { FormFieldSet } from './FormFieldSet.tsx';
 import { FormLayout } from './FormLayout.tsx';
@@ -97,6 +99,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     hideEmpty = true,
     layout,
     createTypename,
+    createOptionLabel,
+    createOptionIcon,
     createInitialValuePath,
     createFieldMap,
     db,
@@ -160,7 +164,10 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   if (resolution.kind === 'provided') {
     return resolution.element;
   }
-  if (resolution.kind === 'array') {
+  // An array of tag refs (the meta tags) is one multiple selection rather than a row per element.
+  const refArray = resolution.kind === 'array' ? getRefProps(type) : undefined;
+  const tagArray = refArray?.isArray && refArray.typename === TAG_TYPENAME ? refArray : undefined;
+  if (resolution.kind === 'array' && !tagArray) {
     return <ArrayField fieldProps={fieldState} label={label} {...props} />;
   }
   if (resolution.kind === 'object') {
@@ -213,13 +220,20 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       description={description}
       format={fieldProps.format}
       binding={binding}
-      standalone={scalar?.standalone}
+      standalone={tagArray ? true : scalar?.standalone}
       labelPlacement={scalar?.labelPlacement}
       renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name) : undefined}
     >
       {control}
     </FormFieldRow>
   );
+
+  /** The form's create options (e.g. a tag's), which apply only to refs of `createTypename`. */
+  function createOptionsFor(typename: string | undefined): CreateOptions {
+    return !createTypename || typename === createTypename
+      ? { createOptionLabel, createOptionIcon, createInitialValuePath, createFieldMap }
+      : {};
+  }
 
   function renderControl(resolution: FieldRendererResolution): ReactNode | undefined {
     switch (resolution.kind) {
@@ -239,15 +253,27 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
       case 'hue':
         return <HueField {...fieldProps} />;
+      case 'array':
+        return (
+          tagArray && (
+            <RefArrayField
+              {...fieldProps}
+              {...createOptionsFor(tagArray.typename)}
+              elementType={tagArray.ast}
+              db={db}
+              useType={useType}
+              getOptions={getOptions}
+              onCreate={onCreate}
+              resolveCreateEntry={resolveCreateEntry}
+            />
+          )
+        );
       case 'ref': {
-        // The form's create options (e.g. a tag's) apply only to refs of `createTypename`.
-        const isCreateTarget = !createTypename || resolution.refProps.typename === createTypename;
         return (
           <RefField
             {...fieldProps}
             {...resolution.refProps}
-            createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
-            createFieldMap={isCreateTarget ? createFieldMap : undefined}
+            {...createOptionsFor(resolution.refProps.typename)}
             db={db}
             useType={useType}
             getOptions={getOptions}

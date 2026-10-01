@@ -130,10 +130,11 @@ through `onCreate`/`resolveCreateEntry` and selects it. The data path is the cur
 
 - **Combobox finding (fixed in react-ui next):** zag cancels pointerdown on the popup to keep focus in its search
   field, so a click could not focus a field composed into `Content`; the Content now focuses such a field itself.
-- **Gaps:** `createOptionLabel`/`createOptionIcon` are not honoured (the row is Combobox's `Create “{query}”`; a
-  custom row means composing `List` by hand, and the collection is not exposed). Choosing the create row re-opens the
-  popup in the same batch as zag's `item-select` close. The read-only `DxAnchor` link is a plain Typography label;
-  `multiple` (arrays of refs) and the virtual anchor are not used yet.
+- **Create row text and icon:** `Next.Combobox.Root` takes `createLabel(query)` and `createIcon` for its default
+  create row; the next RefField passes the form's `createOptionLabel` (translated with the query as `text`) and
+  `createOptionIcon`, which the RefField story checks.
+- **Gaps:** choosing the create row re-opens the popup in the same batch as zag's `item-select` close. The read-only
+  `DxAnchor` link is a plain Typography label, and the virtual anchor is not used yet.
 
 ### 6. Custom renderer migration (`CustomRenderer.stories.tsx`)
 
@@ -377,10 +378,14 @@ The design branch (A1–A5) is merged in, so each now builds on its Next parts:
     the casts the current one needs.
   - **ObjectForm and ObjectProperties** (`ObjectForm.tsx`) share one form model (`useObjectFormModel`): the object's
     values plus its editable meta tags, writes through `Obj.update`, and a create handler honouring `FactoryAnnotation`.
-    The meta-tags row is the next ArrayField of RefFields, so a tag is picked or created inline (M9) with a hue Select;
-    `ObjectForm.stories.tsx` covers editing, picking a tag and creating one. A multi-select picker for the tags (one
-    Combobox `multiple` instead of a row per tag) is the open follow-up. The form's create options (`createTypename`,
-    `createInitialValuePath`, `createFieldMap`) now reach the next RefField, gated to `createTypename` as today.
+    The meta-tags row is one multiple selection (`RefArrayField` on `ObjectMultiPicker`): removable `Next.Tag` chips in
+    each tag's hue in a wrapping `Combobox.Control`, whose caret opens a search popup that toggles tags without
+    closing; `Add tag “…”` (tag icon) swaps the list for a create form seeded with the query, with a hue Select, and the
+    new tag joins the selection. `ObjectForm.stories.tsx` covers editing, toggling, creating and removing a chip. Only
+    arrays of Tag refs take this form: other ref arrays keep the ordered ArrayField rows, since their order can matter
+    (decision for review: extend it to unordered ref arrays). The form's create options (`createTypename`,
+    `createOptionLabel`, `createOptionIcon`, `createInitialValuePath`, `createFieldMap`) reach the next ref fields,
+    gated to `createTypename` as today. RefField and RefArrayField share their data path (`useRefCandidates`).
   - **ViewEditor** (`ViewEditor.tsx`) announces a read-only schema in a `Next.Banner` and lists the field projections
     on the Listbox-based `OrderedList`: drag/Alt+Arrow reorder, a `Next.Toggle` to hide or show, delete, and add,
     each row opening to the next FieldEditor. The `tag` mode's `QueryForm` is still the current component, in a

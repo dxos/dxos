@@ -32,6 +32,7 @@ export const translations = [
         'delete-field.label': 'Delete field',
         'create-option.label': 'Create',
         'add-tag.label': 'Add tag',
+        'add-tag-query.label': 'Add tag “{{text}}”',
 
         'ref-field-combobox-input.placeholder': 'Search…',
         'ref-field.placeholder': 'Select…',

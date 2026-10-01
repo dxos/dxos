@@ -102,29 +102,41 @@ export const Test: Story = {
     await userEvent.type(name, 'Alice Liddell');
     await waitFor(() => expect(readObject(canvasElement).fullName).toBe('Alice Liddell'));
 
-    // 4. The meta tags are a Tags array whose row picks a Tag ref; adding one and picking writes `meta.tags`.
-    const tags = canvas.getByRole('listbox', { name: 'Tags' });
-    await expect(within(tags).getAllByRole('option')).toHaveLength(1);
-    await expect(within(tags).getByText('Friend')).toBeVisible();
-    await userEvent.click(canvas.getByTestId('_tags.add'));
-    await waitFor(() => expect(within(tags).getAllByRole('option')).toHaveLength(2));
-    const triggers = tags.querySelectorAll<HTMLElement>('[data-scope="combobox"][data-part="trigger"]');
-    await userEvent.click(triggers[1]);
-    await userEvent.click(within(await body.findByRole('dialog')).getByRole('option', { name: 'Colleague' }));
-    await waitFor(() => expect(readObject(canvasElement).tags).toEqual(['Friend', 'Colleague']));
-
-    // 5. An unmatched query creates a tag inline, seeded with the query as its label, with a hue Select.
-    await userEvent.click(canvas.getByTestId('_tags.add'));
-    await waitFor(() => expect(within(tags).getAllByRole('option')).toHaveLength(3));
-    await userEvent.click(tags.querySelectorAll<HTMLElement>('[data-scope="combobox"][data-part="trigger"]')[2]);
+    // 4. The meta tags are one multiple selection: a chip per tag in its hue, and a caret opening a search popup where
+    // picking toggles a tag without closing.
+    const tags = canvas.getByTestId('_tags');
+    await expect(within(tags).getByText('Friend').closest('[data-hue]')).toHaveAttribute('data-hue', 'emerald');
+    await userEvent.click(caretOf(tags));
     const popup = await body.findByRole('dialog');
+    await userEvent.click(within(popup).getByRole('option', { name: 'Colleague' }));
+    await waitFor(() => expect(readObject(canvasElement).tags).toEqual(['Friend', 'Colleague']));
+    await expect(within(tags).getByText('Colleague')).toBeVisible();
+
+    // 5. An unmatched query offers `Add tag “…”` with a tag icon; the create form is seeded with the query and has a hue
+    // Select, and the new tag joins the selection.
     await userEvent.keyboard('Family');
-    await userEvent.click(within(popup).getByRole('option', { name: 'Create “Family”' }));
+    const create = await within(popup).findByRole('option', { name: 'Add tag “Family”' });
+    await expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--tag--regular');
+    await userEvent.click(create);
     await expect(await within(popup).findByRole('textbox', { name: 'Label' })).toHaveValue('Family');
     await expect(within(popup).getByRole('combobox', { name: 'Hue' })).toBeInTheDocument();
     await userEvent.click(within(popup).getByTestId('save-button'));
     await waitFor(() => expect(readObject(canvasElement).tags).toEqual(['Friend', 'Colleague', 'Family']));
+    await userEvent.keyboard('{Escape}');
+
+    // 6. A chip's delete removes its tag.
+    await userEvent.click(within(tags).getByRole('button', { name: /Colleague/ }));
+    await waitFor(() => expect(readObject(canvasElement).tags).toEqual(['Friend', 'Family']));
   },
+};
+
+/** The tags row's caret trigger. */
+const caretOf = (control: HTMLElement): HTMLElement => {
+  const caret = control.querySelector<HTMLElement>('[data-scope="combobox"][data-part="trigger"]');
+  if (!caret) {
+    throw new Error('No caret trigger.');
+  }
+  return caret;
 };
 
 /** 1. TestProperties: the properties pane scrolls its own form and edits the object the same way. */
@@ -135,6 +147,6 @@ export const TestProperties: Story = {
     const title = await canvas.findByDisplayValue('Engineer', {}, { timeout: 15_000 });
     await userEvent.type(title, ' II');
     await waitFor(() => expect(readObject(canvasElement).jobTitle).toBe('Engineer II'));
-    await expect(within(canvas.getByRole('listbox', { name: 'Tags' })).getByText('Friend')).toBeVisible();
+    await expect(within(canvas.getByTestId('_tags')).getByText('Friend')).toBeVisible();
   },
 };

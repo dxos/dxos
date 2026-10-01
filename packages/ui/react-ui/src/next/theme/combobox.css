@@ -20,6 +20,21 @@
     padding-inline-end: 0;
     background: var(--color-input-surface);
   }
+  /*
+   * A wrapping row (a multiple selection's chips): one inset of padding round lines one tag tall, so a single line is
+   * control-tall; the caret takes a tag-tall cell at the end of the last line.
+   */
+  .nx-combobox-control[data-wrap] {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--nx-control-size);
+    padding-block: var(--nx-control-inset);
+    gap: var(--nx-control-inset) var(--nx-gap-size);
+  }
+  .nx-combobox-control[data-wrap] > .nx-combobox-trigger {
+    height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
+    margin-inline-start: auto;
+  }
   /* An outline, not an inset shadow: it paints above the trigger's own fill instead of under it. */
   .nx-combobox-control:has(> .nx-combobox-input:focus-visible) {
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);

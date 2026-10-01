@@ -12,13 +12,17 @@ import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { FactoryAnnotation } from '@dxos/schema';
 
-import { type FormFieldMap, type RefFieldDataProps } from '#types';
+import { translationKey } from '#translations';
+import { type CreateOptions, type FormFieldMap, type RefFieldDataProps } from '#types';
 
 import { META_TAGS_KEY, partitionMetaTags, withMetaTags } from '../components/Form/meta-tags.ts';
 import { omitId } from '../util/index.ts';
 import { HueField } from './fields/index.ts';
 import { Form } from './Form.tsx';
 import { FormField } from './FormField.tsx';
+
+/** The tags row's create option: `Add tag “{query}”`. */
+const CREATE_TAG_LABEL: CreateOptions['createOptionLabel'] = ['add-tag-query.label', { ns: translationKey }];
 
 /** The create form for a tag (the meta-tags row's create target): its `hue` as a hue Select. */
 const createFieldMap: FormFieldMap = {
@@ -133,6 +137,8 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
       values={values}
       db={db}
       createTypename={Type.getTypename(Tag.Tag)}
+      createOptionLabel={CREATE_TAG_LABEL}
+      createOptionIcon='ph--tag--regular'
       createInitialValuePath='label'
       createFieldMap={createFieldMap}
       onValuesChanged={handleChange}
@@ -176,6 +182,8 @@ export const ObjectProperties = ({
       values={values}
       db={db}
       createTypename={Type.getTypename(Tag.Tag)}
+      createOptionLabel={CREATE_TAG_LABEL}
+      createOptionIcon='ph--tag--regular'
       createInitialValuePath='label'
       createFieldMap={createFieldMap}
       onValuesChanged={handleChange}

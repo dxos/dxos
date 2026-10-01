@@ -61,6 +61,9 @@ type ComboboxRootContextValue = {
   loading: boolean;
   /** The create row's option, while there is one. */
   create?: ComboboxOption;
+  /** The create row's text for a query and its icon, when the Root overrides the defaults. */
+  createLabel?: (query: string) => string;
+  createIcon?: string;
   /** Whether the input is the popup's search field (a button `Trigger` or an `Input` inside `Content`). */
   search: boolean;
   registerTrigger: (present: boolean) => void;
@@ -80,6 +83,10 @@ type ComboboxRootProps = ThemedClassName<Omit<ComboboxPrimitive.RootProps<Combob
   loading?: boolean;
   /** Offers a create row while the typed query matches no label exactly; choosing it calls this instead of selecting. */
   onCreate?: (query: string) => void;
+  /** The create row's text for the query (e.g. `Add tag “{query}”`); `Create “{query}”` by default. */
+  createLabel?: (query: string) => string;
+  /** The create row's icon; a plus by default. */
+  createIcon?: string;
 };
 
 /**
@@ -94,6 +101,8 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
       filter = containsFilter,
       loading = false,
       onCreate,
+      createLabel,
+      createIcon,
       positioning,
       lazyMount = true,
       unmountOnExit = true,
@@ -173,6 +182,8 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
           query={query}
           loading={loading}
           create={create}
+          createLabel={createLabel}
+          createIcon={createIcon}
           search={search}
           registerTrigger={registerTrigger}
           registerSearch={registerSearch}
@@ -225,12 +236,23 @@ ComboboxLabel.displayName = 'Next.Combobox.Label';
 // Inside a Control the Trigger is its caret square; elsewhere it is the button that shows the value.
 const ControlContext = createContext(false);
 
-type ComboboxControlProps = ThemedClassName<ComboboxPrimitive.ControlProps>;
+type ComboboxControlProps = ThemedClassName<ComboboxPrimitive.ControlProps> & {
+  /**
+   * Wraps its children (e.g. the chips of a multiple selection) onto further lines, growing from control height; the
+   * trailing caret stays at the end of the last line.
+   */
+  wrap?: boolean;
+};
 
 /** A control-sized row; without children it holds the text `Input` and a trailing caret `Trigger`. */
 const ComboboxControl = forwardRef<HTMLDivElement, ComboboxControlProps>(
-  ({ classNames, children, ...props }, forwardedRef) => (
-    <ComboboxPrimitive.Control {...props} className={mx(recipes.comboboxControl(), classNames)} ref={forwardedRef}>
+  ({ classNames, wrap, children, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.Control
+      {...props}
+      data-wrap={wrap ? '' : undefined}
+      className={mx(recipes.comboboxControl(), classNames)}
+      ref={forwardedRef}
+    >
       <ControlContext.Provider value={true}>
         {children ?? (
           <>
@@ -598,7 +620,7 @@ type ComboboxCreateItemProps = Omit<ComboboxItemProps, 'item'>;
  */
 const ComboboxCreateItem = forwardRef<HTMLDivElement, ComboboxCreateItemProps>(
   ({ children, ...props }, forwardedRef) => {
-    const { create } = useComboboxRootContext('Next.Combobox.CreateItem');
+    const { create, createLabel, createIcon } = useComboboxRootContext('Next.Combobox.CreateItem');
     const { t } = useTranslation(translationKey);
     if (!create) {
       return null;
@@ -608,9 +630,10 @@ const ComboboxCreateItem = forwardRef<HTMLDivElement, ComboboxCreateItemProps>(
       <ComboboxItem {...props} item={create} data-create='' ref={forwardedRef}>
         {children ?? (
           <>
-            <ComboboxItemIcon icon='ph--plus--regular' />
+            <ComboboxItemIcon icon={createIcon ?? 'ph--plus--regular'} />
             <ComboboxItemText>
-              {t('combobox.create.label', { query: create.label, interpolation: { escapeValue: false } })}
+              {createLabel?.(create.label) ??
+                t('combobox.create.label', { query: create.label, interpolation: { escapeValue: false } })}
             </ComboboxItemText>
           </>
         )}

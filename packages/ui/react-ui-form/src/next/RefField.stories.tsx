@@ -26,6 +26,9 @@ const OPTIONS: RefOption[] = ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli'].
   description: index === 2 ? 'Software, Austin' : undefined,
 }));
 
+/** The story's own translations: the create row's `createOptionLabel`. */
+const STORY_NS = 'react-ui-form.next.ref-field.story';
+
 const useType: NonNullable<RefFieldDataProps['useType']> = () => Organization;
 
 /** A single reference on the next `ObjectPicker`: a trigger button, a searchable popup and an inline create form. */
@@ -49,6 +52,8 @@ const DefaultStory = (_: PaneArgs) => {
           values={values}
           getOptions={getOptions}
           useType={useType}
+          createOptionLabel={['create-organization.label', { ns: STORY_NS }]}
+          createOptionIcon='ph--buildings--regular'
           onCreate={handleCreate}
           onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
         >
@@ -70,7 +75,13 @@ const meta = {
   title: 'ui/react-ui-form/next/RefField',
   render: DefaultStory,
   decorators: [withTheme(), withNextPane({ height: '32rem' })],
-  parameters: { layout: 'fullscreen', translations: nextTranslations },
+  parameters: {
+    layout: 'fullscreen',
+    translations: [
+      ...nextTranslations,
+      { 'en-US': { [STORY_NS]: { 'create-organization.label': 'New organization “{{text}}”' } } },
+    ],
+  },
 } satisfies Meta<PaneArgs>;
 
 export default meta;
@@ -116,7 +127,10 @@ export const Test: Story = {
     await userEvent.click(trigger);
     const createPopup = await body.findByRole('dialog');
     await userEvent.keyboard('Wayne');
-    await userEvent.click(within(createPopup).getByRole('option', { name: 'Create “Wayne”' }));
+    // The row takes the form's `createOptionLabel` (translated with the query) and `createOptionIcon`.
+    const create = within(createPopup).getByRole('option', { name: 'New organization “Wayne”' });
+    await expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--buildings--regular');
+    await userEvent.click(create);
     const name = await within(createPopup).findByRole('textbox', { name: 'Full name' });
     await userEvent.type(name, 'Wayne Enterprises');
     const save = within(createPopup).getByTestId('save-button');
