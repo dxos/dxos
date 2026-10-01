@@ -21,6 +21,19 @@ moon run assistant-evals:evals-watch                             # re-run on cha
 The tasks come from the `evalite` moon tag (`.moon/tasks/tag-evalite.yml`); the nightly
 `.depot/workflows/assistant-evals.yml` runs the same `evals` task.
 
+## Code mode
+
+`src/evals/code-mode.eval.ts` runs every task on a matrix of engine × model: the tool-calling
+`AiSession` (`tools`) and both code-mode dialects (`code-mode-plain`, `code-mode-effect`), each on
+Claude Opus and DeepSeek V4 Pro. DeepSeek is served through EDGE with the run's identity, so it needs
+no key of its own. Every task is also graded by `tool-calls-succeeded`, the fraction of its tool
+calls that did not fail.
+
+```bash
+DX_EVAL_ENGINES=code-mode-effect DX_EVAL_MODELS=deepseek-v4-pro \
+  moon run assistant-evals:evals -- src/evals/code-mode.eval.ts
+```
+
 ## MCP targets and latency
 
 `src/evals/mcp-server.eval.ts` drives the projected MCP surface. `DX_EVAL_MCP_TARGET` picks which

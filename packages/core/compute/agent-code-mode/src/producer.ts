@@ -15,6 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import type { ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
@@ -193,13 +194,20 @@ const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = E
   return db.registry
     .list()
     .filter((entity) => Type.isType(entity) && Type.isObject(entity))
-    .map((type) => ({
-      typename: Type.getTypename(type) ?? '',
-      // The same `fields` record the sandbox's bound type carries, which is what the model would
-      // otherwise go looking for.
-      fields: describeFields(('fields' in type && type.fields) || {}),
-    }))
-    .filter(({ typename }) => typename.length > 0);
+    .flatMap((type) => {
+      const typename = Type.getTypename(type) ?? '';
+      return typename.length > 0
+        ? [
+            {
+              typename,
+              dxn: String(DXN.make(typename, Type.getVersion(type))),
+              // The same `fields` record the sandbox's bound type carries, which is what the model
+              // would otherwise go looking for.
+              fields: describeFields(('fields' in type && type.fields) || {}),
+            },
+          ]
+        : [];
+    });
 });
 
 /**

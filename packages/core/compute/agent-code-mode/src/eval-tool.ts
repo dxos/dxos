@@ -22,7 +22,7 @@ import * as Sandbox from './Sandbox.ts';
 export const EVAL_TOOL_NAME = 'eval';
 
 /** Characters of printed output returned from one eval call before it is truncated. */
-const DEFAULT_MAX_OUTPUT = 8_000;
+export const DEFAULT_MAX_OUTPUT = 8_000;
 
 /** Characters of a failure's message the model is shown; the head says what went wrong. */
 const MAX_ERROR_LENGTH = 1_000;
@@ -34,7 +34,9 @@ const MAX_ERROR_LINE_LENGTH = 300;
 export const EvalTool = Tool.make(EVAL_TOOL_NAME, {
   description:
     'Runs code against the workspace and returns whatever that code printed. ' +
-    'This is the only tool: every read, every write and every operation happens inside it.',
+    'This is the only tool: every read, every write and every operation happens inside it. ' +
+    `Printed output is capped (at ${DEFAULT_MAX_OUTPUT} characters by default) and cut off beyond that, ` +
+    'so print the values you need rather than whole objects or long lists.',
   parameters: Schema.Struct({
     code: Schema.String.annotate({
       description: 'The program, in the dialect the system prompt describes. Print anything you need to see.',
@@ -42,6 +44,8 @@ export const EvalTool = Tool.make(EVAL_TOOL_NAME, {
   }),
   success: Schema.Struct({
     output: Schema.String,
+    /** False when the code failed; the failure is the last line of `output`. */
+    ok: Schema.Boolean,
   }),
   failure: Schema.Never,
 });
@@ -90,13 +94,13 @@ export const makeEvalToolkit = ({
           // Reported as output, not as a tool failure: the model's next move is to read the message
           // and write different code, which a failed turn would deny it.
           log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-          printer.print(`Error: ${conciseError(result.failure.message)}`);
+          printer.fail(`Error: ${conciseError(result.failure.message)}`);
         } else if (result.success !== undefined && printer.isEmpty()) {
           // A program that printed nothing but produced a value: show the value rather than nothing.
           printer.print(result.success);
         }
 
-        return { output: printer.output() };
+        return { output: printer.output(), ok: Result.isSuccess(result) };
       }),
     }),
   );
@@ -116,17 +120,26 @@ const makePrinter = (maxOutput: number) => {
       // separators, which would otherwise grow the buffer without ever spending it.
       const separator = lines.length > 0 ? 1 : 0;
       if (printed + separator + line.length > maxOutput) {
-        lines.push(`${line.slice(0, Math.max(0, maxOutput - printed - separator))}\n[output truncated]`);
+        lines.push(`${line.slice(0, Math.max(0, maxOutput - printed - separator))}\n${truncationWarning(maxOutput)}`);
         truncated = true;
         return;
       }
       printed += separator + line.length;
       lines.push(line);
     },
+    /** Past the budget too: a failure the model is not shown reads as code that worked. */
+    fail: (message: string): void => {
+      lines.push(message);
+    },
     isEmpty: () => lines.length === 0,
     output: () => lines.join('\n'),
   };
 };
+
+/** Tells the model its output was cut, and how to get what it needs within the cap next time. */
+const truncationWarning = (maxOutput: number): string =>
+  `[output truncated: an eval result is capped at ${maxOutput} characters and the rest was dropped. ` +
+  'Print less — counts, the specific fields you need, or a slice — and run again if you need more.]';
 
 /** Printed form of a value: strings verbatim, everything else as JSON the model can read back. */
 const format = (value: unknown): string => {

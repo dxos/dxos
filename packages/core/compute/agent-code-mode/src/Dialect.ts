@@ -39,6 +39,8 @@ export type SandboxField = {
 /** A type the workspace has registered, as the model is told about it. */
 export type SandboxType = {
   readonly typename: string;
+  /** The versioned DXN `Database.resolve` resolves the type by. */
+  readonly dxn: string;
   /**
    * Fields with their types, so the model never has to introspect a schema to find out what it may
    * write — least of all that a field holds a reference, which a name alone does not say.
@@ -85,8 +87,14 @@ export type InstructionsContext = {
   readonly types: readonly SandboxType[];
 };
 
-/** The types section of the API reference, shared by the dialects. */
-export const renderTypes = (types: readonly SandboxType[]): string =>
+/**
+ * The types section of the API reference, shared by the dialects. `name` renders the identifier a
+ * dialect's code names a type by — its typename, or the DXN it resolves.
+ */
+export const renderTypes = (
+  types: readonly SandboxType[],
+  name: (type: SandboxType) => string = ({ typename }) => typename,
+): string =>
   types.length === 0
     ? '### Types\n\nNo types are registered.'
     : trim`
@@ -96,7 +104,7 @@ export const renderTypes = (types: readonly SandboxType[]): string =>
       do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
       the object or its id.
 
-      ${types.map(({ typename, fields }) => `- \`${typename}\` — ${fields.map(renderField).join(', ')}`).join('\n')}
+      ${types.map((type) => `- \`${name(type)}\` — ${type.fields.map(renderField).join(', ')}`).join('\n')}
     `;
 
 const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;

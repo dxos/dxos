@@ -8,10 +8,12 @@ import { describe, expect, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Ref, Type } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { EffectDialect } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
+import { loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
 import { describeFields, describeInput } from './fields.ts';
 
@@ -41,7 +43,13 @@ describe('prompt', () => {
   });
 
   test('the types section renders each field with its type', ({ expect }) => {
-    const rendered = renderTypes([{ typename: 'com.example.type.task', fields: describeFields(Task.fields) }]);
+    const rendered = renderTypes([
+      {
+        typename: 'com.example.type.task',
+        dxn: 'dxn:com.example.type.task:0.1.0',
+        fields: describeFields(Task.fields),
+      },
+    ]);
     expect(rendered).toContain(
       '- `com.example.type.task` — title: string, status: "open" | "done", priority?: number, ' +
         'owner?: Ref<com.example.type.person>, tags: string[]',
@@ -84,9 +92,19 @@ describe('prompt', () => {
     });
     expect(instructions).toContain('input: { task: Ref<com.example.type.task> }');
     expect(instructions).not.toContain('"type":"string"');
-    expect(instructions).toContain('Filter.id(id)');
+    expect(instructions).toContain("yield* Database.resolve('dxn:com.example.operation.close')");
+    expect(instructions).toContain("DOCS['README.md']");
+  });
+
+  test('the README indexes every doc', async ({ expect }) => {
+    const DOCS = await EffectEx.runPromise(loadDocs);
+    expect(Object.keys(DOCS)).toEqual(['README.md', 'database.md', 'references.md', 'operations.md', 'errors.md']);
+    for (const name of Object.keys(DOCS).filter((name) => name !== 'README.md')) {
+      expect(DOCS['README.md']).toContain(`\`${name}\``);
+    }
+    expect(DOCS['database.md']).toContain('Filter.id(id)');
     // Models guessed `result.value`; the field is `success`.
-    expect(instructions).toContain("{ _tag: 'Success', success }");
+    expect(DOCS['errors.md']).toContain("{ _tag: 'Success', success }");
   });
 
   test('a failure keeps its head and drops serialized values', () => {

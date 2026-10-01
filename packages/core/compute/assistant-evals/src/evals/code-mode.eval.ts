@@ -8,7 +8,9 @@ import { evalite } from 'evalite';
 
 import { EffectDialect, makeCodeModeTurnProducer } from '@dxos/agent-code-mode';
 import { type MakeTurnProducer } from '@dxos/agent-runtime';
+import { Model } from '@dxos/ai';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { type DXN } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -17,27 +19,46 @@ import { createEvalRunner } from '../runner.ts';
 import * as Scorer from '../Scorer.ts';
 
 /**
- * Code mode across a spread of database work, one engine per variant.
+ * Code mode across a spread of database work, one engine and model per variant.
  *
  * The point is the comparison, not any single score: every task runs on DXOS's own tool-calling
- * `AiSession` and on both code-mode dialects, with the same skills, prompt and scorers, so a column
- * that only fails on one engine is evidence about that engine rather than about the task.
+ * `AiSession` and on both code-mode dialects, on each model, with the same skills, prompt and
+ * scorers, so a column that only fails on one engine or one model is evidence about that engine or
+ * model rather than about the task.
  */
-const ENGINES: { name: string; input: { makeTurnProducer?: MakeTurnProducer } }[] = [
+const ENGINES: { name: string; makeTurnProducer?: MakeTurnProducer }[] = [
   // No producer: the default `AiSession`, where every action is its own tool call.
-  { name: 'tools', input: {} },
-  { name: 'code-mode-plain', input: { makeTurnProducer: makeCodeModeTurnProducer() } },
-  {
-    name: 'code-mode-effect',
-    input: { makeTurnProducer: makeCodeModeTurnProducer({ dialect: EffectDialect }) },
-  },
+  { name: 'tools' },
+  { name: 'code-mode-plain', makeTurnProducer: makeCodeModeTurnProducer() },
+  { name: 'code-mode-effect', makeTurnProducer: makeCodeModeTurnProducer({ dialect: EffectDialect }) },
 ];
 
-/** `DX_EVAL_ENGINES` narrows the matrix, comma-separated; unset or empty runs every engine. */
-const selected = process.env.DX_EVAL_ENGINES?.trim()
-  ? process.env.DX_EVAL_ENGINES.split(',').map((name) => name.trim())
-  : undefined;
-const VARIANTS = selected ? ENGINES.filter(({ name }) => selected.includes(name)) : ENGINES;
+/**
+ * Opus goes to Anthropic directly and needs `DX_ANTHROPIC_API_KEY`; DeepSeek is served through EDGE
+ * with the run's own identity, as the app serves it.
+ */
+const MODELS: { name: string; model: DXN.DXN }[] = [Model.claudeOpus5, Model.deepseekV4Pro].map((model) => ({
+  name: model.backend,
+  model: model.id,
+}));
+
+/** A comma-separated filter from the environment; unset or empty keeps everything. */
+const filterFromEnv = (variable: string): ((name: string) => boolean) => {
+  const value = process.env[variable]?.trim() ?? '';
+  const selected = value ? value.split(',').map((name) => name.trim()) : [];
+  return (name) => selected.length === 0 || selected.includes(name);
+};
+
+/** `DX_EVAL_ENGINES` and `DX_EVAL_MODELS` narrow the matrix, each comma-separated. */
+const engineSelected = filterFromEnv('DX_EVAL_ENGINES');
+const modelSelected = filterFromEnv('DX_EVAL_MODELS');
+
+const VARIANTS = ENGINES.filter(({ name }) => engineSelected(name)).flatMap((engine) =>
+  MODELS.filter(({ name }) => modelSelected(name)).map(({ name, model }) => ({
+    name: `${engine.name} / ${name}`,
+    input: { model, ...(engine.makeTurnProducer ? { makeTurnProducer: engine.makeTurnProducer } : {}) },
+  })),
+);
 
 /** Code mode reaches an operation by writing a loop around it, so several turns is normal. */
 const TIMEOUT = 150_000;
@@ -114,7 +135,8 @@ const defineTask = ({
   evalite.each(VARIANTS)(`Code mode — ${title}`, {
     data: [{ input: null }],
     task,
-    scorers: Scorer.toEvalite(scorers),
+    // Every task needs the workspace, so how many of its calls the agent got right is graded on all.
+    scorers: Scorer.toEvalite([...scorers, Scorer.toolCallSuccess()]),
   });
 };
 
