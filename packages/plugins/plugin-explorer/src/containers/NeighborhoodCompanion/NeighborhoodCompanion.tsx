@@ -75,14 +75,9 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
           <div className='grow' />
           <Next.Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
             {DEPTHS.map((value) => (
-              <Next.ToggleGroup.Item
-                key={value}
-                value={String(value)}
-                aria-label={t('depth.label', { count: value })}
-                title={t('depth.label', { count: value })}
-              >
-                {value}
-              </Next.ToggleGroup.Item>
+              <Next.Tooltip.Trigger key={value} asChild content={t('depth.label', { count: value })}>
+                <Next.ToggleGroup.Item value={String(value)} label={String(value)} />
+              </Next.Tooltip.Trigger>
             ))}
           </Next.Toolbar.ToggleGroup>
         </Next.Toolbar.Root>

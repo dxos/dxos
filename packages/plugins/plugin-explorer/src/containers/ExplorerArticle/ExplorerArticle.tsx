@@ -93,9 +93,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
             <QueryEditor db={db} onFilterChange={handleFilterChange} />
             <Next.Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
-                <Next.ToggleGroup.Item key={value} value={value} aria-label={label} title={label}>
-                  <Next.Icon icon={icon} size='md' />
-                </Next.ToggleGroup.Item>
+                <Next.ToggleGroup.Item key={value} value={value} icon={icon} iconOnly label={label} />
               ))}
             </Next.Toolbar.ToggleGroup>
           </Next.Toolbar.Root>
