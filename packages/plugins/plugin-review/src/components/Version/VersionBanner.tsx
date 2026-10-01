@@ -93,9 +93,9 @@ export const VersionBanner = ({
         <Next.Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
         <Next.Tag hue={hue}>{name}</Next.Tag>
         {timestamp && (
-          <Next.TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
+          <Next.Tooltip.Trigger asChild content={new Date(timestamp).toLocaleString()} side='bottom'>
             <Next.Tag hue='sky'>{relativeTime(timestamp)}</Next.Tag>
-          </Next.TextTooltip>
+          </Next.Tooltip.Trigger>
         )}
       </div>
       <Next.Toolbar.Separator />

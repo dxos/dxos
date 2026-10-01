@@ -42,8 +42,8 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
 
   return (
     <Form.FieldSet label={t('versions.title')}>
-      {/* `standalone` labels nothing focusable, so it renders a span rather than an orphan <label>. */}
-      <Form.Label
+      {/* `standalone` labels nothing focusable, so the label is text rather than an orphan <label>. */}
+      <Form.Field
         standalone
         label={currentLabel}
         labelEnd={
@@ -51,14 +51,15 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
             {t('branch-count.label', { count: branchCount })} · {t('checkpoint-count.label', { count: versionCount })}
           </span>
         }
-      />
-      <div className='flex gap-1'>
-        <Next.Button
-          icon='ph--bookmark-simple--regular'
-          label={t('create-checkpoint.label')}
-          onClick={handleCheckpoint}
-        />
-      </div>
+      >
+        <div className='flex gap-1'>
+          <Next.Button
+            icon='ph--bookmark-simple--regular'
+            label={t('create-checkpoint.label')}
+            onClick={handleCheckpoint}
+          />
+        </div>
+      </Form.Field>
     </Form.FieldSet>
   );
 };
