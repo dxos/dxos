@@ -100,8 +100,8 @@ const Playground = () => {
   return (
     <div className={GRID_LAYOUT}>
       <PaneTools>
-        <ToolList.Root selectedId={selectedId} onSelect={setSelectedId}>
-          <ToolList.Content tools={SAMPLE_TOOLS} />
+        <ToolList.Root tools={SAMPLE_TOOLS} selectedId={selectedId} onSelect={setSelectedId}>
+          <ToolList.Content />
         </ToolList.Root>
       </PaneTools>
 
@@ -190,9 +190,8 @@ export const TitlesOnly: Story = {
   render: () => (
     <div className={GRID_LAYOUT}>
       <PaneTools>
-        <ToolList.Root selectedId={SAMPLE_TOOLS[0].id}>
+        <ToolList.Root tools={SAMPLE_TOOLS} selectedId={SAMPLE_TOOLS[0].id}>
           <ToolList.Content
-            tools={SAMPLE_TOOLS}
             renderItem={(tool) => (
               <ToolList.Item key={tool.id} tool={tool}>
                 <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>

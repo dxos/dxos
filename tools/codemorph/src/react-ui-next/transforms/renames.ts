@@ -373,6 +373,8 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     ...Object.fromEntries(
       ['Popover', 'Menu', 'HoverCard', 'Select'].map((name) => [`${name}.Content`, { apply: contentPlacement }]),
     ),
+    // Ark's menu has no `modal`; it never traps the page.
+    'Menu.Root': { drop: ['modal'], apply: openChange },
     // System buttons.
     ...Object.fromEntries(
       [

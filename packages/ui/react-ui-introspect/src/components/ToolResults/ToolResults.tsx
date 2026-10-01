@@ -109,7 +109,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
   // both columns and uses `grid-cols-subgrid` to inherit them, so a
   // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
-    <Listbox.Root>
+    <Listbox.Root items={filtered.map((item) => ({ value: item.id, label: item.id }))}>
       <Next.Panel.Root>
         <Next.Panel.Header>
           <Next.Toolbar.Root>

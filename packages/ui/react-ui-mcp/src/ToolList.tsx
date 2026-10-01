@@ -11,7 +11,15 @@
 // consumers can layer Tailwind classes on top of the theme defaults without forking the
 // component.
 
-import React, { type ComponentProps, Fragment, type PropsWithChildren, type ReactNode } from 'react';
+import React, {
+  type ComponentProps,
+  Fragment,
+  type PropsWithChildren,
+  type ReactNode,
+  createContext,
+  useContext,
+  useMemo,
+} from 'react';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list/next';
@@ -39,17 +47,27 @@ export type Tool = {
 //
 
 export type ToolListRootProps = PropsWithChildren<{
+  /** The tools to list; order is preserved as-is. */
+  tools: readonly Tool[];
   /** Selected tool id; null when no row is highlighted. */
   selectedId?: string | null;
   /** Called when the user picks a tool. */
   onSelect?: (id: string) => void;
 }>;
 
-const ToolListRoot = ({ selectedId, onSelect, children }: ToolListRootProps): ReactNode => (
-  <Listbox.Root value={selectedId ?? undefined} onValueChange={onSelect}>
-    {children}
-  </Listbox.Root>
-);
+// The listbox takes its options at the Root; Content renders rows from the same tools.
+const ToolsContext = createContext<readonly Tool[]>([]);
+
+const ToolListRoot = ({ tools, selectedId, onSelect, children }: ToolListRootProps): ReactNode => {
+  const items = useMemo(() => tools.map((tool) => ({ value: tool.id, label: tool.title })), [tools]);
+  return (
+    <ToolsContext.Provider value={tools}>
+      <Listbox.Root items={items} value={selectedId ?? undefined} onValueChange={onSelect}>
+        {children}
+      </Listbox.Root>
+    </ToolsContext.Provider>
+  );
+};
 ToolListRoot.displayName = 'ToolList.Root';
 
 //
@@ -57,8 +75,6 @@ ToolListRoot.displayName = 'ToolList.Root';
 //
 
 export type ToolListContentProps = ThemedClassName<{
-  /** The tools to render. Order is preserved as-is. */
-  tools: readonly Tool[];
   /**
    * Optional render override for each row. Default renders title +
    * description via `<ToolList.Item>`. Override when you want extra row
@@ -69,11 +85,12 @@ export type ToolListContentProps = ThemedClassName<{
 }>;
 
 // `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref
-// land on the listbox's `<ul>` (which `Listbox.Content` renders via `@dxos/react-list`).
-const ToolListContent = composable<HTMLUListElement, ToolListContentProps>(
-  ({ tools, renderItem, ...props }, forwardedRef) => (
+// land on the listbox's content element.
+const ToolListContent = composable<HTMLDivElement, ToolListContentProps>(({ renderItem, ...props }, forwardedRef) => {
+  const tools = useContext(ToolsContext);
+  return (
     <Listbox.Content
-      {...composableProps<HTMLUListElement>(props, { classNames: 'flex flex-col gap-px' })}
+      {...composableProps<HTMLDivElement>(props, { classNames: 'flex flex-col gap-px' })}
       aria-label='Tools'
       ref={forwardedRef}
     >
@@ -81,8 +98,8 @@ const ToolListContent = composable<HTMLUListElement, ToolListContentProps>(
         renderItem ? <Fragment key={tool.id}>{renderItem(tool)}</Fragment> : <ToolListItem key={tool.id} tool={tool} />,
       )}
     </Listbox.Content>
-  ),
-);
+  );
+});
 ToolListContent.displayName = 'ToolList.Content';
 
 //

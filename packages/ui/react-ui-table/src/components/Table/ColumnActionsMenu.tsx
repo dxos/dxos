@@ -29,9 +29,8 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
 
   return (
     <Next.Menu.Root
-      modal={false}
       open={true}
-      onOpenChange={({ open }) => modals.close(open)}
+      onOpenChange={({ open }) => !open && modals.close()}
       positioning={Next.virtualAnchor(modals.trigger)}
     >
       <Next.Menu.Content>
