@@ -36,28 +36,41 @@ export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-autofocus';
 // Root
 //
 
-type DialogRootProps = DialogPrimitive.RootProps;
+type DialogPlacement = 'start' | 'center' | 'end';
+
+type DialogRootProps = DialogPrimitive.RootProps & {
+  /**
+   * Where the Content sits unless it says otherwise: a host that opens dialogs it does not render (a layout showing
+   * a surface's Content) places them here.
+   */
+  placement?: DialogPlacement;
+};
 
 /** Lets the Content keep the dialog open on an outside click, since a surface often renders the Content alone. */
 const OutsideDismissContext = createContext<((dismissable: boolean) => void) | undefined>(undefined);
+
+const PlacementContext = createContext<DialogPlacement | undefined>(undefined);
 
 /** Ark dialog; content mounts on first open and unmounts on close unless the caller opts out. */
 const DialogRoot = ({
   lazyMount = true,
   unmountOnExit = true,
   closeOnInteractOutside = true,
+  placement,
   ...props
 }: DialogRootProps) => {
   const [contentDismissable, setContentDismissable] = useState(true);
   return (
-    <OutsideDismissContext.Provider value={setContentDismissable}>
-      <DialogPrimitive.Root
-        {...props}
-        closeOnInteractOutside={closeOnInteractOutside && contentDismissable}
-        lazyMount={lazyMount}
-        unmountOnExit={unmountOnExit}
-      />
-    </OutsideDismissContext.Provider>
+    <PlacementContext.Provider value={placement}>
+      <OutsideDismissContext.Provider value={setContentDismissable}>
+        <DialogPrimitive.Root
+          {...props}
+          closeOnInteractOutside={closeOnInteractOutside && contentDismissable}
+          lazyMount={lazyMount}
+          unmountOnExit={unmountOnExit}
+        />
+      </OutsideDismissContext.Provider>
+    </PlacementContext.Provider>
   );
 };
 
@@ -85,8 +98,11 @@ type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
   size?: Size;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
-  /** `end` docks the dialog at the viewport's block end (e.g. a chat panel) instead of centring it. */
-  placement?: 'center' | 'end';
+  /**
+   * `end` docks the dialog at the viewport's block end (e.g. a chat panel) and `start` hangs it from the top (e.g. a
+   * picker whose list grows downward) instead of centring it; the Root's `placement` otherwise.
+   */
+  placement?: DialogPlacement;
   /**
    * `false` drops the scrim and lets pointer events through around the dialog, for a non-modal (`modal={false}`)
    * dialog that leaves the page usable.
@@ -99,10 +115,12 @@ type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
 /** Portalled surface at `level='raised'` over a scrim, centred in the viewport: a column of Header, Body and Footer. */
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   (
-    { classNames, size, container, placement = 'center', scrim = true, closeOnInteractOutside, children, ...props },
+    { classNames, size, container, placement: placementProp, scrim = true, closeOnInteractOutside, children, ...props },
     forwardedRef,
   ) => {
     const dialog = useDialogContext();
+    const rootPlacement = useContext(PlacementContext);
+    const placement = placementProp ?? rootPlacement ?? 'center';
     const setDismissable = useContext(OutsideDismissContext);
     useEffect(() => {
       if (closeOnInteractOutside !== false || !setDismissable) {
@@ -282,6 +300,7 @@ export const Dialog = {
 };
 
 export type {
+  DialogPlacement,
   DialogBodyProps,
   DialogCloseTriggerProps,
   DialogContentProps,

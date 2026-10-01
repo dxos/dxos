@@ -192,6 +192,29 @@ export const KeepOpenOutside: Story = {
   },
 };
 
+/** The Root's `placement` places Content it does not render (here `start`: hung from the top). */
+export const RootPlacement: Story = {
+  render: () => (
+    <Next.Dialog.Root defaultOpen placement='start'>
+      <Next.Dialog.Content data-testid='hung'>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title>Move to</Next.Dialog.Title>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>
+          <Next.Typography>{DESCRIPTION}</Next.Typography>
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const dialog = await within(canvasElement.ownerDocument.body).findByTestId('hung');
+    await expect(dialog.parentElement).toHaveAttribute('data-placement', 'start');
+    // Hung from the top: nearer the viewport's top than its bottom.
+    const bounds = dialog.getBoundingClientRect();
+    await expect(bounds.top).toBeLessThan(canvasElement.ownerDocument.documentElement.clientHeight - bounds.bottom);
+  },
+};
+
 /** A non-modal dialog docked at the block end with no scrim (e.g. a chat panel): the page behind stays usable. */
 export const Docked: Story = {
   render: () => (

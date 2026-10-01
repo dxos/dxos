@@ -21,6 +21,10 @@
     align-items: flex-end;
     padding-block-end: 1rem;
   }
+  .nx-dialog-positioner[data-placement='start'] {
+    align-items: flex-start;
+    padding-block-start: calc(env(safe-area-inset-top) + 1.2rem);
+  }
   /* Without a scrim the page stays usable: only the dialog takes pointer events. */
   .nx-dialog-positioner[data-scrim='none'] {
     pointer-events: none;
