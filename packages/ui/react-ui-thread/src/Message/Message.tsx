@@ -31,7 +31,7 @@ import { command } from '../command.ts';
 import { useThreadContext } from '../context.ts';
 import { type MessageMetadata } from '../types.ts';
 
-const avatarSize = 7;
+const avatarSize = 'md';
 
 const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 const buttonClassNames = 'p-1! transition-opacity';
@@ -60,30 +60,28 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     },
     forwardedRef,
   ) => {
-    // Must wrap the message since Avatar.Label may be used in the content.
     // Columns mirror Thread.Header (avatar/rail · content · controls) so trailing
     // controls align with the thread header's controls.
     return (
-      <Next.Avatar.Root>
-        <div
-          data-testid='thread.message'
-          {...rootProps}
-          className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
-          ref={forwardedRef}
-        >
-          <div className='flex flex-col items-center gap-2 pt-1'>
-            <Next.Avatar.Content
-              size={avatarSize}
-              hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
-              fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
-              {...(authorImgSrc && { imgSrc: authorImgSrc })}
-            />
-            {continues && <div className='w-px grow bg-separator' />}
-          </div>
-          <div className='py-1 min-w-0'>{children}</div>
-          {controls && <div className='self-start'>{controls}</div>}
+      <div
+        data-testid='thread.message'
+        {...rootProps}
+        className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
+        ref={forwardedRef}
+      >
+        <div className='flex flex-col items-center gap-2 pt-1'>
+          <Next.Avatar.Root
+            size={avatarSize}
+            hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
+            fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
+            src={authorImgSrc}
+            label={authorName}
+          />
+          {continues && <div className='w-px grow bg-separator' />}
         </div>
-      </Next.Avatar.Root>
+        <div className='py-1 min-w-0'>{children}</div>
+        {controls && <div className='self-start'>{controls}</div>}
+      </div>
     );
   },
 );
@@ -116,9 +114,7 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Next.Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>
-      {authorName ?? t('anonymous.label')}
-    </Next.Avatar.Label>
+    <span className='block truncate min-w-0 shrink text-sm text-subdued'>{authorName ?? t('anonymous.label')}</span>
   );
 };
 
