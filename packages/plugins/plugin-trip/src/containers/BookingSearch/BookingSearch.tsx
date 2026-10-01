@@ -205,8 +205,8 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
           <Form.Content>
             {services.length > 1 && (
               <Next.Select.Root
-                value={[service?.id]}
-                onValueChange={({ value: [value] }) => setServiceId(value)}
+                value={service ? [service.id] : []}
+                onValueChange={({ value: [value] }) => value && setServiceId(value)}
                 items={services.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
               >
                 <Next.Select.Trigger placeholder={t('booking.provider.placeholder')} />
