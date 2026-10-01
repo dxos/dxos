@@ -66,8 +66,8 @@ TooltipRoot.displayName = 'Next.Tooltip.Root';
 // Trigger
 //
 
-type TooltipTriggerProps = TooltipPrimitive.TriggerProps & {
-  /** Shorthand, as on the current `Tooltip.Trigger`: the trigger brings its own Root and a Content showing this. */
+type TooltipTriggerProps = Omit<TooltipPrimitive.TriggerProps, 'content'> & {
+  /** Shorthand, as on the current `Tooltip.Trigger`: the trigger brings its own Root and a Content showing this (any node, so it replaces the HTML `content` attribute). */
   content?: ReactNode;
   /** With `content`, the side the tooltip opens on; below by default. */
   side?: TooltipSide;
