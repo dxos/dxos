@@ -144,7 +144,7 @@
     display: contents;
   }
   @media (hover: hover) {
-    .nx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) > .nx-tree-item-actions > * {
+    .nx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) .nx-tree-item-actions > * {
       opacity: 0;
     }
   }

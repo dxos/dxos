@@ -1235,14 +1235,15 @@ TreeItemIcon.displayName = 'Tree.ItemIcon';
 type TreeItemTextProps = {
   /** Replaces the model's label. */
   children?: ReactNode;
+  'data-testid'?: string;
 };
 
 /** The row's label (`itemProps.label`, translated), truncated to one line. */
-const TreeItemText = ({ children }: TreeItemTextProps) => {
+const TreeItemText = ({ children, 'data-testid': testId }: TreeItemTextProps) => {
   const { node } = useTreeItemContext('Tree.ItemText');
   const { t } = useTranslation();
   return (
-    <Next.Typography truncate classNames='nx-tree-item-text'>
+    <Next.Typography truncate classNames='nx-tree-item-text' data-testid={testId}>
       {children ?? toLocalizedString(node.props.label, t)}
     </Next.Typography>
   );
