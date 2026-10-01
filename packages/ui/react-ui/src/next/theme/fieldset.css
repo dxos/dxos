@@ -5,10 +5,34 @@
 
 @layer dx-components {
   .nx-fieldset {
+    min-inline-size: 0;
+  }
+  .nx-fieldset:not(.nx-grid) {
     display: flex;
     flex-direction: column;
     gap: var(--nx-gap-size);
-    min-inline-size: 0;
+  }
+  /* A grid set (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
+  .nx-fieldset.nx-grid {
+    row-gap: inherit;
+  }
+
+  /*
+   * An inset grid set (a nested group) encloses its fields in a border and indents them one step: it spans only the
+   * parent's content track, whose edge lines it inherits, so its fields keep the `content` placement (and any interior
+   * column lines) while its padding offsets them. It keeps its host's surface; nesting never steps the level.
+   */
+  .nx-fieldset.nx-grid[data-inset] {
+    grid-column: content;
+    /* Half the size's gap, tighter than the form's own rows, so a group's fields read as one; its Content inherits it. */
+    row-gap: calc(var(--nx-gap-size) / 2);
+    padding: var(--nx-gap-size);
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+  /* The set spans no `full` lines, so an inheriting grid inside it (a Collapsible Content) spans the set's tracks. */
+  .nx-fieldset.nx-grid[data-inset] > .nx-grid[data-gutter='inherit'] {
+    grid-column: 1 / -1;
   }
   .nx-fieldset > .nx-control {
     margin-block: var(--nx-control-inset);
@@ -20,11 +44,14 @@
     align-items: center;
     gap: var(--nx-gap-size);
     width: 100%;
-    min-height: var(--nx-block-size);
+    /* Like `Field.Header`: the set's size, control-tall, in the label step, so a trailing action shares the fields' end column. */
+    min-height: var(--nx-control-size);
     padding: 0;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
     font-weight: 500;
+    /* A group's label, like a field's (see `control.css`). */
+    color: var(--color-subdued);
   }
   /* The legend text is a bare text node, so the first trailing part pushes the rest to the row's end. */
   .nx-fieldset-legend > :is(.nx-block, .nx-button):not(:is(.nx-block, .nx-button) ~ *) {
@@ -33,7 +60,16 @@
   .nx-fieldset-legend > .nx-block {
     width: var(--nx-control-size);
     height: var(--nx-control-size);
-    margin: var(--nx-control-inset);
+    margin: 0 var(--nx-control-inset);
+  }
+  .nx-fieldset-legend > .nx-button[data-square] {
+    margin-block: 0;
+  }
+  /* A legend given its own size is a heading row: one block tall, in that size's text. */
+  .nx-fieldset-legend[data-size] {
+    min-height: var(--nx-block-size);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
   }
   .nx-fieldset[data-disabled] {
     opacity: 0.5;

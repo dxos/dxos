@@ -34,6 +34,13 @@
     overflow-y: auto;
     overscroll-behavior: contain;
   }
+  /*
+   * A row track with a fixed minimum (`minmax(block, auto)`) grows only into the viewport's free space, so content
+   * taller than the viewport overflowed it centred, half above the top; content-sized rows let the viewport scroll.
+   */
+  .nx-scroll-viewport.nx-grid[data-layout='row'] {
+    grid-auto-rows: auto;
+  }
   .nx-scroll-viewport:not([data-native]) {
     scrollbar-width: none;
   }

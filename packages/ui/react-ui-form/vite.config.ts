@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     annotations: 'src/annotations.ts',
     index: 'src/index.ts',
+    next: 'src/next/index.ts',
     translations: 'src/translations.ts',
     types: 'src/types.ts',
   },

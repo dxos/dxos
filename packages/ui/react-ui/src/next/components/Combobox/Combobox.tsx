@@ -7,6 +7,7 @@ import { Combobox as ComboboxPrimitive, useComboboxContext } from '@ark-ui/react
 import { Portal } from '@ark-ui/react/portal';
 import React, {
   type ComponentPropsWithoutRef,
+  type PointerEvent,
   type ReactNode,
   type RefObject,
   createContext,
@@ -60,6 +61,9 @@ type ComboboxRootContextValue = {
   loading: boolean;
   /** The create row's option, while there is one. */
   create?: ComboboxOption;
+  /** The create row's text for a query and its icon, when the Root overrides the defaults. */
+  createLabel?: (query: string) => string;
+  createIcon?: string;
   /** Whether the input is the popup's search field (a button `Trigger` or an `Input` inside `Content`). */
   search: boolean;
   registerTrigger: (present: boolean) => void;
@@ -79,6 +83,10 @@ type ComboboxRootProps = ThemedClassName<Omit<ComboboxPrimitive.RootProps<Combob
   loading?: boolean;
   /** Offers a create row while the typed query matches no label exactly; choosing it calls this instead of selecting. */
   onCreate?: (query: string) => void;
+  /** The create row's text for the query (e.g. `Add tag “{query}”`); `Create “{query}”` by default. */
+  createLabel?: (query: string) => string;
+  /** The create row's icon; a plus by default. */
+  createIcon?: string;
 };
 
 /**
@@ -93,6 +101,8 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
       filter = containsFilter,
       loading = false,
       onCreate,
+      createLabel,
+      createIcon,
       positioning,
       lazyMount = true,
       unmountOnExit = true,
@@ -172,6 +182,8 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
           query={query}
           loading={loading}
           create={create}
+          createLabel={createLabel}
+          createIcon={createIcon}
           search={search}
           registerTrigger={registerTrigger}
           registerSearch={registerSearch}
@@ -224,12 +236,23 @@ ComboboxLabel.displayName = 'Next.Combobox.Label';
 // Inside a Control the Trigger is its caret square; elsewhere it is the button that shows the value.
 const ControlContext = createContext(false);
 
-type ComboboxControlProps = ThemedClassName<ComboboxPrimitive.ControlProps>;
+type ComboboxControlProps = ThemedClassName<ComboboxPrimitive.ControlProps> & {
+  /**
+   * Wraps its children (e.g. the chips of a multiple selection) onto further lines, growing from control height; the
+   * trailing caret stays at the end of the last line.
+   */
+  wrap?: boolean;
+};
 
 /** A control-sized row; without children it holds the text `Input` and a trailing caret `Trigger`. */
 const ComboboxControl = forwardRef<HTMLDivElement, ComboboxControlProps>(
-  ({ classNames, children, ...props }, forwardedRef) => (
-    <ComboboxPrimitive.Control {...props} className={mx(recipes.comboboxControl(), classNames)} ref={forwardedRef}>
+  ({ classNames, wrap, children, ...props }, forwardedRef) => (
+    <ComboboxPrimitive.Control
+      {...props}
+      data-wrap={wrap ? '' : undefined}
+      className={mx(recipes.comboboxControl(), classNames)}
+      ref={forwardedRef}
+    >
       <ControlContext.Provider value={true}>
         {children ?? (
           <>
@@ -400,6 +423,19 @@ const ComboboxViewport = composable<HTMLDivElement, ComboboxPrimitive.ContentPro
   <ComboboxPrimitive.Content {...composableProps(props)} data-scope='combobox' data-part='content' ref={forwardedRef} />
 ));
 
+const COMPOSED_FIELD = 'input, textarea, select, [contenteditable="true"]';
+
+/**
+ * zag cancels pointerdown on the popup to keep focus in its search field, which also stops a click focusing a field
+ * composed into the Content (e.g. an inline create form), so focus that field explicitly.
+ */
+const focusComposedField = (event: PointerEvent<HTMLDivElement>) => {
+  const field = event.target instanceof Element ? event.target.closest<HTMLElement>(COMPOSED_FIELD) : null;
+  if (field && field.dataset.scope !== 'combobox' && event.currentTarget.contains(field)) {
+    field.focus();
+  }
+};
+
 /**
  * Portalled popup at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the popup itself. Without
  * children it lists the options that match the typed text, then the create row, loading row and `Empty`; with a button
@@ -420,7 +456,15 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
       <Portal container={container}>
         <ComboboxPrimitive.Positioner>
           <PopupScroll size={popupSize} classNames={mx(classNames)}>
-            <ComboboxViewport {...props} aria-busy={loading || undefined} ref={forwardedRef}>
+            <ComboboxViewport
+              {...props}
+              aria-busy={loading || undefined}
+              onPointerDown={(event) => {
+                props.onPointerDown?.(event);
+                focusComposedField(event);
+              }}
+              ref={forwardedRef}
+            >
               <ContentContext.Provider value={true}>
                 {children ??
                   (search ? (
@@ -576,7 +620,7 @@ type ComboboxCreateItemProps = Omit<ComboboxItemProps, 'item'>;
  */
 const ComboboxCreateItem = forwardRef<HTMLDivElement, ComboboxCreateItemProps>(
   ({ children, ...props }, forwardedRef) => {
-    const { create } = useComboboxRootContext('Next.Combobox.CreateItem');
+    const { create, createLabel, createIcon } = useComboboxRootContext('Next.Combobox.CreateItem');
     const { t } = useTranslation(translationKey);
     if (!create) {
       return null;
@@ -586,9 +630,10 @@ const ComboboxCreateItem = forwardRef<HTMLDivElement, ComboboxCreateItemProps>(
       <ComboboxItem {...props} item={create} data-create='' ref={forwardedRef}>
         {children ?? (
           <>
-            <ComboboxItemIcon icon='ph--plus--regular' />
+            <ComboboxItemIcon icon={createIcon ?? 'ph--plus--regular'} />
             <ComboboxItemText>
-              {t('combobox.create.label', { query: create.label, interpolation: { escapeValue: false } })}
+              {createLabel?.(create.label) ??
+                t('combobox.create.label', { query: create.label, interpolation: { escapeValue: false } })}
             </ComboboxItemText>
           </>
         )}

@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => {
@@ -82,10 +82,8 @@ export const Test: Story = {
       );
       await expect(parseFloat(getComputedStyle(row).marginTop), `${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
       const increment = within(row).getByRole('button', { name: 'Increment' });
-      await expect(increment.getBoundingClientRect().right, `${size} stepper end`).toBeCloseTo(
-        rect.right - GEOMETRY[size].inset,
-        0,
-      );
+      // The last stepper centres on the end cell, the pair's other half sitting before it.
+      await expectEndCell(increment.querySelector('svg'), rect.right, size, `${size} stepper`);
       // Compact steppers: the pair abuts, each narrower than a block cell.
       const decrement = within(row).getByRole('button', { name: 'Decrement' });
       await expect(decrement, `${size} decrement compact`).toHaveAttribute('data-compact');

@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode } from 'react';
+import React, { type CSSProperties, type ReactNode } from 'react';
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
+import { type CSSVariables } from '../Container/index.ts';
 
 export type ControlFrameVariant = 'default' | 'subdued' | 'mono';
 
@@ -21,6 +22,11 @@ export type ControlFrameProps = {
   'disabled'?: boolean;
   /** The `data-scope` a control built on the frame reports for it (decision 10); `control-frame` otherwise. */
   'scope'?: string;
+  /**
+   * A multi-line frame (a markdown editor) at least this many lines tall, growing with its content like an
+   * auto-resizing Textarea, its first line where a single-line control's text sits and its adornments at the top.
+   */
+  'rows'?: number;
 };
 
 /**
@@ -29,14 +35,19 @@ export type ControlFrameProps = {
  * ring follows whatever inside it, other than an adornment, has focus.
  */
 export const ControlFrame = composable<HTMLDivElement, ControlFrameProps>(
-  ({ children, start, end, variant = 'default', disabled, scope = 'control-frame', ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps<HTMLDivElement>(props, { classNames: recipes.controlFrame() });
+  ({ children, start, end, variant = 'default', disabled, scope = 'control-frame', rows, ...props }, forwardedRef) => {
+    const { className, style, ...rest } = composableProps<HTMLDivElement>(props, {
+      classNames: recipes.controlFrame(),
+    });
+    const rowsStyle: CSSProperties & CSSVariables = rows ? { '--nx-rows': String(rows) } : {};
     return (
       <div
         {...rest}
+        style={{ ...rowsStyle, ...style }}
         data-scope={scope}
         data-part='root'
         data-variant={variant}
+        data-rows={rows ? '' : undefined}
         data-disabled={disabled ? '' : undefined}
         className={className}
         ref={forwardedRef}

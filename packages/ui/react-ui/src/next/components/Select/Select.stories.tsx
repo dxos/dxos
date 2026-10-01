@@ -17,6 +17,7 @@ import {
   centreY,
   controlSize,
   expectAnchoredBelow,
+  expectEndCell,
   expectNonScrollingPopup,
   expectPopupSize,
   expectScoped,
@@ -185,6 +186,13 @@ export const Test: Story = {
       const rect = byTestId(canvasElement, `select-${size}`).getBoundingClientRect();
       await expect(rect.height, `select-${size} height`).toBeCloseTo(controlSize(size), 0);
       await expect(centreY(rect), `select-${size} centre`).toBeCloseTo(centreY(toolbar), 0);
+      const trigger = byTestId(canvasElement, `select-${size}`);
+      await expectEndCell(
+        trigger.querySelector('[data-part="indicator"] svg'),
+        rect.right,
+        size,
+        `select-${size} caret`,
+      );
     }
     await expectScoped(canvasElement);
 

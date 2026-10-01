@@ -166,7 +166,19 @@
     flex: 1;
     min-width: 0;
   }
-  .nx-control-frame:has(> :not(.nx-input-adornment):is(:focus-visible, :has(:focus-visible))) {
+  /* A multi-line frame: `--nx-rows` lines tall at least, growing with its content; the first line and the adornments
+     sit where a single-line control's do, like a Textarea's. */
+  .nx-control-frame[data-rows] {
+    height: auto;
+    min-height: calc(var(--nx-rows) * var(--nx-line-height) + var(--nx-control-size) - var(--nx-line-height));
+    align-items: start;
+    padding-block: calc((var(--nx-control-size) - var(--nx-line-height)) / 2);
+  }
+  .nx-control-frame[data-rows] > .nx-input-adornment {
+    height: var(--nx-line-height);
+  }
+  /* `:has()` cannot nest, so focus deeper in the content (an editor's own element) is a descendant selector instead. */
+  .nx-control-frame:has(> :not(.nx-input-adornment):focus-visible, > :not(.nx-input-adornment) :focus-visible) {
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
     outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
@@ -192,18 +204,23 @@
   .nx-input-row:has(> .nx-input-adornment:last-child > .nx-button[data-square]:last-child) {
     padding-inline-end: 0;
   }
+  /*
+   * A trailing icon-only Button fills a block-wide end cell, so a control spanning to the row's end
+   * centres its icon on the same column as the row's own actions (a header's icon-only Buttons, a list row's remove).
+   */
   .nx-input-adornment > .nx-button[data-square] {
     margin: 0;
+    min-width: 0;
     height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
     width: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
-    margin-inline: var(--nx-control-inset);
+    margin-inline: calc((var(--nx-block-size) - var(--nx-control-size)) / 2 + var(--nx-control-inset));
   }
-  /* Compact icon-only buttons abut, one segmented run (a stepper's − and +); the last keeps the row's end inset. */
+  /* Compact icon-only buttons abut, one segmented run (a stepper's − and +); the last centres on the end cell. */
   .nx-input-adornment > .nx-button[data-square][data-compact] {
     margin-inline: 0;
   }
   .nx-input-adornment > .nx-button[data-square][data-compact]:last-child {
-    margin-inline-end: var(--nx-control-inset);
+    margin-inline-end: calc((var(--nx-block-size) - var(--nx-control-icon)) / 2 - var(--nx-control-inset));
   }
   .nx-input-adornment > .nx-button[data-compact] + .nx-button[data-compact] {
     margin-inline-start: calc(-1 * var(--nx-control-inset));
@@ -353,37 +370,120 @@
   .nx-field > .nx-control {
     margin-block: var(--nx-control-inset);
   }
-  /* The label row is a small block row (size sm by default), so trailing icons and icon buttons fit at its end. */
+
+  /*
+   * A row field (Phase 4 decision 3) is a subgrid row of its parent's `columns`: stacked below the pane's collapse
+   * width; above it the header spans the row and the helper text and the control share the next line, split at the
+   * interior `control` line and top-aligned, as the current Form's settings rows are.
+   */
+  .nx-field[data-layout='row'] {
+    display: grid;
+    grid-column: content;
+    grid-template-columns: subgrid;
+    align-items: start;
+  }
+  .nx-field[data-layout='row'] > * {
+    grid-column: content;
+  }
+  .nx-field[data-layout='row'][data-surface] {
+    padding: var(--nx-gap-size);
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+  /* A settings row's title is content and its description secondary content (the current Form's settings chrome). */
+  .nx-field[data-layout='row'] > .nx-field-header > :is(.nx-label, .nx-typography) {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    color: var(--color-base-fg);
+  }
+  /* A control (also one under a box-less Select or Combobox root) tops its line rather than centring on a taller description. */
+  .nx-field[data-layout='row'] > .nx-control,
+  .nx-field[data-layout='row'] > :is(.nx-select, .nx-combobox) > .nx-control {
+    align-self: start;
+  }
+  /* The space under the title is the header's own, so the description and control below it still share a top. */
+  .nx-field[data-layout='row'] > .nx-field-header {
+    margin-block-end: var(--spacing-trim-sm);
+  }
+  .nx-field[data-layout='row'] > .nx-field-helper {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-description);
+    margin-block-end: var(--nx-gap-size);
+  }
+  @container (width >= 24rem) {
+    .nx-field[data-layout='row'] > * {
+      grid-column: control / content-end;
+      grid-row: 2;
+    }
+    .nx-field[data-layout='row'] > .nx-field-header {
+      grid-row: 1;
+    }
+    .nx-field[data-layout='row'] > .nx-field-helper {
+      grid-column: content-start / control;
+      margin-block-end: 0;
+    }
+    .nx-field[data-layout='row'] > :is(.nx-field-header, .nx-field-error) {
+      grid-column: content;
+    }
+    .nx-field[data-layout='row'] > .nx-field-error {
+      grid-row: auto;
+    }
+  }
+  /*
+   * The label row takes its field's size, so a trailing icon-only Button or Block fills the same block-wide end cell as
+   * the control's own trailing icon below it (one column, one icon size); the row is only control-tall, its buttons
+   * dropping their block inset, and its text is the size's label step.
+   */
   .nx-field-header {
     display: flex;
     align-items: center;
     gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
+    min-height: var(--nx-control-size);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
   }
   /* A trailing Block matches an icon-only Button's visible box and block-sized cell, so static and interactive icons align. */
   .nx-field-header > .nx-block {
     width: var(--nx-control-size);
     height: var(--nx-control-size);
-    margin: var(--nx-control-inset);
+    margin: 0 var(--nx-control-inset);
   }
-  .nx-field-header > .nx-label {
+  .nx-field-header > .nx-button[data-square] {
+    margin-block: 0;
+  }
+  /* Trailing actions sit at the row's end whatever the label is (a Label, or Typography for a row with no one control). */
+  .nx-field-header > :is(.nx-block, .nx-button):not(:is(.nx-block, .nx-button) ~ *) {
+    margin-inline-start: auto;
+  }
+  .nx-field-header > :is(.nx-label, .nx-typography) {
     flex: 1;
     min-width: 0;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
   }
   /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
-  .nx-field-required {
-    margin-inline-start: 0.125em;
-    color: var(--color-error-text, currentColor);
+  /*
+   * A field's label reads a step below its value, in ui-theme's subdued text; a Checkbox or Switch's own label is the
+   * control's text, not a field label, so it keeps the base colour.
+   */
+  :is(.nx-field, .nx-field-header) > :is(.nx-label, .nx-typography) {
+    color: var(--color-subdued);
   }
-  .nx-field-helper,
+  /* The required mark is the current Form's: a warning-coloured `*` a small gap after the label at every size. */
+  .nx-field-required {
+    margin-inline-start: max(0.125em, var(--nx-control-inset));
+    color: var(--color-warning-text, currentColor);
+  }
   .nx-field-error {
     font-size: var(--text-sm);
     line-height: var(--text-sm--line-height);
   }
+  /* Help text is interface text like the label: the same subdued colour, one size step smaller so the two stay distinct. */
   .nx-field-helper {
-    color: var(--color-description);
+    font-size: var(--nx-helper-font-size);
+    line-height: var(--nx-helper-line-height);
+    color: var(--color-subdued);
   }
   .nx-field-error {
     color: var(--color-error-text);
@@ -479,6 +579,8 @@
     justify-content: space-between;
     /* A full gap between a leading option icon and its label, as in Button. */
     gap: var(--nx-gap-size);
+    /* The caret centres on the block-wide end cell, the column of the row's trailing actions. */
+    padding-inline-end: calc((var(--nx-block-size) - var(--nx-control-icon)) / 2);
     width: 100%;
     min-width: 0;
     background: var(--color-input-surface);

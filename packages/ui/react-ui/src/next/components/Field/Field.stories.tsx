@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
@@ -123,6 +123,28 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Next.Input placeholder='Filter' />
     </Next.Field.Root>
     <EveryField size={size} />
+    {/* Row fields (Phase 4 decision 3): bordered subgrid rows of the Container's two tracks. */}
+    <Next.Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
+      {['Theme', 'Language'].map((name) => (
+        <Next.Field.Root key={name} layout='row' level='+1' data-testid={`row-${name.toLowerCase()}-${size}`}>
+          <Next.Field.Header>
+            <Next.Field.Label>{name}</Next.Field.Label>
+          </Next.Field.Header>
+          <Next.Field.HelperText>The app's {name.toLowerCase()}.</Next.Field.HelperText>
+          <Next.Input />
+        </Next.Field.Root>
+      ))}
+    </Next.Container>
+    {/* A header whose label is text (no single control to name): its action still ends the row. */}
+    <Next.Field.Header data-testid={`text-header-${size}`}>
+      <Next.Typography truncate>Tags</Next.Typography>
+      <Next.Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
+    </Next.Field.Header>
+    {/* A row with its own columns spaces them by its gap. */}
+    <Next.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+      <Next.Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
+      <Next.Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
+    </Next.Container>
   </>
 );
 
@@ -241,6 +263,78 @@ export const Test: Story = {
     await expect(asChild.tagName).toBe('SECTION');
     await expect(asChild).toHaveClass('nx-field');
     await expect(within(asChild).getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
+
+    // Row fields share the Container's tracks: the header spans the row; the helper (before the `control` line) and the
+    // control (after it) share the next line, top-aligned to the control's cell.
+    const rows = ['theme', 'language'].map((name) => {
+      const row = byTestId(canvasElement, `row-${name}-md`);
+      const inputElement = row.querySelector<HTMLElement>('.nx-input')!;
+      return {
+        row,
+        header: row.querySelector('[data-part="header"]')!.getBoundingClientRect(),
+        helper: row.querySelector('[data-part="helper-text"]')!.getBoundingClientRect(),
+        input: inputElement.getBoundingClientRect(),
+        inputTop: inputElement.getBoundingClientRect().top - parseFloat(getComputedStyle(inputElement).marginTop),
+      };
+    });
+    for (const { row, header, helper, input, inputTop } of rows) {
+      await expect(input.left).toBeCloseTo(rows[0].input.left, 0);
+      await expect(header.right).toBeGreaterThanOrEqual(input.right - 0.5);
+      await expect(helper.top).toBeGreaterThanOrEqual(header.bottom - 0.5);
+      await expect(helper.right).toBeLessThanOrEqual(input.left + 0.5);
+      await expect(helper.top).toBeCloseTo(inputTop, 0);
+      await expect(row).toHaveAttribute('data-surface', '+1');
+      await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
+    }
+    await expect(canvas.getByRole('textbox', { name: 'Theme' })).toBeInTheDocument();
+    const first = byTestId(canvasElement, 'pair-first-md').getBoundingClientRect();
+    const second = byTestId(canvasElement, 'pair-second-md').getBoundingClientRect();
+    await expect(second.left - first.right).toBeCloseTo(4, 0);
+
+    // Header actions end the row whatever the label is: the icon sits in the block-wide end cell.
+    for (const size of SIZES) {
+      const header = byTestId(canvasElement, `text-header-${size}`);
+      const box = header.getBoundingClientRect();
+      await expect(header.firstElementChild!.getBoundingClientRect().left, `${size} text label`).toBeCloseTo(
+        box.left,
+        0,
+      );
+      await expectEndCell(
+        within(header).getByRole('button', { name: 'Add tag' }).querySelector('svg'),
+        box.right,
+        size,
+        size,
+      );
+    }
+
+    // Colours resolved from the tokens, through a probe element in the same scope.
+    const resolve = (token: string) => {
+      const probe = canvasElement.ownerDocument.createElement('span');
+      probe.style.color = `var(${token})`;
+      canvasElement.appendChild(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    };
+
+    // Label and help text are interface text in the subdued colour, distinct from the value; help text is a size smaller.
+    const field = within(byTestId(canvasElement, 'field-md'));
+    const emailLabel = getComputedStyle(field.getByText('Email'));
+    const helper = getComputedStyle(field.getByText('We never share it.'));
+    const value = getComputedStyle(field.getByRole('textbox'));
+    await expect(emailLabel.color).toBe(resolve('--color-subdued'));
+    await expect(helper.color).toBe(resolve('--color-subdued'));
+    await expect(parseFloat(helper.fontSize)).toBeLessThan(parseFloat(emailLabel.fontSize));
+    await expect(emailLabel.color).not.toBe(value.color);
+    await expect(helper.color).not.toBe(value.color);
+
+    // The required mark is warning-coloured, a small gap after the label's text.
+    const requiredLabel = byTestId(canvasElement, 'required-label-md');
+    const mark = requiredLabel.querySelector<HTMLElement>('[data-part="required-indicator"]')!;
+    await expect(getComputedStyle(mark).color).toBe(resolve('--color-warning-text'));
+    const range = canvasElement.ownerDocument.createRange();
+    range.selectNodeContents(requiredLabel.firstChild!);
+    await expect(mark.getBoundingClientRect().left - range.getBoundingClientRect().right).toBeGreaterThan(0.5);
 
     const clear = website.getByRole('button', { name: 'Clear website' });
     await userEvent.hover(clear);

@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type Span, spanAttributes } from '../Container/index.ts';
+import { type Level, type Span, containerAttributes, spanAttributes } from '../Container/index.ts';
 
 //
 // Root
@@ -19,23 +19,39 @@ import { type Span, spanAttributes } from '../Container/index.ts';
 type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
   /** Tracks the set spans in its parent Container. */
   span?: Span;
+  /**
+   * `inherit` makes the set a subgrid of the enclosing Container, as an inheriting Container is, so nested sets keep
+   * the parent's tracks at any depth; without it the set is a flex stack of its own.
+   */
+  gutter?: 'inherit';
+  /** A rung for the set's surface, as on Container; only applies with `gutter='inherit'`. */
+  level?: Level;
+  /**
+   * A nested group (with `gutter='inherit'`): bordered and indented one step inside the parent's content track, on its
+   * host's surface, its fields still sharing the parent's columns.
+   */
+  inset?: boolean;
 };
 
 /**
  * A `group` stacking its Fields with the container gap, named by its Legend; `disabled` and `invalid` reach every
- * child control through context. Not a `<fieldset>`, whose anonymous content box cannot take part in a parent's grid.
+ * child control through context. Not a `<fieldset>`, whose anonymous content box cannot take part in a parent's grid;
+ * with `gutter='inherit'` it is a subgrid of its parent.
  */
 const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
-  ({ classNames, span, style, disabled, children, ...props }, forwardedRef) => {
+  ({ classNames, span, gutter, level, inset, style, disabled, children, ...props }, forwardedRef) => {
     const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
+    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter, level }) : { style: undefined };
     return (
       <FieldsetPrimitive.Root
         {...props}
         {...spanAttrs}
+        {...grid}
+        data-inset={gutter && inset ? '' : undefined}
         disabled={disabled}
         asChild
-        style={{ ...spanStyle, ...style }}
-        className={mx(recipes.fieldsetRoot(), classNames)}
+        style={{ ...spanStyle, ...gridStyle, ...style }}
+        className={mx(recipes.fieldsetRoot(), gutter && recipes.container(), classNames)}
       >
         <div role='group' aria-disabled={disabled ? true : undefined} ref={forwardedRef}>
           {children}
@@ -52,13 +68,13 @@ FieldsetRoot.displayName = 'Next.Fieldset.Root';
 //
 
 type FieldsetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
-  /** The row's own size; `sm` by default so it reads like a Field's label row. */
+  /** A size of its own makes the legend a heading row; by default it takes the set's size, in its label step. */
   size?: Size;
 };
 
 /** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or icon-only Buttons. */
 const FieldsetLegend = forwardRef<HTMLDivElement, FieldsetLegendProps>(
-  ({ classNames, size = 'sm', children, ...props }, forwardedRef) => (
+  ({ classNames, size, children, ...props }, forwardedRef) => (
     <FieldsetPrimitive.Legend {...props} asChild data-size={size} className={mx(recipes.fieldsetLegend(), classNames)}>
       <div ref={forwardedRef}>{children}</div>
     </FieldsetPrimitive.Legend>

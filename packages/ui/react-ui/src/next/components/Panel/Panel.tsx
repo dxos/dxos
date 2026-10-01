@@ -86,7 +86,7 @@ PanelHeader.displayName = 'Next.Panel.Header';
 //
 
 type PanelBodyProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
-  Pick<ContainerProps, 'gutter' | 'columns' | 'gap' | 'layout'>;
+  Pick<ContainerProps, 'gutter' | 'columns' | 'gap' | 'layout' | 'align'>;
 
 /**
  * The growing middle row: a composed ScrollArea (decision 5) around a gutter Container (`rail` by default), so the
@@ -94,7 +94,10 @@ type PanelBodyProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
  * the panel, like the header and footer. Carries ScrollArea's `data-scope` (finding 10); the ref is the frame's.
  */
 const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(
-  ({ children, classNames, mode, width, native, gutter = 'rail', columns, gap, layout, ...props }, forwardedRef) => (
+  (
+    { children, classNames, mode, width, native, gutter = 'rail', columns, gap, layout, align, ...props },
+    forwardedRef,
+  ) => (
     <ScrollArea.Root
       {...props}
       mode={mode}
@@ -104,7 +107,7 @@ const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(
       ref={forwardedRef}
     >
       <ScrollArea.Viewport asChild>
-        <Container gutter={gutter} columns={columns} gap={gap} layout={layout}>
+        <Container gutter={gutter} columns={columns} gap={gap} layout={layout} align={align}>
           {children}
         </Container>
       </ScrollArea.Viewport>

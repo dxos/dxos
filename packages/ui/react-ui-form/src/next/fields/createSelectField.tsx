@@ -1,0 +1,68 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React from 'react';
+
+import { invariant } from '@dxos/invariant';
+import { Next } from '@dxos/react-ui/next';
+
+import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
+
+import { type CreateSelectFieldOptions } from '../../components/Form/FormField/fields/SelectField/create-select-field.tsx';
+import { presentationFor } from '../../components/Form/FormField/presentation.tsx';
+import { FormField } from '../FormField.tsx';
+import { SelectControl } from './SelectField.tsx';
+
+// A value outside every option, since Ark reads an empty value as no selection.
+const SENTINEL = '__default__';
+
+/** The current `createSelectField`, same signature, on `Next.Select`; the renderer owns its row as before. */
+export const createSelectField = ({
+  options,
+  defaultLabel = 'Default',
+}: CreateSelectFieldOptions): FormFieldRenderer => {
+  const normalized = options.map((option) => (typeof option === 'string' ? { value: option, label: option } : option));
+  invariant(
+    !normalized.some((option) => option.value === SENTINEL),
+    `createSelectField: option value '${SENTINEL}' is reserved.`,
+  );
+  const hasDefault = defaultLabel !== null;
+  const items: Next.SelectOption[] = [
+    ...(hasDefault ? [{ value: SENTINEL, label: defaultLabel }] : []),
+    ...normalized.map((option) => ({ value: option.value, label: option.label ?? option.value })),
+  ];
+
+  const SelectFieldRenderer = ({
+    type,
+    label,
+    jsonPath,
+    readonly,
+    presentation,
+    getValue,
+    onValueChange,
+    onBlur,
+  }: FormFieldRendererProps<string | undefined>) => {
+    const value = getValue();
+    return (
+      <FormField path={jsonPath} label={label} readonly={readonly} presentation={presentation}>
+        {presentationFor(presentation).isStatic ? (
+          <Next.Typography truncate>
+            {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
+          </Next.Typography>
+        ) : (
+          <SelectControl
+            items={items}
+            value={value ?? (hasDefault ? SENTINEL : undefined)}
+            readonly={readonly}
+            onValueChange={(next) => {
+              onValueChange(type, hasDefault && next === SENTINEL ? undefined : next);
+              onBlur();
+            }}
+          />
+        )}
+      </FormField>
+    );
+  };
+  return SelectFieldRenderer;
+};

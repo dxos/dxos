@@ -9,6 +9,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
+import { containerAttributes } from '../Container/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { RowContext } from '../Listbox/grid.ts';
 
@@ -67,17 +68,25 @@ CollapsibleTrigger.displayName = 'Next.Collapsible.Trigger';
 // Content
 //
 
-type CollapsibleContentProps = ThemedClassName<CollapsiblePrimitive.ContentProps>;
+type CollapsibleContentProps = ThemedClassName<CollapsiblePrimitive.ContentProps> & {
+  /** `inherit` makes the content a subgrid of the enclosing grid (a Container or a grid Fieldset), keeping its rails. */
+  gutter?: 'inherit';
+};
 
 /** Animates its height from Ark's measured `--height`. */
 const CollapsibleContent = forwardRef<HTMLDivElement, CollapsibleContentProps>(
-  ({ classNames, ...props }, forwardedRef) => (
-    <CollapsiblePrimitive.Content
-      {...props}
-      className={mx(recipes.collapsibleContent(), classNames)}
-      ref={forwardedRef}
-    />
-  ),
+  ({ classNames, gutter, style, ...props }, forwardedRef) => {
+    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter }) : { style: undefined };
+    return (
+      <CollapsiblePrimitive.Content
+        {...props}
+        {...grid}
+        style={gridStyle ? { ...gridStyle, ...style } : style}
+        className={mx(recipes.collapsibleContent(), gutter && recipes.container(), classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
 );
 
 CollapsibleContent.displayName = 'Next.Collapsible.Content';

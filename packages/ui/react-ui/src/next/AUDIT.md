@@ -807,6 +807,9 @@ No open questions remain.
   `density` codemod reads the enclosing scope first: it drops `density` where that scope already yields it
   (`fine`→`sm`, `coarse`→`md`), hoists a size shared by sibling buttons to the nearest scope element, and otherwise
   sets `size` on the button; scopes it cannot see (another file) are reported.
+- **Colour token naming:** not part of the cut-over. A follow-up PR renames the text emphasis tokens, utilities and
+  `tone` values together with the other `subdued`/`description` colour uses (borders included); `fg`/`fg-muted`/
+  `fg-subtle` is the proposal to review then.
 
 ### Milestone status
 

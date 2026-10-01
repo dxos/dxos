@@ -578,6 +578,42 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     nearest ancestors (`dragScope`: attribute reads, no layout), for pragmatic-drag-and-drop's portalled native
     preview (AUDIT 2.6). react-ui adds no drag binding: pointer dragging and reorder logic stay in react-ui-list.
 
+## Form spike follow-ups
+
+From the react-ui-form Form spike (`react-ui-form/src/next/SPIKE.md`) and its user review.
+
+60. **Form nesting: enclosed and indented, no surface stepping.** A nested object is a grid Fieldset
+    (`gutter='inherit'`, rendered as a `group` element, since a `<fieldset>` cannot be a subgrid) with `inset`: it spans
+    only its parent's content track and inherits that track's edge lines, so its fields keep the `content` placement
+    (and any interior column line, such as the settings `control` line). Its 1px separator border and `--nx-gap-size`
+    padding indent it one step per depth. It stays on its host's surface: stepping a level per depth does not scale,
+    since the `+1` ladder runs out at popup. A grid set or Collapsible Content keeps its parent's row gap (`row-gap: inherit`),
+    except an inset set, which spaces its fields at half the size's `--nx-gap-size` (4px at md, against the form's 8px),
+    so they read as one group.
+61. **Row fields** (Phase 4 decision 3). `Field.Root layout='row'` is a subgrid row of its parent's `columns`: header
+    and helper before the interior `control` line, the control after it, stacked below the collapse width.
+    `level='+1'` draws the bordered settings card.
+62. **One trailing column.** Every trailing icon in a form column centres on the block-wide end cell of the row:
+    - a row action (an icon-only Button or Block in `Field.Header` or a Fieldset legend, a list row's remove);
+    - a Select caret or Combobox trigger;
+    - an Input `end` icon-only Button (DateInput's calendar, PasswordInput's toggle);
+    - the last of NumberInput's compact steppers.
+
+    All are the size's control icon size. `Field.Header` and legends therefore take their field's size (supersedes
+    the `sm` default of follow-up 9): the row is control-tall, its text in the size's label step, and its square
+    Buttons drop their block inset. A legend given an explicit `size` is a heading row. `expectEndCell`
+    (`testing.ts`) asserts the rule.
+
+63. **Rows in a scroll viewport size to their content.** `minmax(block, auto)` rows grow only into a definite-height
+    container's free space, so a row taller than a scrolling Panel Body overflowed it centred, half above its top.
+    A scrolling row viewport uses `auto` rows. `Container align='start'` tops a row's cells of differing heights,
+    such as two forms side by side, instead of centring them.
+64. **Label colours: content outranks interface text.** Field labels, header Typography, Fieldset legends and help
+    text (`Field.HelperText`) all use ui-theme's `--color-subdued`; help text is one size step smaller than its label
+    (`--nx-helper-font-size`, the next-smaller size's label step; xs and sm have no smaller step). Error text is
+    unchanged. A Checkbox or Switch label is the control's own text and keeps the base colour. The required mark is the
+    current Form's: `--color-warning-text`, `max(0.125em, --nx-control-inset)` after the label text.
+
 ## Phase 3: react-ui-form port
 
 Parity audit, Next shortcomings and the milestone plan for the react-ui-form and react-ui-list rewrites: [AUDIT.md](./AUDIT.md).
