@@ -361,5 +361,17 @@ export const Test: Story = {
     // Rest on an open tooltip.
     await userEvent.hover(addLg);
     await expectTooltip(addLg, 'Add');
+
+    // The focus ring takes the theme's own focus slot, not a hard-coded hue.
+    const probe = (color: string) => {
+      const element = canvasElement.ownerDocument.createElement('span');
+      element.style.color = color;
+      canvasElement.append(element);
+      const resolved = getComputedStyle(element).color;
+      element.remove();
+      return resolved;
+    };
+    await expect(probe('var(--nx-focus-ring-color)')).toBe(probe('var(--color-focus)'));
+    await expect(probe('var(--color-focus)')).not.toBe(probe('var(--color-secondary-border)'));
   },
 };

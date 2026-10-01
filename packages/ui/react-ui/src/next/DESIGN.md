@@ -74,6 +74,8 @@
    are fixed at build time, not swapped at runtime through context (unlike the current `tx()` theme functions).
    One theme therefore serves both bindings, provided they emit identical DOM (same elements, classes and `data-*`
    attributes); the shared recipes guarantee the classes, and a parity test should assert the rest.
+   The focus ring takes ui-theme's `--color-focus` (decided 2026-10-01): a slot of its own, orange today, rather than
+   `secondary` (an alias of green, which reads as success) or the brand primary it must stand out against.
 9. **ARIA.** Interactive roles and `aria-*` state come only from zag machines (`api.get*Props()`), so a role is
    claimed only by code that implements its keyboard contract. Layout parts (Container, Block, ScrollArea) carry no
    role by default; callers add landmark or `group` roles explicitly. Icons are `aria-hidden` unless given a label.

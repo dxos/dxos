@@ -6,7 +6,7 @@
 @layer dx-components {
   /* Focus ring: its own themable variables rather than ui-theme's ring, so a theme can recolour it (decision 8). */
   :root {
-    --nx-focus-ring-color: var(--color-orange-500, oklch(70.5% 0.213 47.604));
+    --nx-focus-ring-color: var(--color-focus, oklch(70.5% 0.213 47.604));
     --nx-focus-ring-width: 2px;
   }
   .nx-focus-ring:focus {
