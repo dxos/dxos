@@ -102,7 +102,9 @@ of the source per edit, which the public Automerge API makes proportional to his
 
 Not yet done:
 
-- `watchVersions` is not yet wired into plugin-client, and lenses are code only.
+- Deferred (2026-10-01) pending evaluation: wiring `watchVersions` into plugin-client and lenses as data.
+  Version lenses are meant to replace in-place migrations once steps 2–4 cover what migrations express
+  (lists/maps/text, opaque one-way transforms, multi-object); until then the in-place runner stays.
 - A released app that still runs an in-place migration for a versioned type would rewrite the linked
   document in place; types move to version documents only once no released app migrates them.
 - The host takes the versions from the query until #13284 lands, then from the client's registry.
