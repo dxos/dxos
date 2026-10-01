@@ -131,9 +131,9 @@ describe('startMcpHost', () => {
 
         const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
         const code = [
-          "await loadSkill('tasks');",
+          "yield* loadSkill('tasks');",
           "for (const title of ['Ship', 'Test']) {",
-          `  print((await invoke('${KEY}', { title })).id);`,
+          `  yield* print((yield* invoke('${KEY}', { title })).id);`,
           '}',
         ].join('\n');
         yield* Stream.runDrain(

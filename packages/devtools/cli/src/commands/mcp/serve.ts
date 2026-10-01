@@ -84,7 +84,7 @@ const devPluginPaths = Effect.gen(function* () {
  * server over stdio already holds, but a caller should still choose to hand it a code interpreter.
  */
 const codeModeOption = Options.Boolean('code-mode').pipe(
-  Options.withDescription('Also serve runScript, which runs agent-written JavaScript against the operations.'),
+  Options.withDescription('Also serve runScript, which runs agent-written Effect programs against the operations.'),
   Options.withDefault(false),
 );
 

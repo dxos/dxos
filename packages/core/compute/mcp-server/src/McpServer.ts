@@ -4,9 +4,11 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
@@ -544,9 +546,9 @@ export const invokeHosted = (
 // Code mode.
 //
 // A task that touches many objects costs one `invokeOperation` round trip per object, each of them
-// spent in the client's context. `runScript` lets the caller write that loop once instead: the
-// script reaches the same three verbs as functions, through the same skill gate and space rules,
-// and only what it prints comes back.
+// spent in the client's context. `runScript` lets the caller write that loop once instead, as an
+// Effect program: it reaches the same three verbs as effects, through the same skill gate and space
+// rules, and only what it prints comes back.
 //
 
 export { ScriptError } from './internal/script.ts';
@@ -570,26 +572,32 @@ const DEFAULT_SCRIPT_MAX_OUTPUT = 16_000;
 
 export const RunScript = Tool.make('runScript', {
   description:
-    'Runs a JavaScript script against this server and returns what it printed — use it instead of ' +
-    'a chain of invokeOperation calls when a task touches many objects or needs a loop, a filter, ' +
-    'or a join. `code` is the body of an async function with these in scope: ' +
-    '`await invoke(key, input?, { spaceId }?)` runs an operation exactly as invokeOperation does ' +
-    '(same keys, input schemas, skill gate and ref envelopes) and throws on failure; ' +
-    '`await queryOperations({ query?, skill?, keys? })` returns the rows queryOperations does; ' +
-    '`await loadSkill(name?)` returns what loadSkill does and unlocks its operations; ' +
-    '`print(...values)` adds a line to the output (non-strings as JSON); `spaceId` is the spaceId ' +
-    'argument, used by invoke when a call names none. Nothing else is in scope: no import, require ' +
-    'or fetch. Only printed values reach you — print the fields you need, not whole objects. Look up ' +
-    'input schemas with queryOperations before writing code against them.',
+    'Runs an Effect program against this server and returns what it printed — use it instead of a ' +
+    'chain of invokeOperation calls when a task touches many objects or needs a loop, a filter, or a ' +
+    'join. `code` is the BODY of an `Effect.gen(function* () { ... })` generator: write `yield*` ' +
+    'statements directly and do not write the wrapper. In scope: `Effect` (the effect module); ' +
+    '`yield* invoke(key, input?, { spaceId }?)` runs an operation exactly as invokeOperation does ' +
+    '(same keys, input schemas, skill gate and {"/": "echo://..."} ref envelopes) and returns its ' +
+    'output; `yield* queryOperations({ query?, skill?, keys? })` returns the rows queryOperations ' +
+    'does; `yield* loadSkill(name?)` returns what loadSkill does and unlocks its operations; ' +
+    '`yield* print(...values)` adds a line to the output (non-strings as JSON); `spaceId` is the ' +
+    'spaceId argument, used by invoke when a call names none. A failed call fails the program with ' +
+    'a ToolFailure ({ code, message }); recover with `yield* Effect.result(invoke(...))`, whose value ' +
+    "is { _tag: 'Success', success } or { _tag: 'Failure', failure }. Run independent calls together " +
+    'with `yield* Effect.all([...], { concurrency: 8 })`. Nothing else is in scope: no import, ' +
+    'require or fetch. Only printed values reach you — print the fields you need, not whole objects. ' +
+    'Look up input schemas with queryOperations before writing code against them.',
   parameters: Schema.Struct({
-    code: Schema.String.annotate({ description: 'The async function body. Print anything you need to see.' }),
+    code: Schema.String.annotate({
+      description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
+    }),
     spaceId: spaceInternal.idParameter,
   }),
   success: Schema.Struct({
     output: Schema.String.annotate({ description: 'Everything the script printed, in order.' }),
     error: Schema.optional(
       Schema.String.annotate({
-        description: 'Why the script failed, when it threw; output holds what it printed first.',
+        description: 'Why the program failed, when it did; output holds what it printed first.',
       }),
     ),
   }),
@@ -602,9 +610,13 @@ export const RunScript = Tool.make('runScript', {
 export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation, LoadSkill, RunScript);
 
 /**
- * Answers one `runScript` call: the script's verbs dispatch through {@link invokeWithLedger},
+ * Answers one `runScript` call: the program's verbs dispatch through {@link invokeWithLedger},
  * {@link queryOperations} and {@link loadSkill}, so a script can do nothing a sequence of tool
  * calls could not.
+ *
+ * The script is written in Effect, the dialect `@dxos/agent-code-mode` calls `effect`: the body of
+ * an `Effect.gen`, with each verb an effect failing with the same `ToolFailure` the tool would
+ * return, so recovery is typed (`Effect.result`, `Effect.catchTag`) rather than try/catch on a string.
  */
 export const runScript = (
   registry: Registry.Registry,
@@ -615,48 +627,44 @@ export const runScript = (
 ): Effect.Effect<{ output: string; error?: string }> =>
   Effect.gen(function* () {
     const services = yield* Effect.context<never>();
-    // A tool failure becomes a rejection carrying its message, so the script can catch and read it.
-    const run = <A>(effect: Effect.Effect<A, ToolFailure>): Promise<A> =>
-      Effect.runPromiseWith(services)(Effect.result(effect)).then((result) =>
-        Result.isSuccess(result) ? result.success : Promise.reject(new Error(result.failure.message)),
-      );
-
     const printer = scriptInternal.makePrinter(maxOutput);
     const bindings = {
+      Effect,
       spaceId,
-      print: printer.print,
+      print: (...values: unknown[]) => Effect.sync(() => printer.print(...values)),
       invoke: (key: unknown, input?: unknown, options?: unknown) =>
-        run(
-          Effect.gen(function* () {
-            const request = yield* scriptRequest(key, input, options);
-            return yield* invokeWithLedger(registry, host, ledger, {
-              ...request,
-              spaceId: request.spaceId ?? spaceId,
-            });
-          }),
-        ),
-      queryOperations: (query?: unknown) =>
-        run(
-          Schema.decodeUnknownEffect(QueryOperations.parametersSchema)(query ?? {}).pipe(
-            Effect.mapError((error) => failure('invalid_request', `queryOperations: ${String(error)}`)),
-            Effect.flatMap((params) => queryOperations(registry, params)),
-            Effect.map(({ operations }) => operations),
+        scriptRequest(key, input, options).pipe(
+          Effect.flatMap((request) =>
+            invokeWithLedger(registry, host, ledger, { ...request, spaceId: request.spaceId ?? spaceId }),
           ),
         ),
-      loadSkill: (skill?: unknown) =>
-        run(
-          skill === undefined || typeof skill === 'string'
-            ? loadSkill(registry, ledger, skill)
-            : Effect.fail(failure('invalid_request', 'loadSkill takes a skill name.')),
+      queryOperations: (query?: unknown) =>
+        Schema.decodeUnknownEffect(QueryOperations.parametersSchema)(query ?? {}).pipe(
+          Effect.mapError((error) => failure('invalid_request', `queryOperations: ${String(error)}`)),
+          Effect.flatMap((params) => queryOperations(registry, params)),
+          Effect.map(({ operations }) => operations),
         ),
+      loadSkill: (skill?: unknown) =>
+        skill === undefined || typeof skill === 'string'
+          ? loadSkill(registry, ledger, skill)
+          : Effect.fail(failure('invalid_request', 'loadSkill takes a skill name.')),
+      /** Supplied by the wrapper, not by the script: runs its program and reports how it failed. */
+      runEffect: (program: unknown): Promise<unknown> =>
+        scriptInternal.isProgram(program)
+          ? Effect.runPromiseWith(services)(Effect.exit(program)).then((exit) =>
+              Exit.isSuccess(exit)
+                ? exit.value
+                : Promise.reject(new Error(scriptInternal.describeFailure(Cause.squash(exit.cause)))),
+            )
+          : Promise.reject(new Error('The script body must be an Effect.gen body; do not write the wrapper.')),
     };
 
-    const result = yield* sandbox.evaluate({ code, bindings, timeout }).pipe(Effect.result);
+    const result = yield* sandbox.evaluate({ code: scriptInternal.wrap(code), bindings, timeout }).pipe(Effect.result);
     if (Result.isFailure(result)) {
       log.info('mcp script failed', { message: result.failure.message });
       return { output: printer.output(), error: result.failure.message };
     }
-    // A script that printed nothing but returned a value would otherwise answer with nothing.
+    // A program that printed nothing but returned a value would otherwise answer with nothing.
     if (result.success !== undefined && printer.isEmpty()) {
       printer.print(result.success);
     }

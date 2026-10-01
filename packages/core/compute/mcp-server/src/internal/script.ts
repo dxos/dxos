@@ -23,6 +23,19 @@ export type Sandbox = {
   readonly evaluate: (params: EvaluateParams) => Effect.Effect<unknown, ScriptError>;
 };
 
+/**
+ * Wraps a script body into the async function body the sandbox evaluates: the script is the body
+ * of an `Effect.gen`, so `yield*` works without the model having to remember the wrapper.
+ */
+export const wrap = (code: string): string => `return await runEffect(Effect.gen(function* () {\n${code}\n}));`;
+
+/**
+ * Whether a value the script produced is a program `runEffect` can run. Narrowed to no requirements
+ * because every binding in scope is already closed over its services, so nothing the script can
+ * build needs one.
+ */
+export const isProgram = (value: unknown): value is Effect.Effect<unknown, unknown> => Effect.isEffect(value);
+
 /** `AsyncFunction` is not a global binding, so it is reached through an async function's prototype. */
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 

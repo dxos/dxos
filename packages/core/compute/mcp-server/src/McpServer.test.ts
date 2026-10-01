@@ -598,13 +598,13 @@ describe('McpServer', () => {
     };
 
     // The point of code mode: a loop the caller would otherwise spend one round trip per item on.
-    test('a script runs operations through the skill gate, defaulting to the call space', async ({ expect }) => {
+    test('a program runs operations through the skill gate, defaulting to the call space', async ({ expect }) => {
       const { invocations, result } = run(
         trim`
-          await loadSkill('codeProject');
+          yield* loadSkill('codeProject');
           for (const title of ['a', 'b', 'c']) {
-            const { ok } = await invoke('${KEY}', { title });
-            print(title, ok);
+            const { ok } = yield* invoke('${KEY}', { title });
+            yield* print(title, ok);
           }
         `,
         { spaceId: SPACE_A },
@@ -617,27 +617,53 @@ describe('McpServer', () => {
       );
     });
 
-    test('an ungoverned call throws inside the script, where it can be caught', async ({ expect }) => {
+    test('independent calls run together through Effect.all', async ({ expect }) => {
       const { invocations, result } = run(
         trim`
-          try {
-            await invoke('${KEY}', { title: 'x' });
-          } catch (error) {
-            print(error.message);
-          }
+          yield* loadSkill('codeProject');
+          const results = yield* Effect.all(
+            ['a', 'b'].map((title) => invoke('${KEY}', { title })),
+            { concurrency: 2 },
+          );
+          yield* print(results.length);
+        `,
+        { spaceId: SPACE_A },
+      );
+      expect(await result).to.deep.equal({ output: '2' });
+      expect(invocations).to.have.length(2);
+    });
+
+    test('an ungoverned call fails with a typed ToolFailure the program can recover from', async ({ expect }) => {
+      const { invocations, result } = run(
+        trim`
+          const attempt = yield* Effect.result(invoke('${KEY}', { title: 'x' }));
+          yield* print(attempt._tag, attempt.failure.code);
         `,
         { spaceId: SPACE_A },
       );
       const { output, error } = await result;
       expect(error).to.be.undefined;
-      expect(output).to.include("Call loadSkill with skill: 'codeProject'");
+      expect(output).to.equal('Failure skill_not_loaded');
       expect(invocations).to.have.length(0);
     });
 
-    test('a skill loaded by an earlier tool call stays loaded in the script', async ({ expect }) => {
+    test('an unrecovered failure is the error, with what was printed before it', async ({ expect }) => {
+      const { result } = run(
+        trim`
+          yield* print('before');
+          yield* invoke('${KEY}', { title: 'x' });
+        `,
+        { spaceId: SPACE_A },
+      );
+      const { output, error } = await result;
+      expect(output).to.equal('before');
+      expect(error).to.include("Call loadSkill with skill: 'codeProject'");
+    });
+
+    test('a skill loaded by an earlier tool call stays loaded in the program', async ({ expect }) => {
       const ledger = McpServer.memorySkillLedger();
       await EffectEx.runPromise(McpServer.loadSkill(testRegistry(), ledger, 'codeProject'));
-      const { invocations, result } = run(`await invoke('${KEY}', { title: 'x' }, { spaceId: '${SPACE_A}' });`, {
+      const { invocations, result } = run(`yield* invoke('${KEY}', { title: 'x' }, { spaceId: '${SPACE_A}' });`, {
         ledger,
       });
       expect((await result).error).to.be.undefined;
@@ -645,12 +671,12 @@ describe('McpServer', () => {
     });
 
     test('queryOperations returns the rows the tool does', async ({ expect }) => {
-      const { result } = run(`print((await queryOperations({ query: 'create task' })).map((row) => row.key));`);
+      const { result } = run(`yield* print((yield* queryOperations({ query: 'create task' })).map((row) => row.key));`);
       expect(JSON.parse((await result).output)).to.deep.equal([KEY]);
     });
 
     test('a thrown error is reported with what was printed before it', async ({ expect }) => {
-      const { result } = run(`print('before'); throw new Error('boom');`);
+      const { result } = run(`yield* print('before'); throw new Error('boom');`);
       expect(await result).to.deep.equal({ output: 'before', error: 'boom' });
     });
 
@@ -660,17 +686,17 @@ describe('McpServer', () => {
     });
 
     test('malformed invoke arguments fail with the call signature', async ({ expect }) => {
-      const { result } = run(`await invoke(42);`);
+      const { result } = run(`yield* invoke(42);`);
       expect((await result).error).to.include('invoke(key, input?, { spaceId }?)');
     });
 
-    test('a script that outruns its budget is abandoned with an error', async ({ expect }) => {
-      const { result } = run(`await new Promise(() => {});`, { timeout: 50 });
+    test('a program that outruns its budget is abandoned with an error', async ({ expect }) => {
+      const { result } = run(`yield* Effect.never;`, { timeout: 50 });
       expect((await result).error).to.include('abandoned');
     });
 
     test('nothing outside the bindings is in scope by name', async ({ expect }) => {
-      const { result } = run(`print(typeof invoke, typeof registry, typeof host, typeof ledger);`);
+      const { result } = run(`yield* print(typeof invoke, typeof registry, typeof host, typeof ledger);`);
       expect((await result).output).to.equal('function undefined undefined undefined');
     });
   });
@@ -1060,7 +1086,7 @@ describe('McpServer.toolsLayer', () => {
       await send(handler, 'tools/call', { name: 'loadSkill', arguments: { skill: 'codeProject' } });
       const called = await send(handler, 'tools/call', {
         name: 'runScript',
-        arguments: { code: `print((await invoke('${KEY}', { title: 'x' })).ok);`, spaceId: SPACE_A },
+        arguments: { code: `yield* print((yield* invoke('${KEY}', { title: 'x' })).ok);`, spaceId: SPACE_A },
       });
       expect(called.result.isError).not.to.equal(true);
       expect(called.result.structuredContent).to.deep.equal({ output: 'true' });
