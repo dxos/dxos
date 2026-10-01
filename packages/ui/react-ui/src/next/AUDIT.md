@@ -722,6 +722,33 @@ Reviewed one question at a time; decisions supersede the recommendations above.
   reaches its controls through context.
 - **Spike 46, subgrid in a one-track cell:** deferred for a separate discussion.
 
+### Decision review 2026-10-01 (group B: lists)
+
+- **Virtualization:** `virtual` is `undefined | 'fixed' | 'variable'`, shared by Listbox, OrderedList and Tree.
+  `'fixed'` windows the rows with spacer rows and one row height (dev warning when rows differ); `'variable'` uses
+  `content-visibility`.
+- **Selection:** Ark owns selection; `useListSelection` becomes an optional adapter.
+- **List machine:** every list runs Ark's listbox machine, with `selectionMode='none'` when nothing selects.
+- **Row columns:** part-based layout by default (leading cell, text, trailing parts); a list needing custom tracks
+  declares `columns` once on its Root and rows inherit them as a subgrid.
+- **Point 19, keyboard grammar:** the ARIA grid pattern. → enters a row, Tab moves within it, Escape or ← returns;
+  row controls stay out of the tab order until the row is entered; DragHandle keeps Alt+↑/↓.
+- **Point 16, DetailItem layout:** deferred.
+- **Point 17, drop target:** `useReorder` sets `data-drop-target='top' | 'bottom'` on the row; the `:has()` rule stays
+  as the fallback for custom hosts.
+- **Point 18, disclosure title:** the trigger draws only the caret, a square button in the trailing action column
+  labelled by the row's `ItemText`; the labelled trigger stays for standalone toggles.
+- **Point 20, row states:** one shared `nx-row` class carries hover, selected, disabled and drop states keyed on
+  Ark's attributes; each row type keeps its own class for layout.
+- **Point 24, drag preview:** a default `DragPreview` chip labelled by `getLabel`, falling back to `ItemText`;
+  `dragPreview` overrides it.
+- **Point 43, row identity:** `getId` is optional; `useStableIds` keeps generated ids beside a plain array through
+  move, remove and insert.
+- **Point 44, Remove names:** `SystemButton.Remove` is named from the row's `ItemText` via `aria-labelledby`
+  ("Delete Q3 budget"); `label` overrides it.
+- **Point 21, chrome labels:** the strings move to react-ui translations under its own `translationKey`.
+- **Point 23, plugin list:** list items forward `hue` to their icon (`ItemIcon` forwards Icon's props); no cards.
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
