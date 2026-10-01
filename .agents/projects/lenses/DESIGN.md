@@ -1258,6 +1258,49 @@ returns each object at the newest version the reader knows.
   query that traverses it returns that version (the traversal clause names only the property, so the client
   derives the target from the anchor's schema).
 
+### 12.7 One lens (decided 2026-10-01)
+
+`Lens` (a view of one type through another) and `VersionLens` (translation between version documents)
+become one entity. A lens is to types what a relation is to objects: an edge between two of them.
+
+1. **One definition, two uses.** `Lens.make` is the only constructor. A view runs `get`/`put` against a live
+   object; version documents compile the same declarative mapping to `forward`/`backward` over plain data.
+   Ephemeral use is unchanged: a lens made and used on the spot needs no registration or storage, and may
+   use inline functions or be coded.
+2. **The subset version documents accept.** Rename, same-name match, add with a default and remove with a
+   default translate in both directions; lists, maps and text join them (step 2). Everything else stays a
+   view lens, and registering it between two versions of one type throws, naming the entry. Every
+   migration built so far gets a lens form by the end of step 4:
+   - forward only (older peers read but do not edit): `readOnly` and codec entries, `Migration.define`
+     transforms (step 3), cross-object moves, fan-out, fan-in and array fan-out (step 4);
+   - code only, shipped with the app and never stored: arbitrary transforms and function collision
+     policies;
+   - not yet: a typename rename, since version documents key everything by typename. It stays in place.
+3. **Identity.** A lens is named by its endpoints, `<source URI> → <target URI or identifier>`, and there is
+   at most one lens per pair. A plain-schema target must carry an identifier annotation. Overlays are stored
+   under that name. Separately, a `digest` of the resolved mapping (both URIs, every explicit and same-name
+   entry, defaults included) designates which lens derived a version root; a schema that changes without a
+   version bump changes the digest, and that device stops translating. A code-only lens's digest is a
+   declared version plus a hash of its source.
+4. **Target-only properties.** In version documents a target-only property lives in the target version's
+   document, starting at the target schema's default, unset when optional; a required property with no
+   default needs `add(property, default)`. Removed properties mirror this backward. A view between two
+   versions of one type reads the version document when one exists; overlays remain for views between
+   different types and for ephemeral use, so no fact is stored twice.
+5. **A new entity kind.** `EntityKind.Lens`, modelled on the `Type` kind: persisted with `db.addLens()`, kept
+   out of `db.add()`, and indexed by the registry by endpoints (`lensBetween`, `lensesFrom`). It is the kind
+   query traversals through lenses will use later. The stored `Lens.Object` is replaced, not migrated. A
+   lens between two versions is immutable once published; changing it means a new type version.
+6. **The host translates.** Translation runs in the host's indexing pass with a durable intent log, as
+   convergence-key merging does, using the declarative lenses stored in the space. A client stores each lens
+   it registers in every space it opens, deduplicated by endpoints and digest. Code-only lenses run in the
+   client. The static `Lens.register` and `syncVersions`/`watchVersions` go away; the registry supplies the
+   lenses, and queries still carry the versions each client knows.
+7. **Trust.** Any member may store a lens. An existing object translates with the lens whose digest its
+   root records, so a later lens cannot change it. A pair with two stored lenses of different digests
+   derives no new versions on any host until one is removed, and devtools shows the conflict.
+8. **Storage.** Declarative lenses are stored in the space (decision 6).
+
 ## 13. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·

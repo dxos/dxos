@@ -108,11 +108,25 @@ Known versions travel with each query as `QueryOptions.versions` (item 7, 2026-1
 decision 2 revised): exact for the requesting client and free of the registry push's timing, so version
 resolution does not depend on #13284.
 
+One lens (decided 2026-10-01, DESIGN.md §12.7), built on this branch in order:
+
+- **A.** Record the decisions.
+- **B. Merge.** `Lens` gains schema defaults with `add`/`remove`, endpoint names, a digest of the resolved
+  mapping and the subset check; `VersionLens` folds into it, with one `findPath`; the version runner takes a
+  `Lens`.
+- **C. Entity kind.** `EntityKind.Lens`, `db.addLens`, a registry index by endpoints; the static
+  `Lens.register` goes; plain targets carry an identifier.
+- **D. Host runner.** Translation moves into the host's indexing pass with an intent log; the host reads
+  lenses from the space; a client stores the lenses it registers; the conflict rule applies;
+  `syncVersions`/`watchVersions` go and routing takes its versions from the registry.
+
 Not yet done:
 
-- Deferred (2026-10-01) pending evaluation: wiring `watchVersions` into plugin-client and lenses as data.
-  Version lenses are meant to replace in-place migrations once steps 2–4 cover what migrations express
-  (lists/maps/text, opaque one-way transforms, multi-object); until then the in-place runner stays.
+- Deferred (2026-10-01) pending evaluation: plugin contributions of lenses (the app stays unwired until a
+  plugin registers one). Lenses are meant to replace in-place migrations once steps 2–4 cover what
+  migrations express (lists/maps/text, opaque one-way transforms, multi-object); until then the in-place
+  runner stays.
+- Later: code-only lenses in the client, traversals through lenses in the query DSL, typename renames.
 
 **Carried over from the in-place work:** per-edit translation and list/text rebasing (`fold-edit.ts`),
 byte-identical authoring (`ObjectCore.sharedChangeAt`), originals-only folding and ancestor-image forks,
