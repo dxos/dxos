@@ -19,7 +19,14 @@ export type UseVirtualRowsOptions = {
   count: number;
   /** Rows mounted beyond each edge of the view. */
   overscan?: number;
+  /** A row kept mounted outside the window (e.g. the roving tabstop), so DOM focus is never unmounted. */
+  pinned?: number;
+  /** Selects the rows measured for the pitch (default: the list's non-spacer children); e.g. to skip animating rows. */
+  measure?: string;
 };
+
+/** A run of mounted rows, `[first, last]` inclusive. */
+export type VirtualSpan = { first: number; last: number };
 
 export type VirtualRows = {
   /** Binds the list element; it scrolls itself or is scrolled by its nearest scrolling ancestor. */
@@ -30,6 +37,10 @@ export type VirtualRows = {
   /** Heights of the spacers before and after the mounted rows. */
   before: number;
   after: number;
+  /** The mounted runs in row order: the window, plus the `pinned` row's own run when it is outside it. */
+  spans: VirtualSpan[];
+  /** The height a spacer takes in place of `rows` unmounted rows (between spans). */
+  spacer: (rows: number) => number;
   /** Scrolls the row at `index` into view, mounting it; for zag's `scrollToIndexFn`. */
   scrollToIndex: (index: number) => void;
 };
@@ -50,10 +61,30 @@ const scrollerOf = (list: HTMLElement): HTMLElement => {
   return list.ownerDocument.scrollingElement instanceof HTMLElement ? list.ownerDocument.scrollingElement : list;
 };
 
-const mountedRows = (list: HTMLElement) =>
-  Array.from(list.children).filter(
-    (child): child is HTMLElement => child instanceof HTMLElement && !child.hasAttribute(SPACER_ATTRIBUTE),
-  );
+const mountedRows = (list: HTMLElement, measure: string | undefined): HTMLElement[] =>
+  measure
+    ? Array.from(list.querySelectorAll<HTMLElement>(measure))
+    : Array.from(list.children).filter(
+        (child): child is HTMLElement => child instanceof HTMLElement && !child.hasAttribute(SPACER_ATTRIBUTE),
+      );
+
+const spansOf = (first: number, last: number, pinned: number | undefined): VirtualSpan[] => {
+  if (last < first) {
+    return [];
+  }
+  if (pinned === undefined || (pinned >= first && pinned <= last)) {
+    return [{ first, last }];
+  }
+  return pinned < first
+    ? [
+        { first: pinned, last: pinned },
+        { first, last },
+      ]
+    : [
+        { first, last },
+        { first: pinned, last: pinned },
+      ];
+};
 
 /**
  * Windowing shared by the Next lists (Listbox, OrderedList, Tree). With `fixed` it tracks the scroll position of the
@@ -61,7 +92,13 @@ const mountedRows = (list: HTMLElement) =>
  * `VirtualSpacer`s and the slice. With `variable` or no mode every row is mounted; `variable` lists set
  * `data-virtual='variable'` so the theme defers off-screen rows.
  */
-export const useVirtualRows = ({ mode, count, overscan = DEFAULT_OVERSCAN }: UseVirtualRowsOptions): VirtualRows => {
+export const useVirtualRows = ({
+  mode,
+  count,
+  overscan = DEFAULT_OVERSCAN,
+  pinned,
+  measure,
+}: UseVirtualRowsOptions): VirtualRows => {
   const fixed = mode === 'fixed';
   const listRef = useRef<HTMLElement | null>(null);
   const [list, setList] = useState<HTMLElement | null>(null);
@@ -97,11 +134,16 @@ export const useVirtualRows = ({ mode, count, overscan = DEFAULT_OVERSCAN }: Use
     if (!fixed || !list) {
       return;
     }
-    const rows = mountedRows(list);
+    const rows = mountedRows(list, measure);
     const height = rows[0]?.getBoundingClientRect().height;
     if (height) {
+      const changed = Math.abs(height - rowRef.current) > 0.5;
       rowRef.current = height;
       gapRef.current = Number.parseFloat(getComputedStyle(list).rowGap) || 0;
+      // The window was computed with the nominal pitch until now.
+      if (changed) {
+        update();
+      }
       if (process.env.NODE_ENV !== 'production' && !warnedRef.current) {
         const other = rows.find((row) => Math.abs(row.getBoundingClientRect().height - height) > 0.5);
         if (other) {
@@ -154,7 +196,16 @@ export const useVirtualRows = ({ mode, count, overscan = DEFAULT_OVERSCAN }: Use
   );
 
   if (!fixed) {
-    return { listRef: bind, first: 0, last: count - 1, before: 0, after: 0, scrollToIndex };
+    return {
+      listRef: bind,
+      first: 0,
+      last: count - 1,
+      before: 0,
+      after: 0,
+      spans: spansOf(0, count - 1, undefined),
+      spacer: () => 0,
+      scrollToIndex,
+    };
   }
 
   const pitch = rowRef.current + gapRef.current;
@@ -162,12 +213,15 @@ export const useVirtualRows = ({ mode, count, overscan = DEFAULT_OVERSCAN }: Use
   const last = Math.min(range.last, count - 1);
   // A spacer takes the place of its rows and the gaps between them; the grid adds the gap beside it.
   const spacer = (rows: number) => (rows > 0 ? rows * pitch - gapRef.current : 0);
+  const spans = spansOf(first, last, pinned !== undefined && pinned < count ? pinned : undefined);
   return {
     listRef: bind,
     first,
     last,
-    before: spacer(first),
-    after: spacer(count - 1 - last),
+    before: spacer(spans[0]?.first ?? 0),
+    after: spacer(count - 1 - (spans.at(-1)?.last ?? -1)),
+    spans,
+    spacer,
     scrollToIndex,
   };
 };

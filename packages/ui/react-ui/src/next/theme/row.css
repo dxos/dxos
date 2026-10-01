@@ -17,10 +17,11 @@
   .nx-row[data-highlighted] {
     background: var(--color-hover-surface);
   }
-  .nx-row[aria-selected='true'] {
+  /* `data-selected` too: a tree branch's `aria-selected` lands on its `display: contents` wrapper, not the row. */
+  .nx-row:is([aria-selected='true'], [data-selected]) {
     background: var(--color-selected-surface);
   }
-  .nx-row[aria-selected='true']:hover {
+  .nx-row:is([aria-selected='true'], [data-selected]):hover {
     background: var(--color-selected-surface-hover);
   }
   .nx-row[aria-current='true'] {
@@ -31,7 +32,11 @@
     cursor: default;
   }
 
-  /* The keyboard's row: ringed while its list has visible focus (directly, or around a collapsible row). */
+  /* The keyboard's row: ringed while it has visible focus itself (Tree), or while its list does (Listbox). */
+  .nx-row:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
   [role='listbox']:focus-visible > .nx-row[data-highlighted],
   [role='listbox']:focus-visible > * > .nx-row[data-highlighted] {
     box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
@@ -46,7 +51,8 @@
   [data-drop-target] {
     position: relative;
   }
-  [data-drop-target]::after {
+  /* `inside` (a tree branch) is drawn by its own row type. */
+  :is([data-drop-target='top'], [data-drop-target='bottom'])::after {
     content: '';
     position: absolute;
     inset-inline: 0;
