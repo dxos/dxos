@@ -85,53 +85,63 @@ export const incrementPlank = (deck: string[], adjustment: DeckSchema.DeckAction
   });
 };
 
+const DETAIL_NAME_PREFIX = 'detail:';
+
+/** The plank name `owner`'s detail holds: opening a detail of `owner` is a named open under it. */
+export const detailName = (owner: string): string => `${DETAIL_NAME_PREFIX}${owner}`;
+
 /** The details hanging off `id`, nearest first: its detail, that detail's detail, and so on. */
-export const detailChain = (details: Readonly<Record<string, string>>, id: string): string[] => {
+export const detailChain = (names: Readonly<Record<string, string>>, id: string): string[] => {
   const chain: string[] = [];
   const seen = new Set([id]);
-  for (let next = details[id]; next && !seen.has(next); next = details[next]) {
+  for (let next = names[detailName(id)]; next && !seen.has(next); next = names[detailName(next)]) {
     chain.push(next);
     seen.add(next);
   }
   return chain;
 };
 
-/** The detail links still reachable from an open plank; the rest belong to planks that closed. */
-export const pruneDetails = (
-  details: Readonly<Record<string, string>>,
+/**
+ * The plank names still in use: a name whose holder is open, and every detail name an open plank
+ * reaches. The rest belong to planks that closed.
+ */
+export const prunePlankNames = (
+  names: Readonly<Record<string, string>>,
   active: readonly string[],
 ): Record<string, string> => {
-  const kept: Record<string, string> = {};
+  const kept = Object.fromEntries(
+    Object.entries(names).filter(([name, holder]) => !name.startsWith(DETAIL_NAME_PREFIX) && active.includes(holder)),
+  );
   for (const id of active) {
     let owner = id;
-    for (const detail of detailChain(details, id)) {
-      kept[owner] = detail;
+    for (const detail of detailChain(names, id)) {
+      kept[detailName(owner)] = detail;
       owner = detail;
     }
   }
   return kept;
 };
 
-/** `details` with `detail` as `owner`'s detail; the chain hanging off its previous detail is dropped. */
+/** `names` with `detail` as `owner`'s detail; the chain hanging off its previous detail is dropped. */
 export const setDetail = (
-  details: Readonly<Record<string, string>>,
+  names: Readonly<Record<string, string>>,
   owner: string,
   detail: string,
 ): Record<string, string> => {
-  if (details[owner] === detail) {
-    return { ...details };
+  if (names[detailName(owner)] === detail) {
+    return { ...names };
   }
-  const next = { ...details };
-  for (const id of detailChain(details, owner)) {
-    delete next[id];
+  const next = { ...names };
+  for (const id of detailChain(names, owner)) {
+    delete next[detailName(id)];
   }
-  next[owner] = detail;
+  next[detailName(owner)] = detail;
   return next;
 };
 
 export type DetailOpen = {
   next: string[];
-  details: Record<string, string>;
+  plankNames: Record<string, string>;
   /** The flattened deck shows the detail beside its main plank rather than as a plank of its own. */
   inCompanion: boolean;
   /** The plank the new detail took the place of. */
@@ -149,14 +159,14 @@ export type DetailOpen = {
  */
 export const resolveDetailOpen = ({
   active,
-  details,
+  plankNames,
   pivot,
   subject,
   flatten,
   stack,
 }: {
   active: readonly string[];
-  details: Readonly<Record<string, string>>;
+  plankNames: Readonly<Record<string, string>>;
   pivot: string;
   subject: string;
   flatten?: boolean;
@@ -165,23 +175,23 @@ export const resolveDetailOpen = ({
 }): DetailOpen | undefined => {
   if (flatten && !stack) {
     const main = active.at(-1);
-    if (main && pivot === details[main]) {
-      return { next: [...active, pivot], details: setDetail(details, pivot, subject), inCompanion: true };
+    if (main && pivot === plankNames[detailName(main)]) {
+      return { next: [...active, pivot], plankNames: setDetail(plankNames, pivot, subject), inCompanion: true };
     }
     const index = active.indexOf(pivot);
     return index === -1
       ? undefined
-      : { next: active.slice(0, index + 1), details: setDetail(details, pivot, subject), inCompanion: true };
+      : { next: active.slice(0, index + 1), plankNames: setDetail(plankNames, pivot, subject), inCompanion: true };
   }
 
   if (!active.includes(pivot)) {
     return undefined;
   }
-  const previous = details[pivot];
+  const previous = plankNames[detailName(pivot)];
   if (previous === subject && active.includes(subject)) {
-    return { next: [...active], details: { ...details }, inCompanion: false };
+    return { next: [...active], plankNames: { ...plankNames }, inCompanion: false };
   }
-  const stale = new Set(previous ? [previous, ...detailChain(details, previous)] : []);
+  const stale = new Set(previous ? [previous, ...detailChain(plankNames, previous)] : []);
   let next: string[];
   if (stack) {
     next = pushSubjectsToStack(
@@ -198,7 +208,7 @@ export const resolveDetailOpen = ({
     ).filter((id) => id === subject || !stale.has(id));
   }
   const replacedId = previous && previous !== subject && active.includes(previous) ? previous : undefined;
-  return { next, details: setDetail(details, pivot, subject), inCompanion: false, replacedId };
+  return { next, plankNames: setDetail(plankNames, pivot, subject), inCompanion: false, replacedId };
 };
 
 /**

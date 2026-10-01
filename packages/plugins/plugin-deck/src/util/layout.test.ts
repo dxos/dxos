@@ -7,12 +7,17 @@ import { describe, test } from 'vitest';
 import {
   addSubjectsToActiveDeck,
   detailChain,
+  detailName,
   matchOpenEntities,
-  pruneDetails,
+  prunePlankNames,
   pushSubjectsToStack,
   resolveDetailOpen,
   setDetail,
 } from './layout.ts';
+
+/** Plank names holding each owner's detail. */
+const details = (links: Record<string, string>): Record<string, string> =>
+  Object.fromEntries(Object.entries(links).map(([owner, detail]) => [detailName(owner), detail]));
 
 describe('addSubjectsToActiveDeck', () => {
   test('appends to the end without a pivot', ({ expect }) => {
@@ -70,29 +75,40 @@ describe('addSubjectsToActiveDeck', () => {
 });
 
 describe('details', () => {
-  const details = { 'inbox': 'msg-1', 'msg-1': 'att-1' };
+  const chain = details({ 'inbox': 'msg-1', 'msg-1': 'att-1' });
 
   test('detailChain follows details nearest first', ({ expect }) => {
-    expect(detailChain(details, 'inbox')).toEqual(['msg-1', 'att-1']);
-    expect(detailChain(details, 'att-1')).toEqual([]);
+    expect(detailChain(chain, 'inbox')).toEqual(['msg-1', 'att-1']);
+    expect(detailChain(chain, 'att-1')).toEqual([]);
   });
 
   test('detailChain stops at a cycle', ({ expect }) => {
-    expect(detailChain({ a: 'b', b: 'a' }, 'a')).toEqual(['b']);
+    expect(detailChain(details({ a: 'b', b: 'a' }), 'a')).toEqual(['b']);
   });
 
   test('setDetail drops the chain hanging off the previous detail', ({ expect }) => {
-    expect(setDetail(details, 'inbox', 'msg-2')).toEqual({ inbox: 'msg-2' });
+    expect(setDetail(chain, 'inbox', 'msg-2')).toEqual(details({ inbox: 'msg-2' }));
   });
 
   test('setDetail with the current detail keeps its chain', ({ expect }) => {
-    expect(setDetail(details, 'inbox', 'msg-1')).toEqual(details);
+    expect(setDetail(chain, 'inbox', 'msg-1')).toEqual(chain);
   });
 
-  // Under flatten the detail is not open as a plank, so links are kept while an open plank reaches them.
-  test('pruneDetails keeps what an open plank reaches', ({ expect }) => {
-    expect(pruneDetails({ ...details, gone: 'x' }, ['inbox'])).toEqual(details);
-    expect(pruneDetails(details, [])).toEqual({});
+  test('setDetail leaves other names alone', ({ expect }) => {
+    expect(setDetail({ ...chain, preview: 'doc' }, 'inbox', 'msg-2')).toEqual({
+      ...details({ inbox: 'msg-2' }),
+      preview: 'doc',
+    });
+  });
+
+  // Under flatten the detail is not open as a plank, so detail names are kept while an open plank reaches them.
+  test('prunePlankNames keeps the details an open plank reaches', ({ expect }) => {
+    expect(prunePlankNames({ ...chain, ...details({ gone: 'x' }) }, ['inbox'])).toEqual(chain);
+    expect(prunePlankNames(chain, [])).toEqual({});
+  });
+
+  test('prunePlankNames keeps other names only while their plank is open', ({ expect }) => {
+    expect(prunePlankNames({ preview: 'doc', reader: 'gone' }, ['doc'])).toEqual({ preview: 'doc' });
   });
 });
 
@@ -101,25 +117,25 @@ describe('resolveDetailOpen', () => {
     test('the main plank keeps its place and the detail goes to the companion', ({ expect }) => {
       const result = resolveDetailOpen({
         active: ['inbox'],
-        details: {},
+        plankNames: details({}),
         pivot: 'inbox',
         subject: 'msg-1',
         flatten: true,
       });
-      expect(result).toEqual({ next: ['inbox'], details: { inbox: 'msg-1' }, inCompanion: true });
+      expect(result).toEqual({ next: ['inbox'], plankNames: details({ inbox: 'msg-1' }), inCompanion: true });
     });
 
     test('a detail of the companion promotes it into the main plank', ({ expect }) => {
       const result = resolveDetailOpen({
         active: ['inbox'],
-        details: { inbox: 'msg-1' },
+        plankNames: details({ inbox: 'msg-1' }),
         pivot: 'msg-1',
         subject: 'att-1',
         flatten: true,
       });
       expect(result).toEqual({
         next: ['inbox', 'msg-1'],
-        details: { 'inbox': 'msg-1', 'msg-1': 'att-1' },
+        plankNames: details({ 'inbox': 'msg-1', 'msg-1': 'att-1' }),
         inCompanion: true,
       });
     });
@@ -127,26 +143,37 @@ describe('resolveDetailOpen', () => {
     test('a new detail of an earlier crumb returns to it and drops the old chain', ({ expect }) => {
       const result = resolveDetailOpen({
         active: ['inbox', 'msg-1'],
-        details: { 'inbox': 'msg-1', 'msg-1': 'att-1' },
+        plankNames: details({ 'inbox': 'msg-1', 'msg-1': 'att-1' }),
         pivot: 'inbox',
         subject: 'msg-2',
         flatten: true,
       });
-      expect(result).toEqual({ next: ['inbox'], details: { inbox: 'msg-2' }, inCompanion: true });
+      expect(result).toEqual({ next: ['inbox'], plankNames: details({ inbox: 'msg-2' }), inCompanion: true });
     });
 
     test('a pivot that is not open falls back to the caller', ({ expect }) => {
       expect(
-        resolveDetailOpen({ active: ['other'], details: {}, pivot: 'inbox', subject: 'msg-1', flatten: true }),
+        resolveDetailOpen({
+          active: ['other'],
+          plankNames: details({}),
+          pivot: 'inbox',
+          subject: 'msg-1',
+          flatten: true,
+        }),
       ).toBeUndefined();
     });
   });
 
   describe('not flattened', () => {
     test('the first detail opens beside its pivot', ({ expect }) => {
-      const result = resolveDetailOpen({ active: ['inbox', 'doc'], details: {}, pivot: 'inbox', subject: 'msg-1' });
+      const result = resolveDetailOpen({
+        active: ['inbox', 'doc'],
+        plankNames: details({}),
+        pivot: 'inbox',
+        subject: 'msg-1',
+      });
       expect(result?.next).toEqual(['inbox', 'msg-1', 'doc']);
-      expect(result?.details).toEqual({ inbox: 'msg-1' });
+      expect(result?.plankNames).toEqual(details({ inbox: 'msg-1' }));
       expect(result?.inCompanion).toBe(false);
     });
 
@@ -154,30 +181,30 @@ describe('resolveDetailOpen', () => {
     test('a new detail replaces the previous one in place and closes its details', ({ expect }) => {
       const result = resolveDetailOpen({
         active: ['inbox', 'msg-1', 'att-1', 'doc'],
-        details: { 'inbox': 'msg-1', 'msg-1': 'att-1' },
+        plankNames: details({ 'inbox': 'msg-1', 'msg-1': 'att-1' }),
         pivot: 'inbox',
         subject: 'msg-2',
       });
       expect(result?.next).toEqual(['inbox', 'msg-2', 'doc']);
-      expect(result?.details).toEqual({ inbox: 'msg-2' });
+      expect(result?.plankNames).toEqual(details({ inbox: 'msg-2' }));
       expect(result?.replacedId).toBe('msg-1');
     });
 
     test('a detail of a detail leaves the shallower one in place', ({ expect }) => {
       const result = resolveDetailOpen({
         active: ['inbox', 'msg-1'],
-        details: { inbox: 'msg-1' },
+        plankNames: details({ inbox: 'msg-1' }),
         pivot: 'msg-1',
         subject: 'att-1',
       });
       expect(result?.next).toEqual(['inbox', 'msg-1', 'att-1']);
-      expect(result?.details).toEqual({ 'inbox': 'msg-1', 'msg-1': 'att-1' });
+      expect(result?.plankNames).toEqual(details({ 'inbox': 'msg-1', 'msg-1': 'att-1' }));
     });
 
     test('a previous detail open elsewhere closes rather than stays', ({ expect }) => {
       const result = resolveDetailOpen({
         active: ['inbox', 'msg-1', 'msg-2'],
-        details: { inbox: 'msg-1' },
+        plankNames: details({ inbox: 'msg-1' }),
         pivot: 'inbox',
         subject: 'msg-2',
       });
@@ -185,26 +212,28 @@ describe('resolveDetailOpen', () => {
     });
 
     test('reselecting the open detail changes nothing', ({ expect }) => {
-      const details = { 'inbox': 'msg-1', 'msg-1': 'att-1' };
+      const plankNames = details({ 'inbox': 'msg-1', 'msg-1': 'att-1' });
       const result = resolveDetailOpen({
         active: ['inbox', 'msg-1', 'att-1'],
-        details,
+        plankNames,
         pivot: 'inbox',
         subject: 'msg-1',
       });
       expect(result?.next).toEqual(['inbox', 'msg-1', 'att-1']);
-      expect(result?.details).toEqual(details);
+      expect(result?.plankNames).toEqual(plankNames);
     });
 
     test('a pivot that is not open falls back to the caller', ({ expect }) => {
-      expect(resolveDetailOpen({ active: ['doc'], details: {}, pivot: 'inbox', subject: 'msg-1' })).toBeUndefined();
+      expect(
+        resolveDetailOpen({ active: ['doc'], plankNames: details({}), pivot: 'inbox', subject: 'msg-1' }),
+      ).toBeUndefined();
     });
   });
 
   test('a stack pushes the detail after closing the previous one', ({ expect }) => {
     const result = resolveDetailOpen({
       active: ['inbox', 'msg-1', 'att-1'],
-      details: { 'inbox': 'msg-1', 'msg-1': 'att-1' },
+      plankNames: details({ 'inbox': 'msg-1', 'msg-1': 'att-1' }),
       pivot: 'inbox',
       subject: 'msg-2',
       flatten: true,

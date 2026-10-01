@@ -1,6 +1,6 @@
 # Deck — Tasks
 
-_Resume: details replace level chains (see Direction below). Design and rationale live in
+_Resume: details are named planks (see Direction below). Design and rationale live in
 [DESIGN.md](./DESIGN.md)._
 
 The deck's own ledger. Split out of the `qa` project on 2026-08-01 — the deck stopped being a stream of
@@ -15,8 +15,9 @@ at open time, so no type declares a chain.
 
 - [x] **Details replace level chains.** `LayoutOperation.Open({ pivotId, disposition: 'detail' })`;
       `resolveDetailOpen` places it (companion under flatten, a plank replacing the pivot's previous
-      detail otherwise, a push on mobile); `StoredDeck.details` replaces `plankNames`; `Close`
-      cascades down detail links. The flattened deck's Detail tab is labelled from the detail node's
+      detail otherwise, a push on mobile). A detail is a named plank under `detailName(pivot)` in
+      `StoredDeck.plankNames`, and `Open` keeps its generic `name`; `Close` cascades down detail
+      names. The Detail tab matches only planks that hold a detail. The flattened deck's Detail tab is labelled from the detail node's
       type (`AppNode.getTypeLabel`). Mailbox, calendar, project and task set open rows through
       `useDetailNavigation`; their own detail companions are gone.
 - [x] **Collection seeding removed.** `initial: 'children'` never ran under flatten (the default), and
@@ -32,7 +33,7 @@ at open time, so no type declares a chain.
       and falls back to defaults — acceptable under the drop-don't-migrate policy, but it silently
       resets the user's choice, so land it deliberately.
 - [ ] **Shared links lose the open detail.** Under flatten the URL records `companion/detail` only;
-      which detail it shows lives in `StoredDeck.details`, so a pasted link opens an empty Detail tab.
+      which detail it shows lives in `StoredDeck.plankNames`, so a pasted link opens an empty Detail tab.
 - [ ] **Promote a detail without opening one of its own.** Under flatten, a detail moves into the main
       plank only when something opens _its_ detail; there is no generic "open beside" for the Detail
       tab yet.
@@ -174,8 +175,8 @@ one settles rather than leaving it a permanent preference.
       sharing that plank's container across one `Splitter` seam, with per-plank open state
       (`DeckState.companionPlanks`). DESIGN.md §4.
 - [x] **Named planks** — `LayoutOperation.Open` takes an optional `name`; opening under a name already
-      taken replaces its occupant in place, the way a browser tab is reused. The mailbox passes
-      `<mailbox>/message`, so reading down it no longer grows the deck one plank per message. Replaced
+      taken replaces its occupant in place, the way a browser tab is reused. A detail is a named open
+      under a name the deck derives from its pivot, so lists no longer pass names themselves. Replaced
       the old `key` option, whose single call site always passed `undefined`. DESIGN.md §5.
 - [x] **Rewrite DESIGN.md for the current deck** — the old one was the completed Plank-migration record
       and had drifted (`tilingSizing`, `companionOpen`, a three-way presentation).

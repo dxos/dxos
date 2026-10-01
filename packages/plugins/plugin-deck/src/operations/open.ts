@@ -107,7 +107,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           disposition === 'detail' && !shift && input.pivotId && input.subject[0]
             ? resolveDetailOpen({
                 active: deck.active,
-                details: deck.details ?? {},
+                plankNames: deck.plankNames,
                 pivot: input.pivotId,
                 subject: input.subject[0],
                 flatten,
@@ -128,7 +128,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         } else if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
-          next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId });
+          // A named open reuses the plank already holding that name, the way a browser tab is reused.
+          const holder = input.name ? deck.plankNames[input.name] : undefined;
+          const replaceId = holder && deck.active.includes(holder) ? holder : undefined;
+          next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
         } else {
           next = navigateSolo(deck.active);
         }
@@ -153,9 +156,14 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           // scroll — a one-frame snap measured at exactly the lost width.
           companionPlanks = openCompanionPlank(companionPlanks, flatten, input.subject[0]);
         }
-        if (detailOpen) {
+        // The name follows whichever plank ended up holding it; `applyActive` prunes names whose plank closed.
+        const holder = input.subject[0];
+        const plankNames =
+          detailOpen?.plankNames ??
+          (input.name && holder && next.includes(holder) ? { ...deck.plankNames, [input.name]: holder } : undefined);
+        if (plankNames) {
           yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-            updateActiveDeck(state, { details: detailOpen.details }),
+            updateActiveDeck(state, { plankNames }),
           );
         }
         shownInCompanion = !!detailOpen?.inCompanion;

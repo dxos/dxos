@@ -18,7 +18,7 @@ import { CompanionViewState, DeckSchema } from '#types';
 import {
   closeCompanionPlank,
   openCompanionPlank,
-  pruneDetails,
+  prunePlankNames,
   resolveCompanionAnchor,
   resolveCompanionPlank,
   updateActiveDeck,
@@ -68,7 +68,7 @@ export const applyActive = Effect.fnUntraced(function* (
     flatten,
     segments: { previous: open?.segments, next: segments },
   });
-  const details = pruneDetails(deck.details ?? {}, deckUpdates.active);
+  const plankNames = prunePlankNames(deck.plankNames, deckUpdates.active);
   const { active, inactive, companionPlanks } = deckUpdates;
   // A caller with no intent at all (a close, a set) has no opinion, so the write falls back to the plank
   // attention is displaced onto, which has to be one that is open. A caller that passed an intent has
@@ -91,8 +91,8 @@ export const applyActive = Effect.fnUntraced(function* (
       }));
     }
     const stored = registry.get(stateAtom).decks[workspace];
-    if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.details, details)) {
-      registry.update(stateAtom, (current) => updateActiveDeck(current, { companionPlanks, details }));
+    if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
+      registry.update(stateAtom, (current) => updateActiveDeck(current, { companionPlanks, plankNames }));
     }
   });
 

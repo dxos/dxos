@@ -143,13 +143,17 @@ A list plank opens its selected row as its **detail**: `Open({ subject, pivotId:
 disposition: 'detail' })`, sent by `useDetailNavigation`. Only the caller knows an open is a detail, so
 nothing is declared on any type; a plain `pivotId` still means "another plank beside this one".
 
-`DeckState.details` maps owner plank id → detail plank id. Where the detail goes
-(`resolveDetailOpen`):
+A detail is a **named plank**. `plankNames` maps a name to the plank holding it, and opening under a
+name that is taken replaces its holder in place, the way a browser tab is reused. Any caller can name
+an open (`Open({ name })`) so independent callers can share a slot without knowing what is in it. A
+detail open is a named open under a name the deck derives from the pivot (`detailName(pivot)`), so
+the pivot's previous detail is whatever holds that name. Where the detail goes (`resolveDetailOpen`):
 
 - **Flattened** — the main plank's detail shows in the companion (§4). A detail opened _from_ that
   detail moves it into the main plank (the breadcrumb grows) and takes the companion itself. Going back
-  through the breadcrumb shows the owner's remembered detail again, so links outlive the detail's plank
-  and are pruned only once no open plank reaches them.
+  through the breadcrumb shows the owner's remembered detail again, so detail names outlive their
+  holder's plank and are pruned only once no open plank reaches them. Other names are pruned as their
+  plank closes.
 - **Not flattened** — a plank beside the pivot that takes the place of the pivot's previous detail;
   that one's own details close with it, so reading a second message drops the first one's attachment.
 - **Mobile** — the same replacement, then a push onto the stack.
@@ -166,7 +170,7 @@ Three kinds of state, told apart by who owns them.
 **What is open** is owned by the URL. The workspace, the ordered planks, and the open companion are
 the pathname, and the deck stores no copy of them. The browser is the store.
 
-**How it looks** is owned by the deck and persisted: plank widths, plank details, the sidebar
+**How it looks** is owned by the deck and persisted: plank widths, plank names, the sidebar
 states, and which workspace you were last on.
 
 **What is happening right now** is owned by the deck and not persisted: fullscreen, expanded, the
@@ -177,7 +181,7 @@ exposé, dialogs, popovers and toasts.
 type StoredDeck = {
   plankSizing: Record<string, number>; // rem widths, by URL segment
   companionPlanks: string[]; // planks showing their companion
-  details?: Record<string, string>; // owner plank id → detail plank id
+  plankNames: Record<string, string>; // name → plank id; a detail is held under detailName(owner)
 };
 
 // Per workspace, never persisted.
@@ -298,9 +302,9 @@ just was, and releasing that transform is what the eye follows. Two constraints 
 
 ## 8. Operations
 
-- `LayoutOperation.Open({ subject, disposition?, pivotId? })` — `'solo'` (default) navigates,
+- `LayoutOperation.Open({ subject, disposition?, pivotId?, name? })` — `'solo'` (default) navigates,
   `'add'` inserts after `pivotId` or at the end, `'auto'` follows the deck, `'detail'` opens the
-  subject as `pivotId`'s detail (§5).
+  subject as `pivotId`'s detail (§5). `name` reuses the plank already holding that name.
 - `LayoutOperation.Close` / `UpdateComplementary` / `UpdateCompanion` / `ScrollIntoView`.
 - `DeckOperation.Adjust({ id, type })` — `close`, `companion`, `fullscreen`, `expand`,
   `increment-start`, `increment-end`. `fullscreen` and `expand` toggle ephemeral state rather than

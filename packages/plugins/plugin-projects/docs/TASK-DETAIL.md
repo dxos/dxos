@@ -32,7 +32,7 @@ artifacts, open beside their plank instead, and a card menu's Open always does.
 | Keyboard          | `useArticleKeyboardNavigation({ articleId, items, onSelect })`  | Arrow keys read down the list through the same handler.                                                                                                                          |
 
 Nothing is declared on `Project`, `TaskSet` or `Task`: the call says the open is a detail, and the
-deck remembers which plank's detail it is.
+deck holds it as a named plank under a name derived from the list's plank.
 
 ## Not done
 

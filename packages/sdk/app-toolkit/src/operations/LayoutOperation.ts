@@ -320,6 +320,15 @@ export const Open = Operation.make({
       }),
     ),
     variant: Schema.optional(Schema.String.annotate({ description: 'The variant of the item to open.' })),
+    name: Schema.optional(
+      Schema.String.annotate({
+        description:
+          'Optional name for the plank, which behaves like a browser tab: opening under a name that ' +
+          'is already taken reuses that plank in place rather than adding another. Callers that open ' +
+          'a stream of one-at-a-time items pass a constant name so the deck does not grow an entry per ' +
+          'item. A `detail` open needs no name: the deck names it after its pivot.',
+      }),
+    ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
     scrollIntoView: Schema.optional(Schema.Boolean.annotate({ description: 'Scroll the items into view.' })),
     focus: Schema.optional(
@@ -344,7 +353,8 @@ export const Open = Operation.make({
           'navigation anchors at its origin), else at the end of the deck. `auto` follows the deck: ' +
           'when already sliding (2+ planks) it adds beside its origin (`pivotId`, falling back to the ' +
           'attended plank); when solo it navigates. `detail` opens the item as the detail of `pivotId` ' +
-          "(a list's selected row): it replaces whatever `pivotId` last opened as its detail, and that " +
+          "(a list's selected row), a named open under a name the deck derives from `pivotId`: it " +
+          'replaces whatever `pivotId` last opened as its detail, and that ' +
           "detail's own details close with it; a flattened deck shows it in the companion beside " +
           'its pivot. Holding shift (via `modifiers`) forces any disposition into `add`.',
       }),

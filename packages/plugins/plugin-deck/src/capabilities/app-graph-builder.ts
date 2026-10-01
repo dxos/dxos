@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -19,6 +20,8 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
+import { detailName } from '../util/index.ts';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Read reactively so the extension establishes a dependency and heals once these
@@ -29,6 +32,21 @@ export default Capability.makeModule(
     const deckSettingsAtom = yield* Capability.atom(DeckCapabilities.Settings);
     const platformAtom = yield* Capability.atom(DeckCapabilities.Platform);
     const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+
+    // The detail a plank shows in the flattened deck's companion, per plank so only that plank re-matches
+    // when its detail changes.
+    const detailOf = Atom.family((id: string) =>
+      Atom.make((get): string | undefined => {
+        const [stateAtom] = get(deckStateAtom);
+        const [settingsAtom] = get(deckSettingsAtom);
+        const [platform] = get(platformAtom);
+        if (!stateAtom || !settingsAtom || platform === 'mobile' || !get(settingsAtom).flatten) {
+          return undefined;
+        }
+        const state = get(stateAtom);
+        return state.decks[state.activeDeck]?.plankNames[detailName(id)];
+      }),
+    );
 
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
@@ -121,26 +139,16 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      // The flattened deck's detail tab, on a plank that has opened a detail (see `resolveDetailOpen`).
+      // The flattened deck's detail tab, on a plank that holds a detail (see `resolveDetailOpen`).
       // Named for what it shows, so a mailbox's reads "Message" and a project's "Task".
       AppGraphBuilder.createExtension({
         id: 'detailCompanion',
         relation: AppNode.companion,
-        match: (node) => Option.some(node.id),
-        connector: (id, get) => {
-          const [stateAtom] = get(deckStateAtom);
-          const [settingsAtom] = get(deckSettingsAtom);
-          const [platform] = get(platformAtom);
-          if (!stateAtom || !settingsAtom || platform === 'mobile' || !get(settingsAtom).flatten) {
-            return Effect.succeed([]);
-          }
-
-          const state = get(stateAtom);
-          const detail = state.decks[state.activeDeck]?.details?.[id];
-          if (!detail) {
-            return Effect.succeed([]);
-          }
-
+        match: (node, get) => {
+          const detail = get(detailOf(node.id));
+          return detail ? Option.some(detail) : Option.none();
+        },
+        connector: (detail, get) => {
           const [appGraph] = get(appGraphAtom);
           const node = appGraph ? Option.getOrUndefined(get(appGraph.graph.node(detail))) : undefined;
           return Effect.succeed([
