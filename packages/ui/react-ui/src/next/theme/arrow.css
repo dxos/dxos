@@ -16,11 +16,10 @@
   .nx-arrow-tip {
     scale: 0.7071;
     /*
-     * zag rotates the tip so its top and left edges face the anchor; widened by √2 to stay 1px after the scale. A popup
-     * with a coloured border sets `--nx-arrow-border` so the arrow's outer edges continue it.
+     * zag rotates the tip so its top and left edges face the anchor. A popup with a coloured border sets
+     * `--nx-arrow-border` to continue it along those edges: an inset shadow rather than a border, since border widths
+     * snap to device pixels and would shrink below the box's 1px after the 1/√2 scale.
      */
-    border-style: solid;
-    border-color: var(--nx-arrow-border, transparent);
-    border-width: 1.4142px 0 0 1.4142px;
+    box-shadow: inset 1.4142px 1.4142px 0 0 var(--nx-arrow-border, transparent);
   }
 }
