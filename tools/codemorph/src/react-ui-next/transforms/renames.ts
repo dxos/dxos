@@ -485,6 +485,12 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
         const value = type ? attrValue(type) : undefined;
         const target =
           value?.kind === 'string' ? { number: 'NumberInput', password: 'PasswordInput' }[value.value] : undefined;
+        // NumberInput reports `onValueChange(text, number)`, not change events; an `onChange` keeps the native input.
+        if (target === 'NumberInput' && getAttr(element, 'onChange')) {
+          renameElement(file, element, ['Input']);
+          file.count('Field.Input type=number with onChange → Input');
+          return;
+        }
         if (target && type) {
           removeAttr(file, type);
         }
@@ -506,6 +512,15 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     },
     'Checkbox': { apply: checkedChange },
     'Switch': { apply: checkedChange },
+    'NumberInput': {
+      apply: ({ file, element }) => {
+        if (getAttr(element, 'onChange')) {
+          renameElement(file, element, ['Input']);
+          addAttr(file, element, "type='number'");
+          file.count('NumberInput with onChange → Input type=number');
+        }
+      },
+    },
     'Field.TriggerIcon': { residue: 'Field.TriggerIcon → DateInput trigger or a Button in the end slot' },
   },
   'react-ui-list': {

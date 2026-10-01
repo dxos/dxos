@@ -227,4 +227,32 @@ describe('popups', () => {
       );
     `);
   });
+
+  test('NumberInput with an onChange handler stays a native number Input', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Field } from '@dxos/react-ui';
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Inputs = ({ set }: { set: (event: unknown) => void }) => (
+          <>
+            <Field.Input type='number' onChange={set} />
+            <Next.NumberInput value='1' onChange={set} />
+          </>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Input } from '@dxos/react-ui';
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Inputs = ({ set }: { set: (event: unknown) => void }) => (
+        <>
+          <Input type='number' onChange={set} />
+          <Next.Input value='1' onChange={set} type='number' />
+        </>
+      );
+    `);
+  });
 });
