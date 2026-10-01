@@ -6,8 +6,7 @@ import React, { type ButtonHTMLAttributes, forwardRef, useCallback, useMemo, use
 
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
-import { mx } from '@dxos/ui-theme';
+import { Next, type Size } from '@dxos/react-ui/next';
 import {
   type ClassNameValue,
   type DropdownMenuItemGroupProperties,
@@ -36,12 +35,22 @@ import { ActionMenu } from './ActionMenu.tsx';
 
 type ItemProps<T> = { menu: MenuActions } & T;
 
-/** Next's Button has no icon slot, so a spinning icon is styled through the button: its icon is the first child. */
-const spinClassNames = (spin?: boolean): ClassNameValue => spin && '[&>svg:first-child]:animate-spin';
+/** The binding's icon sizes are the current Icon's spacing steps; Next names the step of each size's icon scale. */
+const ICON_SIZES: Partial<Record<NonNullable<MenuActions['iconSize']>, Size>> = {
+  3: 'xs',
+  3.5: 'sm',
+  4: 'md',
+  5: 'lg',
+  6: 'xl',
+};
+
+const iconSizeOf = (size: MenuActions['iconSize']): Size | undefined =>
+  size === undefined ? undefined : ICON_SIZES[size];
 
 type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> & {
   action: MenuAction | MenuItemGroup<DropdownMenuItemGroupProperties>;
   variant: Next.ButtonVariant;
+  iconSize?: Size;
   caretDown?: boolean;
   classNames?: ClassNameValue;
   testId?: string;
@@ -57,7 +66,8 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
     const { icon, iconOnly = true, spin } = action.properties;
     const common = {
       ...props,
-      classNames: mx(spinClassNames(spin), classNames),
+      spin,
+      classNames,
       ...(testId && { 'data-testid': testId }),
       ref: forwardedRef,
     };
@@ -72,7 +82,7 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
 );
 
 const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
-  const { onAction, caller } = menu;
+  const { onAction, caller, iconSize } = menu;
   const [pending, setPending] = useState(false);
   const pendingRef = useRef(false);
   const { disabled, testId, hidden, classNames } = action.properties;
@@ -104,6 +114,7 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
       action={action}
       variant={action.properties.variant === 'primary' ? 'primary' : 'ghost'}
       disabled={disabled || pending}
+      iconSize={iconSizeOf(iconSize)}
       classNames={classNames}
       onClick={handleClick}
       testId={testId}
@@ -113,7 +124,7 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
 
 /** A `toggle` action is a pressed button whose state is the action's `checked`. */
 const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
-  const { onAction, caller } = menu;
+  const { onAction, caller, iconSize } = menu;
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, checked, classNames, spin } = action.properties;
 
@@ -133,7 +144,9 @@ const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
     variant: 'ghost' as const,
     pressed: !!checked,
     disabled,
-    classNames: mx(spinClassNames(spin), classNames),
+    spin,
+    iconSize: iconSizeOf(iconSize),
+    classNames,
     onPressedChange: handlePressedChange,
     ...(testId && { 'data-testid': testId }),
   };
@@ -214,6 +227,7 @@ const DropdownToolbarItem = ({ menu, group }: ItemProps<{ group: MenuItemGroup<D
       action={display}
       variant='ghost'
       disabled={disabled}
+      iconSize={iconSizeOf(menu.iconSize)}
       caretDown={caretDown && !disabled}
       testId={testId}
     />
@@ -236,7 +250,7 @@ const ToggleGroupItem = ({
   group,
   action,
 }: ItemProps<{ group: MenuItemGroup<ToggleGroupMenuItemGroupProperties>; action: MenuAction }>) => {
-  const { onAction, caller } = menu;
+  const { onAction, caller, iconSize } = menu;
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames, spin } = action.properties;
 
@@ -256,7 +270,9 @@ const ToggleGroupItem = ({
     value: action.id,
     disabled,
     variant: 'ghost' as const,
-    classNames: mx(spinClassNames(spin), classNames),
+    spin,
+    iconSize: iconSizeOf(iconSize),
+    classNames,
     onClick: handleClick,
     ...(testId && { 'data-testid': testId }),
   };
@@ -297,12 +313,7 @@ const ToggleGroupToolbarItem = ({
 
 const ToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
-    // Next's separator is only the rule; the `gap` variant is a spacer that pushes what follows to the end.
-    return item.properties.variant === 'line' ? (
-      <Next.Toolbar.Separator />
-    ) : (
-      <div role='separator' aria-orientation='vertical' className='grow' />
-    );
+    return <Next.Toolbar.Separator variant={item.properties.variant === 'line' ? 'line' : 'gap'} />;
   }
 
   if (isMenuGroup(item)) {

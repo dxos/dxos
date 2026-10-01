@@ -102,6 +102,11 @@ export const SwitchToolbar: Story = {
     await userEvent.click(canvas.getByText('Word wrap'));
     await waitFor(() => expect(canvas.getByRole('switch', { name: 'Word wrap' })).toBeChecked());
     await expect(canvas.getByRole('switch', { name: 'Line numbers' })).toBeChecked();
+
+    // Switches join the toolbar's roving focus.
+    canvas.getByRole('switch', { name: 'Word wrap' }).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByRole('switch', { name: 'Line numbers' })).toHaveFocus();
   },
 };
 
@@ -180,6 +185,9 @@ export const Builder: Story = {
           .action('secret', { label: 'Secret', icon: 'ph--eye-slash--regular', hidden: true, testId: 'secret' }, () =>
             record('secret'),
           )
+          .action('sync', { label: 'Sync', icon: 'ph--arrows-clockwise--regular', spin: true, testId: 'sync' }, () =>
+            record('sync'),
+          )
           .separator('line')
           .action(
             'bold',
@@ -229,6 +237,11 @@ export const Builder: Story = {
                   sub
                     .action('pdf', { label: 'PDF' }, () => record('pdf'))
                     .action('png', { label: 'PNG' }, () => record('png')),
+                )
+                .group(
+                  'import',
+                  { label: 'Import', icon: 'ph--download-simple--regular', disabled: true, testId: 'import' },
+                  (sub) => sub.action('csv', { label: 'CSV' }, () => record('csv')),
                 ),
             'more',
           )
@@ -253,6 +266,10 @@ export const Builder: Story = {
     await expect(canvas.getByTestId('add')).toHaveAccessibleName(/^Add \(.+\)$/);
     await expect(canvas.getByTestId('remove')).toBeDisabled();
     await expect(canvas.queryByTestId('secret')).toBeNull();
+    await expect(canvas.getByTestId('sync').querySelector('svg')).toHaveAttribute('data-spin');
+
+    // A `gap` separator is Next's growing spacer.
+    await expect(canvas.getByRole('toolbar').querySelector('[data-part="gap"]')).not.toBeNull();
 
     // Toggle and toggle group.
     await expect(canvas.getByTestId('bold')).toHaveAttribute('aria-pressed', 'false');
@@ -288,6 +305,9 @@ export const Builder: Story = {
     await expect(copy.querySelector('kbd')).not.toBeNull();
     const exportTrigger = body.getByTestId('export');
     await expect(exportTrigger).toHaveAttribute('aria-haspopup', 'menu');
+    // A disabled group is an inert row: no submenu behind it.
+    await expect(body.getByTestId('import')).toHaveAttribute('aria-disabled', 'true');
+    await expect(body.getByTestId('import')).not.toHaveAttribute('aria-haspopup');
     await userEvent.click(exportTrigger);
     await userEvent.click(await body.findByRole('menuitem', { name: 'PDF' }));
     await waitFor(() => expect(canvas.getByTestId('log')).toHaveTextContent('add,pdf'));

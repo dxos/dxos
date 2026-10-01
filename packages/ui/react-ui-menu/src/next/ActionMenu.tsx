@@ -16,7 +16,6 @@ import React, {
 import { keySymbols } from '@dxos/react-focus';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
-import { mx } from '@dxos/ui-theme';
 import { type MenuItemChrome } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -88,7 +87,7 @@ type ActionItemProps = {
 
 const ItemIcon = ({ action }: { action: MenuAction | MenuItemGroup<MenuItemChrome> }) =>
   action.properties?.icon ? (
-    <Next.Menu.ItemIcon classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)} />
+    <Next.Menu.ItemIcon spin={action.properties.spin} classNames={action.properties.iconClassNames} />
   ) : null;
 
 const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
@@ -141,7 +140,11 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
   const item = useItemData(group.id, group.properties);
   return (
     <Next.Menu.Sub>
-      <Next.Menu.TriggerItem item={item} {...(group.properties.testId && { 'data-testid': group.properties.testId })}>
+      <Next.Menu.TriggerItem
+        item={item}
+        disabled={group.properties.disabled}
+        {...(group.properties.testId && { 'data-testid': group.properties.testId })}
+      >
         <ItemIcon action={group} />
         <Next.Menu.ItemText />
         <Next.Icon icon='ph--caret-right--regular' />
@@ -323,11 +326,7 @@ export const ActionMenu = ({
   // Next's Content portals into a ref.
   const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
 
-  // Ark has no virtual-trigger part: anchor the positioner at the element's rect instead.
-  const positioning = useMemo(
-    () => (virtualRef ? { getAnchorRect: () => virtualRef.current?.getBoundingClientRect() ?? null } : undefined),
-    [virtualRef],
-  );
+  const positioning = Next.useVirtualAnchor(virtualRef);
 
   if (deferred && !built && trigger) {
     return cloneElement(trigger, {

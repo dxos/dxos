@@ -830,10 +830,10 @@ Nothing in the cut-over PR may be a new component; every Next counterpart lands 
    `@dxos/react-ui-menu/next` exports `ActionToolbar` and `ActionMenu` with the current props over the shared model
    (hooks, `MenuBuilder`, types, re-exported), so a call site migrates by its import path. Groups render as
    `Menu.Sub`/`TriggerItem`, `checked` members of a single-select group as a `RadioItemGroup`, of a multi-select group
-   as `CheckboxItem`s; a `toggle` action is a `Next.Toggle`. Gaps it works around, to close in Next: Button has no icon
-   slot (`iconClassNames` is dropped, `spin` styles the first svg through the button); `Toolbar.Separator` has no `gap`
-   spacer variant; `Switch` does not join the toolbar's roving focus; `Menu.TriggerItem` takes no `disabled`; Menu has
-   no per-instance icon size (`iconSize` is ignored).
+   as `CheckboxItem`s; a `toggle` action is a `Next.Toggle`. The Phase A1 props replaced its workarounds: Button and
+   Menu.ItemIcon `spin`, Button `iconSize` (the binding's spacing steps map to Next sizes), `Toolbar.Separator
+variant='gap'`, Switch in the toolbar's roving focus, `Menu.TriggerItem disabled`, and `useVirtualAnchor` for
+   `virtualRef`. Still open: Button has no icon slot, so `iconClassNames` is dropped on toolbar buttons.
 4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
    Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components.
 5. Translation keys: four `osTranslations` lookups use undefined keys (`drag-handle.label`, `toolbar-delete.label`,
