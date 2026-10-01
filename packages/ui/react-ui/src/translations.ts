@@ -11,6 +11,10 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'empty.label': 'No items',
+        'error-fallback.title.label': 'Runtime Error',
+        'error-fallback.stack.label': 'Stack',
+        'error-fallback.data.label': 'Data',
+        'steps.step.label': 'Step {{index}}',
         'remove.label': 'Delete',
 
         'toolbar-menu.label': 'Action menu',

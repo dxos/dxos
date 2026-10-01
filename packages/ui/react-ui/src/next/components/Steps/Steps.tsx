@@ -4,9 +4,12 @@
 
 import { Steps as StepsPrimitive, useStepsContext } from '@ark-ui/react/steps';
 import React, { type CSSProperties, forwardRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
+
+import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type CSSVariables } from '../Container/index.ts';
@@ -121,6 +124,7 @@ const StepsItems = ({
   onSelect,
 }: StepsItemsProps) => {
   const api = useStepsContext();
+  const { t } = useTranslation(translationKey);
 
   return (
     <>
@@ -130,7 +134,7 @@ const StepsItems = ({
         const state = stepState(current, completed, handover, error);
         const last = index === count - 1;
         // A circle carries no text and an anonymous plan supplies no label, so its position is the only name it has.
-        const label = step.label?.trim() || `Step ${index + 1}`;
+        const label = step.label?.trim() || t('steps.step.label', { index: index + 1 });
         const indicator = {
           'index': index + PHANTOM,
           'aria-label': label,
