@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
+import { Button } from '../Button/index.ts';
 
 //
 // Root
@@ -82,7 +82,7 @@ ToggleGroupRoot.displayName = 'Next.ToggleGroup.Root';
 // Item
 //
 
-type ToggleGroupItemProps = ButtonProps & {
+type ToggleGroupItemProps = ComponentPropsWithoutRef<typeof Button> & {
   value: string;
 };
 
