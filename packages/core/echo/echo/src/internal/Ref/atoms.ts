@@ -7,9 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { isNonNullable } from '@dxos/util';
 
 import { subscribe } from '../common/proxy/reactive.ts';
-import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import type { LoadOptions, Ref } from './ref.ts';
-import { loadRefTarget } from './utils.ts';
+import { isTargetDeleted, loadRefTarget } from './utils.ts';
 
 const toOptions = (includeDeleted: boolean): LoadOptions | undefined =>
   includeDeleted ? { deleted: 'include' } : undefined;
@@ -23,15 +22,12 @@ export const refFamily = Atom.family(
     return Atom.make<T | undefined>((get) => {
       let unsubscribeTarget: (() => void) | undefined;
 
-      // T has no ECHO-proxy constraint at this generic level; `subscribe` and ObjectDeletedId
-      // both require the internal proxy shape that cannot be expressed statically here.
-      const read = (target: T): T | undefined =>
-        !includeDeleted && (target as any)[ObjectDeletedId] ? undefined : target;
+      const read = (target: T): T | undefined => (!includeDeleted && isTargetDeleted(target) ? undefined : target);
 
       const setupSubscription = (target: T): T | undefined => {
         // Release any previous subscription before re-subscribing (loadRefTarget may call this more than once).
         unsubscribeTarget?.();
-        unsubscribeTarget = subscribe(target as any, () => {
+        unsubscribeTarget = subscribe(target, () => {
           get.setSelf(read(target));
         });
         // Runs at once when the node was disposed while the target loaded.

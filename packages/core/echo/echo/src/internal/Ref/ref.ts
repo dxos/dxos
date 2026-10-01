@@ -37,6 +37,7 @@ import {
 import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import { type JsonSchemaType } from '../JsonSchema/index.ts';
 import * as RefAtoms from './atoms.ts';
+import { isTargetDeleted } from './utils.ts';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -183,10 +184,6 @@ export const Ref: RefFn = (input: any): RefSchema<any> => {
 export type LoadOptions = {
   deleted?: 'exclude' | 'include';
 };
-
-/** Reads the deletion marker off a value of unconstrained target type. */
-const isTargetDeleted = (target: unknown): boolean =>
-  typeof target === 'object' && target !== null && (target as Record<symbol, unknown>)[ObjectDeletedId] === true;
 
 /**
  * Represents materialized reference to a target.
