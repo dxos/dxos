@@ -4,7 +4,16 @@
 
 import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialog';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ComponentPropsWithoutRef, type ReactNode, type RefObject, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+  type RefObject,
+  createContext,
+  forwardRef,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -29,10 +38,28 @@ export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-autofocus';
 
 type DialogRootProps = DialogPrimitive.RootProps;
 
+/** Lets the Content keep the dialog open on an outside click, since a surface often renders the Content alone. */
+const OutsideDismissContext = createContext<((dismissable: boolean) => void) | undefined>(undefined);
+
 /** Ark dialog; content mounts on first open and unmounts on close unless the caller opts out. */
-const DialogRoot = ({ lazyMount = true, unmountOnExit = true, ...props }: DialogRootProps) => (
-  <DialogPrimitive.Root {...props} lazyMount={lazyMount} unmountOnExit={unmountOnExit} />
-);
+const DialogRoot = ({
+  lazyMount = true,
+  unmountOnExit = true,
+  closeOnInteractOutside = true,
+  ...props
+}: DialogRootProps) => {
+  const [contentDismissable, setContentDismissable] = useState(true);
+  return (
+    <OutsideDismissContext.Provider value={setContentDismissable}>
+      <DialogPrimitive.Root
+        {...props}
+        closeOnInteractOutside={closeOnInteractOutside && contentDismissable}
+        lazyMount={lazyMount}
+        unmountOnExit={unmountOnExit}
+      />
+    </OutsideDismissContext.Provider>
+  );
+};
 
 DialogRoot.displayName = 'Next.Dialog.Root';
 
@@ -65,12 +92,25 @@ type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
    * dialog that leaves the page usable.
    */
   scrim?: boolean;
+  /** `false` keeps the dialog open on a click outside, e.g. while it holds unsaved input; Escape still closes it. */
+  closeOnInteractOutside?: boolean;
 };
 
 /** Portalled surface at `level='raised'` over a scrim, centred in the viewport: a column of Header, Body and Footer. */
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, size, container, placement = 'center', scrim = true, children, ...props }, forwardedRef) => {
+  (
+    { classNames, size, container, placement = 'center', scrim = true, closeOnInteractOutside, children, ...props },
+    forwardedRef,
+  ) => {
     const dialog = useDialogContext();
+    const setDismissable = useContext(OutsideDismissContext);
+    useEffect(() => {
+      if (closeOnInteractOutside !== false || !setDismissable) {
+        return;
+      }
+      setDismissable(false);
+      return () => setDismissable(true);
+    }, [closeOnInteractOutside, setDismissable]);
     const dialogSize = usePopupSize(size, dialog.open, [dialog.getTriggerProps().id], 'md');
     return (
       <Portal container={container}>

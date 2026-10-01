@@ -162,6 +162,36 @@ export const HiddenTitle: Story = {
   },
 };
 
+/** `closeOnInteractOutside={false}` on the Content (the part a surface renders) keeps the dialog open on an outside click. */
+export const KeepOpenOutside: Story = {
+  render: () => (
+    <Next.Dialog.Root defaultOpen>
+      <Next.Dialog.Content closeOnInteractOutside={false} data-testid='keep-open'>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title>Unsaved</Next.Dialog.Title>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>
+          <ProfileForm />
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await body.findByTestId('keep-open');
+    const scrim = canvasElement.ownerDocument.querySelector<HTMLElement>('.nx-dialog-backdrop');
+    await expect(scrim).not.toBeNull();
+    // A modal dialog makes the page inert to the pointer, so the press is dispatched rather than simulated.
+    scrim?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }));
+    scrim?.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse' }));
+    scrim?.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(body.queryByTestId('keep-open')).not.toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByTestId('keep-open')).toBeNull());
+  },
+};
+
 /** A non-modal dialog docked at the block end with no scrim (e.g. a chat panel): the page behind stays usable. */
 export const Docked: Story = {
   render: () => (
