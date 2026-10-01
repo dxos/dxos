@@ -34,7 +34,6 @@ import {
   type UnknownTypeSchema,
   getStaticTypeSchema,
 } from '../common/types/index.ts';
-import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import { type JsonSchemaType } from '../JsonSchema/index.ts';
 import * as RefAtoms from './atoms.ts';
 import { isTargetDeleted } from './utils.ts';
