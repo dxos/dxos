@@ -28,7 +28,7 @@ const TaskV1 = Type.makeObject(DXN.make(TYPENAME, '0.1.0'))(
 const TaskV2 = Type.makeObject(DXN.make(TYPENAME, '0.2.0'))(
   Schema.Struct({ name: Schema.String, tags: Schema.Array(Schema.String), count: Schema.Number }),
 );
-const lenses = [Lens.make(TaskV1, TaskV2, { name: 'title' })];
+const edges = [Lens.versionEdge(Lens.make(TaskV1, TaskV2, { name: 'title' }))];
 
 /** An object with `edits` edits, every change authored by fixed actors at time 0, so its bytes are fixed. */
 const history = (edits: number): VersionDoc => {
@@ -71,7 +71,7 @@ const derive = (origin: VersionDoc): VersionDoc => {
     version: '0.2.0',
     objectId: OBJECT_ID,
     typename: TYPENAME,
-    lenses,
+    edges,
   });
   invariant(root, 'no root');
   return translate({
@@ -79,7 +79,7 @@ const derive = (origin: VersionDoc): VersionDoc => {
     target: { doc: root, version: '0.2.0' },
     objectId: OBJECT_ID,
     typename: TYPENAME,
-    lenses,
+    edges,
   });
 };
 

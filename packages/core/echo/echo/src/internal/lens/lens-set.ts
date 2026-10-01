@@ -5,15 +5,21 @@
 import * as Type from '../../Type.ts';
 import { endpointOf } from './identity.ts';
 import { type AnyLens } from './types.ts';
+import { isVersionLens, versionEdge } from './versions.ts';
 
 /**
  * The lenses a registry holds, by name. There is at most one lens per pair of types: adding the same lens
- * again (an equal digest) replaces it, and adding a different one for a registered pair throws.
+ * again (an equal digest) replaces it, and adding a different one for a registered pair throws, as does
+ * adding a lens between two versions of one type that version documents cannot run.
  */
 export class LensSet {
   readonly #byName = new Map<string, AnyLens>();
 
   add(lens: AnyLens): void {
+    if (isVersionLens(lens)) {
+      // A lens between two versions of one type translates version documents, so only the subset that can.
+      versionEdge(lens);
+    }
     const existing = this.#byName.get(lens.name);
     if (existing && existing.digest !== lens.digest) {
       throw new TypeError(`Lens: a different lens is already registered for ${lens.name}.`);

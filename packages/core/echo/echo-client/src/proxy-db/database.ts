@@ -31,6 +31,7 @@ import {
   type Registry,
   Type,
 } from '@dxos/echo';
+import { encodedValuesEqual } from '@dxos/echo-host/versions';
 import {
   DATA_NAMESPACE,
   type DatabaseDirectory,
@@ -84,15 +85,10 @@ import {
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { runArrayFanOutMigration, runStampElementIdsMigration } from './array-fan-out.ts';
-import { computeGuardedDataWrites, encodedValuesEqual, getDecodedDataWithRefs } from './encoded-value.ts';
+import { computeGuardedDataWrites, getDecodedDataWithRefs } from './encoded-value.ts';
 import { runFanInMigration } from './fan-in.ts';
 import { type FoldForwardOptions, foldForwardMigrations } from './fold-forward.ts';
 import { createObjectMigrationContext } from './migration-context.ts';
-import {
-  type SyncVersionsOptions,
-  type VersionSettled,
-  syncVersionDocuments,
-} from './version-documents/version-runner.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -135,13 +131,6 @@ export interface EchoDatabase extends Database.Database {
   watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn;
 
   /**
-   * Keeps every version document of the objects of each lens's type present and in sync: creates the
-   * versions an object lacks, merges duplicate version documents, and translates edits between the
-   * versions. Without `objectIds`, covers every object of those types.
-   */
-  syncVersions(lenses: readonly Lens.Any[], options?: SyncVersionsOptions): Promise<void>;
-
-  /**
    * The object at version `type` of its type: the live object when it reads that version, else an object
    * bound to that version's document, whose edits are translated to the object's other versions.
    * Undefined when the object has no document for that version.
@@ -153,12 +142,6 @@ export interface EchoDatabase extends Database.Database {
 
   /** @internal */
   _peekVersionOfType(obj: Entity.Unknown, type: string, onLoad?: () => void): Entity.Unknown | undefined;
-
-  /**
-   * Syncs versions once for every object, then again, debounced, for each object whose documents
-   * change. `getLenses` is read on each pass so the current set always applies.
-   */
-  watchVersions(getLenses: () => readonly Lens.Any[], options?: { debounceMs?: number }): CleanupFn;
 
   /**
    * Get the current per-peer automerge document sync state.
@@ -400,7 +383,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly #retiredFeeds = new Set<Promise<void>>();
   /** Serializes migration and fold-forward passes, which read a checkpoint and write it back. */
   readonly #migrationLock = new Mutex();
-  readonly #versionSettled: VersionSettled = new Map();
+  /** The lens adoption in flight, so adoptions run one at a time. */
+  #adoption: Promise<void> = Promise.resolve();
   readonly #versionBindings = new Map<string, Entity.Unknown>();
 
   constructor(params: EchoDatabaseProps) {
@@ -489,6 +473,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
     }
 
+    this.#adoptLenses();
+    this._ctx.onDispose(this.graph.registry.changed.on(() => this.#adoptLenses()));
+
     if (this._preloadSchemaOnOpen) {
       await this.query(Filter.type(PersistentSchema)).run();
     }
@@ -510,6 +497,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#feeds.clear();
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
+    await this.#adoption;
     await this._entityManager.close();
   }
 
@@ -523,6 +511,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
         await this._entityManager.openWithSpaceState(this._ctx, { rootUrl });
+        this.#adoptLenses();
       } else {
         await this._entityManager.updateSpaceState(this._ctx, { rootUrl });
       }
@@ -855,6 +844,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
+    // Storing adopted lenses is a write this database started, so a flush covers it.
+    await this.#adoption;
     await this._entityManager.flush(opts);
     await Promise.all([
       ...[...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()),
@@ -895,15 +886,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       clearTimeout(timer);
       unsubscribe();
     };
-  }
-
-  async syncVersions(lenses: readonly Lens.Any[], options?: SyncVersionsOptions): Promise<void> {
-    this._entityManager.setKnownVersionTypes(versionTypesOf(lenses).map((type) => Type.getURI(type)));
-    await this.#migrationLock.executeSynchronized(async () => {
-      const objectIds = options?.objectIds ?? (await this.#versionedObjectIds(lenses));
-      await syncVersionDocuments(this, lenses, objectIds, { settled: this.#versionSettled, ...options });
-      await this._entityManager.flush();
-    });
   }
 
   async version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined> {
@@ -967,76 +949,28 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return object;
   }
 
-  watchVersions(getLenses: () => readonly Lens.Any[], options?: { debounceMs?: number }): CleanupFn {
-    let changed: Set<string> | undefined;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const watched = new Map<DocHandleProxy<DatabaseDirectory>, () => void>();
-    const onHandle = (objectId: string, handle: DocHandleProxy<DatabaseDirectory>) => {
-      if (!watched.has(handle)) {
-        const listener = () => schedule([objectId]);
-        handle.on('change', listener);
-        watched.set(handle, () => handle.off('change', listener));
-      }
-    };
-    const pass = () => {
-      timer = undefined;
-      const objectIds = changed;
-      changed = new Set();
-      void this.syncVersions(getLenses(), { objectIds, onHandle }).catch((err) => {
+  /**
+   * Adopts the lenses registered for this database: reads the versions they connect, and stores each lens
+   * between two versions of one type in the space, where the host finds it and keeps version documents in
+   * sync.
+   */
+  #adoptLenses(): void {
+    const lenses = this.graph.registry.lenses().filter(Lens.isVersionLens);
+    this._entityManager.setKnownVersionTypes(versionTypesOf(lenses).map((type) => Type.getURI(type)));
+    if (lenses.length === 0 || this._rootUrl === undefined) {
+      return;
+    }
+    this.#adoption = this.#adoption
+      .then(async () => {
+        for (const lens of lenses) {
+          await this.addLens(lens);
+        }
+      })
+      .catch((err) => {
         if (!(err instanceof RpcClosedError)) {
           log.catch(err);
         }
       });
-    };
-    const schedule = (objectIds: Iterable<string>) => {
-      for (const id of objectIds) {
-        changed?.add(id);
-      }
-      clearTimeout(timer);
-      timer = setTimeout(pass, options?.debounceMs ?? FOLD_FORWARD_DEBOUNCE_MS);
-    };
-    this._entityManager.setKnownVersionTypes(versionTypesOf(getLenses()).map((type) => Type.getURI(type)));
-    const unsubscribe = this._entityManager._updateEvent.on((event) => {
-      schedule(event.itemsUpdated.map(({ id }) => id));
-    });
-    // A registry or link change is how a version document another peer created arrives.
-    const root = this._getSpaceRootDocHandle();
-    const onRootChange = (event: { patches: readonly A.Patch[] }) => {
-      const branches = root.doc().branches ?? {};
-      schedule(
-        event.patches
-          .filter(({ path }) => (path[0] === 'branches' || path[0] === 'links') && typeof path[1] === 'string')
-          .flatMap(({ path }) => {
-            const id = String(path[1]);
-            // A user branch is keyed by its subtree root; every member of it may have gained a document.
-            const members = Object.values(branches[id] ?? {}).flatMap((record) => Object.keys(record.members ?? {}));
-            return [id, ...members];
-          }),
-      );
-    };
-    root.on('change', onRootChange);
-    // The first pass covers every object.
-    schedule([]);
-    return () => {
-      clearTimeout(timer);
-      unsubscribe();
-      root.off('change', onRootChange);
-      for (const dispose of watched.values()) {
-        dispose();
-      }
-    };
-  }
-
-  /** Ids of every object of a type the lenses cover. */
-  async #versionedObjectIds(lenses: readonly Lens.Any[]): Promise<string[]> {
-    const types = versionTypesOf(lenses);
-    if (types.length === 0) {
-      return [];
-    }
-    const objects = await this._hypergraph
-      .query(Query.select(Filter.or(...types.map((type) => Filter.type(type)))).from(this))
-      .run();
-    return objects.map((object) => object.id);
   }
 
   async #runMigrations(migrations: Migration.Migration[]): Promise<void> {

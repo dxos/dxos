@@ -22,6 +22,7 @@ import {
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, type Entity, Lens } from '@dxos/echo';
+import { imageHeads } from '@dxos/echo-host/versions';
 import { type BranchRecord, DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
@@ -55,7 +56,6 @@ import {
   type SpaceDocumentHeads,
 } from './types.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
-import { imageHeads } from './version-history.ts';
 
 const TRACE_LOADING = false;
 

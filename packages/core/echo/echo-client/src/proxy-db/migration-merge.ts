@@ -5,14 +5,19 @@
 import { next as A, type Doc as AutomergeDoc, type Heads } from '@automerge/automerge';
 
 import { type Migration, type Obj } from '@dxos/echo';
+import {
+  type ChangeGraph,
+  ancestorsOf,
+  applyStructuralEdit,
+  encodedValuesEqual,
+  frontierOf,
+  isRecord,
+} from '@dxos/echo-host/versions';
 import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
-import { type ChangeGraph, ancestorsOf, frontierOf } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { encodedValuesEqual, isRecord } from './encoded-value.ts';
-import { applyStructuralEdit } from './fold-edit.ts';
 
 //
 // Peers that migrate one object before receiving each other's migration each write their own lists,

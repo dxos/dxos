@@ -1323,6 +1323,22 @@ become one entity. A lens is to types what a relation is to objects: an edge bet
   `Lens.findPath`/`resolveView` take the lenses to walk.
 - **Persistence.** `db.addLens(lens)` stores it (reusing one with the same name and digest); `db.add`
   rejects lenses at compile time and at run time, as it does types.
+- **Version edges.** Translation runs on `Lens.VersionEdge`s: a lens between two versions as plain data,
+  named by type URIs, with `forward`/`backward` over plain object data. `Lens.versionEdge(lens)` builds one
+  from code (throwing outside the subset); `Lens.storedVersionEdge(data)` from a stored lens's data,
+  without schemas. `Lens.versionPath` walks edges by version, either direction, ties broken by digest; views
+  still walk `Lens.findPath`. Both read the same lenses, but there are two walkers, not one.
+- **Host translation.** The runner, translation core and their helpers moved to `@dxos/echo-host/versions`,
+  over a small document-store interface. `EchoHost` runs `VersionTranslator` after each index pass that
+  indexed documents (and once at startup), without blocking indexing: per space it reads the stored lenses
+  through the index, finds the objects of their types, and syncs an object again only when its documents,
+  registry entries or the space's lenses changed (compared by the documents' live heads). Because the first
+  pass after startup syncs everything, no separate intent log is needed.
+- **Conflicts.** Per object, the runner picks, among a type's stored lenses, the choice every held derived
+  document was derived with; a type with two lenses for one pair derives nothing new.
+- **Client.** `syncVersions`/`watchVersions` are gone. On open and on every registry change, a database
+  reads the versions its registry's version lenses connect (routing and `QueryOptions.versions`) and stores
+  those lenses in its space; `db.flush()` waits for that store.
 
 ## 13. References
 

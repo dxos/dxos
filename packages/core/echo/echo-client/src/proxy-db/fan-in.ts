@@ -6,13 +6,14 @@ import { type Heads } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Migration, Obj } from '@dxos/echo';
+import { encodedValuesEqual } from '@dxos/echo-host/versions';
 import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, type ObjectCore, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { encodedValuesEqual, getDecodedDataWithRefs, mapRefsToEncodedReferences } from './encoded-value.ts';
+import { getDecodedDataWithRefs, mapRefsToEncodedReferences } from './encoded-value.ts';
 import { assignPatch } from './migration-context.ts';
 
 //

@@ -11,7 +11,7 @@ import { type DatabaseDirectory, EncodedReference, SpaceDocVersion } from '@dxos
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { creationChange, isTranslation } from '../../core-db/index.ts';
+import { creationChange, isTranslation } from './version-history.ts';
 import { type VersionDoc, deriveVersionDoc, isDerived, translate, versionOfDoc } from './version-translation.ts';
 
 const TYPENAME = 'org.dxos.test.task';
@@ -53,10 +53,14 @@ class Device {
   readonly docs = new Map<string, VersionDoc>();
   readonly settled = new Set<string>();
 
+  readonly edges: readonly Lens.VersionEdge[];
+
   constructor(
     readonly name: string,
-    readonly lenses: readonly Lens.Any[],
-  ) {}
+    lenses: readonly Lens.Any[],
+  ) {
+    this.edges = lenses.map(Lens.versionEdge);
+  }
 
   doc(version: string): VersionDoc {
     const doc = this.docs.get(version);
@@ -74,7 +78,7 @@ class Device {
       version,
       objectId: OBJECT_ID,
       typename: TYPENAME,
-      lenses: this.lenses,
+      edges: this.edges,
     });
     invariant(derived, `${this.name} cannot derive ${version}`);
     this.docs.set(version, derived);
@@ -92,7 +96,7 @@ class Device {
           target: { doc: targetDoc, version: targetVersion },
           objectId: OBJECT_ID,
           typename: TYPENAME,
-          lenses: this.lenses,
+          edges: this.edges,
           settled: this.settled,
         });
         if (A.getHeads(next).join() !== A.getHeads(targetDoc).join()) {
@@ -169,7 +173,7 @@ describe('version translation', () => {
     const origin = createOrigin(TaskV1, { title: 'Plan', tags: [] });
     const [, second] = A.getChangesMetaSince(origin, []);
     expect(creationChange(origin, OBJECT_ID)?.hash).toBe(second.hash);
-    expect(versionOfDoc(origin, OBJECT_ID, lenses)).toBe('0.1.0');
+    expect(versionOfDoc(origin, OBJECT_ID, lenses.map(Lens.versionEdge))).toBe('0.1.0');
     expect(isDerived(origin)).toBe(false);
   });
 
@@ -177,7 +181,7 @@ describe('version translation', () => {
     const { newA, newB } = setup();
     const rootOf = (doc: VersionDoc) => A.getChangesMetaSince(doc, [])[0].hash;
     expect(rootOf(newA.doc('0.3.0'))).toBe(rootOf(newB.doc('0.3.0')));
-    expect(versionOfDoc(newA.doc('0.3.0'), OBJECT_ID, lenses)).toBe('0.3.0');
+    expect(versionOfDoc(newA.doc('0.3.0'), OBJECT_ID, lenses.map(Lens.versionEdge))).toBe('0.3.0');
     expect(dataOf(newA.doc('0.3.0'))).toEqual({ name: 'Plan', labels: ['a', 'early'], done: false });
   });
 

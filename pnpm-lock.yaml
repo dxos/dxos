@@ -5873,6 +5873,9 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 1.8.0
       bs58check:
         specifier: 'catalog:'
         version: 4.0.0

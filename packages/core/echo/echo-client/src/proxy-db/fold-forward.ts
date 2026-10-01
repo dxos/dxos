@@ -6,6 +6,15 @@ import { next as A, type Doc as AutomergeDoc, type Heads, type Patch } from '@au
 import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Lens, Migration, Obj, Query, Ref } from '@dxos/echo';
+import {
+  type ChangeGraph,
+  ancestorsOf,
+  applyStructuralEdit,
+  encodedValuesEqual,
+  frontierOf,
+  isMapValue,
+  isRecord,
+} from '@dxos/echo-host/versions';
 import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { MetaId } from '@dxos/echo/internal';
 import { EntityId, URI } from '@dxos/keys';
@@ -13,20 +22,16 @@ import { log } from '@dxos/log';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, type ObjectCore, SYSTEM_NAMESPACE } from '../core-db/index.ts';
-import { type ChangeGraph, ancestorsOf, frontierOf } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { arrayFanOutSplitMessage, hasUnresolvedIdConflict } from './array-fan-out.ts';
 import {
   changedOutputEntries,
   computeGuardedDataWrites,
-  encodedValuesEqual,
   getDecodedDataWithRefs,
-  isRecord,
   mapRefsToEncodedReferences,
   removedOutputKeys,
 } from './encoded-value.ts';
 import { fanInAbsorbMessage, resolvePatch } from './fan-in.ts';
-import { applyStructuralEdit, isMapValue } from './fold-edit.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey, findByConvergenceKey } from './migration-context.ts';
 import { replayLosingMigrations } from './migration-merge.ts';
 

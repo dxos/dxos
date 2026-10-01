@@ -30,7 +30,7 @@ the migrations effort, not a separate project.
   translates between any pair, indefinitely. Nothing in the translation rules depends on which documents
   a device holds, so this changes storage policy, not the rules.
 
-**Translation rules** (prototype: `echo-client/src/proxy-db/version-documents/`, item 12 below).
+**Translation rules** (now `echo-host/src/versions/`, item 12 below).
 
 1. A version document's root is derived from the object's origin root through the lens chain, authored
    with a content-derived actor and time 0, so every device creates the same root. A device then edits
@@ -59,7 +59,7 @@ that does not have the app's code. Declarative lenses are the ones data can expr
    object read-only.
 4. Multi-object migrations (fan-out, fan-in, array split) on convergence keys.
 
-**Step 1 status (2026-09-30): implemented on this branch.**
+**Step 1 status (2026-09-30): implemented on this branch.** (Superseded in places by the one-lens work below: `VersionLens` folded into `Lens`, and the runner moved to the host.)
 
 | Piece                                                                                                                                                                              | Where                                                                 |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
@@ -116,9 +116,12 @@ One lens (decided 2026-10-01, DESIGN.md §12.7), built on this branch in order:
   `Lens`.
 - **C. Entity kind.** `EntityKind.Lens`, `db.addLens`, a registry index by endpoints; the static
   `Lens.register` goes; plain targets carry an identifier.
-- **D. Host runner.** Translation moves into the host's indexing pass with an intent log; the host reads
-  lenses from the space; a client stores the lenses it registers; the conflict rule applies;
-  `syncVersions`/`watchVersions` go and routing takes its versions from the registry.
+- **D. Host runner.** Translation moves to the host, after each index pass (the first pass after startup
+  syncs everything, which replaces an intent log); the host reads lenses from the space; a client stores the
+  lenses it registers; the conflict rule applies; `syncVersions`/`watchVersions` go and routing takes its
+  versions from the registry.
+
+Status (2026-10-01): A–D built on this branch; see DESIGN.md §12.8.
 
 Not yet done:
 

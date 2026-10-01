@@ -12,6 +12,7 @@ import { createBranch, switchBranch } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
 
 import { type TestDatabase, createPartitionedPair } from './migration-bench/harness.ts';
@@ -57,6 +58,13 @@ const versionDoc = async (db: TestDatabase, objectId: string, version: string) =
   return handle;
 };
 
+/** Waits until a peer's host has synced the version documents of what its database wrote. */
+const settle = async (peer: { host: { versionsSettled(): Promise<void> } }, db: TestDatabase): Promise<void> => {
+  await db._repo.flush();
+  await db.flush({ indexes: true });
+  await peer.host.versionsSettled();
+};
+
 const labelsOf = (doc: DatabaseDirectory, objectId: string): string[] => {
   const labels: unknown = JSON.parse(JSON.stringify(doc.objects?.[objectId]?.data?.labels ?? []));
   return Array.isArray(labels) ? labels.map(String).sort() : [];
@@ -84,13 +92,24 @@ describe('version documents across peers', () => {
     const db1 = await peer1.createDatabase(spaceKey);
     const task = db1.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
     await db1.flush();
-    const db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl);
+    const db2 = await peer2.openDatabase(spaceKey, rootUrl);
     await syncAll(db1, db2);
 
-    // Partitioned: each peer creates its own version documents and edits in its v3.
+    // Partitioned: each peer's host creates its own version documents, and each edits in its v3.
     await partition();
-    await db1.syncVersions(lenses);
-    await db2.syncVersions(lenses);
+    db1.graph.registry.add(lenses);
+    db2.graph.registry.add(lenses);
+    await waitForCondition({
+      condition: async () => {
+        await settle(peer1, db1);
+        await settle(peer2, db2);
+        return versionUrl(db1, task.id, '0.3.0') !== undefined && versionUrl(db2, task.id, '0.3.0') !== undefined;
+      },
+      interval: 100,
+      timeout: 20_000,
+    });
     expect(versionUrl(db1, task.id, '0.3.0')).not.toBe(versionUrl(db2, task.id, '0.3.0'));
     (await versionDoc(db1, task.id, '0.3.0')).change((doc) => {
       doc.objects![task.id].data.labels.push('one');
@@ -98,14 +117,14 @@ describe('version documents across peers', () => {
     (await versionDoc(db2, task.id, '0.3.0')).change((doc) => {
       doc.objects![task.id].data.labels.push('two');
     });
-    await db1.syncVersions(lenses);
-    await db2.syncVersions(lenses);
+    await settle(peer1, db1);
+    await settle(peer2, db2);
 
     await heal();
     await waitForCondition({
       condition: async () => {
-        await db1.syncVersions(lenses);
-        await db2.syncVersions(lenses);
+        await settle(peer1, db1);
+        await settle(peer2, db2);
         const urls = ['0.2.0', '0.3.0'].map((version) => [
           versionUrl(db1, task.id, version),
           versionUrl(db2, task.id, version),
@@ -141,11 +160,19 @@ describe('version documents across peers', () => {
     const spaceKey = PublicKey.random();
     // `fresh` runs the lenses; `old` never does, as an app released before version documents.
     const fresh = await peer1.createDatabase(spaceKey);
+    fresh.graph.registry.add(lenses);
     const created = fresh.add(Obj.make(TaskV3, { name: 'Fresh', labels: ['new'], done: true }));
-    await fresh.flush();
-    await fresh.syncVersions(lenses);
-    await fresh.flush();
-    const old = await peer2.openDatabase(spaceKey, fresh.rootUrl!);
+    await waitForCondition({
+      condition: async () => {
+        await settle(peer1, fresh);
+        return versionUrl(fresh, created.id, '0.1.0') !== undefined;
+      },
+      interval: 100,
+      timeout: 20_000,
+    });
+    const rootUrl = fresh.rootUrl;
+    invariant(rootUrl);
+    const old = await peer2.openDatabase(spaceKey, rootUrl);
     await syncAll(fresh, old);
 
     const [seen] = await old.query(Filter.type(TaskV1)).run();
@@ -162,7 +189,7 @@ describe('version documents across peers', () => {
     await old.flush();
     await waitForCondition({
       condition: async () => {
-        await fresh.syncVersions(lenses);
+        await settle(peer1, fresh);
         return [...created.labels].sort().join() === 'new,old';
       },
       interval: 200,
@@ -180,10 +207,20 @@ describe('version documents across peers', () => {
     const db1 = await peer1.createDatabase(spaceKey);
     const task = db1.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
     await db1.flush();
-    const db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl);
+    const db2 = await peer2.openDatabase(spaceKey, rootUrl);
     await syncAll(db1, db2);
 
-    await db1.syncVersions(lenses);
+    db1.graph.registry.add(lenses);
+    await waitForCondition({
+      condition: async () => {
+        await settle(peer1, db1);
+        return versionUrl(db1, task.id, '0.3.0') !== undefined;
+      },
+      interval: 100,
+      timeout: 20_000,
+    });
     (await versionDoc(db1, task.id, '0.3.0')).change((doc) => {
       doc.objects![task.id].data.labels.push('waited');
     });

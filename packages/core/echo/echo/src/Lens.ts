@@ -24,14 +24,16 @@ export { endpointOf, nameOf } from './internal/lens/identity.ts';
 export { LensSet, between, from as lensesFrom, shadow } from './internal/lens/lens-set.ts';
 export {
   type Data as VersionData,
+  type VersionEdge,
   type VersionPath,
   compareVersions,
   isVersionLens,
+  storedVersionEdge,
   typeOfVersion,
+  versionEdge,
   versionOf,
   versionPath,
   versionsOf,
-  versionStep,
 } from './internal/lens/versions.ts';
 export { of, targetSchema } from './internal/lens/live.ts';
 export { applyWrites } from './internal/lens/write.ts';

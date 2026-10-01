@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
+import { isRecord } from '@dxos/echo-host/versions';
 import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,7 +15,7 @@ import { getDeep, setDeep } from '@dxos/util';
 
 import { META_NAMESPACE, SYSTEM_NAMESPACE } from '../core-db/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
-import { computeGuardedDataWrites, getDecodedDataWithRefs, isRecord } from './encoded-value.ts';
+import { computeGuardedDataWrites, getDecodedDataWithRefs } from './encoded-value.ts';
 import { type ConvergenceKeyCache, ensureByConvergenceKey } from './migration-context.ts';
 
 //

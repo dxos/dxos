@@ -3,16 +3,15 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 
-import { Lens, Type } from '@dxos/echo';
+import { Lens } from '@dxos/echo';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
-import { type DocHandleProxy, type RepoProxy } from '../../automerge/index.ts';
-import { isRecord } from '../encoded-value.ts';
+import { isRecord } from './encoded-value.ts';
 import {
   type VersionDoc,
+  derivedWith,
   deriveVersionDoc,
   isDerived,
   translate,
@@ -31,10 +30,22 @@ import {
 // - Every original edit is translated into every other version this device holds.
 //
 
-/** What the runner needs from a database. */
-export type VersionDocumentsHost = {
-  readonly _repo: RepoProxy;
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
+/** A document the runner reads and writes. */
+export type VersionDocHandle = {
+  readonly url: string | undefined;
+  doc(): VersionDoc;
+  change(callback: A.ChangeFn<DatabaseDirectory>): void;
+  /** Replaces the document with one built from it, as `A.merge` returns. */
+  update(callback: (doc: VersionDoc) => VersionDoc): void;
+};
+
+/** Where the runner finds, creates and records an object's version documents. */
+export type VersionStore = {
+  /** The space root document, which holds `links` and the branch registry. */
+  readonly root: VersionDocHandle;
+  load(url: string): Promise<VersionDocHandle>;
+  /** Stores `doc` as a new document. */
+  create(doc: VersionDoc): Promise<VersionDocHandle>;
 };
 
 /** Per-object memory of edits already handled, so each is examined once per target. */
@@ -45,10 +56,10 @@ export type SyncVersionsOptions = {
   objectIds?: Iterable<string>;
   settled?: VersionSettled;
   /** Receives every version document handle the pass loaded, to watch for further edits. */
-  onHandle?: (objectId: string, handle: DocHandleProxy<DatabaseDirectory>) => void;
+  onHandle?: (objectId: string, handle: VersionDocHandle) => void;
 };
 
-type Held = { version: string; handle: DocHandleProxy<DatabaseDirectory> };
+type Held = { version: string; handle: VersionDocHandle };
 
 type Alternative = {
   value: unknown;
@@ -111,32 +122,23 @@ const recordedVersions = (root: DatabaseDirectory, objectId: string): Set<string
   return versions;
 };
 
-const load = async (host: VersionDocumentsHost, url: string): Promise<DocHandleProxy<DatabaseDirectory>> => {
-  if (!isValidAutomergeUrl(url)) {
-    throw new TypeError(`not a document url: ${url}`);
-  }
-  const handle = host._repo.find<DatabaseDirectory>(url);
-  await handle.whenReady();
-  return handle;
-};
-
 /** Merges every duplicate document into `winner`: both share the same root, so the result is their union. */
 const mergeLosers = async (
-  host: VersionDocumentsHost,
-  winner: DocHandleProxy<DatabaseDirectory>,
+  store: VersionStore,
+  winner: VersionDocHandle,
   losers: readonly string[],
   accept: (doc: VersionDoc) => boolean = () => true,
 ): Promise<void> => {
   for (const url of losers) {
-    const loser = await load(host, url);
+    const loser = await store.load(url);
     if (accept(loser.doc()) && !A.hasHeads(winner.doc(), A.getHeads(loser.doc()))) {
       winner.update((doc) => A.merge(doc, loser.doc()));
     }
   }
 };
 
-const register = (host: VersionDocumentsHost, objectId: string, version: string, url: string, type: string): void => {
-  host._getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
+const register = (store: VersionStore, objectId: string, version: string, url: string, type: string): void => {
+  store.root.change((doc: DatabaseDirectory) => {
     // Assign through re-read proxies: a chained `??=` result is a detached literal under Automerge.
     doc.branches ??= {};
     doc.branches[objectId] ??= {};
@@ -152,14 +154,14 @@ const register = (host: VersionDocumentsHost, objectId: string, version: string,
  * registry's winner, and translates edits between the versions until none is left.
  */
 export const syncVersionDocuments = async (
-  host: VersionDocumentsHost,
-  lenses: readonly Lens.Any[],
+  store: VersionStore,
+  edges: readonly Lens.VersionEdge[],
   objectIds: Iterable<string>,
   options: Omit<SyncVersionsOptions, 'objectIds'> = {},
 ): Promise<void> => {
   for (const objectId of objectIds) {
     try {
-      await syncObject(host, lenses, objectId, options);
+      await syncObject(store, edges, objectId, options);
     } catch (err) {
       log.warn('version documents: could not sync object', { objectId, err });
     }
@@ -167,12 +169,12 @@ export const syncVersionDocuments = async (
 };
 
 const syncObject = async (
-  host: VersionDocumentsHost,
-  lenses: readonly Lens.Any[],
+  store: VersionStore,
+  allEdges: readonly Lens.VersionEdge[],
   objectId: string,
   { settled, onHandle }: Omit<SyncVersionsOptions, 'objectIds'>,
 ): Promise<void> => {
-  const root = host._getSpaceRootDocHandle();
+  const root = store.root;
   const [legacyUrl, ...legacyLosers] = [
     ...new Set(alternativesAlong(root.doc(), ['links', objectId]).map((url) => String(url))),
   ];
@@ -180,22 +182,19 @@ const syncObject = async (
     // Inline objects share the space root and have no document of their own to version.
     return;
   }
-  const legacy = await load(host, legacyUrl);
-  const legacyType = typeOfDoc(legacy.doc(), objectId, lenses);
+  const legacy = await store.load(legacyUrl);
+  const legacyType = typeOfDoc(legacy.doc(), objectId, allEdges);
   if (!legacyType) {
     return;
   }
-  const legacyVersion = Lens.versionOf(legacyType);
-  const typename = Type.getTypename(legacyType);
-  const typeOf = (version: string): string | undefined => {
-    const type = Lens.typeOfVersion(lenses, typename, version);
-    return type && Type.getURI(type);
-  };
-  await mergeLosers(host, legacy, legacyLosers, (doc) => versionOfDoc(doc, objectId, lenses) === legacyVersion);
+  const { version: legacyVersion, typename } = legacyType;
+  const conflicted = conflictedOf(allEdges, typename);
+  const typeOf = (version: string): string | undefined => Lens.typeOfVersion(allEdges, typename, version);
+  await mergeLosers(store, legacy, legacyLosers, (doc) => versionOfDoc(doc, objectId, allEdges) === legacyVersion);
   const held = new Map<string, Held>([[legacyVersion, { version: legacyVersion, handle: legacy }]]);
   // The registry lists every version, the linked one included, so a reader can pick among them unloaded.
   if (DatabaseDirectory.getVersionDocUrls(root.doc(), objectId)[legacyVersion] !== legacyUrl) {
-    register(host, objectId, legacyVersion, legacyUrl, Type.getURI(legacyType));
+    register(store, objectId, legacyVersion, legacyUrl, legacyType.uri);
   }
 
   // Recorded versions: load the winner and fold every losing duplicate into it.
@@ -204,46 +203,42 @@ const syncObject = async (
     if (!winnerUrl || version === legacyVersion) {
       continue;
     }
-    const winner = await load(host, winnerUrl);
-    await mergeLosers(host, winner, losers);
+    const winner = await store.load(winnerUrl);
+    await mergeLosers(store, winner, losers);
     held.set(version, { version, handle: winner });
     // A version recorded only inside a map a concurrent write hid has no visible entry; record it again.
     const type = typeOf(version);
     if (!DatabaseDirectory.getVersionDocUrls(root.doc(), objectId)[version] && type) {
-      register(host, objectId, version, winnerUrl, type);
+      register(store, objectId, version, winnerUrl, type);
     }
+  }
+
+  // A pair with two different stored lenses derives no new versions; held documents translate with the
+  // lenses their roots were derived with.
+  const edges = designatedEdges(allEdges, typename, [...held.values()]);
+  if (!edges) {
+    log.warn('version documents: no stored lenses match the roots of the held versions', { objectId, typename });
+    return;
   }
 
   // Missing versions are derived from the origin: the document the app created the object in.
   const origin = [...held.values()].find(({ handle }) => !isDerived(handle.doc()));
-  for (const version of Lens.versionsOf(lenses, typename)) {
+  for (const version of conflicted.size > 0 ? [] : Lens.versionsOf(edges, typename)) {
     const type = typeOf(version);
     if (held.has(version) || !origin || !type) {
       continue;
     }
-    const derived = deriveVersionDoc({
-      origin: origin.handle.doc(),
-      originVersion: origin.version,
-      version,
-      objectId,
-      typename,
-      lenses,
-    });
-    if (!derived) {
+    const handle = await derive(store, origin, version, objectId, typename, edges);
+    if (!handle?.url) {
       continue;
     }
-    const handle = host._repo.import<DatabaseDirectory>(A.save(derived));
-    await handle.whenReady();
-    if (!handle.url) {
-      continue;
-    }
-    register(host, objectId, version, handle.url, type);
+    register(store, objectId, version, handle.url, type);
     held.set(version, { version, handle });
   }
 
   // Released apps follow only `links`, so it names the oldest version, including for an object an app
   // created at a newer one.
-  const [oldest] = Lens.versionsOf(lenses, typename);
+  const [oldest] = Lens.versionsOf(edges, typename);
   const oldestUrl = held.get(oldest)?.handle.url;
   if (oldest !== legacyVersion && oldestUrl) {
     root.change((doc: DatabaseDirectory) => {
@@ -256,8 +251,58 @@ const syncObject = async (
     onHandle?.(objectId, handle);
   }
 
-  translateAll([...held.values()], objectId, typename, lenses, settledFor(settled, objectId));
-  await syncBranches(host, lenses, objectId, typename, origin, { settled, onHandle });
+  translateAll([...held.values()], objectId, typename, edges, settledFor(settled, objectId));
+  await syncBranches(store, edges, conflicted.size > 0, objectId, typename, origin, { settled, onHandle });
+};
+
+/** The names of the pairs of versions of `typename` with more than one stored lens. */
+const conflictedOf = (edges: readonly Lens.VersionEdge[], typename: string): Set<string> => {
+  const digests = new Map<string, Set<string>>();
+  for (const edge of edges.filter((candidate) => candidate.typename === typename)) {
+    digests.set(edge.name, (digests.get(edge.name) ?? new Set()).add(edge.digest));
+  }
+  return new Set([...digests].filter(([, set]) => set.size > 1).map(([name]) => name));
+};
+
+/**
+ * One lens per pair: where a pair has several, the choice every held derived document was derived with,
+ * or `undefined` when no choice fits them all.
+ */
+const designatedEdges = (
+  edges: readonly Lens.VersionEdge[],
+  typename: string,
+  held: readonly Held[],
+): Lens.VersionEdge[] | undefined => {
+  const byName = new Map<string, Lens.VersionEdge[]>();
+  for (const edge of edges.filter((candidate) => candidate.typename === typename)) {
+    byName.set(edge.name, [...(byName.get(edge.name) ?? []), edge]);
+  }
+  const choices = [...byName.values()].reduce<Lens.VersionEdge[][]>(
+    (combinations, variants) =>
+      combinations.flatMap((combination) => variants.map((variant) => [...combination, variant])),
+    [[]],
+  );
+  return choices.find((choice) => held.every(({ handle }) => derivedWith(handle.doc(), choice, typename)));
+};
+
+/** Stores the document for `version` derived from `origin`. */
+const derive = async (
+  store: VersionStore,
+  origin: Held,
+  version: string,
+  objectId: string,
+  typename: string,
+  edges: readonly Lens.VersionEdge[],
+): Promise<VersionDocHandle | undefined> => {
+  const derived = deriveVersionDoc({
+    origin: origin.handle.doc(),
+    originVersion: origin.version,
+    version,
+    objectId,
+    typename,
+    edges,
+  });
+  return derived && store.create(derived);
 };
 
 /** The edits already handled for one set of version documents, kept across passes. */
@@ -276,48 +321,37 @@ const settledFor = (settled: VersionSettled | undefined, key: string): Set<strin
  * and merge back version by version; edits are translated among the branch's own documents.
  */
 const syncBranches = async (
-  host: VersionDocumentsHost,
-  lenses: readonly Lens.Any[],
+  store: VersionStore,
+  edges: readonly Lens.VersionEdge[],
+  conflicted: boolean,
   objectId: string,
   typename: string,
   origin: Held | undefined,
   { settled, onHandle }: Omit<SyncVersionsOptions, 'objectIds'>,
 ): Promise<void> => {
-  const root = host._getSpaceRootDocHandle();
+  const root = store.root;
   for (const [rootId, byName] of Object.entries(root.doc().branches ?? {})) {
     for (const [name, record] of Object.entries(byName)) {
       const memberUrl = record.members?.[objectId]?.toString();
       if (DatabaseDirectory.isReservedBranchName(name) || !memberUrl) {
         continue;
       }
-      const member = await load(host, memberUrl);
-      const memberVersion = versionOfDoc(member.doc(), objectId, lenses);
+      const member = await store.load(memberUrl);
+      const memberVersion = versionOfDoc(member.doc(), objectId, edges);
       if (!memberVersion) {
         continue;
       }
       const held = new Map<string, Held>([[memberVersion, { version: memberVersion, handle: member }]]);
       for (const [version, url] of Object.entries(record.versions?.[objectId] ?? {})) {
-        held.set(version, { version, handle: await load(host, url.toString()) });
+        held.set(version, { version, handle: await store.load(url.toString()) });
       }
-      for (const version of Lens.versionsOf(lenses, typename)) {
+      for (const version of conflicted ? [] : Lens.versionsOf(edges, typename)) {
         if (held.has(version) || !origin) {
           continue;
         }
-        const derived = deriveVersionDoc({
-          origin: origin.handle.doc(),
-          originVersion: origin.version,
-          version,
-          objectId,
-          typename,
-          lenses,
-        });
-        if (!derived) {
-          continue;
-        }
-        const handle = host._repo.import<DatabaseDirectory>(A.save(derived));
-        await handle.whenReady();
-        const url = handle.url;
-        if (!url) {
+        const handle = await derive(store, origin, version, objectId, typename, edges);
+        const url = handle?.url;
+        if (!handle || !url) {
           continue;
         }
         root.change((doc: DatabaseDirectory) => {
@@ -333,13 +367,7 @@ const syncBranches = async (
       for (const { handle } of held.values()) {
         onHandle?.(objectId, handle);
       }
-      translateAll(
-        [...held.values()],
-        objectId,
-        typename,
-        lenses,
-        settledFor(settled, `${objectId} ${rootId}/${name}`),
-      );
+      translateAll([...held.values()], objectId, typename, edges, settledFor(settled, `${objectId} ${rootId}/${name}`));
     }
   }
 };
@@ -349,7 +377,7 @@ const translateAll = (
   held: readonly Held[],
   objectId: string,
   typename: string,
-  lenses: readonly Lens.Any[],
+  edges: readonly Lens.VersionEdge[],
   settled: Set<string> | undefined,
 ): void => {
   for (let round = 0; round < held.length + 1; round++) {
@@ -365,7 +393,7 @@ const translateAll = (
           target: { doc: before, version: target.version },
           objectId,
           typename,
-          lenses,
+          edges,
           settled,
         });
         if (next !== before) {

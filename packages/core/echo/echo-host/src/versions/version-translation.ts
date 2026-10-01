@@ -6,11 +6,13 @@ import { next as A, type Heads } from '@automerge/automerge';
 import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 
-import { Lens, Type } from '@dxos/echo';
+import { Lens } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
+import { encodedValuesEqual, isRecord } from './encoded-value.ts';
+import { applyStructuralEdit } from './fold-edit.ts';
 import {
   type ChangeGraph,
   creationChange,
@@ -19,9 +21,7 @@ import {
   parseTranslation,
   rootChangesOf,
   translationMessage,
-} from '../../core-db/index.ts';
-import { encodedValuesEqual, isRecord } from '../encoded-value.ts';
-import { applyStructuralEdit } from '../fold-edit.ts';
+} from './version-history.ts';
 
 //
 // One object stored as one Automerge document per schema version (`.agents/projects/lenses/DESIGN.md` §12).
@@ -74,24 +74,31 @@ const objectAt = (doc: VersionDoc, heads: Heads, objectId: string): Data | undef
   return isRecord(entry) ? entry : undefined;
 };
 
-/** The declared type of the object in `doc`, among the versions `lenses` connect. */
-export const typeOfDoc = (doc: VersionDoc, objectId: string, lenses: readonly Lens.Any[]): Type.AnyObj | undefined => {
+/** The type URI and version of the object in `doc`, when its type is one of the versions `edges` connect. */
+export const typeOfDoc = (
+  doc: VersionDoc,
+  objectId: string,
+  edges: readonly Lens.VersionEdge[],
+): { uri: string; typename: string; version: string } | undefined => {
   const type = doc.objects?.[objectId]?.system?.type;
   if (!type) {
     return undefined;
   }
   const uri = EncodedReference.toURI(type);
-  return lenses
-    .filter(Lens.isVersionLens)
-    .flatMap((lens) => [lens.source, lens.target])
-    .find((entity) => Type.getURI(entity) === uri);
+  for (const edge of edges) {
+    if (edge.source === uri || edge.target === uri) {
+      return { uri, typename: edge.typename, version: edge.source === uri ? edge.from : edge.to };
+    }
+  }
+  return undefined;
 };
 
-/** The schema version of the object in `doc`, read from its type among the versions `lenses` know. */
-export const versionOfDoc = (doc: VersionDoc, objectId: string, lenses: readonly Lens.Any[]): string | undefined => {
-  const type = typeOfDoc(doc, objectId, lenses);
-  return type && Lens.versionOf(type);
-};
+/** The schema version of the object in `doc`, read from its type among the versions `edges` connect. */
+export const versionOfDoc = (
+  doc: VersionDoc,
+  objectId: string,
+  edges: readonly Lens.VersionEdge[],
+): string | undefined => typeOfDoc(doc, objectId, edges)?.version;
 
 /** Whether `doc` was derived from another version document rather than created by an app. */
 export const isDerived = (doc: VersionDoc): boolean => rootOf(doc) !== undefined;
@@ -107,17 +114,17 @@ export const deriveVersionDoc = ({
   version,
   objectId,
   typename,
-  lenses,
+  edges,
 }: {
   origin: VersionDoc;
   originVersion: string;
   version: string;
   objectId: string;
   typename: string;
-  lenses: readonly Lens.Any[];
+  edges: readonly Lens.VersionEdge[];
 }): VersionDoc | undefined => {
-  const path = Lens.versionPath(lenses, typename, originVersion, version);
-  const type = Lens.typeOfVersion(lenses, typename, version);
+  const path = Lens.versionPath(edges, typename, originVersion, version);
+  const type = Lens.typeOfVersion(edges, typename, version);
   const creation = creationChange(origin, objectId);
   if (!path || !type || !creation) {
     return undefined;
@@ -128,7 +135,7 @@ export const deriveVersionDoc = ({
   const system = isRecord(entry?.system) ? entry.system : {};
   const object = {
     ...entry,
-    system: { ...system, type: EncodedReference.fromURI(Type.getURI(type)) },
+    system: { ...system, type: EncodedReference.fromURI(type) },
     data: path.apply(data),
   };
   const root = {
@@ -201,18 +208,18 @@ export const translate = ({
   target,
   objectId,
   typename,
-  lenses,
+  edges,
   settled,
 }: {
   source: TranslationSource;
   target: TranslationSource;
   objectId: string;
   typename: string;
-  lenses: readonly Lens.Any[];
+  edges: readonly Lens.VersionEdge[];
   settled?: Set<string>;
 }): VersionDoc => {
-  const path = Lens.versionPath(lenses, typename, source.version, target.version);
-  if (!path || !designates(source.doc, target.doc, lenses, typename)) {
+  const path = Lens.versionPath(edges, typename, source.version, target.version);
+  if (!path || !designates(source.doc, target.doc, edges, typename)) {
     return target.doc;
   }
   const sourceChanges = A.getChangesMetaSince(source.doc, []);
@@ -420,12 +427,14 @@ const authorShared = (
 };
 
 /**
- * Whether this device's lenses are the ones the documents were derived with: a derived document records
- * the digest of the lenses from its origin, and a device whose lenses differ stays out.
+ * Whether `edges` are the lenses `doc` was derived with: a derived document records the digest of the lenses
+ * from its origin, and a device whose lenses differ stays out. A document an app created designates any.
  */
-const designates = (one: VersionDoc, two: VersionDoc, lenses: readonly Lens.Any[], typename: string): boolean =>
-  [one, two].every((doc) => {
-    const root = rootOf(doc);
-    const path = root && Lens.versionPath(lenses, typename, root.origin, root.version);
-    return !root || (path !== undefined && lensDigest(path) === root.lenses);
-  });
+export const derivedWith = (doc: VersionDoc, edges: readonly Lens.VersionEdge[], typename: string): boolean => {
+  const root = rootOf(doc);
+  const path = root && Lens.versionPath(edges, typename, root.origin, root.version);
+  return !root || (path !== undefined && lensDigest(path) === root.lenses);
+};
+
+const designates = (one: VersionDoc, two: VersionDoc, edges: readonly Lens.VersionEdge[], typename: string): boolean =>
+  derivedWith(one, edges, typename) && derivedWith(two, edges, typename);

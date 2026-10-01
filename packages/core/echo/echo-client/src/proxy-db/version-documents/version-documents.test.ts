@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Filter, Lens, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type EchoHost } from '@dxos/echo-host';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -63,6 +64,47 @@ const typeOf = (object: Obj.Unknown): string | undefined => {
 const dataOf = (doc: DatabaseDirectory, objectId: string): Record<string, unknown> =>
   JSON.parse(JSON.stringify(doc.objects?.[objectId]?.data ?? {}));
 
+type TestDatabase = Awaited<ReturnType<EchoTestBuilder['createDatabase']>>['db'];
+
+/** Whether this client holds every change of every space document the host holds. */
+const caughtUp = async (db: TestDatabase, heads: Record<string, string[]>): Promise<boolean> => {
+  for (const [documentId, documentHeads] of Object.entries(heads)) {
+    const url = `automerge:${documentId}`;
+    if (!isValidAutomergeUrl(url)) {
+      return false;
+    }
+    const handle = db._repo.find<DatabaseDirectory>(url);
+    await handle.whenReady();
+    if (!A.hasHeads(handle.doc(), documentHeads)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Waits until the host has kept every version in sync and this client holds what it wrote: the host's
+ * heads stop moving between two passes and the client holds them.
+ */
+const settle = async (host: EchoHost, db: TestDatabase): Promise<void> => {
+  let previous: string | undefined;
+  await waitForCondition({
+    condition: async () => {
+      // Edits made through raw document handles are sent by the repo, not tracked by the database.
+      await db._repo.flush();
+      await db.flush({ indexes: true });
+      await host.versionsSettled();
+      const { heads } = await db.getDocumentHeads();
+      const state = JSON.stringify(Object.entries(heads).sort(([left], [right]) => left.localeCompare(right)));
+      const stable = state === previous && (await caughtUp(db, heads));
+      previous = state;
+      return stable;
+    },
+    interval: 50,
+    timeout: 20_000,
+  });
+};
+
 describe('version documents', () => {
   let builder: EchoTestBuilder;
 
@@ -75,12 +117,12 @@ describe('version documents', () => {
   });
 
   test('every version is created up front, recorded as a reserved branch, and kept in sync', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: ['a'] }));
     await db.flush();
     const legacyUrl = db._getSpaceRootDocHandle().doc().links?.[task.id]?.toString();
 
-    await db.syncVersions(lenses);
+    await settle(host, db);
     const urls = DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), task.id);
     expect(Object.keys(urls).sort()).toEqual(['0.1.0', '0.2.0', '0.3.0']);
     // The link still names the document released apps read, and the registry lists it too.
@@ -97,22 +139,22 @@ describe('version documents', () => {
     v1.change((doc) => {
       doc.objects![task.id].data.tags.push('b');
     });
-    await db.syncVersions(lenses);
+    await settle(host, db);
     expect(dataOf(v3.doc(), task.id).labels).toEqual(['a', 'b']);
 
     v3.change((doc) => {
       A.updateText(doc, ['objects', task.id, 'data', 'name'], 'Plan B');
     });
-    await db.syncVersions(lenses);
+    await settle(host, db);
     expect(dataOf(v1.doc(), task.id)).toEqual({ title: 'Plan B', tags: ['a', 'b'] });
     expect(dataOf(v2.doc(), task.id)).toEqual({ name: 'Plan B', tags: ['a', 'b'] });
   });
 
   test('an object reads at the newest version the client knows, and a query returns it once', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: ['a'] }));
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     await db.flush();
 
     const results = await db.query(Filter.or(Filter.type(TaskV1), Filter.type(TaskV2), Filter.type(TaskV3))).run();
@@ -127,7 +169,7 @@ describe('version documents', () => {
       task.done = true;
     });
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     const v1 = await versionDoc(db, id, '0.1.0');
     expect(dataOf(v1.doc(), id)).toEqual({ title: 'Plan', tags: ['a', 'b'] });
     // A translation written into v1 does not pull the object back onto it.
@@ -139,10 +181,10 @@ describe('version documents', () => {
   });
 
   test('a query returns each object once, at the newest version it names, so a limit is not short', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const ids = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TaskV1, { title, tags: [] })).id);
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     await db.flush({ indexes: true });
 
     const all = Filter.or(Filter.type(TaskV1), Filter.type(TaskV2), Filter.type(TaskV3));
@@ -155,10 +197,10 @@ describe('version documents', () => {
   });
 
   test('a query for an older version returns the object at that version', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: ['a'] }));
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     await db.flush({ indexes: true });
 
     const olds = await db.query(Filter.type(TaskV1)).run();
@@ -183,17 +225,17 @@ describe('version documents', () => {
       old.tags.push('b');
     });
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     expect([...current.labels]).toEqual(['a', 'b']);
     expect([...old.tags]).toEqual(['a', 'b']);
   });
 
   test('a typed reference resolves to its target at the version the schema names', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
     const oldBoard = db.add(Obj.make(OldBoard, { task: Ref.make(task), backlog: [Ref.make(task)] }));
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     const current = await db.version(task, TaskV3);
     invariant(current, 'no v3 of the task');
     const newBoard = db.add(Obj.make(NewBoard, { task: Ref.make(current) }));
@@ -221,10 +263,10 @@ describe('version documents', () => {
   });
 
   test('an object created at a newer version is linked at the oldest, which released apps read', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const task = db.add(Obj.make(TaskV3, { name: 'Fresh', labels: [], done: false }));
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     await db.flush();
 
     const root = db._getSpaceRootDocHandle().doc();
@@ -239,10 +281,10 @@ describe('version documents', () => {
   });
 
   test('document heads cover every version and branch document', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     const [task] = await db.query(Filter.type(TaskV3)).run();
     await createBranch(task, 'b1');
 
@@ -258,52 +300,24 @@ describe('version documents', () => {
     expect(heads).toEqual(expect.arrayContaining(urls.filter(isValidAutomergeUrl).map((url) => toDocumentId(url))));
   });
 
-  test('a second pass writes nothing', async () => {
-    const { db } = await builder.createDatabase({ types });
-    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
-    await db.flush();
-    await db.syncVersions(lenses);
-    // Changes the runner authors: roots and translations. The repo's own initial change of an imported
-    // document can arrive from the worker at any time, so heads alone do not show what a pass wrote.
-    const authored = async () =>
-      (
-        await Promise.all(
-          ['0.1.0', '0.2.0', '0.3.0'].map(async (version) =>
-            A.getChangesMetaSince((await versionDoc(db, task.id, version)).doc(), [])
-              .filter(({ message }) => message !== null)
-              .map(({ hash }) => hash),
-          ),
-        )
-      ).flat();
-    const before = await authored();
-    const rootHeads = A.getHeads(db._getSpaceRootDocHandle().doc()).join();
-    await db.syncVersions(lenses);
-    expect(await authored()).toEqual(before);
-    expect(A.getHeads(db._getSpaceRootDocHandle().doc()).join()).toBe(rootHeads);
-  });
-
-  test('watchVersions creates versions, routes the object and translates as it changes', async () => {
-    const { db } = await builder.createDatabase({ types });
+  test('the host creates versions, routes the object and translates as it changes', async () => {
+    const { db } = await builder.createDatabase({ types, registry: lenses });
     const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
     await db.flush();
-    const unwatch = db.watchVersions(() => lenses, { debounceMs: 10 });
-    try {
-      await waitForCondition({
-        condition: async () => (await db.query(Filter.type(TaskV3)).run()).length === 1,
-        timeout: 5_000,
-      });
-      const [task] = await db.query(Filter.type(TaskV3)).run();
-      Obj.update(task, (task) => {
-        task.labels.push('watched');
-      });
-      const v1 = await versionDoc(db, id, '0.1.0');
-      await waitForCondition({
-        condition: () => JSON.stringify(dataOf(v1.doc(), id).tags) === '["watched"]',
-        timeout: 5_000,
-      });
-    } finally {
-      unwatch();
-    }
+    await waitForCondition({
+      condition: async () => (await db.query(Filter.type(TaskV3)).run()).length === 1,
+      timeout: 10_000,
+    });
+    const [task] = await db.query(Filter.type(TaskV3)).run();
+    Obj.update(task, (task) => {
+      task.labels.push('watched');
+    });
+    await db.flush();
+    const v1 = await versionDoc(db, id, '0.1.0');
+    await waitForCondition({
+      condition: () => JSON.stringify(dataOf(v1.doc(), id).tags) === '["watched"]',
+      timeout: 10_000,
+    });
   });
 });
 
@@ -333,10 +347,10 @@ describe('version documents on branches', () => {
     dataOf((await versionDoc(db, objectId, version)).doc(), objectId);
 
   test('a branch forks every version, translates within itself and merges back version by version', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
     const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     const [task] = await db.query(Filter.type(TaskV3)).run();
 
     await createBranch(task, 'b1');
@@ -349,18 +363,18 @@ describe('version documents on branches', () => {
       task.labels.push('branch');
     });
     await db.flush();
-    await db.syncVersions(lenses);
+    await settle(host, db);
     expect((await branchData(db, id, 'b1', '0.1.0')).tags).toEqual(['branch']);
     expect((await mainData(db, id, '0.1.0')).tags).toEqual([]);
 
     await mergeBranch(task, 'b1');
-    await db.syncVersions(lenses);
+    await settle(host, db);
     expect((await mainData(db, id, '0.3.0')).labels).toEqual(['branch']);
     expect((await mainData(db, id, '0.1.0')).tags).toEqual(['branch']);
   });
 
   test('a branch opened before an upgrade gains the new versions and merges back once', async () => {
-    const { db } = await builder.createDatabase({ types });
+    const { db, host } = await builder.createDatabase({ types });
     const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
     await db.flush();
     await createBranch(task, 'b1');
@@ -370,12 +384,14 @@ describe('version documents on branches', () => {
     });
     await db.flush();
 
-    await db.syncVersions(lenses);
+    // The upgrade: this client's lenses arrive after the branch was opened.
+    db.graph.registry.add(lenses);
+    await settle(host, db);
     expect((await branchData(db, task.id, 'b1', '0.3.0')).labels).toEqual(['branch']);
     expect((await mainData(db, task.id, '0.3.0')).labels).toEqual([]);
 
     await mergeBranch(task, 'b1');
-    await db.syncVersions(lenses);
+    await settle(host, db);
     expect((await mainData(db, task.id, '0.1.0')).tags).toEqual(['branch']);
     expect((await mainData(db, task.id, '0.3.0')).labels).toEqual(['branch']);
   });

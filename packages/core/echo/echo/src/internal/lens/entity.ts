@@ -37,7 +37,8 @@ const Entry = Schema.Union([
 
 type Entry = Schema.Schema.Type<typeof Entry>;
 
-const StoredStruct = Schema.Struct({
+/** The data of a stored lens. */
+export const StoredData = Schema.Struct({
   /** The lens's name, from its endpoints. */
   name: Schema.String,
   /** URI of the source type. */
@@ -57,13 +58,13 @@ const StoredStruct = Schema.Struct({
 });
 
 /** The schema of a stored lens. */
-export const Stored = StoredStruct.pipe(
+export const Stored = StoredData.pipe(
   Annotation.LabelAnnotation.set(['name']),
   EchoLensKindSchema(DXN.make('org.dxos.type.lens', '0.1.0')),
 );
 
 /** A lens stored in a space. */
-export type Stored = Schema.Schema.Type<typeof StoredStruct> & {
+export type Stored = Schema.Schema.Type<typeof StoredData> & {
   readonly id: string;
   readonly [KindId]: EntityKind.Lens;
 };

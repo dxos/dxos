@@ -28,6 +28,11 @@
       "types": "./dist/types/src/filter/index.d.ts",
       "import": "./dist/lib/filter.mjs"
     },
+    "./versions": {
+      "source": "./src/versions/index.ts",
+      "types": "./dist/types/src/versions/index.d.ts",
+      "import": "./dist/lib/versions.mjs"
+    },
     "./query": {
       "source": "./src/query/planner.ts",
       "types": "./dist/types/src/query/planner.d.ts",
@@ -69,6 +74,7 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
+    "@noble/hashes": "catalog:",
     "bs58check": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:"
