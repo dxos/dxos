@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -41,7 +41,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
           label={t('close-companion.label')}
           variant='ghost'
           icon='ph--x--regular'
-          onClick={handleCloseCompanion}
+          onClick={() => void handleCloseCompanion()}
           classNames={plankControlSpacing}
         />
       </div>
@@ -49,19 +49,22 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
   },
 );
 
-const PlankControl = ({
-  icon,
-  label,
-  ...props
-}: Omit<Next.ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return <Next.Button label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
+type PlankControlProps = Pick<ComponentPropsWithoutRef<typeof Next.Button>, 'variant' | 'classNames' | 'disabled'> & {
+  label: string;
+  icon: string;
+  onClick?: () => void;
+  'data-testid'?: string;
+};
+
+const PlankControl = ({ icon, label, variant = 'ghost', ...props }: PlankControlProps) => {
+  return <Next.Button {...props} label={label} icon={icon} iconOnly variant={variant} tooltipSide='bottom' />;
 };
 
 //
 // PlankControls
 //
 
-export type PlankControlsProps = Omit<Next.GroupProps, 'onClick'> & {
+export type PlankControlsProps = Omit<ComponentPropsWithoutRef<typeof Next.Group>, 'onClick'> & {
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';

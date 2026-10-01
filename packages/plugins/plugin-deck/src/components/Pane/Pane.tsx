@@ -6,7 +6,7 @@ import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
-import { DensityProvider, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
+import { type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { Next } from '@dxos/react-ui/next';
 import { iconSize, mx } from '@dxos/ui-theme';
@@ -36,7 +36,7 @@ const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props
       role: 'article',
       // No `dx-density-*` here: the class sets `--dx-control` for the whole subtree, so a pane-wide
       // `lg` reached the content body and rendered form labels and inputs at 40px. The toolbar gets
-      // `lg` from its own `DensityProvider` (see `Pane.Toolbar`); the body keeps the `md` default.
+      // `lg` from its own size scope (see `Pane.Toolbar`); the body keeps the `md` default.
       classNames: 'dx-expand flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all',
     })}
     ref={forwardedRef}
@@ -57,11 +57,13 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
       asChild={asChild}
       {...composableProps(props, {
         style: iconSize(5),
-        classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
+        // `nx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
+        classNames: 'nx-scope flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
       })}
+      data-size='lg'
       ref={forwardedRef}
     >
-      <DensityProvider size='lg'>{children}</DensityProvider>
+      {children}
     </ark.div>
   );
 });

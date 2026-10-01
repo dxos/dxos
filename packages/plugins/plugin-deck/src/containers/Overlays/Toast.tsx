@@ -33,16 +33,12 @@ export const Toast = ({
 
   return (
     <Next.Toast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
-      <Next.Toast.Title icon={icon} onClose={() => handleOpenChange(false)}>
-        {title && <span>{toLocalizedString(title, t)}</span>}
-      </Next.Toast.Title>
+      <Next.Toast.Header icon={icon}>{title && toLocalizedString(title, t)}</Next.Toast.Header>
       {description && <Next.Toast.Description>{toLocalizedString(description, t)}</Next.Toast.Description>}
       {onAction && actionAlt && actionLabel && (
         <Next.Toast.Footer>
-          <Next.Toast.ActionTrigger asChild>
-            <Next.Button data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
-              {toLocalizedString(actionLabel, t)}
-            </Next.Button>
+          <Next.Toast.ActionTrigger data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
+            {toLocalizedString(actionLabel, t)}
           </Next.Toast.ActionTrigger>
         </Next.Toast.Footer>
       )}

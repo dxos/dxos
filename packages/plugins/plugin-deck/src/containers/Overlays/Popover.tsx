@@ -7,13 +7,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { createContext } from '@dxos/react-hooks';
-import {
-  type PopoverContentInteractOutsideEvent,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
+import { toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
@@ -35,18 +29,11 @@ const CardFallback = ({ error }: { error: Error }) => (
   </Next.Card.Body>
 );
 
-type DeckPopoverContextValue = {
-  setOpen: (open: boolean) => void;
-};
-
-const [DeckPopoverProvider, useDeckPopoverContext] = createContext<DeckPopoverContextValue>('DeckPopover');
-
 export type PopoverRootProps = PropsWithChildren;
 
 export const PopoverRoot = ({ children }: PopoverRootProps) => {
-  const { state } = useDeckState();
-  const virtualRef = useRef<HTMLButtonElement | null>(null);
-  const [virtualIter, setVirtualIter] = useState(0);
+  const { state, updateEphemeral } = useDeckState();
+  const virtualRef = useRef<Element | null>(null);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -58,31 +45,64 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
-      if (state.popoverAnchor && virtualRef.current !== state.popoverAnchor) {
-        virtualRef.current = state.popoverAnchor ?? null;
-        setVirtualIter((iter) => iter + 1);
+      if (state.popoverAnchor) {
+        virtualRef.current = state.popoverAnchor;
       }
       debounceRef.current = setTimeout(() => setOpen(true), DEBOUNCE_DELAY);
     }
   }, [state.popoverOpen, state.popoverAnchorId, state.popoverAnchor, state.popoverContent]);
 
+  const isRename = state.popoverKind === 'rename';
   // The rename popover is modal so other navtree item menus are inert while it is open.
-  const modal = state.popoverKind === 'rename';
+  const modal = isRename;
+  // Anchor to the right of the row on wide displays; drop centered below on narrow ones.
+  const [isLg] = useMediaQuery('lg', { fallback: [true] });
+  const side = isRename ? (isLg ? 'right' : 'bottom') : state.popoverSide;
+
+  const handleOpenChange = useCallback(
+    ({ open }: { open: boolean }) => {
+      if (open) {
+        return;
+      }
+      setOpen(false);
+      updateEphemeral((state) => ({
+        ...state,
+        popoverOpen: false,
+        popoverAnchor: undefined,
+        popoverAnchorId: undefined,
+        popoverSide: undefined,
+      }));
+    },
+    [updateEphemeral],
+  );
+
+  // Focus leaving the popover (into a portaled menu, or CodeMirror re-focusing itself) must not dismiss it: only a
+  // pointer-down outside the card, or Escape, closes. Layers spawned from the card (its menu, a select) are the
+  // machine's nested layers, so a press inside one is not outside.
+  const handleFocusOutside = useCallback((event: Event) => event.preventDefault(), []);
 
   return (
-    <DeckPopoverProvider setOpen={setOpen}>
-      <Next.Popover.Root modal={modal} open={open}>
-        {state.popoverAnchor && <Next.Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
-        {children}
-      </Next.Popover.Root>
-    </DeckPopoverProvider>
+    <Next.Popover.Root
+      modal={modal}
+      open={open}
+      // The trigger was the row that asked for the popover; the rename field takes focus, a card does not.
+      autoFocus={isRename}
+      positioning={{
+        ...(state.popoverAnchor ? Next.virtualAnchor(virtualRef) : {}),
+        placement: side,
+        hideWhenDetached: true,
+      }}
+      onFocusOutside={handleFocusOutside}
+      onOpenChange={handleOpenChange}
+    >
+      {children}
+    </Next.Popover.Root>
   );
 };
 
 export const PopoverContent = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { state, updateEphemeral } = useDeckState();
-  const { setOpen } = useDeckPopoverContext('PopoverContent');
+  const { state } = useDeckState();
   const popoverSubject =
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
   const isObjectPopover = Obj.isObject(popoverSubject);
@@ -103,59 +123,10 @@ export const PopoverContent = () => {
     (state.popoverKind === 'base' || state.popoverKind === 'rename') && !!content && 'component' in content;
   const isRename = state.popoverKind === 'rename';
 
-  // Anchor to the right of the row on wide displays; drop centered below on narrow ones.
-  const [isLg] = useMediaQuery('lg', { fallback: [true] });
-  const side = isRename ? (isLg ? 'right' : 'bottom') : state.popoverSide;
-
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    updateEphemeral((state) => ({
-      ...state,
-      popoverOpen: false,
-      popoverAnchor: undefined,
-      popoverAnchorId: undefined,
-      popoverSide: undefined,
-    }));
-  }, [updateEphemeral]);
-
-  const handleInteractOutside = useCallback(
-    (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
-      // Focus leaving the popover (clicking into the card surfaces a portaled menu, or CodeMirror
-      // re-focusing itself) must not dismiss it — only a pointer-down genuinely outside the card, or
-      // Escape, closes. (Clicks inside the card never reach here; Radix scopes them to the content.)
-      if (event.type === 'dismissableLayer.focusOutside') {
-        event.preventDefault();
-        return;
-      }
-      // A pointer-down inside a PORTALED layer spawned from the card (its ⋮ menu, a select) is not
-      // "outside" either — Radix's own nested-layer coordination cannot be relied on here because
-      // the workspace resolves several copies of react-dismissable-layer (vendored popover + menu
-      // forks), whose module-level layer registries are disjoint.
-      if ('detail' in event && typeof event.detail === 'object' && event.detail !== null) {
-        const target = event.detail.originalEvent.target;
-        if (
-          target instanceof Element &&
-          target.closest('[data-radix-popper-content-wrapper], [data-radix-menu-content]')
-        ) {
-          event.preventDefault();
-          return;
-        }
-      }
-      handleClose();
-    },
-    [handleClose],
-  );
-
   const roundedClassNames = 'rounded-sm';
 
   return (
     <Next.Popover.Content
-      side={side}
-      border
-      hideWhenDetached
-      onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
-      onInteractOutside={handleInteractOutside}
-      onEscapeKeyDown={handleInteractOutside}
       classNames={[
         roundedClassNames,
         !isRename && [

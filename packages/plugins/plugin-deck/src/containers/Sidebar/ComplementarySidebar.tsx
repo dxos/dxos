@@ -158,8 +158,8 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
 
   return (
     <Next.Panel.Root>
-      <Next.Panel.Header size='lg'>
-        <Next.Toolbar.Root style={iconSize(5)} classNames='dx-header-surface'>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root size='lg' style={iconSize(5)} classNames='dx-header-surface'>
           <Next.Button
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
             label={toLocalizedString(companion.properties.label, t)}
