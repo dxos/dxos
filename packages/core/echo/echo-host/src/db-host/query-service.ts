@@ -48,6 +48,30 @@ export type QueryServiceProps = {
   executor?: QueryExecutorMode;
   /** Resolved lazily, like `indexEngine`: the client exists only once the host is open. */
   sql: () => SqlClient.SqlClient;
+
+  /** Overrides {@link DEFAULT_QUERY_DEBOUNCE}. */
+  debounce?: Partial<QueryDebounceOptions>;
+};
+
+/**
+ * How long a live query waits before re-running, in proportion to what its last run cost, so one
+ * heavy query re-executing on every write cannot starve the cheap queries and writes sharing its worker.
+ */
+export type QueryDebounceOptions = {
+  /** Debounce window per millisecond of the last run: at 4 a query spends at most a fifth of the time running. */
+  factor: number;
+  /** Queries whose last run was cheaper than this (ms) re-run as soon as they are invalidated. */
+  minCost: number;
+  /** Ceiling on a debounce window (ms), so a very slow query still refreshes. */
+  maxDelay: number;
+  /** Cost (ms) charged for a run; defaults to its wall-clock time, which tests replace to be deterministic. */
+  cost?: (query: QueryAST.Query, measured: number) => number;
+};
+
+export const DEFAULT_QUERY_DEBOUNCE: QueryDebounceOptions = {
+  factor: 4,
+  minCost: 16,
+  maxDelay: 5_000,
 };
 
 /**
@@ -67,6 +91,12 @@ type ActiveQuery = {
   /** Query reads from at least one feed scope, so its first result must await indexing. */
   feedScoped: boolean;
 
+  /** Cost (ms) of the last run; 0 until the query has run. */
+  cost: number;
+
+  /** `performance.now()` before which an invalidated query is left dirty rather than re-run. */
+  debouncedUntil: number;
+
   sendResults: (results: QueryService.QueryResult[]) => void;
   onError: (err: Error) => void;
 
@@ -81,6 +111,8 @@ type QueryInvalidationStats = {
   totalExecutionBatches: number;
   averageDirtyPerBatch: number;
   averageQueriesActive: number;
+  /** Times a dirty query was left for a later batch because its debounce window was still open. */
+  totalDebounced: number;
 };
 
 export class QueryServiceImpl extends Resource implements QueryService.Handlers {
@@ -121,11 +153,22 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     totalExecutionBatches: 0,
     averageDirtyPerBatch: 0,
     averageQueriesActive: 0,
+    totalDebounced: 0,
   };
+
+  readonly #debounce: QueryDebounceOptions;
+
+  /** Set by {@link awaitQueryUpdates}: the next batch runs debounced queries too. */
+  #flushDebounced = false;
+
+  /** Wakes the scheduler when the earliest debounce window closes. */
+  #wakeTimer: ReturnType<typeof setTimeout> | undefined;
+  #wakeAt = Infinity;
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   'constructor'(private readonly _params: QueryServiceProps) {
     super();
+    this.#debounce = { ...DEFAULT_QUERY_DEBOUNCE, ..._params.debounce };
 
     trace.diagnostic({
       id: 'active-queries',
@@ -154,6 +197,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
 
   @synchronized
   override async '_close'(): Promise<void> {
+    this.#clearWake();
     await this._updateQueries.join();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
@@ -222,13 +266,18 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
 
   /**
    * Resolves once every query invalidated so far has re-run and sent its results, so a caller that
-   * waited for the index also sees the queries it changed.
+   * waited for the index also sees the queries it changed. Debounced queries run now rather than
+   * when their window closes.
    */
   async 'awaitQueryUpdates'(): Promise<void> {
-    if (this._updateQueries.scheduled) {
+    await this._updateQueries.join();
+    const pending =
+      this._updateQueries.scheduled ||
+      this.#pendingHint !== null ||
+      Array.from(this._queries).some((query) => query.open && query.dirty);
+    if (pending) {
+      this.#flushDebounced = true;
       await this._updateQueries.runBlocking();
-    } else {
-      await this._updateQueries.join();
     }
   }
 
@@ -256,6 +305,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       open: false,
       firstResult: true,
       feedScoped: queryHasFeedScope(parsedQuery),
+      cost: 0,
+      debouncedUntil: 0,
       sendResults: (results) => {
         if (ctx.disposed) {
           return;
@@ -297,32 +348,35 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       }
     }
 
-    const begin = performance.now();
-    let dirtyCount = 0;
-    const activeCount = this._queries.size;
-    await Promise.all(
-      Array.from(this._queries).map(async (query) => {
-        if (!query.dirty || !query.open) {
-          return;
-        }
-        dirtyCount++;
+    const flush = this.#flushDebounced;
+    this.#flushDebounced = false;
 
-        try {
-          const { changed } = await query.executor.execQuery();
-          query.dirty = false;
-          if (changed || query.firstResult) {
-            query.firstResult = false;
-            query.sendResults(query.executor.getResults());
-          }
-        } catch (err) {
-          log.catch(err, {
-            queryId: query.executor.queryId,
-            query: JSON.stringify(query.executor.query),
-          });
-          query.onError(err as Error);
-        }
-      }),
-    );
+    const begin = performance.now();
+    const activeCount = this._queries.size;
+    const ready: ActiveQuery[] = [];
+    const deferred: ActiveQuery[] = [];
+    for (const query of this._queries) {
+      if (!query.dirty || !query.open) {
+        continue;
+      }
+      if (!flush && !query.firstResult && query.debouncedUntil > begin) {
+        deferred.push(query);
+      } else {
+        ready.push(query);
+      }
+    }
+    this.#stats.totalDebounced += deferred.length;
+
+    // Cheap queries finish before expensive ones start: the worker serializes statements, so running
+    // them together would delay the cheap results and charge the expensive run's time to them.
+    ready.sort((left, right) => left.cost - right.cost);
+    const cheap = ready.filter((query) => query.cost < this.#debounce.minCost);
+    const expensive = ready.filter((query) => query.cost >= this.#debounce.minCost);
+    await Promise.all(cheap.map((query) => this.#runQuery(query)));
+    await Promise.all(expensive.map((query) => this.#runQuery(query)));
+    const dirtyCount = ready.length;
+
+    this.#scheduleWake(deferred);
 
     this.#stats.totalExecutionBatches++;
     this.#stats.totalDirtyQueriesExecuted += dirtyCount;
@@ -332,6 +386,61 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       this.#stats.totalExecutionBatches;
 
     log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration: performance.now() - begin });
+  }
+
+  async #runQuery(query: ActiveQuery): Promise<void> {
+    try {
+      const begin = performance.now();
+      const { changed } = await query.executor.execQuery();
+      const finishedAt = performance.now();
+      query.cost = this.#debounce.cost?.(query.executor.query, finishedAt - begin) ?? finishedAt - begin;
+      query.debouncedUntil =
+        query.cost < this.#debounce.minCost
+          ? 0
+          : finishedAt + Math.min(this.#debounce.factor * query.cost, this.#debounce.maxDelay);
+      query.dirty = false;
+      if (changed || query.firstResult) {
+        query.firstResult = false;
+        query.sendResults(query.executor.getResults());
+      }
+    } catch (err) {
+      log.catch(err, {
+        queryId: query.executor.queryId,
+        query: JSON.stringify(query.executor.query),
+      });
+      query.onError(err as Error);
+    }
+  }
+
+  /** Arms a wake-up for the earliest deferred query, so its pending invalidation is not lost. */
+  #scheduleWake(deferred: ActiveQuery[]): void {
+    let wakeAt = Infinity;
+    for (const query of deferred) {
+      if (query.open && query.dirty) {
+        wakeAt = Math.min(wakeAt, query.debouncedUntil);
+      }
+    }
+    if (wakeAt === Infinity || wakeAt >= this.#wakeAt || this._ctx.disposed) {
+      return;
+    }
+    this.#clearWake();
+    this.#wakeAt = wakeAt;
+    this.#wakeTimer = setTimeout(
+      () => {
+        this.#wakeTimer = undefined;
+        this.#wakeAt = Infinity;
+        if (!this._ctx.disposed) {
+          this._updateQueries.schedule();
+        }
+      },
+      Math.max(0, wakeAt - performance.now()),
+    );
+  }
+
+  #clearWake(): void {
+    clearTimeout(this.#wakeTimer);
+    this.#wakeTimer = undefined;
+    this.#wakeAt = Infinity;
   }
 }
 
