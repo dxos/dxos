@@ -252,3 +252,21 @@ export const Test: Story = {
     await expect(settings.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
   },
 };
+
+/** A toolbar that is also a landmark (an app bar) keeps the `role` it is given; arrows still move between its items. */
+export const Banner: Story = {
+  render: () => (
+    <Next.Toolbar.Root role='banner'>
+      <Next.Button label='Back' />
+      <Next.Button label='Menu' />
+    </Next.Toolbar.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('banner')).toBeInTheDocument();
+    const back = canvas.getByRole('button', { name: 'Back' });
+    back.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Menu' })).toHaveFocus());
+  },
+};

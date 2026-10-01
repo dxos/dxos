@@ -45,6 +45,7 @@ const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
     const service = useMachine(toolbar.machine, { id: useId(), orientation, loop, disabled });
     const api = toolbar.connect(service);
     const { className, ...rest } = composableProps(props, { classNames: recipes.toolbar() });
+    const rootProps = api.getRootProps();
     return (
       <ToolbarContext.Provider value={api}>
         <ScrollArea.Root
@@ -58,7 +59,9 @@ const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
             <ToolbarElement
               asChild={asChild}
               {...rest}
-              {...api.getRootProps()}
+              {...rootProps}
+              // A toolbar that is also a landmark (an app bar's `banner`) keeps the role it is given.
+              role={rest.role ?? rootProps.role}
               data-size={size}
               classNames={className}
               ref={forwardedRef}
