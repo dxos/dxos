@@ -1215,15 +1215,12 @@ returns each object at the newest version the reader knows.
    documents are recorded where they already look: under reserved branch names
    (`branches[objectId]['@v<version>']`), which every release that ships branching replicates and never
    materializes as extra objects. Releases older than branching cannot sync them.
-2. **The host resolves versions from the requesting client's registry.** Today the host has no schema
-   registry (types reach it only as strings). Open PR #13284 ("echo: index the client registry on the
-   host") pushes each client's registry to the host as an indexed data source, keyed by `clientId`,
-   with types identified by `name` and `version` as separate entries. With it, the query executor resolves
-   each object id to one document: the version the query names, else the newest version that the
-   requesting client's registry holds among those the object has. Results are never duplicated and limits
-   are not shortchanged. Resolve against the requesting client, not the host's union of clients: two tabs
-   of different app builds can share a host. Until #13284 lands, the same resolution runs with the
-   client's known versions sent in `QueryAST.QueryOptions`.
+2. **The query names the versions its reader knows** (revised 2026-10-01). Each client sends the type
+   URIs its lenses know as `QueryOptions.versions`, and the host resolves each object once over the
+   query's own matches against them. The option travels with the request, so it is exactly the requesting
+   client's knowledge (two tabs of different builds can share a host), it cannot race the asynchronous
+   registry push of #13284, and the query path needs no registry lookup. #13284 is therefore not needed
+   for this.
 3. **"Update to open" for unreadable newer versions is out of scope.**
 4. **Branches of a versioned object: the simplest rule.** A branch forks every version document of each
    member (registry `members[objectId]` becomes a per-version map), translation runs inside the branch as

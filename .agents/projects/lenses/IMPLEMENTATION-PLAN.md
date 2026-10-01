@@ -104,12 +104,15 @@ Lens chains start at the version current when lenses are introduced for a type (
 released apps never migrate the version `links` names in place; a type with lenses gets no new in-place
 migrations.
 
+Known versions travel with each query as `QueryOptions.versions` (item 7, 2026-10-01; DESIGN.md §12.5
+decision 2 revised): exact for the requesting client and free of the registry push's timing, so version
+resolution does not depend on #13284.
+
 Not yet done:
 
 - Deferred (2026-10-01) pending evaluation: wiring `watchVersions` into plugin-client and lenses as data.
   Version lenses are meant to replace in-place migrations once steps 2–4 cover what migrations express
   (lists/maps/text, opaque one-way transforms, multi-object); until then the in-place runner stays.
-- The host takes the versions from the query until #13284 lands, then from the client's registry.
 
 **Carried over from the in-place work:** per-edit translation and list/text rebasing (`fold-edit.ts`),
 byte-identical authoring (`ObjectCore.sharedChangeAt`), originals-only folding and ancestor-image forks,
