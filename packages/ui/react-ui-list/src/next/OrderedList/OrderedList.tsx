@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import React, {
   Children,
   type ComponentPropsWithoutRef,
@@ -265,16 +266,32 @@ OrderedListItem.displayName = 'OrderedList.Item';
 // DragHandle
 //
 
+type OrderedListDragHandleProps = {
+  /**
+   * Makes the single child the pointer drag source in place of the grip (e.g. a thumbnail a reader expects to grab);
+   * it carries `data-disabled` while dragging is off. The keyboard moves need the grip.
+   */
+  asChild?: boolean;
+  children?: ReactNode;
+};
+
 /**
  * The row's grip (`Next.DragHandle`): the pointer drag source and, from the keyboard (inside the entered row),
  * Alt+Arrow or grab-and-arrow moves. Disabled when the list is readonly or the row opts out.
  */
-const OrderedListDragHandle = () => {
+const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps) => {
   const { readonly, move } = useOrderedListContext('OrderedList.DragHandle');
   const { id, canDrag, handleRef } = useOrderedListItemContext('OrderedList.DragHandle');
-  return (
-    <Next.DragHandle disabled={readonly || !canDrag} onMove={(direction) => move(id, direction)} ref={handleRef} />
-  );
+  const disabled = readonly || !canDrag;
+  if (asChild) {
+    return (
+      <ark.div asChild data-disabled={disabled ? '' : undefined} ref={disabled ? undefined : handleRef}>
+        {children}
+      </ark.div>
+    );
+  }
+
+  return <Next.DragHandle disabled={disabled} onMove={(direction) => move(id, direction)} ref={handleRef} />;
 };
 
 OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
@@ -322,4 +339,10 @@ export const OrderedList: {
   ItemDescription: Next.Listbox.ItemDescription,
 };
 
-export type { OrderedListContentProps, OrderedListDetailProps, OrderedListItemProps, OrderedListRootProps };
+export type {
+  OrderedListContentProps,
+  OrderedListDetailProps,
+  OrderedListDragHandleProps,
+  OrderedListItemProps,
+  OrderedListRootProps,
+};

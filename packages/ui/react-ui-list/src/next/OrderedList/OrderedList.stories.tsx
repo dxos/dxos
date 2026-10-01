@@ -99,6 +99,28 @@ const SimpleStory = () => (
   </OrderedList.Root>
 );
 
+/** The row's whole preview is the drag source (`DragHandle asChild`), as in a stack of thumbnails. */
+const PreviewHandleStory = () => {
+  const [items, , move] = useItems(ITEMS);
+  return (
+    <OrderedList.Root items={items} getLabel={getLabel} onMove={move} dragPreview='clone'>
+      {({ items }) => (
+        <OrderedList.Content aria-label='Previews'>
+          {items.map((item) => (
+            <OrderedList.Item key={item.id} id={item.id}>
+              <OrderedList.DragHandle asChild>
+                <div className='p-2 rounded-sm bg-input-surface' data-testid={`preview-${item.id}`}>
+                  {item.label}
+                </div>
+              </OrderedList.DragHandle>
+            </OrderedList.Item>
+          ))}
+        </OrderedList.Content>
+      )}
+    </OrderedList.Root>
+  );
+};
+
 /** A long draggable list in a fixed-height host; the Content scrolls and auto-scrolls under a drag. */
 const ScrollableStory = () => {
   const [items, , move] = useItems(LONG);
@@ -302,6 +324,15 @@ export const Scrollable: Story = { render: () => <ScrollableStory /> };
 export const CheckboxWithRemove: Story = { render: () => <CheckboxWithRemoveStory /> };
 
 export const Nested: Story = { render: () => <NestedStory /> };
+
+/** The child of `DragHandle asChild` is the row's drag source. */
+export const PreviewHandle: Story = {
+  render: () => <PreviewHandleStory />,
+  play: async ({ canvasElement }) => {
+    const preview = await within(canvasElement).findByTestId(`preview-${ITEMS[0].id}`);
+    await waitFor(() => expect(preview.closest('[draggable="true"]')).not.toBeNull());
+  },
+};
 
 /**
  * 1. Rows are `option`s of a `listbox` named by its Label, each the pointer drag source (`draggable`) through its handle.
