@@ -19,34 +19,48 @@ export type MessageArticleSurfaceProps = {
   role: string;
   subject: Message.Message;
   attendableId: string;
+  nodeId?: string;
 };
 
 /** Resolves the mailbox that scopes a message's conversation from the graph. */
-export const MessageArticleSurface = ({ role, subject, attendableId }: MessageArticleSurfaceProps) => {
+export const MessageArticleSurface = ({
+  role,
+  subject,
+  attendableId,
+  nodeId = attendableId,
+}: MessageArticleSurfaceProps) => {
   const { graph } = useAppGraph();
-  const parent = useNode(graph, parentId(attendableId));
+  const parent = useNode(graph, parentId(nodeId));
   // A message lives under its mailbox view; every mailbox view carries the mailbox as its node
   // `data`, so use that (not `properties.mailbox`, which only some views set) to scope the
   // conversation lookup in MessageArticle.
   const mailbox = Mailbox.instanceOf(parent?.data) ? parent.data : undefined;
 
-  return <MessageArticle role={role} subject={subject} attendableId={attendableId} mailbox={mailbox} />;
+  return <MessageArticle role={role} subject={subject} attendableId={attendableId} nodeId={nodeId} mailbox={mailbox} />;
 };
 
 export type EventArticleSurfaceProps = {
   role: string;
   subject: Event.Event;
   attendableId: string;
+  nodeId?: string;
 };
 
 /** Resolves the calendar an event belongs to; renders nothing when none is found. */
-export const EventArticleSurface = ({ role, subject, attendableId }: EventArticleSurfaceProps) => {
+export const EventArticleSurface = ({
+  role,
+  subject,
+  attendableId,
+  nodeId = attendableId,
+}: EventArticleSurfaceProps) => {
   const { graph } = useAppGraph();
-  const parentNode = useNode(graph, parentId(attendableId));
+  const parentNode = useNode(graph, parentId(nodeId));
   const calendar = Calendar.instanceOf(parentNode?.data) ? parentNode.data : undefined;
   if (!calendar) {
     return null;
   }
 
-  return <EventArticle role={role} subject={subject} attendableId={attendableId} companionTo={calendar} />;
+  return (
+    <EventArticle role={role} subject={subject} attendableId={attendableId} nodeId={nodeId} companionTo={calendar} />
+  );
 };

@@ -82,7 +82,7 @@ export default Capability.makeModule(() =>
         id: 'article.task',
         filter: AppSurface.object(AppSurface.Article, Task.Task),
         component: TaskArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'article.taskSet',

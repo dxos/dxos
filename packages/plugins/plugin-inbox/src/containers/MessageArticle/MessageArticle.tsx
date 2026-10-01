@@ -59,6 +59,7 @@ export const MessageArticle = ({
   role,
   subject,
   attendableId,
+  nodeId = attendableId,
   mailbox,
   testId,
   onOpenAttachment,
@@ -300,12 +301,12 @@ export const MessageArticle = ({
       if (mailbox && db) {
         void invoker.invokePromise(LayoutOperation.Open, {
           subject: [getMailboxAttachmentPath(db.spaceId, mailbox.id, message.id, index)],
-          pivotId: attendableId,
+          pivotId: nodeId,
           disposition: 'detail',
         });
       }
     },
-    [onOpenAttachment, invoker, mailbox, db, attendableId],
+    [onOpenAttachment, invoker, mailbox, db, nodeId],
   );
 
   const handleArchived = useCallback(
@@ -322,6 +323,7 @@ export const MessageArticle = ({
   return (
     <ConversationStack.Root
       attendableId={attendableId}
+      nodeId={nodeId}
       items={orderedMessages}
       summaries={summaries}
       conversationSummary={conversationSummary}

@@ -27,7 +27,7 @@ export default Capability.makeModule(
         id: 'detailCompanion',
         filter: AppSurface.subject(AppSurface.Article, CompanionViewState.isDetailData),
         component: DetailCompanion,
-        props: ({ role, data: { subject } }) => ({ role, detail: subject.detail }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, attendableId, detail: subject.detail }),
       }),
       Surface.create({
         id: 'notFound',

@@ -38,7 +38,7 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * A file dropped or pasted anywhere over the pane is stored and attached (`Task.attachments`), when
  * a plugin that can store files is present.
  */
-export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticleProps) => {
+export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
@@ -132,7 +132,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   task={task}
                   canAttach={!!handleAttach}
                   pending={pendingAttachments}
-                  detailOf={attendableId}
+                  detailOf={nodeId}
                 />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />

@@ -75,7 +75,7 @@ export default Capability.makeModule(() =>
           AppSurface.subject(AppSurface.Section, isNonDraftMessage),
         ),
         component: MessageArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'attachment',
@@ -97,7 +97,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Event.Event),
         ),
         component: EventArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'calendar',

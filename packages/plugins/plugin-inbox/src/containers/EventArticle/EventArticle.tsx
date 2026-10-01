@@ -27,7 +27,13 @@ const NOT_STARRED = Atom.make(false);
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
-export const EventArticle = ({ role, subject, attendableId, companionTo: calendar }: EventArticleProps) => {
+export const EventArticle = ({
+  role,
+  subject,
+  attendableId,
+  nodeId = attendableId,
+  companionTo: calendar,
+}: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const db = Obj.getDatabase(calendar);
@@ -95,7 +101,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   }, [invokePromise, event]);
 
   return (
-    <Event.Root event={event} attendableId={attendableId} nodeId={attendableId}>
+    <Event.Root event={event} attendableId={attendableId} nodeId={nodeId}>
       <ObjectArticle
         role={role}
         toolbar={
