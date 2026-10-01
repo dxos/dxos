@@ -294,8 +294,8 @@ const FeedPaginationStory = () => {
               <Next.Field.Root>
                 <Next.NumberInput
                   min={1}
-                  value={addCount}
-                  onChange={(event) => setAddCount(event.target.valueAsNumber || 0)}
+                  value={String(addCount)}
+                  onValueChange={(_, valueAsNumber) => setAddCount(valueAsNumber || 0)}
                   classNames='w-full'
                 />
               </Next.Field.Root>
