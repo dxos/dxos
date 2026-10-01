@@ -41,6 +41,9 @@ const PACKAGES = [
   'typescript@^7.0.2',
 ];
 
+/** The toolchain install takes five to ten minutes; the service allows fifteen. */
+const INSTALL_TIMEOUT_MS = 15 * 60 * 1_000;
+
 const GUIDE_PATH = 'docs/src/content/docs/docs/composer/publishing-plugins.md';
 
 type TaskSeed = Pick<Task.Task, 'title' | 'description' | 'estimate'>;
@@ -60,10 +63,8 @@ Use the Sandbox skill: every command runs in one sandbox, a container on EDGE, w
 Pass that sandbox to every call. Work in \`${PLUGIN_DIR}\`, never under \`/workspace\`, and pass \`cwd\` \
 rather than \`cd\`. Write files with a quoted bash heredoc.
 
-A command that runs for more than a minute (an install, a build) must be started with \
-\`background: true\`, its output redirected to a log file, and a marker file written when it ends; then \
-poll the marker and read the log with short commands. A long command held open loses its connection \
-while it keeps running, and its output is lost with it.
+A command's output streams back while it runs, so a long one (an install) runs in one call: pass a \
+\`timeout\` long enough for it rather than splitting it up.
 
 Plugin, group, page and surface ids are camelCase: a hyphenated id is dropped without an error, \
 and the plugin then loads with nothing to show.`;
@@ -73,7 +74,7 @@ const makeSteps = (ref: string): ReadonlyArray<TaskSeed> => {
   return [
     {
       title: 'Create the sandbox and install the toolchain',
-      description: `Create a sandbox named "World Clock". In \`${PLUGIN_DIR}\`, write a \`package.json\` of \`{"name":"world-clock","version":"0.1.0","private":true,"type":"module"}\`, then run in the background \`npm install --no-audit --no-fund ${dxos} ${PACKAGES.join(' ')} > install.log 2>&1; echo $? > install.done\`. It takes five to ten minutes: poll \`install.done\` until it exists, and read \`install.log\` if it is not \`0\`. A 404 from pkg.pr.new means this app was built from a commit that was never published there: run the install again with \`@main\` in place of \`@${ref}\`, and fetch the guide at \`main\` too.`,
+      description: `Create a sandbox named "World Clock". In \`${PLUGIN_DIR}\`, write a \`package.json\` of \`{"name":"world-clock","version":"0.1.0","private":true,"type":"module"}\`, then run \`npm install --no-audit --no-fund ${dxos} ${PACKAGES.join(' ')}\` with a \`timeout\` of ${INSTALL_TIMEOUT_MS}: it takes five to ten minutes. A 404 from pkg.pr.new means this app was built from a commit that was never published there: run the install again with \`@main\` in place of \`@${ref}\`, and fetch the guide at \`main\` too.`,
       estimate: 's',
     },
     {
@@ -93,7 +94,7 @@ const makeSteps = (ref: string): ReadonlyArray<TaskSeed> => {
     },
     {
       title: 'Serve and expose the plugin',
-      description: `Start \`python3 -m http.server ${PORT} --directory ${PLUGIN_DIR}/dist\` with \`background: true\`, then expose port ${PORT} with ExposePort. The manifest URL is the returned URL followed by \`manifest.json\`. Fetch it from the sandbox with \`curl -fsS\`: a server that started is not evidence that the app can reach it.`,
+      description: `Expose port ${PORT} with ExposePort, passing \`command\` \`python3 -m http.server ${PORT} --directory ${PLUGIN_DIR}/dist\`: the service starts the server, and starts it again after the sandbox sleeps. The manifest URL is the returned URL followed by \`manifest.json\`. Fetch it from the sandbox with \`curl -fsS\`: a server that started is not evidence that the app can reach it.`,
       estimate: 'xs',
     },
     {

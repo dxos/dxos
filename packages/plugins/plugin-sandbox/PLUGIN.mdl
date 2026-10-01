@@ -12,12 +12,16 @@ URL back to load — the Coding (Dev) template's demo without a locally served C
 
 ## Exposed ports
 
-A process started with `background: true` keeps running after `exec` returns. `exposePort` then issues
-`<edge>/sandbox/preview/<sandboxId>/<port>/<token>/`, which proxies any request below it to that port in
-the container with CORS for any origin and no `Authorization` — so a browser can fetch a manifest and
-import a module from it. The random token in the path is the only credential, and it is checked before the
-container is touched. The URL lives as long as the sandbox; a background process stops when the container
-sleeps after some minutes idle, and is started again with another `exec`.
+`exposePort` issues a URL that proxies any request to that port in the container with no `Authorization`,
+so a browser can fetch a manifest and import a module from it: on its own host,
+`https://<port>-<sandboxId>-<token><suffix>/` (`-dev.dx.pub` on dev, `.dx.pub` in production), or under
+`<edge>/sandbox/preview/<sandboxId>/<port>/<token>/` where an env has no preview hosts. The random token is
+the only credential, and it is checked before the container is touched. Given the `command` that serves
+the port, the service starts it when it is not running and again whenever the container has slept, so the
+URL lives as long as the sandbox.
+
+`exec` streams the command's output from the service and returns once it exits, so a command of several
+minutes runs in one call; a request answered only at the end lost its connection while the command ran.
 
 ## Backends
 
@@ -101,6 +105,8 @@ op exposePort
   input:
     sandbox: Ref<Sandbox>
     port: number         # 1024-65535, except 3000
+    command?: string     # serves the port; started now if not running, and again after the container restarts
+    cwd?: string
   output:
     url: string          # ends in `/`; the token in the path is the only credential
   effects: [sandbox:expose]

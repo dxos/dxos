@@ -102,6 +102,11 @@ export const ExposePort = Operation.make({
       .annotate({
         description: 'Port a process in the sandbox listens on: 1024-65535, except 3000.',
       }),
+    command: Schema.optional(Schema.String).annotate({
+      description:
+        'Command that serves the port, e.g. a static file server. The service starts it if it is not running and again whenever the container has restarted, so the URL keeps working after the sandbox sleeps.',
+    }),
+    cwd: Schema.optional(Schema.String).annotate({ description: 'Working directory of `command`.' }),
   }),
   output: Schema.Struct({
     url: Schema.String.annotate({

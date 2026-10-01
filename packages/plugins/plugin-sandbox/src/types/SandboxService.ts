@@ -9,7 +9,14 @@ import type * as Effect from 'effect/Effect';
 
 import { BaseError } from '@dxos/errors';
 
-import type { ExecRequest, ExecResult, ExposedPort, FileEntry, SandboxRecord } from '../services/SandboxClient.ts';
+import type {
+  ExecRequest,
+  ExecResult,
+  ExposedPort,
+  ExposePortOptions,
+  FileEntry,
+  SandboxRecord,
+} from '../services/SandboxClient.ts';
 
 /**
  * A sandbox request that could not be carried out — the backend failed, not the command: a command
@@ -35,7 +42,12 @@ export interface Backend {
   writeFile(spaceId: string, sandboxId: string, path: string, content: Uint8Array): Effect.Effect<void, SandboxError>;
   listFiles(spaceId: string, sandboxId: string, path: string): Effect.Effect<readonly FileEntry[], SandboxError>;
   /** Publishes `port` at a URL anyone holding it can load, with no credentials; local sandboxes cannot. */
-  exposePort(spaceId: string, sandboxId: string, port: number): Effect.Effect<ExposedPort, SandboxError>;
+  exposePort(
+    spaceId: string,
+    sandboxId: string,
+    port: number,
+    options?: ExposePortOptions,
+  ): Effect.Effect<ExposedPort, SandboxError>;
 }
 
 /** The sandbox backend, contributed to the process runtime by the plugin's layer spec. */

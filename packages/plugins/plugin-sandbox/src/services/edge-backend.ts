@@ -48,8 +48,8 @@ export const makeEdgeBackend = (client: Client): SandboxService.Backend => {
       request((sandboxClient) => sandboxClient.writeFile(spaceId, sandboxId, path, new TextDecoder().decode(content))),
     listFiles: (spaceId, sandboxId, path) =>
       request((sandboxClient) => sandboxClient.listFiles(spaceId, sandboxId, path)),
-    exposePort: (spaceId, sandboxId, port) =>
-      request((sandboxClient) => sandboxClient.exposePort(spaceId, sandboxId, port)),
+    exposePort: (spaceId, sandboxId, port, options) =>
+      request((sandboxClient) => sandboxClient.exposePort(spaceId, sandboxId, port, options)),
   };
 };
 

@@ -29,12 +29,12 @@ const make = () =>
         You can create sandboxes, run shell commands inside them, upload files from ECHO into a sandbox,
         and download files from a sandbox back into ECHO.
         The sandbox service is lazily initialized: the container starts on first use.
-        A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds).
-        A command that is cut off has not finished.
-        To serve something (a static site, a dev server), start the server with \`background: true\`, which
-        returns at once and leaves it running, then call ExposePort with its port for a public URL.
-        A background server stops when the container sleeps after some minutes idle; start it again if its
-        URL stops answering.
+        A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds, at most
+        fifteen minutes). A command that is cut off has not finished.
+        To serve something (a static site, a dev server), call ExposePort with its port and the \`command\`
+        that serves it, for a public URL: the service starts the server, and starts it again whenever the
+        container has slept, so the URL keeps answering. \`background: true\` starts any other command that
+        must outlive its call and returns at once.
       `,
     }),
   });
