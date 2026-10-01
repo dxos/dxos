@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
+import * as Prompt from 'effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
-import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';

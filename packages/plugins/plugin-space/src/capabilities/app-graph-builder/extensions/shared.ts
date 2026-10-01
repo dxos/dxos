@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';

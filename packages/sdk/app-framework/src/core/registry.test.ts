@@ -4,7 +4,7 @@
 
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

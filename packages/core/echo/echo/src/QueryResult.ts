@@ -4,7 +4,7 @@
 
 import type * as Effect from 'effect/Effect';
 import type * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import { type CleanupFn } from '@dxos/async';
 

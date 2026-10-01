@@ -5,9 +5,9 @@
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
-import type * as Statement from 'effect/unstable/sql/Statement';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
+import type * as Statement from 'effect/sql/Statement';
 
 import { invariant } from '@dxos/invariant';
 

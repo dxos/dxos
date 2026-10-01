@@ -6,11 +6,11 @@ import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';

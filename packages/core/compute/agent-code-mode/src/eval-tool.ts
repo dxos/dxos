@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import type * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import type * as Operation from '@dxos/compute/Operation';

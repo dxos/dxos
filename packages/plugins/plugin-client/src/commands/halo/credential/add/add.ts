@@ -3,12 +3,12 @@
 //
 
 import { fromBinary } from '@bufbuild/protobuf';
+import * as Args from 'effect/cli/Argument';
+import * as Command from 'effect/cli/Command';
+import * as Prompt from 'effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Args from 'effect/unstable/cli/Argument';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';

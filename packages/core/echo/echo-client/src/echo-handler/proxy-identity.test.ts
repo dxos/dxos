@@ -4,7 +4,7 @@
 
 import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';

@@ -16,10 +16,10 @@ import * as Fiber from 'effect/Fiber';
 import * as Latch from 'effect/Latch';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
+import type * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

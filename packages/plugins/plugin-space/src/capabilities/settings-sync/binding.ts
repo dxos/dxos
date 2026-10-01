@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';

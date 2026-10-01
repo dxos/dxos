@@ -5,8 +5,8 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import * as Statement from 'effect/unstable/sql/Statement';
+import * as SqlClient from 'effect/sql/SqlClient';
+import * as Statement from 'effect/sql/Statement';
 
 import { ATTR_DELETED, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';

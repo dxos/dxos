@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';

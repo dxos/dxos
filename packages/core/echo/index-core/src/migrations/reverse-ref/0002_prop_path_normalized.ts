@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 /**
  * Adds `propPathNormalized`: the escaped property path with array-index segments removed, so an

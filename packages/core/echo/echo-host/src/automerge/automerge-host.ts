@@ -30,8 +30,8 @@ import {
 import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { DeferredTask, Event, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';

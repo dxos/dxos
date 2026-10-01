@@ -7,11 +7,11 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';

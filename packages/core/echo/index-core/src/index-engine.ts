@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';

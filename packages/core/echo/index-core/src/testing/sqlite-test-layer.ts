@@ -5,8 +5,8 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as Statement from 'effect/unstable/sql/Statement';
+import * as Reactivity from 'effect/reactivity/Reactivity';
+import * as Statement from 'effect/sql/Statement';
 
 import { SqlBoundVariableLimit } from '../utils.ts';
 

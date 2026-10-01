@@ -8,9 +8,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { IdentityDid, SpaceId } from '@dxos/keys';
 import { type AccessToken } from '@dxos/link';

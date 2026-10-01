@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Decision from 'effect/ai/Decision';
 import * as Schema from 'effect/Schema';
-import * as Decision from 'effect/unstable/ai/Decision';
 
 import { type Message } from '@dxos/types';
 

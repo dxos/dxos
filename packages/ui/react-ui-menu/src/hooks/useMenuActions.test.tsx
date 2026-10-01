@@ -6,8 +6,8 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { cleanup, render, screen } from '@testing-library/react';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { StrictMode, Suspense, use, useState } from 'react';
 import { afterEach, describe, test } from 'vitest';
 import { cdp } from 'vitest/browser';

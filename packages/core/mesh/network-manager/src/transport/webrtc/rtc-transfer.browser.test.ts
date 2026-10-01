@@ -6,7 +6,7 @@ import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunn
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
