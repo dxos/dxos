@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Tabs as TabsPrimitive } from '@ark-ui/react/tabs';
+import { Tabs as TabsPrimitive, useTabsContext } from '@ark-ui/react/tabs';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -133,6 +133,8 @@ export const Tabs = {
   Trigger: TabsTrigger,
   Content: TabsContent,
   Indicator: TabsIndicator,
+  /** Ark's tabs api (`value`, `setValue`, `focusedValue`, …) for parts inside the Root. */
+  useContext: useTabsContext,
 };
 
 export type { TabsContentProps, TabsIndicatorProps, TabsListProps, TabsRootProps, TabsTriggerProps };

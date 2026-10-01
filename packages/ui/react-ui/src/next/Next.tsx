@@ -126,6 +126,7 @@ import {
   type LinkProps as NextLinkProps,
   type LinkVariant as NextLinkVariant,
   Listbox as NextListbox,
+  type ListboxContext as NextListboxContext,
   type ListboxOption as NextListboxOption,
   type ListboxSelectionMode as NextListboxSelectionMode,
   Main as NextMain,
@@ -179,6 +180,7 @@ import {
   Slider as NextSlider,
   type SliderProps as NextSliderProps,
   Splitter as NextSplitter,
+  type SplitterContext as NextSplitterContext,
   type SplitterMode as NextSplitterMode,
   type SplitterOrientation as NextSplitterOrientation,
   type SplitterRootProps as NextSplitterRootProps,
@@ -342,6 +344,7 @@ export namespace Next {
   export const ToggleGroup = NextToggleGroup;
   export const Listbox = NextListbox;
   export type ListboxOption = NextListboxOption;
+  export type ListboxContext = NextListboxContext;
   export type ListboxSelectionMode = NextListboxSelectionMode;
   export type VirtualMode = NextVirtualMode;
   export const useVirtualRows = nextUseVirtualRows;
@@ -371,6 +374,7 @@ export namespace Next {
   export const Splitter = NextSplitter;
   export type SplitterRootProps = NextSplitterRootProps;
   export type SplitterMode = NextSplitterMode;
+  export type SplitterContext = NextSplitterContext;
   export type SplitterOrientation = NextSplitterOrientation;
   export const Toast = NextToast;
   export type ToastRootProps = NextToastRootProps;
