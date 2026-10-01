@@ -452,11 +452,25 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
         [`${name}.Close`, { to: [name, 'CloseTrigger'] }],
       ]),
     ),
-    'ScrollContainer.Content': review({
-      thin: 'ScrollContainer.Content thin → width',
-      padding: 'padding dropped',
-      centered: 'centered dropped',
-    }),
+    'ScrollContainer.Content': {
+      drop: ['padding', 'centered'],
+      apply: ({ file, element }) => {
+        const thin = getAttr(element, 'thin');
+        const value = thin ? attrValue(thin) : undefined;
+        if (!thin || !value) {
+          return;
+        }
+        if (value.kind === 'true' || (value.kind === 'boolean' && value.value)) {
+          file.replace(thin, "width='thin'");
+        } else if (value.kind === 'boolean') {
+          file.replace(thin, "width='regular'");
+        } else {
+          file.report(thin, "ScrollContainer.Content thin → width ('thin' | 'regular')");
+          return;
+        }
+        file.count('ScrollContainer.Content thin → width');
+      },
+    },
     'Slider': { drop: ['thumbSize', 'thumbAlignment'] },
     'TextCrawl': review({
       size: 'TextCrawl size comes from data-size',
