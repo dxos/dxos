@@ -8,8 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';

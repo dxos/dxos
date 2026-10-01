@@ -15,8 +15,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
 import { Settings } from '#types';

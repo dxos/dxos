@@ -9,8 +9,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

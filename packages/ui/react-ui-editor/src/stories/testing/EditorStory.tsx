@@ -9,10 +9,9 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { useMergeRefs } from '@dxos/react-ui';
+import { Next, useMergeRefs } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,

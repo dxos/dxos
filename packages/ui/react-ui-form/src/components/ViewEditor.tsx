@@ -27,10 +27,9 @@ import {
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import {
   ParentLabelAnnotation,
   ProjectionModel,

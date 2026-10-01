@@ -6,9 +6,8 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 
 import { useCountdown } from '#hooks';
 import { meta } from '#meta';

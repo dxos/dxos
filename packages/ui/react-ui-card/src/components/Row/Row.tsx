@@ -7,8 +7,7 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { DxAnchorActivate, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { DxAnchorActivate, Next, useTranslation } from '@dxos/react-ui';
 import { type Actor, type Message } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
 

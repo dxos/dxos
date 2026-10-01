@@ -4,8 +4,7 @@
 
 import React, { useRef } from 'react';
 
-import { useId } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId } from '@dxos/react-ui';
 
 import { IdentityPanel, type IdentityPanelProps } from '../../panels/index.ts';
 

@@ -8,9 +8,8 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { composable, composableProps } from '@dxos/react-ui';
-import { createStaticTreeModel, Tree, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps } from '@dxos/react-ui';
+import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
 import { Unit } from '@dxos/util';
 
 const DEFAULT_DEPTH = 1;

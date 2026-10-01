@@ -7,9 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

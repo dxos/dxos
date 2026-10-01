@@ -9,7 +9,7 @@ import React, { Component, type PropsWithChildren, useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { type FormPresentation } from '#types';
 

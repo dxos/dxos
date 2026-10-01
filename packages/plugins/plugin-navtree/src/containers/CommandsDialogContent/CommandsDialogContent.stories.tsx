@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { NavTreePlugin } from '#plugin';

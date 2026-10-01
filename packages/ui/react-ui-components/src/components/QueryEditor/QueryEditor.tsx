@@ -6,7 +6,7 @@ import { type Extension, Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { type BuildResult, QueryBuilder } from '@dxos/echo-query';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   type EditorController,
@@ -15,7 +15,6 @@ import {
   type UseEditorMenuProps,
   createMenuGroup,
 } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';

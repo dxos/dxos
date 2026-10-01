@@ -18,7 +18,7 @@ import React, {
 
 import { Doc } from '@dxos/echo-doc';
 import { composeRefs, createContext } from '@dxos/react-hooks';
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -26,7 +26,6 @@ import {
   type UseTextEditorProps,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,

@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { createObject } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
+import { Next } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {

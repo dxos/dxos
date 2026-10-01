@@ -7,8 +7,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { Next } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
-import { Next } from '@dxos/react-ui/next';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { SearchResultStack } from '#components';

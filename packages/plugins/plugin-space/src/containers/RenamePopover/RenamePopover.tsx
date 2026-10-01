@@ -9,8 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space, isSpace } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

@@ -10,8 +10,7 @@ import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { useFileDownload } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useFileDownload } from '@dxos/react-ui';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';

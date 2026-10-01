@@ -4,9 +4,8 @@
 
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { Row } from '../Row/index.ts';
@@ -27,7 +26,7 @@ type CardTileRootProps = ThemedClassName<
 >;
 
 /**
- * Shared mosaic tile shell: `Mosaic.Tile` → `Focus.Item` → `Card.Root`.
+ * Shared mosaic tile shell: `Mosaic.Tile` → `Next.Focus.Item` → `Card.Root`.
  * Callers supply the inner `Card.Header`/`Card.Body` (typically via {@link CardTileHeader} + rows).
  * Activation is committed by the caller's `onCurrentChange` (Mosaic `current`/selection), so click/Enter light the tile up.
  */
@@ -43,11 +42,11 @@ const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
       location={location}
       classNames={classNames ?? 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator'}
     >
-      <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
+      <Next.Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
         <Next.Card.Root border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
           {children}
         </Next.Card.Root>
-      </Focus.Item>
+      </Next.Focus.Item>
     </Mosaic.Tile>
   ),
 );

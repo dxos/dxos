@@ -13,8 +13,8 @@ import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Next } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {

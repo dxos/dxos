@@ -7,10 +7,9 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Next, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';

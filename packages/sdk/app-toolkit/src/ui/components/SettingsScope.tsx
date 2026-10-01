@@ -4,8 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useSettingsScope } from '../hooks/index.ts';

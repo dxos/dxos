@@ -6,9 +6,8 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
-import { Next } from '@dxos/react-ui/next';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';

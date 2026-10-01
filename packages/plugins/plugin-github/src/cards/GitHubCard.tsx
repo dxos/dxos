@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
 type Subject = Repo.Repo | Issue.Issue | PullRequest.PullRequest;

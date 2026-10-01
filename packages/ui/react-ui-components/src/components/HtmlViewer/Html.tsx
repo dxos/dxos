@@ -5,8 +5,7 @@
 import DOMPurify from 'dompurify';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type ColorScheme, detectColorScheme } from './color-scheme.ts';

@@ -11,9 +11,8 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { type FormFieldRendererProps, FormFieldRow, TextField } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { GenerationService } from '#types';

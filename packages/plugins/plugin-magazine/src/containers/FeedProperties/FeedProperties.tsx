@@ -13,9 +13,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';

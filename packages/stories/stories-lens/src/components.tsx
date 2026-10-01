@@ -8,9 +8,9 @@ import { Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { type FormUpdateMeta, omitId, Form } from '@dxos/react-ui-form';
+import { Next } from '@dxos/react-ui';
+import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';

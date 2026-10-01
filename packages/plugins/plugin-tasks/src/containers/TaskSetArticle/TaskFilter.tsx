@@ -5,10 +5,9 @@
 import React, { type PropsWithChildren, type Ref } from 'react';
 
 import { type Database, type Tag } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';

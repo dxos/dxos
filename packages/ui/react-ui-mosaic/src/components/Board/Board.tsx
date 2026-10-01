@@ -12,15 +12,12 @@ import React, {
   useState,
 } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { type DndContainerHandler, useDndRootContext } from '@dxos/react-ui-dnd';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks/index.ts';
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles } from '../Mosaic/index.ts';
 import { BoardContextProvider, type BoardContextValue, useBoardContext } from './BoardContext.ts';
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column.tsx';
@@ -64,7 +61,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
 
     return (
       <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
-        <Focus.Group asChild orientation='horizontal'>
+        <Next.Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
             withFocus
@@ -80,7 +77,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
               </Next.ScrollArea.Viewport>
             </Next.ScrollArea.Root>
           </Mosaic.Container>
-        </Focus.Group>
+        </Next.Focus.Group>
         <DebugInfo />
       </div>
     );

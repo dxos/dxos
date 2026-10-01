@@ -4,8 +4,7 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { translationKey } from '#translations';

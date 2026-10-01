@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
-import { Next } from '@dxos/react-ui/next';
 
 import { useComputeNodeState } from '../hooks/index.ts';
 import { FunctionBody } from './common/index.ts';

@@ -12,9 +12,8 @@ import { Filter, Obj, Query, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { parentId } from '@dxos/graph/GraphNode';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 import { type Event, Message } from '@dxos/types';
 
 import { EventArticle, MessageArticle } from '#containers';

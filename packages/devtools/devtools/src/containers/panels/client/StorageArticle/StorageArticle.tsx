@@ -10,7 +10,7 @@ import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { Bitbar, JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';

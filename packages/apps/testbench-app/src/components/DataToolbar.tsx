@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';

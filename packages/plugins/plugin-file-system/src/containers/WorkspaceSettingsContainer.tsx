@@ -13,10 +13,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, Form } from '@dxos/react-ui-form';
+import { Next, useTranslation } from '@dxos/react-ui';
+import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Next } from '@dxos/react-ui/next';
 
 import { useActiveFileSystemWorkspace } from '#hooks';
 import { meta } from '#meta';

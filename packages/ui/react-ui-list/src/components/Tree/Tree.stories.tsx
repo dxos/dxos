@@ -7,11 +7,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { type Mock, expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import '@dxos/react-ui/next/theme.css';
+import '@dxos/react-ui/theme.css';
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui/next';
-import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
-import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { Next } from '@dxos/react-ui';
+import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withRegistry, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
 import { createStaticTreeModel } from './static-tree-model.ts';

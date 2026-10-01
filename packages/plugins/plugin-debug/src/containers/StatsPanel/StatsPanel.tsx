@@ -9,7 +9,7 @@ import React from 'react';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { STAT_CARD_HUES, StatCard } from '@dxos/devtools';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 // Fallback so the atom hook is called unconditionally when no store is contributed (host plugin not
 // loaded); the panel then renders its empty state.

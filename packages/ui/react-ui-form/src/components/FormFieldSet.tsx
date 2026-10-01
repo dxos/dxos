@@ -4,7 +4,7 @@
 
 import React, { Children, type PropsWithChildren, type ReactNode, useState } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { useFormContext } from '../hooks/index.ts';
 

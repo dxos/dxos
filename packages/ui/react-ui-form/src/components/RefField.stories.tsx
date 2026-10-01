@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Entity, Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type RefFieldDataProps, type RefOption } from '#types';

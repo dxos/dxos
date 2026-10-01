@@ -8,9 +8,8 @@ import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } f
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
-import { Column, useTranslation } from '@dxos/react-ui';
-import { useFormContext, Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
+import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { OutlineOperation } from '#types';
@@ -145,12 +144,10 @@ export const QuickEntryDialog = () => {
           onSave={handleSave}
           onCancel={handleCancel}
         >
-          <Column.Center>
-            <Form.Content>
-              <Form.Fields />
-              <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
-            </Form.Content>
-          </Column.Center>
+          <Form.Content>
+            <Form.Fields />
+            <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
+          </Form.Content>
         </Form.Root>
       </Next.Dialog.Body>
     </Next.Dialog.Content>

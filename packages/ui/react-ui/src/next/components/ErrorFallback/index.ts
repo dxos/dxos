@@ -3,3 +3,4 @@
 //
 
 export * from './ErrorFallback.tsx';
+export { type ParsedStackFrame, parseCaptureOwnerStack } from './parse-stack.ts';

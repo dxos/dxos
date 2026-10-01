@@ -12,8 +12,8 @@ import { type AppSurface, useCardPivot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
+import { Next } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table/types';
-import { Next } from '@dxos/react-ui/next';
 import { getTypeURIFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
 

@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';
@@ -42,11 +43,11 @@ const DefaultStory = ({ segmentIndex, current }: StoryArgs) => {
   };
   return (
     <Dnd.Root>
-      <Focus.Group asChild>
+      <Next.Focus.Group asChild>
         <Mosaic.Container withFocus currentId={current ? segment.id : undefined}>
           <SegmentTile data={{ segment, onAction: handleAction }} location='story' current={current} />
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     </Dnd.Root>
   );
 };

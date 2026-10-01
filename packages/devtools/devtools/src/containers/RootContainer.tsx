@@ -7,8 +7,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { toPublicKey } from '@dxos/protocols/buf';
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import { ErrorBoundary } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { ErrorBoundary, Next } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useSections } from '../hooks/index.ts';

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type NamePopoverProps = PropsWithChildren<{
   open: boolean;

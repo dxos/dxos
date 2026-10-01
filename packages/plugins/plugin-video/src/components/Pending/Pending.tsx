@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 
 export type PendingProps = {
   label: string;

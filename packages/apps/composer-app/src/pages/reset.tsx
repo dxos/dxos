@@ -8,7 +8,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 // Next components style through `.nx-*` rules that ship separately from the theme.
-import '@dxos/react-ui/next/theme.css';
+import '@dxos/react-ui/theme.css';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';

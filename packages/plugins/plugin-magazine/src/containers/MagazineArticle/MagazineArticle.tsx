@@ -11,12 +11,11 @@ import { type AppSurface, useProgressMonitor, useShowItem } from '@dxos/app-tool
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';

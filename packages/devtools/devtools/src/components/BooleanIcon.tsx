@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 // TODO(burdon): Use theme.
 export const BooleanIcon = ({ value }: { value: boolean | undefined }) => (

@@ -12,7 +12,7 @@ import { Space_PipelineStateSchema } from '@dxos/protocols/buf/dxos/client/servi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState, useSpacesInfo } from '../../../../hooks/index.ts';

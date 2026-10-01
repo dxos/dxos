@@ -4,7 +4,7 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type InputProps = Next.InputProps & {
   validationMessage?: string;

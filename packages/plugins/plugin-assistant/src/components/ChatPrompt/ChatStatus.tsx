@@ -4,10 +4,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-components';
-import { Next } from '@dxos/react-ui/next';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 

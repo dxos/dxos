@@ -8,8 +8,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useId } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId } from '@dxos/react-ui';
 
 import { Viewport } from '../../components/index.ts';
 import { ConfirmReset } from '../../steps/index.ts';

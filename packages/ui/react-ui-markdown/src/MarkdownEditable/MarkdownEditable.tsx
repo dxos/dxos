@@ -5,9 +5,8 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createMarkdownExtensions,

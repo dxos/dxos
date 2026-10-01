@@ -5,8 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { ThemedClassName } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, ThemedClassName } from '@dxos/react-ui';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 

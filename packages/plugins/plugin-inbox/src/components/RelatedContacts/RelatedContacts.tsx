@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Avatar } from '@dxos/react-ui-card';
-import { Next } from '@dxos/react-ui/next';
 import { type Person } from '@dxos/types';
 
 import { meta } from '#meta';

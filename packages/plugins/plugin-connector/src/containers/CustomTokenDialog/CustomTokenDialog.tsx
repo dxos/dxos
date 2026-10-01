@@ -10,9 +10,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
@@ -124,12 +123,10 @@ export const CustomTokenDialog = ({
           defaultValues={credentialForm.defaultValues ?? {}}
           onSave={handleSave}
         >
-          <Column.Center>
-            <Form.Content>
-              <Form.Fields />
-              <Form.Submit disabled={isPending ? true : undefined} />
-            </Form.Content>
-          </Column.Center>
+          <Form.Content>
+            <Form.Fields />
+            <Form.Submit disabled={isPending ? true : undefined} />
+          </Form.Content>
         </Form.Root>
         {error && <p className='text-error-text'>{error}</p>}
       </Next.Dialog.Body>

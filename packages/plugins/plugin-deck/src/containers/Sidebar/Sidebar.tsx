@@ -6,8 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Label } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { type Label, Next } from '@dxos/react-ui';
 
 import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';

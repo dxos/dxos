@@ -9,8 +9,7 @@ import React, { type RefObject, forwardRef, useCallback, useEffect, useRef, useS
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useObject } from '@dxos/react-client/echo';
-import { Flex, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Book } from '#types';

@@ -18,9 +18,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 
 import { useTours } from '#hooks';
 import { meta } from '#meta';

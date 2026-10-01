@@ -17,8 +17,7 @@ import React, {
 } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type Hue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';

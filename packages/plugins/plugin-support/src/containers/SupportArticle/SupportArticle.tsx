@@ -7,8 +7,7 @@ import React, { useCallback } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Column, Flex, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Support } from '#types';
@@ -69,9 +68,9 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
         </Next.Toolbar.Root>
       </Next.Panel.Header>
       <Next.Panel.Body asChild>
-        <Column.Root>
-          <Next.ScrollArea.Root orientation='vertical'>
-            <Next.ScrollArea.Viewport>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='lg' gap='md'>
               <Next.Field.Root>
                 <Next.Field.Label>{t('title.label')}</Next.Field.Label>
                 <Next.Input value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
@@ -109,9 +108,9 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
                   </Next.Button>
                 )}
               </Flex>
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
-        </Column.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );

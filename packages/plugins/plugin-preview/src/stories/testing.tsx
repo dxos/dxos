@@ -6,8 +6,8 @@ import React, { type FC, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Next } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
-import { Next } from '@dxos/react-ui/next';
 
 import { JsonCard } from '../cards/index.ts';
 import { omitImage } from './fixtures.ts';

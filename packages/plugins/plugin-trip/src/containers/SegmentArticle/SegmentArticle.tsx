@@ -7,9 +7,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
-import { omitId, Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
+import { Form, omitId } from '@dxos/react-ui-form';
 
 import { BookingSearch } from '#containers';
 import { meta } from '#meta';

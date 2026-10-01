@@ -5,8 +5,7 @@
 import React, { memo, useMemo } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { Flex, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#types';

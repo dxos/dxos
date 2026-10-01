@@ -6,8 +6,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Flex, type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {

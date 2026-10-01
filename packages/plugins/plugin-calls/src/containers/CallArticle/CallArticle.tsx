@@ -7,8 +7,8 @@ import React, { useCallback } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
+import { Next } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
-import { Next } from '@dxos/react-ui/next';
 
 import { Call, Lobby } from '#components';
 import { CallsCapabilities } from '#types';

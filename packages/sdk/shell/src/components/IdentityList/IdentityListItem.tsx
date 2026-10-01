@@ -8,9 +8,8 @@ import { generateName } from '@dxos/display-name';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { type ThemedClassName, useId } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useId } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { keyToFallback } from '@dxos/util';
 
 import { profileString } from '../../util/index.ts';

@@ -7,9 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Identity, type Space } from '@dxos/halo';
-import { type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { type ObjectTileComponent, Thread } from '@dxos/react-ui-thread';
-import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 

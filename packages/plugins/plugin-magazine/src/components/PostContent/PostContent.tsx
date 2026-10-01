@@ -4,9 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { composable } from '@dxos/react-ui';
+import { Next, composable } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 
 import { usePostContentAtom } from '#atoms';
 import { Subscription } from '#types';

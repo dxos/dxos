@@ -40,8 +40,7 @@ import React, {
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Next, type Size } from '@dxos/react-ui/next';
+import { Next, composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { hues } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
@@ -111,7 +110,7 @@ type TreeRootProps<T extends { id: string } = any> = {
    * the drag scope, so trees mounted under one root (a tree per workspace tab) accept each other's rows.
    */
   path?: string[];
-  size?: Size;
+  size?: Next.Size;
   /** Each row's grid template; the default is disclosure, icon, label and trailing tracks. */
   columns?: string;
   /**

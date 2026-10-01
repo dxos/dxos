@@ -5,9 +5,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useHotkeys } from '@dxos/react-focus';
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

@@ -1,10 +1,37 @@
 # Next cut-over (Phase C)
 
 The cut-over branch (draft PR against `claude/react-ui-next-design-4db6eb`): the Phase B codemods applied for real, then
-fixed by hand batch by batch. The current components are not yet deleted and `@dxos/react-ui` still exports them by
-default. Plan: [AUDIT.md](AUDIT.md) §7.
+fixed by hand batch by batch, then the current components deleted and Next made the default export. Plan:
+[AUDIT.md](AUDIT.md) §7.
 
-## Status (step 2: every batch on Next)
+## Status (step 3: the current components are gone)
+
+### What step 3 changed
+
+- **`@dxos/react-ui`:** `src/components` (45 components) is deleted; the root exports the `Next` namespace (plus
+  `NextSize`, flat because `@dxos/ui-types` already exports a spacing-scale `Size`). The `./next` subpath is gone and
+  every importer reads `@dxos/react-ui` (914 files); `./next/testing` folded into `./testing`; the stylesheet is
+  `@dxos/react-ui/theme.css`. `ErrorBoundary` is re-exported from the root index, `ThrowError` moved to `./testing`,
+  `parseCaptureOwnerStack` and `Toolbar.SeparatorProps` joined the namespace. The playground stories went with the
+  components; the exemplars and flow stories are on Next.
+- **Theme:** `defaultTheme` holds no component tables (Next styles through `.nx-*` CSS); `ThemeProvider` and
+  `defaultTx` stay for their context (mode, platform, translations). The Density and Elevation contexts are deleted
+  (their last readers were current components; five toolbars unwrapped). ui-theme drops `card.css`, `dialog.css`,
+  `drawer.css` and `toast.css` (no remaining user; Next ships its own toast rules). Spotlight's frame override now
+  targets `.nx-dialog`.
+- **`react-ui-menu`, `-list`, `-form`:** the `/next` entries became the root; the current ActionMenu/ActionToolbar,
+  Tree/Listbox/OrderedList/Combobox and Form were deleted, their shared models (tree model, form property walk,
+  field resolution, layout parser) moved beside the Next components. `MenuActions.iconSize` is a Next size.
+  MasterDetail sits on Next OrderedList (its content is the scroll region in horizontal orientation).
+- **Residue migrated:** the 13 `Column` users (`Next.Container`; a labelled `Column.Section` became a `section` under `Container asChild`
+  with a `Typography` heading),
+  react-ui-mosaic's `Focus` re-export (20 files to `Next.Focus`), plugin-deck's `useMainSize` (it read the deleted
+  Main's context and so never saw the sidebars; now `Next.useMainSidebars`), EditorMenuProvider's `tx('menu.*')`
+  rows (now `nx-menu-item`), `stepCount`, `DialogSize`.
+- **Kept:** `Flex`/`Grid` layout utilities (`src/layout`, theme-free), `Show`/`Switch`, the hooks, `tools/codemorph`
+  (it still targets `@dxos/react-ui/next` by design: it is the record of the migration).
+
+## Status at the end of step 2 (every batch on Next)
 
 Every batch type-checks: `tsc -b` over the whole repo reports no error in a package the cut-over touched. The errors
 it still prints are outside it and were there before (`eslint-plugin-rules` and `hyperformula` fixtures writing over
@@ -98,10 +125,7 @@ width='document'`, `Form.Submit icon`/`busy`, `ObjectPicker trigger`, `RefEditor
 
 ### Superseded current implementations
 
-`react-ui-list` (current Listbox, OrderedList, Tree, Combobox), `react-ui-menu` (current ActionMenu, ActionToolbar,
-`types.ts`) and `react-ui-form` (`src/components`) each have a Next counterpart in their `/next` entry that every
-consumer now imports. The codemods had rewritten their internals onto Next parts; they are restored to their
-pre-cut-over source and stay on the current react-ui until step 3 deletes them, rather than being ported twice.
+Deleted in step 3 (see above).
 
 ### Behaviour that moved (visual pass)
 
@@ -122,15 +146,15 @@ pre-cut-over source and stay on the current react-ui until step 3 deletes them, 
 - Sync-targets dialog: a multiple-selection listbox with check indicators in place of checkboxes.
 - Library download is a `Link`, not a button; Welcome's sign-in menu no longer forces `z-50`.
 
-### Open (for step 3 or a decision)
+### Open (decisions)
 
-- **Layout primitives still on the current react-ui:** `Flex` (75 uses), `Grid` (14), `Column` (12) across plugins,
-  devtools and `ui-template`. Deleting them in step 3 needs either a Next equivalent (`Next.Container` covers the
-  unambiguous cases the layout codemod already converted) or keeping them as theme-free layout utilities.
-- **Providers:** `ThemeProvider`/`defaultTx` (apps, shell, examples, plugin-theme/-file/-onboarding/-search/-terra),
-  `ElevationProvider`/`useElevationContext` (four toolbars, EditorToolbar, dnd ResizeHandle) → `level`.
-- **Utilities exported from react-ui** (not components): `useId`, `useAsyncEffect`, `useControlledState`,
-  `useFileDownload`, `composeRefs`, `ErrorBoundary`, `Show`/`Switch`, `ThrowError`, `DxAnchorActivate`. They stay.
+- **`Next.` prefix:** consumers still write `Next.Button`; flattening the namespace into the root (dropping the prefix
+  across ~900 files) is a mechanical follow-up once collisions with local names are settled.
+- **`Flex` (75 uses) and `Grid` (14):** kept as theme-free layout utilities; `Next.Container` covers the grid cases.
+- **`ThemeProvider` `tx`:** now binds an empty theme; removing the prop (and `ThemeFunction` from ui-types) touches
+  every app root and is left for a follow-up.
+- **ui-theme leftovers:** `--dx-drawer-size`, the `dx-callout`/`dx-text`/`dx-tag` colour variants with no user,
+  and `react-ui-list`'s `List.theme.ts` (only `Picker` reads it).
 
 ## Step 1 record
 

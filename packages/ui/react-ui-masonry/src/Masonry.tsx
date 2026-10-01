@@ -19,9 +19,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, ThemedClassName, composable, composableProps, useMergeRefs, usePx } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip.ts';

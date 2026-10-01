@@ -12,8 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The

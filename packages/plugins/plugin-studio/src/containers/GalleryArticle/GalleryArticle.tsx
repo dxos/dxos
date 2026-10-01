@@ -10,10 +10,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Next } from '@dxos/react-ui/next';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';

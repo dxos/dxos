@@ -6,7 +6,7 @@
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Obj, Type } from '@dxos/echo';
-import type { Next } from '@dxos/react-ui/next';
+import type { Next } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
 import type * as Translations from '../app/Translations.ts';

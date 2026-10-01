@@ -19,9 +19,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
-import { useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';

@@ -5,8 +5,7 @@
 import React, { type ForwardedRef, forwardRef } from 'react';
 
 import type { Space } from '@dxos/react-client/echo';
-import { useId } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { humanize, keyToEmoji } from '@dxos/util';
 

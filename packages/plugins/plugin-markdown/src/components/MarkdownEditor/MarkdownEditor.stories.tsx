@@ -7,11 +7,11 @@ import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createObject } from '@dxos/echo-client';
+import { Next } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor } from '@dxos/react-ui-editor';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 

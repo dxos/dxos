@@ -4,8 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 

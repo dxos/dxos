@@ -9,10 +9,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { Flex, useControlledState, useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
+import { Flex, Next, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
-import { Next } from '@dxos/react-ui/next';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '#meta';

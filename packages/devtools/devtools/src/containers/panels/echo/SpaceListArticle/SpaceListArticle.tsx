@@ -13,9 +13,8 @@ import { toDate } from '@dxos/protocols/buf';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { useFileDownload } from '@dxos/react-ui';
+import { Next, useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 
 import { useDevtoolsDispatch } from '../../../../hooks/index.ts';
 import { type ArticleProps } from '../../types.ts';

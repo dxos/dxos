@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { ErrorIndicator } from './ErrorIndicator.tsx';
 import { NetworkIndicator } from './NetworkIndicator.tsx';

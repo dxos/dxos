@@ -5,9 +5,8 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Terminal, type TerminalApi } from '@dxos/react-ui-terminal';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

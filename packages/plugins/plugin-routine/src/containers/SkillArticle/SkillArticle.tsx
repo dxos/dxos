@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Skill from '@dxos/compute/Skill';
+import { Next } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { TemplateEditor } from '#components';
 

@@ -6,9 +6,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';

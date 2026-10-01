@@ -5,10 +5,9 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '#components';
 import { meta } from '#meta';
@@ -49,7 +48,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         draggable={draggable}
         dragHandle={dragHandle}
       >
-        <Focus.Item asChild>
+        <Next.Focus.Item asChild>
           <Next.Card.Root ref={forwardedRef} data-testid='board-item'>
             <Next.Card.Header>
               <Next.DragHandle ref={dragHandleRef} />
@@ -72,7 +71,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
               </Next.Card.Row>
             </Next.Card.Body>
           </Next.Card.Root>
-        </Focus.Item>
+        </Next.Focus.Item>
       </Mosaic.Tile>
     );
   },

@@ -9,7 +9,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type PickerProps = {
   options: ReadonlyArray<string>;

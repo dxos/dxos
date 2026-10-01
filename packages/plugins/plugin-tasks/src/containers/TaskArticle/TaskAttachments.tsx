@@ -22,9 +22,8 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { CardMasonry } from '@dxos/plugin-space/components';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -271,36 +270,41 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
 
   return (
     // A section of the pane's column, headed like the questions and artifacts around it.
-    <Column.Section label={t('task-attachments.label')} data-testid='tasksPlugin.attachments'>
-      <div
-        className={mx(
-          'rounded-md border border-dashed',
-          dragging ? 'border-accent-bg' : hasCards ? 'border-transparent' : 'border-separator',
-          hasCards
-            ? // Outset by the border and padding so the cards sit on the column's content track.
-              '-m-1.5 p-1'
-            : 'flex items-center justify-center gap-2 p-trim-sm text-description',
-        )}
-        {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
-      >
-        {hasCards ? (
-          <RemoveAttachmentContext.Provider value={handleRemove}>
-            <CardMasonry
-              objects={refs ?? []}
-              size='compact'
-              inline
-              CardMenu={AttachmentCardMenu}
-              pending={placeholders}
-            />
-          </RemoveAttachmentContext.Provider>
-        ) : (
-          <>
-            <Next.Icon icon='ph--paperclip--regular' />
-            {t('task-attachments.drop-area.label')}
-          </>
-        )}
-      </div>
-    </Column.Section>
+    <Next.Container asChild gutter='inherit' gap='md'>
+      <section data-testid='tasksPlugin.attachments'>
+        <Next.Typography asChild tone='subdued'>
+          <h2>{t('task-attachments.label')}</h2>
+        </Next.Typography>
+        <div
+          className={mx(
+            'rounded-md border border-dashed',
+            dragging ? 'border-accent-bg' : hasCards ? 'border-transparent' : 'border-separator',
+            hasCards
+              ? // Outset by the border and padding so the cards sit on the column's content track.
+                '-m-1.5 p-1'
+              : 'flex items-center justify-center gap-2 p-trim-sm text-description',
+          )}
+          {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
+        >
+          {hasCards ? (
+            <RemoveAttachmentContext.Provider value={handleRemove}>
+              <CardMasonry
+                objects={refs ?? []}
+                size='compact'
+                inline
+                CardMenu={AttachmentCardMenu}
+                pending={placeholders}
+              />
+            </RemoveAttachmentContext.Provider>
+          ) : (
+            <>
+              <Next.Icon icon='ph--paperclip--regular' />
+              {t('task-attachments.drop-area.label')}
+            </>
+          )}
+        </div>
+      </section>
+    </Next.Container>
   );
 };
 

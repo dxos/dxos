@@ -11,10 +11,9 @@ import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-routine/components';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,

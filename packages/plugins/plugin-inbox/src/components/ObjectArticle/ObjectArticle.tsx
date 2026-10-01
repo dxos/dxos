@@ -4,7 +4,7 @@
 
 import React, { type ComponentProps, type ReactNode } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type ObjectArticleProps = {
   role?: ComponentProps<typeof Next.Panel.Root>['role'];

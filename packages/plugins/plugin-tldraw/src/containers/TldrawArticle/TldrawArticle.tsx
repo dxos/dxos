@@ -11,10 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { useActions } from '@dxos/plugin-graph/hooks';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Flex } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Flex, Next, composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 import { isTauri } from '@dxos/util';
 
 import { CanvasComponent } from '#components';

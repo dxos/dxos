@@ -14,16 +14,13 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks/index.ts';
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic/index.ts';
 import { BoardColumnProvider, useBoardColumn } from './BoardColumnContext.ts';
 import { useBoard } from './BoardContext.ts';
@@ -61,7 +58,7 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
         draggable={draggable}
         dragHandle={dragHandle}
       >
-        <Focus.Group
+        <Next.Focus.Group
           {...rest}
           data-testid='board-column'
           border
@@ -74,7 +71,7 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
           ref={forwardedRef}
         >
           <BoardColumnProvider column={data}>{children}</BoardColumnProvider>
-        </Focus.Group>
+        </Next.Focus.Group>
       </Mosaic.Tile>
     );
   },

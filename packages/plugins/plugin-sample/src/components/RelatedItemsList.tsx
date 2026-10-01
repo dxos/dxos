@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 
 export type RelatedItemsListProps = {
   items: ReadonlyArray<{ id: string; name?: string; status?: string }>;

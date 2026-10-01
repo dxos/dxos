@@ -17,9 +17,8 @@ import React, {
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
-import { Next } from '@dxos/react-ui/next';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

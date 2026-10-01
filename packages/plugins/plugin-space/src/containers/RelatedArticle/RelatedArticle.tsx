@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Next } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Next } from '@dxos/react-ui/next';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';

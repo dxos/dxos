@@ -21,7 +21,7 @@ import React, {
 } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import {
   type DndContainerData,
   type DndLocation,
@@ -31,7 +31,6 @@ import {
 } from '@dxos/react-ui-dnd';
 import { isTruthy } from '@dxos/util';
 
-import { useFocus } from '../Focus/index.ts';
 import {
   MOSAIC_CONTAINER_NAME,
   MosaicContainerContextProvider,
@@ -146,7 +145,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     }, [currentId]);
 
     // Focus container.
-    const { setFocus } = useFocus();
+    const { setFocus } = Next.useFocus();
     useEffect(() => {
       if (withFocus) {
         setFocus?.(state.type === 'active' ? 'active' : undefined);

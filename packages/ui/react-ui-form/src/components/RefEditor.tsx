@@ -4,8 +4,8 @@
 
 import React, { forwardRef } from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { Editor, type EditorController, type EditorViewProps } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 
 import { type RefEditorOptions, useRefEditor } from './useRefEditor.ts';
 

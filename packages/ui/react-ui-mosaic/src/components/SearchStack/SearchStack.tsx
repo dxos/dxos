@@ -4,11 +4,10 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
-import { Next } from '@dxos/react-ui/next';
 
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
 
 export type SearchStackAction = {
   type: 'select';
@@ -53,7 +52,7 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
           <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport ref={setViewport}>
@@ -69,7 +68,7 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );
@@ -112,7 +111,7 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       location={location}
       current={current}
     >
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Next.Card.Root ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block />
@@ -126,7 +125,7 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
             </Next.Card.Body>
           )}
         </Next.Card.Root>
-      </Focus.Item>
+      </Next.Focus.Item>
     </Mosaic.Tile>
   );
 });

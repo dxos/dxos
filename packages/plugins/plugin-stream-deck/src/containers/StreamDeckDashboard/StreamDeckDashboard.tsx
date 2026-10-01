@@ -9,7 +9,7 @@ import { useOptionalAtomCapability, usePluginManager } from '@dxos/app-framework
 import { type AppSurface, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { useQuery } from '@dxos/echo-react';
 import { SPACE_STATS_QUERY, toMetrics, toSpaceStats } from '@dxos/plugin-space/dashboard';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { VirtualStreamDeck } from '#components';
 import * as Protocol from '#protocol';

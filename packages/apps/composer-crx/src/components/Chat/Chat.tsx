@@ -9,10 +9,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, ChatStatusIndicator } from '@dxos/react-ui-chat';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 

@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import {
   PAGE_ACTION_PREDICATE_MESSAGE_TYPE,

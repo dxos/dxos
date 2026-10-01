@@ -5,11 +5,11 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { Next } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 
-import { Focus, Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
+import { Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
 
 export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -33,7 +33,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
        * fire here. See `ui-theme/src/css/components/selected.md`.
        */}
       <Mosaic.Tile {...props} asChild>
-        <Focus.Item asChild>
+        <Next.Focus.Item asChild>
           <Next.Card.Root classNames='dx-current dx-hover'>
             <Next.Card.Header>
               <Next.DragHandle ref={dragHandleRef} />
@@ -50,7 +50,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
               </Next.Card.Row>
             )}
           </Next.Card.Root>
-        </Focus.Item>
+        </Next.Focus.Item>
       </Mosaic.Tile>
     </>
   );

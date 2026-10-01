@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard/index.ts';

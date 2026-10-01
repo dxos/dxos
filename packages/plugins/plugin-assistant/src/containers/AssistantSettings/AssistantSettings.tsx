@@ -10,7 +10,7 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, Form, createSelectField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, Ollama } from '#types';

@@ -7,7 +7,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type ActiveSpacePanelProps = {
   spaceName?: string;

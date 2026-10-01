@@ -7,9 +7,8 @@ import React, { useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
 

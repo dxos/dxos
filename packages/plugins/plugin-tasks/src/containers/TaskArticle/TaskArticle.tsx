@@ -9,10 +9,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
-import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -89,26 +88,24 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
                 hangs outside it. */}
-              <Column.Root gutter='md' gap='lg' classNames='py-2'>
-                <Column.Center>
-                  {/* The task's own fields, not the list's strip: the pane has a subject, so it
-                    needs neither the create case nor the selection the strip reads. */}
-                  <TaskEditor
-                    task={task}
-                    onUpdate={handleUpdate}
-                    showDescription
-                    descriptionExtensions={descriptionExtensions}
-                    classNames='dx-document'
-                  />
-                </Column.Center>
+              <Next.Container gutter='md' gap='lg' classNames='py-2'>
+                {/* The task's own fields, not the list's strip: the pane has a subject, so it
+                  needs neither the create case nor the selection the strip reads. */}
+                <TaskEditor
+                  task={task}
+                  onUpdate={handleUpdate}
+                  showDescription
+                  descriptionExtensions={descriptionExtensions}
+                  classNames='dx-document'
+                />
 
                 {/* What the task carries, in a flow rather than the row's one scrolling line: the
                   pane has the width to wrap them, and a chip that wraps is a chip the reader can
                   see without dragging the row sideways. */}
-                <Column.Center classNames='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
+                <div className='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
                   <TaskMnemonic task={task} />
                   <TaskTags task={task} />
-                </Column.Center>
+                </div>
 
                 {/* The task's own fields, under what it says: they are properties of the task, so
                   they read after the description rather than as chrome above it — and with the
@@ -119,21 +116,26 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Column.Section label={t('task-questions.label')} data-testid='tasksPlugin.questions'>
-                    {openQuestions.map((thread) => (
-                      <TaskQuestion
-                        key={thread.question.id}
-                        thread={thread}
-                        onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
-                      />
-                    ))}
-                  </Column.Section>
+                  <Next.Container asChild gutter='inherit' gap='md'>
+                    <section data-testid='tasksPlugin.questions'>
+                      <Next.Typography asChild tone='subdued'>
+                        <h2>{t('task-questions.label')}</h2>
+                      </Next.Typography>
+                      {openQuestions.map((thread) => (
+                        <TaskQuestion
+                          key={thread.question.id}
+                          thread={thread}
+                          onAnswer={(answer) => handleQuestionAnswer(task, thread.question.id, answer)}
+                        />
+                      ))}
+                    </section>
+                  </Next.Container>
                 )}
 
                 <TaskAttachments task={task} canAttach={!!handleAttach} pending={pendingAttachments} />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
-              </Column.Root>
+              </Next.Container>
             </TaskAttachmentDropZone>
           </Next.ScrollArea.Viewport>
         </Next.ScrollArea.Root>

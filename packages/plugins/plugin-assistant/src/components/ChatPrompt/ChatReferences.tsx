@@ -6,8 +6,7 @@ import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
-import { type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { type Label, Next, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useContextObjects } from '#hooks';

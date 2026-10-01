@@ -9,11 +9,10 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
-import { Next } from '@dxos/react-ui/next';
 import { type Actor, type Message, Person } from '@dxos/types';
 
 import { useVisibleTags } from '#hooks';
@@ -272,7 +271,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
     );
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -306,7 +305,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );
@@ -376,7 +375,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const messageTags = useVisibleTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
-  // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
+  // focus (Next.Focus.Item's onCurrentChange fires on click/Enter, not on focus
   // change), so they don't select.
   const handleCurrentChange = useCallback(() => {
     setCurrentId(message.id);

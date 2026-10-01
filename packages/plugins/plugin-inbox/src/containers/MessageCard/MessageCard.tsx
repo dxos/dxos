@@ -5,9 +5,8 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Flex } from '@dxos/react-ui';
+import { Flex, Next } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
-import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util/index.ts';

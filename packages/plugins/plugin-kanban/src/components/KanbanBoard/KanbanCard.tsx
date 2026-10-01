@@ -7,10 +7,9 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 
@@ -61,7 +60,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         draggable={draggable}
         dragHandle={dragHandle}
       >
-        <Focus.Item asChild>
+        <Next.Focus.Item asChild>
           <Next.Card.Root ref={forwardedRef} data-testid='board-item'>
             <Next.Card.Header ref={cardRef}>
               <Next.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
@@ -94,7 +93,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
               )}
             </Next.Card.Body>
           </Next.Card.Root>
-        </Focus.Item>
+        </Next.Focus.Item>
       </Mosaic.Tile>
     );
   },

@@ -17,9 +17,8 @@ import {
 } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
-import { useFileDownload } from '@dxos/react-ui';
+import { Next, useFileDownload } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';

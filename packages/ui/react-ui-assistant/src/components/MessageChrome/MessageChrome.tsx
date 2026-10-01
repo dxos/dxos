@@ -4,10 +4,9 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
-import { Next } from '@dxos/react-ui/next';
 import { type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 

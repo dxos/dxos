@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { PublicKey, useClient, useMulticastObservable } from '@dxos/react-client';
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { arrayToString, deepMapValues } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';

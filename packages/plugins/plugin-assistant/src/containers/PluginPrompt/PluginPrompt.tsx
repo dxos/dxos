@@ -7,8 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { RegistryOperation } from '@dxos/plugin-registry/operations';
-import { Flex, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

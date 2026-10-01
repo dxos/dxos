@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 
 /**
  * Renders the space database's EDGE sync state (Automerge document counts and feed block backlogs)

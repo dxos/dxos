@@ -6,9 +6,8 @@ import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithC
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 export type MarkdownViewProps = ThemedClassName<

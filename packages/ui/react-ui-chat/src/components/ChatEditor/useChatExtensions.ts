@@ -5,8 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useMemo } from 'react';
 
-import { useDynamicRef } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useDynamicRef } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,

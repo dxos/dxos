@@ -6,8 +6,8 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   type ThemeExtensionsOptions,
   createBasicExtensions,

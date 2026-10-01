@@ -4,8 +4,7 @@
 
 import React, { type ComponentProps, type HTMLAttributes, type PropsWithChildren } from 'react';
 
-import { type ClassNameValue } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { type ClassNameValue, Next } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { visitNodes } from './visit-nodes.ts';

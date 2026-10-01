@@ -13,17 +13,10 @@ import React, {
 } from 'react';
 
 import { logFileRegistry } from '@dxos/log';
-import {
-  type ThemedClassName,
-  composable,
-  composableProps,
-  parseCaptureOwnerStack,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -463,7 +456,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
-            const frames = isExpanded && record.error ? parseCaptureOwnerStack(record.error) : null;
+            const frames = isExpanded && record.error ? Next.parseCaptureOwnerStack(record.error) : null;
             return (
               <Listbox.Item
                 key={id}

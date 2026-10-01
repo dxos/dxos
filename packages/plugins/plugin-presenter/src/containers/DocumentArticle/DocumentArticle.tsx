@@ -7,7 +7,7 @@ import React from 'react';
 import { AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { PresentationShell, RevealPlayer } from '#components';
 

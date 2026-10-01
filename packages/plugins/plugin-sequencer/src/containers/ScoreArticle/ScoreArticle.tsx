@@ -7,11 +7,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Flex } from '@dxos/react-ui';
+import { Flex, Next } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 

@@ -10,8 +10,8 @@ import { Format } from '@dxos/echo/Format';
 import { SchemaAST } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { ControlledSelector, MasterDetailTable } from '../../../../components/index.ts';

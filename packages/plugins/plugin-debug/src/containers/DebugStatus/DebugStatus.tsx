@@ -8,7 +8,7 @@ import { TimeoutError } from '@dxos/async';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',

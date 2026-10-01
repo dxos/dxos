@@ -8,9 +8,8 @@ import React, { type KeyboardEvent, type MouseEvent, useMemo } from 'react';
 import { Annotation, Entity, Obj, Ref, Type } from '@dxos/echo';
 import { type SchemaAST } from '@dxos/effect';
 import { URI } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { DxAnchorActivate, hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 

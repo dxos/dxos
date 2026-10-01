@@ -31,7 +31,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -43,7 +43,6 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -449,11 +448,9 @@ export const MailboxArticle = ({
 
   return (
     <Next.Panel.Root data-testid='inbox.mailbox'>
-      <ElevationProvider elevation='positioned'>
-        <Next.Panel.Header>
-          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-        </Next.Panel.Header>
-      </ElevationProvider>
+      <Next.Panel.Header>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+      </Next.Panel.Header>
       <Next.Panel.Body>
         <Next.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack

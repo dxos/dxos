@@ -5,8 +5,8 @@
 import React, { type FC, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
+import { Next } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-trace';
-import { Next } from '@dxos/react-ui/next';
 
 import { useExecutionGraph } from './useExecutionGraph.ts';
 

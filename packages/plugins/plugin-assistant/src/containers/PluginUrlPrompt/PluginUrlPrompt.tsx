@@ -8,8 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { RegistryOperation, describeLoadError } from '@dxos/plugin-registry/operations';
-import { Flex, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

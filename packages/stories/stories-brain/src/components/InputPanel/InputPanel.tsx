@@ -5,9 +5,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createMarkdownExtensions,

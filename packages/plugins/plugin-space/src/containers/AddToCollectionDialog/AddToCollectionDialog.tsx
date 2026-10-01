@@ -14,9 +14,8 @@ import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';

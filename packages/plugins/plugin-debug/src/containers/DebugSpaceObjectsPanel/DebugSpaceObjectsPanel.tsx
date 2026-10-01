@@ -9,9 +9,8 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
-import { Grid } from '@dxos/react-ui';
+import { Grid, Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 
 export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
   onOpen?: (object: Obj.Unknown) => void;

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
-import { Next } from '@dxos/react-ui/next';
 
 export const LoggerPanel = () => (
   <Logger.Root>

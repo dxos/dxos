@@ -15,9 +15,8 @@ import React, {
 
 import { type Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';

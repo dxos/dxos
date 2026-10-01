@@ -22,9 +22,8 @@ import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
-import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
+import { ErrorBoundary, Next, type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   type AutoScrollProps,
   PROMPT_ELEMENT,

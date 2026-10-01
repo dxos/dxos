@@ -9,10 +9,8 @@ import React, { useMemo } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
-import { Next } from '@dxos/react-ui/next';
 import { Message, type Thread } from '@dxos/types';
 
 import { MessageThread } from '#components';

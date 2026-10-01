@@ -8,8 +8,8 @@ import { Format } from '@dxos/echo/Format';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_PresenceState, useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';

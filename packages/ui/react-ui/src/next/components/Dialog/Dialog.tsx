@@ -300,13 +300,13 @@ export const Dialog = {
 };
 
 export type {
-  DialogPlacement,
   DialogBodyProps,
   DialogCloseTriggerProps,
   DialogContentProps,
   DialogDescriptionProps,
   DialogFooterProps,
   DialogHeaderProps,
+  DialogPlacement,
   DialogRootProps,
   DialogTitleProps,
   DialogTriggerProps,

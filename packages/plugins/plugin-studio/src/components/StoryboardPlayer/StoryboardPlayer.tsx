@@ -4,9 +4,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type ThemedClassName, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

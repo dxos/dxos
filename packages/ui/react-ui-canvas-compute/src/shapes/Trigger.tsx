@@ -9,8 +9,8 @@ import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
-import { Next } from '@dxos/react-ui/next';
 
 import { FunctionBody, getHeight } from './common/index.ts';
 import { type TriggerShape } from './trigger-def.ts';

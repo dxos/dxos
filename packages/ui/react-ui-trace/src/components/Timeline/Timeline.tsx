@@ -7,11 +7,17 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
-import { type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import {
+  Next,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useDynamicRef,
+  useForwardedRef,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Shimmer } from '@dxos/react-ui-components';
 import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 

@@ -5,8 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Flex, composable, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, composable, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

@@ -6,8 +6,8 @@ import React from 'react';
 
 import { EdgeServiceName } from '@dxos/config';
 import { useEdgeServiceEndpoint } from '@dxos/react-client';
+import { Next } from '@dxos/react-ui';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
-import { Next } from '@dxos/react-ui/next';
 
 /**
  * Binds the tools explorer to the introspect endpoint from config; the explorer renders its

@@ -11,9 +11,8 @@ import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { useControlledState, useTranslation } from '@dxos/react-ui';
+import { Next, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

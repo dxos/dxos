@@ -7,8 +7,8 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DEFAULT_INPUT } from '@dxos/conductor';
+import { Next } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
-import { Next } from '@dxos/react-ui/next';
 
 import { useComputeNodeState } from '../hooks/index.ts';
 import { Box } from './common/index.ts';

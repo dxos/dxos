@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { cardDefaultInlineSize } from '@dxos/ui-theme';
 

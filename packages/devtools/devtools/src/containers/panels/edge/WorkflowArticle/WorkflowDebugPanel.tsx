@@ -22,9 +22,8 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { type ThemedClassName, useAsyncEffect } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useAsyncEffect } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { useDevtoolsState } from '../../../../hooks/index.ts';

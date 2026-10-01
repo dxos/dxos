@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useDevices, useIdentity } from '@dxos/react-client/halo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { JsonView } from '../../../../components/index.ts';
 import { VaultSelector } from '../../../../containers/index.ts';

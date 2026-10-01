@@ -7,8 +7,8 @@ import React from 'react';
 
 import { type CallMetadata, log } from '@dxos/log';
 import { random } from '@dxos/random';
+import { Next } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

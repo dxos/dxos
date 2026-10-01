@@ -8,9 +8,8 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

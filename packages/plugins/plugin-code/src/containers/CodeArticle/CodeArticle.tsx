@@ -14,9 +14,8 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Grid, useTranslation } from '@dxos/react-ui';
+import { Grid, Next, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createDataExtensions,

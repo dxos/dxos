@@ -4,8 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { Flex, type ThemedClassName } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, type ThemedClassName } from '@dxos/react-ui';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
 /** An entry of a card's header menu. */

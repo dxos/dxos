@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, Format, Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { hues } from '@dxos/ui-types';
 

@@ -16,8 +16,8 @@ import {
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
+import { Next } from '@dxos/react-ui';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 

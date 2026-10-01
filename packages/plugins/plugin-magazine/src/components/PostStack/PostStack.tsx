@@ -5,11 +5,9 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { Subscription } from '#types';
 
@@ -46,7 +44,7 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -68,7 +66,7 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );
@@ -101,7 +99,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Next.Card.Root ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block>
@@ -145,7 +143,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
             )}
           </Next.Card.Body>
         </Next.Card.Root>
-      </Focus.Item>
+      </Next.Focus.Item>
     </Mosaic.Tile>
   );
 });

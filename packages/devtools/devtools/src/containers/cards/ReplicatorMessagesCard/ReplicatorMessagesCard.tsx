@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { Grid } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Grid, Next } from '@dxos/react-ui';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';

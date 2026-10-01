@@ -16,8 +16,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate, Next } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
 

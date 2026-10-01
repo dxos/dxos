@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Axis } from '@dxos/react-ui';
+import { type Axis, Next } from '@dxos/react-ui';
 import { Dnd, type Size } from '@dxos/react-ui-dnd';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Mosaic, type MosaicTileProps } from './Mosaic.ts';

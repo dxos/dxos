@@ -4,9 +4,8 @@
 
 import React, { Fragment, useState } from 'react';
 
-import { Grid } from '@dxos/react-ui';
+import { Grid, Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';

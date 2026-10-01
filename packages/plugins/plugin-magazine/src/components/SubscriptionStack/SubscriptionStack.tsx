@@ -4,9 +4,8 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { Subscription } from '#types';
@@ -53,7 +52,7 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -75,7 +74,7 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );
@@ -129,7 +128,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
 
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current' id={feed.id} data={data} location={location}>
-        <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Next.Card.Root ref={forwardedRef}>
             <Next.Card.Header>
               <Next.Block>
@@ -161,7 +160,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
               )}
             </Next.Card.Body>
           </Next.Card.Root>
-        </Focus.Item>
+        </Next.Focus.Item>
       </Mosaic.Tile>
     );
   },

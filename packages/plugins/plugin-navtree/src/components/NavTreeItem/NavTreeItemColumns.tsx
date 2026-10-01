@@ -4,9 +4,8 @@
 
 import React, { Fragment, memo, useMemo } from 'react';
 
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 
 import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';

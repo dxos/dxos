@@ -7,10 +7,9 @@ import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState }
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { useTranslation } from '@dxos/react-ui';
-import { useFormContext, useSubmitOnEnter, Form } from '@dxos/react-ui-form';
+import { Next, useTranslation } from '@dxos/react-ui';
+import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { ProjectCapabilities } from '#types';

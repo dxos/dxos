@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Next } from '@dxos/react-ui/next';
+import { type Next } from '@dxos/react-ui';
 import { hues } from '@dxos/ui-types';
 
 import { type FormFieldRendererProps } from '#types';

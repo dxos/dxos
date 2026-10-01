@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { Trans, useId, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, Trans, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';

@@ -11,8 +11,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Next } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { Next } from '@dxos/react-ui/next';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {

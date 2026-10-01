@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { Example } from '@dxos/schema/testing';

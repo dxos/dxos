@@ -4,9 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

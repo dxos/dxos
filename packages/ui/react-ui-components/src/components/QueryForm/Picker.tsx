@@ -4,8 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 

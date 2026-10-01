@@ -9,8 +9,8 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import '@dxos/react-ui/next/theme.css';
-import { Next } from '@dxos/react-ui/next';
+import '@dxos/react-ui/theme.css';
+import { Next } from '@dxos/react-ui';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 
 /**
  * Generic JSON inspector module: renders the cell's bound `subject` as highlighted JSON. Bind data

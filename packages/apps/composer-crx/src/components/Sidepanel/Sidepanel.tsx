@@ -7,8 +7,7 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { ErrorBoundary, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { ErrorBoundary, Next, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { getConfig } from '../../config.ts';

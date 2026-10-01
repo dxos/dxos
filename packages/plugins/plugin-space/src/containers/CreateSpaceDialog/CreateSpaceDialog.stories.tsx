@@ -12,8 +12,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { Next } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

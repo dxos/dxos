@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { DebugPanelContext, type DebugPanelContextValue } from './DebugPanelContext.ts';
 import { DebugPanelMain } from './DebugPanelMain.tsx';

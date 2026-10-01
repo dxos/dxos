@@ -7,8 +7,8 @@ import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { useAudioStream } from '@dxos/react-ui-audio';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type ShaderOptions } from '../../shaders/index.ts';

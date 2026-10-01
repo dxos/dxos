@@ -6,9 +6,8 @@ import { tooltips } from '@codemirror/view';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type Segmentation } from '@dxos/nlp';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   type Extension,
   createBasicExtensions,

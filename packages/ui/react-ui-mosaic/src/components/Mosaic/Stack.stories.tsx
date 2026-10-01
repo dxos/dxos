@@ -8,14 +8,13 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
+import { Next } from '@dxos/react-ui';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { arrayMove } from '@dxos/util';
 
 import { useContainerDebug } from '../../hooks/index.ts';
 import { DefaultStackTile, TestItem } from '../../testing/index.ts';
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, MosaicStackProps } from './Mosaic.ts';
 import { MosaicStack } from './Stack.tsx';
 
@@ -79,7 +78,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
           </Next.Toolbar.Root>
         </Next.Panel.Header>
         <Next.Panel.Body asChild>
-          <Focus.Group asChild>
+          <Next.Focus.Group asChild>
             <Mosaic.Container
               asChild
               orientation='vertical'
@@ -94,7 +93,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
                 </Next.ScrollArea.Viewport>
               </Next.ScrollArea.Root>
             </Mosaic.Container>
-          </Focus.Group>
+          </Next.Focus.Group>
         </Next.Panel.Body>
         {props.debug && (
           <Next.Panel.Footer classNames='h-[40dvh]'>

@@ -5,8 +5,7 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

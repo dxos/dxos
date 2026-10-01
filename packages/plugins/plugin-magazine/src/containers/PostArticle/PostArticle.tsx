@@ -11,8 +11,8 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import { Next } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';

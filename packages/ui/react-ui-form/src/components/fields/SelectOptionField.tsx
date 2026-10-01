@@ -6,9 +6,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 

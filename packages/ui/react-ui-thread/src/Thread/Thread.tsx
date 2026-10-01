@@ -21,6 +21,7 @@ import React, {
 import { Obj } from '@dxos/echo';
 import {
   type ComposableProps,
+  Next,
   type ThemedClassName,
   composable,
   composableProps,
@@ -28,7 +29,6 @@ import {
 } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';

@@ -6,8 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ThemedClassName } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type SchemaTableProps = ThemedClassName<{

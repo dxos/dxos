@@ -5,11 +5,9 @@
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 

@@ -15,9 +15,8 @@ import React, {
 
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { composable, composableProps, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { Next, composable, composableProps, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';

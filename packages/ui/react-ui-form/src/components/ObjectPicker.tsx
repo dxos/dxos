@@ -14,7 +14,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 

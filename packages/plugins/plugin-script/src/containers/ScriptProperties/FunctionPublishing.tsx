@@ -12,9 +12,8 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';

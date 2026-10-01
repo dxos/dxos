@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { Next } from '@dxos/react-ui/next';
 import { type Hue } from '@dxos/ui-theme';
 
 import { type ToolMode } from '../VoxelEditor/index.ts';

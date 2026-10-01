@@ -8,9 +8,8 @@ import React, { useCallback, useRef } from 'react';
 import { Annotation, Ref } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';

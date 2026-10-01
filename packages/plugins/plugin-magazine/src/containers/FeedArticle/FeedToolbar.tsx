@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

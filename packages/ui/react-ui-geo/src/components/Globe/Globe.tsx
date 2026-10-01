@@ -31,14 +31,15 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import {
+  Next,
   type ThemedClassName,
   type ThemeMode,
+  composable,
+  composableProps,
   useComposedRefs,
   useControlledState,
   useDynamicRef,
 } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import {

@@ -5,8 +5,7 @@
 import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-import { composable, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -201,7 +200,7 @@ export const FormErrorText = ({ children }: PropsWithChildren) =>
 
 FormErrorText.displayName = 'Form.ErrorText';
 
-/** The `Form` namespace of `@dxos/react-ui-form`, rendered with `@dxos/react-ui/next`; `Root` is the shared one. */
+/** The `Form` namespace of `@dxos/react-ui-form`, rendered with the `Next` namespace of `@dxos/react-ui`; `Root` is the shared one. */
 export const Form = {
   Root: FormRoot,
   Viewport: FormViewport,

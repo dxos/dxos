@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Obj, Type } from '@dxos/echo';
 import { useResolveRef, useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
-import { type FormFieldMap, Form, SelectField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { Map } from '#types';

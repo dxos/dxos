@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, DXN, Entity, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, hues } from '@dxos/ui-types';
 

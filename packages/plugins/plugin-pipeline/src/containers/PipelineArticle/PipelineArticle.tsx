@@ -14,10 +14,10 @@ import {
   useCardPivot,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
+import { Next } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenuContribution } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { type Pipeline } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent } from '#components';

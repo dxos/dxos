@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { useId, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId, useTranslation } from '@dxos/react-ui';
 
 import { StatusPanel } from '../../panels/index.ts';
 import { translationKey } from '../../translations.ts';

@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { TerraObject } from '#types';
 

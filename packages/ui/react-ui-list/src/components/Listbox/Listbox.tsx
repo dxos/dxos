@@ -12,7 +12,7 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 type NextRootProps = ComponentPropsWithoutRef<typeof Next.Listbox.Root>;
 type NextItemProps = ComponentPropsWithoutRef<typeof Next.Listbox.Item>;

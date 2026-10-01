@@ -10,8 +10,8 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
+import { Next } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { TogglePanel, type TogglePanelRootProps } from './TogglePanel.tsx';

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Entity, Obj } from '@dxos/echo';
 import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 import { nameToHue } from './avatar-name.ts';

@@ -28,10 +28,15 @@ import React, {
   useRef,
 } from 'react';
 
-import { type ThemedClassName, useControllableState, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import {
+  Next,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useControllableState,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';

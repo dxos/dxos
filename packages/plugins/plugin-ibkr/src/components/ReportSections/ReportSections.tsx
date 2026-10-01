@@ -5,9 +5,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 
 import { Ibkr } from '#types';
 

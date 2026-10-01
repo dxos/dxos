@@ -11,9 +11,9 @@ import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
+import { Next } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Next } from '@dxos/react-ui/next';
 
 import { type TypeInputOptions, TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
 

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {

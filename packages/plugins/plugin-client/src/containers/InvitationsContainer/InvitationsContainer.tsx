@@ -7,10 +7,9 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
-import { Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';

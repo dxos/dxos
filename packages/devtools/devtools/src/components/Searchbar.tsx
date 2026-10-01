@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { useControlledState } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useControlledState } from '@dxos/react-ui';
 
 export type SearchbarProps = Pick<Next.InputProps, 'placeholder'> & {
   delay?: number;

@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
+import { Next } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
-import { Next } from '@dxos/react-ui/next';
 
 import { type GptRealtimeShape } from './gpt-realtime-def.ts';
 

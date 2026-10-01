@@ -14,8 +14,7 @@ import React, {
 } from 'react';
 
 import { keySymbols } from '@dxos/react-focus';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type MenuItemChrome } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -32,7 +31,6 @@ import {
   isSeparator,
 } from '../types.ts';
 import { executeMenuAction } from '../util.ts';
-import { iconSizeOf } from './icon-size.ts';
 
 //
 // Items (private): the graph's items as `Next.Menu` parts.
@@ -90,7 +88,7 @@ const ItemIcon = ({ menu, action }: { menu: MenuActions; action: MenuAction | Me
   action.properties?.icon ? (
     <Next.Menu.ItemIcon
       spin={action.properties.spin}
-      size={iconSizeOf(menu.iconSize)}
+      size={menu.iconSize}
       classNames={action.properties.iconClassNames}
     />
   ) : null;

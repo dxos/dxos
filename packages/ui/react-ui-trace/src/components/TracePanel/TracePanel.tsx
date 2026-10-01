@@ -5,10 +5,9 @@
 import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
 
 import type * as Process from '@dxos/compute/Process';
-import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { type ExecutionGraph } from '../../execution-graph/index.ts';

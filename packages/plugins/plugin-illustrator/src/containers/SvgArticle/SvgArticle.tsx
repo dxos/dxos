@@ -8,7 +8,7 @@ import { SvgHandler } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { SceneSvg } from '#components';
 import { Drawing, type IllustratorCapabilities } from '#types';

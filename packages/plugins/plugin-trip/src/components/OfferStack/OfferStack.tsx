@@ -5,9 +5,8 @@
 import { format } from 'date-fns';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 import { BookingSearch } from '#types';
@@ -49,7 +48,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
       data={data}
       location={location}
     >
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Next.Card.Root border={false} ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block>
@@ -80,7 +79,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
             )}
           </Next.Card.Body>
         </Next.Card.Root>
-      </Focus.Item>
+      </Next.Focus.Item>
     </Mosaic.Tile>
   );
 });
@@ -103,7 +102,7 @@ export const OfferStack = composable<HTMLDivElement, OfferStackProps>(
     const items = useMemo(() => offers.map((offer) => ({ offer, onSelect })), [offers, onSelect]);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId}>
           <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport>
@@ -111,7 +110,7 @@ export const OfferStack = composable<HTMLDivElement, OfferStackProps>(
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );

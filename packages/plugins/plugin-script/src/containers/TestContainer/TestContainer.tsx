@@ -8,7 +8,7 @@ import type * as Script from '@dxos/compute/Script';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { TestPanel } from '#components';
 import { useDeployDeps } from '#hooks';

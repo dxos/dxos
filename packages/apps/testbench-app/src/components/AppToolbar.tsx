@@ -6,7 +6,7 @@ import React from 'react';
 
 import { toPublicKey } from '@dxos/protocols/buf';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type AppToolbarProps = {
   onHome: () => void;

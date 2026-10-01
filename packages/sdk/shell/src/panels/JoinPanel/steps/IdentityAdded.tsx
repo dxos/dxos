@@ -7,8 +7,7 @@ import React, { cloneElement } from 'react';
 import { generateName } from '@dxos/display-name';
 import { toPublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
-import { useId, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 

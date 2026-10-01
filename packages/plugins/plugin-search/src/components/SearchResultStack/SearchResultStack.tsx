@@ -7,11 +7,10 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
-import { Next } from '@dxos/react-ui/next';
 
 //
 // SearchResultStack
@@ -35,7 +34,7 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild>
           <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport ref={setViewport}>
@@ -51,7 +50,7 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );
@@ -87,7 +86,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
 
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={result.id} data={data} location={location}>
-        <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Next.Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
             <Next.Card.Header ref={cardRef}>
               <Next.Block />
@@ -102,7 +101,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
             </Next.Card.Header>
             <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
           </Next.Card.Root>
-        </Focus.Item>
+        </Next.Focus.Item>
       </Mosaic.Tile>
     );
   },

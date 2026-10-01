@@ -13,11 +13,10 @@ import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { persistentClientServices, withClientProvider } from '@dxos/react-client/testing';
+import { Next } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
-import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Focus } from '../Focus/index.ts';
 import { Mosaic } from './Mosaic.ts';
 import { type MosaicTileProps } from './Tile.tsx';
 
@@ -88,13 +87,13 @@ const usePaginatedItems = (total: number) => {
 
 const ListItemTile: FC<MosaicTileProps<ListItem>> = ({ data, location, current }) => (
   <Mosaic.Tile id={data.id} data={data} location={location} current={current} asChild>
-    <Focus.Item asChild>
+    <Next.Focus.Item asChild>
       <Next.Card.Root>
         <Next.Card.Header>
           <Next.Card.Title>Item #{data.index}</Next.Card.Title>
         </Next.Card.Header>
       </Next.Card.Root>
-    </Focus.Item>
+    </Next.Focus.Item>
   </Mosaic.Tile>
 );
 
@@ -222,7 +221,7 @@ const orderFor = (field: SortField, direction: SortDirection) => {
 
 const CounterItemTile: FC<MosaicTileProps<CounterItem>> = ({ data, location, current }) => (
   <Mosaic.Tile id={data.id} data={data} location={location} current={current} asChild>
-    <Focus.Item asChild>
+    <Next.Focus.Item asChild>
       <Next.Card.Root>
         <Next.Card.Header>
           <Next.Card.Title>
@@ -230,7 +229,7 @@ const CounterItemTile: FC<MosaicTileProps<CounterItem>> = ({ data, location, cur
           </Next.Card.Title>
         </Next.Card.Header>
       </Next.Card.Root>
-    </Focus.Item>
+    </Next.Focus.Item>
   </Mosaic.Tile>
 );
 

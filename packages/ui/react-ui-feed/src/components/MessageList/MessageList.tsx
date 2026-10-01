@@ -15,9 +15,8 @@ import React, {
   useState,
 } from 'react';
 
-import { composable, composableProps, createContext, setRef } from '@dxos/react-ui';
+import { Next, composable, composableProps, createContext, setRef } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
-import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 

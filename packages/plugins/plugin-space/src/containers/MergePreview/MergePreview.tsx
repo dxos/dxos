@@ -5,8 +5,8 @@
 import React, { forwardRef } from 'react';
 
 import { type Type } from '@dxos/echo';
+import { Next } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { SpaceCapabilities } from '#types';
 

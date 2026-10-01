@@ -4,8 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useControlledState, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useControlledState, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 

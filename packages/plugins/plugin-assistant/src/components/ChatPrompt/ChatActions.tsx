@@ -5,9 +5,8 @@
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

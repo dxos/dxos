@@ -9,9 +9,8 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
-import { type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';

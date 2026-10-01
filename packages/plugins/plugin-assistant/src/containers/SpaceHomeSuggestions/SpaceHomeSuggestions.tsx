@@ -7,8 +7,7 @@ import React, { useCallback } from 'react';
 import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';

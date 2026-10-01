@@ -5,7 +5,7 @@
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
+import { type Next } from '@dxos/react-ui';
 import {
   type DropdownMenuItemGroupProperties,
   type MenuActionProperties,
@@ -16,7 +16,7 @@ export type MenuAction<P extends {} = {}> = AppGraphNode.Action<P & MenuActionPr
 
 export const MenuSeparatorType = '@dxos/react-ui-toolbar/separator' as const;
 
-export type MenuSeparator = AppGraphNode.Node<never, Pick<ToolbarSeparatorProps, 'variant'>> & {
+export type MenuSeparator = AppGraphNode.Node<never, Pick<Next.ToolbarSeparatorProps, 'variant'>> & {
   type: typeof MenuSeparatorType;
 };
 
@@ -58,7 +58,7 @@ export type MenuActionsOptions = {
   onAction?: ActionExecutor;
   /** Identifies the component that owns the menu (passed to action handlers). */
   caller?: string;
-  iconSize?: IconButtonProps['size'];
+  iconSize?: Next.Size;
 };
 
 /**

@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { composable } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable } from '@dxos/react-ui';
 
 import { InitializeEmpty } from './InitializeEmpty.tsx';
 import { useTargetConnection } from './useTargetConnection.ts';

@@ -4,8 +4,7 @@
 
 import React, { type KeyboardEvent, type RefObject, useCallback } from 'react';
 
-import { Flex, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';

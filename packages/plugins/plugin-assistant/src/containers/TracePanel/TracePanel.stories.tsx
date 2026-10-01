@@ -21,6 +21,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
@@ -31,7 +32,6 @@ import {
   subAgentDelegationFixture,
   useLocalStorageNumber,
 } from '@dxos/react-ui-trace/testing';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 

@@ -12,9 +12,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, type FormUpdateMeta, useFormValues, Form, RefField } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 

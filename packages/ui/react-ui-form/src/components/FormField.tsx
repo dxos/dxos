@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { type Format } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { type FormFieldLabelPlacement, type FormPresentation } from '#types';
 

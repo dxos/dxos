@@ -5,8 +5,7 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Next } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext.ts';

@@ -4,8 +4,8 @@
 
 import React, { type ComponentProps, useCallback, useMemo } from 'react';
 
-import { type FormFieldRendererProps, Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
+import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import type { FeedbackPluginOption } from './types.ts';
 

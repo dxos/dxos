@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { type Message, type Transcript } from '@dxos/types';
 import {
   createBasicExtensions,

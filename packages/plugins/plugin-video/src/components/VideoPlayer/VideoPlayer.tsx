@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

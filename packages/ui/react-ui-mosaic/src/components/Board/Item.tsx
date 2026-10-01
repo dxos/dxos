@@ -6,14 +6,12 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 
 import { Obj } from '@dxos/echo';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, type MosaicTileProps } from '../Mosaic/index.ts';
 import { useBoardColumn } from './BoardColumnContext.ts';
 import { useBoard } from './BoardContext.ts';
@@ -67,7 +65,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         location={location}
         debug={debug}
       >
-        <Focus.Item asChild>
+        <Next.Focus.Item asChild>
           <Next.Card.Root
             classNames={classNames}
             data-testid='board-item'
@@ -107,7 +105,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               )}
             </Next.Card.Row>
           </Next.Card.Root>
-        </Focus.Item>
+        </Next.Focus.Item>
       </Mosaic.Tile>
     );
   },

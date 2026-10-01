@@ -18,7 +18,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ChatThreadController,
   type ChatThreadEvent,
@@ -34,7 +34,6 @@ import {
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
-import { Next } from '@dxos/react-ui/next';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 

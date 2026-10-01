@@ -10,8 +10,8 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
+import { Next } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { Loading, MobileAppBar, MobileNavBar, NavigationStack, useExpandPath, useMobileLayout } from '#components';
 import { useMobileAppBar, useMobileNavbarActions, useMobileStack } from '#hooks';

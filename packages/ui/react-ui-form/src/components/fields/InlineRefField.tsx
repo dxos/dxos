@@ -11,8 +11,7 @@ import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, type URI } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps, type RefFieldDataProps } from '#types';

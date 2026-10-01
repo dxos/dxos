@@ -7,11 +7,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { composable, composableProps, slottable } from '@dxos/react-ui';
+import { Next, composable, composableProps, slottable, useTranslation } from '@dxos/react-ui';
 import type { MenuActions } from '@dxos/react-ui-menu';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 

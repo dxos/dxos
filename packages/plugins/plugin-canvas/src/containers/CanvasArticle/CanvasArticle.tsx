@@ -10,8 +10,8 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import { Next } from '@dxos/react-ui';
 import { SceneView, useRegistry } from '@dxos/react-ui-canvas/scene';
-import { Next } from '@dxos/react-ui/next';
 
 import { type BoundCanvasStore, bindCanvasStore } from '#model';
 import { CanvasCapabilities } from '#types';

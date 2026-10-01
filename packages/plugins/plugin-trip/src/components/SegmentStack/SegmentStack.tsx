@@ -4,9 +4,8 @@
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Next, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { Segment } from '#types';
 
@@ -54,7 +53,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -77,7 +76,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );

@@ -6,10 +6,9 @@ import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState }
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { type Actor, PullRequest, Task } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';

@@ -17,7 +17,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Switch, useTranslation } from '@dxos/react-ui';
+import { Next, Switch, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -36,7 +36,6 @@ import {
   type TaskPlacement,
   type TaskSelectModifiers,
 } from '@dxos/react-ui-task';
-import { Next } from '@dxos/react-ui/next';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';

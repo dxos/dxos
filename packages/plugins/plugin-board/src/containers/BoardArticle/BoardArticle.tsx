@@ -13,7 +13,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -24,7 +24,6 @@ import {
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
 import { ObjectPicker, type ObjectPickerProps } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
 import { Board } from '#types';

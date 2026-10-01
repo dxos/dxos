@@ -13,8 +13,8 @@ import {
   RecoverIdentityRequest_ExternalSignatureSchema,
   RecoverIdentityRequestSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client/index.ts';

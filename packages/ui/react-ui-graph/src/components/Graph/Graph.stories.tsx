@@ -11,8 +11,8 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 
 import { type SelectionMode, SelectionModel } from '@dxos/graph';
 import type * as GraphModel from '@dxos/graph/GraphModel';
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 

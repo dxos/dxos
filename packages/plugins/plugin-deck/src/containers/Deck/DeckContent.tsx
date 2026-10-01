@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';

@@ -6,9 +6,8 @@ import React from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

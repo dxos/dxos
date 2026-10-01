@@ -7,8 +7,7 @@ import './emoji.css';
 import React, { Suspense, lazy, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 /**

@@ -15,7 +15,7 @@ import { Feed } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { NotebookArticle, ScriptArticle, ScriptSettings } from '#containers';
 import { useCompiler } from '#hooks';

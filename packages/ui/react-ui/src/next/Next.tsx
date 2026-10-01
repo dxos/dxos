@@ -20,7 +20,6 @@ import {
   type AvatarRootProps as NextAvatarRootProps,
   type AvatarStatus as NextAvatarStatus,
   type AvatarVariant as NextAvatarVariant,
-  toAvatarHue as nextToAvatarHue,
   Banner as NextBanner,
   type BannerRootProps as NextBannerRootProps,
   Block as NextBlock,
@@ -151,6 +150,7 @@ import {
   type NumberInputProps as NextNumberInputProps,
   Panel as NextPanel,
   type PanelRootProps as NextPanelRootProps,
+  type ParsedStackFrame as NextParsedStackFrame,
   PasswordInput as NextPasswordInput,
   type PasswordInputProps as NextPasswordInputProps,
   PinInput as NextPinInput,
@@ -217,6 +217,7 @@ import {
   type ToggleProps as NextToggleProps,
   Toolbar as NextToolbar,
   type ToolbarRootProps as NextToolbarRootProps,
+  type ToolbarSeparatorProps as NextToolbarSeparatorProps,
   Tooltip as NextTooltip,
   Tour as NextTour,
   type TourActionsProps as NextTourActionsProps,
@@ -243,6 +244,8 @@ import {
   type VirtualMode as NextVirtualMode,
   VirtualSpacer as NextVirtualSpacer,
   dragScope as nextDragScope,
+  parseCaptureOwnerStack as nextParseCaptureOwnerStack,
+  toAvatarHue as nextToAvatarHue,
   useEditable as nextUseEditable,
   useFocus as nextUseFocus,
   useMainSidebars as nextUseMainSidebars,
@@ -257,9 +260,11 @@ import {
   usePlatform as nextUsePlatform,
   useThemeMode as nextUseThemeMode,
 } from './hooks.ts';
+import { type Size as NextSizeType } from './sizes.ts';
 
-/** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
+/** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/theme.css`. */
 export namespace Next {
+  export type Size = NextSizeType;
   export const Container = NextContainer;
   export type ContainerProps = NextContainerProps;
   export type Gutter = NextGutter;
@@ -271,6 +276,7 @@ export namespace Next {
   export const ScrollArea = NextScrollArea;
   export const Toolbar = NextToolbar;
   export type ToolbarRootProps = NextToolbarRootProps;
+  export type ToolbarSeparatorProps = NextToolbarSeparatorProps;
   export const Icon = NextIcon;
   export type IconHue = NextIconHue;
   export type IconProps = NextIconProps;
@@ -403,6 +409,8 @@ export namespace Next {
   export type ErrorFallbackProps = NextErrorFallbackProps;
   export type ErrorStackFrame = NextErrorStackFrame;
   export type ErrorStackProps = NextErrorStackProps;
+  export type ParsedStackFrame = NextParsedStackFrame;
+  export const parseCaptureOwnerStack = nextParseCaptureOwnerStack;
   export const Focus = NextFocus;
   export const useFocus = nextUseFocus;
   export type FocusGroupProps = NextFocusGroupProps;

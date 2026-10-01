@@ -18,6 +18,7 @@ import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { Next } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import {
   Editor,
@@ -27,7 +28,6 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 

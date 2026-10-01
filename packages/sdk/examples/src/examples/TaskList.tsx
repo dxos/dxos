@@ -7,7 +7,7 @@ import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } f
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { TaskType } from '../types.ts';
 

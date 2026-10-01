@@ -8,8 +8,8 @@ import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { Next } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 

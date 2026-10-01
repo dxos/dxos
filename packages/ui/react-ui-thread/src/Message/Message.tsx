@@ -17,9 +17,8 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { type ThemedClassName, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';

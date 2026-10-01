@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type DialogRestoreSpaceProps = {
   handleFile: (backupFile: File) => Promise<void>;

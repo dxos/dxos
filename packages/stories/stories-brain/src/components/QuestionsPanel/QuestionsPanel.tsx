@@ -4,8 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 
 export type QuestionRow = {
   readonly id: string;

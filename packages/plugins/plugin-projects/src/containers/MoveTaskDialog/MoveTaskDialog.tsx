@@ -11,8 +11,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 
 import { MoveTaskPanel } from '#components';

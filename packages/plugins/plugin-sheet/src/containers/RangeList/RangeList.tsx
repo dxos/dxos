@@ -5,12 +5,11 @@
 import React, { useCallback } from 'react';
 
 // Loaded only through the lazy `RangeList` container, so Next's CSS stays out of the boot graph.
-import '@dxos/react-ui/next/theme.css';
+import '@dxos/react-ui/theme.css';
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { type Sheet, SheetUtil } from '#types';

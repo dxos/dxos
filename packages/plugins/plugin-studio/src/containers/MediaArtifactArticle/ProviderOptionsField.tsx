@@ -11,7 +11,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
-import { type FormFieldMap, type FormFieldRendererProps, ComboboxField, FormFieldRow } from '@dxos/react-ui-form';
+import { ComboboxField, type FormFieldMap, type FormFieldRendererProps, FormFieldRow } from '@dxos/react-ui-form';
 import { type OptionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { type GenerationService } from '#types';

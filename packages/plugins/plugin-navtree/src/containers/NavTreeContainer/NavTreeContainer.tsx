@@ -19,9 +19,8 @@ import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { useMediaQuery } from '@dxos/react-ui';
+import { Next, useMediaQuery } from '@dxos/react-ui';
 import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';

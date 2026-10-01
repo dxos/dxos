@@ -19,12 +19,11 @@ import { useControllableState } from '@dxos/react-hooks';
 import {
   DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
+  Next,
   toLocalizedString,
   useDynamicRef,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -239,13 +238,12 @@ type MenuProps = {
 } & Pick<MenuGroupProps, 'currentItem' | 'onSelect'>;
 
 const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
-  const { tx } = useThemeContext();
   return (
     <ul>
       {groups.map((group, index) => (
         <Fragment key={group.id}>
           <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-          {index < groups.length - 1 && <div className={tx('menu.separator', {})} />}
+          {index < groups.length - 1 && <Next.Separator />}
         </Fragment>
       ))}
     </ul>
@@ -262,15 +260,14 @@ type MenuGroupProps = {
 } & Pick<MenuItemProps, 'onSelect'>;
 
 const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
-  const { tx } = useThemeContext();
   const { t } = useTranslation();
 
   return (
     <>
       {group.label && (
-        <div className={tx('menu.groupLabel', {})}>
-          <span>{toLocalizedString(group.label, t)}</span>
-        </div>
+        <Next.Typography tone='description' classNames='px-2'>
+          {toLocalizedString(group.label, t)}
+        </Next.Typography>
       )}
 
       {group.items.map((item) => (
@@ -291,7 +288,6 @@ type MenuItemProps = {
 };
 
 const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
-  const { tx } = useThemeContext();
   const { t } = useTranslation();
 
   const listRef = useRef<HTMLLIElement>(null);
@@ -306,9 +302,10 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const handleSelect = useCallback(() => onSelect?.(item), [item, onSelect]);
 
   return (
-    <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hover-surface'])} onClick={handleSelect}>
+    // Menu row metrics without a Menu machine: the popover keeps focus in the editor, so `current` is the highlight.
+    <li ref={listRef} className='nx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
       {item.icon && <Next.Icon icon={item.icon} />}
-      <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
+      <span className='nx-menu-item-text'>{toLocalizedString(item.label, t)}</span>
     </li>
   );
 };

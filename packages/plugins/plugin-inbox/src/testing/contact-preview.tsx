@@ -8,8 +8,8 @@ import { type Database, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { buildContactFromActor } from '@dxos/extractor-lib';
 import { EID } from '@dxos/keys';
+import { Next } from '@dxos/react-ui';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { type Actor, type Person } from '@dxos/types';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 

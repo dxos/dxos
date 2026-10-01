@@ -5,8 +5,7 @@
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { composeRefs } from '@dxos/react-hooks';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { useMosaicTileContext } from './MosaicTileContext.ts';
 

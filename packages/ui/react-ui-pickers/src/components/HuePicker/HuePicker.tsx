@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import type { Next, Size } from '@dxos/react-ui/next';
+import { type Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { getSize, osTranslations } from '@dxos/ui-theme';
 import { hues } from '@dxos/ui-types';
 
@@ -36,9 +35,9 @@ export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) 
 };
 
 /** Next icon sizes as the Tailwind steps the preview's square is drawn at. */
-const PREVIEW_SIZES: Record<Size, 3 | 3.5 | 4 | 5 | 6> = { xs: 3, sm: 3.5, md: 4, lg: 5, xl: 6 };
+const PREVIEW_SIZES: Record<Next.Size, 3 | 3.5 | 4 | 5 | 6> = { xs: 3, sm: 3.5, md: 4, lg: 5, xl: 6 };
 
-const HuePreview = ({ value, size: iconSize = 'lg' }: { value: string; size?: Size }) => {
+const HuePreview = ({ value, size: iconSize = 'lg' }: { value: string; size?: Next.Size }) => {
   const size = PREVIEW_SIZES[iconSize];
   return (
     <div className='flex justify-center items-center'>

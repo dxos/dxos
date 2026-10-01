@@ -17,9 +17,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import { Next } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
-import { Next } from '@dxos/react-ui/next';
 
 import { Mic } from '#components';
 import { createStoryDecorators } from '#testing';

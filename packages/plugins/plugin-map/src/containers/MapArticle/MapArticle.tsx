@@ -6,10 +6,9 @@ import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'reac
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
+import { Flex, type FlexProps, Next, useControlledState } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
-import { Next } from '@dxos/react-ui/next';
 
 import { type GeoControlProps, GlobeControl, MapControl } from '#components';
 import { MapCapabilities } from '#types';

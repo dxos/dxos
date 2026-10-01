@@ -6,9 +6,8 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import { compactSlots } from '@dxos/ui-editor';
 

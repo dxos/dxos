@@ -4,8 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Flex, Grid, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Grid, Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

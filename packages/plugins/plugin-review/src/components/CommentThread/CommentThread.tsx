@@ -6,7 +6,7 @@ import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 
 
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import {
   Message as MessageComponent,
   type MessageMetadata,
@@ -14,7 +14,6 @@ import {
   type ThreadComponents,
   ThreadStatusProps,
 } from '@dxos/react-ui-thread';
-import { Next } from '@dxos/react-ui/next';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 

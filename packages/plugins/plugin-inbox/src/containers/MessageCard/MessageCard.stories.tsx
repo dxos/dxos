@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
+import { Next } from '@dxos/react-ui';
 import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
-import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 

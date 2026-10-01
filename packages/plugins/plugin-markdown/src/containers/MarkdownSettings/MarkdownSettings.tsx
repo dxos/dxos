@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
-import { type FormFieldRendererProps, Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
+import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';

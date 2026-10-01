@@ -6,9 +6,8 @@ import React from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Flex } from '@dxos/react-ui';
+import { Flex, Next } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Next } from '@dxos/react-ui/next';
 
 import { SpacetimeEditor } from '#components';
 import { Scene, SceneView } from '#types';

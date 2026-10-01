@@ -6,10 +6,9 @@ import { Prec } from '@codemirror/state';
 import React, { type Ref, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { Column, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, RefEditor } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 import { type Message as MessageType, Person } from '@dxos/types';
 import { type Extension, keymap } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -205,7 +204,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
     return (
       <Next.ScrollArea.Root>
         <Next.ScrollArea.Viewport>
-          <Column.Root
+          <Next.Container
             {...composableProps(props, {
               // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height participates in
               // layout: when the surface is short the whole form scrolls (outer ScrollArea) instead of
@@ -218,7 +217,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             ref={forwardedRef}
           >
             {showHeader && (
-              <Column.Center classNames='flex items-center justify-between pt-form-gap'>
+              <div className='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
                   <Next.Button
@@ -229,13 +228,13 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                     onClick={onDelete}
                   />
                 )}
-              </Column.Center>
+              </div>
             )}
 
             {/* Label / editor / reveal-links tracks; every row shares the grid so the labels and
                 fields align as columns, with a small row gap separating the fields vertically. */}
-            <Column.Center
-              classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-2'
+            <div
+              className='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-2'
               data-testid='edit-email-form'
             >
               <span className={labelStyles}>{t('draft-to.label')}</span>
@@ -308,9 +307,9 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                   }}
                 />
               </Next.Field.Root>
-            </Column.Center>
+            </div>
 
-            <Column.Center classNames='flex flex-col dx-grow py-3'>
+            <div className='flex flex-col dx-grow py-3'>
               <Editor
                 compact
                 classNames='dx-input dx-expand'
@@ -319,15 +318,15 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}
                 onChange={handleBodyChanged}
               />
-            </Column.Center>
+            </div>
 
-            <Column.Center classNames='pb-form-padding'>
+            <div className='pb-form-padding'>
               <Next.Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
                 <Next.Icon icon='ph--paper-plane-right--regular' size='lg' />
                 <span className='ms-2'>{t('send-email-button.label')}</span>
               </Next.Button>
-            </Column.Center>
-          </Column.Root>
+            </div>
+          </Next.Container>
         </Next.ScrollArea.Viewport>
       </Next.ScrollArea.Root>
     );

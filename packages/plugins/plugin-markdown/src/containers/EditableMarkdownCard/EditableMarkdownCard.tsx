@@ -7,8 +7,8 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
+import { Next } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';

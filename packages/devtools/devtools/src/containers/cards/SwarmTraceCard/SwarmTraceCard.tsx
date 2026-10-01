@@ -5,8 +5,8 @@
 import React, { Fragment, useState } from 'react';
 
 import * as Trace from '@dxos/compute/Trace';
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type ReceivedMessage } from '../../../hooks/index.ts';

@@ -7,7 +7,7 @@ import React from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { TracePanel } from '@dxos/plugin-assistant/components';
 import { type Space } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 /**
  * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.

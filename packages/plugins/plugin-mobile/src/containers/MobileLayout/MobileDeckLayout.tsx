@@ -6,8 +6,8 @@ import React, { useLayoutEffect, useState } from 'react';
 
 import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '@dxos/plugin-deck/overlays';
+import { Next } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
-import { Next } from '@dxos/react-ui/next';
 
 import { DebugOverlay, MobileLayout } from '#components';
 

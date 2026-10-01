@@ -19,8 +19,8 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type TreeItemDataProps, type TreeModel, Tree, type TreeNode } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
+import { Tree, type TreeItemDataProps, type TreeModel, type TreeNode } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {

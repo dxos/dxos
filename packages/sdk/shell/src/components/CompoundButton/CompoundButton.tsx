@@ -4,8 +4,7 @@
 
 import React, { type ButtonHTMLAttributes, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { useId } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type CompoundButtonSlots = {

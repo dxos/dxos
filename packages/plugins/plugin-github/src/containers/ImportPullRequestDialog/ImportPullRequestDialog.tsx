@@ -9,9 +9,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
@@ -143,12 +142,10 @@ export const ImportPullRequestDialog = () => {
           onSave={handleSave}
           onCancel={handleCancel}
         >
-          <Column.Center>
-            <Form.Content>
-              <Form.Fields />
-              <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
-            </Form.Content>
-          </Column.Center>
+          <Form.Content>
+            <Form.Fields />
+            <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
+          </Form.Content>
         </Form.Root>
       </Next.Dialog.Body>
     </Next.Dialog.Content>

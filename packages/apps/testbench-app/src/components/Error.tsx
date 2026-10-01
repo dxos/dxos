@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouteError } from 'react-router-dom';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type ErrorProps = { noJoke?: boolean };
 

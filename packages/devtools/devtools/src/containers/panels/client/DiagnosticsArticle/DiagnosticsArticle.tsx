@@ -6,8 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { useFileDownload } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useFileDownload } from '@dxos/react-ui';
 
 import { JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';

@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';

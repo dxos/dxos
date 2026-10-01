@@ -7,8 +7,9 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { Next } from '../next/index.ts';
 
 random.seed(999);
 
@@ -58,13 +59,13 @@ export const Default = {
     const virtualItems = virtualizer.getVirtualItems();
 
     return (
-      <Panel.Root>
-        <Panel.Toolbar asChild>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
           <ScrollToolbar items={items} index={index} setIndex={setIndex} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical' centered>
-            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root orientation='vertical'>
+            <Next.ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <div
                 style={{
                   position: 'relative',
@@ -93,10 +94,10 @@ export const Default = {
                   </div>
                 ))}
               </div>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-      </Panel.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 };
@@ -111,26 +112,33 @@ const ScrollToolbar = ({
   setIndex: (index: number) => void;
 }) => {
   return (
-    <Toolbar.Root classNames='grid grid-cols-3'>
-      <div />
-      <div className='flex justify-center gap-1'>
-        <Toolbar.IconButton icon='ph--arrow-line-left--regular' iconOnly label='start' onClick={() => setIndex(0)} />
-        <Toolbar.IconButton
-          icon='ph--arrows-out-line-horizontal--regular'
-          iconOnly
-          label='random'
-          onClick={() => setIndex(Math.floor(Math.random() * items.length))}
-        />
-        <Toolbar.IconButton
-          icon='ph--arrow-line-right--regular'
-          iconOnly
-          label='end'
-          onClick={() => setIndex(items.length - 1)}
-        />
-      </div>
-      <div className='p-1 text-right'>
+    <Next.Toolbar.Root>
+      <Next.Toolbar.Separator variant='gap' />
+      <Next.Button
+        variant='ghost'
+        icon='ph--arrow-line-left--regular'
+        iconOnly
+        label='start'
+        onClick={() => setIndex(0)}
+      />
+      <Next.Button
+        variant='ghost'
+        icon='ph--arrows-out-line-horizontal--regular'
+        iconOnly
+        label='random'
+        onClick={() => setIndex(Math.floor(Math.random() * items.length))}
+      />
+      <Next.Button
+        variant='ghost'
+        icon='ph--arrow-line-right--regular'
+        iconOnly
+        label='end'
+        onClick={() => setIndex(items.length - 1)}
+      />
+      <Next.Toolbar.Separator variant='gap' />
+      <Next.Toolbar.Text>
         {index + 1}/{items.length}
-      </div>
-    </Toolbar.Root>
+      </Next.Toolbar.Text>
+    </Next.Toolbar.Root>
   );
 };

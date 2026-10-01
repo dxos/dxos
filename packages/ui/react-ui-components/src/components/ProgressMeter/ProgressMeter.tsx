@@ -5,8 +5,7 @@
 import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } from 'react';
 
 import { Progress as ProgressModel } from '@dxos/progress';
-import { type ThemedClassName, composable, composableProps, stepCount, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -158,7 +157,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
     // rather than dropping it: a button that vanishes on completion takes its width with it and
     // slides the readout beside it sideways, at the exact moment the reader is looking at it.
     const cancellable = failed || (state.cancellable === true && active);
-    const stages = stepCount(state.phases);
+    const stages = state.phases ?? 0;
     // The crawl is the meter's only text now, so it opens with the run's name: without it a list of
     // meters would say what each is doing and never which task it is.
     const lines = useNotes(label ?? name, note, state.startedAt);

@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
+import { Next } from '@dxos/react-ui';
 import { MarkdownLink, type MarkdownViewProps } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 
 /**
  * Renderers for a task's description at rest: a link some contributed preview resolver answers for

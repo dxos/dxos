@@ -5,8 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { useId, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 

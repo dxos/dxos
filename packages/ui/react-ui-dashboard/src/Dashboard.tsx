@@ -8,13 +8,13 @@ import React, { type ComponentProps, type PropsWithChildren, forwardRef, useCall
 import { createContext, useControllableState } from '@dxos/react-hooks';
 import {
   type ComposableProps,
+  Next,
   type SlottableProps,
   type ThemedClassName,
   composable,
   composableProps,
   slottable,
 } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type UnitFormat } from '@dxos/util';
 

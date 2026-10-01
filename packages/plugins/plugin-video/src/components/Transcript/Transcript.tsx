@@ -8,9 +8,8 @@ import React, { useEffect } from 'react';
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, composeRefs } from '@dxos/react-ui';
+import { Next, composable, composableProps, composeRefs } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,

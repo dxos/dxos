@@ -7,8 +7,7 @@ import React, { useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Grid } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Grid, Next } from '@dxos/react-ui';
 
 import { Subscription } from '#types';
 

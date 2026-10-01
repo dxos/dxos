@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { Result } from '#types';
 

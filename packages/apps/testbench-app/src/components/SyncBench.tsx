@@ -19,8 +19,8 @@ import { log } from '@dxos/log';
 import { useClient, useConfig } from '@dxos/react-client';
 import { type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 import { Expando } from '@dxos/schema';
 
 const runtime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);

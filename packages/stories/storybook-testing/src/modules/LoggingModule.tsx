@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
-import { Next } from '@dxos/react-ui/next';
 
 /**
  * Renders the `@dxos/react-ui-debug` {@link Logger} composite — a live `@dxos/log` viewer with

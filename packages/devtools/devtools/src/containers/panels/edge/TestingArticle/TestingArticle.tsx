@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState } from '../../../../hooks/index.ts';

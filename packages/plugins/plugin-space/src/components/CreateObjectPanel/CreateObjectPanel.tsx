@@ -8,11 +8,10 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { Flex, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { omitId, useFormContext, useSubmitOnEnter, Form, ObjectForm } from '@dxos/react-ui-form';
+import { Flex, Next, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 

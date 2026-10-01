@@ -8,8 +8,8 @@ import React, { createContext, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Next } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
 import { ObjectCard } from '../ObjectCard/index.ts';

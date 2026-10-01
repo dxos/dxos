@@ -5,9 +5,8 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Flex } from '@dxos/react-ui';
+import { Flex, Next } from '@dxos/react-ui';
 import { Oscilloscope } from '@dxos/react-ui-audio';
-import { Next } from '@dxos/react-ui/next';
 
 import { Mixer } from '#components';
 import { useMixerEngine } from '#hooks';

@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

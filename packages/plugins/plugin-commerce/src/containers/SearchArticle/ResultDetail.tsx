@@ -5,8 +5,7 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Flex, Grid, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Grid, Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Result } from '#types';

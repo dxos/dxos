@@ -311,8 +311,7 @@
 
   /*
    * The app's own dialog overlay. Only this one is named: the name has to be unique among rendered
-   * elements or the transition is abandoned, and `dx-dialog__overlay` is worn by every dialog in the
-   * app, including ones a plank puts on screen beside this one.
+   * elements or the transition is abandoned, and a plank can put another dialog on screen beside it.
    */
   .dx-main-dialog {
     view-transition-name: dx-main-dialog;

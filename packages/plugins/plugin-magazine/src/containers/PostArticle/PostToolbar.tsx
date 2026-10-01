@@ -5,8 +5,8 @@
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 
 import { postReadAtom, postTagsAtom } from '#atoms';
 import { meta } from '#meta';

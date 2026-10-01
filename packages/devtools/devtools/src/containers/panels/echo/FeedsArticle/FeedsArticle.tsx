@@ -15,8 +15,8 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
+import { Next } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 
 import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';

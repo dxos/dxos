@@ -9,9 +9,8 @@ import React, { type ChangeEvent, type ComponentProps, useCallback, useMemo } fr
 
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { type FormFieldMap, Form, createSelectField } from '@dxos/react-ui-form';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
+import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 export const CrawlOptions = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({

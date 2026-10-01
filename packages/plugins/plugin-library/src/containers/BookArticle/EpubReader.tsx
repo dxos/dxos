@@ -4,8 +4,7 @@
 
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { Flex } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next } from '@dxos/react-ui';
 
 /** Minimal surface of foliate-js's `<foliate-view>` custom element we drive imperatively. */
 type FoliateView = HTMLElement & {

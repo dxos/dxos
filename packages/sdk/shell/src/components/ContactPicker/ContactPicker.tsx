@@ -5,8 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Contact } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations.ts';
 import { contactDisplayName, contactKeyHex, filterContacts } from '../ContactList/index.ts';

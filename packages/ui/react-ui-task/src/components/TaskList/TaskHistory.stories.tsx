@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { useObject } from '@dxos/echo-react';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 

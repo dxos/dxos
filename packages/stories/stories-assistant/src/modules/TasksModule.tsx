@@ -9,8 +9,8 @@ import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createDataExtensions,

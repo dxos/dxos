@@ -5,8 +5,7 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react';
 
-import { createContext } from '@dxos/react-ui';
-import { type Next } from '@dxos/react-ui/next';
+import { type Next, createContext } from '@dxos/react-ui';
 
 import { type TreeNode, type TreeWalk } from './tree-collection.ts';
 import { type TreeData } from './tree-data.ts';

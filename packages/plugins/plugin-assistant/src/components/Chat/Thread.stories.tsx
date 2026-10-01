@@ -19,6 +19,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { ChatThread, type ChatThreadEvent, type ChatView } from '@dxos/react-ui-assistant';
 import {
   type MessageGenerator,
@@ -27,7 +28,6 @@ import {
 } from '@dxos/react-ui-assistant/testing';
 import { EditorPreviewProvider } from '@dxos/react-ui-editor';
 import { useFeedModel } from '@dxos/react-ui-feed';
-import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Message as MessageType } from '@dxos/types';
 import { Message, Organization, Person } from '@dxos/types';

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import {
   type ControlProps,
   Globe,
@@ -20,7 +20,6 @@ import {
   useTour,
   useWheel,
 } from '@dxos/react-ui-geo';
-import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
 import { type GeoControlProps } from '../types.ts';

@@ -8,8 +8,8 @@ import { DXN, Entity, Format, Type } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, Placeholder, Searchbar } from '../../../../components/index.ts';

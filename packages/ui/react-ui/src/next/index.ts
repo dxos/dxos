@@ -3,7 +3,8 @@
 //
 
 export * from './Next.tsx';
-export * from './sizes.ts';
+// Flat under its own name: the root re-exports `@dxos/ui-types`, whose spacing-scale `Size` would collide.
+export { type Size as NextSize } from './sizes.ts';
 
 // Declaration emit in consumers names these types when it infers a composite's props (TS2883 otherwise).
 export type {

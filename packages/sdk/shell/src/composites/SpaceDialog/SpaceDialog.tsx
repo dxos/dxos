@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { useId } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId } from '@dxos/react-ui';
 
 import { SpacePanel, type SpacePanelProps } from '../../panels/index.ts';
 

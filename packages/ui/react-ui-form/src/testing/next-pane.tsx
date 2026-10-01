@@ -5,7 +5,7 @@
 import { type Decorator } from '@storybook/react-vite';
 import React from 'react';
 
-import '@dxos/react-ui/next/theme.css';
+import '@dxos/react-ui/theme.css';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { osTranslations } from '@dxos/ui-theme';
 

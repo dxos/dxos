@@ -4,9 +4,8 @@
 
 import React, { type ButtonHTMLAttributes, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
-import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Next, type Size } from '@dxos/react-ui/next';
 import {
   type ClassNameValue,
   type DropdownMenuItemGroupProperties,
@@ -28,7 +27,6 @@ import { executeMenuAction } from '../util.ts';
 import { actionLabel } from './action-label.ts';
 import { ActionLabel } from './ActionLabel.tsx';
 import { ActionMenu } from './ActionMenu.tsx';
-import { iconSizeOf } from './icon-size.ts';
 
 //
 // Items (private): the graph's root items as `Next.Toolbar` parts.
@@ -39,7 +37,7 @@ type ItemProps<T> = { menu: MenuActions } & T;
 type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> & {
   action: MenuAction | MenuItemGroup<DropdownMenuItemGroupProperties>;
   variant: Next.ButtonVariant;
-  iconSize?: Size;
+  iconSize?: Next.Size;
   caretDown?: boolean;
   classNames?: ClassNameValue;
   testId?: string;
@@ -103,7 +101,7 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
       action={action}
       variant={action.properties.variant === 'primary' ? 'primary' : 'ghost'}
       disabled={disabled || pending}
-      iconSize={iconSizeOf(iconSize)}
+      iconSize={iconSize}
       classNames={classNames}
       onClick={handleClick}
       testId={testId}
@@ -134,7 +132,7 @@ const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
     pressed: !!checked,
     disabled,
     spin,
-    iconSize: iconSizeOf(iconSize),
+    iconSize: iconSize,
     classNames,
     onPressedChange: handlePressedChange,
     ...(testId && { 'data-testid': testId }),
@@ -216,7 +214,7 @@ const DropdownToolbarItem = ({ menu, group }: ItemProps<{ group: MenuItemGroup<D
       action={display}
       variant='ghost'
       disabled={disabled}
-      iconSize={iconSizeOf(menu.iconSize)}
+      iconSize={menu.iconSize}
       caretDown={caretDown && !disabled}
       testId={testId}
     />
@@ -260,7 +258,7 @@ const ToggleGroupItem = ({
     disabled,
     variant: 'ghost' as const,
     spin,
-    iconSize: iconSizeOf(iconSize),
+    iconSize: iconSize,
     classNames,
     onClick: handleClick,
     ...(testId && { 'data-testid': testId }),

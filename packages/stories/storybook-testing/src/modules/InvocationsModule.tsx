@@ -7,7 +7,7 @@ import React from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export const InvocationsModule = () => {
   const space = useActiveSpace();

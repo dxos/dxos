@@ -9,10 +9,9 @@ import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';

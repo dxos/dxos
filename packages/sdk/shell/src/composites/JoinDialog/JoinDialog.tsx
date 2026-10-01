@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
 
 import { JoinPanel, type JoinPanelProps } from '../../panels/index.ts';
 import { translationKey } from '../../translations.ts';

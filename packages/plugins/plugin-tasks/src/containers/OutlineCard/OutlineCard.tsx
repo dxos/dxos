@@ -6,8 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useResolveRef } from '@dxos/echo-react';
-import { Show } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, Show } from '@dxos/react-ui';
 import { type Outline as OutlineType } from '@dxos/types';
 
 import { Outline } from '#components';

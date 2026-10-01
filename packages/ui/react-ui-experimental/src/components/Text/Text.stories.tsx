@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { motion } from 'motion/react';
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: string }>) => {

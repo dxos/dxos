@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Column, Flex } from '@dxos/react-ui';
+import { Flex, Next } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -17,7 +17,6 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -27,7 +26,7 @@ export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 /**
  * Per-space Home article shell. Owns only the chrome: a toolbar sourced from graph actions
  * contributed with `disposition: 'toolbar'` (e.g. Start / Hide Welcome from plugin-support),
- * and a Column layout that delegates its body to surface contributors:
+ * and a Container layout that delegates its body to surface contributors:
  *
  * - `space-home-content`: scrollable region (Welcome panel, recent-objects masonry, starter prompts).
  * - `space-home-pin-bottom`: pinned region (assistant prompt), capped at one contributor.
@@ -47,7 +46,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
       </Next.Panel.Header>
 
       <Next.Panel.Body asChild>
-        <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
+        <Next.Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport>
               <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
@@ -55,10 +54,10 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
               </Flex>
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
-          <Column.Center classNames='dx-document pb-4'>
+          <div className='dx-document pb-4'>
             <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
-          </Column.Center>
-        </Column.Root>
+          </div>
+        </Next.Container>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );

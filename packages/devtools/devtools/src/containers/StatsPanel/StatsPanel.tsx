@@ -4,8 +4,7 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Flex } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next } from '@dxos/react-ui';
 
 const LIVE_INTERVAL = 5_000;
 

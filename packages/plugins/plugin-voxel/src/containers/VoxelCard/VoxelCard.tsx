@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { VoxelEditor } from '#components';
 import { Voxel } from '#types';

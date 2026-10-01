@@ -7,8 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { useId, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useId, useTranslation } from '@dxos/react-ui';
 
 import { CloseButton, Heading, Viewport } from '../../components/index.ts';
 import { InvitationManager } from '../../steps/index.ts';

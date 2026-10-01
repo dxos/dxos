@@ -4,9 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 

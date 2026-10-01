@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type Next } from '@dxos/react-ui/next';
+import { type Next } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 

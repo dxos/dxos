@@ -7,10 +7,8 @@ import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { Grid, ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Grid, Next, ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { Next } from '@dxos/react-ui/next';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

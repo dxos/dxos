@@ -4,20 +4,18 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type DialogSize } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */
-  size?: DialogSize;
+  size?: Next.Size;
   /** Passed to `Dialog.Overlay` (default `center`). */
   blockAlign?: 'center' | 'start' | 'end';
 };
 
 /**
  * Renders shell story content inside a real `Dialog` so Storybook matches production
- * layout, portal/overlay behavior, and focus management. `Dialog.Content` supplies
- * `Column.Root`; overlay layout is taken from `Dialog.Overlay` context.
+ * layout, portal/overlay behavior, and focus management.
  */
 export const StorybookDialog = ({ children, size = 'md', blockAlign = 'center' }: StorybookDialogProps) => {
   return (

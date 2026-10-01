@@ -5,8 +5,7 @@
 import React, { type FC, useEffect, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName } from '@dxos/react-ui';
 
 export type PickerButtonProps = ThemedClassName<{
   Component: FC<{ value: string; size?: Next.IconProps['size'] }>;

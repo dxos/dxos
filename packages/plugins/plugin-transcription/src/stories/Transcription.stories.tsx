@@ -16,8 +16,8 @@ import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
+import { Next } from '@dxos/react-ui';
 import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
-import { Next } from '@dxos/react-ui/next';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators } from '#testing';

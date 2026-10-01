@@ -5,7 +5,7 @@
 import React from 'react';
 
 import type { GraphDiagnostic } from '@dxos/conductor';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type DiagnosticOverlayProps = {
   diagnostics: GraphDiagnostic[];

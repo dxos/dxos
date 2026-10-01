@@ -5,7 +5,7 @@
 import React, { type ComponentType } from 'react';
 
 import { random } from '@dxos/random';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { type ContentBlock, Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';

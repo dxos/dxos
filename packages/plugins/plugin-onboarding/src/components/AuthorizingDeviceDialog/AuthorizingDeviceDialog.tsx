@@ -7,8 +7,7 @@ import '@fontsource/poiret-one';
 import React from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Flex, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta.ts';

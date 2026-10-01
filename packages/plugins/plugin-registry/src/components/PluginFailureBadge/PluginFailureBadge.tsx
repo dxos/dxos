@@ -5,8 +5,7 @@
 import React, { type ComponentPropsWithoutRef } from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

@@ -9,7 +9,7 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Filter } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 // No plugin renders a bare `Instructions` object as an Article (the routine article surface matches
 // `Routine.Routine`, which only references Instructions), so render it via the generic card surface

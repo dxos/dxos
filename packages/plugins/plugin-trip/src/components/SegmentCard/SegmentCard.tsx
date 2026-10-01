@@ -6,10 +6,9 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -54,7 +53,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
  *     Card.Header  → kind icon + title + delete (Card.ActionIconButton action='delete')
  *     Card.Body  → optional Route and Date rows
  *
- * Selection / current state is wired through `Mosaic.Tile asChild` + `Focus.Item`
+ * Selection / current state is wired through `Mosaic.Tile asChild` + `Next.Focus.Item`
  * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`
  * states uniformly across the stack.
  */
@@ -95,7 +94,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       data={data}
       location={location}
     >
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+      <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Next.Card.Root border={false} ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block>
@@ -134,7 +133,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
             )
           )}
         </Next.Card.Root>
-      </Focus.Item>
+      </Next.Focus.Item>
     </Mosaic.Tile>
   );
 });

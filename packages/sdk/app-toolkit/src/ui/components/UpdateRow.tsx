@@ -6,7 +6,7 @@ import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Match from 'effect/Match';
 import React, { type ReactNode, useState } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate from '../../app/AppUpdate.ts';

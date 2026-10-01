@@ -6,7 +6,7 @@ import React from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Tree } from '@dxos/devtools';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 export type DebugGraphProps = { role?: string; graph: AppGraph.Graph; root: string };
 

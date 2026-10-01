@@ -11,8 +11,8 @@ import { requirePublicKey } from '@dxos/protocols/buf';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Next } from '@dxos/react-ui/next';
 import { ComplexMap } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';

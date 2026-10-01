@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { CompoundButton, InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';

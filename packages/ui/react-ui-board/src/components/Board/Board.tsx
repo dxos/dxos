@@ -17,7 +17,15 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, composable, composableProps, composeRefs, usePx, useTranslation } from '@dxos/react-ui';
+import {
+  Next,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  composeRefs,
+  usePx,
+  useTranslation,
+} from '@dxos/react-ui';
 import {
   type DndContainerHandler,
   type DndPlaceholderData,
@@ -25,7 +33,6 @@ import {
   useContainerId,
   useDndRootContext,
 } from '@dxos/react-ui-dnd';
-import { Next } from '@dxos/react-ui/next';
 import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';

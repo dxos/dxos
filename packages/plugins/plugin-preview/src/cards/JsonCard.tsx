@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
+import { Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Next } from '@dxos/react-ui/next';
 
 export const JsonCard = ({ data }: { data: unknown }) => {
   const [open, setOpen] = useState(false);

@@ -4,7 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { type ArtifactKind, type ArtifactLink } from '../../pull-request-body.ts';
 

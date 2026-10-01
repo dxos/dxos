@@ -8,8 +8,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Next } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

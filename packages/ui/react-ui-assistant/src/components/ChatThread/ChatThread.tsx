@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { createContext, useTranslation } from '@dxos/react-ui';
+import { Next, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -20,7 +20,6 @@ import {
   type MessageRange,
   useMessageList,
 } from '@dxos/react-ui-feed';
-import { Next } from '@dxos/react-ui/next';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';

@@ -6,8 +6,7 @@ import React from 'react';
 
 import { Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps } from '#types';

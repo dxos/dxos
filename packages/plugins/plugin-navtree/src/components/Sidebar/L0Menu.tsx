@@ -27,9 +27,8 @@ import React, {
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { type ThemedClassName, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
-import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 

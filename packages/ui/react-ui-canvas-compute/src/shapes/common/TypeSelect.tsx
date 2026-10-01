@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 // TODO(burdon): Factor out.
 export type TypeSelectProps = {

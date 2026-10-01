@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { JsonView } from '../../../../components/index.ts';
 import { EdgeSelector, VaultSelector } from '../../../../containers/index.ts';

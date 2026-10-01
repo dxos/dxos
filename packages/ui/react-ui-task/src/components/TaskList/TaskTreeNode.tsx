@@ -6,9 +6,8 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { type FC, type KeyboardEvent, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeDropEvent, type TreeNode, type TreeSelectEvent } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
 import { type Task } from '@dxos/types';
 
 import {

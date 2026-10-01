@@ -7,10 +7,9 @@ import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useI
 import { Obj } from '@dxos/echo';
 import { findFirstFocusable } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
 import { type ComposableProps } from '@dxos/ui-types';
 
 //

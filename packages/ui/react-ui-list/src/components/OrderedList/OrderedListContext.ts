@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@dxos/react-ui';
-import { type Next } from '@dxos/react-ui/next';
+import { type Next, createContext } from '@dxos/react-ui';
 
 import { type ReorderListController } from '../../hooks/index.ts';
 

@@ -10,14 +10,13 @@ import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHan
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { INITIAL_FOCUS_ATTRIBUTE } from '@dxos/react-focus';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   type EditorToolbarState,
   type UseTextEditorProps,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import {
   type EditorSelectionState,
   type EditorStateStore,

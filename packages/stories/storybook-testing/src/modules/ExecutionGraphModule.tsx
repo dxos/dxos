@@ -9,8 +9,8 @@ import { ExecutionGraph } from '@dxos/assistant/ExecutionGraph';
 import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
+import { Next } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-trace';
-import { Next } from '@dxos/react-ui/next';
 
 export const ExecutionGraphModule = () => {
   const space = useActiveSpace();

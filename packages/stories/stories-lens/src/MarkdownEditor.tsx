@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Doc } from '@dxos/echo-doc';
+import { Next } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import {
   createBasicExtensions,

@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 
 import { type SceneId } from '../../model/index.ts';
 

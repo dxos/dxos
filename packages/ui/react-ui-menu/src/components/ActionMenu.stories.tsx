@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import '@dxos/react-ui/next/theme.css';
-import { Next } from '@dxos/react-ui/next';
+import '@dxos/react-ui/theme.css';
+import { Next } from '@dxos/react-ui';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -76,7 +76,7 @@ export const StaticItems: Story = {
     return (
       <>
         <Contributor menu={menu} id='static-items' items={staticItems} />
-        <ActionMenu {...menu} iconSize={5}>
+        <ActionMenu {...menu} iconSize='lg'>
           <Next.Button icon='ph--list-checks--regular' label='Options' iconOnly />
         </ActionMenu>
       </>

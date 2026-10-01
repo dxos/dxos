@@ -4,8 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { ThemeProvider, useThemeContext } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { trim } from '@dxos/util';
 
 import { type ColorScheme } from './color-scheme.ts';

@@ -8,10 +8,9 @@ import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Next, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
-import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Board, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
@@ -124,7 +123,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Item asChild>
+        <Next.Focus.Item asChild>
           <Next.Card.Root classNames={classNames} ref={composedRef}>
             <Next.Card.Header>
               <Next.Block>
@@ -142,7 +141,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
               <Item {...itemProps} menu={menu} />
             </Next.Card.Body>
           </Next.Card.Root>
-        </Focus.Item>
+        </Next.Focus.Item>
       </Mosaic.Tile>
     );
   },

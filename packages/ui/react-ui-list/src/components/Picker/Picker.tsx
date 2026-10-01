@@ -25,8 +25,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme.ts';

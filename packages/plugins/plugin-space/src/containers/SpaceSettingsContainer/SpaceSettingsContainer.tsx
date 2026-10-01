@@ -16,10 +16,9 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Flex, useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, Form } from '@dxos/react-ui-form';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
+import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';

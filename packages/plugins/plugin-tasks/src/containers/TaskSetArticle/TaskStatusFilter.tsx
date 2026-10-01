@@ -4,10 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createLineSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { statusIcon, statusTextStyle } from '@dxos/react-ui-task';
-import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';

@@ -10,8 +10,8 @@ import React, { useMemo } from 'react';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Parser, parseText } from '@dxos/nlp';
 import { stubParse } from '@dxos/nlp/testing';
+import { Next } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
-import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,

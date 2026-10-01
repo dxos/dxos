@@ -19,8 +19,7 @@ import {
 } from '@xyflow/react';
 import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
-import { composable, composableProps, createContext } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, composable, composableProps, createContext } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { GRID, layout } from '../../model/index.ts';

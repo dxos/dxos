@@ -4,17 +4,9 @@
 
 import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Next, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { CardTile } from '@dxos/react-ui-card';
-import {
-  Focus,
-  Mosaic,
-  type MosaicScrollController,
-  type MosaicTileProps,
-  useMosaicContainer,
-} from '@dxos/react-ui-mosaic';
-import { Next } from '@dxos/react-ui/next';
+import { Mosaic, type MosaicScrollController, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -77,7 +69,7 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Next.Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -101,7 +93,7 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Mosaic.Container>
-      </Focus.Group>
+      </Next.Focus.Group>
     );
   },
 );

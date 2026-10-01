@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Next } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type GalleryImageProps = {

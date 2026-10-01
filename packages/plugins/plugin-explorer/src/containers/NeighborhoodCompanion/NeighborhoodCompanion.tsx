@@ -5,9 +5,8 @@
 import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DxAnchorActivate, useTranslation } from '@dxos/react-ui';
+import { DxAnchorActivate, Next, useTranslation } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-graph';
-import { Next } from '@dxos/react-ui/next';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { Visualization } from '#components';

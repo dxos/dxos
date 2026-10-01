@@ -10,9 +10,7 @@ import React, { ReactNode } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { type ThemeMode, ThemeProvider, type ThemeProviderProps } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, type ThemeMode, ThemeProvider, type ThemeProviderProps, defaultTx } from '@dxos/react-ui';
 import { ACCENT_HUES, type AccentHue, applyAccent } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

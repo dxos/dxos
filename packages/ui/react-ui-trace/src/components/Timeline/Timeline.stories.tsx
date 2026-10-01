@@ -8,8 +8,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { LogLevel } from '@dxos/log';
 import { random } from '@dxos/random';
-import { useInterval } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Next, useInterval } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { defaultOptions } from './timeline-options.ts';
