@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -21,7 +22,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, type Entity, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, type Entity, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -71,6 +72,12 @@ const isTypeAvailable = (typenames: ReadonlySet<string>, object: Obj.Unknown): b
   // No typename at all is not an unavailable type — leave those to the renderers.
   return !typename || typenames.has(typename);
 };
+
+/** A collection's members in its order, omitting deleted and archived objects. */
+const getMembers = (get: Atom.AtomContext, refs: readonly Ref.Ref<Obj.Unknown>[]): Obj.Unknown[] =>
+  get(Obj.atomReactive(refs)).filter(
+    (object) => !Option.getOrElse(get(Annotation.atom(object, ArchivedAnnotation)), () => false),
+  );
 
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
@@ -161,19 +168,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
           Option.getOrUndefined,
         );
-        const collection = collectionRef ? get(Obj.atom(collectionRef)) : undefined;
-        if (!collection) {
+        const refs = collectionRef ? get(Obj.atomProperty(collectionRef, 'objects')) : undefined;
+        if (!refs) {
           return Effect.succeed([]);
         }
 
         const available = getAvailableTypenames(get(space.db.query(TypeOptions.allTypesQuery).atom));
-        const objects = get(
-          space.db.query(
-            Query.select(Filter.entity(collection))
-              .reference('objects')
-              .select(Filter.not(Filter.annotation(ArchivedAnnotation, true))),
-          ).atom,
-        ).filter((object: Obj.Unknown) => isTypeAvailable(available, object));
+        const objects = getMembers(get, refs).filter((object) => isTypeAvailable(available, object));
 
         return Effect.succeed(
           objects
@@ -229,16 +230,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const db = Obj.getDatabase(collection);
 
         const available = db ? getAvailableTypenames(get(db.query(TypeOptions.allTypesQuery).atom)) : undefined;
-        const members = db
-          ? get(
-              db.query(
-                Query.select(Filter.entity(collection))
-                  .reference('objects')
-                  .select(Filter.not(Filter.annotation(ArchivedAnnotation, true))),
-              ).atom,
-            )
-          : [];
-        const objects = members.filter((object: Obj.Unknown) => !available || isTypeAvailable(available, object));
+        const objects = getMembers(get, get(Obj.atomProperty(collection, 'objects'))).filter(
+          (object) => !available || isTypeAvailable(available, object),
+        );
 
         return Effect.succeed(
           objects

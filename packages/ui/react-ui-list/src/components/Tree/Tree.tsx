@@ -1204,7 +1204,12 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           element,
           getInitialData: () => data,
           getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
-          onDragStart: () => setDragState('dragging'),
+          // Marks the row while the browser snapshots it as the drag image (cleared once the drag starts).
+          onGenerateDragPreview: () => element.setAttribute('data-drag-preview', ''),
+          onDragStart: () => {
+            element.removeAttribute('data-drag-preview');
+            setDragState('dragging');
+          },
           onDrop: () => setDragState('idle'),
         }),
       );
@@ -1380,6 +1385,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         // there reads as selection.
         'hover:bg-hover-surface',
         'data-[selected]:bg-current-surface data-[selected]:text-current-fg',
+        // A translucent drag image, so the drop indicator shows through it.
+        'data-[drag-preview]:hover:bg-hover-surface/25 data-[drag-preview]:data-[selected]:bg-current-surface/25',
         // Keyboard travel paints the row it lands on rather than ringing it: a ring inside a row
         // that is already a filled band reads as a second, competing highlight, and the fill says
         // what selection says — this is the row you are on. Keyed on `:focus-visible` rather than

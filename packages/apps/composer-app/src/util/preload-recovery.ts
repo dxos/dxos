@@ -29,6 +29,16 @@ const preloadErrorUrl = (event: Event): string | undefined => {
   return message.match(/https?:\/\/\S+/)?.[0];
 };
 
+/** Whether the url is one of this app's chunks; a plugin loaded from another origin reports its own failures. */
+const isOwnChunk = (url: string): boolean => {
+  try {
+    return new URL(url).origin === location.origin;
+  } catch {
+    // Unparseable: keep the recovery as it was before plugins could fail here.
+    return true;
+  }
+};
+
 /** Records the failure under the same key the boot guard uses, so the next boot reports it once. */
 const recordFailure = (url: string): void => {
   const previous: unknown = JSON.parse(localStorage.getItem(BOOT_ASSET_FAILURE_KEY) ?? 'null');
@@ -52,6 +62,10 @@ export const registerPreloadErrorHandler = ({
 }: PreloadErrorHandlerOptions = {}): void => {
   target.addEventListener('vite:preloadError', (event) => {
     const url = preloadErrorUrl(event);
+    // A reload cannot bring back another origin's module, and would drop the page for a plugin that failed.
+    if (url && !isOwnChunk(url)) {
+      return;
+    }
     log.warn('lazy chunk failed to load', { url });
     try {
       if (sessionStorage.getItem(PRELOAD_RETRY_KEY)) {

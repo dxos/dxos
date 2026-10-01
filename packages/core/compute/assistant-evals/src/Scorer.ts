@@ -123,6 +123,45 @@ export const toolCalls = (options: {
   });
 
 /**
+ * Whether one tool call failed: the tool path reported an error, or the tool reported its own
+ * failure in its result as `{ ok: false }` — the shape code mode's `eval` returns, since a failed
+ * program is handed back to the model as output rather than as a tool error.
+ */
+export const failedCall = (invocation: ToolInvocation): boolean => {
+  if (invocation.error !== undefined) {
+    return true;
+  }
+  const result = parseResult(invocation.result);
+  return typeof result === 'object' && result !== null && 'ok' in result && result.ok === false;
+};
+
+/** A traced result is the tool's encoded output, which arrives as a JSON string or already parsed. */
+const parseResult = (result: unknown): unknown => {
+  if (typeof result !== 'string') {
+    return result;
+  }
+  try {
+    return JSON.parse(result);
+  } catch {
+    return result;
+  }
+};
+
+/**
+ * The fraction of the session's tool calls that succeeded (see {@link failedCall}). A session that
+ * made no calls scores nothing: every task graded with this one needs at least one.
+ */
+export const toolCallSuccess = (options: { name?: string; description?: string } = {}): Scorer =>
+  toolCalls({
+    name: options.name ?? 'tool-calls-succeeded',
+    description: options.description ?? 'The fraction of tool calls that succeeded rather than failed.',
+    score: (invocations) =>
+      invocations.length === 0
+        ? 0
+        : invocations.filter((invocation) => !failedCall(invocation)).length / invocations.length,
+  });
+
+/**
  * A scorer over the session's wall clock: full marks up to `targetMinutes`, falling linearly to
  * nothing at `budgetMinutes`. `delivered` gates it, so a run that never produced the thing being
  * timed scores nothing rather than being rewarded for stopping early.
