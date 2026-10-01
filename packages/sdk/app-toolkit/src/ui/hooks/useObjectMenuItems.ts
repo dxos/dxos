@@ -89,7 +89,7 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown =>
  * navigable (e.g. not an Echo object, or not of a user-facing type). Use it for a card's own click.
  * A card lives inside a plank, so its object opens as a plank beside that plank (`add`), resolved
  * structurally from the target via {@link Attention.getRootAttendableId} — or, given `detailOf`, as that
- * plank's detail. The destination path comes from {@link openObject}.
+ * plank's detail unless meta/ctrl is held. The destination path comes from {@link openObject}.
  */
 export const useObjectNavigate = (
   subject: unknown,
@@ -106,7 +106,13 @@ export const useObjectNavigate = (
       // `currentTarget` is only valid while the event is dispatching, so read the pivot before the
       // resolution the program awaits.
       const pivotId = detailOf ?? Attention.getRootAttendableId(event.currentTarget);
-      void EffectEx.runPromise(openObject(subject, invoke, { pivotId, disposition: detailOf ? 'detail' : 'add' }));
+      // As with a list row, a meta/ctrl-click opens a plank of its own rather than the detail.
+      const { nativeEvent } = event;
+      const modified =
+        (nativeEvent instanceof MouseEvent || nativeEvent instanceof KeyboardEvent) &&
+        (nativeEvent.metaKey || nativeEvent.ctrlKey);
+      const disposition = detailOf && !modified ? 'detail' : 'add';
+      void EffectEx.runPromise(openObject(subject, invoke, { pivotId, disposition }));
     };
   }, [subject, detailOf, invoke]);
 };
