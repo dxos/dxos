@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Repository } from '#types';
+import { Repository, Sandbox } from '#types';
 
 export const translations = [
   {
@@ -21,6 +21,12 @@ export const translations = [
         'rename-object.label': 'Rename repository',
         'delete-object.label': 'Delete repository',
         'object-deleted.label': 'Repository deleted',
+      },
+      [Type.getTypename(Sandbox.Sandbox)]: {
+        'typename.label': 'Sandbox',
+        'typename.label_zero': 'Sandboxes',
+        'typename.label_one': 'Sandbox',
+        'typename.label_other': 'Sandboxes',
       },
       [meta.profile.key]: {
         'plugin.name': 'Sandbox',
