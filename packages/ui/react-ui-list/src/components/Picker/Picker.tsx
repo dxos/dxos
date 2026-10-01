@@ -25,7 +25,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type Density, type Elevation, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
+import { type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
@@ -182,8 +182,6 @@ type PickerInputProps = ThemedClassName<
     onValueChange?: (value: string) => void;
     /** Defaults to `clear`. */
     escapeBehavior?: EscapeBehavior;
-    density?: Density;
-    elevation?: Elevation;
     variant?: InputVariant;
   }
 >;

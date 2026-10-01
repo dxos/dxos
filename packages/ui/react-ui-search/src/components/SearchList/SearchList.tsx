@@ -19,7 +19,6 @@
 
 import React, {
   type ChangeEvent,
-  type ComponentProps,
   type ComponentPropsWithRef,
   type PropsWithChildren,
   type ReactNode,
@@ -29,13 +28,7 @@ import React, {
   useRef,
 } from 'react';
 
-import {
-  type Density,
-  type Elevation,
-  type ThemedClassName,
-  useControllableState,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type ThemedClassName, useControllableState, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
@@ -48,8 +41,6 @@ import { SearchListInputContextProvider, SearchListItemContextProvider, useSearc
 //
 // Root — wraps `Picker.Root` and adds query state + debounced onSearch.
 //
-
-type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
 
 type SearchListRootProps = PropsWithChildren<{
   /** Controlled query value. */
@@ -180,8 +171,6 @@ type InputVariant = 'default' | 'subdued';
 
 type SearchListInputProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & {
-    density?: Density;
-    elevation?: Elevation;
     variant?: InputVariant;
     /** What Escape does while the query is non-empty; defaults to `clear`. */
     escapeBehavior?: EscapeBehavior;
@@ -189,7 +178,7 @@ type SearchListInputProps = ThemedClassName<
 >;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  ({ density, elevation, variant = 'subdued', placeholder, onChange, escapeBehavior, ...props }, forwardedRef) => {
+  ({ variant = 'subdued', placeholder, onChange, escapeBehavior, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { query, onQueryChange } = useSearchListInputContext('SearchList.Input');
     const defaultPlaceholder = t('search.placeholder');
@@ -207,8 +196,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     return (
       <Picker.Input
         {...props}
-        size={density}
-        elevation={elevation}
         variant={variant}
         escapeBehavior={escapeBehavior}
         placeholder={placeholder ?? defaultPlaceholder}
@@ -224,33 +211,23 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 SearchListInput.displayName = 'SearchList.Input';
 
 //
-// Viewport — scroll surface; carries `role='listbox'`. Forwards ScrollArea knobs.
+// Viewport — scroll surface; carries `role='listbox'`.
 //
-// The defaults reserve the scroll strip on both sides, which a menu-style list docked to the
-// popover edge does not want: `padding={false}` makes the rows flush, matching `Listbox`.
+// `padding` insets the rows from the scroll strip; a menu-style list docked to the popover edge
+// passes `padding={false}` so the rows are flush, matching `Listbox`.
 //
 
-type SearchListViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+type SearchListViewportProps = {
+  padding?: boolean;
+};
 
-const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>((props, forwardedRef) => {
-  const {
-    thin = true,
-    padding = true,
-    centered = true,
-    children,
-    ...rest
-  } = props as PropsWithChildren<SearchListViewportProps & Record<string, unknown>>;
-  return (
-    <Next.ScrollArea.Root
-      {...composableProps<HTMLDivElement>(rest)}
-      {...{ thin, padding, centered }}
-      role='listbox'
-      ref={forwardedRef}
-    >
-      <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
+const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>(
+  ({ padding = true, children, ...props }, forwardedRef) => (
+    <Next.ScrollArea.Root {...composableProps<HTMLDivElement>(props)} role='listbox' ref={forwardedRef}>
+      <Next.ScrollArea.Viewport classNames={padding ? 'px-1' : undefined}>{children}</Next.ScrollArea.Viewport>
     </Next.ScrollArea.Root>
-  );
-});
+  ),
+);
 
 SearchListViewport.displayName = 'SearchList.Viewport';
 
