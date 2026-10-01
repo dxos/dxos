@@ -5,9 +5,10 @@
 import ts from '@typescript/typescript6';
 
 import { type Binding, type CodeFile } from '../code-file.ts';
-import { IMPORT_TARGETS, MODULES, type PackageName, nextParts } from '../targets.ts';
+import { IMPORT_TARGETS, MODULES, type PackageName, hasNextExport, nextParts } from '../targets.ts';
 import { LAYOUT_NAMES, layout } from './layout.ts';
 import { hasRenameRule, renames } from './renames.ts';
+import { THEME_NAMES, theme } from './theme.ts';
 import { type Transform } from './transform.ts';
 
 /** Reports member accesses (`Panel.Toolbar`) whose part the Next composite does not have. */
@@ -70,6 +71,58 @@ const rewrite = (file: CodeFile, binding: Binding, pkg: PackageName, name: strin
   file.count(`${binding.imported} → ${target.namespace}.${name}`);
 };
 
+/** Utility and provider types that stay on the current entry. */
+const SURVIVING_TYPES = new Set([
+  'ComposableProps',
+  'SlottableProps',
+  'ThemedClassName',
+  'ThemeProviderProps',
+  'ErrorBoundaryProps',
+]);
+
+/** `FooBarProps` → the Next part `Foo.Bar` (or the leaf `FooBar`) whose props it described. */
+const propsSource = (pkg: PackageName, name: string): { pkg: PackageName; path: string[] } | undefined => {
+  const base = name.replace(/Props$/, '');
+  for (let split = base.length - 1; split > 0; split--) {
+    const [composite, part] = [base.slice(0, split), base.slice(split)];
+    if (nextParts(pkg, composite)?.includes(part)) {
+      return { pkg, path: [composite, part] };
+    }
+  }
+  return hasNextExport(pkg, base) ? { pkg, path: [base] } : undefined;
+};
+
+/**
+ * A `*Props` type with no Next name becomes a local alias of the props of the Next part it described, so its uses are
+ * untouched; each alias is reported, since the Next part's props differ from the current ones.
+ */
+const aliasProps = (file: CodeFile, binding: Binding) => {
+  const { pkg, imported, local, specifier } = binding;
+  if (!specifier || SURVIVING_TYPES.has(imported)) {
+    return;
+  }
+  const source = propsSource(pkg, imported);
+  if (!source) {
+    file.report(specifier, `type ${imported} has no Next counterpart`);
+    return;
+  }
+  if (file.references(local).some((ref) => ts.isExportSpecifier(ref.parent)) || file.isShadowed(local)) {
+    file.report(specifier, `type ${imported} is re-exported or shadowed; alias it by hand`);
+    return;
+  }
+  const part = file.nameFor(source.pkg, 'next', source.path, { typeOnly: true });
+  const alias = `${file.reactType('ComponentProps')}<typeof ${part}>`;
+  file.removeSpecifier(specifier);
+  file.addAfterImports(`type ${local} = ${alias};`);
+  file.count(`${imported} → local alias of ComponentProps`);
+  file.report(specifier, `type ${imported} is now a local alias of ComponentProps<typeof ${source.path.join('.')}>`);
+};
+
+/** Names whose uses an earlier transform reported one by one, so the import says nothing more. */
+const reportedPerUse = (file: CodeFile, imported: string) =>
+  (file.ran.includes(layout.name) && LAYOUT_NAMES.has(imported)) ||
+  (file.ran.includes(theme.name) && THEME_NAMES.has(imported));
+
 export const imports: Transform = {
   name: 'imports',
   description: 'Current @dxos/react-ui, -list, -form and -menu imports → their Next entries.',
@@ -93,18 +146,17 @@ export const imports: Transform = {
       const target = IMPORT_TARGETS[pkg][imported];
       if (!target) {
         if ((pkg === 'react-ui' || pkg === 'react-ui-list') && /^[A-Z]\w*Props$/.test(imported)) {
-          file.report(specifier, `type ${imported} has no Next counterpart`);
+          aliasProps(file, binding);
         }
         continue;
       }
       switch (target.kind) {
         case 'none':
-          // The layout transform reports each element it left, which says more than the import does.
-          if (
-            !(file.ran.includes(layout.name) && LAYOUT_NAMES.has(imported) && file.references(binding.local).length > 0)
-          ) {
+          if (!(reportedPerUse(file, imported) && file.references(binding.local).length > 0)) {
             file.report(specifier, `${imported}: ${target.reason}`);
           }
+          break;
+        case 'keep':
           break;
         case 'renames':
           if (file.references(binding.local).length === 0) {

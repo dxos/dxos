@@ -128,4 +128,68 @@ describe('layout', () => {
       'Column.Row → a row Container with Block rails, by hand',
     ]);
   });
+
+  test('a static, centred, non-growing Grid becomes a row Container with columns', () => {
+    const { output, residue } = transformFixture(
+      layout,
+      code`
+        import { Grid } from '@dxos/react-ui';
+
+        export const Rows = () => (
+          <>
+            <Grid cols={['10rem', 1, 'min-content']} grow={false} align='center' gap='sm' data-testid='rows'>
+              <span>A</span>
+              <span>B</span>
+            </Grid>
+            <Grid cols={3} grow={false} align='center'>
+              <span>C</span>
+            </Grid>
+          </>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Rows = () => (
+        <>
+          <Next.Container gap='md' data-testid='rows' layout='row' columns='10rem 1fr min-content'>
+            <span>A</span>
+            <span>B</span>
+          </Next.Container>
+          <Next.Container layout='row' columns='repeat(3, 1fr)'>
+            <span>C</span>
+          </Next.Container>
+        </>
+      );
+    `);
+    expect(residue).toEqual([]);
+  });
+
+  test('Grids that are not converted', () => {
+    const input = code`
+      import { Grid } from '@dxos/react-ui';
+
+      export const Rest = ({ cols }: { cols: number }) => (
+        <>
+          <Grid cols={2}>grows by default</Grid>
+          <Grid cols={2} grow={false}>stretches</Grid>
+          <Grid cols={cols} grow={false} align='center'>computed</Grid>
+          <Grid cols='subgrid' grow={false} align='center'>subgrid</Grid>
+          <Grid cols={2} rows={2} grow={false} align='center'>rows</Grid>
+          <Grid cols={2} grow={false} align='center' classNames='gap-1'>classes</Grid>
+        </>
+      );
+    `;
+    const { output, residue } = transformFixture(layout, input);
+    expect(output).toBe(input);
+    expect(residue).toEqual([
+      'Grid not converted: it grows to fill its parent (Grid grow defaults to true)',
+      "Grid not converted: align other than 'center' (a Container row centres its cells)",
+      'Grid not converted: cols is missing, computed or subgrid',
+      'Grid not converted: cols is missing, computed or subgrid',
+      'Grid not converted: rows (a person decides the layout)',
+      'Grid not converted: classNames (a person decides the layout)',
+    ]);
+  });
 });

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { REACT_UI_LIST_NEXT, REACT_UI_NEXT } from './next-exports.ts';
+import { REACT_UI_FORM_NEXT, REACT_UI_LIST_NEXT, REACT_UI_NEXT } from './next-exports.ts';
 
 /**
  * The single table of where each current import goes.
@@ -25,7 +25,7 @@ export type ModuleTarget = {
 export const MODULES: Record<PackageName, ModuleTarget> = {
   'react-ui': { current: '@dxos/react-ui', next: '@dxos/react-ui/next', namespace: 'Next' },
   'react-ui-list': { current: '@dxos/react-ui-list', next: '@dxos/react-ui-list/next' },
-  'react-ui-form': { current: '@dxos/react-ui-form' },
+  'react-ui-form': { current: '@dxos/react-ui-form', next: '@dxos/react-ui-form/next' },
   'react-ui-menu': { current: '@dxos/react-ui-menu', next: '@dxos/react-ui-menu/next', moveAll: true },
 };
 
@@ -36,15 +36,15 @@ export type ImportTarget =
   /** Element renames (`IconButton` → `Button`) must run first; the `renames` transform rewrites every use. */
   | { kind: 'renames' }
   /** No Next counterpart; the reason is the residue. */
-  | { kind: 'none'; reason: string };
+  | { kind: 'none'; reason: string }
+  /** A name Next shares but for a different thing; it stays on the current entry. */
+  | { kind: 'keep' };
 
 const next = (pkg: PackageName, name: string): ImportTarget => ({ kind: 'next', pkg, name });
 const none = (reason: string): ImportTarget => ({ kind: 'none', reason });
 
 const sameName = (pkg: PackageName, names: string[]): Record<string, ImportTarget> =>
   Object.fromEntries(names.map((name) => [name, next(pkg, name)]));
-
-const FORM_PENDING = none('react-ui-form/next is not on this branch yet (AUDIT §7 Phase A item 2)');
 
 /**
  * Import targets by package and imported name. A name not listed stays on the current entry (hooks, utilities,
@@ -54,6 +54,9 @@ export const IMPORT_TARGETS: Record<PackageName, Record<string, ImportTarget>> =
   'react-ui': {
     ...sameName('react-ui', [...REACT_UI_NEXT.values, ...REACT_UI_NEXT.types]),
     ButtonGroup: next('react-ui', 'Group'),
+    ButtonGroupProps: next('react-ui', 'GroupProps'),
+    IconButtonProps: next('react-ui', 'ButtonProps'),
+    Switch: { kind: 'keep' },
     DRAWER_DEFAULT_HEIGHT: next('react-ui', 'MAIN_DRAWER_DEFAULT_HEIGHT'),
     DRAWER_MAX_HEIGHT: next('react-ui', 'MAIN_DRAWER_MAX_HEIGHT'),
     DRAWER_MIN_HEIGHT: next('react-ui', 'MAIN_DRAWER_MIN_HEIGHT'),
@@ -97,40 +100,55 @@ export const IMPORT_TARGETS: Record<PackageName, Record<string, ImportTarget>> =
     useListSelection: none('useListSelection → listboxSelection adapter (react-ui-list/next)'),
     useListboxSelection: none('Ark owns Listbox selection; use listboxSelection'),
   },
-  'react-ui-form': Object.fromEntries(
-    [
-      'ArrayField',
-      'BooleanField',
-      'ComboboxField',
-      'DateField',
-      'FieldEditor',
-      'Form',
-      'FormFieldHeader',
-      'FormFieldLabel',
-      'FormFieldRow',
-      'FormFieldSet',
-      'MarkdownField',
-      'NumberField',
-      'ObjectForm',
-      'ObjectPicker',
-      'ObjectProperties',
-      'PasswordField',
-      'RefEditor',
-      'RefField',
-      'SelectField',
-      'TextAreaField',
-      'TextField',
-      'TupleField',
-      'ViewEditor',
-      'createSelectField',
-    ].map((name) => [name, FORM_PENDING]),
-  ),
+  'react-ui-form': {
+    ...sameName('react-ui-form', [...REACT_UI_FORM_NEXT.values, ...REACT_UI_FORM_NEXT.types]),
+    ...Object.fromEntries(
+      [
+        'ArrayField',
+        'BooleanField',
+        'ComboboxField',
+        'DateField',
+        'FieldEditor',
+        'Form',
+        'FormFieldHeader',
+        'FormFieldLabel',
+        'FormFieldRow',
+        'FormFieldSet',
+        'MarkdownField',
+        'NumberField',
+        'ObjectForm',
+        'ObjectPicker',
+        'ObjectProperties',
+        'PasswordField',
+        'RefEditor',
+        'RefField',
+        'SelectField',
+        'TextAreaField',
+        'TextField',
+        'TupleField',
+        'ViewEditor',
+        'createSelectField',
+      ]
+        .filter((name) => !REACT_UI_FORM_NEXT.values.includes(name))
+        .map((name) => [name, none(`${name} is not in react-ui-form/next`)]),
+    ),
+  },
   'react-ui-menu': {},
 };
 
 /** The Next parts of a composite, or undefined for a leaf (or a name with no Next counterpart). */
 export const nextParts = (pkg: PackageName, name: string): string[] | undefined =>
-  pkg === 'react-ui' ? REACT_UI_NEXT.parts[name] : pkg === 'react-ui-list' ? REACT_UI_LIST_NEXT.parts[name] : undefined;
+  pkg === 'react-ui-menu' ? undefined : NEXT_ENTRIES[pkg].parts[name];
+
+const NEXT_ENTRIES = {
+  'react-ui': REACT_UI_NEXT,
+  'react-ui-list': REACT_UI_LIST_NEXT,
+  'react-ui-form': REACT_UI_FORM_NEXT,
+};
+
+/** Whether `pkg`'s Next entry exports `name` (as a value, or a type when `type`). */
+export const hasNextExport = (pkg: PackageName, name: string, type = false): boolean =>
+  pkg !== 'react-ui-menu' && (type ? NEXT_ENTRIES[pkg].types : NEXT_ENTRIES[pkg].values).includes(name);
 
 /** The package whose current or Next entry `specifier` names. */
 export const packageOf = (specifier: string): { pkg: PackageName; form: Form } | undefined => {

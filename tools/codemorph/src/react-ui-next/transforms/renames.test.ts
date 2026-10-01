@@ -8,7 +8,7 @@ import { code, transformFixture } from '../testing.ts';
 import { renames } from './renames.ts';
 
 describe('renames', () => {
-  test('Panel regions; asChild dropped and the ScrollArea pair reported', () => {
+  test('Panel regions; Body keeps asChild and its ScrollArea', () => {
     const { output, residue } = transformFixture(
       renames,
       code`
@@ -37,7 +37,7 @@ describe('renames', () => {
           <Panel.Header>
             <Toolbar.Root />
           </Panel.Header>
-          <Panel.Body>
+          <Panel.Body asChild>
             <ScrollArea.Root>
               <ScrollArea.Viewport />
             </ScrollArea.Root>
@@ -46,9 +46,7 @@ describe('renames', () => {
         </Panel.Root>
       );
     `);
-    expect(residue).toEqual([
-      'Panel.Content asChild wrapped ScrollArea.Root: Panel.Body composes its own ScrollArea; collapse the pair',
-    ]);
+    expect(residue).toEqual([]);
   });
 
   test('IconButton → Button; props mapped and the import swapped', () => {
@@ -250,11 +248,11 @@ describe('renames', () => {
           <Avatar.Root aria-labelledby={id} src={url} variant='circle' />
           <Progress value={0.5} />
           <Icon icon='ph--x--regular' size='md' />
-          <Icon icon='ph--x--regular' size={8} />
+          <Icon icon='ph--x--regular' size='xl' />
         </>
       );
     `);
-    expect(residue).toEqual(['size {8} has no xs–xl step']);
+    expect(residue).toEqual(["size {8} rounded to the nearest step, 'xl'"]);
   });
 
   test('list parts, including a part that becomes a react-ui component', () => {

@@ -6,7 +6,7 @@ import ts from '@typescript/typescript6';
 
 import { type CodeFile, type Element } from './code-file.ts';
 import { lineRange } from './edits.ts';
-import { type Form, type PackageName } from './targets.ts';
+import { type PackageName } from './targets.ts';
 
 /** An attribute's value, by shape. */
 export type AttrValue =
@@ -107,11 +107,8 @@ export const tagText = (
   if (release) {
     file.release(identity.binding.local, element.closing ? 2 : 1);
   }
-  return file.nameFor(pkg, formOf(identity.form, pkg), path);
+  return file.nameFor(pkg, identity.form, path);
 };
-
-/** A package without a Next entry stays on its current one. */
-const formOf = (form: Form, pkg: PackageName): Form => (pkg === 'react-ui-form' ? 'current' : form);
 
 /** The children that matter: everything but whitespace-only text. */
 export const meaningfulChildren = (element: Element): ts.JsxChild[] =>

@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 
 import { readReactUiNext, readSiblingNext } from './extract.ts';
-import { REACT_UI_LIST_NEXT, REACT_UI_NEXT } from './next-exports.ts';
-import { IMPORT_TARGETS, nextParts } from './targets.ts';
+import { REACT_UI_FORM_NEXT, REACT_UI_LIST_NEXT, REACT_UI_NEXT } from './next-exports.ts';
+import { IMPORT_TARGETS, hasNextExport, nextParts } from './targets.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
 
@@ -15,14 +15,17 @@ describe('next exports', () => {
   test('the snapshot matches the Next sources', () => {
     expect(REACT_UI_NEXT).toEqual(readReactUiNext(REPO_ROOT));
     expect(REACT_UI_LIST_NEXT).toEqual(readSiblingNext(REPO_ROOT, 'react-ui-list'));
+    expect(REACT_UI_FORM_NEXT).toEqual(readSiblingNext(REPO_ROOT, 'react-ui-form'));
   });
 
   test('every import target names a real Next export', () => {
     for (const targets of Object.values(IMPORT_TARGETS)) {
       for (const target of Object.values(targets)) {
         if (target.kind === 'next') {
-          const entry = target.pkg === 'react-ui' ? REACT_UI_NEXT : REACT_UI_LIST_NEXT;
-          expect([...entry.values, ...entry.types]).toContain(target.name);
+          expect(
+            hasNextExport(target.pkg, target.name) || hasNextExport(target.pkg, target.name, true),
+            target.name,
+          ).toBe(true);
         }
       }
     }

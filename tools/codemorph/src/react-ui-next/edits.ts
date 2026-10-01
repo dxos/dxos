@@ -9,6 +9,9 @@ export type Edit = {
   text: string;
 };
 
+/** An insertion sorts before a replacement at the same position, so it lands in front of the replaced text. */
+const isInsert = (edit: Edit) => (edit.start === edit.end ? 1 : 0);
+
 /**
  * Applies non-overlapping edits to `text`.
  * Edits at the same position keep their insertion order; an overlapping edit throws, since it means two rules
@@ -17,7 +20,7 @@ export type Edit = {
 export const applyEdits = (text: string, edits: Edit[]): string => {
   const sorted = edits
     .map((edit, index) => ({ edit, index }))
-    .sort((a, b) => a.edit.start - b.edit.start || a.index - b.index);
+    .sort((a, b) => a.edit.start - b.edit.start || isInsert(b.edit) - isInsert(a.edit) || a.index - b.index);
   let result = '';
   let cursor = 0;
   for (const { edit } of sorted) {

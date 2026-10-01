@@ -23,6 +23,7 @@ import {
   type RuleContext,
   cardActionButton,
   dialogActionButton,
+  labelledControl,
   listboxItemContent,
   virtualTrigger,
 } from './composites.ts';
@@ -59,13 +60,27 @@ const iconSize = ({ file, element }: RuleContext, name: string) => {
     return;
   }
   const value = attrValue(attr);
-  const size = value.kind === 'number' ? ICON_SIZES[value.value] : undefined;
-  if (size) {
+  if (value.kind === 'number') {
+    const exact = ICON_SIZES[value.value];
+    const size = exact ?? nearestIconSize(value.value);
     file.replace(attr, attrText(name, size));
-    file.count(`size={n} → ${name}='xs–xl'`);
+    if (exact) {
+      file.count(`size={n} → ${name}='xs–xl'`);
+    } else {
+      file.count(`size={n} → ${name}='xs–xl' (rounded)`);
+      file.report(attr, `size {${value.value}} rounded to the nearest step, '${size}'`);
+    }
   } else if (value.kind !== 'string') {
-    file.report(attr, `size ${attr.initializer?.getText(file.sourceFile) ?? ''} has no xs–xl step`);
+    file.report(attr, `size ${attr.initializer?.getText(file.sourceFile) ?? ''} is computed; map it to xs–xl by hand`);
   }
+};
+
+/** The xs–xl step nearest a Tailwind `size-N`. */
+const nearestIconSize = (value: number): string => {
+  const [nearest] = Object.entries(ICON_SIZES).sort(
+    ([a], [b]) => Math.abs(Number(a) - value) - Math.abs(Number(b) - value),
+  );
+  return nearest[1];
 };
 
 /** Button props shared by IconButton, Toolbar.IconButton and Toolbar.Button. */
@@ -110,28 +125,6 @@ const buttonProps = (ctx: RuleContext) => {
 };
 
 const button = (to: string[]): Rule => ({ to, drop: ['square'], apply: buttonProps });
-
-/** Panel.Content → Panel.Body: Body composes its own ScrollArea and element, so `asChild` cannot carry over. */
-const panelBody = ({ file, element }: RuleContext) => {
-  const asChild = getAttr(element, 'asChild');
-  if (!asChild) {
-    return;
-  }
-  removeAttr(file, asChild);
-  const [child] = meaningfulChildren(element);
-  const childElement =
-    child && (ts.isJsxElement(child) ? child.openingElement : ts.isJsxSelfClosingElement(child) ? child : undefined);
-  const childIdentity = childElement ? file.resolve(childElement.tagName) : undefined;
-  if (childIdentity?.pkg === 'react-ui' && childIdentity.path.join('.') === 'ScrollArea.Root') {
-    file.report(
-      element.opening,
-      'Panel.Content asChild wrapped ScrollArea.Root: Panel.Body composes its own ScrollArea; collapse the pair',
-    );
-  } else {
-    const tag = childElement?.tagName.getText(file.sourceFile) ?? 'children';
-    file.report(element.opening, `Panel.Content asChild wrapped ${tag}: Panel.Body renders its own element`);
-  }
-};
 
 /** Tabs default to vertical in the current component and horizontal in Next; keep the current behaviour. */
 const tabsRoot = ({ file, element }: RuleContext) => {
@@ -253,7 +246,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     // Panel.
     'Panel.Toolbar': { to: ['Panel', 'Header'], drop: ['asChild'] },
     'Panel.Statusbar': { to: ['Panel', 'Footer'], drop: ['asChild'] },
-    'Panel.Content': { to: ['Panel', 'Body'], apply: panelBody },
+    'Panel.Content': { to: ['Panel', 'Body'] },
     // Buttons.
     'IconButton': button(['Button']),
     'Toolbar.IconButton': button(['Button']),
@@ -400,8 +393,8 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
         file.count(`Field.Input → ${target ?? 'Input'}`);
       },
     },
-    'Field.Switch': { residue: 'Field.Switch → Next.Switch with a label prop' },
-    'Field.Checkbox': { residue: 'Field.Checkbox → Next.Checkbox with a label prop' },
+    'Field.Switch': { apply: labelledControl('Switch') },
+    'Field.Checkbox': { apply: labelledControl('Checkbox') },
     'Field.TriggerIcon': { residue: 'Field.TriggerIcon → DateInput trigger or a Button in the end slot' },
   },
   'react-ui-list': {

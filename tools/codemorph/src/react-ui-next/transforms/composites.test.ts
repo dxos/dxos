@@ -143,4 +143,39 @@ describe('composites', () => {
     `);
     expect(residue).toEqual(['Next.Block has no compact variant']);
   });
+
+  test('Field.Switch / Field.Checkbox → Next leaf controls with a label prop', () => {
+    const { output, residue } = transformFixture(
+      renames,
+      code`
+        import { Field } from '@dxos/react-ui';
+
+        export const Controls = ({ t, on }: { t: (key: string) => string; on: boolean }) => (
+          <>
+            <Field.Switch checked={on}>
+              {t('online.label')}
+            </Field.Switch>
+            <Field.Checkbox checked={on}>Remember me</Field.Checkbox>
+            <Field.Switch checked={on}>
+              <span>Rich</span> label
+            </Field.Switch>
+            <Field.Switch checked={on} />
+          </>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Controls = ({ t, on }: { t: (key: string) => string; on: boolean }) => (
+        <>
+          <Next.Switch checked={on} label={t('online.label')} />
+          <Next.Checkbox checked={on} label='Remember me' />
+          <Next.Switch checked={on} label={<><span>Rich</span> label</>} />
+          <Next.Switch checked={on} />
+        </>
+      );
+    `);
+    expect(residue).toEqual([]);
+  });
 });

@@ -64,13 +64,13 @@ describe('all transforms', () => {
               </Next.Toolbar.Root>
             </Next.Panel.Header>
             <Next.Panel.Body>
-              <Next.Field.Switch />
+              <Next.Switch />
             </Next.Panel.Body>
           </Next.Panel.Root>
         );
       };
     `);
-    expect(residue).toEqual(['renames: Field.Switch → Next.Switch with a label prop']);
+    expect(residue).toEqual([]);
     expect(runAll(text).text).toBe(text);
   });
 });

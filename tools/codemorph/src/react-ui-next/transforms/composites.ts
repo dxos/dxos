@@ -109,6 +109,48 @@ export const virtualTrigger = ({ file, element }: RuleContext) => {
   file.count(`${identity.path.join('.')} → Root positioning={virtualAnchor(ref)}`);
 };
 
+/**
+ * `<Field.Switch …>label</Field.Switch>` → `<Next.Switch … label=… />`: Next's leaf controls take their label as a prop.
+ * Written in the Next spelling, since the current entry's `Switch` is the flow control. Children stay in place (as a
+ * fragment when they are not one text or expression), so edits inside them still apply.
+ */
+export const labelledControl =
+  (control: 'Switch' | 'Checkbox') =>
+  ({ file, element }: RuleContext) => {
+    const { node, opening } = element;
+    const tag = file.nameFor('react-ui', 'next', [control]);
+    file.replace(opening.tagName, tag);
+    file.release(element.identity.binding.local, element.closing ? 2 : 1);
+    file.count(`Field.${control} → ${control}`);
+    if (!ts.isJsxElement(node)) {
+      return;
+    }
+    const children = node.children.filter((child) => !(ts.isJsxText(child) && child.containsOnlyTriviaWhiteSpaces));
+    const tail = opening.getEnd() - 1;
+    if (children.length === 0) {
+      file.edit(tail, node.getEnd(), ' />');
+      return;
+    }
+    const [first] = children;
+    const last = children[children.length - 1];
+    if (children.length === 1 && ts.isJsxText(first)) {
+      const text = first.text.trim().replace(/\s+/g, ' ');
+      const value = text.includes("'") ? `{${JSON.stringify(text)}}` : `'${text}'`;
+      file.edit(tail, node.getEnd(), ` label=${value} />`);
+    } else if (children.length === 1 && ts.isJsxExpression(first) && first.expression) {
+      file.edit(tail, first.getStart(file.sourceFile), ' label=');
+      file.edit(first.getEnd(), node.getEnd(), ' />');
+    } else {
+      // Text at either end keeps only its words, so the fragment does not carry the old indentation.
+      const start =
+        first.getStart(file.sourceFile) + (ts.isJsxText(first) ? first.text.length - first.text.trimStart().length : 0);
+      const end = last.getEnd() - (ts.isJsxText(last) ? last.text.length - last.text.trimEnd().length : 0);
+      file.edit(tail, start, ' label={<>');
+      file.edit(end, node.getEnd(), '</>} />');
+    }
+    file.count(`Field.${control} children → label`);
+  };
+
 const ROW_PARTS = ['icon', 'title', 'description'];
 
 /** Text for a JSX child: a plain string literal inline, anything else in an expression container. */

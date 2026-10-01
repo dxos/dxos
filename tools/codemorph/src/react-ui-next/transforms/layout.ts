@@ -167,6 +167,80 @@ const flex = (file: CodeFile, element: Element) => {
   file.count("Flex column → Next.Container gutter='none'");
 };
 
+/** Grid `cols` as a Container `columns` template: a count of equal tracks or a static list, as Grid's `trackList`. */
+const columnsOf = (attr: ts.JsxAttribute): string | undefined => {
+  const init = attr.initializer;
+  const expression = init && ts.isJsxExpression(init) ? init.expression : undefined;
+  if (expression && ts.isNumericLiteral(expression)) {
+    return `repeat(${expression.text}, 1fr)`;
+  }
+  if (expression && ts.isArrayLiteralExpression(expression)) {
+    const tracks = expression.elements.map((track) =>
+      ts.isNumericLiteral(track) ? `${track.text}fr` : ts.isStringLiteral(track) ? track.text : undefined,
+    );
+    return tracks.every((track) => track !== undefined) ? tracks.join(' ') : undefined;
+  }
+  return undefined;
+};
+
+/** The props a convertible Grid may set; any other Grid prop (`rows`, `center`, `contents`) changes its layout. */
+const GRID_PROPS = new Set(['cols', 'gap', 'align', 'grow', 'rows', 'center', 'contents']);
+
+/**
+ * `<Grid cols grow={false} align='center' gap>` → `<Next.Container layout='row' columns gap>`: a row Container centres its
+ * cells and spaces columns and rows by `gap`, as such a Grid does. Grid's default `grow` fills the parent and other
+ * alignments stretch, which a Container row does not, so those stay.
+ */
+const grid = (file: CodeFile, element: Element) => {
+  const fail = (reason: string) => file.report(element.opening, `Grid not converted: ${reason}`);
+  const props = element.opening.attributes.properties;
+  if (props.some(ts.isJsxSpreadAttribute)) {
+    return fail('spread props');
+  }
+  const names = props.filter(ts.isJsxAttribute).map(attrName);
+  const blocking = names.find((name) => BLOCKING.has(name) || ['rows', 'center', 'contents'].includes(name));
+  if (blocking) {
+    return fail(`${blocking} (a person decides the layout)`);
+  }
+  const cols = getAttr(element, 'cols');
+  const columns = cols ? columnsOf(cols) : undefined;
+  if (!cols || !columns) {
+    return fail('cols is missing, computed or subgrid');
+  }
+  const grow = getAttr(element, 'grow');
+  const growValue = grow ? attrValue(grow) : undefined;
+  if (!(growValue?.kind === 'boolean' && !growValue.value)) {
+    return fail('it grows to fill its parent (Grid grow defaults to true)');
+  }
+  const align = getAttr(element, 'align');
+  const alignValue = align ? attrValue(align) : undefined;
+  if (!(alignValue?.kind === 'string' && alignValue.value === 'center')) {
+    return fail("align other than 'center' (a Container row centres its cells)");
+  }
+  const gap = getAttr(element, 'gap');
+  const gapValue = gap ? attrValue(gap) : undefined;
+  if (gap && !(gapValue?.kind === 'string' && FLEX_GAPS[gapValue.value])) {
+    return fail('a gap with no Container step');
+  }
+  const problem = childrenProblem(element);
+  if (problem) {
+    return fail(problem);
+  }
+
+  toContainer(file, element);
+  for (const name of GRID_PROPS) {
+    const attr = getAttr(element, name);
+    if (attr && attr !== gap) {
+      removeAttr(file, attr);
+    }
+  }
+  if (gap && gapValue?.kind === 'string') {
+    file.replace(gap, attrText('gap', FLEX_GAPS[gapValue.value]));
+  }
+  addAttr(file, element, `layout='row' ${attrText('columns', columns)}`);
+  file.count("Grid → Next.Container layout='row' columns");
+};
+
 const COLUMN_GUTTERS = new Set(['sm', 'md', 'lg']);
 
 /** `Column.Root` whose children are all `Column.Center`/`Row` → a gutter `Next.Container`; returns whether it converted. */
@@ -254,12 +328,13 @@ const columnCenter = (file: CodeFile, element: Element) => {
 };
 
 /** Imports whose elements this transform converts or reports one by one. */
-export const LAYOUT_NAMES = new Set(['Flex', 'Column']);
+export const LAYOUT_NAMES = new Set(['Flex', 'Column', 'Grid']);
 
 export const layout: Transform = {
   name: 'layout',
-  description: 'Unambiguous Flex column and Column.Root/Center → Next.Container; everything else is reported.',
-  applies: (text) => text.includes('@dxos/react-ui') && (text.includes('<Flex') || text.includes('<Column.')),
+  description: 'Unambiguous Flex column, Grid and Column.Root/Center → Next.Container; everything else is reported.',
+  applies: (text) =>
+    text.includes('@dxos/react-ui') && (text.includes('<Flex') || text.includes('<Column.') || text.includes('<Grid')),
   run: (file) => {
     const converted = new Set<ts.Node>();
     for (const element of file.elements()) {
@@ -267,6 +342,9 @@ export const layout: Transform = {
         continue;
       }
       switch (element.identity.path.join('.')) {
+        case 'Grid':
+          grid(file, element);
+          break;
         case 'Flex':
           flex(file, element);
           break;

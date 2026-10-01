@@ -111,7 +111,7 @@ describe('imports', () => {
     `);
   });
 
-  test('list and menu move entry; form reports the missing entry', () => {
+  test('list, form and menu move entry', () => {
     const { output, residue } = transformFixture(
       imports,
       code`
@@ -123,14 +123,14 @@ describe('imports', () => {
       `,
     );
     expect(output).toBe(code`
-      import { Form } from '@dxos/react-ui-form';
       import { Path } from '@dxos/react-ui-list';
+      import { Form } from '@dxos/react-ui-form/next';
       import { Listbox } from '@dxos/react-ui-list/next';
       import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu/next';
 
       export const List = () => <Listbox.Root />;
     `);
-    expect(residue).toEqual(['Form: react-ui-form/next is not on this branch yet (AUDIT §7 Phase A item 2)']);
+    expect(residue).toEqual([]);
   });
 
   test('shadowed and re-exported bindings are left for a person', () => {
@@ -147,6 +147,34 @@ describe('imports', () => {
     expect(residue).toEqual([
       'Icon is also declared in this file; rewrite its uses by hand',
       'Tag is re-exported; re-export Next.Tag by hand',
+    ]);
+  });
+
+  test('a *Props type with no Next name becomes a local alias of the Next part props', () => {
+    const { output, residue } = transformFixture(
+      imports,
+      code`
+        import React from 'react';
+
+        import { type IconButtonProps, type ScrollAreaRootProps, type ThemedClassName, type FlexProps } from '@dxos/react-ui';
+
+        export type Props = ScrollAreaRootProps & IconButtonProps & FlexProps & ThemedClassName<{}>;
+      `,
+      'types.ts',
+    );
+    expect(output).toBe(code`
+      import React from 'react';
+
+      import { type ThemedClassName, type FlexProps } from '@dxos/react-ui';
+      import type { Next } from '@dxos/react-ui/next';
+
+      type ScrollAreaRootProps = React.ComponentProps<typeof Next.ScrollArea.Root>;
+
+      export type Props = ScrollAreaRootProps & Next.ButtonProps & FlexProps & ThemedClassName<{}>;
+    `);
+    expect(residue).toEqual([
+      'type ScrollAreaRootProps is now a local alias of ComponentProps<typeof ScrollArea.Root>',
+      'type FlexProps has no Next counterpart',
     ]);
   });
 });

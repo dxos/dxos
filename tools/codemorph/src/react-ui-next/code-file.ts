@@ -126,6 +126,8 @@ export class CodeFile {
   readonly #pending: PendingImport[] = [];
   readonly #upgraded = new Set<ts.ImportSpecifier>();
   readonly #claimed: { start: number; end: number }[] = [];
+  readonly #afterImports: string[] = [];
+  readonly #reactTypes = new Map<string, string>();
 
   readonly fileName: string;
   readonly text: string;
@@ -210,6 +212,11 @@ export class CodeFile {
   /** The transformed text, with import declarations rewritten for every name added, moved or no longer used. */
   finish(): string {
     this.#finishImports();
+    if (this.#afterImports.length > 0) {
+      const body = this.sourceFile.statements.find((statement) => !ts.isImportDeclaration(statement));
+      const at = body ? body.getStart(this.sourceFile) : this.text.length;
+      this.edit(at, at, `${this.#afterImports.join('\n')}\n\n`);
+    }
     return applyEdits(this.text, this.#edits);
   }
 
@@ -315,6 +322,71 @@ export class CodeFile {
       .find((decl) => ts.isStringLiteral(decl.moduleSpecifier) && decl.moduleSpecifier.text === module);
     this.#pending.push({ module, name, local, typeOnly, anchor });
     return local;
+  }
+
+  /** Queues a statement to follow the import declarations (a local type alias). */
+  addAfterImports(text: string) {
+    this.#afterImports.push(text);
+  }
+
+  /**
+   * The name of a type exported by `react` (e.g. `ComponentProps`), adding it to the file's `react` import (or a new
+   * one) when absent; `React.X` when react is only imported as a namespace or default.
+   */
+  reactType(name: string): string {
+    const pending = this.#reactTypes.get(name);
+    if (pending) {
+      return pending;
+    }
+    const decls = this.sourceFile.statements.filter(
+      (statement): statement is ts.ImportDeclaration =>
+        ts.isImportDeclaration(statement) && moduleText(statement) === 'react',
+    );
+    let text: string | undefined;
+    for (const decl of decls) {
+      const named = decl.importClause?.namedBindings;
+      const found =
+        named && ts.isNamedImports(named)
+          ? named.elements.find((spec) => (spec.propertyName ?? spec.name).text === name)
+          : undefined;
+      if (found) {
+        text = found.name.text;
+      }
+    }
+    const withNamed = decls.find(
+      (decl) => decl.importClause?.namedBindings && ts.isNamedImports(decl.importClause.namedBindings),
+    );
+    const namespace = decls
+      .map(
+        (decl) =>
+          decl.importClause?.name ??
+          (decl.importClause?.namedBindings && ts.isNamespaceImport(decl.importClause.namedBindings)
+            ? decl.importClause.namedBindings.name
+            : undefined),
+      )
+      .find((id) => id !== undefined);
+    if (!text && withNamed?.importClause?.namedBindings && ts.isNamedImports(withNamed.importClause.namedBindings)) {
+      const elements = withNamed.importClause.namedBindings.elements;
+      const typeOnly = withNamed.importClause.isTypeOnly;
+      this.edit(
+        elements.end,
+        elements.end,
+        `${elements.hasTrailingComma ? ' ' : ', '}${typeOnly ? '' : 'type '}${name}`,
+      );
+      text = name;
+    } else if (!text && namespace) {
+      text = `${namespace.text}.${name}`;
+    } else if (!text) {
+      const [first] = this.sourceFile.statements;
+      this.edit(
+        first?.getStart(this.sourceFile) ?? 0,
+        first?.getStart(this.sourceFile) ?? 0,
+        `import { type ${name} } from 'react';\n`,
+      );
+      text = name;
+    }
+    this.#reactTypes.set(name, text);
+    return text;
   }
 
   /** Moves a binding to `module`, keeping its local name, so its references stay valid. */

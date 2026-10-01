@@ -111,5 +111,10 @@ export const readSiblingNext = (repoRoot: string, pkg: string): EntryExports => 
     });
   };
   visit(join(dir, 'index.ts'));
-  return { values: [...values].sort(), types: [...types].sort(), parts: readParts(dir) };
+  const parts = readParts(dir);
+  return {
+    values: [...values].sort(),
+    types: [...types].sort(),
+    parts: Object.fromEntries(Object.entries(parts).filter(([name]) => values.has(name))),
+  };
 };
