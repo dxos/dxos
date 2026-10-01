@@ -37,7 +37,8 @@ export const SERVER_INSTRUCTIONS = trim`
 
   Operations belong to larger workflows described by skills. When a queryOperations row names a
   skill, call loadSkill with that name and follow the returned instructions before invoking the
-  operation — invokeOperation refuses it until one of its skills is loaded in this session.
+  operation. loadSkill also returns a one-word skillToken: pass it as invokeOperation's skillToken
+  on every call to that skill's operations, which are refused without it.
   loadSkill with no argument lists every skill. Skills are also offered to users as
   prompts (slash commands); loadSkill brings the same text into context without user action.
 

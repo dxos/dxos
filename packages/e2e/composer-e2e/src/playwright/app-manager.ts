@@ -735,6 +735,11 @@ export class AppManager {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 
+  /** Clicks the switch's root label, since the visually hidden input underneath it never receives pointer events. */
+  async togglePlugin(plugin: string): Promise<void> {
+    await this.page.getByTestId(`pluginList.${plugin}`).locator('[data-scope="switch"][data-part="root"]').click();
+  }
+
   async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {

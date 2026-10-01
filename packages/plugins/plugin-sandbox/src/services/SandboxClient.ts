@@ -10,6 +10,9 @@ import * as HttpBody from 'effect/unstable/http/HttpBody';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import type * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
+
+import { EXEC_STREAM_CONTENT_TYPE, foldExecStream } from './exec-stream.ts';
 
 /** A repository attached to a sandbox, and the git remote name commands in it address it by. */
 export const AttachedRepository = Schema.Struct({
@@ -34,8 +37,17 @@ export const ExecResult = Schema.Struct({
   stderr: Schema.String,
   exitCode: Schema.Number,
   success: Schema.Boolean,
+  /** Set for a command started in the background, which is all that `success` then means. */
+  processId: Schema.optional(Schema.String),
 });
 export type ExecResult = Schema.Schema.Type<typeof ExecResult>;
+
+export const ExposedPort = Schema.Struct({
+  port: Schema.Number,
+  /** Public URL of the port, ending in `/`; the token in it is the only credential it needs. */
+  url: Schema.String,
+});
+export type ExposedPort = Schema.Schema.Type<typeof ExposedPort>;
 
 export const FileEntry = Schema.Struct({
   name: Schema.String,
@@ -68,6 +80,14 @@ export type ExecRequest = {
   cwd?: string;
   env?: Record<string, string>;
   timeout?: number;
+  /** Start the command and return at once, for a server that must outlive the request. */
+  background?: boolean;
+};
+
+export type ExposePortOptions = {
+  /** The server behind the port, restarted with the container. */
+  command?: string;
+  cwd?: string;
 };
 
 /**
@@ -168,17 +188,29 @@ export class SandboxClient {
     ).pipe(Effect.map((body) => body.sandbox));
   }
 
+  /**
+   * Runs a command to its end. Asked for as a stream, whose heartbeat keeps a long command's request
+   * open: answered once at the end, an install of several minutes lost its connection while it kept
+   * running. A service that does not stream answers with the result itself, which is read as before.
+   */
   exec(spaceId: string, sandboxId: string, options: ExecRequest): RequestEffect<ExecResult> {
     // The caller's own `timeout` bounds the command inside the container; this bounds the request.
     // Kept above it so a command that times out server-side reports its own error rather than
     // surfacing as an indistinguishable client timeout.
     const timeout = options.timeout ? Duration.millis(options.timeout + 30_000) : DEFAULT_TIMEOUT;
-    return send(
-      HttpClientRequest.post(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/exec`)),
+    const request = HttpClientRequest.post(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/exec`));
+    if (options.background) {
+      return send(request, options, ExecResult, timeout, this._authHeader);
+    }
+    return execute(
+      HttpClientRequest.setHeader(request, 'Accept', EXEC_STREAM_CONTENT_TYPE),
       options,
-      ExecResult,
       timeout,
       this._authHeader,
+      (response) =>
+        (response.headers['content-type'] ?? '').includes(EXEC_STREAM_CONTENT_TYPE)
+          ? Effect.map(response.text, foldExecStream)
+          : Effect.flatMap(response.json, Schema.decodeUnknownEffect(ExecResult)),
     );
   }
 
@@ -244,13 +276,29 @@ export class SandboxClient {
       this._authHeader,
     ).pipe(Effect.map((body) => body.entries));
   }
+
+  /**
+   * Exposes `port` at a public URL. With `command`, the service starts the server behind it when it is
+   * not running, and again whenever the container has restarted since.
+   */
+  exposePort(
+    spaceId: string,
+    sandboxId: string,
+    port: number,
+    options?: ExposePortOptions,
+  ): RequestEffect<ExposedPort> {
+    return send(
+      HttpClientRequest.post(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/ports`)),
+      { port, ...options },
+      ExposedPort,
+      METADATA_TIMEOUT,
+      this._authHeader,
+    );
+  }
 }
 
 /**
- * Executes one request: JSON body when there is one, decode against `schema`, bounded by `timeout`,
- * and scoped so the response body is released even when the effect fails or is interrupted.
- * Deliberately no retry — `exec` is not idempotent, and re-running a command that may already have
- * taken effect is worse than reporting the failure.
+ * Executes one request whose JSON answer is decoded against `schema`; see {@link execute}.
  *
  * With `checkStatus`, a non-2xx response fails as an `HttpClientError` carrying its status rather
  * than as a body that does not decode — what lets a caller tell "not found" from "broken".
@@ -261,6 +309,29 @@ export const send = <T>(
   schema: Schema.Codec<T>,
   timeout: Duration.Duration,
   authHeader: AuthHeaderProvider,
+  options: { checkStatus?: boolean } = {},
+): RequestEffect<T> =>
+  execute(
+    request,
+    body,
+    timeout,
+    authHeader,
+    (response) => Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema)),
+    options,
+  );
+
+/**
+ * Executes one request: JSON body when there is one, answer read by `read`, bounded by `timeout`,
+ * and scoped so the response body is released even when the effect fails or is interrupted.
+ * Deliberately no retry — `exec` is not idempotent, and re-running a command that may already have
+ * taken effect is worse than reporting the failure.
+ */
+const execute = <T>(
+  request: HttpClientRequest.HttpClientRequest,
+  body: unknown,
+  timeout: Duration.Duration,
+  authHeader: AuthHeaderProvider,
+  read: (response: HttpClientResponse.HttpClientResponse) => Effect.Effect<T, SandboxRequestError>,
   { checkStatus = false }: { checkStatus?: boolean } = {},
 ): RequestEffect<T> =>
   Effect.gen(function* () {
@@ -269,9 +340,5 @@ export const send = <T>(
     const withBody = body === undefined ? request : yield* HttpClientRequest.bodyJson(request, body);
     const header = yield* Effect.promise(authHeader);
     const authorized = header ? HttpClientRequest.setHeader(withBody, 'Authorization', header) : withBody;
-    return yield* client.execute(authorized).pipe(
-      Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema))),
-      Effect.timeout(timeout),
-      Effect.scoped,
-    );
+    return yield* client.execute(authorized).pipe(Effect.flatMap(read), Effect.timeout(timeout), Effect.scoped);
   });
