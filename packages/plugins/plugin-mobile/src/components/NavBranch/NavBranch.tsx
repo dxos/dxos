@@ -12,7 +12,7 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useId, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { Next } from '@dxos/react-ui/next';
@@ -142,6 +142,7 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const isSelected = selectedValue === data.id;
 
   const name = toLocalizedString(data.properties.label, t);
+  const titleId = useId('mobile-tile');
 
   const handleSelect = useCallback(
     () => void invokePromise(LayoutOperation.Open, { subject: [data.id] }),
@@ -176,26 +177,22 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       onClick={handleSelect}
     >
       <Next.Card.Header>
-        <Next.Avatar.Root>
-          {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
-              `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Next.Block>
-            <Next.Avatar.Content
-              hue={data.properties.hue}
-              icon={data.properties.icon}
-              hueVariant='transparent'
-              variant='square'
-              size={8}
-              fallback={name}
-            />
-          </Next.Block>
-          <Next.Avatar.Label asChild>
-            <Next.Card.Title>{name}</Next.Card.Title>
-          </Next.Avatar.Label>
-          <Next.Block rail='end'>
-            <Next.Icon icon='ph--caret-right--regular' />
-          </Next.Block>
-        </Next.Avatar.Root>
+        {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+            `Card.Title` are what keep the icon, label, and caret on one row. */}
+        <Next.Block>
+          <Next.Avatar.Root
+            icon={data.properties.icon}
+            hue={Next.toAvatarHue(data.properties.hue)}
+            hueVariant='transparent'
+            variant='square'
+            fallback={name}
+            aria-labelledby={titleId}
+          />
+        </Next.Block>
+        <Next.Card.Title id={titleId}>{name}</Next.Card.Title>
+        <Next.Block rail='end'>
+          <Next.Icon icon='ph--caret-right--regular' />
+        </Next.Block>
       </Next.Card.Header>
     </Next.Card.Root>
   );
