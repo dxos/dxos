@@ -407,3 +407,70 @@ export const Test: Story = {
     await expect(probe('var(--color-focus)')).not.toBe(probe('var(--color-secondary-border)'));
   },
 };
+
+/** One md scope holding a text, an icon-only, a compact, an `iconSize`d button, a Toggle and a ToggleGroup item per `size`. */
+const SizesStory = () => (
+  <>
+    {SIZES.map((size) => (
+      <Next.Group key={size}>
+        <Next.Button size={size} icon='ph--share--regular' data-testid={`sized-${size}`}>
+          {size}
+        </Next.Button>
+        <Next.Button size={size} icon='ph--plus--regular' label='Add' iconOnly data-testid={`sized-icon-${size}`} />
+        <Next.Button size={size} compact data-testid={`sized-compact-${size}`}>
+          1
+        </Next.Button>
+        <Next.Button
+          size={size}
+          icon='ph--star--regular'
+          label='Star'
+          iconOnly
+          iconSize='lg'
+          data-testid={`sized-icon-size-${size}`}
+        />
+        <Next.Toggle
+          size={size}
+          icon='ph--push-pin--regular'
+          label='Pin'
+          iconOnly
+          data-testid={`sized-toggle-${size}`}
+        />
+        <Next.ToggleGroup.Root type='single'>
+          <Next.ToggleGroup.Item size={size} value='bold' data-testid={`sized-toggle-group-${size}`}>
+            Bold
+          </Next.ToggleGroup.Item>
+        </Next.ToggleGroup.Root>
+      </Next.Group>
+    ))}
+  </>
+);
+
+/**
+ * `size` scopes one button inside an md scope: each is its size's control height, an icon-only button is a square of
+ * it inset by its size's inset with its size's icon, compact pads by its size's inset, `iconSize` still overrides the
+ * icon, and Toggle and ToggleGroup items take `size` as Buttons do.
+ */
+export const Sizes: Story = {
+  render: () => <SizesStory />,
+  play: async ({ canvasElement }) => {
+    for (const size of SIZES) {
+      const { inset, icon } = GEOMETRY[size];
+      for (const part of ['sized', 'sized-icon', 'sized-compact', 'sized-toggle', 'sized-toggle-group']) {
+        const button = byTestId(canvasElement, `${part}-${size}`);
+        await expect(button).toHaveAttribute('data-size', size);
+        await expect(button.getBoundingClientRect().height, `${part}-${size} height`).toBeCloseTo(controlSize(size), 0);
+      }
+      const square = byTestId(canvasElement, `sized-icon-${size}`);
+      await expect(square.getBoundingClientRect().width, `sized-icon-${size} width`).toBeCloseTo(controlSize(size), 0);
+      await expect(parseFloat(getComputedStyle(square).marginTop), `sized-icon-${size} inset`).toBeCloseTo(inset, 0);
+      await expect(square.querySelector('svg')?.getBoundingClientRect().width, `sized-icon-${size} icon`).toBeCloseTo(
+        icon,
+        0,
+      );
+      const compact = getComputedStyle(byTestId(canvasElement, `sized-compact-${size}`));
+      await expect(parseFloat(compact.paddingLeft), `sized-compact-${size} padding`).toBeCloseTo(inset, 0);
+      const glyph = byTestId(canvasElement, `sized-icon-size-${size}`).querySelector('svg')?.getBoundingClientRect();
+      await expect(glyph?.width, `sized-icon-size-${size} icon`).toBeCloseTo(GEOMETRY.lg.icon, 0);
+    }
+  },
+};
