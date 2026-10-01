@@ -357,4 +357,31 @@ describe('renames', () => {
     `;
     expect(transformFixture(renames, input).output).toBe(input);
   });
+
+  test('Avatar.Root with Content and Label → Avatar.Root aria-labelledby beside the name', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Person = ({ id, name }: { id: string; name: string }) => (
+          <div>
+            <Next.Avatar.Root labelId={id}>
+              <Next.Avatar.Content hue='red' fallback='A' />
+              <Next.Avatar.Label classNames='text-sm'>{name}</Next.Avatar.Label>
+            </Next.Avatar.Root>
+          </div>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Person = ({ id, name }: { id: string; name: string }) => (
+        <div>
+          <Next.Avatar.Root aria-labelledby={id} hue='red' fallback='A' /><span id={id} className='text-sm'>{name}</span>
+        </div>
+      );
+    `);
+  });
 });

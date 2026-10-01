@@ -4,7 +4,7 @@
 
 import ts from '@typescript/typescript6';
 
-import { type Element } from '../code-file.ts';
+import { type CodeFile, type Element } from '../code-file.ts';
 import {
   addAttr,
   attributes,
@@ -12,6 +12,7 @@ import {
   attrText,
   attrValue,
   getAttr,
+  inJsxChildren,
   meaningfulChildren,
   removeAttr,
   renameAttr,
@@ -191,7 +192,8 @@ const selectItemValue = (ctx: RuleContext) => {
 };
 
 /** Avatar.Root (ids only) + Avatar.Content → one Avatar.Root element. */
-const avatarRoot = ({ file, element }: RuleContext) => {
+const avatarRoot = (ctx: RuleContext) => {
+  const { file, element } = ctx;
   const children = meaningfulChildren(element);
   const contents = children.filter((child) => {
     const opening = ts.isJsxElement(child)
@@ -203,6 +205,20 @@ const avatarRoot = ({ file, element }: RuleContext) => {
     return identity?.pkg === 'react-ui' && identity.path.join('.') === 'Avatar.Content';
   });
   const [content] = contents;
+  const partOf = (child: ts.JsxChild) => {
+    const opening = ts.isJsxElement(child)
+      ? child.openingElement
+      : ts.isJsxSelfClosingElement(child)
+        ? child
+        : undefined;
+    const identity = opening ? file.resolve(opening.tagName) : undefined;
+    return identity?.pkg === 'react-ui' ? identity.path.join('.') : undefined;
+  };
+  const label = children.find((child) => partOf(child) === 'Avatar.Label');
+  if (children.length === 2 && content && ts.isJsxSelfClosingElement(content) && label && ts.isJsxElement(label)) {
+    avatarWithLabel(ctx, content, label);
+    return;
+  }
   if (children.length !== 1 || !content || !ts.isJsxSelfClosingElement(content)) {
     file.report(
       element.opening,
@@ -210,14 +226,25 @@ const avatarRoot = ({ file, element }: RuleContext) => {
     );
     return;
   }
-  const rootProps = attributes(element).map((attr) => {
+  const rootProps = avatarRootProps(file, element);
+  const contentProps = avatarContentProps(file, content);
+  const tag = element.opening.tagName.getText(file.sourceFile);
+  file.replace(element.node, `<${tag} ${[...rootProps, ...contentProps].join(' ')} />`);
+  file.claim(element.node);
+  file.count('Avatar.Root + Avatar.Content → Avatar.Root');
+};
+
+const avatarRootProps = (file: CodeFile, element: Element) =>
+  attributes(element).map((attr) => {
     const name = attrName(attr);
     const renamed = name === 'labelId' ? 'aria-labelledby' : name === 'descriptionId' ? 'aria-describedby' : name;
     return renamed === name
       ? attr.getText(file.sourceFile)
       : `${renamed}${attr.initializer ? `=${attr.initializer.getText(file.sourceFile)}` : ''}`;
   });
-  const contentProps = content.attributes.properties.map((prop) => {
+
+const avatarContentProps = (file: CodeFile, content: ts.JsxSelfClosingElement) =>
+  content.attributes.properties.map((prop) => {
     if (ts.isJsxAttribute(prop) && attrName(prop) === 'imgSrc') {
       return `src${prop.initializer ? `=${prop.initializer.getText(file.sourceFile)}` : ''}`;
     }
@@ -226,10 +253,46 @@ const avatarRoot = ({ file, element }: RuleContext) => {
     }
     return prop.getText(file.sourceFile);
   });
+
+/**
+ * `<Avatar.Root labelId><Avatar.Content …/><Avatar.Label>name</Avatar.Label></Avatar.Root>` → one `Avatar.Root`
+ * (`aria-labelledby`) beside a `<span id>` holding the name: Next's Avatar is one element named by visible text.
+ */
+const avatarWithLabel = ({ file, element }: RuleContext, content: ts.JsxSelfClosingElement, label: ts.JsxElement) => {
+  const labelId = getAttr(element, 'labelId');
+  const labelClass = label.openingElement.attributes.properties.find(
+    (prop) => ts.isJsxAttribute(prop) && attrName(prop) === 'classNames',
+  );
+  const others = label.openingElement.attributes.properties.filter((prop) => prop !== labelClass);
+  if (
+    !labelId?.initializer ||
+    others.length > 0 ||
+    (labelClass &&
+      ts.isJsxAttribute(labelClass) &&
+      !(labelClass.initializer && ts.isStringLiteral(labelClass.initializer)))
+  ) {
+    file.report(
+      element.opening,
+      'Avatar.Root with an Avatar.Label: render the name with an id and pass aria-labelledby by hand',
+    );
+    return;
+  }
+  const rootProps = avatarRootProps(file, element);
+  const contentProps = avatarContentProps(file, content);
   const tag = element.opening.tagName.getText(file.sourceFile);
-  file.replace(element.node, `<${tag} ${[...rootProps, ...contentProps].join(' ')} />`);
+  const className =
+    labelClass && ts.isJsxAttribute(labelClass) && labelClass.initializer
+      ? ` className=${labelClass.initializer.getText(file.sourceFile)}`
+      : '';
+  const text = file.text.slice(label.openingElement.getEnd(), label.closingElement.getStart(file.sourceFile));
+  const avatar = `<${tag} ${[...rootProps, ...contentProps].join(' ')} />`;
+  const span = `<span id=${labelId.initializer.getText(file.sourceFile)}${className}>${text}</span>`;
+  const [first] = meaningfulChildren(element);
+  const pair = first === content ? `${avatar}${span}` : `${span}${avatar}`;
+  file.replace(element.node, inJsxChildren(element) ? pair : `<>${pair}</>`);
+  file.release(label.openingElement.tagName.getText(file.sourceFile).split('.')[0], 2);
   file.claim(element.node);
-  file.count('Avatar.Root + Avatar.Content → Avatar.Root');
+  file.count('Avatar.Root + Content + Label → Avatar.Root aria-labelledby + span');
 };
 
 /** `<Banner.Empty icon label />` → `<Empty icon>{label}</Empty>` (decided 2026-10-01: the text is the children). */
