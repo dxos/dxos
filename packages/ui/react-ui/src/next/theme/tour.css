@@ -37,6 +37,7 @@
     width: min(18rem, 100vw - 1rem);
     padding: var(--nx-gap-size);
     border: 1px solid var(--color-accent-bg);
+    --nx-arrow-border: var(--color-accent-bg);
   }
 
   /* A trailing CloseTrigger's inset cell ends at the card's padding edge, as in `Popover.Header`. */
@@ -68,5 +69,9 @@
     justify-content: space-between;
     gap: var(--nx-gap-size);
     min-height: var(--nx-block-size);
+  }
+  /* The footer row is one block like the header, so its buttons sit as far from the bottom as the close button from the top. */
+  .nx-tour-control > .nx-group {
+    padding-block: 0;
   }
 }

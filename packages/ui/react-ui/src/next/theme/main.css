@@ -18,7 +18,11 @@
 
   /* Content */
 
+  /* The sidebars are fixed, so the content is the host's only in-flow child and must fill it whatever its display. */
   .nx-main-content {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
     view-transition-name: nx-main-content;
     padding-inline: 0;
     scroll-padding-inline: 0;
