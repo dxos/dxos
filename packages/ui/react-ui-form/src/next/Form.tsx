@@ -34,13 +34,15 @@ export type FormViewportProps = PropsWithChildren<{
   scroll?: boolean;
   /** The pane's size when `scroll`; otherwise the form inherits its host's. */
   size?: Next.PanelRootProps['size'];
+  /** `document` keeps the form at the reading width when `scroll`, centred in the pane. */
+  width?: Next.PanelRootProps['width'];
   gutter?: Next.Gutter;
 }>;
 
 /** The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. */
-export const FormViewport = ({ children, scroll, size, gutter = 'rail' }: FormViewportProps) =>
+export const FormViewport = ({ children, scroll, size, width, gutter = 'rail' }: FormViewportProps) =>
   scroll ? (
-    <Next.Panel.Root size={size}>
+    <Next.Panel.Root size={size} width={width}>
       <Next.Panel.Body asChild>
         <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport asChild>

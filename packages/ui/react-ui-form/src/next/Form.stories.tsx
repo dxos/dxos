@@ -69,6 +69,22 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** `Form.Viewport scroll width='document'`: the form scrolls at the pane's edge but keeps the reading width. */
+export const DocumentWidth: Story = {
+  render: () => (
+    <Form.Root schema={ScalarSchema} values={SCALAR_VALUES}>
+      <Form.Viewport scroll width='document'>
+        <Form.Content>
+          <Form.Fields />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('[data-scope="panel"][data-width="document"]')).not.toBeNull();
+  },
+};
+
 /** `Form.Submit` with its own icon, spinning while busy (a send rather than a save). */
 export const Submit: Story = {
   render: () => (
