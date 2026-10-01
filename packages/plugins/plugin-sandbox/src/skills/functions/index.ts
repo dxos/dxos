@@ -13,6 +13,7 @@ export const SandboxHandlers = OperationHandlerSet.lazy([
   SandboxOperation.UploadFile.pipe(Operation.lazyHandler(() => import('./upload-file.ts'))),
   SandboxOperation.DownloadFile.pipe(Operation.lazyHandler(() => import('./download-file.ts'))),
   SandboxOperation.PublishFiles.pipe(Operation.lazyHandler(() => import('./publish-files.ts'))),
+  SandboxOperation.GrantAccountAccess.pipe(Operation.lazyHandler(() => import('./grant-account-access.ts'))),
   SandboxOperation.AttachRepository.pipe(Operation.lazyHandler(() => import('./attach-repository.ts'))),
   RepositoryOperation.CreateRepository.pipe(Operation.lazyHandler(() => import('./repository/create-repository.ts'))),
   RepositoryOperation.GetBranches.pipe(

@@ -34,10 +34,12 @@ const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSe
 
 /**
  * The section role, typed for an embedded task set: the host says where a row opens its task, since
- * only the host knows whether it contributes a companion to open into.
+ * only the host knows whether it contributes a companion to open into, and whether rows show their
+ * descriptions, since the host owns the preference.
  */
-const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { detail?: 'plank' | 'companion' }>> =
-  Role.make('org.dxos.role.section');
+const TaskSetSection: Role.Role<
+  AppSurface.SectionData<TaskSetType.TaskSet, { detail?: 'plank' | 'companion'; showDescription?: boolean }>
+> = Role.make('org.dxos.role.section');
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -100,7 +102,13 @@ export default Capability.makeModule(() =>
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
         component: TaskSetArticle,
-        props: ({ role, data: { subject, attendableId, detail } }) => ({ role, subject, attendableId, detail }),
+        props: ({ role, data: { subject, attendableId, detail, showDescription } }) => ({
+          role,
+          subject,
+          attendableId,
+          detail,
+          showDescription,
+        }),
       }),
       Surface.create({
         id: 'card.outline',

@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -36,10 +37,17 @@ export const CreateSandbox = Operation.make({
         description: 'Repositories to attach: each is a git remote, named after the repository, in every command.',
       }),
     ),
+    accountAccess: Schema.optional(Schema.Boolean).annotate({
+      description:
+        "Give the sandbox an API token that acts as the user's account, exported to every command as DX_API_TOKEN, so `dx` in it can publish as them. Defaults to true; pass false for a sandbox that runs code you do not trust.",
+    }),
   }),
   output: Schema.Struct({
     sandboxId: Schema.String.annotate({
       description: 'The ECHO object ID of the created sandbox (also used as the sandbox service ID).',
+    }),
+    accountTokenEnv: Schema.optional(Schema.String).annotate({
+      description: 'The environment variable the account token is exported as; absent when none was minted.',
     }),
   }),
   services: [Database.Service, SandboxService.Service, RepositoryService.Service],
@@ -149,6 +157,32 @@ export const PublishFiles = Operation.make({
     }),
   }),
   services: [Database.Service, SandboxService.Service],
+});
+
+/** The variable a granted account token is exported as, which `dx` reads for its API key. */
+export const ACCOUNT_TOKEN_ENV = 'DX_API_TOKEN';
+
+/**
+ * Lets commands in a sandbox act as the reader's account: mints an API token bound to their identity,
+ * expiring with the sandbox, and exports it to every command as {@link ACCOUNT_TOKEN_ENV}.
+ * {@link CreateSandbox} does this itself; this re-grants a sandbox that has no token or an expired one.
+ */
+export const GrantAccountAccess = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sandbox.grantAccountAccess'),
+    name: 'GrantAccountAccess',
+    description: 'Gives the commands in a sandbox an API token that acts as your account.',
+    icon: 'ph--key--regular',
+  },
+  input: Schema.Struct({
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
+  }),
+  output: Schema.Struct({
+    env: Schema.String.annotate({
+      description: 'The environment variable the token is exported as.',
+    }),
+  }),
+  services: [Capability.Service, Database.Service],
 });
 
 export const AttachRepository = Operation.make({
