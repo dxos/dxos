@@ -11,6 +11,7 @@ import '@dxos/react-ui/next/theme.css';
 import { random } from '@dxos/random';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '@dxos/react-ui/next/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { translations } from '@dxos/react-ui/translations';
 
 import { createStaticTreeModel } from '../../components/Tree/static-tree-model.ts';
 import { type TestItem, createTree, updateState } from '../../components/Tree/testing.ts';
@@ -221,7 +222,7 @@ const DefaultStory = ({
       >
         <Tree.Label className='sr-only'>Tree</Tree.Label>
         <Tree.Content>{composed ? renderComposedRow : undefined}</Tree.Content>
-        <Tree.Empty icon='ph--tree-structure--regular'>No items</Tree.Empty>
+        <Tree.Empty icon='ph--tree-structure--regular' />
       </Tree.Root>
     </div>
   );
@@ -233,7 +234,7 @@ const meta = {
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withRegistry, withTheme()],
   args: { size: 'md', tree: () => createTree(4, 3) },
   argTypes: SIZE_ARG_TYPES,
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'centered', translations },
 } satisfies Meta<StoryArgs>;
 
 export default meta;
@@ -266,7 +267,7 @@ export const Groups: Story = {
   args: { tree: createGroupedTree, draggable: true },
 };
 
-/** No rows: `Tree.Empty` shows in their place. */
+/** No rows: `Tree.Empty` shows its translated default in their place. */
 export const Empty: Story = {
   args: { tree: () => ({ id: 'root', name: 'Root', items: [] }) },
   play: async ({ canvasElement }) => {
@@ -541,7 +542,8 @@ export const DropTest: Story = {
       dispatchDrag(vegetables, 'dragenter', dataTransfer, 0.1);
       dispatchDrag(vegetables, 'dragover', dataTransfer, 0.1);
       await waitFor(() => expect(vegetables).toHaveAttribute('data-drop-target', 'top'));
-      await expect(vegetables.querySelector('.nx-drop-indicator')).toHaveAttribute('data-edge', 'top');
+      // The shared row line (row.css) is the target row's own `::after`.
+      await expect(getComputedStyle(vegetables, '::after').height).toBe('2px');
 
       dispatchDrag(fruit, 'dragenter', dataTransfer);
       dispatchDrag(fruit, 'dragover', dataTransfer);

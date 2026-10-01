@@ -6,6 +6,7 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import { type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react';
 
 import { createContext } from '@dxos/react-ui';
+import { type Next } from '@dxos/react-ui/next';
 
 import { type TreeData } from '../../components/Tree/tree-data.ts';
 import { type RowActivation } from '../../components/Tree/TreeContext.ts';
@@ -15,7 +16,7 @@ import { type TreeNode, type TreeWalk } from './tree-collection.ts';
 // Kept out of the component module: react-refresh only fast-refreshes a module whose exports are all components.
 
 /** `fixed` windows rows of one block each; `variable` mounts every row with `content-visibility: auto`. */
-export type TreeVirtual = 'fixed' | 'variable';
+export type TreeVirtual = Next.VirtualMode;
 
 /** A disclosure in flight: the rows under `path` fade in (`open`) or conceal before the close commits. */
 export type TreeDisclosure = { value: string; path: string[]; open: boolean };

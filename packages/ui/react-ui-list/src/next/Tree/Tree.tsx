@@ -33,7 +33,6 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -41,7 +40,6 @@ import React, {
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import { log } from '@dxos/log';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Next, type Size } from '@dxos/react-ui/next';
 import { hues } from '@dxos/ui-types';
@@ -658,12 +656,6 @@ TreeLabel.displayName = 'Tree.Label';
 // Content
 //
 
-/** Rows mounted beyond each edge of the view, so a fast wheel does not show blank rows. */
-const OVERSCAN = 8;
-
-/** A row's extent before one has been measured: the `md` block. */
-const NOMINAL_BLOCK = 32;
-
 /**
  * Ark's `tree` element carrying Container attributes, so the ScrollArea viewport slot merges onto it and the tree
  * element itself scrolls (part-naming rules 1 and 2).
@@ -699,24 +691,8 @@ type TreeContentProps = {
 
 const renderDefaultRow = (node: TreeNode) => <TreeItem node={node} />;
 
-/** A run of rows to mount, `[first, last]`, in row order. */
-type Span = { first: number; last: number };
-
-/** The window's span, plus the focused row's own when it is outside it, so the tabstop is never unmounted. */
-const mountedSpans = (first: number, last: number, focused: number | undefined): Span[] => {
-  if (focused === undefined || (focused >= first && focused <= last)) {
-    return [{ first, last }];
-  }
-  return focused < first
-    ? [
-        { first: focused, last: focused },
-        { first, last },
-      ]
-    : [
-        { first, last },
-        { first: focused, last: focused },
-      ];
-};
+/** The rows a fixed window measures its pitch from: an animating row is mid-way between zero and one block. */
+const SETTLED_ROWS = ':is([data-tree-row], [data-tree-group]):not([data-disclosure])';
 
 /**
  * The tree element as the viewport of a thin ScrollArea. Rows are rendered flat in visible (pre-order) order, never
@@ -729,97 +705,42 @@ const TreeContent = ({ children }: TreeContentProps) => {
   const renderRow = typeof children === 'function' ? children : renderDefaultRow;
   const trailing = typeof children === 'function' ? null : children;
   const { rows } = walk;
-  const viewportRef = useRef<HTMLDivElement | null>(null);
-  const blockRef = useRef(NOMINAL_BLOCK);
-  const warnedRef = useRef(false);
   const windowed = virtual === 'fixed';
-  const [range, setRange] = useState({ first: 0, last: windowed ? 2 * OVERSCAN : rows.length - 1 });
+  const focused = windowed && focusedValue ? walk.rowIndex.get(focusedValue) : undefined;
+  const windowing = Next.useVirtualRows({
+    mode: virtual,
+    count: rows.length,
+    pinned: focused,
+    measure: SETTLED_ROWS,
+  });
 
-  const update = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) {
-      return;
-    }
-    const block = blockRef.current;
-    const first = Math.max(0, Math.floor(viewport.scrollTop / block) - OVERSCAN);
-    const last = Math.min(rows.length - 1, Math.ceil((viewport.scrollTop + viewport.clientHeight) / block) + OVERSCAN);
-    setRange((range) => (range.first === first && range.last === last ? range : { first, last }));
-  }, [rows.length]);
-
-  // Rows are exactly one block, so the first mounted row's height is the extent of every row at this size.
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!windowed) {
       return;
     }
-    // An animating row is mid-way between zero and one block.
-    const settled = viewportRef.current?.querySelectorAll<HTMLElement>(
-      ':is([data-tree-row], [data-tree-group]):not([data-disclosure])',
-    );
-    const height = settled?.[0]?.getBoundingClientRect().height;
-    if (height && height !== blockRef.current) {
-      blockRef.current = height;
-    }
-    if (process.env.NODE_ENV !== 'production' && height && settled && !warnedRef.current) {
-      const uneven = [...settled].find((row) => Math.abs(row.getBoundingClientRect().height - height) > 0.5);
-      if (uneven) {
-        warnedRef.current = true;
-        log.warn("Tree virtual='fixed' needs rows of one height", { row: uneven.dataset.objectId });
-      }
-    }
-    update();
-  }, [windowed, update]);
-
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!windowed || !viewport) {
-      return;
-    }
-    const observer = new ResizeObserver(update);
-    observer.observe(viewport);
-    viewport.addEventListener('scroll', update, { passive: true });
-    scrollToIndexRef.current = (index) => {
-      const block = blockRef.current;
-      const top = index * block;
-      if (top < viewport.scrollTop) {
-        viewport.scrollTop = top;
-      } else if (top + block > viewport.scrollTop + viewport.clientHeight) {
-        viewport.scrollTop = top + block - viewport.clientHeight;
-      }
-      update();
-    };
+    scrollToIndexRef.current = windowing.scrollToIndex;
     return () => {
-      observer.disconnect();
-      viewport.removeEventListener('scroll', update);
       scrollToIndexRef.current = null;
     };
-  }, [windowed, update, scrollToIndexRef]);
-
-  const first = windowed ? Math.min(range.first, Math.max(0, rows.length - 1)) : 0;
-  const last = windowed ? Math.min(range.last, rows.length - 1) : rows.length - 1;
-  const block = blockRef.current;
-  const focused = windowed && focusedValue ? walk.rowIndex.get(focusedValue) : undefined;
+  }, [windowed, windowing.scrollToIndex, scrollToIndexRef]);
 
   // Spacers stand in for the rows between spans, so the scroll extent is the whole tree's.
   const content: ReactNode[] = [];
   let next = 0;
-  for (const span of rows.length > 0 ? mountedSpans(first, last, focused) : []) {
-    if (span.first > next) {
-      content.push(<div key={`gap-${next}`} role='none' style={{ height: (span.first - next) * block }} />);
-    }
+  for (const span of windowing.spans) {
+    content.push(<Next.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(span.first - next)} />);
     for (let index = span.first; index <= span.last; index++) {
       const node = rows[index];
       content.push(<Fragment key={node.value}>{renderRow(node)}</Fragment>);
     }
     next = span.last + 1;
   }
-  if (rows.length > next) {
-    content.push(<div key={`gap-${next}`} role='none' style={{ height: (rows.length - next) * block }} />);
-  }
+  content.push(<Next.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(rows.length - next)} />);
 
   return (
     <Next.ScrollArea.Root>
       <Next.ScrollArea.Viewport asChild>
-        <TreeContentElement ref={viewportRef}>
+        <TreeContentElement ref={windowing.listRef}>
           {content}
           {draggable && dropAtEnd && <TreeEndDropTarget treeId={treeId} root={walk.root} />}
           {trailing}
@@ -857,9 +778,13 @@ const TreeEndDropTarget = ({ treeId, root }: { treeId: string; root: TreeNode })
   }, [treeId, rootId, rootPath]);
 
   return (
-    <div ref={ref} role='none' data-tree-end='' data-drop-target={over ? 'top' : undefined} className='nx-tree-end'>
-      {over && <Next.DropIndicator edge='top' />}
-    </div>
+    <div
+      ref={ref}
+      role='none'
+      data-tree-end=''
+      data-drop-target={over ? 'top' : undefined}
+      className='nx-tree-end'
+    ></div>
   );
 };
 
@@ -1126,7 +1051,7 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
     'onClickCapture': handleClickCapture,
     'onMouseEnter': handleMouseEnter,
     style,
-    'className': 'nx-grid nx-tree-item',
+    'className': 'nx-grid nx-row nx-tree-item',
   };
 
   const content = (
@@ -1143,7 +1068,6 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
         Array.from({ length: depth - 1 }, (_, level) => (
           <span key={level} aria-hidden='true' className='nx-tree-indent-guide' style={guideStyle(level)} />
         ))}
-      {(drop.target === 'top' || drop.target === 'bottom') && <Next.DropIndicator edge={drop.target} />}
     </>
   );
 
@@ -1343,26 +1267,17 @@ TreeItemCount.displayName = 'Tree.ItemCount';
 //
 
 type TreeEmptyProps = {
+  /** A Phosphor icon above the message. */
   icon?: string;
-  children: ReactNode;
+  /** The message; the default is the translated "No items". */
+  children?: ReactNode;
 };
 
-/**
- * Shown in place of rows when the root has no children; renders nothing otherwise. Moves onto `Next.Empty` (AUDIT
- * group A point 41) when that lands.
- */
-const TreeEmpty = ({ icon, children }: TreeEmptyProps) => {
+/** `Next.Empty` (its text the children or the translated "No items"), rendered only while the root has no children. */
+const TreeEmpty = forwardRef<HTMLDivElement, TreeEmptyProps>((props, forwardedRef) => {
   const { walk } = useTreeContext('Tree.Empty');
-  if (walk.rows.length > 0) {
-    return null;
-  }
-  return (
-    <div role='status' data-scope='tree-view' data-part='empty' className='nx-tree-empty'>
-      {icon && <Next.Icon icon={icon} />}
-      <Next.Typography>{children}</Next.Typography>
-    </div>
-  );
-};
+  return walk.rows.length === 0 ? <Next.Empty {...props} ref={forwardedRef} /> : null;
+});
 
 TreeEmpty.displayName = 'Tree.Empty';
 

@@ -1,6 +1,7 @@
 /*
  * Tree (`@dxos/react-ui-list/next`): rows are flat, one block tall and indented one block per level. Row states (hover,
- * selected, disabled, drop target) live here until the shared `nx-row` class carries them (AUDIT group B point 20).
+ * selected, focus, disabled, drag, the drop line) are the shared `nx-row` rules (row.css); this file keeps the tree's
+ * layout, the `inside` ring and the line's indent.
  */
 
 @layer dx-components {
@@ -29,8 +30,6 @@
     position: relative;
     grid-auto-rows: var(--nx-block-size);
     padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-block-size));
-    border-radius: var(--radius-sm, 0.25rem);
-    cursor: default;
     outline: none;
     user-select: none;
   }
@@ -42,20 +41,7 @@
     grid-column: auto;
   }
 
-  .nx-tree-item:hover {
-    background: var(--color-hover-surface);
-  }
-  .nx-tree-item[data-selected] {
-    background: var(--color-current-surface);
-  }
-  .nx-tree-item:focus-visible {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
-  }
-  .nx-tree-item[data-disabled] {
-    opacity: 0.5;
-    cursor: default;
-  }
-  /* Drop targets: `top`/`bottom` draw a `Next.DropIndicator` line at the landing level; `inside` rings the branch. */
+  /* Drop targets: `top`/`bottom` draw the shared row line at the landing level; `inside` rings the branch. */
   .nx-tree-item[data-drop-target='inside'] {
     outline: var(--nx-drop-indicator-width) solid var(--nx-drop-indicator-color);
     outline-offset: calc(-1 * var(--nx-drop-indicator-width));
@@ -63,11 +49,11 @@
   .nx-tree-item[data-drop-target='inside'][data-drop-kind='link'] {
     outline-style: dashed;
   }
-  .nx-tree-item > .nx-drop-indicator {
+  .nx-tree-item[data-drop-target]::after {
     inset-inline-start: calc(var(--nx-tree-drop-level, 0) * var(--nx-block-size));
   }
   /* A link adds a reference and leaves the item where it is, so its line is dashed. */
-  .nx-tree-item[data-drop-kind='link'] > .nx-drop-indicator {
+  .nx-tree-item[data-drop-kind='link']::after {
     height: 0;
     background: none;
     border-block-start: var(--nx-drop-indicator-width) dashed var(--nx-drop-indicator-color);
@@ -142,9 +128,6 @@
     }
   }
 
-  .nx-tree-item[data-selectable] {
-    cursor: pointer;
-  }
   .nx-tree-item[data-hide-drag-source] {
     display: none;
   }
@@ -175,15 +158,6 @@
   .nx-tree-end {
     position: relative;
     min-block-size: var(--nx-block-size);
-  }
-
-  .nx-tree-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--nx-gap-size);
-    min-height: calc(3 * var(--nx-block-size));
-    color: var(--color-description);
   }
 
   /* One segment per ancestor, centred under that ancestor's disclosure block; segments join across rows. */
