@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { type PRNG, type ULIDFactory, monotonicFactory } from 'ulidx';
 
+import { withStatics } from './schema-statics.ts';
+
 // Crockford Base32 alphabet used by ULID. Excludes I, L, O, U.
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
@@ -139,7 +141,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
 let factory: ULIDFactory = monotonicFactory();
 let seedTime: number | undefined;
 
-export const EntityId: EntityIdClass = Object.assign(EntityIdSchema, {
+export const EntityId: EntityIdClass = withStatics(EntityIdSchema, {
   isValid: (id: string): id is EntityId => {
     try {
       Schema.decodeSync(EntityIdSchema)(id);
