@@ -1,30 +1,22 @@
 {
-  "generated": "2026-10-01T15:24:28.237Z",
+  "generated": "2026-10-01T15:25:28.563Z",
   "paths": ["packages"],
   "changed": [
-    "packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.tsx",
-    "packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx",
-    "packages/plugins/plugin-file/src/containers/FileCard/FileCard.tsx",
-    "packages/plugins/plugin-library/src/containers/BookCard/BookCard.tsx",
-    "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx",
-    "packages/plugins/plugin-magazine/src/containers/PostCard/PostCard.tsx",
-    "packages/plugins/plugin-preview/src/cards/OrganizationCard.tsx",
-    "packages/plugins/plugin-preview/src/cards/ProjectCard.tsx",
-    "packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx",
-    "packages/plugins/plugin-routine/src/components/Schedule/Schedule.tsx",
-    "packages/plugins/plugin-space/src/components/RelatedTypeFilter/RelatedTypeFilter.tsx",
-    "packages/plugins/plugin-studio/src/components/MediaArtifactCard/MediaArtifactCard.tsx",
-    "packages/ui/react-ui-masonry/src/Masonry.stories.tsx"
+    "packages/plugins/plugin-github/src/components/PullRequestOverview/ArtifactPill.tsx",
+    "packages/plugins/plugin-testing/src/components/Layout/Layout.tsx",
+    "packages/ui/react-ui-card/src/components/Row/Row.stories.tsx",
+    "packages/ui/react-ui-feed/src/components/Outline/Outline.tsx",
+    "packages/ui/react-ui-graph/src/components/Graph/Graph.stories.tsx",
+    "packages/ui/react-ui-mosaic/src/testing/CardContainer.tsx",
+    "packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx"
   ],
   "transforms": [
     {
       "transform": "renames",
       "filesScanned": 12386,
-      "filesChanged": 13,
+      "filesChanged": 7,
       "rules": {
-        "Card.Poster image → src": 10,
-        "Card.Poster aspect → aspectRatio": 2,
-        "ToggleGroup → ToggleGroup.Root": 3
+        "Popover.Content onOpenAutoFocus preventDefault → Root autoFocus={false}": 7
       },
       "residue": [
         {
@@ -246,6 +238,14 @@
         {
           "transform": "renames",
           "file": "packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx",
+          "line": 156,
+          "column": 7,
+          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
+          "snippet": "onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx",
           "line": 152,
           "column": 5,
           "reason": "Popover.Content side → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
@@ -309,6 +309,14 @@
         },
         {
           "transform": "renames",
+          "file": "packages/plugins/plugin-github/src/stories/Links.stories.tsx",
+          "line": 45,
+          "column": 7,
+          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
+          "snippet": "onOpenAutoFocus={(event) => event.preventDefault()}"
+        },
+        {
+          "transform": "renames",
           "file": "packages/plugins/plugin-inbox/src/components/Event/EventEditor.tsx",
           "line": 207,
           "column": 15,
@@ -322,6 +330,14 @@
           "column": 17,
           "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
           "snippet": "<Next.Field.TriggerIcon icon='ph--calendar--regular' />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-inbox/src/testing/contact-preview.tsx",
+          "line": 27,
+          "column": 27,
+          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
+          "snippet": "onOpenAutoFocus={(event) => event.preventDefault()}"
         },
         {
           "transform": "renames",
@@ -623,7 +639,7 @@
           "transform": "renames",
           "file": "packages/plugins/plugin-studio/src/components/MediaArtifactCard/MediaArtifactCard.tsx",
           "line": 34,
-          "column": 51,
+          "column": 49,
           "reason": "Card.Poster icon has no Next part: render an Image fallback or an Icon in a Block by hand",
           "snippet": "icon={src ? undefined : 'ph--image--regular'}"
         },
@@ -1022,6 +1038,14 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
+          "line": 204,
+          "column": 9,
+          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
+          "snippet": "onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
           "line": 189,
           "column": 7,
           "reason": "Popover.Content align → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
@@ -1034,6 +1058,14 @@
           "column": 15,
           "reason": "Listbox.ItemContent: props other than icon, title, description (in that order); compose the row parts by hand",
           "snippet": "<Listbox.ItemContent classNames='grow' title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-editor/src/stories/Widgets.stories.tsx",
+          "line": 79,
+          "column": 7,
+          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
+          "snippet": "onOpenAutoFocus={(event) => event.preventDefault()}"
         },
         {
           "transform": "renames",

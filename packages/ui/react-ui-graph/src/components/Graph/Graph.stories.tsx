@@ -214,6 +214,7 @@ const DefaultStory = ({
       open={!!popover}
       onOpenChange={({ open: state }) => !state && setPopover(undefined)}
       positioning={Next.virtualAnchor(popoverAnchorRef)}
+      autoFocus={false}
     >
       <div className={mx('dx-fill grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
@@ -266,7 +267,7 @@ const DefaultStory = ({
         )}
       </div>
 
-      <Next.Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Next.Popover.Content>
         <Next.Popover.Body>
           <Next.Card.Root>
             <JsonHighlighter data={popover} classNames='text-xs my-form-padding px-form-padding bg-transparent' />

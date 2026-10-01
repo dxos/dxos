@@ -48,11 +48,11 @@ export const PopoverCardContainer = ({
   icon = 'ph--arrow-line-down--regular',
 }: PopoverCardContainerProps) => {
   return (
-    <Next.Popover.Root open>
+    <Next.Popover.Root open autoFocus={false}>
       <Next.Popover.Trigger asChild>
         <Next.Icon icon={icon} />
       </Next.Popover.Trigger>
-      <Next.Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
+      <Next.Popover.Content>
         <Next.Popover.Body>
           {/* Mirrors the deck's popover card host (plugin-deck Overlays/Popover.tsx) so card
                 stories exercise the real composition: Card.Root grid + header + content. */}

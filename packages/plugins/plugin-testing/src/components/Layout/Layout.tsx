@@ -123,7 +123,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
           degrades when it finds no provider, taking the whole surface down with it. */}
       <div className='fixed inset-0 flex overflow-hidden'>
         <Dnd.Root>
-          <Next.Popover.Root open={open} positioning={Next.virtualAnchor(trigger)}>
+          <Next.Popover.Root open={open} positioning={Next.virtualAnchor(trigger)} autoFocus={false}>
             <Next.Main.Root
               navigationSidebarState={layout.sidebarState}
               complementarySidebarState={layout.complementarySidebarState}
@@ -164,7 +164,6 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
             <Next.Popover.Content
               side={layout.popoverSide}
-              onOpenAutoFocus={(event) => event.preventDefault()}
               onInteractOutside={handleInteractOutside}
               onEscapeKeyDown={handleInteractOutside}
               hideWhenDetached

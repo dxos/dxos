@@ -266,7 +266,7 @@ export const Outline = ({
   const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
   return (
-    <Next.Popover.Root open={hoveredMarker != null} positioning={{ placement: 'right' }}>
+    <Next.Popover.Root open={hoveredMarker != null} positioning={{ placement: 'right' }} autoFocus={false}>
       <div
         role='navigation'
         className={mx('relative flex flex-col justify-center overflow-hidden', classNames)}
@@ -364,7 +364,6 @@ export const Outline = ({
           key={hoveredMarker.id}
           // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
           avoidCollisions={false}
-          onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Next.Popover.Body>
             <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>

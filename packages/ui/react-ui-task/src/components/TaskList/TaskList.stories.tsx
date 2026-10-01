@@ -456,13 +456,14 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
       positioning={Next.virtualAnchor(triggerRef)}
+      autoFocus={false}
     >
       {children}
       <output className='sr-only' data-testid='artifact-opened'>
         {opened}
       </output>
       {artifact && (
-        <Next.Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Next.Popover.Content>
           <Next.Popover.Body classNames='dx-card-popover-width'>
             <Next.Card.Root border={false} data-testid='artifact-preview'>
               <Next.Card.Header>

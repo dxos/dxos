@@ -76,10 +76,11 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
       positioning={Next.virtualAnchor(triggerRef as RefObject<HTMLButtonElement>)}
+      autoFocus={false}
     >
       {children}
       {link && (
-        <Next.Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Next.Popover.Content>
           <Next.Popover.Body classNames='dx-card-popover-width'>
             <Next.Card.Root border={false} data-testid='contact-preview'>
               <Next.Card.Header>

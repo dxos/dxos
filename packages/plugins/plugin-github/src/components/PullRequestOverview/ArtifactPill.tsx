@@ -59,7 +59,7 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
   }
 
   return (
-    <Next.Popover.Root>
+    <Next.Popover.Root autoFocus={false}>
       <Next.Popover.Trigger asChild>
         <Next.Button
           variant='tag'
@@ -71,7 +71,7 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
           data-testid='pull-request.artifact.pill'
         />
       </Next.Popover.Trigger>
-      <Next.Popover.Content classNames='w-[min(40rem,90vw)]' onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Next.Popover.Content classNames='w-[min(40rem,90vw)]'>
         <Next.Popover.Body classNames='p-1'>
           <ArtifactMedia artifact={artifact} />
         </Next.Popover.Body>
