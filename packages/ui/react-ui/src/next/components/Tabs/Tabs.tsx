@@ -89,16 +89,26 @@ TabsList.displayName = 'Next.Tabs.List';
 // Trigger
 //
 
-type TabsTriggerProps = ComponentPropsWithoutRef<typeof Button> & Pick<TabsPrimitive.TriggerProps, 'value'>;
+type TabsTriggerProps =
+  | (ComponentPropsWithoutRef<typeof Button> & Pick<TabsPrimitive.TriggerProps, 'value'> & { asChild?: false })
+  | (Omit<TabsPrimitive.TriggerProps, 'asChild'> & { asChild: true });
 
-/** A ghost Button that fills when selected; takes Button's content props (`icon`, `label`, `iconOnly`). */
-const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(
-  ({ value, disabled, classNames, variant = 'ghost', ...props }, forwardedRef) => (
+/**
+ * A ghost Button that fills when selected; takes Button's content props (`icon`, `label`, `iconOnly`). With `asChild`
+ * the child element is the tab as it is (e.g. a rail of avatars), taking only the tab's state and behaviour.
+ */
+const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((props, forwardedRef) => {
+  if (props.asChild) {
+    return <TabsPrimitive.Trigger {...props} ref={forwardedRef} />;
+  }
+
+  const { value, disabled, classNames, variant = 'ghost', asChild: _asChild, ...buttonProps } = props;
+  return (
     <TabsPrimitive.Trigger value={value} disabled={disabled} asChild>
-      <Button {...props} variant={variant} classNames={[recipes.tabsTrigger(), classNames]} ref={forwardedRef} />
+      <Button {...buttonProps} variant={variant} classNames={[recipes.tabsTrigger(), classNames]} ref={forwardedRef} />
     </TabsPrimitive.Trigger>
-  ),
-);
+  );
+});
 
 TabsTrigger.displayName = 'Next.Tabs.Trigger';
 

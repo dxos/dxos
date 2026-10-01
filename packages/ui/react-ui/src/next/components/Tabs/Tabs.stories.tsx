@@ -125,3 +125,30 @@ export const Vertical: Story = {
     await waitFor(() => expect(tasks).toHaveFocus());
   },
 };
+
+/** `Trigger asChild`: the child element is the tab, unstyled (e.g. a rail of avatars), with the tab's state and keys. */
+export const CustomTrigger: Story = {
+  render: () => (
+    <Next.Tabs.Root defaultValue='a' orientation='vertical'>
+      <Next.Tabs.List>
+        {['a', 'b'].map((value) => (
+          <Next.Tabs.Trigger key={value} asChild value={value}>
+            <button type='button' aria-label={`Space ${value}`} className='size-8 rounded-full bg-input-surface'>
+              {value.toUpperCase()}
+            </button>
+          </Next.Tabs.Trigger>
+        ))}
+      </Next.Tabs.List>
+      <Next.Tabs.Content value='a'>First</Next.Tabs.Content>
+      <Next.Tabs.Content value='b'>Second</Next.Tabs.Content>
+    </Next.Tabs.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const second = canvas.getByRole('tab', { name: 'Space b' });
+    await expect(second).not.toHaveAttribute('data-variant');
+    await userEvent.click(second);
+    await waitFor(() => expect(second).toHaveAttribute('aria-selected', 'true'));
+    await waitFor(() => expect(canvas.getByText('Second')).toBeVisible());
+  },
+};
