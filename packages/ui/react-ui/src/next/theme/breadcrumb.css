@@ -32,15 +32,16 @@
     align-items: center;
   }
 
+  /* Link and current share the inset, so a crumb's text stays put when it becomes (or stops being) the current page. */
   .nx-breadcrumb-link,
   .nx-breadcrumb-current {
+    padding-inline: var(--nx-control-inset);
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
     white-space: nowrap;
   }
 
   .nx-breadcrumb-link {
-    padding-inline: var(--nx-control-inset);
     border-radius: var(--radius-sm, 0.25rem);
     color: var(--color-description);
     text-decoration: none;
