@@ -412,7 +412,7 @@ export const SortAndGroup: Story = {
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.group"]')).find((row) =>
         row.textContent?.includes('Done'),
       ) ?? null;
-    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]') ?? null);
+    await clickElement(doneGroup()?.querySelector<HTMLElement>('[data-part="branch-trigger"]') ?? null);
     await waitFor(() => expect(titles()).not.toContain('Source green coffee'), { timeout: 10_000 });
     await expect(headers()).toContain('Done1');
 
@@ -608,7 +608,7 @@ export const AddSubTask: Story = {
     );
 
     // Collapse the parent, then add another: the branch opens so both children are in view.
-    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!);
+    await userEvent.click(parentRow().querySelector<HTMLElement>('[data-part="branch-trigger"]')!);
     await waitFor(() => expect(visible(first.id)).toBe(false), { timeout: 10_000 });
     await addSubTask();
     await waitFor(() => expect(children()).toHaveLength(2), { timeout: 10_000 });
@@ -766,7 +766,7 @@ export const CollapsePersists: Story = {
       canvas
         .getByText(title)
         .closest<HTMLElement>('[data-testid="taskList.item"]')!
-        .querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+        .querySelector<HTMLElement>('[data-part="branch-trigger"]')!;
     await waitFor(() => expect(visible('Pick the typeface')).toBe(true), { timeout: 10_000 });
     await waitFor(() => expect(visible('Order the samples')).toBe(true), { timeout: 10_000 });
 

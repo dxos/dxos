@@ -209,12 +209,7 @@ export const createTaskTreeModel = (
           ? // A branch (its children make it one) rather than a `group` disposition: a section
             // header cannot be collapsed, and folding away the `Done` group is half the point.
             { testId: 'taskList.group' }
-          : {
-              testId: 'taskList.item',
-              // The selection fill already marks the row, so a focus ring on top of it reads as a
-              // second, conflicting highlight; unselected rows keep the ring for keyboard travel.
-              className: 'data-[selected]:ring-0',
-            }),
+          : { testId: 'taskList.item' }),
     }),
     isOpen: (node) => !collapsed?.has(node.id),
   });

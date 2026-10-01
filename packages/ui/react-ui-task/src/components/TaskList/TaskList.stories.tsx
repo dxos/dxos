@@ -543,7 +543,6 @@ const DefaultStory = ({
   showOrdinals,
   showDescription = true,
   showEstimates,
-  debug,
   framed = true,
   acceptFiles = false,
 }: {
@@ -565,8 +564,6 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescription?: boolean;
   showEstimates?: boolean;
-  /** Paint every row's drop bands, so the zones are visible without holding a drag. */
-  debug?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
@@ -656,7 +653,6 @@ const DefaultStory = ({
 
   return (
     <TaskList.Root
-      debug={debug}
       tasks={tasks}
       selected={selected}
       hierarchical={hierarchical}
@@ -981,22 +977,8 @@ export const HierarchicalDraggable: Story = {
   },
 };
 
-/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
-export const DragDebug: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    draggable: true,
-    showOrdinals: true,
-    showDescription: true,
-    debug: true,
-    framed: false,
-  },
-};
-
 /**
- * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
- * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
+ * The minimal `A > B, C` shape TREE.md reasons the six landing places about. Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
  * check a hitbox change against.
  */
 export const DropZones: Story = {
@@ -1005,7 +987,6 @@ export const DropZones: Story = {
     hierarchical: true,
     draggable: true,
     showDescription: false,
-    debug: true,
     framed: false,
   },
 };
@@ -1875,7 +1856,7 @@ export const TestHierarchy: Story = {
           ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
-    const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-part="branch-trigger"]')!;
     const press = (row: HTMLElement, key: string) => {
       row.focus();
       row.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: true, bubbles: true }));
@@ -1992,7 +1973,7 @@ export const TestHierarchy: Story = {
 
     // The disclosure toggle sits on the title's centreline whether or not a description follows.
     for (const { row } of rows()) {
-      const toggle = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      const toggle = row.querySelector<HTMLElement>('[data-part="branch-trigger"]');
       const rowTitle = row.querySelector<HTMLElement>('.truncate');
       if (toggle && rowTitle) {
         const centre = (element: HTMLElement) => {

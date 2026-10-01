@@ -2,21 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Listbox, TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 import { type Actor, PullRequest, Task } from '@dxos/types';
-import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
-import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
+import { mx, toHue } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
+import { type TaskPlacement } from './hierarchy.ts';
 import { STATUS_ORDER } from './status-icons.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
@@ -100,8 +100,6 @@ type TaskListRootProps = PropsWithChildren<{
   // What a row shows.
   //
 
-  /** Paint the tree's drop bands on every row (development affordance). */
-  debug?: boolean;
   /** Render the status heading above each group; grouping order is kept either way. */
   showGroupLabels?: boolean;
   /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
@@ -174,7 +172,6 @@ const TaskListRoot = ({
   tasks,
   groupByStatus = true,
   groups,
-  debug = false,
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
@@ -199,17 +196,6 @@ const TaskListRoot = ({
   const selected = selectedProp ?? selectedState;
   const selectable = selectableProp ?? (!!onTaskSelect || selectedProp !== undefined);
 
-  const handleValueChange = useCallback(
-    (id: string) => {
-      setSelectedState(id);
-      const task = tasks.find((task) => task.id === id);
-      if (task) {
-        onTaskSelect?.(task);
-      }
-    },
-    [tasks, onTaskSelect],
-  );
-
   // Passing `undefined` clears the selection — what `Escape` on a row and the edit pane's buttons do.
   const handleSelect = useCallback(
     (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => {
@@ -219,29 +205,38 @@ const TaskListRoot = ({
     [onTaskSelect],
   );
 
-  // The hook owns the controlled/uncontrolled Set state machine; its trigger/panel ids are not
-  // used, because a sub-task is a sibling row in the same grid rather than a region the toggle
-  // could point `aria-controls` at — `aria-expanded` on the row carries the disclosure instead.
-  const disclosure = useListDisclosure({
-    mode: 'multi',
-    ...(collapsed !== undefined || onCollapsedChange ? { value: collapsed } : {}),
-    defaultValue: new Set<string>(),
-    onValueChange: onCollapsedChange,
-  });
-  const isCollapsed = useCallback((id: string) => disclosure.bind(id).expanded, [disclosure]);
-  const onCollapseToggle = useCallback((id: string) => disclosure.bind(id).toggle(), [disclosure]);
-
-  // A dragged task leaves the list while it is in flight — it is in the reader's hand, shown in the
-  // drag preview — so the rows close up over the gap it came from. Its sub-tasks go with it: they
-  // travel with their parent and are part of the same preview.
-  const [draggingTask, setDraggingTask] = useState<Task.Task>();
-  const dragging = useMemo(() => (draggingTask ? subtreeIds(tasks, draggingTask) : EMPTY_IDS), [tasks, draggingTask]);
+  // Controlled once the host passes the set or listens for it, even while the set is still
+  // undefined, so a host clearing it is not mistaken for handing control back to the list.
+  const collapsedControlled = collapsed !== undefined || !!onCollapsedChange;
+  const [collapsedState, setCollapsedState] = useState<ReadonlySet<string>>(EMPTY_IDS);
+  const collapsedIds = collapsedControlled ? (collapsed ?? EMPTY_IDS) : collapsedState;
+  // Read through a ref so two toggles before a re-render (a drag collapsing and reopening its
+  // branch) each build on the other.
+  const collapsedIdsRef = useRef(collapsedIds);
+  collapsedIdsRef.current = collapsedIds;
+  const isCollapsed = useCallback((id: string) => collapsedIds.has(id), [collapsedIds]);
+  const onCollapseToggle = useCallback(
+    (id: string) => {
+      const next = new Set(collapsedIdsRef.current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      collapsedIdsRef.current = next;
+      if (!collapsedControlled) {
+        setCollapsedState(next);
+      }
+      onCollapsedChange?.(next);
+    },
+    [collapsedControlled, onCollapsedChange],
+  );
 
   // The checkbox shares the ordinal's gutter, so a checkable list reserves the track even when it
   // shows no numbers. A movable one does not: the whole row is the drag source, and a track held
   // for a handle that no longer exists only pushed every title one square right.
   const showGutter = showOrdinals || !!onTaskCheck;
-  const gridTemplateColumns = useMemo(
+  const { columns, gridTemplateColumns } = useMemo(
     () =>
       buildGridTemplate({
         toggle: hierarchical || !!groups,
@@ -255,6 +250,7 @@ const TaskListRoot = ({
   return (
     <TaskListProvider
       tasks={tasks}
+      columns={columns}
       gridTemplateColumns={gridTemplateColumns}
       // Not gated on `!hierarchical` any more: the tree expresses a status group as a `group` node,
       // so grouping and hierarchy are a choice rather than mutually exclusive capabilities.
@@ -266,14 +262,11 @@ const TaskListRoot = ({
       descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
-      debug={debug}
       showGutter={showGutter}
       isCollapsed={isCollapsed}
       selected={selected}
       checked={checked}
-      dragging={dragging}
       getTaskActions={getTaskActions}
-      onDraggingChange={setDraggingTask}
       onCollapseToggle={onCollapseToggle}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
@@ -281,10 +274,7 @@ const TaskListRoot = ({
       onTaskCheck={onTaskCheck}
       onTaskMove={onTaskMove}
     >
-      {/* Both roots are headless, so the pair renders no DOM of its own. */}
-      <Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>
-        {children}
-      </Listbox.Root>
+      {children}
     </TaskListProvider>
   );
 };
@@ -292,8 +282,8 @@ const TaskListRoot = ({
 TaskListRoot.displayName = 'TaskList.Root';
 
 //
-// Viewport — the scrolling region (the listbox's own viewport). `Create` sits outside it, so the
-// add row stays pinned while the rows scroll.
+// Viewport — bounds the rows, which scroll inside it (the tree's content is its own scroll area).
+// `Create` sits outside it, so the add row stays pinned while the rows scroll.
 //
 
 type TaskListViewportProps = ComposableProps<{
@@ -307,20 +297,15 @@ const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
     // Whole rows only: a fractional count would cut through the next row.
     const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
     return (
-      <Listbox.Viewport
+      <div
         {...rest}
-        classNames={mx('dx-shrink', className)}
-        // Each row is one control tall (the rail-item square every cell holds), and the tree's grid
-        // puts a `gap-0.5` (0.125rem) between rows; without the gaps the last row is cut short.
-        style={
-          rows === undefined
-            ? style
-            : { ...style, maxHeight: `calc(${rows} * var(--dx-control) + ${Math.max(rows - 1, 0)} * 0.125rem)` }
-        }
+        className={mx('flex flex-col min-h-0 dx-shrink', className)}
+        // Each one-line row is one block tall, with no gap between rows.
+        style={rows === undefined ? style : { ...style, maxHeight: `calc(${rows} * var(--nx-block-size))` }}
         ref={forwardedRef}
       >
         {children}
-      </Listbox.Viewport>
+      </div>
     );
   },
 );
@@ -336,16 +321,14 @@ const MAX_ORDINAL = 99;
 
 /**
  * One column template per list, built from its options and shared by the tree's rows and the edit
- * pane (the create row sits outside the scrolling viewport, in a grid of its own), so the pane's
- * icon sits under the rows' status controls and its field starts where their titles do.
+ * pane (the create row sits outside the scrolling tree, in a grid of its own), so the pane's icon
+ * sits under the rows' status controls and its field starts where their titles do.
  *
- * Every fixed track is one control — the rail-item square each cell's `IconBlock` holds — and a
- * track exists only when its option is on, so a cell is never rendered into a track that is not
- * there and no track is held empty. Cells flow into the tracks in DOM order; the names are for the
- * pane and the description, which place themselves.
+ * Every fixed track is one block — the square each cell's `Next.Block` holds — and a track exists
+ * only when its option is on, so a cell is never rendered into a track that is not there and no
+ * track is held empty. Row cells flow into the tracks in DOM order; the names are for the pane and
+ * for the cells a row places on its later lines (the chips and the description).
  */
-type GridTrack = readonly [name: string | undefined, size: string, endName?: string];
-
 const buildGridTemplate = ({
   toggle,
   showGutter,
@@ -357,45 +340,40 @@ const buildGridTemplate = ({
   showGutter: boolean;
   showEstimates: boolean;
   hasActions: boolean;
-}): string => {
-  const candidates: (GridTrack | false)[] = [
-    // The tree's block, which each level also indents by, so a guide lands under its branch's chevron.
-    toggle && [undefined, TREE_BLOCK],
-    showGutter && ['gutter', 'var(--dx-control)'],
-    ['status', 'var(--dx-control)'],
+}): { columns: string; gridTemplateColumns: string } => {
+  const candidates: (readonly [name: string | undefined, size: string] | false)[] = [
+    // The tree indents each level by one block, so a guide lands under its branch's chevron.
+    toggle && [undefined, 'var(--nx-block-size)'],
+    showGutter && ['gutter', 'var(--nx-block-size)'],
+    ['status', 'var(--nx-block-size)'],
     ['title', 'minmax(0, 1fr)'],
     // Sized by its content: a row with no pull request holds no width for one.
     ['artifacts', 'auto'],
-    ['assignee', 'var(--dx-control)'],
-    showEstimates && ['estimate', 'var(--dx-control)'],
-    ['priority', 'var(--dx-control)'],
-    hasActions && ['actions', 'var(--dx-control)'],
+    ['assignee', 'var(--nx-block-size)'],
+    showEstimates && ['estimate', 'var(--nx-block-size)'],
+    ['priority', 'var(--nx-block-size)'],
+    hasActions && ['actions', 'var(--nx-block-size)'],
   ];
+  const tracks = candidates.filter((track) => track !== false);
+  const template = (named: (index: number) => boolean) =>
+    tracks.map(([name, size], index) => (name && named(index) ? `[${name}] ${size}` : size)).join(' ');
 
-  const tracks = candidates.filter((track): track is GridTrack => !!track);
-
-  // A line carries all its names in one bracket: `[tree-row-start] [status]` with no track between
-  // is invalid and silently drops the whole declaration, which is what happens the moment the
-  // toggle track is omitted — so the first track's name joins the row's own.
-  return tracks
-    .map(([name, size], index) => {
-      // A track's `endName` belongs to the line that follows it, which is the same line the next
-      // track's own name sits on — so it is emitted here rather than by the track that declares it.
-      const names = [index === 0 && 'tree-row-start', tracks[index - 1]?.[2], name].filter(Boolean).join(' ');
-      return `${names ? `[${names}] ` : ''}${size}`;
-    })
-    .concat(`[${['tree-row-end', tracks.at(-1)?.[2]].filter(Boolean).join(' ')}]`)
-    .join(' ');
+  return {
+    // The row wraps its columns in `[content-start] … [content-end]`, and two bracketed names with no
+    // track between them invalidate the whole template, so the first track goes unnamed there; no
+    // row cell is placed by the first track's name.
+    columns: template((index) => index > 0),
+    gridTemplateColumns: template(() => true),
+  };
 };
 
 /**
- * `classNames` only, and no ref: the part renders no element of its own — it is the tree, and
- * `Tree` takes a class list and forwards no ref. A wider `ComposableProps` would accept props the
- * tree has nowhere to put, which is how the class list came to be dropped silently.
+ * No props: the part renders no element of its own — it is the tree, which takes neither a class
+ * list nor a ref, so anything accepted here would be dropped silently.
  */
-type TaskListContentProps = ThemedClassName<{}>;
+type TaskListContentProps = {};
 
-const TaskListContent = ({ classNames }: TaskListContentProps) => {
+const TaskListContent = (_props: TaskListContentProps) => {
   const {
     tasks,
     groupByStatus,
@@ -403,14 +381,12 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     hierarchical,
     selected,
     checked,
-    dragging,
-    debug,
     showGroupLabels,
     showOrdinals,
     showDescription,
     descriptionComponents,
     showGutter,
-    gridTemplateColumns,
+    columns,
     isCollapsed,
     onCollapseToggle,
     onTaskCheck,
@@ -442,26 +418,23 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
         : hierarchical
           ? flattenVisibleTasks(buildTaskForest(tasks), collapsed)
           : tasks;
-    // A dragged row and its sub-tasks are hidden rather than unmounted, so they are still in
-    // `ordered` — numbering them would leave gaps in the column the reader can actually see.
-    const visible = dragging.size > 0 ? ordered.filter((task) => !dragging.has(task.id)) : ordered;
     // Past 99 the number outgrows the gutter, so it is dropped rather than shrunk.
-    return new Map(visible.flatMap((task, index) => (index < MAX_ORDINAL ? [[task.id, index + 1] as const] : [])));
-  }, [tasks, collapsed, groups, grouping, hierarchical, dragging]);
+    return new Map(ordered.flatMap((task, index) => (index < MAX_ORDINAL ? [[task.id, index + 1] as const] : [])));
+  }, [tasks, collapsed, groups, grouping, hierarchical]);
 
   // One path: every mode renders through `Tree`. A flat list is a tree of depth one, and a status
   // group is a `group` node the machine splices out of its own topology.
   return (
     <TaskTreeNode
       descriptionComponents={descriptionComponents}
-      debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}
       groups={groups}
       tasks={tasks}
       collapsed={collapsed}
+      toggle={hierarchical || !!groups}
       showGutter={showGutter}
-      gridTemplateColumns={gridTemplateColumns}
+      columns={columns}
       ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
       selected={selected}
       checked={checked}
@@ -473,9 +446,6 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       onTaskSelect={onTaskSelect}
       onTaskUpdate={onTaskUpdate}
       onTaskMove={onTaskMove}
-      // Flattened here rather than in the tree: `ThemedClassName` admits nested arrays and nulls,
-      // and `Tree` takes a plain list.
-      classNames={mx(classNames)}
     />
   );
 };
@@ -503,9 +473,8 @@ const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, f
 
 TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 
-/** Trailing cells of a tree row — the same content the flat row puts after its title. */
+/** Trailing cells of a tree row, after its title, and the chips line under it. */
 const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
-  const { t } = useTranslation(translationKey);
   const { showEstimates } = useTaskListContext('TaskList.TreeTrailing');
   const task = item.task;
   // Subscribed for the same reason as the heading: priority, estimate and assignee are property
@@ -520,17 +489,17 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
     <>
       {/* On the title line, beside who has the task: the pull request is what the row is scanned for
           once work is under way, and on a line of its own it pushed the description down. */}
-      <div className='col-[artifacts] row-start-1 flex items-center gap-1 ps-1' data-testid='taskList.item.artifacts'>
+      <div className='flex items-center gap-1 ps-1' data-testid='taskList.item.artifacts'>
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
       </div>
-      <div className='col-[assignee] row-start-1 grid place-items-center'>
+      <div className='grid place-items-center'>
         {current.assignee && <TaskListAssignee assignee={current.assignee} iconOnly />}
       </div>
       {showEstimates && <TaskEstimateControl task={task} />}
       <TaskPriorityIcon task={task} />
       <TaskListItemActions task={task} />
 
-      {/* TODO(burdon): Update TaskTreeNode to render second line. */}
+      {/* The row's second line, under the title; it takes no height when the task has no chips. */}
       <div className='col-[title] row-start-2 flex items-center empty:hidden' data-testid='taskList.item.chips'>
         <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
       </div>
@@ -541,11 +510,6 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 //
 // Item actions — the trailing cell of a row.
 //
-
-// The row drives `--controls-opacity` on hover, focus and selection, so its controls reveal
-// together. The previous `group-hover/row:visible` named a group that only the flat row declared —
-// once rows became tree rows nothing matched it and the actions stayed hidden even on hover.
-const ROW_ACTION_CLASSNAMES = hoverableControlItem;
 
 const isMenuAction = (item: MenuItem): item is MenuAction => 'data' in item && typeof item.data === 'function';
 
@@ -565,41 +529,42 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   const [only] = actions;
   if (actions.length === 1 && isMenuAction(only)) {
     return (
-      <Next.Block>
-        <Next.Button
-          variant='ghost'
-          iconOnly
-          icon={only.properties?.icon ?? fallbackIcon}
-          label={toLocalizedString(only.properties?.label, t)}
-          data-testid={only.properties?.testId}
-          classNames={ROW_ACTION_CLASSNAMES}
-          onClick={(event) => {
-            // The row is the selection target; running its action must not also select it.
-            event.stopPropagation();
-            void executeMenuAction(only);
-          }}
-        />
-      </Next.Block>
+      <Tree.ItemActions>
+        <Next.Block>
+          <Next.Button
+            variant='ghost'
+            iconOnly
+            icon={only.properties?.icon ?? fallbackIcon}
+            label={toLocalizedString(only.properties?.label, t)}
+            data-testid={only.properties?.testId}
+            onClick={(event) => {
+              // The row is the selection target; running its action must not also select it.
+              event.stopPropagation();
+              void executeMenuAction(only);
+            }}
+          />
+        </Next.Block>
+      </Tree.ItemActions>
     );
   }
 
   return (
-    <Next.Block>
-      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-          too, and a trigger above it would never receive it. The block still gives every control in
-          the row one rail-item square. */}
-      <ActionMenu deferUntilOpen actions={actions}>
-        <Next.Button
-          variant='ghost'
-          iconOnly
-          icon='ph--dots-three-vertical--regular'
-          label={t('task-actions.label')}
-          data-testid='taskList.item.actions'
-          classNames={ROW_ACTION_CLASSNAMES}
-          onClick={(event) => event.stopPropagation()}
-        />
-      </ActionMenu>
-    </Next.Block>
+    <Tree.ItemActions>
+      <Next.Block>
+        {/* The button is the trigger, not the block: the button stops the click so the row is not
+            selected too, and a trigger above it would never receive it. */}
+        <ActionMenu deferUntilOpen actions={actions}>
+          <Next.Button
+            variant='ghost'
+            iconOnly
+            icon='ph--dots-three-vertical--regular'
+            label={t('task-actions.label')}
+            data-testid='taskList.item.actions'
+            onClick={(event) => event.stopPropagation()}
+          />
+        </ActionMenu>
+      </Next.Block>
+    </Tree.ItemActions>
   );
 };
 
