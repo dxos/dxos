@@ -55,7 +55,7 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
               iconOnly
               square
               iconSize='md'
-              active={starred}
+              pressed={starred}
               onClick={handleToggleStar}
             />
           </Next.Block>

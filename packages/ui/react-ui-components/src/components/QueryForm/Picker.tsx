@@ -36,13 +36,9 @@ export const Picker = <T extends { value: string; label: string }>({
       <Next.Select.Trigger placeholder={placeholder ?? t('picker-select.label')} />
       <Next.Select.Content>
         <Next.Select.ItemGroup>
-          <Next.Select.Item value={NULL}>
-            <Next.Select.ItemText>{t('picker-none.label')}</Next.Select.ItemText>
-          </Next.Select.Item>
+          <Next.Select.Item item={{ value: NULL, label: t('picker-none.label') }} />
           {sorted.map(({ value, label }) => (
-            <Next.Select.Item key={value} value={value}>
-              <Next.Select.ItemText>{label}</Next.Select.ItemText>
-            </Next.Select.Item>
+            <Next.Select.Item key={value} item={{ value: value, label: label }} />
           ))}
         </Next.Select.ItemGroup>
       </Next.Select.Content>

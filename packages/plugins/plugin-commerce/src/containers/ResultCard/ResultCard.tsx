@@ -63,7 +63,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
         )}
         <Next.Card.Header>
           <Next.Block>
-            <Next.SystemButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
+            <Next.SystemButton.Star variant='ghost' iconOnly square pressed={starred} onClick={handleToggleStar} />
           </Next.Block>
           <Flex column gap='xs' classNames='min-w-0 py-2'>
             <Next.Card.Title lines={2}>{result.title}</Next.Card.Title>

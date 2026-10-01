@@ -1,20 +1,26 @@
 {
-  "generated": "2026-10-01T15:35:22.661Z",
+  "generated": "2026-10-01T15:41:31.065Z",
   "paths": ["packages"],
   "changed": [
-    "packages/apps/testbench-app/src/components/DataToolbar.tsx",
-    "packages/devtools/devtools/src/components/Select.tsx",
-    "packages/plugins/plugin-magazine/src/stories/ArticleExtractor.stories.tsx",
-    "packages/ui/react-ui-canvas-editor/src/components/Toolbar/Toolbar.tsx",
-    "packages/ui/react-ui-mosaic/src/components/Mosaic/VirtualStackPagination.stories.tsx"
+    "packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx",
+    "packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultDetail.tsx",
+    "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx",
+    "packages/ui/react-ui-canvas-compute/src/compute.stories.tsx",
+    "packages/ui/react-ui-canvas-compute/src/scene/compute.stories.tsx",
+    "packages/ui/react-ui-components/src/components/QueryForm/Picker.tsx",
+    "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx"
   ],
   "transforms": [
     {
       "transform": "renames",
       "filesScanned": 12349,
-      "filesChanged": 5,
+      "filesChanged": 7,
       "rules": {
-        "Button asChild around a Trigger unwrapped": 6
+        "Select.Option → Select.Item": 10,
+        "SystemButton.Star active → pressed": 3,
+        "Select.Root items from its Items": 2,
+        "Select.Option → Select.Item item={…}": 4,
+        "Listbox.Viewport unwrapped": 1
       },
       "residue": [
         {
@@ -27,11 +33,27 @@
         },
         {
           "transform": "renames",
+          "file": "packages/apps/testbench-app/src/components/DataToolbar.tsx",
+          "line": 44,
+          "column": 15,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={type} value={type}>"
+        },
+        {
+          "transform": "renames",
           "file": "packages/apps/testbench-app/src/components/SpaceToolbar.tsx",
           "line": 55,
           "column": 9,
           "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
           "snippet": "<Next.Select.Root value={[selected?.toHex()]} onValueChange={({ value: [value] }) => handleChange(value)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/apps/testbench-app/src/components/SpaceToolbar.tsx",
+          "line": 59,
+          "column": 15,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={space.key.toHex()} value={space.key.toHex()}>"
         },
         {
           "transform": "renames",
@@ -43,11 +65,27 @@
         },
         {
           "transform": "renames",
+          "file": "packages/devtools/devtools/src/components/ControlledSelector.tsx",
+          "line": 22,
+          "column": 11,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={mode} value={mode}>"
+        },
+        {
+          "transform": "renames",
           "file": "packages/devtools/devtools/src/components/PublicKeySelector.tsx",
           "line": 27,
           "column": 5,
           "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
           "snippet": "<Next.Select.Root value={[value?.toHex()]} onValueChange={({ value: [id] }) => { id && onChange?.(PublicKey.fromHex(i..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/devtools/devtools/src/components/PublicKeySelector.tsx",
+          "line": 36,
+          "column": 11,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={key.toHex()} value={key.toHex()}>"
         },
         {
           "transform": "renames",
@@ -59,11 +97,27 @@
         },
         {
           "transform": "renames",
+          "file": "packages/devtools/devtools/src/components/Select.tsx",
+          "line": 21,
+          "column": 11,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={value} value={value}>"
+        },
+        {
+          "transform": "renames",
           "file": "packages/devtools/devtools/src/containers/DataSpaceSelector.tsx",
           "line": 51,
           "column": 5,
           "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
           "snippet": "<Next.Select.Root value={[space?.id]} onValueChange={({ value: [id] }) => { id && handleSelect?.(id as SpaceId); }} >"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/devtools/devtools/src/containers/DataSpaceSelector.tsx",
+          "line": 60,
+          "column": 11,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={space.id} value={space.id}>"
         },
         {
           "transform": "renames",
@@ -443,6 +497,14 @@
         },
         {
           "transform": "renames",
+          "file": "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+          "line": 297,
+          "column": 27,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={versionEntry.version} value={versionEntry.version}>"
+        },
+        {
+          "transform": "renames",
           "file": "packages/plugins/plugin-review/src/components/Suggestions/SuggestionAuthors.tsx",
           "line": 44,
           "column": 32,
@@ -640,6 +702,22 @@
           "column": 9,
           "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
           "snippet": "<Next.Select.Root value={[value ?? '']} onValueChange={({ value: [value] }) => handleValueChange(value)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/components/FeedbackForm/AreaSelectField.tsx",
+          "line": 68,
+          "column": 15,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item value={CLEAR_VALUE}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/components/FeedbackForm/AreaSelectField.tsx",
+          "line": 73,
+          "column": 15,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={plugin.id} value={plugin.id} classNames='flex'>"
         },
         {
           "transform": "renames",
@@ -963,22 +1041,6 @@
         },
         {
           "transform": "renames",
-          "file": "packages/ui/react-ui-canvas-compute/src/compute.stories.tsx",
-          "line": 146,
-          "column": 13,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[sidebar]} onValueChange={({ value: [value] }) => setSidebar(value as RenderProps['sidebar']..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-canvas-compute/src/scene/compute.stories.tsx",
-          "line": 126,
-          "column": 13,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[sidebar]} onValueChange={({ value: [value] }) => setSidebar(value as Sidebar)}>"
-        },
-        {
-          "transform": "renames",
           "file": "packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx",
           "line": 785,
           "column": 9,
@@ -998,7 +1060,7 @@
           "file": "packages/ui/react-ui-components/src/components/QueryForm/Picker.tsx",
           "line": 32,
           "column": 5,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "reason": "Select.Root items: Items are rendered by several expressions; pass the options by hand",
           "snippet": "<Next.Select.Root value={[value ?? NULL]} onValueChange={({ value: [value] }) => onChange?.(value === NULL ? null : v..."
         },
         {
@@ -1024,6 +1086,14 @@
           "column": 5,
           "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
           "snippet": "<Next.Select.Root value={[value]} onValueChange={({ value: [value] }) => handleValueChange(value)} disabled={!!readon..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/SelectField/SelectField.tsx",
+          "line": 59,
+          "column": 13,
+          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
+          "snippet": "<Next.Select.Item key={String(value)} value={String(value)}>"
         },
         {
           "transform": "renames",
@@ -1084,10 +1154,26 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx",
-          "line": 286,
+          "line": 285,
           "column": 7,
           "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
           "snippet": "<Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx",
+          "line": 310,
+          "column": 7,
+          "reason": "Listbox.Viewport dropped: Listbox.Content scrolls (scroll={false} to defer to the host)",
+          "snippet": "<Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} // Each row is one control tall (the rail-item sq..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx",
+          "line": 310,
+          "column": 7,
+          "reason": "Listbox.Viewport unwrapped; its props need a new home (classNames, style, ref)",
+          "snippet": "<Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} // Each row is one control tall (the rail-item sq..."
         },
         {
           "transform": "renames",
