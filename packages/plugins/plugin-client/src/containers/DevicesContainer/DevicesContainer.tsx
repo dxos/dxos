@@ -53,8 +53,8 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
             label={t('devices-verbose.label', { ns: meta.profile.key })}
             description={t('devices.description', { ns: meta.profile.key })}
           >
-            <Form.FieldSet appearance='section' label={t('devices.label', { ns: meta.profile.key })}>
-              <Listbox.Root>
+            <Form.FieldSet label={t('devices.label', { ns: meta.profile.key })}>
+              <Listbox.Root items={devices.map((device) => ({ value: device.key, label: device.label ?? device.key }))}>
                 <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
                   {devices.map((device: Identity.DeviceInfo) => (
                     <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
@@ -63,7 +63,7 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
               </Listbox.Root>
             </Form.FieldSet>
             {createInvitationUrl && (
-              <Form.FieldSet appearance='section' label={t('add-device.label')}>
+              <Form.FieldSet label={t('add-device.label')}>
                 <DeviceInvitation createInvitationUrl={createInvitationUrl} />
               </Form.FieldSet>
             )}

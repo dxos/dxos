@@ -93,7 +93,12 @@ export const RecoveryCredentialsContainer = () => {
                 <Next.Banner.Body>{t('no-credentials.message')}</Next.Banner.Body>
               </Next.Banner.Root>
             ) : (
-              <Listbox.Root>
+              <Listbox.Root
+                items={recoveryCredentials.map((credential, index) => ({
+                  value: credential.id ?? `${index}`,
+                  label: credential.recovery?.label ?? credential.id ?? `${index}`,
+                }))}
+              >
                 <Listbox.Content classNames='gap-1'>
                   {recoveryCredentials.map((credential, index) => {
                     const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
