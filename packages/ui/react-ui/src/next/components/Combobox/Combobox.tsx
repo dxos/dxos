@@ -7,6 +7,7 @@ import { Combobox as ComboboxPrimitive, useComboboxContext } from '@ark-ui/react
 import { Portal } from '@ark-ui/react/portal';
 import React, {
   type ComponentPropsWithoutRef,
+  type PointerEvent,
   type ReactNode,
   type RefObject,
   createContext,
@@ -400,6 +401,19 @@ const ComboboxViewport = composable<HTMLDivElement, ComboboxPrimitive.ContentPro
   <ComboboxPrimitive.Content {...composableProps(props)} data-scope='combobox' data-part='content' ref={forwardedRef} />
 ));
 
+const COMPOSED_FIELD = 'input, textarea, select, [contenteditable="true"]';
+
+/**
+ * zag cancels pointerdown on the popup to keep focus in its search field, which also stops a click focusing a field
+ * composed into the Content (e.g. an inline create form), so focus that field explicitly.
+ */
+const focusComposedField = (event: PointerEvent<HTMLDivElement>) => {
+  const field = event.target instanceof Element ? event.target.closest<HTMLElement>(COMPOSED_FIELD) : null;
+  if (field && field.dataset.scope !== 'combobox' && event.currentTarget.contains(field)) {
+    field.focus();
+  }
+};
+
 /**
  * Portalled popup at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the popup itself. Without
  * children it lists the options that match the typed text, then the create row, loading row and `Empty`; with a button
@@ -420,7 +434,15 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
       <Portal container={container}>
         <ComboboxPrimitive.Positioner>
           <PopupScroll size={popupSize} classNames={mx(classNames)}>
-            <ComboboxViewport {...props} aria-busy={loading || undefined} ref={forwardedRef}>
+            <ComboboxViewport
+              {...props}
+              aria-busy={loading || undefined}
+              onPointerDown={(event) => {
+                props.onPointerDown?.(event);
+                focusComposedField(event);
+              }}
+              ref={forwardedRef}
+            >
               <ContentContext.Provider value={true}>
                 {children ??
                   (search ? (

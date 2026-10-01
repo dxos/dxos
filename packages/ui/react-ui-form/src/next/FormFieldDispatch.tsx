@@ -234,7 +234,17 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       case 'hue':
         return <HueField {...fieldProps} />;
       case 'ref':
-        return <RefField {...fieldProps} {...resolution.refProps} db={db} useType={useType} getOptions={getOptions} />;
+        return (
+          <RefField
+            {...fieldProps}
+            {...resolution.refProps}
+            db={db}
+            useType={useType}
+            getOptions={getOptions}
+            onCreate={onCreate}
+            resolveCreateEntry={resolveCreateEntry}
+          />
+        );
       default:
         return undefined;
     }

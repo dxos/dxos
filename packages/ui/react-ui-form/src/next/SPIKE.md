@@ -120,28 +120,20 @@ and type, remove, Alt+ArrowDown reorder, and object items rendering as nested se
 
 ### 5. Refs (`RefField.stories.tsx`)
 
-**Trigger mode is not in the base**, so the field uses `Next.Combobox` in input mode: `Control` with `Input`,
-`ClearTrigger` and `Trigger`. The Test covers labelling by the field, filtering as the user types, Enter picking the
-first match and writing a `Ref`, the popup inheriting `sm`, and clear unsetting the value. The data path is the current
-one (`useResults`, `getOptions`, `findRefOption`).
+`RefField` renders the next `ObjectPicker` (`ObjectPicker.tsx`) on `Next.Combobox` trigger mode (#13549, merged in
+with A1): a `Trigger` button showing the target or the placeholder, and a dialog popup with the search `Input` over a
+`List` of candidates, each with its `description`. The Test covers the popup's focus and `sm` size, the description
+line, filtering, Enter writing a `Ref`, picking the selected option again to clear it, and inline create: the Root's
+create row (`onCreate(query)`) swaps the list for a create `Form` in the same popup, whose Save persists the object
+through `onCreate`/`resolveCreateEntry` and selects it. The data path is the current one (`useResults`, `getOptions`,
+`findRefOption`, `useType`).
 
-What trigger mode (AUDIT point 9, milestone 5) must provide for RefField and ObjectPicker:
-
-1. A `Trigger` outside `Control` that shows the selected option's label, or a placeholder in the description tone, as a
-   control-sized button with `aria-haspopup='listbox'`, labelled by the enclosing `Field`.
-2. The search `Input` inside `Content`, at the top of the popup and outside its scroll viewport. Focus moves to it on
-   open and back to the trigger on close. Typing filters; Arrow/Enter/Escape work from the input.
-3. An item `description` line (`RefOption.description`); popup rows are one block today (Part naming rule 7 reserves
-   `ItemDescription` for Listbox).
-4. A **create row**: a footer action outside the collection ("Create …", `createOptionLabel`/`createOptionIcon`) that
-   swaps the popup to an inline `Form` and calls `onCreate` with the new values, keeping keyboard reach from the list.
-5. Async results: a `loading` state on Trigger (Select has one) and on Content, distinct from `Empty`.
-6. A virtual anchor (`positioning.getAnchorRect`) for opening from a `DxAnchor` or an editor mark.
-7. `multiple` for arrays of refs (tags), with the selected labels in the trigger.
-8. Translatable labels: zag's defaults are English ("Toggle suggestions", "Clear value"), which the Test must match
-   today (AUDIT 2.10).
-
-Not ported: the read-only `DxAnchor` link (a plain Typography label here) and inline create.
+- **Combobox finding (fixed in react-ui next):** zag cancels pointerdown on the popup to keep focus in its search
+  field, so a click could not focus a field composed into `Content`; the Content now focuses such a field itself.
+- **Gaps:** `createOptionLabel`/`createOptionIcon` are not honoured (the row is Combobox's `Create “{query}”`; a
+  custom row means composing `List` by hand, and the collection is not exposed). Choosing the create row re-opens the
+  popup in the same batch as zag's `item-select` close. The read-only `DxAnchor` link is a plain Typography label;
+  `multiple` (arrays of refs) and the virtual anchor are not used yet.
 
 ### 6. Custom renderer migration (`CustomRenderer.stories.tsx`)
 
@@ -377,9 +369,8 @@ The design branch (A1–A5) is merged in, so each now builds on its Next parts:
   tracks (`align='start'`), and a `<field span=N>` a cell Container with A1's `span`. `Form.Fields` hands off to it when
   the schema carries `FormLayoutAnnotation` (`layoutName` picks the variant). `FormLayout.stories.tsx` checks paired
   rows, spans and a named layout.
-- **M9, ref and lookup fields.** `RefField` and the lookup Combobox use input mode. The RefField and ObjectPicker
-  rebuild needs Combobox trigger mode with its create row and descriptions, which is in PR #13549 and not yet on
-  `main`.
+- **M9, ref fields: done.** `RefField` and `ObjectPicker` are on Combobox trigger mode with descriptions and inline
+  create (section 5). The lookup `ComboboxField` stays in input mode, which suits free text.
 - **M10, higher-level components.**
   - **FieldEditor** is ported. Its play test changes a field's format and saves, and checks the projection's schema
     takes the new type while keeping the description. The format's extra JSON-schema attributes are merged without
