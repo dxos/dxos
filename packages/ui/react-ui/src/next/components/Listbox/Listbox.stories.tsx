@@ -116,15 +116,21 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </div>
       <div data-place='full' className='h-40'>
         <Next.Panel.Root size={size}>
-          <Next.Panel.Body data-testid={`panel-${size}`}>
-            <Next.Typography data-testid={`panel-heading-${size}`}>In a panel</Next.Typography>
-            <Next.Listbox.Root items={LONG}>
-              <Next.Listbox.Content aria-label='In panel' scroll={false}>
-                {LONG.map((item) => (
-                  <Next.Listbox.Item key={item.value} item={item} />
-                ))}
-              </Next.Listbox.Content>
-            </Next.Listbox.Root>
+          <Next.Panel.Body asChild data-testid={`panel-${size}`}>
+            <Next.ScrollArea.Root>
+              <Next.ScrollArea.Viewport asChild>
+                <Next.Container gutter='rail'>
+                  <Next.Typography data-testid={`panel-heading-${size}`}>In a panel</Next.Typography>
+                  <Next.Listbox.Root items={LONG}>
+                    <Next.Listbox.Content aria-label='In panel' scroll={false}>
+                      {LONG.map((item) => (
+                        <Next.Listbox.Item key={item.value} item={item} />
+                      ))}
+                    </Next.Listbox.Content>
+                  </Next.Listbox.Root>
+                </Next.Container>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
           </Next.Panel.Body>
         </Next.Panel.Root>
       </div>

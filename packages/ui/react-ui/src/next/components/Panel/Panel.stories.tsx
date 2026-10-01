@@ -31,15 +31,21 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
           <Next.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
         </Next.Toolbar.Root>
       </Next.Panel.Header>
-      <Next.Panel.Body data-testid={`body-${size}`}>
-        {ROWS.map((label, index) => (
-          <Next.Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
-            <Next.Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
-              <Next.Icon icon='ph--envelope--regular' />
-            </Next.Block>
-            <Next.Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Next.Typography>
-          </Next.Container>
-        ))}
+      <Next.Panel.Body asChild data-testid={`body-${size}`}>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              {ROWS.map((label, index) => (
+                <Next.Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
+                  <Next.Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
+                    <Next.Icon icon='ph--envelope--regular' />
+                  </Next.Block>
+                  <Next.Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Next.Typography>
+                </Next.Container>
+              ))}
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer data-testid={`footer-${size}`}>
         <Next.Toolbar.Root>
@@ -51,8 +57,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 );
 
 /**
- * The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing, and a
- * panel at the document width.
+ * The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing (its Body
+ * a plain slot with no ScrollArea), and a panel at the document width.
  */
 const TestStory = (args: SizeArgs) => (
   <>
@@ -67,8 +73,14 @@ const TestStory = (args: SizeArgs) => (
     </div>
     <div data-place='full' className='h-16' style={READING_WIDTH}>
       <Next.Panel.Root size={args.size} width='document' data-testid={`reading-${args.size}`}>
-        <Next.Panel.Body>
-          <Next.Typography data-testid={`reading-text-${args.size}`}>Reading width</Next.Typography>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root>
+            <Next.ScrollArea.Viewport asChild>
+              <Next.Container gutter='rail'>
+                <Next.Typography data-testid={`reading-text-${args.size}`}>Reading width</Next.Typography>
+              </Next.Container>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Next.Panel.Body>
       </Next.Panel.Root>
     </div>
@@ -92,10 +104,10 @@ export const Default: Story = {};
 
 /**
  * At every size the panel fills its host and stacks a header and footer sized to their one-row toolbars (one block) and
- * the growing body with no gaps, while an empty header and a missing footer take no space; its `data-size` reaches the
- * toolbar's controls and the body's rail Blocks. The body overflows and scrolls with the thin overlay thumb in the end
- * gutter. Narrowed below the collapse width, the panel (the query container) collapses the body's rail gutter to the
- * inset and hides the rail Blocks.
+ * the growing body with no gaps, while an empty header and a missing footer take no space and a plain Body adds no
+ * frame; its `data-size` reaches the toolbar's controls and the body's rail Blocks. The body overflows and scrolls with
+ * the thin overlay thumb in the end gutter. Narrowed below the collapse width, the panel (the query container)
+ * collapses the body's rail gutter to the inset and hides the rail Blocks.
  */
 export const Test: Story = {
   render: TestStory,
@@ -135,6 +147,10 @@ export const Test: Story = {
       await expect(emptyHeader.height, `${size} empty header height`).toBe(0);
       await expect(bareBody.top, `${size} bare body top`).toBeCloseTo(bareHost.top, 0);
       await expect(bareBody.bottom, `${size} bare body bottom`).toBeCloseTo(bareHost.bottom, 0);
+      // A Body that composes nothing is a plain slot: no ScrollArea frame of its own.
+      const bareBodyElement = byTestId(canvasElement, `bare-body-${size}`);
+      await expect(bareBodyElement).toHaveAttribute('data-part', 'body');
+      await expect(bareBodyElement.querySelector('.nx-scroll-root')).toBeNull();
 
       // Size flows to the toolbar's controls and the body's rails.
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();

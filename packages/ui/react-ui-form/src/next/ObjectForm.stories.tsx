@@ -40,8 +40,14 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
     </Next.Panel.Root>
   ) : (
     <Next.Panel.Root size='sm'>
-      <Next.Panel.Body>
-        <ObjectForm object={person} type={Person.Person} />
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <ObjectForm object={person} type={Person.Person} />
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       {footer}
     </Next.Panel.Root>

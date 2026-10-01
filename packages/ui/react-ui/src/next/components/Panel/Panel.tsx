@@ -5,13 +5,10 @@
 import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
-import { mx } from '@dxos/ui-theme';
-
 import { composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Container, type ContainerProps, type Level } from '../Container/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { type Level } from '../Container/index.ts';
 
 //
 // Root
@@ -21,7 +18,7 @@ type PanelRootProps = {
   size?: Size;
   /** An absolute rung of the surface ladder; `base` by default, as the current Panel's content. */
   level?: Exclude<Level, '+1'>;
-  /** `document` keeps the Body's content at the reading width, centred, while it still scrolls at the panel's edge. */
+  /** `document` keeps a scrolling Body's content at the reading width, centred, while it still scrolls at the panel's edge. */
   width?: 'document';
 };
 
@@ -85,35 +82,21 @@ PanelHeader.displayName = 'Next.Panel.Header';
 // Body
 //
 
-type PanelBodyProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
-  Pick<ContainerProps, 'gutter' | 'columns' | 'gap' | 'layout' | 'align'>;
+type PanelBodyProps = {};
 
 /**
- * The growing middle row: a composed ScrollArea (decision 5) around a gutter Container (`rail` by default), so the
- * thin overlay bar sits in the end gutter. The frame is no query container of its own: its Container collapses against
- * the panel, like the header and footer. Carries ScrollArea's `data-scope` (finding 10); the ref is the frame's.
+ * The growing middle row, a plain slot: it neither scrolls nor adds a gutter, so content composes its own frame
+ * (`asChild` onto a `ScrollArea.Root` around a gutter Container, or a canvas that fills the row). Like the header and
+ * footer it is no query container, so its content collapses against the panel.
  */
-const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(
-  (
-    { children, classNames, mode, width, native, gutter = 'rail', columns, gap, layout, align, ...props },
-    forwardedRef,
-  ) => (
-    <ScrollArea.Root
-      {...props}
-      mode={mode}
-      width={width}
-      native={native}
-      classNames={mx(recipes.panelBody(), classNames)}
-      ref={forwardedRef}
-    >
-      <ScrollArea.Viewport asChild>
-        <Container gutter={gutter} columns={columns} gap={gap} layout={layout} align={align}>
-          {children}
-        </Container>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  ),
-);
+const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props, { classNames: recipes.panelBody() });
+  return (
+    <ark.div asChild={asChild} {...rest} data-scope='panel' data-part='body' className={className} ref={forwardedRef}>
+      {children}
+    </ark.div>
+  );
+});
 
 PanelBody.displayName = 'Next.Panel.Body';
 

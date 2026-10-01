@@ -251,6 +251,11 @@ import {
   useVirtualRows as nextUseVirtualRows,
   virtualAnchor as nextVirtualAnchor,
 } from './components/index.ts';
+import {
+  useIosKeyboard as nextUseIosKeyboard,
+  usePlatform as nextUsePlatform,
+  useThemeMode as nextUseThemeMode,
+} from './hooks.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
 export namespace Next {
@@ -348,6 +353,9 @@ export namespace Next {
   export type ListboxSelectionMode = NextListboxSelectionMode;
   export type VirtualMode = NextVirtualMode;
   export const useVirtualRows = nextUseVirtualRows;
+  export const useThemeMode = nextUseThemeMode;
+  export const usePlatform = nextUsePlatform;
+  export const useIosKeyboard = nextUseIosKeyboard;
   export const VirtualSpacer = NextVirtualSpacer;
   export const RowContext = NextRowContext;
   export const Panel = NextPanel;

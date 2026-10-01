@@ -24,12 +24,18 @@ const DefaultStory = ({ fields = 2, size }: StoryArgs) => {
   const [values, setValues] = useState({});
   return (
     <Next.Panel.Root size={size}>
-      <Next.Panel.Body>
-        <Form.Root schema={schema} values={values} onValuesChanged={(next) => setValues(next)}>
-          <Form.Content>
-            <Form.Fields />
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root schema={schema} values={values} onValuesChanged={(next) => setValues(next)}>
+                <Form.Content>
+                  <Form.Fields />
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );
@@ -78,28 +84,39 @@ const BenchmarkStory = ({ fields = 83 }: StoryArgs) => {
           <Next.Button label='Unmount' onClick={() => mount(undefined)} data-testid='unmount' />
         </Next.Toolbar.Root>
       </Next.Panel.Header>
-      <Next.Panel.Body ref={hostRef}>
-        {impl === 'next' && (
-          <Form.Root schema={schema} values={values} onValuesChanged={(next) => setValues(next)} testId='bench-form'>
-            <Form.Content>
-              <Form.Fields />
-            </Form.Content>
-          </Form.Root>
-        )}
-        {impl === 'current' && (
-          <CurrentForm.Root
-            schema={schema}
-            values={values}
-            onValuesChanged={(next) => setValues(next)}
-            testId='bench-form'
-          >
-            <CurrentForm.Viewport>
-              <CurrentForm.Content>
-                <CurrentForm.Fields />
-              </CurrentForm.Content>
-            </CurrentForm.Viewport>
-          </CurrentForm.Root>
-        )}
+      <Next.Panel.Body asChild ref={hostRef}>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              {impl === 'next' && (
+                <Form.Root
+                  schema={schema}
+                  values={values}
+                  onValuesChanged={(next) => setValues(next)}
+                  testId='bench-form'
+                >
+                  <Form.Content>
+                    <Form.Fields />
+                  </Form.Content>
+                </Form.Root>
+              )}
+              {impl === 'current' && (
+                <CurrentForm.Root
+                  schema={schema}
+                  values={values}
+                  onValuesChanged={(next) => setValues(next)}
+                  testId='bench-form'
+                >
+                  <CurrentForm.Viewport>
+                    <CurrentForm.Content>
+                      <CurrentForm.Fields />
+                    </CurrentForm.Content>
+                  </CurrentForm.Viewport>
+                </CurrentForm.Root>
+              )}
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography data-testid='timings'>{JSON.stringify(timings)}</Next.Typography>

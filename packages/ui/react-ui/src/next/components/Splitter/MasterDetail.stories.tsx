@@ -97,7 +97,13 @@ const MasterPane = ({ title, count, children }: PropsWithChildren<{ title: strin
         </Next.Toolbar.Text>
       </Next.Toolbar.Root>
     </Next.Panel.Header>
-    <Next.Panel.Body>{children}</Next.Panel.Body>
+    <Next.Panel.Body asChild>
+      <Next.ScrollArea.Root>
+        <Next.ScrollArea.Viewport asChild>
+          <Next.Container gutter='rail'>{children}</Next.Container>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
+    </Next.Panel.Body>
   </Next.Panel.Root>
 );
 
@@ -120,25 +126,37 @@ const DetailPane = forwardRef<HTMLDivElement, DetailPaneProps>(
 
 /** Label and value pairs on two tracks of their own, between the panel's rails (one track once the pane is narrow). */
 const Fields = ({ fields }: { fields: [label: string, value: string][] }) => (
-  <Next.Panel.Body>
-    <Next.Container gutter='inherit' layout='row' columns='minmax(0, 6rem) minmax(0, 1fr)' gap='sm'>
-      {fields.flatMap(([label, value]) => [
-        <Next.Typography key={`${label}-label`} tone='description'>
-          {label}
-        </Next.Typography>,
-        <Next.Typography key={`${label}-value`} truncate>
-          {value}
-        </Next.Typography>,
-      ])}
-    </Next.Container>
+  <Next.Panel.Body asChild>
+    <Next.ScrollArea.Root>
+      <Next.ScrollArea.Viewport asChild>
+        <Next.Container gutter='rail'>
+          <Next.Container gutter='inherit' layout='row' columns='minmax(0, 6rem) minmax(0, 1fr)' gap='sm'>
+            {fields.flatMap(([label, value]) => [
+              <Next.Typography key={`${label}-label`} tone='description'>
+                {label}
+              </Next.Typography>,
+              <Next.Typography key={`${label}-value`} truncate>
+                {value}
+              </Next.Typography>,
+            ])}
+          </Next.Container>
+        </Next.Container>
+      </Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   </Next.Panel.Body>
 );
 
 const EmptyBody = ({ children, testId }: PropsWithChildren<{ testId?: string }>) => (
-  <Next.Panel.Body>
-    <Next.Empty icon='ph--cursor-click--regular' data-testid={testId}>
-      {children}
-    </Next.Empty>
+  <Next.Panel.Body asChild>
+    <Next.ScrollArea.Root>
+      <Next.ScrollArea.Viewport asChild>
+        <Next.Container gutter='rail'>
+          <Next.Empty icon='ph--cursor-click--regular' data-testid={testId}>
+            {children}
+          </Next.Empty>
+        </Next.Container>
+      </Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   </Next.Panel.Body>
 );
 

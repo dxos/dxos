@@ -36,28 +36,34 @@ const DefaultStory = (_: PaneArgs) => {
   const [recipients, setRecipients] = useState('');
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body>
-        <Form.Root
-          schema={NoteSchema}
-          values={values}
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          <Form.Content>
-            <Form.Fields />
-            <FormField label='Attendees' standalone>
-              {people.length > 0 && (
-                <RefEditor
-                  db={space?.db}
-                  type={Person.Person}
-                  value={recipients}
-                  start={<Next.Icon icon='ph--users--regular' />}
-                  onChange={setRecipients}
-                  data-testid='attendees'
-                />
-              )}
-            </FormField>
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root
+                schema={NoteSchema}
+                values={values}
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <Form.Content>
+                  <Form.Fields />
+                  <FormField label='Attendees' standalone>
+                    {people.length > 0 && (
+                      <RefEditor
+                        db={space?.db}
+                        type={Person.Person}
+                        value={recipients}
+                        start={<Next.Icon icon='ph--users--regular' />}
+                        onChange={setRecipients}
+                        data-testid='attendees'
+                      />
+                    )}
+                  </FormField>
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography truncate data-testid='values'>

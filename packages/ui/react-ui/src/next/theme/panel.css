@@ -27,13 +27,18 @@
     min-width: 0;
   }
 
-  /* The body frame is no query container of its own, so its Container collapses against the panel. */
-  .nx-panel > .nx-scroll-root.nx-panel-body {
+  /*
+   * A plain slot; it is no query container even when it is a ScrollArea frame (`asChild`), so the content collapses
+   * against the panel.
+   */
+  .nx-panel > .nx-panel-body {
     grid-row: 2;
+    min-width: 0;
+    min-height: 0;
     container-type: normal;
   }
 
-  /* Padding, not a narrower frame, so the scrollbar stays at the panel's edge. */
+  /* A scrolling Body pads its viewport rather than narrowing the frame, so the scrollbar stays at the panel's edge. */
   .nx-panel[data-width='document'] > .nx-panel-body > .nx-scroll-viewport {
     padding-inline: max(0px, calc((100% - var(--spacing-document-max-width, 50rem)) / 2));
   }

@@ -150,29 +150,35 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
             />
           </Next.Toolbar.Root>
         </Next.Panel.Header>
-        <Next.Panel.Body>
-          {filtered.length > 0 ? (
-            <PluginList
-              plugins={filtered}
-              enabled={enabled}
-              installed={installed}
-              installing={installing}
-              updating={updating}
-              updateAvailableIds={updateAvailableIds}
-              extraTagsById={extraTagsById}
-              failuresById={failuresById}
-              deviceOnlyIds={deviceOnlyIds}
-              onClick={handleClick}
-              readOnly={settingsSync === undefined}
-              onChange={handleChange}
-              onInstall={onInstall}
-              onUpdate={onUpdate}
-              hasSettings={hasSettings}
-              onSettings={handleSettings}
-            />
-          ) : (
-            empty
-          )}
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root>
+            <Next.ScrollArea.Viewport asChild>
+              <Next.Container gutter='rail'>
+                {filtered.length > 0 ? (
+                  <PluginList
+                    plugins={filtered}
+                    enabled={enabled}
+                    installed={installed}
+                    installing={installing}
+                    updating={updating}
+                    updateAvailableIds={updateAvailableIds}
+                    extraTagsById={extraTagsById}
+                    failuresById={failuresById}
+                    deviceOnlyIds={deviceOnlyIds}
+                    onClick={handleClick}
+                    readOnly={settingsSync === undefined}
+                    onChange={handleChange}
+                    onInstall={onInstall}
+                    onUpdate={onUpdate}
+                    hasSettings={hasSettings}
+                    onSettings={handleSettings}
+                  />
+                ) : (
+                  empty
+                )}
+              </Next.Container>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Next.Panel.Body>
       </Next.Panel.Root>
     );

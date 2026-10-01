@@ -78,6 +78,10 @@
    attributes); the shared recipes guarantee the classes, and a parity test should assert the rest.
    The focus ring takes ui-theme's `--color-focus` (decided 2026-10-01): a slot of its own, orange today, rather than
    `secondary` (an alias of green, which reads as success) or the brand primary it must stand out against.
+   The theme context splits (decided 2026-10-01): `useThemeContext`'s `tx` is not carried into Next, and the runtime
+   values components still need come from small hooks on the existing ThemeProvider (no new provider):
+   `Next.useThemeMode()` (`themeMode`), `Next.usePlatform()` (`platform`) and `Next.useIosKeyboard()`
+   (`hasIosKeyboard`), defined in `hooks.ts`.
 9. **ARIA.** Interactive roles and `aria-*` state come only from zag machines (`api.get*Props()`), so a role is
    claimed only by code that implements its keyboard contract. Layout parts (Container, Block, ScrollArea) carry no
    role by default; callers add landmark or `group` roles explicitly. Icons are `aria-hidden` unless given a label.
@@ -645,7 +649,8 @@ parallel-namespace approach; no compatibility shims).
 
 1. **`Next.Panel` hosts a plank.** A new parallel component (`Root`, `Toolbar`, `Content`, `Statusbar`); Root sets
    `data-size`/level and is the pane's query container (decision 5); Content is a composed ScrollArea around a gutter
-   Container. The current `Panel` stays untouched; plugins switch when they adopt Next.
+   Container (superseded: Body is a plain slot, Part naming rule 5). The current `Panel` stays untouched; plugins switch
+   when they adopt Next.
 2. **Popups inherit the trigger's size.** On open, a popup's Content copies `data-size` from its trigger's nearest sized
    ancestor (one DOM lookup per open, no context); an explicit `size` prop still wins. Supersedes follow-up 2.
 3. **Settings layout deferred** to the react-ui-form port (AUDIT §3.2 recommends two-track subgrid rows via Container
@@ -679,7 +684,10 @@ audit" (points 25–39, all accepted as recommended except where these rules say
 5. **Header, Body, Footer.** `Card`, `Dialog`, `Popover` and `Panel` share them; `Panel.Toolbar`/`Statusbar` become
    `Panel.Header`/`Footer`, generic regions that size to their content (`auto minmax(0,1fr) auto`) and hold a
    `Toolbar.Root` as a child when they need one. A one-row toolbar keeps adjacent planks aligned, and an empty header
-   takes no space. In a height-bound host Body composes a ScrollArea around a gutter Container.
+   takes no space. Body is a plain slot (decided 2026-10-01): the growing row, with `asChild` and no ScrollArea or
+   Container of its own. Scrolling content composes
+   `Panel.Body asChild > ScrollArea.Root > ScrollArea.Viewport asChild > Container gutter='rail'`; a canvas or board
+   takes the slot directly with `asChild`. Root `width='document'` pads a scrolling Body's viewport.
 6. **Items follow Ark's anatomy.** Every composite with items exports `Item`, `ItemText`, `ItemIndicator`,
    `ItemGroup` and `ItemGroupLabel`, so any row can be composed from parts.
 7. **Data renders the default row; children replace it.** An Item with no children renders its default layout from

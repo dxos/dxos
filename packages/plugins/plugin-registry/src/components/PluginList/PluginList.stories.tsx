@@ -57,8 +57,14 @@ const DefaultStory = () => {
 
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body>
-        <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );

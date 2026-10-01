@@ -39,28 +39,34 @@ const DefaultStory = ({ schema: key, variant = 'default', size = 'md' }: StoryAr
   return (
     // The Next form takes the size from its host; the current Form keeps its own density.
     <Next.Panel.Root size={size}>
-      <Next.Panel.Body layout='row' align='start' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='md'>
-        <CurrentForm.Root
-          variant={variant}
-          schema={schema}
-          values={values}
-          testId='current'
-          onValuesChanged={handleChange}
-        >
-          <CurrentForm.Viewport>
-            <CurrentForm.Content>
-              <CurrentForm.Fields />
-            </CurrentForm.Content>
-          </CurrentForm.Viewport>
-        </CurrentForm.Root>
-        <Form.Root variant={variant} schema={schema} values={values} testId='next' onValuesChanged={handleChange}>
-          {/* A row cell is one track, so the form starts its own template there. */}
-          <Form.Viewport gutter='none'>
-            <Form.Content>
-              <Form.Fields />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail' layout='row' align='start' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='md'>
+              <CurrentForm.Root
+                variant={variant}
+                schema={schema}
+                values={values}
+                testId='current'
+                onValuesChanged={handleChange}
+              >
+                <CurrentForm.Viewport>
+                  <CurrentForm.Content>
+                    <CurrentForm.Fields />
+                  </CurrentForm.Content>
+                </CurrentForm.Viewport>
+              </CurrentForm.Root>
+              <Form.Root variant={variant} schema={schema} values={values} testId='next' onValuesChanged={handleChange}>
+                {/* A row cell is one track, so the form starts its own template there. */}
+                <Form.Viewport gutter='none'>
+                  <Form.Content>
+                    <Form.Fields />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );
