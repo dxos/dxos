@@ -749,6 +749,21 @@ Reviewed one question at a time; decisions supersede the recommendations above.
 - **Point 21, chrome labels:** the strings move to react-ui translations under its own `translationKey`.
 - **Point 23, plugin list:** list items forward `hue` to their icon (`ItemIcon` forwards Icon's props); no cards.
 
+### Decision review 2026-10-01 (group C: forms)
+
+- **Point 1, settings layout:** option 1 as built in the spike, matching the current Form: equal tracks, each row its
+  own bordered card; the title spans the row in the base colour, 0.5rem above the description (`text-sm`, description
+  colour) and the control, which share the next line top-aligned; stacked below 24rem with a gap under the
+  description.
+- **Spike 48, `resolveFieldRenderer`:** unchanged until the migration PR, which makes it return Next renderers; the
+  spike keeps its translation table until then.
+- **Spike 50, blur:** on the row (`Field.Root onBlur`), firing only when focus leaves the row (`relatedTarget`
+  outside it); NumberInput, PasswordInput and DateInput gain no `onBlur`.
+- **Spike 52, mono input:** `Input variant='mono'`.
+- **Point 42, Next sections in current hosts:** moot; hosts and sections move together in the migration PR.
+- **Test address:** the Form test schema uses `Geo.PostalAddress`, which gains titles where its key reads poorly
+  (`locality` → City, `region` → State / Region, `extendedAddress`); the ZIP pattern demo moves to its own field.
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
