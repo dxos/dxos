@@ -57,42 +57,55 @@ export const HelpMenu = () => {
         </StatusBar.Item>
       </Next.Menu.Trigger>
       <Next.Menu.Content>
-        <Next.Menu.Item asChild>
+        <Next.Menu.Item asChild item={{ value: 'docs.label', label: t('docs.label'), icon: 'ph--book-open--regular' }}>
           <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
-            <Next.Icon icon='ph--book-open--regular' size='md' />
-            <span>{t('docs.label')}</span>
+            <Next.Menu.ItemIcon />
+            <Next.Menu.ItemText />
           </a>
         </Next.Menu.Item>
-        <Next.Menu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
-          <Next.Icon icon='ph--keyboard--regular' size='md' />
-          <span>{t('shortcuts.label')}</span>
-        </Next.Menu.Item>
+        <Next.Menu.Item
+          item={{ value: 'shortcuts.label', label: t('shortcuts.label'), icon: 'ph--keyboard--regular' }}
+          onClick={openDialog(SHORTCUTS_DIALOG)}
+        />
         <Next.Menu.Separator />
-        <Next.Menu.Item asChild>
+        <Next.Menu.Item
+          asChild
+          item={{ value: 'discord.label', label: t('discord.label'), icon: 'ph--discord-logo--regular' }}
+        >
           <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
-            <Next.Icon icon='ph--discord-logo--regular' size='md' />
-            <span>{t('discord.label')}</span>
+            <Next.Menu.ItemIcon />
+            <Next.Menu.ItemText />
           </a>
         </Next.Menu.Item>
-        <Next.Menu.Item asChild>
+        <Next.Menu.Item
+          asChild
+          item={{ value: 'github.label', label: t('github.label'), icon: 'ph--github-logo--regular' }}
+        >
           <a href={GITHUB_URL} target='_blank' rel='noopener noreferrer'>
-            <Next.Icon icon='ph--github-logo--regular' size='md' />
-            <span>{t('github.label')}</span>
+            <Next.Menu.ItemIcon />
+            <Next.Menu.ItemText />
           </a>
         </Next.Menu.Item>
         {!isTauri() && (
-          <Next.Menu.Item asChild>
+          <Next.Menu.Item
+            asChild
+            item={{
+              value: 'download-apps.label',
+              label: t('download-apps.label'),
+              icon: 'ph--download-simple--regular',
+            }}
+          >
             <a href={downloadHref} target='_blank' rel='noopener noreferrer'>
-              <Next.Icon icon='ph--download-simple--regular' size='md' />
-              <span>{t('download-apps.label')}</span>
+              <Next.Menu.ItemIcon />
+              <Next.Menu.ItemText />
             </a>
           </Next.Menu.Item>
         )}
         <Next.Menu.Separator />
-        <Next.Menu.Item onClick={openDialog(ABOUT_DIALOG)}>
-          <Next.Icon icon='ph--info--regular' size='md' />
-          <span>{t('about.label')}</span>
-        </Next.Menu.Item>
+        <Next.Menu.Item
+          item={{ value: 'about.label', label: t('about.label'), icon: 'ph--info--regular' }}
+          onClick={openDialog(ABOUT_DIALOG)}
+        />
         {version && (
           <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
             <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>

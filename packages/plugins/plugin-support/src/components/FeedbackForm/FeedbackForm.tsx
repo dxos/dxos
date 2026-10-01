@@ -167,8 +167,8 @@ const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
     <>
       <p className={noteClassNames}>{t('public-report.description')}</p>
       <Form.Submit
-        classNames={pending ? '[&_svg]:animate-spin' : undefined}
         icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
+        busy={pending}
         label={pending ? t('sending-feedback.label') : t('send-feedback.label')}
         disabled={disabled || pending || undefined}
       />

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentProps, useCallback } from 'react';
+import React, { type ComponentProps, useCallback, useMemo } from 'react';
 
 import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 import { Form } from '@dxos/react-ui-form/next';
@@ -45,8 +45,16 @@ export const AreaSelectField = ({
   const value = getValue();
 
   const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
-    (next) => onValueChange(type, next === CLEAR_VALUE ? undefined : next),
+    ({ value: [next] }) => onValueChange(type, next === CLEAR_VALUE ? undefined : next),
     [type, onValueChange],
+  );
+
+  const items = useMemo(
+    () => [
+      ...(value != null ? [{ value: CLEAR_VALUE, label: '(none)' }] : []),
+      ...plugins.map((plugin) => ({ value: plugin.id, label: plugin.name })),
+    ],
+    [plugins, value],
   );
 
   // Static (read-only) presentation: render the resolved name + id, or nothing.
@@ -61,22 +69,24 @@ export const AreaSelectField = ({
       {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
-        <Next.Select.Root value={[value ?? '']} onValueChange={({ value: [value] }) => handleValueChange(value)}>
+        <Next.Select.Root items={items} value={value ? [value] : []} onValueChange={handleValueChange}>
           <Next.Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
           <Next.Select.Content>
-            {value != null && (
-              <Next.Select.Item value={CLEAR_VALUE}>
-                <span className='text-description italic'>(none)</span>
-              </Next.Select.Item>
+            {items.map((item) =>
+              item.value === CLEAR_VALUE ? (
+                <Next.Select.Item key={item.value} item={item}>
+                  <Next.Select.ItemText classNames='text-description italic' />
+                </Next.Select.Item>
+              ) : (
+                <Next.Select.Item key={item.value} item={item}>
+                  <div className='flex flex-col w-full text-left'>
+                    <Next.Select.ItemText />
+                    <div className='text-xs text-description font-mono py-1'>{item.value}</div>
+                  </div>
+                  <Next.Select.ItemIndicator />
+                </Next.Select.Item>
+              ),
             )}
-            {plugins.map((plugin) => (
-              <Next.Select.Item key={plugin.id} value={plugin.id} classNames='flex'>
-                <div className='flex flex-col w-full text-left'>
-                  <div>{plugin.name}</div>
-                  <div className='text-xs text-description font-mono py-1'>{plugin.id}</div>
-                </div>
-              </Next.Select.Item>
-            ))}
           </Next.Select.Content>
         </Next.Select.Root>
       )}
