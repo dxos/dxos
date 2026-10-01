@@ -5,13 +5,15 @@
 import type * as Schema from 'effect/Schema';
 
 import * as Obj from '../../Obj.ts';
-import type * as Type from '../../Type.ts';
+import * as Type from '../../Type.ts';
+import { canonical, endpointOf, nameOf, planDigest } from './identity.ts';
 import { plan as compile, readSource } from './mapping.ts';
 import { getOverlay } from './overlay.ts';
 import {
   type AnyLens,
   type CodedMapping,
   type Lens,
+  type MakeOptions,
   type Mapping,
   type Plan,
   type ResolvedEntry,
@@ -79,21 +81,27 @@ export const invert = (view: Record<string, unknown>, obj: Obj.Unknown, id: stri
 };
 
 /**
- * Define a lens between a source ECHO type and a declared target type.
+ * Define a lens between a source ECHO type and a declared target type. It is named by the two types,
+ * and there is at most one lens per pair.
  *
  * The mapping is partial: a target property with a same-named, type-compatible source property maps
  * itself, and one with no counterpart stores itself in the object's annotation dictionary. Neither
  * convenience is silent — `Lens.coverage` reports what was decided.
  */
 export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
-  id: string,
   source: S,
   target: T,
   mapping: Mapping<Type.InstanceType<S>, TargetOf<T>> = {},
+  options: MakeOptions = {},
 ): Lens<Type.InstanceType<S>, TargetOf<T>> => {
+  const id = nameOf(source, target);
   const plan = compile(source, target, mapping as Mapping);
+  const defaults = options.defaults ?? {};
   return {
     id,
+    digest: planDigest(source, target, plan, defaults),
+    overlayKey: id,
+    defaults,
     source,
     target,
     plan,
@@ -107,17 +115,27 @@ export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
  * per-property mapping can express. Indistinguishable from `make` to every consumer.
  */
 export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
-  id: string,
   source: S,
   target: T,
   mapping: CodedMapping<Type.InstanceType<S>, TargetOf<T>>,
-): Lens<Type.InstanceType<S>, TargetOf<T>> => ({
-  id,
-  source,
-  target,
-  get: (obj) => mapping.get(obj as Type.InstanceType<S>),
-  put: (view, obj) => mapping.put(view, mapping.get(obj as Type.InstanceType<S>), obj as Type.InstanceType<S>),
-});
+): Lens<Type.InstanceType<S>, TargetOf<T>> => {
+  const id = nameOf(source, target);
+  return {
+    id,
+    digest: canonical({
+      source: Type.getURI(source),
+      target: endpointOf(target),
+      version: mapping.version ?? null,
+      code: `${mapping.get}\n${mapping.put}`,
+    }),
+    overlayKey: id,
+    defaults: {},
+    source,
+    target,
+    get: (obj) => mapping.get(obj as Type.InstanceType<S>),
+    put: (view, obj) => mapping.put(view, mapping.get(obj as Type.InstanceType<S>), obj as Type.InstanceType<S>),
+  };
+};
 
 /** The instance type a target declares, whether it is an ECHO type or a plain schema. */
 export type TargetOf<T> = T extends Type.AnyObj

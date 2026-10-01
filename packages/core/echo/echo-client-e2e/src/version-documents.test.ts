@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
-import { Filter, Obj, Type, VersionLens } from '@dxos/echo';
+import { Filter, Lens, Obj, Type } from '@dxos/echo';
 import { createBranch, switchBranch } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
@@ -36,12 +36,8 @@ const TaskV3 = Type.makeObject(DXN.make(TYPENAME, '0.3.0'))(
 );
 
 const lenses = [
-  VersionLens.make({ from: TaskV1, to: TaskV2, ops: [VersionLens.rename('title', 'name')] }),
-  VersionLens.make({
-    from: TaskV2,
-    to: TaskV3,
-    ops: [VersionLens.rename('tags', 'labels'), VersionLens.add('done', false)],
-  }),
+  Lens.make(TaskV1, TaskV2, { name: 'title' }),
+  Lens.make(TaskV2, TaskV3, { labels: 'tags' }, { defaults: { done: false } }),
 ];
 
 const versionUrl = (db: TestDatabase, objectId: string, version: string): string | undefined =>

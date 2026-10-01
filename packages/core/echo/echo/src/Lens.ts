@@ -20,6 +20,18 @@ export { type TargetOf, coded, make } from './internal/lens/codec.ts';
 export { compose } from './internal/lens/compose.ts';
 export { invert } from './internal/lens/invert.ts';
 export { findPath, resolveView, versionId } from './internal/lens/path.ts';
+export { nameOf } from './internal/lens/identity.ts';
+export {
+  type Data as VersionData,
+  type VersionPath,
+  compareVersions,
+  isVersionLens,
+  typeOfVersion,
+  versionOf,
+  versionPath,
+  versionsOf,
+  versionStep,
+} from './internal/lens/versions.ts';
 export { of, targetSchema } from './internal/lens/live.ts';
 export { applyWrites } from './internal/lens/write.ts';
 export { lookup, registerCodec, scale } from './internal/lens/codecs.ts';
@@ -32,6 +44,7 @@ export {
   type Codec,
   type Coverage,
   type Derived,
+  type MakeOptions,
   type Mapping,
   type Plan,
   type SerializedEntry,

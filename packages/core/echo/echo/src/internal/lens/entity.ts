@@ -125,5 +125,5 @@ export const fromObject = (stored: Lens, source: Type.AnyObj, target: Type.AnyOb
     }
   }
 
-  return make(stored.lens, source, target, mapping as Mapping);
+  return make(source, target, mapping as Mapping);
 };

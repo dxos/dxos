@@ -30,7 +30,6 @@ import {
   Ref,
   type Registry,
   Type,
-  VersionLens,
 } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
@@ -140,7 +139,7 @@ export interface EchoDatabase extends Database.Database {
    * versions an object lacks, merges duplicate version documents, and translates edits between the
    * versions. Without `objectIds`, covers every object of those types.
    */
-  syncVersions(lenses: readonly VersionLens.VersionLens[], options?: SyncVersionsOptions): Promise<void>;
+  syncVersions(lenses: readonly Lens.Any[], options?: SyncVersionsOptions): Promise<void>;
 
   /**
    * The object at version `type` of its type: the live object when it reads that version, else an object
@@ -159,7 +158,7 @@ export interface EchoDatabase extends Database.Database {
    * Syncs versions once for every object, then again, debounced, for each object whose documents
    * change. `getLenses` is read on each pass so the current set always applies.
    */
-  watchVersions(getLenses: () => readonly VersionLens.VersionLens[], options?: { debounceMs?: number }): CleanupFn;
+  watchVersions(getLenses: () => readonly Lens.Any[], options?: { debounceMs?: number }): CleanupFn;
 
   /**
    * Get the current per-peer automerge document sync state.
@@ -345,11 +344,18 @@ const isAtVersion = <S extends Type.AnyObj>(type: S, value: unknown): value is T
 };
 
 /** Every declared type the lenses connect, once each, oldest version first. */
-const versionTypesOf = (lenses: readonly VersionLens.VersionLens[]): Type.AnyObj[] =>
-  [...new Map(lenses.flatMap((lens) => [lens.from, lens.to]).map((type) => [Type.getURI(type), type])).values()].sort(
+const versionTypesOf = (lenses: readonly Lens.Any[]): Type.AnyObj[] =>
+  [
+    ...new Map(
+      lenses
+        .filter(Lens.isVersionLens)
+        .flatMap((lens) => [lens.source, lens.target])
+        .map((type) => [Type.getURI(type), type]),
+    ).values(),
+  ].sort(
     (left, right) =>
       Type.getTypename(left).localeCompare(Type.getTypename(right)) ||
-      VersionLens.compareVersions(VersionLens.versionOf(left), VersionLens.versionOf(right)),
+      Lens.compareVersions(Lens.versionOf(left), Lens.versionOf(right)),
   );
 
 /** Idle time after the last update before a watched fold-forward pass, so a burst folds once. */
@@ -884,7 +890,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     };
   }
 
-  async syncVersions(lenses: readonly VersionLens.VersionLens[], options?: SyncVersionsOptions): Promise<void> {
+  async syncVersions(lenses: readonly Lens.Any[], options?: SyncVersionsOptions): Promise<void> {
     this._entityManager.setKnownVersionTypes(versionTypesOf(lenses).map((type) => Type.getURI(type)));
     await this.#migrationLock.executeSynchronized(async () => {
       const objectIds = options?.objectIds ?? (await this.#versionedObjectIds(lenses));
@@ -954,7 +960,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return object;
   }
 
-  watchVersions(getLenses: () => readonly VersionLens.VersionLens[], options?: { debounceMs?: number }): CleanupFn {
+  watchVersions(getLenses: () => readonly Lens.Any[], options?: { debounceMs?: number }): CleanupFn {
     let changed: Set<string> | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const watched = new Map<DocHandleProxy<DatabaseDirectory>, () => void>();
@@ -1015,7 +1021,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /** Ids of every object of a type the lenses cover. */
-  async #versionedObjectIds(lenses: readonly VersionLens.VersionLens[]): Promise<string[]> {
+  async #versionedObjectIds(lenses: readonly Lens.Any[]): Promise<string[]> {
     const types = versionTypesOf(lenses);
     if (types.length === 0) {
       return [];

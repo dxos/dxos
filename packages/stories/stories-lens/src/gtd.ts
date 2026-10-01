@@ -33,8 +33,6 @@ export class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.demo.Gt
   }).pipe(Annotation.LabelAnnotation.set(['title'])),
 ) {}
 
-export const GTD_LENS_ID = 'org.dxos.demo.lens.task-as-gtd';
-
 const URGENCY: Record<string, number> = { none: 1, low: 2, medium: 3, high: 4, urgent: 5 };
 
 /**
@@ -45,7 +43,7 @@ const URGENCY: Record<string, number> = { none: 1, low: 2, medium: 3, high: 4, u
  * `Task` corresponds, so they fall through to the overlay.
  */
 export const GtdLens: Lens.Lens<Task.Task, GtdTask> = Lens.register(
-  Lens.make(GTD_LENS_ID, Task.Task, GtdTask, {
+  Lens.make(Task.Task, GtdTask, {
     urgency: Lens.from('priority', Lens.lookup(URGENCY)),
 
     // The lossy split: `done` alone cannot restore `todo` vs `started`, so `put` reads the live

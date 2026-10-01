@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Type, VersionLens } from '@dxos/echo';
+import { Lens, Type } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -27,12 +27,8 @@ const TaskV3 = Type.makeObject(DXN.make(TYPENAME, '0.3.0'))(
   Schema.Struct({ name: Schema.String, labels: Schema.Array(Schema.String), done: Schema.Boolean }),
 );
 
-const v1v2 = VersionLens.make({ from: TaskV1, to: TaskV2, ops: [VersionLens.rename('title', 'name')] });
-const v2v3 = VersionLens.make({
-  from: TaskV2,
-  to: TaskV3,
-  ops: [VersionLens.rename('tags', 'labels'), VersionLens.add('done', false)],
-});
+const v1v2 = Lens.make(TaskV1, TaskV2, { name: 'title' });
+const v2v3 = Lens.make(TaskV2, TaskV3, { labels: 'tags' }, { defaults: { done: false } });
 const lenses = [v1v2, v2v3];
 
 /** A document an app created the object in, as the entity manager does: the directory first, the object next. */
@@ -59,7 +55,7 @@ class Device {
 
   constructor(
     readonly name: string,
-    readonly lenses: readonly VersionLens.VersionLens[],
+    readonly lenses: readonly Lens.Any[],
   ) {}
 
   doc(version: string): VersionDoc {
@@ -232,11 +228,7 @@ describe('version translation', () => {
 
   test('a device whose lenses differ from those a document was derived with does not translate', () => {
     const { old, newA, devices } = setup();
-    const otherV2V3 = VersionLens.make({
-      from: TaskV2,
-      to: TaskV3,
-      ops: [VersionLens.rename('tags', 'labels'), VersionLens.add('done', true)],
-    });
+    const otherV2V3 = Lens.make(TaskV2, TaskV3, { labels: 'tags' }, { defaults: { done: true } });
     const other = new Device('other', [v1v2, otherV2V3]);
     other.docs.set('0.1.0', A.clone(old.doc('0.1.0')));
     other.docs.set('0.3.0', A.clone(newA.doc('0.3.0')));
@@ -340,15 +332,31 @@ describe('version translation', () => {
 });
 
 describe('version translation: six versions, two in use', () => {
-  const [TaskV4, TaskV5, TaskV6] = ['0.4.0', '0.5.0', '0.6.0'].map((version) =>
-    Type.makeObject(DXN.make(TYPENAME, version))(Schema.Struct({})),
+  const TaskV4 = Type.makeObject(DXN.make(TYPENAME, '0.4.0'))(
+    Schema.Struct({ heading: Schema.String, labels: Schema.Array(Schema.String), done: Schema.Boolean }),
+  );
+  const TaskV5 = Type.makeObject(DXN.make(TYPENAME, '0.5.0'))(
+    Schema.Struct({
+      heading: Schema.String,
+      labels: Schema.Array(Schema.String),
+      done: Schema.Boolean,
+      priority: Schema.Number.annotate({ default: 0 }),
+    }),
+  );
+  const TaskV6 = Type.makeObject(DXN.make(TYPENAME, '0.6.0'))(
+    Schema.Struct({
+      heading: Schema.String,
+      topics: Schema.Array(Schema.String),
+      done: Schema.Boolean,
+      priority: Schema.Number,
+    }),
   );
   const chain = [
     v1v2,
     v2v3,
-    VersionLens.make({ from: TaskV3, to: TaskV4, ops: [VersionLens.rename('name', 'heading')] }),
-    VersionLens.make({ from: TaskV4, to: TaskV5, ops: [VersionLens.add('priority', 0)] }),
-    VersionLens.make({ from: TaskV5, to: TaskV6, ops: [VersionLens.rename('labels', 'topics')] }),
+    Lens.make(TaskV3, TaskV4, { heading: 'name' }),
+    Lens.make(TaskV4, TaskV5),
+    Lens.make(TaskV5, TaskV6, { topics: 'labels' }),
   ];
 
   test('an old device on v1 and new devices on v6 translate through the composed chain, once per edit', () => {

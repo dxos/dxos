@@ -6,7 +6,7 @@ import { next as A, type Heads } from '@automerge/automerge';
 import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 
-import { Type, VersionLens } from '@dxos/echo';
+import { Lens, Type } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
@@ -64,7 +64,7 @@ const PROBE_ACTOR = '00000000000000000000000000000000';
 const digest = (seed: string): string => bytesToHex(sha256(utf8ToBytes(seed))).slice(0, 32);
 
 /** The digest identifying the lenses a translation between two versions runs. */
-const lensDigest = (path: VersionLens.Path): string => digest(JSON.stringify(path.keys));
+const lensDigest = (path: Lens.VersionPath): string => digest(JSON.stringify(path.digests));
 
 const plain = (value: unknown): unknown => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
 
@@ -74,46 +74,27 @@ const objectAt = (doc: VersionDoc, heads: Heads, objectId: string): Data | undef
   return isRecord(entry) ? entry : undefined;
 };
 
-/** The schema version of the object in `doc`, read from its type among the versions `lenses` know. */
-export const versionOfDoc = (
-  doc: VersionDoc,
-  objectId: string,
-  lenses: readonly VersionLens.VersionLens[],
-): string | undefined => {
+/** The declared type of the object in `doc`, among the versions `lenses` connect. */
+export const typeOfDoc = (doc: VersionDoc, objectId: string, lenses: readonly Lens.Any[]): Type.AnyObj | undefined => {
   const type = doc.objects?.[objectId]?.system?.type;
   if (!type) {
     return undefined;
   }
   const uri = EncodedReference.toURI(type);
-  for (const lens of lenses) {
-    for (const entity of [lens.from, lens.to]) {
-      if (Type.getURI(entity) === uri) {
-        return VersionLens.versionOf(entity);
-      }
-    }
-  }
-  return undefined;
+  return lenses
+    .filter(Lens.isVersionLens)
+    .flatMap((lens) => [lens.source, lens.target])
+    .find((entity) => Type.getURI(entity) === uri);
+};
+
+/** The schema version of the object in `doc`, read from its type among the versions `lenses` know. */
+export const versionOfDoc = (doc: VersionDoc, objectId: string, lenses: readonly Lens.Any[]): string | undefined => {
+  const type = typeOfDoc(doc, objectId, lenses);
+  return type && Lens.versionOf(type);
 };
 
 /** Whether `doc` was derived from another version document rather than created by an app. */
 export const isDerived = (doc: VersionDoc): boolean => rootOf(doc) !== undefined;
-
-/** The declared type of `version` of `typename` among `lenses`. */
-export const typeOfVersion = (
-  lenses: readonly VersionLens.VersionLens[],
-  typename: string,
-  version: string,
-): Type.AnyObj | undefined => {
-  for (const lens of lenses) {
-    if (lens.typename === typename && lens.fromVersion === version) {
-      return lens.from;
-    }
-    if (lens.typename === typename && lens.toVersion === version) {
-      return lens.to;
-    }
-  }
-  return undefined;
-};
 
 /**
  * The document for `version` of the object whose origin document (the one an app created it in) is
@@ -133,10 +114,10 @@ export const deriveVersionDoc = ({
   version: string;
   objectId: string;
   typename: string;
-  lenses: readonly VersionLens.VersionLens[];
+  lenses: readonly Lens.Any[];
 }): VersionDoc | undefined => {
-  const path = VersionLens.findPath(lenses, typename, originVersion, version);
-  const type = typeOfVersion(lenses, typename, version);
+  const path = Lens.versionPath(lenses, typename, originVersion, version);
+  const type = Lens.typeOfVersion(lenses, typename, version);
   const creation = creationChange(origin, objectId);
   if (!path || !type || !creation) {
     return undefined;
@@ -181,7 +162,7 @@ export type TranslationSource = {
 };
 
 /** The parts of an object translated into another version: data through the lenses, the rest as is. */
-const sectionsOf = (entry: Data | undefined, path: VersionLens.Path): { at: string[]; value: Data }[] => {
+const sectionsOf = (entry: Data | undefined, path: Lens.VersionPath): { at: string[]; value: Data }[] => {
   const data = isRecord(entry?.data) ? entry.data : {};
   const meta = isRecord(entry?.meta) ? entry.meta : {};
   const system = isRecord(entry?.system) ? entry.system : {};
@@ -227,10 +208,10 @@ export const translate = ({
   target: TranslationSource;
   objectId: string;
   typename: string;
-  lenses: readonly VersionLens.VersionLens[];
+  lenses: readonly Lens.Any[];
   settled?: Set<string>;
 }): VersionDoc => {
-  const path = VersionLens.findPath(lenses, typename, source.version, target.version);
+  const path = Lens.versionPath(lenses, typename, source.version, target.version);
   if (!path || !designates(source.doc, target.doc, lenses, typename)) {
     return target.doc;
   }
@@ -442,14 +423,9 @@ const authorShared = (
  * Whether this device's lenses are the ones the documents were derived with: a derived document records
  * the digest of the lenses from its origin, and a device whose lenses differ stays out.
  */
-const designates = (
-  one: VersionDoc,
-  two: VersionDoc,
-  lenses: readonly VersionLens.VersionLens[],
-  typename: string,
-): boolean =>
+const designates = (one: VersionDoc, two: VersionDoc, lenses: readonly Lens.Any[], typename: string): boolean =>
   [one, two].every((doc) => {
     const root = rootOf(doc);
-    const path = root && VersionLens.findPath(lenses, typename, root.origin, root.version);
+    const path = root && Lens.versionPath(lenses, typename, root.origin, root.version);
     return !root || (path !== undefined && lensDigest(path) === root.lenses);
   });

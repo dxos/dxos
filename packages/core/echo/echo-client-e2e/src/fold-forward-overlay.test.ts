@@ -30,7 +30,7 @@ class TaskV1 extends Type.makeObject<TaskV1>(DXN.make('org.dxos.test.foldForward
 class TaskV2 extends Type.makeObject<TaskV2>(DXN.make('org.dxos.test.foldForward.e2e.Task', '0.2.0'))(TaskV2Shape) {}
 
 /** `priority` has no source counterpart, so the lens stores it as an overlay (`Lens.coverage(lens).overlaid`). */
-const taskLens = Lens.make('org.dxos.test.foldForward.e2e.task.lens', TaskV1, TaskV2, {});
+const taskLens = Lens.make(TaskV1, TaskV2, {});
 const taskMigration = Migration.fromLens(taskLens);
 
 /**

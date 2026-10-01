@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 
-import { Type, VersionLens } from '@dxos/echo';
+import { Lens, Type } from '@dxos/echo';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
@@ -16,7 +16,7 @@ import {
   deriveVersionDoc,
   isDerived,
   translate,
-  typeOfVersion,
+  typeOfDoc,
   versionOfDoc,
 } from './version-translation.ts';
 
@@ -153,7 +153,7 @@ const register = (host: VersionDocumentsHost, objectId: string, version: string,
  */
 export const syncVersionDocuments = async (
   host: VersionDocumentsHost,
-  lenses: readonly VersionLens.VersionLens[],
+  lenses: readonly Lens.Any[],
   objectIds: Iterable<string>,
   options: Omit<SyncVersionsOptions, 'objectIds'> = {},
 ): Promise<void> => {
@@ -168,7 +168,7 @@ export const syncVersionDocuments = async (
 
 const syncObject = async (
   host: VersionDocumentsHost,
-  lenses: readonly VersionLens.VersionLens[],
+  lenses: readonly Lens.Any[],
   objectId: string,
   { settled, onHandle }: Omit<SyncVersionsOptions, 'objectIds'>,
 ): Promise<void> => {
@@ -181,23 +181,21 @@ const syncObject = async (
     return;
   }
   const legacy = await load(host, legacyUrl);
-  const legacyVersion = versionOfDoc(legacy.doc(), objectId, lenses);
-  const typename = lenses.find(
-    (lens) => legacyVersion !== undefined && (lens.fromVersion === legacyVersion || lens.toVersion === legacyVersion),
-  )?.typename;
-  if (!legacyVersion || !typename) {
+  const legacyType = typeOfDoc(legacy.doc(), objectId, lenses);
+  if (!legacyType) {
     return;
   }
+  const legacyVersion = Lens.versionOf(legacyType);
+  const typename = Type.getTypename(legacyType);
   const typeOf = (version: string): string | undefined => {
-    const type = typeOfVersion(lenses, typename, version);
+    const type = Lens.typeOfVersion(lenses, typename, version);
     return type && Type.getURI(type);
   };
   await mergeLosers(host, legacy, legacyLosers, (doc) => versionOfDoc(doc, objectId, lenses) === legacyVersion);
   const held = new Map<string, Held>([[legacyVersion, { version: legacyVersion, handle: legacy }]]);
   // The registry lists every version, the linked one included, so a reader can pick among them unloaded.
-  const legacyType = typeOf(legacyVersion);
-  if (legacyType && DatabaseDirectory.getVersionDocUrls(root.doc(), objectId)[legacyVersion] !== legacyUrl) {
-    register(host, objectId, legacyVersion, legacyUrl, legacyType);
+  if (DatabaseDirectory.getVersionDocUrls(root.doc(), objectId)[legacyVersion] !== legacyUrl) {
+    register(host, objectId, legacyVersion, legacyUrl, Type.getURI(legacyType));
   }
 
   // Recorded versions: load the winner and fold every losing duplicate into it.
@@ -218,7 +216,7 @@ const syncObject = async (
 
   // Missing versions are derived from the origin: the document the app created the object in.
   const origin = [...held.values()].find(({ handle }) => !isDerived(handle.doc()));
-  for (const version of VersionLens.versionsOf(lenses, typename)) {
+  for (const version of Lens.versionsOf(lenses, typename)) {
     const type = typeOf(version);
     if (held.has(version) || !origin || !type) {
       continue;
@@ -245,7 +243,7 @@ const syncObject = async (
 
   // Released apps follow only `links`, so it names the oldest version, including for an object an app
   // created at a newer one.
-  const [oldest] = VersionLens.versionsOf(lenses, typename);
+  const [oldest] = Lens.versionsOf(lenses, typename);
   const oldestUrl = held.get(oldest)?.handle.url;
   if (oldest !== legacyVersion && oldestUrl) {
     root.change((doc: DatabaseDirectory) => {
@@ -279,7 +277,7 @@ const settledFor = (settled: VersionSettled | undefined, key: string): Set<strin
  */
 const syncBranches = async (
   host: VersionDocumentsHost,
-  lenses: readonly VersionLens.VersionLens[],
+  lenses: readonly Lens.Any[],
   objectId: string,
   typename: string,
   origin: Held | undefined,
@@ -301,7 +299,7 @@ const syncBranches = async (
       for (const [version, url] of Object.entries(record.versions?.[objectId] ?? {})) {
         held.set(version, { version, handle: await load(host, url.toString()) });
       }
-      for (const version of VersionLens.versionsOf(lenses, typename)) {
+      for (const version of Lens.versionsOf(lenses, typename)) {
         if (held.has(version) || !origin) {
           continue;
         }
@@ -351,7 +349,7 @@ const translateAll = (
   held: readonly Held[],
   objectId: string,
   typename: string,
-  lenses: readonly VersionLens.VersionLens[],
+  lenses: readonly Lens.Any[],
   settled: Set<string> | undefined,
 ): void => {
   for (let round = 0; round < held.length + 1; round++) {

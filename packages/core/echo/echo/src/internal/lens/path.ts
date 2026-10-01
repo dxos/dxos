@@ -11,9 +11,10 @@ import { all } from './registry.ts';
 import { type AnyLens } from './types.ts';
 
 //
-// The version graph: one node per `typename@version`, one edge per registered lens, plus (where
-// `Lens.invert` allows it) its reverse. `Lens.findPath`/`Lens.resolveView` walk it for VIEWING only —
-// a migration never takes a discovered path, only an explicitly declared one (DESIGN.md §10.7 q4).
+// The version graph: one node per `typename@version`, one edge per lens, plus (where `Lens.invert`
+// allows it) its reverse. Views walk every registered lens; version documents walk only the lenses
+// between versions of one type. An in-place migration never takes a discovered path, only an explicitly
+// declared one (DESIGN.md §10.7 q4).
 //
 
 /** `typename@version` identity of a declared type, keying the version graph. */
@@ -25,8 +26,8 @@ const asDeclaredObject = (entity: Type.AnyObj | Schema.Top): Type.AnyObj | undef
 
 type Edge = { readonly lens: AnyLens; readonly to: string };
 
-/** Every registered lens as a forward edge, plus a reverse edge for each one {@link invert} allows. */
-const buildGraph = (): Map<string, Edge[]> => {
+/** Every lens as a forward edge, plus a reverse edge for each one {@link invert} allows. */
+const buildGraph = (lenses: readonly AnyLens[]): Map<string, Edge[]> => {
   const graph = new Map<string, Edge[]>();
   const addEdge = (from: string, edge: Edge): void => {
     const edges = graph.get(from);
@@ -37,7 +38,7 @@ const buildGraph = (): Map<string, Edge[]> => {
     }
   };
 
-  for (const lens of all()) {
+  for (const lens of lenses) {
     const target = asDeclaredObject(lens.target);
     if (!target) {
       // A plain-schema target (e.g. the rich-text tree) has no version, so it is not a graph node.
@@ -70,18 +71,22 @@ const compareSequences = (a: readonly AnyLens[], b: readonly AnyLens[]): number 
  * the reverse of every invertible lens. `undefined` when no path exists; `[]` when `from` and `to` are
  * already the same type.
  *
- * Ties (two paths of equal length) resolve lexicographically by the sequence of lens ids, so every
- * peer resolving the same pair of types walks the same path. A direct lens, once registered, is simply
+ * Ties (two paths of equal length) resolve lexicographically by the sequence of lens names, so every
+ * peer resolving the same pair of types over the same lenses walks the same path. A direct lens, once registered, is simply
  * the shortest path of length one and needs no special case here.
  */
-export const findPath = (from: Type.AnyObj, to: Type.AnyObj): readonly AnyLens[] | undefined => {
+export const findPath = (
+  from: Type.AnyObj,
+  to: Type.AnyObj,
+  lenses: readonly AnyLens[] = all(),
+): readonly AnyLens[] | undefined => {
   const start = versionId(from);
   const goal = versionId(to);
   if (start === goal) {
     return [];
   }
 
-  const graph = buildGraph();
+  const graph = buildGraph(lenses);
   const visited = new Set<string>([start]);
   let frontier = new Map<string, readonly AnyLens[]>([[start, []]]);
 

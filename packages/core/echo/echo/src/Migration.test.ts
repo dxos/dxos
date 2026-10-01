@@ -32,7 +32,7 @@ const ContactV2 = Type.makeObject(DXN.make('org.dxos.test.migration.contact', '0
 
 /** `legacyNote` is read by nothing, so it reports as `dropped` — the case `allowDropped` exists for. */
 const contactLens = () =>
-  Lens.make('org.dxos.test.migration.lens.contact', ContactV1, ContactV2, {
+  Lens.make(ContactV1, ContactV2, {
     name: {
       from: ['firstName', 'lastName'],
       get: ({ firstName, lastName }) => `${firstName} ${lastName}`,
@@ -67,7 +67,7 @@ const PersonV2 = Type.makeObject(DXN.make('org.dxos.test.migration.person', '0.2
 
 /** Every source property is read, so coverage has nothing dropped and nothing suspicious. */
 const personLens = () =>
-  Lens.make('org.dxos.test.migration.lens.person', PersonV1, PersonV2, {
+  Lens.make(PersonV1, PersonV2, {
     name: {
       from: ['firstName', 'lastName'],
       get: ({ firstName, lastName }) => `${firstName} ${lastName}`,
@@ -85,9 +85,9 @@ describe('Migration.fromLens', () => {
   });
 
   test('a lens with a suspicious mapping fails, listing the property and its candidates', ({ expect }) => {
-    const lens = Lens.make('org.dxos.test.migration.lens.suspicious', StatusA, StatusB, {});
-    expect(() => Migration.fromLens(lens)).to.throw(/suspicious/);
-    expect(() => Migration.fromLens(lens)).to.throw(/status/);
+    const lens = Lens.make(StatusA, StatusB, {});
+    expect(() => Migration.fromLens(lens, { allowDropped: ['status'] })).to.throw(/suspicious/);
+    expect(() => Migration.fromLens(lens, { allowDropped: ['status'] })).to.throw(/status/);
   });
 
   test('a clean lens produces an object migration carrying the lens and its types', ({ expect }) => {
@@ -101,7 +101,7 @@ describe('Migration.fromLens', () => {
   });
 
   test('a lens targeting a plain schema is rejected: a migration target must be a declared type', ({ expect }) => {
-    const lens = Lens.make('org.dxos.test.migration.lens.plain', PersonV1, Schema.Struct({ name: Schema.String }), {
+    const lens = Lens.make(PersonV1, Schema.Struct({ name: Schema.String }).annotate({ identifier: 'personName' }), {
       name: {
         from: ['firstName', 'lastName'],
         get: ({ firstName, lastName }) => `${firstName} ${lastName}`,

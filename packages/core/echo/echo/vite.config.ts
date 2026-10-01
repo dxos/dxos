@@ -38,7 +38,6 @@ export default defineConfig({
     Dataset: 'src/Dataset.ts',
     Hypergraph: 'src/Hypergraph.ts',
     Json: 'src/Json.ts',
-    VersionLens: 'src/VersionLens.ts',
     View: 'src/View.ts',
   },
   test: { node: true },

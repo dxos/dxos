@@ -15,7 +15,7 @@ import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 
-import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text.ts';
+import { type Block, type Inline, type Mark, RichTextLens, blockText } from './rich-text.ts';
 
 //
 // A basic ProseMirror editor driven entirely by the lens. It never sees markdown: it reads a block
@@ -291,5 +291,3 @@ export const BlockList = ({ text }: { text: Text.Text }) => {
     </Card.Root>
   );
 };
-
-export { RICH_TEXT_LENS_ID };

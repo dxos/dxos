@@ -331,7 +331,7 @@ const TASK_LENS_ID = 'com.example.type.migrationTask.lens';
 
 /** `title` matches by name; `done` is a converted view of `status`; `legacyEstimate` is unread. */
 const taskLens = () =>
-  Lens.make(TASK_LENS_ID, TaskV1, TaskV2, {
+  Lens.make(TaskV1, TaskV2, {
     done: {
       from: ['status'],
       get: ({ status }) => status === 'done',
@@ -351,7 +351,7 @@ const NoteV2 = Type.makeObject(DXN.make('com.example.type.migrationLossyNote', '
 
 /** Reading the first character is not invertible, so `checkLaws` fails against any real title. */
 const lossyLens = () =>
-  Lens.make('com.example.type.migrationLossyNote.lens', NoteV1, NoteV2, {
+  Lens.make(NoteV1, NoteV2, {
     initial: {
       from: ['title'],
       get: ({ title }) => title?.[0],

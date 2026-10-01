@@ -119,6 +119,8 @@ export type ResolvedEntry = {
   readonly origin: 'explicit' | 'automatic';
   /** Present only when the entry is declarative enough to persist. */
   readonly serialized?: SerializedEntry;
+  /** The source text of an inline function the entry runs, so the lens digest changes with it. */
+  readonly code?: string;
 };
 
 /** The compiled mapping: what to read, what to write, and what fell through to an overlay. */
@@ -136,9 +138,22 @@ export type Plan = {
  * object is ever stored as (the rich-text block tree), and forfeits typename dispatch.
  */
 export type Lens<S = any, T = any> = {
+  /** Named by its endpoints (`<source> -> <target>`): there is at most one lens per pair of types. */
   readonly id: string;
+  /**
+   * Identifies what the lens does: the canonical JSON of its resolved mapping and defaults, or, for code, of
+   * the code.
+   * Version documents record it, so two builds whose lenses differ never both translate.
+   */
+  readonly digest: string;
+  /** The key its overlay values are stored under; a composed lens keeps its last hop's. */
+  readonly overlayKey: string;
+  /** Values for properties only one side has: a target-only property forward, a source-only one backward. */
+  readonly defaults: Readonly<Record<string, unknown>>;
   readonly source: Type.AnyObj;
   readonly target: Type.AnyObj | Schema.Top;
+  /** The lens this one reverses, when it was made by `Lens.invert`. */
+  readonly reverseOf?: Lens<any, any>;
   /** Compiled mapping; `undefined` for a coded lens, whose transform is opaque. */
   readonly plan?: Plan;
   /** Project the base object into the target shape. */
@@ -156,4 +171,14 @@ export type CodedMapping<S = any, T = any> = {
   readonly get: (obj: S) => T;
   /** Receives the next view and the previous one, and returns only the writes that differ. */
   readonly put: (next: Partial<T>, previous: T, obj: S) => readonly Write[];
+  /** Bumped whenever the code changes behavior without its source text changing (an imported value, say). */
+  readonly version?: string;
+};
+
+export type MakeOptions = {
+  /**
+   * Values for properties only one side declares, by name, where the schema declares no default: a
+   * target-only property reads it forward, a source-only property reads it backward.
+   */
+  readonly defaults?: Readonly<Record<string, unknown>>;
 };

@@ -42,11 +42,10 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.lens.path
 ) {}
 
 /** Migration `Task@1 -> Task@2`: a bare rename plus an automatic pass-through, both invertible. */
-const migrationV1toV2 = () =>
-  Lens.make('org.dxos.test.lens.path.migration-v1-v2', TaskV1, TaskV2, { note: 'description' });
+const migrationV1toV2 = () => Lens.make(TaskV1, TaskV2, { note: 'description' });
 
 /** A hand-written view lens `Task@1 -> GtdTask`, never itself inverted in these tests. */
-const v1ToGtd = () => Lens.make('org.dxos.test.lens.path.v1-to-gtd', TaskV1, GtdTask, { summary: 'description' });
+const v1ToGtd = () => Lens.make(TaskV1, GtdTask, { summary: 'description' });
 
 const makeTaskV2 = () => Obj.make(TaskV2, { title: 'Ship it', note: 'release notes', archived: false });
 
@@ -74,7 +73,7 @@ describe('Lens.invert', () => {
       Schema.Struct({ initial: Schema.optional(Schema.String) }),
     ) {}
 
-    const lossy = Lens.make('org.dxos.test.lens.path.lossy', TaskV1, Lossy, {
+    const lossy = Lens.make(TaskV1, Lossy, {
       initial: {
         from: ['title'],
         get: ({ title }) => title?.[0],
@@ -90,7 +89,7 @@ describe('Lens.invert', () => {
       Schema.Struct({ label: Schema.optional(Schema.String) }),
     ) {}
 
-    const lens = Lens.make('org.dxos.test.lens.path.readonly', TaskV1, Readonly, {
+    const lens = Lens.make(TaskV1, Readonly, {
       label: Lens.readOnly('title'),
     });
 
@@ -108,7 +107,7 @@ describe('Lens.findPath / Lens.resolveView', () => {
     const path = Lens.findPath(TaskV2, GtdTask);
     expect(path).to.exist;
     expect(path?.length).to.eq(2);
-    expect(path?.[0].id).to.eq(`${migration.id}#inverted`);
+    expect(path?.[0].reverseOf).to.eq(migration);
     expect(path?.[1]).to.eq(view);
 
     const resolved = Lens.resolveView(TaskV2, GtdTask);
@@ -123,9 +122,7 @@ describe('Lens.findPath / Lens.resolveView', () => {
   test('a direct lens, once registered, is simply the shorter path', ({ expect }) => {
     Lens.register(migrationV1toV2());
     Lens.register(v1ToGtd());
-    const direct = Lens.register(
-      Lens.make('org.dxos.test.lens.path.v2-to-gtd-direct', TaskV2, GtdTask, { summary: 'note' }),
-    );
+    const direct = Lens.register(Lens.make(TaskV2, GtdTask, { summary: 'note' }));
 
     const path = Lens.findPath(TaskV2, GtdTask);
     expect(path).to.deep.eq([direct]);
@@ -145,15 +142,15 @@ describe('Lens.findPath / Lens.resolveView', () => {
       Schema.Struct({ title: Schema.String }),
     ) {}
 
-    // Lexicographically, the "aa-…" pair sorts before the "zz-…" pair — that path must win.
-    const viaY1First = Lens.register(Lens.make('org.dxos.test.lens.path.zz-x-y1', NodeX, NodeY1, {}));
-    const viaY1Second = Lens.register(Lens.make('org.dxos.test.lens.path.zz-y1-z', NodeY1, NodeZ, {}));
-    const viaY2First = Lens.register(Lens.make('org.dxos.test.lens.path.aa-x-y2', NodeX, NodeY2, {}));
-    const viaY2Second = Lens.register(Lens.make('org.dxos.test.lens.path.aa-y2-z', NodeY2, NodeZ, {}));
+    // Lens names come from their endpoints, and the path through Y1 sorts before the one through Y2.
+    const viaY1First = Lens.register(Lens.make(NodeX, NodeY1, {}));
+    const viaY1Second = Lens.register(Lens.make(NodeY1, NodeZ, {}));
+    const viaY2First = Lens.register(Lens.make(NodeX, NodeY2, {}));
+    const viaY2Second = Lens.register(Lens.make(NodeY2, NodeZ, {}));
 
     const path = Lens.findPath(NodeX, NodeZ);
-    expect(path).to.deep.eq([viaY2First, viaY2Second]);
-    expect(path).not.to.deep.eq([viaY1First, viaY1Second]);
+    expect(path).to.deep.eq([viaY1First, viaY1Second]);
+    expect(path).not.to.deep.eq([viaY2First, viaY2Second]);
   });
 
   test('unreachable types resolve to undefined', ({ expect }) => {
@@ -174,7 +171,7 @@ describe('Lens.findPath / Lens.resolveView', () => {
     ) {}
 
     Lens.register(
-      Lens.make('org.dxos.test.lens.path.lossy2', TaskV1, Lossy, {
+      Lens.make(TaskV1, Lossy, {
         initial: {
           from: ['title'],
           get: ({ title }) => title?.[0],
@@ -184,7 +181,7 @@ describe('Lens.findPath / Lens.resolveView', () => {
     );
 
     // Forward is reachable; backward is not, because the lossy lens has no inverse edge.
-    expect(Lens.findPath(TaskV1, Lossy)).to.deep.eq([Lens.resolve('org.dxos.test.lens.path.lossy2')]);
+    expect(Lens.findPath(TaskV1, Lossy)).to.deep.eq([Lens.resolve(Lens.nameOf(TaskV1, Lossy))]);
     expect(Lens.findPath(Lossy, TaskV1)).to.be.undefined;
   });
 });
@@ -242,8 +239,8 @@ describe('Lens.compose', () => {
   test('refuses to compose a coded lens', ({ expect }) => {
     // A coded lens's target need not be a declared ECHO type — a plain schema is enough to show the
     // opaque-transform case `compose` refuses.
-    const codedTarget = Schema.Struct({ title: Schema.String });
-    const coded = Lens.coded('org.dxos.test.lens.path.coded', TaskV1, codedTarget, {
+    const codedTarget = Schema.Struct({ title: Schema.String }).annotate({ identifier: 'codedTitle' });
+    const coded = Lens.coded(TaskV1, codedTarget, {
       get: (task) => ({ title: task.title }),
       put: (next) =>
         next.title !== undefined ? [{ kind: 'assign' as const, path: ['title'], value: next.title }] : [],

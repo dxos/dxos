@@ -97,7 +97,7 @@ export const of = <S, T extends Record<string, any>>(obj: Obj.Unknown, lens: Len
       return entry.get(source);
     }
     if (overlays.has(property)) {
-      return getOverlay(obj, lens.id, property);
+      return getOverlay(obj, lens.overlayKey, property);
     }
     // A coded lens has no per-property plan, so its whole view is recomputed and read from.
     if (!lens.plan) {

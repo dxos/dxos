@@ -41,12 +41,8 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.lens-path
 ) {}
 
 const registerGraph = () => {
-  const migration = Lens.register(
-    Lens.make('org.dxos.test.lens-path.migration-v1-v2', TaskV1, TaskV2, { note: 'description' }),
-  );
-  const view = Lens.register(
-    Lens.make('org.dxos.test.lens-path.v1-to-gtd', TaskV1, GtdTask, { summary: 'description' }),
-  );
+  const migration = Lens.register(Lens.make(TaskV1, TaskV2, { note: 'description' }));
+  const view = Lens.register(Lens.make(TaskV1, GtdTask, { summary: 'description' }));
   return { migration, view };
 };
 

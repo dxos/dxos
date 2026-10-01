@@ -53,7 +53,7 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.GtdTask',
 const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
 
 const makeLens = () =>
-  Lens.make('org.dxos.test.lens.gtd', Task, GtdTask, {
+  Lens.make(Task, GtdTask, {
     // `title` and `description` match by name and type — absent from the mapping entirely.
     estimateHours: Lens.from('estimate', Lens.scale(1 / 60)),
     priority: Lens.from(
@@ -109,7 +109,7 @@ describe('Lens mapping resolution', () => {
       }),
     ) {}
 
-    const coverage = Lens.coverage(Lens.make('org.dxos.test.lens.other', Task, Other, {}));
+    const coverage = Lens.coverage(Lens.make(Task, Other, {}));
     expect(coverage.suspicious).to.deep.eq([{ property: 'status', candidates: ['status'] }]);
     // Critically NOT overlaid: that would record the same fact twice and let the copies drift.
     expect(coverage.overlaid).to.deep.eq([]);
@@ -121,15 +121,13 @@ describe('Lens mapping resolution', () => {
       Schema.Struct({ estimate: Schema.Number }),
     ) {}
 
-    const coverage = Lens.coverage(Lens.make('org.dxos.test.lens.required', Task, Required, {}));
+    const coverage = Lens.coverage(Lens.make(Task, Required, {}));
     expect(coverage.automatic).to.deep.eq([]);
     expect(coverage.suspicious).to.deep.eq([{ property: 'estimate', candidates: ['estimate'] }]);
   });
 
   test('a mapping naming an unknown source property fails at definition time', ({ expect }) => {
-    expect(() => Lens.make('org.dxos.test.lens.bad', Task, GtdTask, { done: 'nope' as any })).to.throw(
-      /unknown source property/,
-    );
+    expect(() => Lens.make(Task, GtdTask, { done: 'nope' as any })).to.throw(/unknown source property/);
   });
 });
 
@@ -229,9 +227,12 @@ describe('overlay storage', () => {
   });
 
   test('two lenses over the same object keep separate overlays', ({ expect }) => {
+    class Waiting extends Type.makeObject<Waiting>(DXN.make('org.dxos.test.Waiting', '0.1.0'))(
+      Schema.Struct({ title: Schema.String, waitingOn: Schema.optional(Schema.String) }),
+    ) {}
     const task = makeTask();
     const first = makeLens();
-    const second = Lens.make('org.dxos.test.lens.gtd-two', Task, GtdTask, {});
+    const second = Lens.make(Task, Waiting, {});
 
     Lens.put(task, first, { waitingOn: 'first' });
     Lens.put(task, second, { waitingOn: 'second' });
@@ -302,7 +303,7 @@ describe('Lens.of — the live handle', () => {
 
     expect(task.status).to.eq('done');
     expect(task.estimate).to.eq(180);
-    expect(Lens.getOverlay(task, 'org.dxos.test.lens.gtd', 'context')).to.eq('@work');
+    expect(Lens.getOverlay(task, Lens.nameOf(Task, GtdTask), 'context')).to.eq('@work');
     // One transaction for the whole callback, not one per assignment.
     expect(notifications).to.eq(1);
   });
@@ -344,7 +345,7 @@ describe('Lens.checkLaws', () => {
     ) {}
 
     // Reading the first character is not invertible: `put` cannot restore the rest of the title.
-    const lens = Lens.make('org.dxos.test.lens.lossy', Task, Lossy, {
+    const lens = Lens.make(Task, Lossy, {
       initial: {
         from: ['title'],
         get: ({ title }) => title?.[0],
@@ -377,7 +378,7 @@ describe('registry', () => {
 describe('persistence', () => {
   test('a declarative mapping serializes and rehydrates', ({ expect }) => {
     Lens.registerCodec('minutes-to-hours', Lens.scale(1 / 60));
-    const lens = Lens.make('org.dxos.test.lens.persisted', Task, GtdTask, {
+    const lens = Lens.make(Task, GtdTask, {
       estimateHours: Lens.from('estimate', 'minutes-to-hours'),
       createdBy: Lens.readOnly('author'),
       stage: 'status',
@@ -403,7 +404,7 @@ describe('persistence', () => {
   });
 
   test('an unregistered codec name is caught at serialization', ({ expect }) => {
-    const lens = Lens.make('org.dxos.test.lens.unregistered', Task, GtdTask, {
+    const lens = Lens.make(Task, GtdTask, {
       estimateHours: Lens.from('estimate', 'no-such-codec'),
     });
     expect(() => Lens.toObject(lens)).to.throw(/unregistered codec/);

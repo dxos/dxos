@@ -90,7 +90,7 @@ class NoteV2 extends Type.makeObject<NoteV2>(DXN.make('org.dxos.test.foldForward
 ) {}
 
 /** A bare rename (`content` <- `body`) of a string property. */
-const noteLens = Lens.make('org.dxos.test.foldForward.note.lens', NoteV1, NoteV2, { content: 'body' });
+const noteLens = Lens.make(NoteV1, NoteV2, { content: 'body' });
 const noteMigration = Migration.fromLens(noteLens);
 
 class DocV1 extends Type.makeObject<DocV1>(DXN.make('org.dxos.test.foldForward.Doc', '0.1.0'))(
@@ -101,7 +101,7 @@ class DocV2 extends Type.makeObject<DocV2>(DXN.make('org.dxos.test.foldForward.D
   Schema.Struct({ name: Schema.String, content: Schema.optional(Schema.String) }),
 ) {}
 
-const docLens = Lens.make('org.dxos.test.foldForward.doc.lens', DocV1, DocV2, { name: 'title', content: 'body' });
+const docLens = Lens.make(DocV1, DocV2, { name: 'title', content: 'body' });
 const docMigration = Migration.fromLens(docLens);
 
 class DerivedV1 extends Type.makeObject<DerivedV1>(DXN.make('org.dxos.test.foldForward.Derived', '0.1.0'))(
@@ -121,7 +121,7 @@ class TaskV2 extends Type.makeObject<TaskV2>(DXN.make('org.dxos.test.foldForward
 ) {}
 
 /** `priority` has no source counterpart, so the lens stores it as an overlay (`Lens.coverage(lens).overlaid`). */
-const taskLens = Lens.make('org.dxos.test.foldForward.task.lens', TaskV1, TaskV2, {});
+const taskLens = Lens.make(TaskV1, TaskV2, {});
 const taskMigration = Migration.fromLens(taskLens);
 
 class AssignmentV1 extends Type.makeObject<AssignmentV1>(DXN.make('org.dxos.test.foldForward.Assignment', '0.1.0'))(
@@ -133,7 +133,7 @@ class AssignmentV2 extends Type.makeObject<AssignmentV2>(DXN.make('org.dxos.test
 ) {}
 
 /** Renames `title` and carries the `owner` ref through unchanged. */
-const assignmentLens = Lens.make('org.dxos.test.foldForward.assignment.lens', AssignmentV1, AssignmentV2, {
+const assignmentLens = Lens.make(AssignmentV1, AssignmentV2, {
   name: 'title',
 });
 const assignmentMigration = Migration.fromLens(assignmentLens);
@@ -276,7 +276,7 @@ class PlanV2 extends Type.makeObject<PlanV2>(DXN.make('org.dxos.test.foldForward
 ) {}
 
 /** Two target-only properties, both stored as overlays before the migration. */
-const planLens = Lens.make('org.dxos.test.foldForward.plan.lens', PlanV1, PlanV2, {});
+const planLens = Lens.make(PlanV1, PlanV2, {});
 const planMigration = Migration.fromLens(planLens);
 
 let builder: EchoTestBuilder;

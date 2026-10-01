@@ -125,6 +125,7 @@ const entryFor = (property: string, entry: MappingEntryLike): ResolvedEntry => {
       put: (value) => ({ [from]: value === undefined ? undefined : resolveCodec(entry.codec).encode(value) }),
       origin: 'explicit',
       serialized: typeof entry.codec === 'string' ? { kind: 'converted', from, codec: entry.codec } : undefined,
+      code: typeof entry.codec === 'string' ? undefined : `${entry.codec.decode}\n${entry.codec.encode}`,
     };
   }
 
@@ -149,6 +150,7 @@ const entryFor = (property: string, entry: MappingEntryLike): ResolvedEntry => {
       get: (source) => entry.get(source),
       put: put && ((value, source) => put(value, source) as Record<string, unknown>),
       origin: 'explicit',
+      code: `${entry.get}\n${put ?? ''}`,
     };
   }
 

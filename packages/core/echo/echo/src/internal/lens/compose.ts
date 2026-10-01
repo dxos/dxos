@@ -5,6 +5,7 @@
 import type * as Obj from '../../Obj.ts';
 import * as Type from '../../Type.ts';
 import { invert as invertPlan, project } from './codec.ts';
+import { canonical, nameOf } from './identity.ts';
 import { readSource } from './mapping.ts';
 import { type AnyLens, type Coverage, type Plan, type ResolvedEntry } from './types.ts';
 
@@ -89,7 +90,7 @@ const chainedEntry = (first: AnyLens, second: AnyLens, entry: ResolvedEntry): Re
  *
  * A property `second` overlays (no counterpart on the intermediate shape) still reads and writes under
  * `second`'s own id on the ORIGINAL base object: composing never re-homes an overlay under a synthetic
- * id, which is also why the composed lens takes `second.id` as its own.
+ * id, which is also why the composed lens keeps `second`'s overlay key.
  */
 export const compose = (first: AnyLens, second: AnyLens): AnyLens => {
   if (!first.plan || !second.plan) {
@@ -128,11 +129,14 @@ export const compose = (first: AnyLens, second: AnyLens): AnyLens => {
   const plan: Plan = { entries, overlays: second.plan.overlays, coverage };
 
   return {
-    id: second.id,
+    id: nameOf(first.source, second.target),
+    digest: canonical([first.digest, second.digest]),
+    overlayKey: second.overlayKey,
+    defaults: { ...first.defaults, ...second.defaults },
     source: first.source,
     target: second.target,
     plan,
-    get: (obj: Obj.Unknown) => project(obj, second.id, plan),
-    put: (view: Record<string, unknown>, obj: Obj.Unknown) => invertPlan(view, obj, second.id, plan),
+    get: (obj: Obj.Unknown) => project(obj, second.overlayKey, plan),
+    put: (view: Record<string, unknown>, obj: Obj.Unknown) => invertPlan(view, obj, second.overlayKey, plan),
   };
 };

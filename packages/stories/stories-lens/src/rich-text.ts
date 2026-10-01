@@ -60,11 +60,9 @@ export const plain = (text: string): readonly Inline[] => (text.length > 0 ? [{ 
  */
 export const RichText = Schema.Struct({
   blocks: Schema.Array(Block),
-});
+}).annotate({ identifier: 'org.dxos.demo.richText' });
 
 export type RichText = Schema.Schema.Type<typeof RichText>;
-
-export const RICH_TEXT_LENS_ID = 'org.dxos.demo.lens.text-as-rich-text';
 
 //
 // Parsing. `@lezer/markdown` is already a dependency of `@dxos/react-ui-markdown` and every node
@@ -267,7 +265,7 @@ export const diffBlocks = (previous: readonly Block[], next: readonly Block[]): 
 
 /** `Text` → `RichText`. */
 export const RichTextLens: Lens.Lens<Text.Text, RichText> = Lens.register(
-  Lens.coded(RICH_TEXT_LENS_ID, Text.Text, RichText, {
+  Lens.coded(Text.Text, RichText, {
     get: (text) => ({ blocks: parseBlocks(text.content ?? '') }),
     put: (next, previous) => diffBlocks(previous.blocks, next.blocks ?? previous.blocks),
   }),

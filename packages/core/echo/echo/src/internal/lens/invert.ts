@@ -83,9 +83,9 @@ export const invert = (lens: AnyLens): AnyLens | undefined => {
     return undefined;
   }
 
-  const reversed = make(`${lens.id}#inverted`, target, lens.source, mapping);
+  const reversed = make(target, lens.source, mapping, { defaults: lens.defaults });
   if ((reversed.plan?.coverage.suspicious.length ?? 0) > 0) {
     return undefined;
   }
-  return reversed;
+  return { ...reversed, reverseOf: lens };
 };

@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Type, VersionLens } from '@dxos/echo';
+import { Lens, Type } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -28,7 +28,7 @@ const TaskV1 = Type.makeObject(DXN.make(TYPENAME, '0.1.0'))(
 const TaskV2 = Type.makeObject(DXN.make(TYPENAME, '0.2.0'))(
   Schema.Struct({ name: Schema.String, tags: Schema.Array(Schema.String), count: Schema.Number }),
 );
-const lenses = [VersionLens.make({ from: TaskV1, to: TaskV2, ops: [VersionLens.rename('title', 'name')] })];
+const lenses = [Lens.make(TaskV1, TaskV2, { name: 'title' })];
 
 /** An object with `edits` edits, every change authored by fixed actors at time 0, so its bytes are fixed. */
 const history = (edits: number): VersionDoc => {

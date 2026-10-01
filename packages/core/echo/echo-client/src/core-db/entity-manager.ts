@@ -21,7 +21,7 @@ import {
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
-import { type Database, type Entity, VersionLens } from '@dxos/echo';
+import { type Database, type Entity, Lens } from '@dxos/echo';
 import { type BranchRecord, DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
@@ -1464,7 +1464,7 @@ export class EntityManager implements IDatabaseBinding {
     ];
     const [newest] = candidates
       .filter(({ type }) => type !== undefined && this.#knownVersionTypes.has(type))
-      .sort((left, right) => VersionLens.compareVersions(right.version, left.version));
+      .sort((left, right) => Lens.compareVersions(right.version, left.version));
     return newest?.url ?? member;
   }
 
@@ -1772,7 +1772,7 @@ export class EntityManager implements IDatabaseBinding {
         ? []
         : DatabaseDirectory.getVersionDocs(spaceRootDoc, objectId)
             .filter(({ type }) => type !== undefined && this.#knownVersionTypes.has(type))
-            .sort((left, right) => VersionLens.compareVersions(right.version, left.version));
+            .sort((left, right) => Lens.compareVersions(right.version, left.version));
     const url = newest?.url ?? link;
     return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
   }
