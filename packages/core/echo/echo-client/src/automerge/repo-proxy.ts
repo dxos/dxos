@@ -589,6 +589,8 @@ export class RepoProxy extends Resource {
           // A doc's declared type is an interface without an index signature, which the Struct
           // field's `Record` type does not accept; the value is a plain JSON object at runtime.
           initialValue: initialValue as Record<string, unknown>,
+          // The host imports the document this handle already holds, so no second root of the host's own replicates back.
+          initialDoc: initialValue === undefined ? undefined : A.save(handle.doc()),
         }),
         { timeout: RPC_TIMEOUT },
       )

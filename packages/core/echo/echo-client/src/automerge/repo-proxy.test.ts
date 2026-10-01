@@ -85,6 +85,30 @@ describe('RepoProxy', () => {
     }
   });
 
+  test("a document created with an initial value has one root, the client's", async () => {
+    const { dataService, host } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const clientHandle = clientRepo.create<{ text: string }>({ text: 'initial' });
+    await clientHandle.whenReady();
+    const url = clientHandle.url;
+    invariant(url);
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), url);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+
+    // A second root, written by the host from the same value, would replicate back as a change the client never made.
+    const roots = (doc: A.Doc<unknown>) =>
+      A.getChangesMetaSince(doc, [])
+        .filter((change) => change.deps.length === 0)
+        .map((change) => change.hash);
+    const clientDoc = clientHandle.doc();
+    invariant(clientDoc);
+    expect(roots(hostHandle.doc())).toEqual(roots(clientDoc));
+    expect(roots(clientDoc)).toHaveLength(1);
+  });
+
   test('load document from client', async () => {
     const { host, dataService } = await setup();
     const [clientRepo] = createProxyRepos(dataService);
