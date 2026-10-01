@@ -110,6 +110,21 @@ describe('imports', () => {
     `);
   });
 
+  test('the current Tree stays: its render props have no Next counterpart', () => {
+    const { output, residue } = transformFixture(
+      imports,
+      code`
+        import { Tree } from '@dxos/react-ui-list';
+
+        export const Files = () => <Tree id='x' />;
+      `,
+    );
+    expect(output).toContain(`import { Tree } from '@dxos/react-ui-list';`);
+    expect(residue).toEqual([
+      'Tree: the current Tree takes render props (renderColumns/renderHeading); compose Next Tree.Root/Content/Item by hand',
+    ]);
+  });
+
   test('type-only imports become a type-only Next import', () => {
     const { output } = transformFixture(
       imports,

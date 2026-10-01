@@ -96,6 +96,9 @@ export const IMPORT_TARGETS: Record<PackageName, Record<string, ImportTarget>> =
     MasterDetail: none('MasterDetail is removed: compose the list with Splitter (collapseBelow)'),
     Picker: none('Picker → Next.Combobox trigger mode (decision 9)'),
     TREE_BLOCK: none('the Next Tree sizes rows from its scope'),
+    Tree: none(
+      'the current Tree takes render props (renderColumns/renderHeading); compose Next Tree.Root/Content/Item by hand',
+    ),
     createStaticTreeModel: none('the Next Tree is driven by TreeModel atoms; rewrite the model'),
     useListSelection: none('useListSelection → listboxSelection adapter (react-ui-list/next)'),
     useListboxSelection: none('Ark owns Listbox selection; use listboxSelection'),

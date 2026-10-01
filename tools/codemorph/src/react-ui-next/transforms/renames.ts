@@ -120,10 +120,6 @@ const buttonProps = (ctx: RuleContext) => {
       file.report(iconEnd, 'iconEnd is a boolean in the current Button and the icon name in Next');
     }
   }
-  const iconClassNames = getAttr(element, 'iconClassNames');
-  if (iconClassNames) {
-    file.report(iconClassNames, 'iconClassNames has no Next equivalent (Button has no icon slot)');
-  }
 };
 
 const button = (to: string[]): Rule => ({ to, drop: ['square'], apply: buttonProps });
