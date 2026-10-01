@@ -105,6 +105,8 @@ type StoryArgs = SizeArgs & {
   composed?: boolean;
   /** Rows with a custom icon cell and two trailing columns (the current Tree's `renderIcon` and `renderColumns`). */
   columns?: boolean;
+  /** Rows with a second line under the label (`Tree.Root` `multiline`). */
+  multiline?: boolean;
   /** Ids of rows that cannot be selected; activating such a branch toggles it. */
   unselectable?: string[];
   selectionFollowsFocus?: boolean;
@@ -199,6 +201,21 @@ const renderColumnsRow = (node: TreeNode<TestItem>) => (
   </Tree.Item>
 );
 
+/** A second line under every leaf's label, spanning from the label's track to the row's end. */
+const renderMultilineRow = (node: TreeNode<TestItem>) => (
+  <Tree.Item node={node}>
+    <Tree.ItemIndicator />
+    <Tree.ItemIcon />
+    <Tree.ItemText />
+    <Tree.ItemCount />
+    {!node.branch && (
+      <p className='col-[3/-1] row-start-2 pb-1 text-sm text-description' data-testid='tree-description'>
+        A second line, under the label and as tall as its text.
+      </p>
+    )}
+  </Tree.Item>
+);
+
 const DefaultStory = ({
   size = 'md',
   tree,
@@ -209,6 +226,7 @@ const DefaultStory = ({
   animate,
   composed,
   columns,
+  multiline,
   unselectable,
   selectionFollowsFocus,
   dropAtEnd,
@@ -243,13 +261,16 @@ const DefaultStory = ({
         dropAtEnd={dropAtEnd}
         dropBelowExpanded={dropBelowExpanded}
         columns={columns ? COLUMNS : undefined}
+        multiline={multiline}
         canSelect={canSelect}
         onOpenChange={onOpenChange}
         onSelect={handleSelect}
         onDrop={onDrop}
       >
         <Tree.Label srOnly>Tree</Tree.Label>
-        <Tree.Content>{columns ? renderColumnsRow : composed ? renderComposedRow : undefined}</Tree.Content>
+        <Tree.Content>
+          {columns ? renderColumnsRow : multiline ? renderMultilineRow : composed ? renderComposedRow : undefined}
+        </Tree.Content>
         <Tree.Empty icon='ph--tree-structure--regular' />
       </Tree.Root>
     </div>
@@ -302,6 +323,34 @@ export const Columns: Story = {
     const remove = within(canvasElement).getAllByRole('button', { name: 'Remove' })[0];
     await expect(remove.parentElement?.getAttribute('data-part')).toBe('item-actions');
     await expect(getComputedStyle(remove.parentElement ?? remove).display).toBe('contents');
+  },
+};
+
+/**
+ * `multiline` rows: a leaf's second line grows the row to fit, while its caret, icon and label hold the first line at
+ * one block; a branch without one stays one block tall.
+ */
+export const Multiline: Story = {
+  args: { tree: createFixedTree, open: true, multiline: true, virtual: 'variable' },
+  play: async ({ canvasElement }) => {
+    const [description] = await within(canvasElement).findAllByTestId('tree-description');
+    const row = description.closest<HTMLElement>('[data-tree-row]');
+    const branch = within(canvasElement).getByTestId('row-fruit');
+    const label = row?.querySelector<HTMLElement>('.nx-tree-item-text');
+    if (!row || !label) {
+      throw new Error('Multiline row not found.');
+    }
+    const block = branch.getBoundingClientRect().height;
+    await expect(row.getBoundingClientRect().height).toBeGreaterThan(block);
+    await expect(description.getBoundingClientRect().top).toBeGreaterThanOrEqual(label.getBoundingClientRect().bottom);
+    await expect(Math.abs(description.getBoundingClientRect().left - label.getBoundingClientRect().left)).toBeLessThan(
+      1,
+    );
+    // The label keeps the first line's block, centred as in a one-line row.
+    const centre = (rect: DOMRect) => rect.top + rect.height / 2;
+    await expect(
+      Math.abs(centre(label.getBoundingClientRect()) - (row.getBoundingClientRect().top + block / 2)),
+    ).toBeLessThan(1);
   },
 };
 

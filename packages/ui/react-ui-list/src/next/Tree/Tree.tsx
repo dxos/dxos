@@ -115,6 +115,12 @@ type TreeRootProps<T extends { id: string } = any> = {
   size?: Size;
   /** Each row's grid template; the default is disclosure, icon, label and trailing tracks. */
   columns?: string;
+  /**
+   * Let a row grow past one block for cells placed on further grid lines (a description under the label): the first
+   * line stays one block and later lines size to their content. A fixed window assumes one block per row, so pair it
+   * with `virtual='variable'` or none.
+   */
+  multiline?: boolean;
   selectionMode?: 'single' | 'multiple';
   /** Move selection with the roving tabstop, for a list whose selection only highlights a row. */
   selectionFollowsFocus?: boolean;
@@ -171,6 +177,7 @@ const TreeRoot = <T extends { id: string }>({
   path,
   size,
   columns = DEFAULT_COLUMNS,
+  multiline = false,
   selectionMode = 'single',
   selectionFollowsFocus = false,
   virtual,
@@ -587,6 +594,7 @@ const TreeRoot = <T extends { id: string }>({
         onFocusChange={handleFocusChange}
         scrollToIndexFn={virtual === 'fixed' ? scrollToNode : undefined}
         data-size={size}
+        data-multiline={multiline ? '' : undefined}
         className='nx-tree'
         style={style}
         ref={rootRef}

@@ -33,6 +33,11 @@
     outline: none;
     user-select: none;
   }
+  /* `multiline`: the first line holds the row's cells at one block; later lines (a description) size to their content. */
+  .nx-tree[data-multiline] .nx-tree-item {
+    grid-template-rows: var(--nx-block-size);
+    grid-auto-rows: auto;
+  }
   /*
    * A tree lives in narrow sidebars, where Container's `width < 24rem` query would stack a row's cells; the row keeps
    * its fixed tracks at every width (the specificity beats the query's `.nx-grid[data-layout='row'] > *` rule).
@@ -97,6 +102,14 @@
     animation: nx-tree-row-conceal var(--nx-tree-disclosure-duration) var(--nx-disclosure-ease-close) forwards;
   }
 
+  /* A multiline row has no single height to grow to, so its disclosure only fades. */
+  .nx-tree[data-multiline] .nx-tree-item[data-disclosure='enter'] {
+    animation-name: nx-tree-row-fade-in;
+  }
+  .nx-tree[data-multiline] .nx-tree-item[data-disclosure='conceal'] {
+    animation-name: nx-tree-row-fade-out;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .nx-tree {
       --nx-tree-disclosure-duration: 0ms;
@@ -113,6 +126,16 @@
       opacity: 1;
       block-size: var(--nx-block-size);
       overflow-y: clip;
+    }
+  }
+  @keyframes nx-tree-row-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes nx-tree-row-fade-out {
+    to {
+      opacity: 0;
     }
   }
   @keyframes nx-tree-row-conceal {
