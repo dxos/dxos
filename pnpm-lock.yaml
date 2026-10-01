@@ -1670,6 +1670,9 @@ patchedDependencies:
   '@zag-js/presence@1.43.3':
     hash: 724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58
     path: patches/@zag-js__presence@1.43.3.patch
+  dfx@1.0.15:
+    hash: 4897179d9f91b09100d74728fdca0db2f7d33a64e06f2b3dbd2fa4fb061b5325
+    path: patches/dfx@1.0.15.patch
   js-clipper@1.0.1:
     hash: 6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f
     path: patches/js-clipper@1.0.1.patch
@@ -10521,7 +10524,7 @@ importers:
         version: link:../../common/util
       dfx:
         specifier: 'catalog:'
-        version: 1.0.15(effect@4.0.0)
+        version: 1.0.15(patch_hash=4897179d9f91b09100d74728fdca0db2f7d33a64e06f2b3dbd2fa4fb061b5325)(effect@4.0.0)
       effect:
         specifier: 4.0.0
         version: 4.0.0
@@ -57573,7 +57576,7 @@ snapshots:
 
   devtools-protocol@0.0.981744: {}
 
-  dfx@1.0.15(effect@4.0.0):
+  dfx@1.0.15(patch_hash=4897179d9f91b09100d74728fdca0db2f7d33a64e06f2b3dbd2fa4fb061b5325)(effect@4.0.0):
     dependencies:
       discord-api-types: 0.38.53
       effect: 4.0.0
