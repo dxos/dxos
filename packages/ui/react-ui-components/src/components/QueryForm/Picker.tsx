@@ -30,6 +30,7 @@ export const Picker = <T extends { value: string; label: string }>({
 
   return (
     <Next.Select.Root
+      items={[{ value: NULL, label: t('picker-none.label') }, ...sorted]}
       value={[value ?? NULL]}
       onValueChange={({ value: [value] }) => onChange?.(value === NULL ? null : value)}
     >
