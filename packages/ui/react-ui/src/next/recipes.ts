@@ -137,4 +137,9 @@ export const recipes = {
   avatar: () => 'nx-avatar',
   avatarImage: () => 'nx-avatar-image',
   avatarFallback: () => 'nx-avatar-fallback',
+  tabs: () => 'nx-tabs',
+  tabsList: () => 'nx-tabs-list',
+  tabsTrigger: () => 'nx-tabs-trigger',
+  tabsContent: () => `nx-tabs-content ${FOCUS_RING}`,
+  tabsIndicator: () => 'nx-tabs-indicator',
 } as const;

@@ -79,6 +79,11 @@ import {
   type SwitchProps as NextSwitchProps,
   SystemButton as NextSystemButton,
   type SystemButtonProps as NextSystemButtonProps,
+  Tabs as NextTabs,
+  type TabsOrientation as NextTabsOrientation,
+  type TabsRootProps as NextTabsRootProps,
+  type TabsSelectedVariant as NextTabsSelectedVariant,
+  type TabsTriggerProps as NextTabsTriggerProps,
   Tag as NextTag,
   type TagHue as NextTagHue,
   type TagProps as NextTagProps,
@@ -191,4 +196,9 @@ export namespace Next {
   export type AvatarAnimation = NextAvatarAnimation;
   export type AvatarHue = NextAvatarHue;
   export type AvatarHueVariant = NextAvatarHueVariant;
+  export const Tabs = NextTabs;
+  export type TabsRootProps = NextTabsRootProps;
+  export type TabsTriggerProps = NextTabsTriggerProps;
+  export type TabsOrientation = NextTabsOrientation;
+  export type TabsSelectedVariant = NextTabsSelectedVariant;
 }

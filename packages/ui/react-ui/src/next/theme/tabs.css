@@ -1,0 +1,78 @@
+/*
+ * Tabs: a list of ghost Buttons over (horizontal) or beside (vertical) the selected content. The selected trigger fills
+ * like a default Button in a horizontal list, or takes the selection surface in a vertical one (a navigation column).
+ */
+
+@layer dx-components {
+  .nx-tabs {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .nx-tabs[data-orientation='vertical'] {
+    flex-direction: row;
+  }
+
+  .nx-tabs-list {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--nx-control-inset);
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nx-tabs-list[data-orientation='vertical'] {
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: visible;
+    overflow-y: auto;
+  }
+  .nx-tabs-list[data-orientation='vertical'] > .nx-tabs-trigger:not([data-square]) {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .nx-tabs-trigger[aria-selected='true'] {
+    background: var(--color-input-surface);
+  }
+  .nx-tabs[data-selected-variant='primary'] .nx-tabs-trigger[aria-selected='true'] {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+  .nx-tabs-list[data-orientation='vertical'] > .nx-tabs-trigger[aria-selected='true'] {
+    background: var(--color-selected-surface);
+    color: inherit;
+  }
+
+  .nx-tabs-content {
+    flex: 1 1 0%;
+    min-width: 0;
+    min-height: 0;
+  }
+  .nx-tabs-content[hidden] {
+    display: none;
+  }
+
+  .nx-tabs-indicator {
+    height: 2px;
+    width: var(--width);
+    bottom: 0;
+    background: var(--color-accent-bg);
+    transition-property: left, width;
+    transition-duration: 150ms;
+  }
+  .nx-tabs-indicator[data-orientation='vertical'] {
+    width: 2px;
+    height: var(--height);
+    left: 0;
+    transition-property: top, height;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nx-tabs-indicator {
+      transition: none;
+    }
+  }
+}
