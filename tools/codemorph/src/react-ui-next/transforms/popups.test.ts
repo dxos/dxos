@@ -96,4 +96,28 @@ describe('popups', () => {
       export const Poster = () => <Next.Card.Poster alt='a' src='b.png' />;
     `);
   });
+
+  test('Popover.Content onOpenAutoFocus preventDefault → Root autoFocus={false}', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Popup = () => (
+          <Next.Popover.Root>
+            <Next.Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()} />
+          </Next.Popover.Root>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Popup = () => (
+        <Next.Popover.Root autoFocus={false}>
+          <Next.Popover.Content />
+        </Next.Popover.Root>
+      );
+    `);
+  });
 });

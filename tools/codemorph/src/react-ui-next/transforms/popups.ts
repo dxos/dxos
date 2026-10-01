@@ -65,6 +65,7 @@ const findRoot = ({ file, element }: RuleContext, root: string): Element | undef
  * Ark places the popup from the Root. Only literal values move; anything else is reported.
  */
 export const contentPlacement = (ctx: RuleContext) => {
+  contentAutoFocus(ctx);
   const { file, element } = ctx;
   const attrs = PLACEMENT_PROPS.flatMap((name) => {
     const attr = getAttr(element, name);
@@ -105,6 +106,36 @@ export const contentPlacement = (ctx: RuleContext) => {
   }
   addAttr(file, root, `positioning={{ ${fields.join(', ')} }}`);
   file.count(`${part} placement → ${popup}.Root positioning`);
+};
+
+/** `onOpenAutoFocus={(event) => event.preventDefault()}` on Popover.Content → Root `autoFocus={false}` (Ark). */
+const contentAutoFocus = (ctx: RuleContext) => {
+  const { file, element } = ctx;
+  const handler = getAttr(element, 'onOpenAutoFocus');
+  if (!handler) {
+    return;
+  }
+  const [popup] = element.identity.path;
+  const init = handler.initializer;
+  const expression = init && ts.isJsxExpression(init) ? init.expression : undefined;
+  const root = popup === 'Popover' ? findRoot(ctx, 'Popover.Root') : undefined;
+  const prevents =
+    expression &&
+    ts.isArrowFunction(expression) &&
+    expression.parameters.length === 1 &&
+    ts.isIdentifier(expression.parameters[0].name) &&
+    expression.body.getText(file.sourceFile).replace(/[\s{};]/g, '') ===
+      `${expression.parameters[0].name.text}.preventDefault()`;
+  if (!root || !prevents || getAttr(root, 'autoFocus')) {
+    file.report(
+      handler,
+      `${popup}.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand`,
+    );
+    return;
+  }
+  removeAttr(file, handler);
+  addAttr(file, root, 'autoFocus={false}');
+  file.count('Popover.Content onOpenAutoFocus preventDefault → Root autoFocus={false}');
 };
 
 /** `Card.Block end` → `Block rail='end'`: the trailing slot is the end rail. */
