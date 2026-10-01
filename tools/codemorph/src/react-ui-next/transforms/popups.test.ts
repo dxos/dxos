@@ -150,4 +150,20 @@ describe('popups', () => {
       );
     `);
   });
+
+  test('DragHandle testId → data-testid', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Handle = () => <Next.DragHandle testId='x' />;
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Handle = () => <Next.DragHandle data-testid='x' />;
+    `);
+  });
 });
