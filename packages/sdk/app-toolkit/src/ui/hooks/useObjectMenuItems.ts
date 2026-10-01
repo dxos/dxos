@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { type MouseEvent, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, type SyntheticEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
@@ -34,7 +34,7 @@ type Invoke = ReturnType<typeof useOperationInvoker>['invoke'];
 export const openObject = (
   subject: Obj.Unknown,
   invoke: Invoke,
-  options: { pivotId?: string; modifiers?: { shift?: boolean } },
+  options: { pivotId?: string; disposition?: 'add' | 'detail'; modifiers?: { shift?: boolean } },
 ): Effect.Effect<void> =>
   Effect.gen(function* () {
     // `canNavigateToSubject` guarantees a database; without one there is nothing to address.
@@ -85,13 +85,16 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown =>
   TypeOptions.isUserObject(subject);
 
 /**
- * Returns an onClick handler that opens the subject in the layout, or undefined if the subject is not navigable
- * (e.g. not an Echo object, or not of a user-facing type). Use with Card.Title for object cards.
- * A card lives inside a plank, so opening its object always adds a plank beside that plank (`add`), never
- * replacing it. The origin plank is resolved structurally from the click target via {@link Attention.getRootAttendableId},
- * and the destination path via {@link openObject}.
+ * Returns an activation handler that opens the subject in the layout, or undefined if the subject is not
+ * navigable (e.g. not an Echo object, or not of a user-facing type). Use it for a card's own click.
+ * A card lives inside a plank, so its object opens as a plank beside that plank (`add`), resolved
+ * structurally from the target via {@link Attention.getRootAttendableId} — or, given `detailOf`, as that
+ * plank's detail. The destination path comes from {@link openObject}.
  */
-export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLElement>) => void) | undefined => {
+export const useObjectNavigate = (
+  subject: unknown,
+  detailOf?: string,
+): ((event: SyntheticEvent<HTMLElement>) => void) | undefined => {
   const { invoke } = useOperationInvoker();
 
   return useMemo(() => {
@@ -99,13 +102,13 @@ export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLEle
       return;
     }
 
-    return (event: MouseEvent<HTMLElement>) => {
+    return (event: SyntheticEvent<HTMLElement>) => {
       // `currentTarget` is only valid while the event is dispatching, so read the pivot before the
       // resolution the program awaits.
-      const pivotId = Attention.getRootAttendableId(event.currentTarget);
-      void EffectEx.runPromise(openObject(subject, invoke, { pivotId }));
+      const pivotId = detailOf ?? Attention.getRootAttendableId(event.currentTarget);
+      void EffectEx.runPromise(openObject(subject, invoke, { pivotId, disposition: detailOf ? 'detail' : 'add' }));
     };
-  }, [subject, invoke]);
+  }, [subject, detailOf, invoke]);
 };
 
 /**

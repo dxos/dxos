@@ -227,6 +227,8 @@ export type TaskAttachmentsProps = {
   /** Omitted when files cannot be stored: the drop area is then not offered. */
   canAttach?: boolean;
   pending?: readonly PendingAttachment[];
+  /** The task's own plank: an attachment opens as its detail. */
+  detailOf?: string;
 };
 
 /**
@@ -237,7 +239,7 @@ export type TaskAttachmentsProps = {
  * over the pane, which takes the drop itself. Renders nothing only when there is nothing attached
  * and nothing could be.
  */
-export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmentsProps) => {
+export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
@@ -289,6 +291,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
               size='compact'
               inline
               CardMenu={AttachmentCardMenu}
+              detailOf={detailOf}
               pending={placeholders}
             />
           </RemoveAttachmentContext.Provider>

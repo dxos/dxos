@@ -61,11 +61,11 @@ export const StoredDeck = Schema.Struct({
   plankSizing: Schema.mutableKey(PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
-   * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
-   * like a browser tab: opening under a name that is already taken replaces its occupant in place.
-   * Entries are pruned as their plank closes.
+   * Each plank's detail, as owner plank id → detail plank id: what a list plank opened for its selected
+   * row. A flattened deck shows the main plank's detail in the companion, so links outlive the detail's
+   * plank and are pruned only once no open plank reaches them.
    */
-  plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
+  details: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });
 export type StoredDeck = Schema.Schema.Type<typeof StoredDeck>;
 
@@ -81,7 +81,6 @@ export const DEFAULT_DECK_ID = 'default';
 
 export const defaultDeck: StoredDeck = {
   plankSizing: {},
-  plankNames: {},
 };
 
 //

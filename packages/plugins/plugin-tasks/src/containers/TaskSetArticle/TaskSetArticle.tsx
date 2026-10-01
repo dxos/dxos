@@ -48,12 +48,6 @@ import { TaskFilter } from './TaskFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
-  /**
-   * Where a row opens its task. `'plank'` (the default) opens it beside the list, reusing the host's
-   * `task` deck level; `'companion'` opens the host's `~task` companion instead, which keeps the
-   * host itself in front of the reader. A host offers `'companion'` only where it contributes one.
-   */
-  detail?: 'plank' | 'companion';
   /** Whether rows render their task's description beneath the title. */
   showDescription?: boolean;
 };
@@ -69,7 +63,6 @@ export const TaskSetArticle = ({
   role,
   attendableId,
   subject: taskSet,
-  detail = 'plank',
   showDescription = true,
 }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -170,15 +163,12 @@ export const TaskSetArticle = ({
     spaceId,
   });
 
-  // A row opens its task through the shared reading gesture: the companion beside the list where the
-  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
-  // the host's node — the project's inside its Tasks tab.
+  // A row opens its task as the host plank's detail. `attendableId` is the host's node — the
+  // project's inside its Tasks tab.
   const currentId = useSelection(attendableId, 'single');
   const openDetail = useDetailNavigation({
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
-    level: 'task',
-    companion: detail === 'companion' ? 'task' : undefined,
   });
   const handleOpen = useCallback(
     (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),

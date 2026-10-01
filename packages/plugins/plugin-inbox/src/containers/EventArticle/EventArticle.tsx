@@ -15,14 +15,13 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
 import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
-import { getCalendarEventPath, getEventNodeId } from '../../paths.ts';
+import { getCalendarEventPath } from '../../paths.ts';
 
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
 const NOT_STARRED = Atom.make(false);
@@ -80,23 +79,16 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     [db, invokePromise],
   );
 
-  // TODO(wittjosiah): This is very convoluted, find a simpler way to make this work.
-  const eventSegment = Attention.linkedSegment(event.id);
-  const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
-  const nodeId = isEventNode ? attendableId : attendableId ? getEventNodeId(attendableId, eventSegment) : undefined;
-
+  // The event's own node, as a plank or as its calendar's detail. Nothing expands a detail's actions,
+  // so expand them here for extensions (e.g. plugin-meeting's "Create meeting") to reach its toolbar.
+  const nodeId = attendableId;
   useEffect(() => {
-    if (isEventNode || !nodeId) {
-      return;
+    if (nodeId) {
+      void AppGraph.expandSync(graph, nodeId, 'action');
     }
-    // The event-specific node is produced by the `calendarEvent` connector which does not
-    // trigger automatic action expansion (unlike resolver-created nodes in primary mode).
-    // Explicitly expand here so extensions — e.g. plugin-meeting's "Create meeting" — attach
-    // to this node's toolbar for the one event whose companion is currently open.
-    void AppGraph.expandSync(graph, nodeId, 'action');
-  }, [graph, isEventNode, nodeId]);
+  }, [graph, nodeId]);
 
-  // Promote the event from a companion to the main view (mirrors MessageArticle).
+  // Opens the event as a plank of its own.
   const handleOpen = useCallback(() => {
     if (!db) {
       return;

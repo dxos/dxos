@@ -130,19 +130,32 @@ never moves it.
   Opening or closing the companion therefore never resizes the plank. Dragging the seam commits both
   widths in one `UpdatePlankSizes`, because two sequential writes render an inconsistent intermediate
   frame and the size visibly flickers on release.
+- **The detail tab** — under flatten the main plank's detail (§5) shows as a companion of variant
+  `detail`, contributed by the deck to any plank with a detail and labelled from the detail node's
+  type (`AppNode.getTypeLabel`: "Message", "Task"). The tab renders the detail's own article with its
+  own `attendableId`, exactly as the detail would render as a plank.
 
 ---
 
-## 5. Named planks
+## 5. Details
 
-A plank may carry a **name**, which makes it behave like a browser tab: opening under a name that is
-already taken replaces its occupant in place rather than growing the deck. `DeckState.plankNames` maps
-name → plank id and is pruned as planks close. The mailbox passes `<mailbox>/message`, so reading down
-a mailbox reuses one plank instead of adding one per message.
+A list plank opens its selected row as its **detail**: `Open({ subject, pivotId: <list plank>,
+disposition: 'detail' })`, sent by `useDetailNavigation`. Only the caller knows an open is a detail, so
+nothing is declared on any type; a plain `pivotId` still means "another plank beside this one".
 
-Only the _first_ subject of an open may take the name — that is the one the name is bound to. If it is
-already open elsewhere it keeps its position and takes the name with it, and the plank that held the
-name stays open as an ordinary plank.
+`DeckState.details` maps owner plank id → detail plank id. Where the detail goes
+(`resolveDetailOpen`):
+
+- **Flattened** — the main plank's detail shows in the companion (§4). A detail opened _from_ that
+  detail moves it into the main plank (the breadcrumb grows) and takes the companion itself. Going back
+  through the breadcrumb shows the owner's remembered detail again, so links outlive the detail's plank
+  and are pruned only once no open plank reaches them.
+- **Not flattened** — a plank beside the pivot that takes the place of the pivot's previous detail;
+  that one's own details close with it, so reading a second message drops the first one's attachment.
+- **Mobile** — the same replacement, then a push onto the stack.
+
+Closing a plank closes its details. A modified activation (meta/ctrl) sends `'add'` instead: a plank
+of its own, outside the chain.
 
 ---
 
@@ -153,8 +166,8 @@ Three kinds of state, told apart by who owns them.
 **What is open** is owned by the URL. The workspace, the ordered planks, and the open companion are
 the pathname, and the deck stores no copy of them. The browser is the store.
 
-**How it looks** is owned by the deck and persisted: plank widths, plank names, the sidebar states,
-and which workspace you were last on.
+**How it looks** is owned by the deck and persisted: plank widths, plank details, the sidebar
+states, and which workspace you were last on.
 
 **What is happening right now** is owned by the deck and not persisted: fullscreen, expanded, the
 exposé, dialogs, popovers and toasts.
@@ -164,7 +177,7 @@ exposé, dialogs, popovers and toasts.
 type StoredDeck = {
   plankSizing: Record<string, number>; // rem widths, by URL segment
   companionPlanks: string[]; // planks showing their companion
-  plankNames: Record<string, string>; // name → URL segment
+  details?: Record<string, string>; // owner plank id → detail plank id
 };
 
 // Per workspace, never persisted.
@@ -285,9 +298,9 @@ just was, and releasing that transform is what the eye follows. Two constraints 
 
 ## 8. Operations
 
-- `LayoutOperation.Open({ subject, disposition?, name?, pivotId? })` — `'solo'` (default) navigates,
-  `'add'` inserts after `pivotId` or at the end, `'auto'` follows the deck. `name` gives browser-tab
-  reuse (§5).
+- `LayoutOperation.Open({ subject, disposition?, pivotId? })` — `'solo'` (default) navigates,
+  `'add'` inserts after `pivotId` or at the end, `'auto'` follows the deck, `'detail'` opens the
+  subject as `pivotId`'s detail (§5).
 - `LayoutOperation.Close` / `UpdateComplementary` / `UpdateCompanion` / `ScrollIntoView`.
 - `DeckOperation.Adjust({ id, type })` — `close`, `companion`, `fullscreen`, `expand`,
   `increment-start`, `increment-end`. `fullscreen` and `expand` toggle ephemeral state rather than
@@ -359,171 +372,11 @@ and the FLIP ordering — none of which typecheck differently when broken.
 
 ---
 
-## 12. Plugin-declared decks
+## 12. Plugin-declared decks (removed)
 
-**Status: partially shipped.** P1–P3 are implemented and in this document's terms: the `DeckSpec` /
-`AppAnnotation.DeckAnnotation` contract, Collections as navigation targets seeding their children, and
-mailbox levels with below-pruning. Still open (phasing in [TASKS.md](./TASKS.md)): sizing intent (P4),
-container hooks (P5), and the decided-but-unbuilt items (Collections row, `mode` enum). The analysis
-below is kept because its corrections — notably `activeDeck` being the workspace identity — constrain
-the remaining work.
-
-### The problem
-
-A deck is currently one global thing. `DeckState.active` is a flat list of plank ids, its presentation
-derives only from that list's length, and every plugin opens into the same deck through the same
-`LayoutOperation.Open`. Three consequences:
-
-1. Selecting a Collection in the navtree does not give you the collection — attention stays on whatever
-   document was current, because nothing maps "this node was selected" to "the deck is now _this_".
-2. A plugin cannot say what shape its own deck should take. The mailbox wants
-   `mailbox → message → attachment`: opening a message replaces the message plank, and opening an
-   attachment stacks a third. Today `plugin-inbox` gets the middle level only by hand-passing
-   `name: '<mailbox>/message'` to `Open` (§5) — the mechanism exists but the _shape_ is hard-coded at
-   the call site, and nothing prunes a stale attachment plank.
-3. A plugin cannot influence initial sizing. A new message plank takes `DEFAULT_PLANK_SIZE` (50rem)
-   regardless; the mailbox wants its first two planks to fill the viewport.
-
-### The key observation — and its limit
-
-`StoredDeckState` is already a _map_ of decks:
-
-```ts
-{
-  activeDeck: string;
-  previousDeck: string;
-  decks: Record<string, DeckState>;
-}
-```
-
-`LayoutOperation.SwitchWorkspace` already lazily creates `decks[id]` and switches to it, and every
-mutation routes through `updateActiveDeck`. It is tempting to conclude that a deck per collection is
-free — just let something other than a workspace key a deck.
-
-**That is wrong, and it was the first thing implementation disproved.** `activeDeck` does double duty
-as the _workspace identity_:
-
-- `url-handler` serializes it into the URL's workspace slot (`bareWorkspace(state.activeDeck)`).
-- `url-handler` compares the parsed workspace against it and calls `SwitchWorkspace` when they differ,
-  so a non-workspace value would be fought back on every URL parse.
-- The `Layout` capability publishes it app-wide as `workspace`.
-
-Re-keying `decks[]` by a collection id therefore breaks URL round-tripping immediately. Giving a deck
-its own identity needs a key separate from the workspace, and agreement on where it belongs in the
-pair-chain grammar — which is why adoption below _seeds_ the active deck instead.
-
-### The model
-
-A graph node may declare a **deck spec**. When that node becomes the deck root, the deck adopts it.
-Declared on the node, because the app-graph is already how a plugin says what a node _is_ (`label`,
-`icon`, actions) and is already plugin-owned — which is the control point asked for.
-
-```ts
-type DeckSpec = {
-  /**
-   * Ordered levels. A plank opened at level `i` reuses that level's plank (via the existing plank
-   * name, §5) and closes every level deeper than `i`.
-   */
-  levels?: DeckLevel[];
-  /** What to open when the deck is adopted. `'children'` = the node's graph children. */
-  initial?: 'children' | 'none';
-};
-
-type DeckLevel = {
-  /** Level key; becomes the plank name as `<rootId>/<key>`, so §5 does the reuse. */
-  key: string;
-  /** Initial width only. A user drag writes `plankSizing` and wins from then on. */
-  size?: number | 'fill';
-};
-```
-
-Worked examples:
-
-```ts
-// Collection — its documents, side by side.
-{ initial: 'children' }
-
-// Mailbox — three levels, the first two sharing the viewport.
-{
-  levels: [
-    { key: 'mailbox', size: 'fill' },
-    { key: 'message', size: 'fill' },
-    { key: 'attachment' },
-  ],
-}
-```
-
-### Adoption
-
-Navigating to a node whose type declares `initial: 'children'` **seeds** the active deck with that
-node's openable graph children, in place of a plank showing the node itself. No new deck is created and
-`activeDeck` is untouched, so nothing about the URL or the workspace changes.
-
-Seeding applies only to a navigation, never an add: an `add`, a shift-forced add, or an `auto` that
-grew a sliding deck are all requests to put _this_ node beside what is already open, and replacing the
-deck there would discard the planks the user was working in.
-
-This is what fixes (1): selecting a Collection currently leaves attention alone because the selection
-does not change the deck at all. Seeding makes the collection's documents the deck, and attention
-follows the first.
-
-Two consequences of seeding rather than re-keying, both deliberate:
-
-- **No per-collection persistence.** Plank sets and widths are not remembered per collection; that
-  wants the deck-identity work above.
-- **A cap.** Every plank mounts an article surface, so `MAX_SEEDED_PLANKS` bounds how many a single
-  click opens. An arbitrary constant, and the first thing to revisit once the deck can virtualize
-  planks it is not showing.
-
-### Levels
-
-Levels are the generalization of the named planks that already ship. Opening at level `key` is:
-
-```ts
-Open({ subject, name: `${rootId}/${key}` });
-```
-
-which is exactly what `plugin-inbox` does by hand today — so the mailbox's existing behaviour becomes
-the degenerate case rather than a special case. Two additions are needed:
-
-- **Pruning.** Opening at level `i` must close planks at levels `> i`, or switching messages leaves the
-  previous message's attachment open. `layout.ts` owns this next to `addSubjectsToActiveDeck`.
-- **Level → plank mapping.** `DeckState` needs to know which plank sits at which level. A
-  `plankLevels: Record<string, string>` (plank id → level key) mirrors `plankNames`, or is derived
-  from it by parsing the name — deriving is cheaper and has one source of truth.
-
-### Sizing
-
-`size` is an _intent_, consumed only when a plank has no stored width:
-
-```ts
-const stored = plankSizing[id] ?? resolveInitialSize(level, viewportWidthPx);
-```
-
-`'fill'` means "share the space the two piles leave", which `useMaxPlankWidth` already computes
-(§3) — divided among the `'fill'` levels currently open. Because it only applies in the absence of a
-stored value, the first drag pins the width and the intent never fights the user afterwards.
-
-### Container hooks
-
-Containers should not hand-build plank names. A hook resolves the current deck's spec and does it:
-
-```ts
-const deck = useDeckLevels();
-deck.open(message, { level: 'message' }); // reuses the message plank, prunes deeper
-deck.close({ level: 'attachment' });
-```
-
-It belongs in `app-toolkit` rather than `plugin-deck`, so a plugin can push onto the deck without
-depending on the deck plugin — the same reason `LayoutOperation` lives there.
-
-### What this does not settle
-
-- **Companion vs level — settled: orthogonal.** A level is a position in the chain; a companion is a
-  per-plank affordance. Every plank in `mailbox → message → attachment` can independently show its own
-  companion, so the two compose rather than compete and §4 stands unchanged.
-- **Per-collection memory belongs in view state.** The plank set and widths a collection was left in
-  should live in `react-ui-attention` view state — the aspect the companion variant already uses
-  (§6) — rather than in a deck keyed by collection. View state is per-attendable, global and absent
-  from the URL, so `activeDeck` never needs separating from the workspace identity and the pair-chain
-  grammar is untouched. A later phase; nothing in §12 above depends on it.
+A type could once declare its deck (`DeckSpec` via `AppAnnotation.DeckAnnotation`): a chain of levels
+(`mailbox / message / attachment`) and `initial: 'children'` for collections. Both are gone. A chain is
+one-step links that belong to the middle type (task → attachment is a property of `Task`, under a
+project or a task set alike), and the caller already knows when an open is one of those steps, so §5
+replaced it. Seeding never ran under flatten, and without plugin-stack a collection row is not
+selectable, so it was unreachable from the navtree.

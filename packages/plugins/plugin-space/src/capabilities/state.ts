@@ -49,8 +49,8 @@ export default Capability.makeModule(
     const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
     // Navigating to a collection has to show something. Two renderers answer that: plugin-stack
     // gives a collection its own article, and the mobile deck renders every `role: 'branch'` node —
-    // a collection included — as a NavBranch article. With neither, the desktop deck opens the
-    // collection's contents instead and the collection itself is not a target.
+    // a collection included — as a NavBranch article. With neither, the collection is not a
+    // navigation target: its row only expands.
     const navigableCollectionsAtom = Atom.make((get) => {
       const [layoutAtom] = get(layoutCapabilityAtom);
       const isMobile = layoutAtom ? get(layoutAtom).mode === 'mobile' : false;

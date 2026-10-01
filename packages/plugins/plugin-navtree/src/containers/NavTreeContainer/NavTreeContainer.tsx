@@ -101,7 +101,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     // the message and the sidebar is never blank.
     const tabPresence = useNavigationPresence(graph, tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab);
     const tabUnavailable = tab !== DeckSchema.DEFAULT_DECK_ID && tabPresence !== 'exists';
-    const { getItem, setItem, pick } = useNavTreeState();
+    const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
     const { navigationSidebarState } = useSidebars(meta.profile.key);
@@ -211,10 +211,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
-        if (!current && !shift && pick(node.id)) {
-          // Already open in a deck navigated to its parent; opening it again would leave the deck as is.
-          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id, focus });
-        } else if (!current) {
+        if (!current) {
           // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
           // handler, which upgrades any disposition to add when shift is held).
           void invokePromise(LayoutOperation.Open, {
@@ -240,7 +237,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, pick, runAction, isLg],
+      [graph, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);

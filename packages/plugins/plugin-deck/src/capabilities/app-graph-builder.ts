@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -16,7 +17,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DeckCapabilities, DeckSchema } from '#types';
+import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -25,6 +26,9 @@ export default Capability.makeModule(
     const attentionAtom = yield* Capability.atom(AttentionCapabilities.Attention);
     const deckStateAtom = yield* Capability.atom(DeckCapabilities.State);
     const deckEphemeralAtom = yield* Capability.atom(DeckCapabilities.EphemeralState);
+    const deckSettingsAtom = yield* Capability.atom(DeckCapabilities.Settings);
+    const platformAtom = yield* Capability.atom(DeckCapabilities.Platform);
+    const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
@@ -115,6 +119,40 @@ export default Capability.makeModule(
 
             return open.active.length !== 1 ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
           }).pipe(Effect.orDie),
+      }),
+
+      // The flattened deck's detail tab, on a plank that has opened a detail (see `resolveDetailOpen`).
+      // Named for what it shows, so a mailbox's reads "Message" and a project's "Task".
+      AppGraphBuilder.createExtension({
+        id: 'detailCompanion',
+        relation: AppNode.companion,
+        match: (node) => Option.some(node.id),
+        connector: (id, get) => {
+          const [stateAtom] = get(deckStateAtom);
+          const [settingsAtom] = get(deckSettingsAtom);
+          const [platform] = get(platformAtom);
+          if (!stateAtom || !settingsAtom || platform === 'mobile' || !get(settingsAtom).flatten) {
+            return Effect.succeed([]);
+          }
+
+          const state = get(stateAtom);
+          const detail = state.decks[state.activeDeck]?.details?.[id];
+          if (!detail) {
+            return Effect.succeed([]);
+          }
+
+          const [appGraph] = get(appGraphAtom);
+          const node = appGraph ? Option.getOrUndefined(get(appGraph.graph.node(detail))) : undefined;
+          return Effect.succeed([
+            AppNode.makeCompanion<CompanionViewState.DetailData>({
+              variant: CompanionViewState.DETAIL_VARIANT,
+              label: (node && AppNode.getTypeLabel(node)) ?? ['detail-companion.label', { ns: meta.profile.key }],
+              icon: node?.properties.icon ?? 'ph--article--regular',
+              data: { detail },
+              position: Position.first,
+            }),
+          ]);
+        },
       }),
     ]);
 

@@ -24,8 +24,8 @@ import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskA
 export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
 
 /**
- * Article surface for a single {@link Task} — the detail a row opens, reusing the task plank as the
- * reader moves down a list (see `plugin-projects/docs/TASK-DETAIL.md`).
+ * Article surface for a single {@link Task} — the detail a row opens, in the companion or as a plank
+ * (see `plugin-projects/docs/TASK-DETAIL.md`).
  *
  * The pane is one column: a toolbar carrying what acts on the task, then the fields, the open
  * questions, the history and the artifacts, each starting at the same edge with its glyphs in the
@@ -129,7 +129,12 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                   </Column.Section>
                 )}
 
-                <TaskAttachments task={task} canAttach={!!handleAttach} pending={pendingAttachments} />
+                <TaskAttachments
+                  task={task}
+                  canAttach={!!handleAttach}
+                  pending={pendingAttachments}
+                  detailOf={attendableId}
+                />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
               </Column.Root>

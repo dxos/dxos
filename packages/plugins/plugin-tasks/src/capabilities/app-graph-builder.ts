@@ -3,17 +3,24 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
+import { Filter, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { Task, TaskSet } from '@dxos/types';
 
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
 import { OutlineOperation } from '#types';
+
+const matchTaskSet = (node: AppGraphNode.Node) =>
+  Obj.instanceOf(TaskSet.TaskSet, node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -37,6 +44,25 @@ export default Capability.makeModule(
               },
             }),
           ]),
+      }),
+
+      // Hidden, so `…/<taskSetId>/<taskId>` resolves for the detail a row opens without listing tasks in the nav tree.
+      AppGraphBuilder.createExtension({
+        id: 'taskSetTasks',
+        match: matchTaskSet,
+        connector: (taskSet, get) => {
+          const db = Obj.getDatabase(taskSet);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+
+          const tasks = get(db.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet))).atom);
+          return Effect.succeed(
+            tasks
+              .map((task) => AppNode.makeObject({ get, db, object: task, disposition: 'hidden' }))
+              .filter((node): node is NonNullable<typeof node> => node !== null),
+          );
+        },
       }),
     ]);
 
