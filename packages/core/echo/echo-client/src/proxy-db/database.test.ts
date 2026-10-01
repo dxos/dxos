@@ -863,7 +863,9 @@ describe('Database', () => {
       ]);
     });
 
-    test('Obj.atomReactive over a ref array reads loaded targets in order and drops one once removed', async ({ expect }) => {
+    test('Obj.atomReactive over a ref array reads loaded targets in order and drops one once removed', async ({
+      expect,
+    }) => {
       const { db, person, tasks } = await setup();
       const registry = AtomRegistry.make();
       const titles = () => registry.get(Obj.atomReactive(person.tasks!)).map((task) => task.title);
