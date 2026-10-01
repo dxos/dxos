@@ -13,7 +13,6 @@ import { getDeep } from '@dxos/util';
 
 import {
   type ChangeGraph,
-  ancestorsOf,
   creationChange,
   frontierOf,
   isTranslation,
