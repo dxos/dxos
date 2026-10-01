@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { type ColumnRenderer, type IconRenderer, createStaticTreeModel, Tree } from '@dxos/react-ui-list';
+import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';

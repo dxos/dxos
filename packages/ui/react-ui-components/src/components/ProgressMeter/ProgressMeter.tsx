@@ -183,9 +183,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <div className='min-w-0 flex-1 text-error-text truncate'>{error}</div>
           ) : (
             /* What the run is and what it is doing, in its own words, crawling as it moves through its phases. */
-            <Next.TextCrawl classNames='min-w-0 flex-1 text-xs text-description' lines={lines}
-              greedy
-            />
+            <Next.TextCrawl classNames='min-w-0 flex-1 text-xs text-description' lines={lines} greedy />
           )}
           <div className='flex items-center gap-1 shrink-0 text-description'>
             <span className='tabular-nums'>

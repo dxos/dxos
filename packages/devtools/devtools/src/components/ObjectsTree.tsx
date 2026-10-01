@@ -22,10 +22,10 @@ import { log } from '@dxos/log';
 import {
   type ColumnRenderer,
   type IconRenderer,
+  Tree,
   TREE_BLOCK,
   type TreeItemDataProps,
   type TreeModel,
-  Tree,
 } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
