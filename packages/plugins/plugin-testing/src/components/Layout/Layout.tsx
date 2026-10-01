@@ -4,12 +4,12 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { type ComponentProps, type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Next } from '@dxos/react-ui/next';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
@@ -18,6 +18,8 @@ import { meta } from '#meta';
 import { StorybookCapabilities } from '#types';
 
 const debounce_delay = 100;
+
+type FocusOutsideEvent = Parameters<NonNullable<ComponentProps<typeof Next.Popover.Root>['onFocusOutside']>>[0];
 
 const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
   const { t } = useTranslation(meta.profile.key);
@@ -32,16 +34,14 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
         }
       }}
     >
-      <Next.Toast.Title icon={toast.icon} onClose={toast.closeLabel ? () => onDismiss(toast.id) : undefined}>
-        {toast.title && <span>{toLocalizedString(toast.title, t)}</span>}
-      </Next.Toast.Title>
+      <Next.Toast.Header icon={toast.icon} closable={!!toast.closeLabel}>
+        {toast.title && toLocalizedString(toast.title, t)}
+      </Next.Toast.Header>
       {toast.description && <Next.Toast.Description>{toLocalizedString(toast.description, t)}</Next.Toast.Description>}
       {toast.onAction && toast.actionAlt && toast.actionLabel && (
         <Next.Toast.Footer>
-          <Next.Toast.ActionTrigger asChild>
-            <Next.Button variant='primary' onClick={() => toast.onAction?.()}>
-              {toLocalizedString(toast.actionLabel, t)}
-            </Next.Button>
+          <Next.Toast.ActionTrigger variant='primary' onClick={() => toast.onAction?.()}>
+            {toLocalizedString(toast.actionLabel, t)}
           </Next.Toast.ActionTrigger>
         </Next.Toast.Footer>
       )}
@@ -90,13 +90,11 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     });
   }, [updateState]);
 
-  const handleInteractOutside = useCallback(
-    (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
-      if (
-        // TODO(thure): CodeMirror should not focus itself when it updates.
-        event.type === 'dismissableLayer.focusOutside' &&
-        (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
-      ) {
+  const handleFocusOutside = useCallback(
+    (event: FocusOutsideEvent) => {
+      // TODO(thure): CodeMirror should not focus itself when it updates.
+      const target = event.detail.originalEvent.target;
+      if (target instanceof HTMLElement && target.classList.contains('cm-content')) {
         event.preventDefault();
       } else {
         handleClose();
@@ -113,7 +111,6 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   );
 
   const DialogRoot = layout.dialogType === 'alert' ? Next.AlertDialog.Root : Next.Dialog.Root;
-  const DialogOverlay = layout.dialogType === 'alert' ? Next.AlertDialog.Overlay : Next.Dialog.Overlay;
 
   return (
     <Next.Toast.Provider>
@@ -123,7 +120,14 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
           degrades when it finds no provider, taking the whole surface down with it. */}
       <div className='fixed inset-0 flex overflow-hidden'>
         <Dnd.Root>
-          <Next.Popover.Root open={open} positioning={Next.virtualAnchor(trigger)} autoFocus={false}>
+          <Next.Popover.Root
+            open={open}
+            positioning={{ ...Next.virtualAnchor(trigger), placement: layout.popoverSide, hideWhenDetached: true }}
+            autoFocus={false}
+            onFocusOutside={handleFocusOutside}
+            onPointerDownOutside={handleClose}
+            onEscapeKeyDown={handleClose}
+          >
             <Next.Main.Root
               navigationSidebarState={layout.sidebarState}
               complementarySidebarState={layout.complementarySidebarState}
@@ -136,38 +140,19 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
             <DialogRoot
               modal={layout.dialogBlockAlign !== 'end'}
               open={layout.dialogOpen}
-              onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
+              onOpenChange={({ open: nextOpen }) => updateState({ dialogOpen: nextOpen })}
             >
-              {layout.dialogBlockAlign === 'end' ? (
-                <Surface.Surface
-                  type={AppSurface.Dialog}
-                  data={layout.dialogContent}
-                  limit={1}
-                  fallback={ErrorFallback}
-                  placeholder={<div />}
-                />
-              ) : (
-                <DialogOverlay
-                  blockAlign={layout.dialogBlockAlign}
-                  classNames={layout.dialogOverlayClasses}
-                  style={layout.dialogOverlayStyle}
-                >
-                  <Surface.Surface
-                    type={AppSurface.Dialog}
-                    data={layout.dialogContent}
-                    limit={1}
-                    fallback={ErrorFallback}
-                  />
-                </DialogOverlay>
-              )}
+              {/* The dialog surface renders its own Content, which carries the placement and scrim. */}
+              <Surface.Surface
+                type={AppSurface.Dialog}
+                data={layout.dialogContent}
+                limit={1}
+                fallback={ErrorFallback}
+                placeholder={<div />}
+              />
             </DialogRoot>
 
-            <Next.Popover.Content
-              side={layout.popoverSide}
-              onInteractOutside={handleInteractOutside}
-              onEscapeKeyDown={handleInteractOutside}
-              hideWhenDetached
-            >
+            <Next.Popover.Content>
               <Next.Popover.Body>
                 {/* `border={false}`: the popover content already draws the surface and its border,
                         so a bordered card inside it reads as a second frame. Matches the deck's popover. */}

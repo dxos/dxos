@@ -20,7 +20,6 @@ import {
   documentId,
   selectionState,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 
 //
 // Editor ViewState aspect — local (localStorage) backed, per document id.
@@ -84,9 +83,6 @@ const ITEMS: StoryItem[] = [
   },
 ];
 
-const isItem = (value: unknown): value is StoryItem =>
-  typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'string';
-
 //
 // ItemEditor — mounts a CodeMirror editor for the selected item, wired to the
 // local-backed ViewState store so caret/scroll is remembered per document id.
@@ -133,19 +129,19 @@ const SelectionStateStory = () => {
       {/* Left pane: ordered list with selection. */}
       <div className='w-56 shrink-0 flex flex-col overflow-hidden'>
         <div className='px-3 py-2 text-sm font-medium text-subdued border-b border-separator'>Items</div>
-        <OrderedList.Root<StoryItem> items={ITEMS} isItem={isItem} getId={(item) => item.id}>
+        <OrderedList.Root<StoryItem> items={ITEMS} getId={(item) => item.id} getLabel={(item) => item.label}>
           {({ items: resolved }) => (
             <OrderedList.Content>
               {resolved.map((item) => (
                 <OrderedList.Item
                   key={item.id}
                   id={item.id}
-                  item={item}
-                  hover
-                  classNames={mx('px-3 py-2 cursor-pointer', item.id === selectedId && 'bg-hover-surface font-medium')}
+                  canDrag={false}
+                  highlightOnHover
+                  current={item.id === selectedId}
                   onClick={() => single(item.id)}
                 >
-                  {item.label}
+                  <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
                 </OrderedList.Item>
               ))}
             </OrderedList.Content>

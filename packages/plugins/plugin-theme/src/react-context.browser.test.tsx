@@ -37,7 +37,7 @@ describe('ThemePlugin ReactContext', () => {
     const result = render(
       harness,
       <Next.Toast.Root open duration={Infinity}>
-        <Next.Toast.Title onClose={() => {}}>Deleted</Next.Toast.Title>
+        <Next.Toast.Header>Deleted</Next.Toast.Header>
       </Next.Toast.Root>,
     );
     await act(async () => {});
