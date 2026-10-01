@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import './tree.css';
-
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -16,7 +14,9 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { createStaticTreeModel } from '../../components/Tree/static-tree-model.ts';
 import { type TestItem, createTree, updateState } from '../../components/Tree/testing.ts';
-import { Tree, type TreeDropEvent, type TreeVirtualize } from './Tree.tsx';
+import { type TreeNode } from './tree-collection.ts';
+import { Tree, type TreeDropEvent } from './Tree.tsx';
+import { type TreeVirtual } from './TreeContext.ts';
 
 random.seed(1234);
 
@@ -66,10 +66,12 @@ const createFixedTree = (): TestItem => ({
 type StoryArgs = SizeArgs & {
   tree: () => TestItem;
   open?: boolean;
-  virtualize?: TreeVirtualize;
+  virtual?: TreeVirtual;
   draggable?: boolean;
   indentGuides?: boolean;
   animate?: boolean;
+  /** Composes rows from parts with a trailing count, instead of the default row. */
+  composed?: boolean;
   height?: string;
   testId?: string;
 };
@@ -82,7 +84,12 @@ const useStaticTree = (source: () => TestItem, open: boolean) => {
     () =>
       createStaticTreeModel<TestItem>(root, {
         getChildren: (item) => item.items,
-        getProps: (item) => ({ label: item.name, icon: item.icon, testId: `row-${item.id}` }),
+        getProps: (item) => ({
+          label: item.name,
+          icon: item.icon,
+          iconHue: item.items.length > 0 ? 'amber' : undefined,
+          testId: `row-${item.id}`,
+        }),
         isOpen: () => open,
       }),
     [root, open],
@@ -121,14 +128,25 @@ const useStaticTree = (source: () => TestItem, open: boolean) => {
   return { model, onOpenChange, onSelect, onDrop };
 };
 
+/** A row composed from parts, with the child count in the trailing column. */
+const renderComposedRow = (node: TreeNode<TestItem>) => (
+  <Tree.Item node={node}>
+    <Tree.ItemIndicator />
+    <Tree.ItemIcon />
+    <Tree.ItemText />
+    {node.branch && <span className='px-2 text-description'>{node.item?.items.length}</span>}
+  </Tree.Item>
+);
+
 const DefaultStory = ({
   size = 'md',
   tree,
   open = false,
-  virtualize = 'none',
+  virtual,
   draggable = false,
   indentGuides = true,
   animate,
+  composed,
   height = '24rem',
   testId,
 }: StoryArgs) => {
@@ -140,7 +158,7 @@ const DefaultStory = ({
         rootId={model.rootId}
         id={`tree-${size}`}
         size={size}
-        virtualize={virtualize}
+        virtual={virtual}
         draggable={draggable}
         indentGuides={indentGuides}
         animate={animate}
@@ -149,7 +167,8 @@ const DefaultStory = ({
         onDrop={onDrop}
       >
         <Tree.Label className='sr-only'>Tree</Tree.Label>
-        <Tree.Content />
+        <Tree.Content>{composed ? renderComposedRow : undefined}</Tree.Content>
+        <Tree.Empty icon='ph--tree-structure--regular'>No items</Tree.Empty>
       </Tree.Root>
     </div>
   );
@@ -159,7 +178,7 @@ const meta = {
   title: 'ui/react-ui-list/next/Tree',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withRegistry, withTheme()],
-  args: { size: 'md', tree: () => createTree(4, 3), draggable: true },
+  args: { size: 'md', tree: () => createTree(4, 3) },
   argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<StoryArgs>;
@@ -168,16 +187,33 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A static model (4 × 4 × 4), closed; drag rows to move them (before, after, or into a branch). */
+/** A static model (4 × 4 × 4), closed. The caret toggles a branch; a click on the row selects it. */
 export const Default: Story = {};
 
-/** 5,000 rows with every branch open (50 branches of 99 leaves), windowed to the rows in view. */
+/** 5,000 rows with every branch open (50 branches of 99 leaves), windowed to the rows in view (`virtual='fixed'`). */
 export const Large: Story = {
   args: {
     tree: () => createWideTree(50, 99),
     open: true,
-    virtualize: 'window',
+    virtual: 'fixed',
     height: '32rem',
+  },
+};
+
+/**
+ * Drag rows to move them: before or after a row (a line at the landing level), or into a branch (a ring; holding opens
+ * a closed branch). The preview is a chip with the row's icon and label. Rows are composed from parts.
+ */
+export const Draggable: Story = {
+  args: { draggable: true, composed: true },
+};
+
+/** No rows: `Tree.Empty` shows in their place. */
+export const Empty: Story = {
+  args: { tree: () => ({ id: 'root', name: 'Root', items: [] }) },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryAllByRole('treeitem')).toHaveLength(0);
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent('No items');
   },
 };
 
@@ -227,7 +263,8 @@ const recordDisclosure = (tree: HTMLElement) => {
 /**
  * Rows are one block tall at every size. The keyboard follows the APG tree pattern from zag: ArrowDown/Up move,
  * ArrowRight opens a branch then enters it, ArrowLeft returns to the parent then closes it, Home/End, typeahead, and
- * Enter selects; the model receives each change and feeds it back (`aria-expanded`, `aria-selected`).
+ * Enter selects; the model receives each change and feeds it back (`aria-expanded`, `aria-selected`). Only the caret
+ * toggles a branch with the pointer; a click elsewhere on the row selects it.
  */
 export const Test: Story = {
   args: { tree: createFixedTree, allSizes: true, draggable: true, testId: 'fixed' },
@@ -243,11 +280,17 @@ export const Test: Story = {
     await expect(fruit).toHaveAttribute('aria-expanded', 'false');
     await expect(rows(tree)).toHaveLength(3);
 
-    // A click selects the branch and (zag's `expandOnClick`) opens it; the rows the open mounts enter animated.
-    const opening = recordDisclosure(tree);
+    // A click on the label selects the branch without opening it.
     await userEvent.click(within(fruit).getByText('Fruit'));
     await waitFor(() => expect(fruit).toHaveAttribute('aria-selected', 'true'));
     await waitFor(() => expect(focusedName()).toContain('Fruit'));
+    await expect(fruit).toHaveAttribute('aria-expanded', 'false');
+
+    // The caret opens it; the rows the open mounts enter animated.
+    const opening = recordDisclosure(tree);
+    const caret = fruit.querySelector<HTMLElement>('[data-part="branch-trigger"]');
+    await expect(caret).not.toBeNull();
+    caret && (await userEvent.click(caret));
     await waitFor(() =>
       expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true'),
     );
@@ -255,6 +298,7 @@ export const Test: Story = {
     await waitFor(() => expect(opening.events('Apple')).toEqual(['enter:nx-tree-row-enter']));
     await waitFor(() => expect(tree.querySelector('[data-disclosure]')).toBeNull());
     opening.stop();
+    within(tree).getByRole('treeitem', { name: /Fruit/ }).focus();
 
     // Branch disclosure from the keyboard, fed back through the model.
     await userEvent.keyboard('{ArrowLeft}');
@@ -277,6 +321,8 @@ export const Test: Story = {
       expect(within(tree).getByRole('treeitem', { name: /Banana/ })).toHaveAttribute('aria-selected', 'true'),
     );
     await expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-selected', 'false');
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(focusedName()).toContain('Apple'));
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() => expect(focusedName()).toContain('Fruit'));
     // A close holds its rows mounted while they conceal, then commits and removes them.
@@ -303,7 +349,7 @@ export const Test: Story = {
 
 /** Rows rendered open from the start (persisted open state) do not animate; only user-driven disclosure does. */
 export const OpenTest: Story = {
-  args: { tree: createFixedTree, open: true, draggable: false },
+  args: { tree: createFixedTree, open: true },
   play: async ({ canvasElement }) => {
     const tree = within(canvasElement).getByRole('tree');
     await expect(rows(tree)).toHaveLength(6);
@@ -316,7 +362,7 @@ export const OpenTest: Story = {
 
 /** `animate={false}`: rows appear with the open and leave with the close, with no phase between. */
 export const StaticTest: Story = {
-  args: { tree: createFixedTree, animate: false, draggable: false },
+  args: { tree: createFixedTree, animate: false },
   play: async ({ canvasElement }) => {
     const tree = within(canvasElement).getByRole('tree');
     const recorder = recordDisclosure(tree);
@@ -345,7 +391,7 @@ export const WindowedTest: Story = {
   args: {
     tree: () => createWideTree(50, 99),
     open: true,
-    virtualize: 'window',
+    virtual: 'fixed',
     height: '32rem',
   },
   play: async ({ canvasElement }) => {
@@ -378,14 +424,92 @@ export const WindowedTest: Story = {
   },
 };
 
+/** Dispatches a native drag event at a fraction of the element's height, as the browser would mid-drag. */
+const dispatchDrag = (element: HTMLElement, type: string, dataTransfer: DataTransfer, fraction = 0.5) => {
+  const { x, y, width, height } = element.getBoundingClientRect();
+  element.dispatchEvent(
+    new DragEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer,
+      clientX: x + width / 2,
+      clientY: y + height * fraction,
+    }),
+  );
+};
+
+/**
+ * Drop targets: over a row's top edge `data-drop-target='top'` draws a line, over a closed branch's centre `inside`
+ * rings it, and the drop moves the row into the branch through the model.
+ */
+export const DropTest: Story = {
+  args: { tree: createFixedTree, draggable: true, animate: false },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    // A branch's `treeitem` is a `display: contents` wrapper; the row (the drag source and target) is its control.
+    const row = (name: RegExp) => {
+      const item = within(tree).getByRole('treeitem', { name });
+      const control = item.matches('[data-tree-row]') ? item : item.querySelector<HTMLElement>('[data-tree-row]');
+      if (!control) {
+        throw new Error(`missing row ${name}`);
+      }
+      return control;
+    };
+    const grain = row(/Grain/);
+    const vegetables = row(/Vegetables/);
+    const fruit = row(/Fruit/);
+    await expect(grain).toHaveAttribute('draggable', 'true');
+
+    const dataTransfer = new DataTransfer();
+    dispatchDrag(grain, 'dragstart', dataTransfer);
+    let dropped = false;
+    try {
+      // pragmatic-dnd starts the drag a frame after `dragstart`, once the native preview has been taken.
+      await nextFrame();
+      await waitFor(() => expect(grain).toHaveAttribute('data-dragging'));
+      dispatchDrag(vegetables, 'dragenter', dataTransfer, 0.1);
+      dispatchDrag(vegetables, 'dragover', dataTransfer, 0.1);
+      await waitFor(() => expect(vegetables).toHaveAttribute('data-drop-target', 'top'));
+      await expect(vegetables.querySelector('.nx-drop-indicator')).toHaveAttribute('data-edge', 'top');
+
+      dispatchDrag(fruit, 'dragenter', dataTransfer);
+      dispatchDrag(fruit, 'dragover', dataTransfer);
+      await waitFor(() => expect(fruit).toHaveAttribute('data-drop-target', 'inside'));
+      await waitFor(() => expect(vegetables).not.toHaveAttribute('data-drop-target'));
+
+      dispatchDrag(fruit, 'drop', dataTransfer);
+      dropped = true;
+    } finally {
+      dropped || dispatchDrag(grain, 'dragend', dataTransfer);
+    }
+
+    // Grain is now Fruit's last child; the top level keeps Fruit and Vegetables.
+    await waitFor(() => expect(rows(tree).map((element) => element.textContent)).toEqual(['Fruit', 'Vegetables']));
+    await waitFor(() => expect(row(/Fruit/)).not.toHaveAttribute('data-drop-target'));
+    row(/Fruit/).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() =>
+      expect(rows(tree).map((element) => element.textContent)).toEqual([
+        'Fruit',
+        'Apple',
+        'Banana',
+        'Grain',
+        'Vegetables',
+      ]),
+    );
+  },
+};
+
 //
 // Benchmark
 //
 
-type Sample = { mode: TreeVirtualize; mount: number; scroll: { mean: number; p95: number; max: number }; key: number };
+type BenchMode = TreeVirtual | 'none';
+
+type Sample = { mode: BenchMode; mount: number; scroll: { mean: number; p95: number; max: number }; key: number };
 
 // Shared by the Benchmark story's component and its play function, which run in the same module.
-const bench: { mount: (mode: TreeVirtualize | undefined) => void; start: () => number } = {
+const bench: { mount: (mode: BenchMode | undefined) => void; start: () => number } = {
   mount: () => {},
   start: () => 0,
 };
@@ -394,17 +518,25 @@ const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(r
 
 /** Mounts the 5,000-row tree in one mode per run and records mount-to-paint time. */
 const BenchmarkStory = () => {
-  const [mode, setMode] = useState<TreeVirtualize | undefined>();
+  const [mode, setMode] = useState<BenchMode | undefined>();
   const startRef = useRef(0);
   useLayoutEffect(() => {
-    bench.mount = (next: TreeVirtualize | undefined) => {
+    bench.mount = (next: BenchMode | undefined) => {
       startRef.current = performance.now();
       setMode(next);
     };
     bench.start = () => startRef.current;
   }, []);
   return mode ? (
-    <DefaultStory key={mode} tree={LARGE} open virtualize={mode} height='32rem' indentGuides testId='bench' />
+    <DefaultStory
+      key={mode}
+      tree={LARGE}
+      open
+      virtual={mode === 'none' ? undefined : mode}
+      height='32rem'
+      indentGuides
+      testId='bench'
+    />
   ) : null;
 };
 
@@ -419,7 +551,7 @@ export const Benchmark: StoryObj<typeof meta> = {
   render: () => <BenchmarkStory />,
   play: async ({ canvasElement }) => {
     const samples: Sample[] = [];
-    const modes: TreeVirtualize[] = ['window', 'css', 'none'];
+    const modes: BenchMode[] = ['fixed', 'variable', 'none'];
     for (const mode of modes) {
       bench.mount(undefined);
       await nextFrame();
@@ -428,7 +560,10 @@ export const Benchmark: StoryObj<typeof meta> = {
       const painted = await nextFrame();
       const mount = painted - bench.start();
 
-      const viewport = canvasElement.querySelector<HTMLElement>('[data-part="tree"]')!;
+      const viewport = canvasElement.querySelector<HTMLElement>('[data-part="tree"]');
+      if (!viewport) {
+        throw new Error('missing tree');
+      }
       const frames: number[] = [];
       let last = await nextFrame();
       for (let frame = 0; frame < 60; frame++) {
@@ -446,8 +581,7 @@ export const Benchmark: StoryObj<typeof meta> = {
 
       viewport.scrollTop = 0;
       await nextFrame();
-      const first = canvasElement.querySelector<HTMLElement>('[data-tree-row]')!;
-      first.focus();
+      canvasElement.querySelector<HTMLElement>('[data-tree-row]')?.focus();
       const keyStart = performance.now();
       for (let press = 0; press < 10; press++) {
         await userEvent.keyboard('{ArrowDown}');
