@@ -58,17 +58,28 @@ type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
   size?: Size;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
+  /** `end` docks the dialog at the viewport's block end (e.g. a chat panel) instead of centring it. */
+  placement?: 'center' | 'end';
+  /**
+   * `false` drops the scrim and lets pointer events through around the dialog, for a non-modal (`modal={false}`)
+   * dialog that leaves the page usable.
+   */
+  scrim?: boolean;
 };
 
 /** Portalled surface at `level='raised'` over a scrim, centred in the viewport: a column of Header, Body and Footer. */
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, size, container, children, ...props }, forwardedRef) => {
+  ({ classNames, size, container, placement = 'center', scrim = true, children, ...props }, forwardedRef) => {
     const dialog = useDialogContext();
     const dialogSize = usePopupSize(size, dialog.open, [dialog.getTriggerProps().id], 'md');
     return (
       <Portal container={container}>
-        <DialogPrimitive.Backdrop className={recipes.dialogBackdrop()} />
-        <DialogPrimitive.Positioner className={recipes.dialogPositioner()}>
+        {scrim && <DialogPrimitive.Backdrop className={recipes.dialogBackdrop()} />}
+        <DialogPrimitive.Positioner
+          className={recipes.dialogPositioner()}
+          data-placement={placement}
+          data-scrim={scrim ? undefined : 'none'}
+        >
           <DialogPrimitive.Content
             {...props}
             data-surface='raised'

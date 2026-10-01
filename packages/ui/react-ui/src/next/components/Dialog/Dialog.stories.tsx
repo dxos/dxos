@@ -141,6 +141,33 @@ const open = async (canvasElement: HTMLElement, testId: string, name = 'Edit pro
 
 export const Default: Story = {};
 
+/** A non-modal dialog docked at the block end with no scrim (e.g. a chat panel): the page behind stays usable. */
+export const Docked: Story = {
+  render: () => (
+    <Next.Dialog.Root modal={false} defaultOpen>
+      <Next.Dialog.Content placement='end' scrim={false} data-testid='docked'>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title>Chat</Next.Dialog.Title>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>
+          <Next.Typography>{DESCRIPTION}</Next.Typography>
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const document = canvasElement.ownerDocument;
+    const dialog = await within(document.body).findByTestId('docked');
+    await expect(document.querySelector('.nx-dialog-backdrop')).toBeNull();
+    const positioner = dialog.parentElement;
+    await expect(positioner && getComputedStyle(positioner).pointerEvents).toBe('none');
+    await expect(getComputedStyle(dialog).pointerEvents).toBe('auto');
+    // Docked: the dialog's bottom edge sits one rem above the viewport's.
+    const viewport = document.documentElement.clientHeight;
+    await expect(viewport - dialog.getBoundingClientRect().bottom).toBeCloseTo(16, 0);
+  },
+};
+
 /** Header block height per size in px. */
 const HEADER_BLOCK: [Size, number][] = [
   ['sm', 24],

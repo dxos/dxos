@@ -17,6 +17,17 @@
     align-items: center;
     justify-content: center;
   }
+  .nx-dialog-positioner[data-placement='end'] {
+    align-items: flex-end;
+    padding-block-end: 1rem;
+  }
+  /* Without a scrim the page stays usable: only the dialog takes pointer events. */
+  .nx-dialog-positioner[data-scrim='none'] {
+    pointer-events: none;
+  }
+  .nx-dialog-positioner[data-scrim='none'] > * {
+    pointer-events: auto;
+  }
 
   .nx-dialog {
     --nx-dialog-width: min(32rem, 100% - 2rem);
