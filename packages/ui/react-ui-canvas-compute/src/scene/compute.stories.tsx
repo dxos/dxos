@@ -123,7 +123,7 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
       {sidebar && (
         <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
           <Next.Toolbar.Root>
-            <Next.Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as Sidebar)}>
+            <Next.Select.Root value={[sidebar]} onValueChange={({ value: [value] }) => setSidebar(value as Sidebar)}>
               <Next.Select.Trigger classNames='w-full'>{sidebar}</Next.Select.Trigger>
               <Next.Select.Content>
                 {sidebarTypes.map((type) => (

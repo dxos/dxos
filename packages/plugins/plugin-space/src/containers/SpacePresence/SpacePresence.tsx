@@ -150,7 +150,9 @@ export const FullPresence = (props: MemberPresenceProps) => {
           </Next.Popover.Trigger>
           <Next.Popover.Content side='bottom'>
             <Next.Popover.Body classNames='max-h-56'>
-              <Listbox.Root>
+              <Listbox.Root
+                items={members.map((member) => ({ value: member.identityKey ?? '', label: member.identityKey ?? '' }))}
+              >
                 <Listbox.Content aria-label='members'>
                   {members.map((member) => (
                     <Listbox.Item

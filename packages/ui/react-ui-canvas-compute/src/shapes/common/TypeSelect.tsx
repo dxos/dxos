@@ -12,7 +12,11 @@ type SelectRootProps = React.ComponentProps<typeof Next.Select.Root>;
 
 export const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
-    <Next.Select.Root value={value} onValueChange={onValueChange}>
+    <Next.Select.Root
+      value={[value]}
+      onValueChange={({ value: [value] }) => onValueChange(value)}
+      items={ComputeValueType.literals.map((type) => ({ value: type, label: type }))}
+    >
       <Next.Select.Trigger variant='ghost' classNames='w-full px-0!' />
       <Next.Select.Content>
         {ComputeValueType.literals.map((type) => (

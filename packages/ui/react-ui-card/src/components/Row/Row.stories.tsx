@@ -128,7 +128,7 @@ const DefaultStory = () => {
 
   return (
     <CardPreviewHost>
-      <Next.Card.Root border={false} fullWidth classNames='p-1'>
+      <Next.Card.Root border={false} classNames='p-1'>
         <Next.Card.Body>
           <Next.Card.Row>
             <Next.Block>

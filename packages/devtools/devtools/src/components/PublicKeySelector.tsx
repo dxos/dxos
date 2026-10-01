@@ -25,8 +25,8 @@ export const PublicKeySelector = ({
 }: PublicKeySelectorProps) => {
   return (
     <Next.Select.Root
-      value={value?.toHex()}
-      onValueChange={(id) => {
+      value={[value?.toHex()]}
+      onValueChange={({ value: [id] }) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >

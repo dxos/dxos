@@ -49,8 +49,8 @@ export const DataSpaceSelector = () => {
 
   return (
     <Next.Select.Root
-      value={space?.id}
-      onValueChange={(id) => {
+      value={[space?.id]}
+      onValueChange={({ value: [id] }) => {
         id && handleSelect?.(id as SpaceId);
       }}
     >

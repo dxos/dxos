@@ -74,7 +74,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
             debug={debugHandler}
             placeholderDebug={debug}
           >
-            <Next.ScrollArea.Root orientation='horizontal' centered padding>
+            <Next.ScrollArea.Root orientation='horizontal'>
               <Next.ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </Next.ScrollArea.Viewport>

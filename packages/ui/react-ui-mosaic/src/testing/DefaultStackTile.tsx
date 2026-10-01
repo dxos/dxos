@@ -34,7 +34,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
        */}
       <Mosaic.Tile {...props} asChild>
         <Focus.Item asChild>
-          <Next.Card.Root fullWidth classNames='dx-current dx-hover'>
+          <Next.Card.Root classNames='dx-current dx-hover'>
             <Next.Card.Header>
               <Next.DragHandle ref={dragHandleRef} />
               <Next.Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Next.Card.Title>

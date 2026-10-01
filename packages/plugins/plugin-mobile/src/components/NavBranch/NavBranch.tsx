@@ -111,7 +111,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <Next.ScrollArea.Root centered padding thin>
+        <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport>
             {results.length === 0 ? (
               // A branch with no openable children is a legitimate state (an unpopulated section, or a
@@ -168,7 +168,6 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
     <Next.Card.Root
       ref={ref}
       role='button'
-      fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
       // The search list auto-selects the first row for keyboard nav; a coarse (touch) pointer has no

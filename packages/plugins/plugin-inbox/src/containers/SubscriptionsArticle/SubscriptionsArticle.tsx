@@ -36,7 +36,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
         data={data}
         location={location}
       >
-        <Next.Card.Root fullWidth border={false} ref={forwardedRef} data-testid='subscription-card'>
+        <Next.Card.Root border={false} ref={forwardedRef} data-testid='subscription-card'>
           <Next.Card.Header>
             <Next.Block>
               <Next.Field.Root>
@@ -186,7 +186,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
           {empty ? (
             <Next.Empty>{empty}</Next.Empty>
           ) : (
-            <Next.ScrollArea.Root orientation='vertical' padding thin>
+            <Next.ScrollArea.Root orientation='vertical'>
               <Next.ScrollArea.Viewport classNames='dx-document'>
                 <Mosaic.Container asChild>
                   <Mosaic.Stack

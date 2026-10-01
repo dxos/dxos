@@ -138,7 +138,7 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
           limit={1}
         />
         <div className='overflow-y-auto h-full'>
-          <Listbox.Root>
+          <Listbox.Root items={surfaces.map((surface) => ({ value: surface.id, label: surface.id }))}>
             <Listbox.Content aria-label='Surfaces'>
               {surfaces.map((surface) => (
                 <Listbox.Item key={surface.id} id={surface.id}>

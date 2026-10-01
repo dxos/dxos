@@ -23,9 +23,9 @@ export type MergePreviewProps = {
 export const MergePreview = forwardRef<HTMLDivElement, MergePreviewProps>(({ type, preview }, forwardedRef) => (
   <Next.Panel.Root ref={forwardedRef}>
     <Next.Panel.Body asChild>
-      <Next.ScrollArea.Root orientation='vertical' centered>
+      <Next.ScrollArea.Root orientation='vertical'>
         <Next.ScrollArea.Viewport>
-          <Next.Card.Root fullWidth classNames='pb-form-gap'>
+          <Next.Card.Root classNames='pb-form-gap'>
             <ObjectForm object={preview.preview} type={type} />
           </Next.Card.Root>
         </Next.ScrollArea.Viewport>

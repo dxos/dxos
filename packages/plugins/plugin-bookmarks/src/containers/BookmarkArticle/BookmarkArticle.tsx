@@ -88,7 +88,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
       <Next.Panel.Body classNames='flex flex-col'>
         <Flex justify='center'>
           <div className='dx-document py-3'>
-            <Next.Card.Root fullWidth border={false}>
+            <Next.Card.Root border={false}>
               <Next.Card.Header>
                 <Next.Block>
                   <img src={bookmark.favicon} alt={bookmark.title} />

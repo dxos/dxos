@@ -124,7 +124,7 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
           gutter={gutter}
           ref={forwardedRef}
         >
-          <Next.ScrollArea.Root orientation='vertical' centered padding thin>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Column.Root>

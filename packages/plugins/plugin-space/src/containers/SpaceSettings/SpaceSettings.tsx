@@ -57,9 +57,13 @@ export const SpaceSettings = ({
           <Form.FieldSet label={t('space-settings.label')} description={t('space-settings.description')}>
             <Form.Field label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
               <Next.Select.Root
-                value={defaultSpaceId}
-                onValueChange={(value) => onDefaultSpaceChange?.(value)}
+                value={[defaultSpaceId]}
+                onValueChange={({ value: [value] }) => onDefaultSpaceChange?.(value)}
                 disabled={!onDefaultSpaceChange}
+                items={eligibleDefaultSpaces.map((space) => ({
+                  value: space.id,
+                  label: toLocalizedString(getSpaceDisplayName(space), t),
+                }))}
               >
                 <Next.Select.Trigger placeholder={t('settings.default-space.placeholder')} />
                 <Next.Select.Content>
@@ -77,7 +81,12 @@ export const SpaceSettings = ({
               label={t('settings.space-list.label')}
               description={t('settings.space-list.description')}
             >
-              <Listbox.Root>
+              <Listbox.Root
+                items={spaces.map((space) => ({
+                  value: space.id,
+                  label: toLocalizedString(getSpaceDisplayName(space), t),
+                }))}
+              >
                 <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
                   {spaces?.map((space) => (
                     <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>

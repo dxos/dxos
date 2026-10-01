@@ -37,7 +37,7 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild>
-          <Next.ScrollArea.Root orientation='vertical' padding centered>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchResultTile}

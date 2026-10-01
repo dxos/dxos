@@ -126,7 +126,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
           </Next.Toolbar.Root>
         </Next.Panel.Header>
         <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root thin>
+          <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport>
               {filtered.length === 0 ? (
                 <Next.Empty>{t('no-matching-rows.message')}</Next.Empty>

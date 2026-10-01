@@ -47,7 +47,7 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
         </Next.Toolbar.Root>
       </Next.Panel.Header>
       <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root thin>
+        <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport classNames='p-2'>
             <Flex column gap='sm'>
               {children}

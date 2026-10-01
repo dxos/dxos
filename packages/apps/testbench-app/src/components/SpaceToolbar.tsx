@@ -52,7 +52,7 @@ export const SpaceToolbar = ({
     <Next.Toolbar.Root>
       <Next.Button icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
-        <Next.Select.Root value={selected?.toHex()} onValueChange={handleChange}>
+        <Next.Select.Root value={[selected?.toHex()]} onValueChange={({ value: [value] }) => handleChange(value)}>
           <Next.Select.Trigger classNames='w-full' />
           <Next.Select.Content>
             {spaces.map((space) => (

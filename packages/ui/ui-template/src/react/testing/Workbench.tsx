@@ -134,7 +134,7 @@ export type OperationLogProps = {
  * flat rows, keyboard traversal for free, `Empty` when nothing has been dispatched yet.
  */
 export const OperationLog = ({ entries }: OperationLogProps) => (
-  <Listbox.Root>
+  <Listbox.Root items={entries.map((entry) => ({ value: String(entry.seq), label: String(entry.seq) }))}>
     <Listbox.Content aria-label='Operation log'>
       {entries.map((entry) => (
         <Listbox.Item key={entry.seq} id={String(entry.seq)}>

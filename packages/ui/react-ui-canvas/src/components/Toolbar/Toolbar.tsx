@@ -210,9 +210,12 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         {/* Portalled: inside the bar's flex flow the items would sit under the readout and the canvas. */}
         <Next.Menu.Content side='bottom' align='end' sideOffset={4}>
           {Object.values(nodes).map((def) => (
-            <Next.Menu.Item key={def.type} data-testid={`create-${def.type}`} onSelect={() => actions.create(def.type)}>
-              {def.name}
-            </Next.Menu.Item>
+            <Next.Menu.Item
+              key={def.type}
+              data-testid={`create-${def.type}`}
+              onSelect={() => actions.create(def.type)}
+              item={{ value: def.type, label: def.name }}
+            />
           ))}
         </Next.Menu.Content>
       </Next.Menu.Root>

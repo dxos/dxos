@@ -285,7 +285,11 @@ type SelectDurationProps = {
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Next.Select.Root value={value ?? ''} onValueChange={onValueChange}>
+    <Next.Select.Root
+      value={[value ?? '']}
+      onValueChange={({ value: [value] }) => onValueChange(value)}
+      items={DURATION_PRESETS.map((preset) => ({ value: preset.value, label: preset.label }))}
+    >
       <Next.Select.Trigger placeholder={t('event-duration.placeholder')} />
       <Next.Select.Content>
         {DURATION_PRESETS.map((preset) => (

@@ -713,7 +713,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   }, [scale.width]);
 
   return (
-    <Next.ScrollArea.Root thin orientation='horizontal' classNames={classNames} ref={forwardedRef}>
+    <Next.ScrollArea.Root orientation='horizontal' classNames={classNames} ref={forwardedRef}>
       <Next.ScrollArea.Viewport ref={viewportRef}>
         <svg
           // Pixel coordinates against the drawing's own width, with no viewBox: a viewBox would

@@ -54,7 +54,7 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <Next.ScrollArea.Root orientation='vertical' padding centered>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={PostTile}
@@ -102,7 +102,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root ref={forwardedRef} fullWidth>
+        <Next.Card.Root ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block>
               <Next.Icon icon='ph--rss-simple--regular' />

@@ -117,7 +117,7 @@ export const CreateSpaceDialog = () => {
         <Next.Dialog.Body>
           {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second
               gutter inside the one Dialog.Body already propagates and inset the fields twice. */}
-          <Next.ScrollArea.Root orientation='vertical' padding thin>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport>
               <Form.Content>
                 <Form.Fields />
@@ -128,7 +128,11 @@ export const CreateSpaceDialog = () => {
                     label={t('create-space-dialog.templates.label')}
                     description={t('create-space-dialog.templates.description')}
                   >
-                    <Listbox.Root value={template} onValueChange={setTemplate}>
+                    <Listbox.Root
+                      value={template}
+                      onValueChange={setTemplate}
+                      items={templates.map(({ id, label, description, glyph }) => ({ value: id, label: id }))}
+                    >
                       <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
                         {templates.map(({ id, label, description, glyph }) => (
                           <Listbox.Item key={id} id={id}>

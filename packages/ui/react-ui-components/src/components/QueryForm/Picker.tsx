@@ -29,7 +29,10 @@ export const Picker = <T extends { value: string; label: string }>({
   const sorted = useMemo(() => values?.sort(({ label: a }, { label: b }) => a.localeCompare(b)) ?? [], [values]);
 
   return (
-    <Next.Select.Root value={value ?? NULL} onValueChange={(value) => onChange?.(value === NULL ? null : value)}>
+    <Next.Select.Root
+      value={[value ?? NULL]}
+      onValueChange={({ value: [value] }) => onChange?.(value === NULL ? null : value)}
+    >
       <Next.Select.Trigger placeholder={placeholder ?? t('picker-select.label')} />
       <Next.Select.Content>
         <Next.Select.ItemGroup>

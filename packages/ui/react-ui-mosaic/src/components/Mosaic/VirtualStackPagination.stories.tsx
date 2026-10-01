@@ -307,8 +307,15 @@ const FeedPaginationStory = () => {
               Reset
             </Next.Button>
             <Next.Select.Root
-              value={sortField}
-              onValueChange={(value) => setSortField(value === 'number' || value === 'word' ? value : 'natural')}
+              value={[sortField]}
+              onValueChange={({ value: [value] }) =>
+                setSortField(value === 'number' || value === 'word' ? value : 'natural')
+              }
+              items={[
+                { value: 'natural', label: 'Natural' },
+                { value: 'number', label: 'Number' },
+                { value: 'word', label: 'Word' },
+              ]}
             >
               <Next.Button asChild>
                 <Next.Select.Trigger classNames='shrink-0' />
@@ -320,8 +327,12 @@ const FeedPaginationStory = () => {
               </Next.Select.Content>
             </Next.Select.Root>
             <Next.Select.Root
-              value={direction}
-              onValueChange={(value) => setDirection(value === 'asc' ? 'asc' : 'desc')}
+              value={[direction]}
+              onValueChange={({ value: [value] }) => setDirection(value === 'asc' ? 'asc' : 'desc')}
+              items={[
+                { value: 'asc', label: 'Ascending' },
+                { value: 'desc', label: 'Descending' },
+              ]}
             >
               <Next.Button asChild>
                 <Next.Select.Trigger classNames='shrink-0' />

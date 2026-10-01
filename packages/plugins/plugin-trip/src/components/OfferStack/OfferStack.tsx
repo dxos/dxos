@@ -50,7 +50,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root fullWidth border={false} ref={forwardedRef}>
+        <Next.Card.Root border={false} ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block>
               <Next.Icon icon='ph--airplane--regular' />
@@ -105,7 +105,7 @@ export const OfferStack = composable<HTMLDivElement, OfferStackProps>(
     return (
       <Focus.Group asChild {...composableProps(props)} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId}>
-          <Next.ScrollArea.Root orientation='vertical' padding thin>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport>
               <Mosaic.Stack Tile={OfferTile} items={items} draggable={false} getId={(item) => item.offer.id} />
             </Next.ScrollArea.Viewport>

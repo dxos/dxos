@@ -230,12 +230,16 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
             >
               <Next.Select.Root
                 disabled={!onSettingsChange}
-                value={
+                value={[
                   Object.entries(StorageAdapters).find(
                     ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-                  )?.[0]
-                }
-                onValueChange={handleStorageAdapterChange}
+                  )?.[0],
+                ]}
+                onValueChange={({ value: [value] }) => handleStorageAdapterChange(value)}
+                items={Object.keys(StorageAdapters).map((key) => ({
+                  value: key,
+                  label: t(`settings.storage-adaptor.${key}.label`),
+                }))}
               >
                 <Next.Select.Trigger disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
                 <Next.Select.Content>

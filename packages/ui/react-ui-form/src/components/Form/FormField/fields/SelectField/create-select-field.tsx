@@ -61,9 +61,9 @@ export const createSelectField = ({
     ) : (
       <Next.Select.Root
         disabled={!!readonly}
-        value={value ?? sentinel}
+        value={[value ?? sentinel]}
         // A choice is a commit: the select never blurs, so it commits itself.
-        onValueChange={(next) => {
+        onValueChange={({ value: [next] }) => {
           onValueChange(type, hasDefault && next === sentinel ? undefined : next);
           onBlur();
         }}

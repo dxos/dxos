@@ -21,20 +21,27 @@ export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuP
   const { t } = useTranslation(meta.profile.key);
   return (
     <Next.Menu.Content>
-      <Next.Menu.Item onClick={() => onCellInsert?.('script', cell?.id)}>
-        {t('notebook-cell-insert-script.label')}
-      </Next.Menu.Item>
-      <Next.Menu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>
-        {t('notebook-cell-insert-prompt.label')}
-      </Next.Menu.Item>
-      <Next.Menu.Item onClick={() => onCellInsert?.('query', cell?.id)}>
-        {t('notebook-cell-insert-query.label')}
-      </Next.Menu.Item>
-      <Next.Menu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
-        {t('notebook-cell-insert-markdown.label')}
-      </Next.Menu.Item>
+      <Next.Menu.Item
+        onClick={() => onCellInsert?.('script', cell?.id)}
+        item={{ value: t('notebook-cell-insert-script.label'), label: t('notebook-cell-insert-script.label') }}
+      />
+      <Next.Menu.Item
+        onClick={() => onCellInsert?.('prompt', cell?.id)}
+        item={{ value: t('notebook-cell-insert-prompt.label'), label: t('notebook-cell-insert-prompt.label') }}
+      />
+      <Next.Menu.Item
+        onClick={() => onCellInsert?.('query', cell?.id)}
+        item={{ value: t('notebook-cell-insert-query.label'), label: t('notebook-cell-insert-query.label') }}
+      />
+      <Next.Menu.Item
+        onClick={() => onCellInsert?.('markdown', cell?.id)}
+        item={{ value: t('notebook-cell-insert-markdown.label'), label: t('notebook-cell-insert-markdown.label') }}
+      />
       {cell && onCellDelete && (
-        <Next.Menu.Item onClick={() => onCellDelete?.(cell.id)}>{t('notebook-cell-delete.label')}</Next.Menu.Item>
+        <Next.Menu.Item
+          onClick={() => onCellDelete?.(cell.id)}
+          item={{ value: t('notebook-cell-delete.label'), label: t('notebook-cell-delete.label') }}
+        />
       )}
     </Next.Menu.Content>
   );

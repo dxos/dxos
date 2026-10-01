@@ -15,7 +15,7 @@ import { CardTile } from './CardTile.tsx';
 // CardTile.Header standalone inside Card chrome; CardTile.Root's mosaic shell is exercised by the
 // EventStack / InboxStack stories (it requires a Mosaic.Container ancestor).
 const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) => (
-  <Next.Card.Root fullWidth border={false} classNames='p-1'>
+  <Next.Card.Root border={false} classNames='p-1'>
     <CardTile.Header
       menu={menu}
       starred={starred}

@@ -86,10 +86,11 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           disabled={!canAdmit}
         />
         <Next.Select.Root
-          value={String(role)}
-          onValueChange={(value) =>
+          value={[String(role)]}
+          onValueChange={({ value: [value] }) =>
             setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
           }
+          items={ROLES.map((value) => ({ value: String(value), label: t(roleLabel[value]) }))}
         >
           <Next.Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
           <Next.Select.Content>

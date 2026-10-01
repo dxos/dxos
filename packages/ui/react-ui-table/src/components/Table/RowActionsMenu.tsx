@@ -41,9 +41,8 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                     modals.close();
                     model.handleRowAction(action.id, state.rowIndex);
                   }}
-                >
-                  {toLocalizedString(action.label, t)}
-                </Next.Menu.Item>
+                  item={{ value: action.id, label: toLocalizedString(action.label, t) }}
+                />
               ))}
             </Next.Menu.ItemGroup>
             <Next.Menu.Separator />
@@ -51,9 +50,14 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
         )}
         {/* Default actions */}
         {model.features.dataEditable !== false && (
-          <Next.Menu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
-            {t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label')}
-          </Next.Menu.Item>
+          <Next.Menu.Item
+            data-testid='row-menu-delete'
+            onClick={() => model.deleteRow(state.rowIndex)}
+            item={{
+              value: t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label'),
+              label: t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label'),
+            }}
+          />
         )}
       </Next.Menu.Content>
     </Next.Menu.Root>

@@ -19,7 +19,7 @@ export const ExecutionGraphPanel: FC<ExecutionGraphPanelProps> = ({ objects }) =
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
   return (
-    <Next.ScrollArea.Root orientation='vertical' classNames='flex flex-col h-full' thin>
+    <Next.ScrollArea.Root orientation='vertical' classNames='flex flex-col h-full'>
       <Next.ScrollArea.Viewport ref={setViewport}>
         <Timeline branches={branches} commits={commits} scroller={viewport} />
       </Next.ScrollArea.Viewport>

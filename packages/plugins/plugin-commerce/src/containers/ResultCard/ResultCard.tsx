@@ -50,7 +50,6 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
     return (
       <Next.Card.Root
         ref={forwardedRef}
-        fullWidth
         classNames={['dx-hover cursor-pointer', current && 'dx-current', classNames]}
         {...props}
       >

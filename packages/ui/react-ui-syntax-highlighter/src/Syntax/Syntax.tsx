@@ -219,7 +219,7 @@ type SyntaxViewportProps = ComposableProps;
 /** Optional scroll wrapper. Compose around `Syntax.Code` to make it scrollable. */
 const SyntaxViewport = composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <Next.ScrollArea.Root {...composableProps(props)} orientation='all' thin ref={forwardedRef}>
+    <Next.ScrollArea.Root {...composableProps(props)} orientation='all' ref={forwardedRef}>
       <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
     </Next.ScrollArea.Root>
   );

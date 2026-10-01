@@ -68,7 +68,7 @@ const DefaultStory = () => {
       </Next.Toolbar.Root>
 
       {[...people, ...organizations].map((subject) => (
-        <Next.Card.Root key={subject.id} fullWidth>
+        <Next.Card.Root key={subject.id}>
           <Next.Card.Header>
             <Next.Block>
               <Next.Icon

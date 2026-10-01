@@ -55,7 +55,7 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
-          <Next.ScrollArea.Root orientation='vertical' padding centered thin>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchTile}
@@ -113,7 +113,7 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       current={current}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root fullWidth ref={forwardedRef}>
+        <Next.Card.Root ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block />
             <Next.Card.Title>{result.label}</Next.Card.Title>

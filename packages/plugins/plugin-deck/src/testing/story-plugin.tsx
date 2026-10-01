@@ -305,7 +305,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
 
   return (
     <div className='dx-expand overflow-y-auto p-2' ref={forwardedRef}>
-      <Listbox.Root>
+      <Listbox.Root items={items.map((node) => ({ value: node.id, label: node.id }))}>
         <Listbox.Content aria-label='Navigation'>
           {items.map((node) => (
             <Listbox.Item

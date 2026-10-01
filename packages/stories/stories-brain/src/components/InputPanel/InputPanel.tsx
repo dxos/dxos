@@ -158,7 +158,11 @@ export const InputPanel = ({
           <Next.Panel.Root>
             <Next.Panel.Header>
               <Next.Toolbar.Root>
-                <Next.Select.Root value={dataset?.id ?? ''} onValueChange={setDatasetId}>
+                <Next.Select.Root
+                  value={[dataset?.id ?? '']}
+                  onValueChange={({ value: [value] }) => setDatasetId(value)}
+                  items={datasets.map((item) => ({ value: item.id, label: item.label }))}
+                >
                   <Next.Select.Trigger placeholder='Dataset' />
                   <Next.Select.Content>
                     {datasets.map((item) => (
@@ -185,7 +189,7 @@ export const InputPanel = ({
               </Next.Toolbar.Root>
             </Next.Panel.Header>
             <Next.Panel.Body asChild>
-              <Next.ScrollArea.Root padding>
+              <Next.ScrollArea.Root>
                 <Next.ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
                   {!dataset || dataset.messages.length === 0 ? (
                     <Next.Empty>No messages.</Next.Empty>

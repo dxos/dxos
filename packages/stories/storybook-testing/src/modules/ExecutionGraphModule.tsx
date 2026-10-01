@@ -53,7 +53,7 @@ const ExecutionGraphContainer = ({ space }: { space: Space }) => {
         </Next.Toolbar.Root>
       </Next.Panel.Header>
       <Next.Panel.Body>
-        <Next.ScrollArea.Root orientation='vertical' classNames='h-full' thin>
+        <Next.ScrollArea.Root orientation='vertical' classNames='h-full'>
           <Next.ScrollArea.Viewport ref={setViewport}>
             <Timeline branches={branches} commits={commits} scroller={viewport} />
           </Next.ScrollArea.Viewport>

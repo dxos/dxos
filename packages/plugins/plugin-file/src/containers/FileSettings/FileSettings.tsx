@@ -53,7 +53,11 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
             >
-              <Next.Select.Root value={activeStorage} onValueChange={handleChange}>
+              <Next.Select.Root
+                value={[activeStorage]}
+                onValueChange={({ value: [value] }) => handleChange(value)}
+                items={backends.map((backend) => ({ value: backend.storage, label: backend.name }))}
+              >
                 <Next.Select.Trigger placeholder={t('settings.backend.placeholder')} />
                 <Next.Select.Content>
                   {backends.map((backend) => (

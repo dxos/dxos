@@ -65,7 +65,7 @@ export const PullRequestFiles = ({
       ) : (
         <Next.Empty classNames='dx-expand'>{t(file ? 'file-no-diff.message' : 'no-files.message')}</Next.Empty>
       )}
-      <Next.ScrollArea.Root thin classNames='border-s border-subdued-separator'>
+      <Next.ScrollArea.Root classNames='border-s border-subdued-separator'>
         <Next.ScrollArea.Viewport classNames='p-2'>
           <Next.Field.Root>
             <Next.Field.Label classNames='px-2'>

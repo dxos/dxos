@@ -191,7 +191,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
           </ActionToolbar>
         </Next.Panel.Header>
         <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root thin orientation='vertical'>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
               <SchemaTable
                 classNames='py-1'

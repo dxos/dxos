@@ -39,7 +39,7 @@ export const Home = (_: HomeProps) => {
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <Next.ScrollArea.Root centered padding thin>
+        <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='py-2 gap-1'
@@ -91,7 +91,6 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   return (
     <Next.Card.Root
       role='button'
-      fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
       aria-disabled={pending || undefined}

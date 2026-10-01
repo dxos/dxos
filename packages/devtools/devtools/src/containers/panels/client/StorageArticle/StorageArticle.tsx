@@ -186,9 +186,8 @@ export const StorageArticle = ({ role }: ArticleProps) => {
                   await services?.SystemService?.reset();
                   location.reload();
                 }}
-              >
-                Confirm Reset Storage?
-              </Next.Menu.Item>
+                item={{ value: 'Confirm Reset Storage?', label: 'Confirm Reset Storage?' }}
+              />
             </Next.Menu.Content>
           </Next.Menu.Root>
         </Next.Toolbar.Root>
@@ -197,7 +196,7 @@ export const StorageArticle = ({ role }: ArticleProps) => {
       <Next.Panel.Body
         classNames={selectedValue?.kind === 'feed' ? 'grid grid-rows-2 divide-y divide-separator' : 'grid'}
       >
-        <Next.ScrollArea.Root thin orientation='all'>
+        <Next.ScrollArea.Root orientation='all'>
           <Next.ScrollArea.Viewport>
             <DataTree items={items} onSelect={setSelected} />
           </Next.ScrollArea.Viewport>

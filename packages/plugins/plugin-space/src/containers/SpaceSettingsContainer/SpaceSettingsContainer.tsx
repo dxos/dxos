@@ -219,8 +219,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   </Next.Button>
                 </Next.Menu.Trigger>
                 <Next.Menu.Content>
-                  <Next.Menu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</Next.Menu.Item>
-                  <Next.Menu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</Next.Menu.Item>
+                  <Next.Menu.Item
+                    onClick={handleBackupBinary}
+                    item={{ value: t('download-backup-binary.label'), label: t('download-backup-binary.label') }}
+                  />
+                  <Next.Menu.Item
+                    onClick={handleBackupJson}
+                    item={{ value: t('download-backup-json.label'), label: t('download-backup-json.label') }}
+                  />
                 </Next.Menu.Content>
               </Next.Menu.Root>
             </Form.Field>

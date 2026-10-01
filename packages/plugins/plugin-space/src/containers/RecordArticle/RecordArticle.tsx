@@ -62,7 +62,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
       <Next.Panel.Body asChild>
         <Next.ScrollArea.Root orientation='vertical'>
           <Next.ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Next.Card.Root fullWidth>
+            <Next.Card.Root>
               <Next.Card.Header>
                 <Next.Block>
                   <CardIconSlot subject={subject}>

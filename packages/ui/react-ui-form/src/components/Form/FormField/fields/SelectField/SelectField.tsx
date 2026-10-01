@@ -46,7 +46,11 @@ export const SelectField = ({
   }
 
   return (
-    <Next.Select.Root value={value} onValueChange={handleValueChange} disabled={!!readonly}>
+    <Next.Select.Root
+      value={[value]}
+      onValueChange={({ value: [value] }) => handleValueChange(value)}
+      disabled={!!readonly}
+    >
       <Next.Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
       {options?.length !== 0 && (
         <Next.Select.Content>

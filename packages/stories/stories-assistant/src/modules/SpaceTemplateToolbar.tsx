@@ -145,7 +145,11 @@ const TemplateSelect = () => {
 
   return (
     <>
-      <Next.Select.Root value={templateId} onValueChange={(id) => void handleSelect(id)}>
+      <Next.Select.Root
+        value={[templateId]}
+        onValueChange={({ value: [id] }) => void handleSelect(id)}
+        items={sorted.map(({ id, label }) => ({ value: id, label: label }))}
+      >
         <Next.Select.Trigger placeholder='Template' />
         <Next.Select.Content>
           {sorted.map(({ id, label }) => (

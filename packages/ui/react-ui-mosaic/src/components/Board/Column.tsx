@@ -169,7 +169,7 @@ const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
         debug={debug}
         ref={forwardedRef}
       >
-        <Next.ScrollArea.Root orientation='vertical' thin centered padding>
+        <Next.ScrollArea.Root orientation='vertical'>
           <Next.ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
             <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
           </Next.ScrollArea.Viewport>

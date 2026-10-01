@@ -89,7 +89,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   }, [invokePromise, data]);
 
   return (
-    <Next.Card.Root role='button' fullWidth classNames='cursor-pointer' onClick={handleClick}>
+    <Next.Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Next.Card.Header>
         <Next.Block>
           <Next.Icon icon={icon} classNames={iconStyles?.text} />

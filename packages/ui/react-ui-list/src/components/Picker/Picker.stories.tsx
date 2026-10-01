@@ -79,7 +79,7 @@ const DefaultStory = ({
             {...(controlled && { value: query, onValueChange: setQuery })}
           />
         </Column.Center>
-        <Next.ScrollArea.Root classNames='max-h-[20rem] py-form-gap' thin>
+        <Next.ScrollArea.Root classNames='max-h-[20rem] py-form-gap'>
           <Next.ScrollArea.Viewport>
             <ul role='listbox' className='flex flex-col'>
               {visible.map(({ item, originalIndex }) => {

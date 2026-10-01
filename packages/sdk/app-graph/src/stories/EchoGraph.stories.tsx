@@ -225,7 +225,11 @@ const Controls = ({ children }: PropsWithChildren) => {
           <Next.Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
         <Next.Button icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
-        <Next.Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
+        <Next.Select.Root
+          value={[action?.toString()]}
+          onValueChange={({ value: [action] }) => setAction(action as unknown as Action)}
+          items={Object.keys(actionWeights).map((action) => ({ value: action, label: action }))}
+        >
           <Next.Select.Trigger placeholder='Select value' />
           <Next.Select.Content>
             {Object.keys(actionWeights).map((action) => (

@@ -71,8 +71,9 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
 
               <Next.Field.Root>
                 <Next.Select.Root
-                  value={input.kind}
-                  onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
+                  value={[input.kind]}
+                  onValueChange={({ value: [kind] }) => handleInputKindChange(input.name, kind as Template.InputKind)}
+                  items={inputs.map(({ kind, label }) => ({ value: kind, label: label }))}
                 >
                   <Next.Select.Trigger placeholder='Type' classNames='w-full' />
                   <Next.Select.Content>

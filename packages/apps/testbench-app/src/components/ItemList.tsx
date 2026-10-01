@@ -19,7 +19,7 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
   ({ objects, debug, onDelete, ...props }, forwardedRef) => {
     return (
-      <Next.ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
+      <Next.ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
         <Next.ScrollArea.Viewport>
           {objects
             .slice(0, MAX_RENDERED_COUNT)

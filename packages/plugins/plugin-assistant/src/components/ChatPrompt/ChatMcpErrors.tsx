@@ -37,7 +37,12 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
     <Next.Banner.Root valence='warning'>
       <Next.Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Next.Banner.Title>
       <Next.Banner.Body>
-        <Listbox.Root>
+        <Listbox.Root
+          items={errors.map((error) => ({
+            value: `${error.url}::${error.protocol}`,
+            label: `${error.url}::${error.protocol}`,
+          }))}
+        >
           <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
             {errors.map((error) => (
               <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>

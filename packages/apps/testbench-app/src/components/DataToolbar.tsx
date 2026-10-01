@@ -37,7 +37,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
         />
       </Next.Field.Root>
       {!!types?.length && (
-        <Next.Select.Root value={type} onValueChange={(type) => setType(type)}>
+        <Next.Select.Root value={[type]} onValueChange={({ value: [type] }) => setType(type)}>
           <Next.Button asChild>
             <Next.Select.Trigger />
           </Next.Button>

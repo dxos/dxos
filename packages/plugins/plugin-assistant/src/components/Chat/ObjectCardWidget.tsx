@@ -37,7 +37,7 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
 
   const title = Obj.getLabel(subject)?.trim() || label || '';
   return (
-    <Next.Card.Root fullWidth>
+    <Next.Card.Root>
       <Next.Card.Header>
         <Next.Block>
           <CardIconSlot subject={subject}>

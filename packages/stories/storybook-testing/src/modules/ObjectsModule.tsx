@@ -59,7 +59,7 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
     <Next.Panel.Root classNames='relative'>
       <Next.Panel.Header>
         <Next.Toolbar.Root classNames='grid grid-cols-2'>
-          <Next.Select.Root value={type} onValueChange={setType}>
+          <Next.Select.Root value={[type]} onValueChange={({ value: [value] }) => setType(value)}>
             <Next.Select.Trigger placeholder='Type' />
             <Next.Select.Content>
               <Next.Select.Item item={{ value: ALL_TYPES, label: 'All types' }} />
@@ -79,7 +79,7 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
         </Next.Toolbar.Root>
       </Next.Panel.Header>
       <Next.Panel.Body>
-        <Listbox.Root>
+        <Listbox.Root items={filtered.map((object) => ({ value: object.id, label: object.id }))}>
           <Listbox.Content aria-label='Objects'>
             {filtered.map((object) => (
               <Listbox.Item key={object.id} id={object.id}>

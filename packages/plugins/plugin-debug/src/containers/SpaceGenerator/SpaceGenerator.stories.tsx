@@ -29,9 +29,9 @@ const ObjectList = ({ space }: { space: Parameters<typeof SpaceGenerator>[0]['sp
   const objects = useQuery(space.db, Query.select(Filter.everything()));
 
   return (
-    <Next.ScrollArea.Root thin orientation='vertical'>
+    <Next.ScrollArea.Root orientation='vertical'>
       <Next.ScrollArea.Viewport>
-        <Listbox.Root>
+        <Listbox.Root items={objects.map((object) => ({ value: object.id, label: object.id }))}>
           <Listbox.Content>
             {objects.map((object) => (
               <Listbox.Item key={object.id} id={object.id} classNames='px-2 gap-2'>

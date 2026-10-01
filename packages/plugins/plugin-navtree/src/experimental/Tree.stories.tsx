@@ -148,7 +148,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   return (
     <Next.Panel.Root>
       <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root orientation='vertical' centered padding thin>
+        <Next.ScrollArea.Root orientation='vertical'>
           <Next.ScrollArea.Viewport>
             <Tree
               className='p-0.5 gap-1'

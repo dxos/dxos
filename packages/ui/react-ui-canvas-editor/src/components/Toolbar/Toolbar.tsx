@@ -41,7 +41,11 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <Next.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
         <Next.Icon icon='ph--magnifying-glass-minus--regular' />
       </Next.Button>
-      <Next.Select.Root value={layout} onValueChange={(value) => setLayout(value as LayoutKind)}>
+      <Next.Select.Root
+        value={[layout]}
+        onValueChange={({ value: [value] }) => setLayout(value as LayoutKind)}
+        items={LAYOUTS.map((layout) => ({ value: layout, label: layout }))}
+      >
         <Next.Button asChild>
           <Next.Select.Trigger variant='ghost' classNames='w-[100px]' />
         </Next.Button>

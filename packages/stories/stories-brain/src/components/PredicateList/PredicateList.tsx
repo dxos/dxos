@@ -47,7 +47,11 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
         {predicates.length === 0 ? (
           <Next.Empty>No predicates.</Next.Empty>
         ) : (
-          <Listbox.Root value={selected} onValueChange={onSelect}>
+          <Listbox.Root
+            value={selected}
+            onValueChange={onSelect}
+            items={predicates.map((item) => ({ value: item.predicate, label: item.predicate }))}
+          >
             <Listbox.Content aria-label='Predicates'>
               {predicates.map((item) => (
                 <Listbox.Item

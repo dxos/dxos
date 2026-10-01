@@ -60,7 +60,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
       <Next.Panel.Body asChild>
         <Next.ScrollArea.Root orientation='vertical'>
           <Next.ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Next.Card.Root fullWidth border={false}>
+            <Next.Card.Root border={false}>
               <Next.Card.Header>
                 <Next.Block />
                 <Flex column gap='xs' classNames='min-w-0'>

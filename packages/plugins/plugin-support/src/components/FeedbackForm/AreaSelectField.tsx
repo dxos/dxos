@@ -61,7 +61,7 @@ export const AreaSelectField = ({
       {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
-        <Next.Select.Root value={value ?? ''} onValueChange={handleValueChange}>
+        <Next.Select.Root value={[value ?? '']} onValueChange={({ value: [value] }) => handleValueChange(value)}>
           <Next.Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
           <Next.Select.Content>
             {value != null && (

@@ -473,7 +473,11 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             disabled={!invoker || !mailbox}
             onClick={() => void handleExecute()}
           />
-          <Next.Select.Root value={actionId} onValueChange={setActionId}>
+          <Next.Select.Root
+            value={[actionId]}
+            onValueChange={({ value: [value] }) => setActionId(value)}
+            items={actions.map((action) => ({ value: action.id, label: action.label }))}
+          >
             <Next.Select.Trigger classNames='truncate' data-testid='action-select' placeholder='Action' />
             <Next.Select.Content>
               {actions.map((action) => (

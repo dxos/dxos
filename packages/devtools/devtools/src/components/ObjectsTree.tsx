@@ -69,7 +69,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
 
   return (
     <ObjectsTreeContext.Provider value={contextValue}>
-      <Next.ScrollArea.Root classNames='dx-expand' thin>
+      <Next.ScrollArea.Root classNames='dx-expand'>
         <Next.ScrollArea.Viewport>
           <Tree<ObjectsTreeItem>
             id={ROOT_ANCHOR}
@@ -165,37 +165,37 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
         </Next.Menu.Trigger>
         <Next.Menu.Content>
           {showOpen && (
-            <Next.Menu.Item onClick={handleOpen}>
-              <Next.Icon icon='ph--arrow-square-out--regular' />
-              Open
-            </Next.Menu.Item>
+            <Next.Menu.Item
+              onClick={handleOpen}
+              item={{ value: 'Open', label: 'Open', icon: 'ph--arrow-square-out--regular' }}
+            />
           )}
           {!node.deleted && (
-            <Next.Menu.Item onClick={handleDelete}>
-              <Next.Icon icon='ph--trash--regular' />
-              Delete
-            </Next.Menu.Item>
+            <Next.Menu.Item
+              onClick={handleDelete}
+              item={{ value: 'Delete', label: 'Delete', icon: 'ph--trash--regular' }}
+            />
           )}
           {node.deleted && (
-            <Next.Menu.Item onClick={handleRestore}>
-              <Next.Icon icon='ph--arrow-counter-clockwise--regular' />
-              Restore
-            </Next.Menu.Item>
+            <Next.Menu.Item
+              onClick={handleRestore}
+              item={{ value: 'Restore', label: 'Restore', icon: 'ph--arrow-counter-clockwise--regular' }}
+            />
           )}
 
           <Next.Menu.Separator />
-          <Next.Menu.Item onClick={handleCopyDXN}>
-            <Next.Icon icon='ph--copy--regular' />
-            Copy DXN
-          </Next.Menu.Item>
-          <Next.Menu.Item onClick={handleCopyJSON}>
-            <Next.Icon icon='ph--brackets-curly--regular' />
-            Copy JSON
-          </Next.Menu.Item>
-          <Next.Menu.Item onClick={handlePrintToConsole}>
-            <Next.Icon icon='ph--terminal-window--regular' />
-            Print to console
-          </Next.Menu.Item>
+          <Next.Menu.Item
+            onClick={handleCopyDXN}
+            item={{ value: 'Copy DXN', label: 'Copy DXN', icon: 'ph--copy--regular' }}
+          />
+          <Next.Menu.Item
+            onClick={handleCopyJSON}
+            item={{ value: 'Copy JSON', label: 'Copy JSON', icon: 'ph--brackets-curly--regular' }}
+          />
+          <Next.Menu.Item
+            onClick={handlePrintToConsole}
+            item={{ value: 'Print to console', label: 'Print to console', icon: 'ph--terminal-window--regular' }}
+          />
         </Next.Menu.Content>
       </Next.Menu.Root>
     </div>

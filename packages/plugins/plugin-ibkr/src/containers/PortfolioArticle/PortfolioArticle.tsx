@@ -156,7 +156,11 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
       <Next.Panel.Body asChild>
         <Next.ScrollArea.Root orientation='vertical'>
           <Next.ScrollArea.Viewport>
-            <Listbox.Root value={currentId} onValueChange={handleNavigate}>
+            <Listbox.Root
+              value={currentId}
+              onValueChange={handleNavigate}
+              items={rows.map((row) => ({ value: row.id, label: row.id }))}
+            >
               <Listbox.Content aria-label={t('reports.label')}>
                 {rows.map((row) => (
                   <Listbox.Item key={row.id} id={row.id}>

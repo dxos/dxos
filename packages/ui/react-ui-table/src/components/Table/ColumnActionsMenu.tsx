@@ -36,29 +36,39 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
     >
       <Next.Menu.Content>
         {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
-          <Next.Menu.Item data-testid='column-sort-descending' onClick={() => model.setSort(state.fieldId, 'desc')}>
-            {t('column-action-sort-descending.menu')}
-          </Next.Menu.Item>
+          <Next.Menu.Item
+            data-testid='column-sort-descending'
+            onClick={() => model.setSort(state.fieldId, 'desc')}
+            item={{ value: t('column-action-sort-descending.menu'), label: t('column-action-sort-descending.menu') }}
+          />
         )}
         {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
-          <Next.Menu.Item data-testid='column-sort-ascending' onClick={() => model.setSort(state.fieldId, 'asc')}>
-            {t('column-action-sort-ascending.menu')}
-          </Next.Menu.Item>
+          <Next.Menu.Item
+            data-testid='column-sort-ascending'
+            onClick={() => model.setSort(state.fieldId, 'asc')}
+            item={{ value: t('column-action-sort-ascending.menu'), label: t('column-action-sort-ascending.menu') }}
+          />
         )}
         {isCurrentColumnSorted && (
-          <Next.Menu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
-            {t('column-action-clear-sorting.menu')}
-          </Next.Menu.Item>
+          <Next.Menu.Item
+            data-testid='column-clear-sort'
+            onClick={() => model.clearSort()}
+            item={{ value: t('column-action-clear-sorting.menu'), label: t('column-action-clear-sorting.menu') }}
+          />
         )}
         {model.getColumnCount() > 1 && model.features.schemaEditable && (
-          <Next.Menu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
-            {t('column-action-delete.menu')}
-          </Next.Menu.Item>
+          <Next.Menu.Item
+            data-testid='column-delete'
+            onClick={() => model.deleteColumn(state.fieldId)}
+            item={{ value: t('column-action-delete.menu'), label: t('column-action-delete.menu') }}
+          />
         )}
         {model.features.schemaEditable && (
-          <Next.Menu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
-            {t('column-action-settings.menu')}
-          </Next.Menu.Item>
+          <Next.Menu.Item
+            data-testid='column-settings'
+            onClick={() => modals.openColumnSettings()}
+            item={{ value: t('column-action-settings.menu'), label: t('column-action-settings.menu') }}
+          />
         )}
       </Next.Menu.Content>
     </Next.Menu.Root>

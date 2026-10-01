@@ -20,7 +20,7 @@ export const RelatedItemsList = ({ items, onNavigate }: RelatedItemsListProps) =
   // Navigate-only: the row hosts a focusable button (keyboard-accessible) rather than a
   // row-level click, since plain `Listbox.Item`s are `role=listitem` (not focusable options).
   return (
-    <Listbox.Root>
+    <Listbox.Root items={items.map((item) => ({ value: item.id, label: item.id }))}>
       <Listbox.Content classNames='gap-1'>
         {items.map((item) => (
           <Listbox.Item key={item.id} id={item.id} classNames='p-0'>

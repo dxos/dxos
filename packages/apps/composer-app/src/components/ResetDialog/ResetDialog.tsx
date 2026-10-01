@@ -206,9 +206,11 @@ export const ResetDialog = ({
                 />
               </Next.Menu.Trigger>
               <Next.Menu.Content side='top'>
-                <Next.Menu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
-                  {t('reset-app-confirm.label')}
-                </Next.Menu.Item>
+                <Next.Menu.Item
+                  data-testid='resetDialog.confirmReset'
+                  onClick={onReset}
+                  item={{ value: t('reset-app-confirm.label'), label: t('reset-app-confirm.label') }}
+                />
               </Next.Menu.Content>
             </Next.Menu.Root>
           )}

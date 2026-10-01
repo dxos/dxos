@@ -48,7 +48,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 
       <Next.Panel.Body asChild>
         <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
-          <Next.ScrollArea.Root orientation='vertical' centered padding>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport>
               <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />

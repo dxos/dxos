@@ -75,7 +75,7 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     const departAt = Segment.getDepartAt(segment);
 
     return (
-      <Next.Card.Root fullWidth ref={forwardedRef}>
+      <Next.Card.Root ref={forwardedRef}>
         <Next.Card.Header>
           <Next.Block>
             <Next.Icon icon={icon} />

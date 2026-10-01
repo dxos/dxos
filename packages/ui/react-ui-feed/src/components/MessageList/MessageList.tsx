@@ -633,11 +633,8 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         {...composableProps(props)}
         orientation='vertical'
         autoHide={autoHide}
-        centered={centered}
         native={native}
-        padding={padding}
         scrollbars={scrollbars}
-        thin={thin}
       >
         <Next.ScrollArea.Viewport
           data-testid='feed.viewport'

@@ -34,7 +34,7 @@ const Contact = Schema.Struct({
 const values = { name: 'Ada Lovelace', email: 'ada@example.com', role: 'Engineer' };
 
 const ReferenceCard = () => (
-  <Next.Card.Root fullWidth>
+  <Next.Card.Root>
     <Next.Card.Header>
       <Next.Block>
         <Next.Icon icon='ph--user--regular' />
@@ -53,7 +53,7 @@ const ReferenceCard = () => (
 );
 
 const FormCard = () => (
-  <Next.Card.Root fullWidth>
+  <Next.Card.Root>
     <Next.Card.Header>
       <Next.Block>
         <Next.Icon icon='ph--pencil--regular' />

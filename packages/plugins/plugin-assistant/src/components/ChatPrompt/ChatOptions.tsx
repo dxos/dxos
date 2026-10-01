@@ -173,7 +173,15 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const value = (view as ChatView | undefined) ?? 'normal';
 
   return (
-    <Listbox.Root value={value} onValueChange={setView} autoFocus>
+    <Listbox.Root
+      value={value}
+      onValueChange={setView}
+      autoFocus
+      items={Assistant.ChatViews.map((view) => ({
+        value: view,
+        label: t(`chat-view.${view}.label`, { defaultValue: view }),
+      }))}
+    >
       <Listbox.Content aria-label={t('chat-view.title')}>
         {Assistant.ChatViews.map((view) => (
           <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
@@ -206,7 +214,15 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
 
   return (
-    <Listbox.Root value={value} onValueChange={handleChange} autoFocus>
+    <Listbox.Root
+      value={value}
+      onValueChange={handleChange}
+      autoFocus
+      items={environments.map((environment) => ({
+        value: environment,
+        label: t(`chat-environment.${environment}.label`),
+      }))}
+    >
       <Listbox.Content aria-label={t('options.environment.title')}>
         {environments.map((environment) => (
           <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
@@ -231,7 +247,12 @@ const ModelsPanel = ({
   const { t } = useTranslation(meta.profile.key);
   return (
     <div className='dx-expand flex flex-col'>
-      <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
+      <Listbox.Root
+        value={preset}
+        onValueChange={onPresetChange}
+        autoFocus
+        items={presets.map(({ id, label }) => ({ value: id, label: label }))}
+      >
         <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
             <Listbox.Item
@@ -493,7 +514,14 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           data-testid='assistant.mcp-server.url'
         />
       </Next.Field.Root>
-      <Next.Select.Root value={protocol} onValueChange={(value) => setProtocol(value === 'sse' ? 'sse' : 'http')}>
+      <Next.Select.Root
+        value={[protocol]}
+        onValueChange={({ value: [value] }) => setProtocol(value === 'sse' ? 'sse' : 'http')}
+        items={[
+          { value: 'http', label: 'HTTP' },
+          { value: 'sse', label: 'SSE' },
+        ]}
+      >
         <Next.Select.Trigger placeholder={t('mcp-server-protocol.label')} />
         <Next.Select.Content>
           <Next.Select.Item item={{ value: 'http', label: 'HTTP' }} />
@@ -598,8 +626,8 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
       <div className={mx('flex flex-col', styles.toolbar)}>
         <Next.Select.Root
-          value={selectedUri === ANY ? undefined : selectedUri}
-          onValueChange={(val) => setSelectedUri(val as URI.URI | typeof ANY)}
+          value={[selectedUri === ANY ? undefined : selectedUri]}
+          onValueChange={({ value: [val] }) => setSelectedUri(val as URI.URI | typeof ANY)}
         >
           <Next.Select.Trigger placeholder={t('type-filter.placeholder')} />
           <Next.Select.Content>

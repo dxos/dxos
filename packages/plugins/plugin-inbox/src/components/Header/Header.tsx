@@ -24,12 +24,7 @@ type HeaderRootProps = ThemedClassName<
  * one header structure.
  */
 const HeaderRoot = ({ classNames, children, ...props }: HeaderRootProps) => (
-  <Next.Card.Root
-    border={false}
-    fullWidth
-    classNames={mx('p-1 border-b border-subdued-separator', classNames)}
-    {...props}
-  >
+  <Next.Card.Root border={false} classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...props}>
     <Next.Card.Body>{children}</Next.Card.Body>
   </Next.Card.Root>
 );

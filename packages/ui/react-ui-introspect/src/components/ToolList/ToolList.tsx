@@ -54,7 +54,11 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
   );
 
   return (
-    <Listbox.Root value={selected ?? undefined} onValueChange={handleCurrentChange}>
+    <Listbox.Root
+      value={selected ?? undefined}
+      onValueChange={handleCurrentChange}
+      items={entries.map(([name, tool]) => ({ value: name, label: name }))}
+    >
       <Listbox.Content aria-label={t('tools.label')}>
         {entries.map(([name, tool]) => (
           <Listbox.Item key={name} id={name}>

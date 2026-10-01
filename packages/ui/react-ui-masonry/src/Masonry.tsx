@@ -128,9 +128,6 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
         // signature for CSS custom properties, so `--gutter` cannot be typed directly.
         {...composableProps(props, { style: { '--gutter': `${gap}rem` } as CSSProperties })}
         scrollbars={scrollbars}
-        centered={centered}
-        thin={thin}
-        padding={padding}
         ref={forwardedRef}
       >
         {children}

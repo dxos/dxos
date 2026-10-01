@@ -29,7 +29,7 @@ export type ToolboxProps = {
 export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
   ({ functions, services, skills, activeSkills, ...props }, forwardedRef) => {
     return (
-      <Next.ScrollArea.Root {...composableProps(props)} thin orientation='vertical' ref={forwardedRef}>
+      <Next.ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <Next.ScrollArea.Viewport>
           {skills && skills.length > 0 && (
             <Section

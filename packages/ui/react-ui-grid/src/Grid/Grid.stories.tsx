@@ -74,7 +74,10 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
       {/* Menu */}
       <Next.Menu.Root open={menuOpen} onOpenChange={setMenuOpen} positioning={Next.virtualAnchor(triggerRef)}>
         <Next.Menu.Content>
-          <Next.Menu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</Next.Menu.Item>
+          <Next.Menu.Item
+            onClick={() => console.log('[Click on dropdown menu item]')}
+            item={{ value: 'Hello', label: 'Hello' }}
+          />
         </Next.Menu.Content>
       </Next.Menu.Root>
 

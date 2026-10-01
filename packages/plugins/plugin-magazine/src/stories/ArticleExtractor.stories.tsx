@@ -74,11 +74,12 @@ const DefaultStory = () => {
             />
           </Next.Field.Root>
           <Next.Select.Root
-            value={url}
-            onValueChange={(sample) => {
+            value={[url]}
+            onValueChange={({ value: [sample] }) => {
               setUrl(sample);
               setState({ status: 'idle' });
             }}
+            items={SAMPLE_URLS.map((sample) => ({ value: sample, label: new URL(sample).hostname }))}
           >
             <Next.Button asChild>
               <Next.Select.Trigger placeholder='Sample URL' />
@@ -157,7 +158,7 @@ const ResultView = composable<HTMLDivElement, ResultViewProps>(
 
     if (showMarkdown) {
       return (
-        <Next.ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
+        <Next.ScrollArea.Root {...props} orientation='vertical' ref={forwardedRef}>
           <Next.ScrollArea.Viewport>
             <SyntaxHighlighter language='markdown' classNames='m-4'>
               {article.markdown}

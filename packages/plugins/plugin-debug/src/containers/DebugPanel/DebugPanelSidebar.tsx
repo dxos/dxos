@@ -107,7 +107,7 @@ export const DebugPanelSidebar = () => {
   );
 
   return (
-    <Next.ScrollArea.Root thin orientation='vertical'>
+    <Next.ScrollArea.Root orientation='vertical'>
       <Next.ScrollArea.Viewport>
         <Tree
           id={contextId}

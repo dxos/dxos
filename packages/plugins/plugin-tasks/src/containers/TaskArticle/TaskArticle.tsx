@@ -83,7 +83,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
         </Next.Toolbar.Root>
       </Next.Panel.Header>
       <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root thin>
+        <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport classNames='dx-document'>
             <TaskAttachmentDropZone onFiles={handleAttach}>
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the

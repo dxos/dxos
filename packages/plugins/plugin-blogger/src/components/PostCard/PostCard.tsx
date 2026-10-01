@@ -48,7 +48,6 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
 
   return (
     <Next.Card.Root
-      fullWidth
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}

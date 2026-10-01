@@ -164,7 +164,11 @@ export const ReportSections = ({ positions, trades, cash, openLots, closedLots }
   return (
     <div className='grid grid-rows-[min-content_1fr] min-h-0 h-full'>
       <div className='p-2'>
-        <Next.Select.Root value={active?.id} onValueChange={setSelected}>
+        <Next.Select.Root
+          value={[active?.id]}
+          onValueChange={({ value: [value] }) => setSelected(value)}
+          items={sections.map((section) => ({ value: section.id, label: section.label }))}
+        >
           <Next.Select.Trigger />
           <Next.Select.Content>
             {sections.map((section) => (

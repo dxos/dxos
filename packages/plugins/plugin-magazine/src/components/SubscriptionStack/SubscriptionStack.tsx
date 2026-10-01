@@ -60,7 +60,7 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <Next.ScrollArea.Root orientation='vertical' padding centered>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SubscriptionTile}

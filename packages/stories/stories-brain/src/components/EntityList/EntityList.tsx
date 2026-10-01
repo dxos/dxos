@@ -51,7 +51,11 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
         {entities.length === 0 ? (
           <Next.Empty>No entities.</Next.Empty>
         ) : (
-          <Listbox.Root value={selected} onValueChange={onSelect}>
+          <Listbox.Root
+            value={selected}
+            onValueChange={onSelect}
+            items={entities.map((entity) => ({ value: entity.id, label: entity.label }))}
+          >
             <Listbox.Content aria-label='Entities'>
               {entities.map((entity) => (
                 <Listbox.Item

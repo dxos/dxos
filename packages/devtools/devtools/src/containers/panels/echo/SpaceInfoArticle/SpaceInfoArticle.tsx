@@ -81,7 +81,7 @@ export const SpaceInfoArticle: FC<SpaceInfoArticleProps> = ({ role, ...props }) 
       <Next.Panel.Header>{toolbar}</Next.Panel.Header>
       <Next.Panel.Body>
         {space && metadata && (
-          <Next.ScrollArea.Root thin>
+          <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport>
               <SpaceProperties space={space} metadata={metadata} />
               <div className='h-24'>

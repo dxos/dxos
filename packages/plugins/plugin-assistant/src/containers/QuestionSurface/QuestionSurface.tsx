@@ -53,7 +53,7 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
   return (
     // `fullWidth`: a card defaults to `dx-card-max-width`, which is right where cards are laid out
     // beside each other and wrong in a message, where the thread's column is the width to fill.
-    <Next.Card.Root fullWidth classNames='my-2' size='sm'>
+    <Next.Card.Root classNames='my-2' size='sm'>
       <Next.Card.Header>
         <Next.Block>
           <CardIconSlot subject={object}>

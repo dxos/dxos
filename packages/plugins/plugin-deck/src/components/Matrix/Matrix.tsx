@@ -171,7 +171,7 @@ const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) =
   );
 
   return (
-    <Next.ScrollArea.Root orientation='horizontal' padding snap {...composableProps(props)} ref={forwardedRef}>
+    <Next.ScrollArea.Root orientation='horizontal' snap {...composableProps(props)} ref={forwardedRef}>
       <Next.ScrollArea.Viewport ref={viewportRef}>
         <Mosaic.Stack
           orientation='horizontal'

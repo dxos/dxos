@@ -312,9 +312,6 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
         <Next.ScrollArea.Root
           {...composableProps(props)}
           orientation='vertical'
-          centered
-          padding
-          thin
           data-testid={testId}
           ref={forwardedRef}
         >

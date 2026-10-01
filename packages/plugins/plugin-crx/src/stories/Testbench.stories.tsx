@@ -20,7 +20,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <Next.ScrollArea.Root centered padding>
+    <Next.ScrollArea.Root>
       <Next.ScrollArea.Viewport classNames='flex flex-col gap-2 py-3'>
         <h1 className='text-2xl'>{title}</h1>
         <Next.Image src={image} alt={title} fit='cover' />

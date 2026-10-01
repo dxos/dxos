@@ -143,7 +143,10 @@ const DefaultStory = ({
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
           <Next.Toolbar.Root>
-            <Next.Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
+            <Next.Select.Root
+              value={[sidebar]}
+              onValueChange={({ value: [value] }) => setSidebar(value as RenderProps['sidebar'])}
+            >
               <Next.Select.Trigger classNames='w-full'>{sidebar}</Next.Select.Trigger>
               <Next.Select.Content>
                 {sidebarTypes.map((type) => (

@@ -128,7 +128,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         {availableTargets.length === 0 ? (
           <Next.Empty>{t('no-available-targets.message')}</Next.Empty>
         ) : (
-          <Next.ScrollArea.Root padding>
+          <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport>
               <Listbox.Root>
                 <Listbox.Content>

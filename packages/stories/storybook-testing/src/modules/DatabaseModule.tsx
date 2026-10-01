@@ -238,11 +238,7 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
   const iconAnnotation = Obj.getIcon(object);
 
   return (
-    <Next.Card.Root
-      fullWidth
-      classNames={['cursor-pointer', current && 'ring-2 ring-focus']}
-      onClick={() => onSelect(object.id)}
-    >
+    <Next.Card.Root classNames={['cursor-pointer', current && 'ring-2 ring-focus']} onClick={() => onSelect(object.id)}>
       <Next.Card.Header>
         <Next.Block>
           <Next.Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subdued' />

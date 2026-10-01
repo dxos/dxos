@@ -43,7 +43,6 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
   return (
     <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
       <Next.Card.Root
-        fullWidth
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (

@@ -247,7 +247,6 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
       <Next.ScrollArea.Root
         {...composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
         role='listbox'
-        thin
         ref={forwardedRef}
       >
         <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>

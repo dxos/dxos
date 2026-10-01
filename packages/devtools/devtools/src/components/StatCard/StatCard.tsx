@@ -31,7 +31,7 @@ type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string; densit
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, density = 'sm', classNames, children }: StatCardRootProps) => (
-  <Next.Card.Root id={id} size={density} fullWidth classNames={classNames}>
+  <Next.Card.Root id={id} size={density} classNames={classNames}>
     {children}
   </Next.Card.Root>
 );

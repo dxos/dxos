@@ -81,7 +81,6 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
         style={style}
         classNames={[className, classNames, copyButton && 'relative group']}
         orientation={scroll}
-        thin
         ref={forwardedRef}
       >
         <Next.ScrollArea.Viewport>

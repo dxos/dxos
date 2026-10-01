@@ -410,7 +410,11 @@ type CameraTargetSelectProps = {
 const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Next.Select.Root value={value} onValueChange={onChange}>
+    <Next.Select.Root
+      value={[value]}
+      onValueChange={({ value: [value] }) => onChange(value)}
+      items={definitions.map((definition) => ({ value: definition.id, label: definition.name ?? definition.kind }))}
+    >
       <Next.Select.Trigger
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'

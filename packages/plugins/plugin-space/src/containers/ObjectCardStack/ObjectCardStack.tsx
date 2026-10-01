@@ -54,7 +54,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
             </Next.Banner.Root>
           ) : (
             <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-              <Next.ScrollArea.Root orientation='vertical' centered padding>
+              <Next.ScrollArea.Root orientation='vertical'>
                 <Next.ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack
                     classNames='py-trim-md gap-trim-md'
@@ -63,7 +63,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        <Next.Card.Root fullWidth gutter='sm'>
+                        <Next.Card.Root gutter='sm'>
                           <ObjectForm object={props.data} type={type} />
                         </Next.Card.Root>
                       </Mosaic.Tile>

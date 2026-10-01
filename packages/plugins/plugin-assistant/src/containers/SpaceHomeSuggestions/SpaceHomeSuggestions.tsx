@@ -57,7 +57,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
             className='cursor-pointer w-full text-start'
             onClick={() => handleRunPrompt(prompt)}
           >
-            <Next.Card.Root fullWidth>
+            <Next.Card.Root>
               <Next.Card.Header>
                 <Next.Block>
                   <Next.Icon icon='ph--sparkle--regular' />

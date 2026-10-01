@@ -96,7 +96,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Next.Card.Root fullWidth border={false} ref={forwardedRef}>
+        <Next.Card.Root border={false} ref={forwardedRef}>
           <Next.Card.Header>
             <Next.Block>
               <Next.Icon icon={icon} classNames={iconStyles?.text} />

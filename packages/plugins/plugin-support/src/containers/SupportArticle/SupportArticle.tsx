@@ -70,7 +70,7 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
       </Next.Panel.Header>
       <Next.Panel.Body asChild>
         <Column.Root>
-          <Next.ScrollArea.Root orientation='vertical' padding>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport>
               <Next.Field.Root>
                 <Next.Field.Label>{t('title.label')}</Next.Field.Label>

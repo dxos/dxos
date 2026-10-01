@@ -234,7 +234,11 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
           onChange={(ev) => setFilter(ev.target.value)}
         />
       </Next.Field.Root>
-      <Next.Select.Root value={selectedLevel} onValueChange={setFilter}>
+      <Next.Select.Root
+        value={[selectedLevel]}
+        onValueChange={({ value: [value] }) => setFilter(value)}
+        items={LEVELS.map((level) => ({ value: level, label: t(`level.${level}`) }))}
+      >
         <Next.Select.Trigger classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
         <Next.Select.Content>
           {LEVELS.map((level) => (
@@ -309,7 +313,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
               </Next.Toolbar.Root>
             </Next.Panel.Header>
             <Next.Panel.Body asChild>
-              <Next.ScrollArea.Root orientation='vertical' thin>
+              <Next.ScrollArea.Root orientation='vertical'>
                 <Next.ScrollArea.Viewport>
                   {visibleFiles.length === 0 && (
                     <div className='p-2 text-xs text-subdued'>
@@ -335,8 +339,8 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                 {basename}
                               </Listbox.ItemText>
                               <Next.Select.Root
-                                value={value}
-                                onValueChange={(next) =>
+                                value={[value]}
+                                onValueChange={({ value: [next] }) =>
                                   setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
                                 }
                               >
@@ -395,7 +399,7 @@ const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [rows]);
 
   return (
-    <Next.ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+    <Next.ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
       <Next.ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
       </Next.ScrollArea.Viewport>

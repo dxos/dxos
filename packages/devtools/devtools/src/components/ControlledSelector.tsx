@@ -15,7 +15,7 @@ export type ControlledSelectorProps<T> = {
 
 export const ControlledSelector = <T extends string>(props: ControlledSelectorProps<T>) => {
   return (
-    <Next.Select.Root value={props.value} onValueChange={props.setValue}>
+    <Next.Select.Root value={[props.value]} onValueChange={({ value: [value] }) => props.setValue(value)}>
       <Next.Select.Trigger placeholder={props.placeholder ?? 'Select space'} />
       <Next.Select.Content>
         {props.values.map((mode) => (

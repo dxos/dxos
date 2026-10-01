@@ -342,7 +342,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
       {card ? (
         <>
           <div>
-            <Next.Card.Root fullWidth>
+            <Next.Card.Root>
               <Next.Card.Header>
                 <Next.DragHandle />
                 <Next.Card.Title>Read-only</Next.Card.Title>
@@ -352,7 +352,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
             </Next.Card.Root>
           </div>
           <div>
-            <Next.Card.Root fullWidth>
+            <Next.Card.Root>
               <Next.Card.Header>
                 <Next.DragHandle />
                 <Next.Card.Title>Editable</Next.Card.Title>

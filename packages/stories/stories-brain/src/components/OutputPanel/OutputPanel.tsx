@@ -72,7 +72,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
 };
 
 const StatsView = ({ stats }: { stats: StatItem[] }) => (
-  <Next.ScrollArea.Root padding classNames='h-full'>
+  <Next.ScrollArea.Root classNames='h-full'>
     <Next.ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
       {stats.length === 0 && <Next.Empty>No stats.</Next.Empty>}
       {stats.map((stat) => (

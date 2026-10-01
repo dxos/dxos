@@ -167,7 +167,7 @@ const ProviderHarness = () => {
               {outcome.kind} — {outcome.ok ? `${outcome.options.length} option(s)` : 'error'}
             </div>
             {outcome.ok ? (
-              <Listbox.Root>
+              <Listbox.Root items={outcome.options.map((option) => ({ value: option.id, label: option.name }))}>
                 <Listbox.Content aria-label={outcome.kind}>
                   {outcome.options.map((option) => (
                     <Listbox.Item key={option.id} id={option.id}>

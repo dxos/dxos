@@ -66,7 +66,11 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 // TODO(burdon): Factor out.
 const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
-    <Next.Select.Root value={value} onValueChange={onValueChange}>
+    <Next.Select.Root
+      value={[value]}
+      onValueChange={({ value: [value] }) => onValueChange(value)}
+      items={Trigger.Kinds.map((kind) => ({ value: kind, label: kind }))}
+    >
       <Next.Select.Trigger variant='ghost' classNames='w-full px-0!' />
       <Next.Select.Content>
         {Trigger.Kinds.map((kind) => (

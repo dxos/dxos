@@ -169,7 +169,7 @@ const FactViewerList = ({ classNames }: FactViewerListProps) => {
   const { groups } = useFactViewerContext('List');
   return (
     <Next.Panel.Body asChild>
-      <Next.ScrollArea.Root padding classNames={classNames}>
+      <Next.ScrollArea.Root classNames={classNames}>
         <Next.ScrollArea.Viewport classNames={styles.listViewport()}>
           {groups.length === 0 && <Next.Empty>No facts.</Next.Empty>}
           {groups.map((group) => (

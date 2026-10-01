@@ -36,7 +36,7 @@ export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) =
           {objects.length === 0 ? (
             <Next.Empty>No objects.</Next.Empty>
           ) : (
-            <Listbox.Root>
+            <Listbox.Root items={objects.map((object) => ({ value: object.id, label: object.label }))}>
               <Listbox.Content aria-label='ECHO objects'>
                 {objects.map((object) => (
                   <Listbox.Item classNames='gap-2' key={object.id} id={object.id}>

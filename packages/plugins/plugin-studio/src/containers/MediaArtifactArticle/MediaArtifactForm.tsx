@@ -227,7 +227,11 @@ export const MediaArtifactForm = ({
             variant: 'custom',
             label: ['generator.placeholder', { ns: meta.profile.key }],
             render: () => (
-              <Next.Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
+              <Next.Select.Root
+                value={[provider?.id]}
+                onValueChange={({ value: [value] }) => handleGeneratorChange(value)}
+                items={providers.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
+              >
                 <Next.Select.Trigger placeholder={t('generator.placeholder')} />
                 <Next.Select.Content>
                   {providers.map((candidate) => (

@@ -530,7 +530,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           </Next.Toolbar.Root>
         </Next.Panel.Header>
         <Next.Panel.Body asChild>
-          <Next.ScrollArea.Root thin>
+          <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}

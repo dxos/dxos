@@ -127,7 +127,7 @@ export const ProcessTree = React.memo(
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
 
       return (
-        <Next.ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+        <Next.ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
           <Next.ScrollArea.Viewport>
             <Tree<ProcessNode>
               id={ROOT_ID}

@@ -56,7 +56,7 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
     );
 
     return (
-      <Next.ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
+      <Next.ScrollArea.Root {...props} orientation='vertical' ref={forwardedRef}>
         <Next.ScrollArea.Viewport classNames='flex flex-col gap-3 p-4'>
           {title && <h1 className='text-xl font-semibold'>{title}</h1>}
           {showHero && <img src={imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />}

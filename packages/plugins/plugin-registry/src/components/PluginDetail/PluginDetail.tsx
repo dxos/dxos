@@ -283,7 +283,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('versions.label')} />
                 <Section.Body>
                   <div className='flex gap-2 items-center'>
-                    <Next.Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
+                    <Next.Select.Root
+                      value={[selectedVersionTag]}
+                      onValueChange={({ value: [value] }) => onVersionChange(value)}
+                    >
                       <Next.Select.Trigger classNames='min-w-32' />
                       <Next.Select.Content>
                         {versions.map((versionEntry) => (

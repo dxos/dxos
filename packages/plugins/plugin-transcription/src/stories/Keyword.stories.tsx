@@ -59,7 +59,7 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
       </Next.Panel.Header>
 
       <Next.Panel.Body>
-        <Listbox.Root value={matched}>
+        <Listbox.Root value={matched} items={keywords.map((keyword) => ({ value: keyword, label: keyword }))}>
           <Listbox.Content aria-label='Keywords'>
             {keywords.map((keyword) => (
               <Listbox.Item key={keyword} id={keyword}>

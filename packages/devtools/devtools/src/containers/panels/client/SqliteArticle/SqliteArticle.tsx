@@ -321,7 +321,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
             )}
           </div>
 
-          <Next.ScrollArea.Root thin>
+          <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport classNames='p-2'>
               <div className='text-xs font-medium mb-2'>Tables</div>
               {tables.length === 0 ? (
@@ -373,7 +373,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
 
           {error && <div className='p-2 text-sm text-red-500 font-mono'>{error}</div>}
 
-          <Next.ScrollArea.Root thin>
+          <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport>
               {rows.length === 0 && !error ? (
                 <div className='p-2 text-sm text-neutral-400'>No rows.</div>

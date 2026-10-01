@@ -59,7 +59,11 @@ export const PipelinePanel = ({
     <Next.Panel.Root classNames={classNames}>
       <Next.Panel.Header>
         <Next.Toolbar.Root>
-          <Next.Select.Root value={selected} onValueChange={onSelect}>
+          <Next.Select.Root
+            value={[selected]}
+            onValueChange={({ value: [value] }) => onSelect(value)}
+            items={pipelines.map((item) => ({ value: item.id, label: item.label }))}
+          >
             <Next.Select.Trigger placeholder='Pipeline' />
             <Next.Select.Content>
               {pipelines.map((item) => (
@@ -79,7 +83,7 @@ export const PipelinePanel = ({
         </Next.Toolbar.Root>
       </Next.Panel.Header>
       <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root padding>
+        <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
             {stages.length === 0 && <Next.Empty>No stages.</Next.Empty>}
             {stages.map((stage) => (

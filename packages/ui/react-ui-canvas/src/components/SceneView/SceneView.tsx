@@ -792,18 +792,18 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
                   removePoint(point);
                 }
               }}
-            >
-              Remove control point
-            </Next.Menu.Item>
+              item={{ value: 'Remove control point', label: 'Remove control point' }}
+            />
           )}
           {menu?.kind === 'element' && (
             <>
-              <Next.Menu.Item data-testid='menu-cut' disabled={!capabilities.delete} onSelect={cut}>
-                Cut
-              </Next.Menu.Item>
-              <Next.Menu.Item data-testid='menu-copy' onSelect={copy}>
-                Copy
-              </Next.Menu.Item>
+              <Next.Menu.Item
+                data-testid='menu-cut'
+                disabled={!capabilities.delete}
+                onSelect={cut}
+                item={{ value: 'Cut', label: 'Cut' }}
+              />
+              <Next.Menu.Item data-testid='menu-copy' onSelect={copy} item={{ value: 'Copy', label: 'Copy' }} />
               <Next.Menu.Item
                 data-testid='menu-delete'
                 disabled={!capabilities.delete}
@@ -811,9 +811,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
                   projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
                   select([]);
                 }}
-              >
-                Delete
-              </Next.Menu.Item>
+                item={{ value: 'Delete', label: 'Delete' }}
+              />
             </>
           )}
           {menu?.kind === 'canvas' && (
@@ -821,9 +820,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
               data-testid='menu-paste'
               disabled={!clipboard || !capabilities.create}
               onSelect={() => paste(menu.scene)}
-            >
-              Paste
-            </Next.Menu.Item>
+              item={{ value: 'Paste', label: 'Paste' }}
+            />
           )}
         </Next.Menu.Content>
       </Next.Menu.Root>

@@ -56,7 +56,6 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
 
   return (
     <Next.Card.Root
-      fullWidth
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}

@@ -63,7 +63,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <Next.ScrollArea.Root orientation='vertical' padding centered thin>
+          <Next.ScrollArea.Root orientation='vertical'>
             <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SegmentTile}

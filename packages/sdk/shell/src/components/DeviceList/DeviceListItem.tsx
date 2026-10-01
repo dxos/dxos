@@ -117,22 +117,37 @@ export const DeviceListItem = forwardRef<
                 {/*  {t('edit-device.label')} */}
                 {/* </Menu.Item> */}
                 {onClickJoinExisting && (
-                  <Next.Menu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                    <Next.Icon icon='ph--share-fat--regular' />
-                    {t('choose-join-new-identity.label')}
-                  </Next.Menu.Item>
+                  <Next.Menu.Item
+                    data-testid='device-list-item-current.join-existing'
+                    onClick={onClickJoinExisting}
+                    item={{
+                      value: t('choose-join-new-identity.label'),
+                      label: t('choose-join-new-identity.label'),
+                      icon: 'ph--share-fat--regular',
+                    }}
+                  />
                 )}
                 {onClickRecover && (
-                  <Next.Menu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                    <Next.Icon icon='ph--first-aid-kit--regular' />
-                    {t('choose-recover-identity.label')}
-                  </Next.Menu.Item>
+                  <Next.Menu.Item
+                    data-testid='device-list-item-current.recover'
+                    onClick={onClickRecover}
+                    item={{
+                      value: t('choose-recover-identity.label'),
+                      label: t('choose-recover-identity.label'),
+                      icon: 'ph--first-aid-kit--regular',
+                    }}
+                  />
                 )}
                 {onClickReset && (
-                  <Next.Menu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                    <Next.Icon icon='ph--power--regular' />
-                    {t('reset-device.label')}
-                  </Next.Menu.Item>
+                  <Next.Menu.Item
+                    data-testid='device-list-item-current.reset'
+                    onClick={onClickReset}
+                    item={{
+                      value: t('reset-device.label'),
+                      label: t('reset-device.label'),
+                      icon: 'ph--power--regular',
+                    }}
+                  />
                 )}
               </Next.Menu.Content>
             </Next.Menu.Root>

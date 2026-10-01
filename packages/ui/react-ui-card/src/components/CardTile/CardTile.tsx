@@ -43,7 +43,7 @@ const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
       classNames={classNames ?? 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator'}
     >
       <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
-        <Next.Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
+        <Next.Card.Root border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
           {children}
         </Next.Card.Root>
       </Focus.Item>

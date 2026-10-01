@@ -152,7 +152,11 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 
   return (
-    <Listbox.Root value={selected} onValueChange={handleOpen}>
+    <Listbox.Root
+      value={selected}
+      onValueChange={handleOpen}
+      items={LAUNCHER_MESSAGES.map((message) => ({ value: message.id, label: message.id }))}
+    >
       <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
         {LAUNCHER_MESSAGES.map((message) => (
           <Listbox.Item

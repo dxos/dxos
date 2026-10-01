@@ -30,7 +30,7 @@ export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectAr
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <Next.ScrollArea.Root centered padding thin>
+        <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='gap-1'
@@ -71,7 +71,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { archived, item: archiveItem } = useArchiveMenuItem(item.object);
 
   return (
-    <Next.Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Next.Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Next.Card.Header>
         <Next.Block>
           <Next.Icon icon={item.icon} classNames={styles?.fg} />

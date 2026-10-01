@@ -143,7 +143,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   return (
     <>
-      <Next.ScrollArea.Root thin orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
+      <Next.ScrollArea.Root orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
         <Next.ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>

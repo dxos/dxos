@@ -35,7 +35,11 @@ export const RepositoryToolbar = ({
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
   return (
     <Next.Toolbar.Root classNames='gap-1'>
-      <Next.Select.Root value={currentRef} onValueChange={onRefChange} disabled={branches.length === 0}>
+      <Next.Select.Root
+        value={[currentRef]}
+        onValueChange={({ value: [value] }) => onRefChange(value)}
+        disabled={branches.length === 0}
+      >
         <Next.Select.Trigger
           classNames='text-sm'
           placeholder={t('branch-select.placeholder')}
