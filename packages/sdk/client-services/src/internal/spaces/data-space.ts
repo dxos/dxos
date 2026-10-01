@@ -447,7 +447,12 @@ export class DataSpace {
       return;
     }
 
-    await this.updateOwnProfile(profile);
+    // A repair, not a precondition: a failed write must not keep the space from opening.
+    try {
+      await this.updateOwnProfile(profile);
+    } catch (err) {
+      log.warn('failed to sync own member profile', { space: this.key, err });
+    }
   }
 
   @timed(10_000)
