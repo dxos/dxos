@@ -27,7 +27,6 @@ const ITEMS: Item[] = [
 
 const LONG: Item[] = Array.from({ length: 40 }, (_, index) => ({ id: `item-${index}`, label: `Item ${index + 1}` }));
 
-
 const getId = (item: { id: string }) => item.id;
 
 /** Handle cell, then the title. */

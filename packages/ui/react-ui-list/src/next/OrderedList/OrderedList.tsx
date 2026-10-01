@@ -196,11 +196,7 @@ const OrderedListDragHandle = () => {
   const { readonly, move } = useOrderedListContext('OrderedList.DragHandle');
   const { id, canDrag, handleRef } = useOrderedListItemContext('OrderedList.DragHandle');
   return (
-    <Next.DragHandle
-      disabled={readonly || !canDrag}
-      onMove={(direction) => move(id, direction)}
-      ref={handleRef}
-    />
+    <Next.DragHandle disabled={readonly || !canDrag} onMove={(direction) => move(id, direction)} ref={handleRef} />
   );
 };
 
