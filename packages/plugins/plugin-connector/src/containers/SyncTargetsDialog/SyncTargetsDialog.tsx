@@ -12,7 +12,6 @@ import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Flex, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -54,17 +53,11 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
 
-  const handleToggle = useCallback((id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
+  const targetItems = useMemo(
+    () =>
+      availableTargets.map((target) => ({ value: target.id, label: target.name, description: target.description })),
+    [availableTargets],
+  );
 
   const handleSelectAll = useCallback(() => {
     setSelected(new Set(availableTargets.map((target) => target.id)));
@@ -130,37 +123,24 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         ) : (
           <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport>
-              <Listbox.Root>
-                <Listbox.Content>
-                  {availableTargets.map((target) => {
-                    // Associate the visible label with the checkbox so clicking the name toggles it.
-                    const checkboxId = `sync-target-${target.id}`;
-                    return (
-                      <Listbox.Item key={target.id} id={target.id}>
-                        <Next.Field.Root>
-                          <Listbox.ItemContent
-                            icon={
-                              <Next.Checkbox
-                                id={checkboxId}
-                                checked={selected.has(target.id)}
-                                onCheckedChange={() => handleToggle(target.id)}
-                                disabled={submitting}
-                                aria-label={target.name}
-                              />
-                            }
-                            title={
-                              <Next.Field.Label htmlFor={checkboxId} classNames='text-base text-base-fg'>
-                                {target.name}
-                              </Next.Field.Label>
-                            }
-                            description={target.description}
-                          />
-                        </Next.Field.Root>
-                      </Listbox.Item>
-                    );
-                  })}
-                </Listbox.Content>
-              </Listbox.Root>
+              {/* A multiple-selection listbox: each row toggles its target and shows a check while selected. */}
+              <Next.Listbox.Root
+                items={targetItems}
+                selectionMode='multiple'
+                value={[...selected]}
+                onValueChange={(value) => setSelected(new Set(value))}
+                disabled={submitting}
+              >
+                <Next.Listbox.Content aria-label={t('sync-targets-dialog.title')}>
+                  {targetItems.map((item) => (
+                    <Next.Listbox.Item key={item.value} item={item}>
+                      <Next.Listbox.ItemIndicator />
+                      <Next.Listbox.ItemText />
+                      {item.description && <Next.Listbox.ItemDescription />}
+                    </Next.Listbox.Item>
+                  ))}
+                </Next.Listbox.Content>
+              </Next.Listbox.Root>
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         )}

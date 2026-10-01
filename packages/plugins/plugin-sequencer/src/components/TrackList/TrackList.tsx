@@ -42,7 +42,7 @@ export const TrackList = ({
   classNames,
 }: TrackListProps) => {
   return (
-    <Listbox.Root>
+    <Listbox.Root items={tracks.map((track) => ({ value: track.id, label: track.name }))}>
       <div className={mx('flex flex-col gap-1 p-2 overflow-y-auto', classNames)}>
         <Listbox.Content aria-label='Tracks' classNames='gap-1'>
           {tracks.map((track) => {
@@ -51,8 +51,8 @@ export const TrackList = ({
               <Listbox.Item
                 key={track.id}
                 id={track.id}
-                aria-current={selected || undefined}
-                classNames='gap-2 px-2 py-1 rounded-sm text-sm dx-current'
+                current={selected}
+                classNames='gap-2 px-2 py-1 rounded-sm text-sm'
               >
                 <span
                   className='inline-block size-3 rounded-sm shrink-0 border border-black/20'
