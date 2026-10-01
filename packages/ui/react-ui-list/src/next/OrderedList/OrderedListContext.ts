@@ -5,13 +5,14 @@
 import { createContext } from '@dxos/react-ui';
 import { type Next } from '@dxos/react-ui/next';
 
-import { type ReorderListController, type UseListDisclosureReturn } from '../../hooks/index.ts';
+import { type ReorderListController } from '../../hooks/index.ts';
 
 // Kept out of the component module: react-refresh only fast-refreshes a module whose exports are all components.
 
 export type OrderedListContextValue = {
   reorder: ReorderListController<unknown>;
-  disclosure: UseListDisclosureReturn;
+  /** The listbox option of each row, by id. */
+  options: ReadonlyMap<string, Next.ListboxOption>;
   readonly?: boolean;
   /** Keyboard move from the row's DragHandle, resolved against the current order. */
   move: (id: string, direction: Next.DragMoveDirection) => void;

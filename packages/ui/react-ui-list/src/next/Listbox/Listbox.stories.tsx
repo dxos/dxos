@@ -13,6 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
 import { Listbox } from './Listbox.tsx';
+import { listboxSelection } from './selection.ts';
 
 const ITEMS: Next.ListboxOption[] = [
   { value: 'alpha', label: 'Alpha', description: 'The first letter' },
@@ -34,6 +35,7 @@ const LONG: Next.ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [selected, setSelected] = useState<string | undefined>('alpha');
   const [filter, setFilter] = useState('');
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set(['bravo']));
   const filtered = LONG.filter((item) => item.label.toLowerCase().includes(filter.toLowerCase()));
   return (
     <>
@@ -63,6 +65,20 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
+      <Next.Listbox.Root
+        items={ITEMS}
+        {...listboxSelection({ mode: 'multi', value: picked, onValueChange: setPicked })}
+      >
+        <Next.Listbox.Content aria-label='Picked'>
+          {ITEMS.map((item) => (
+            <Next.Listbox.Item key={item.value} item={item}>
+              <Next.Listbox.ItemText />
+              <Next.Listbox.ItemIndicator />
+            </Next.Listbox.Item>
+          ))}
+        </Next.Listbox.Content>
+      </Next.Listbox.Root>
+      <Next.Typography data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Next.Typography>
       <div className='h-48'>
         <Next.Panel.Root>
           <Next.Panel.Header>
@@ -82,6 +98,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                   <Listbox.Item key={item.value} id={item.value} />
                 ))}
               </Listbox.Content>
+              <Listbox.Empty>No matches</Listbox.Empty>
             </Listbox.Root>
           </Next.Panel.Body>
         </Next.Panel.Root>
@@ -108,7 +125,8 @@ export const Default: Story = {};
 /**
  * Selection is opt-in and single, keyed by the item id: the selected row reports `aria-selected`, clicking another
  * selects it, clicking it again deselects (`onDeselect`), and the disabled row is skipped. Without a value model the
- * list is a plain `list` of `listitem`s. The filter narrows the long list inside the Panel.
+ * list selects nothing; `listboxSelection` adapts a set of ids to multiple selection. The filter narrows the long list
+ * inside the Panel, down to its Empty part.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -127,12 +145,25 @@ export const Test: Story = {
     await userEvent.keyboard('{Home}{ArrowDown}{ArrowDown}{Enter}');
     await waitFor(() => expect(canvas.getByTestId('selected-md')).toHaveTextContent('delta'));
 
-    const plain = canvas.getByRole('list', { name: 'Plain' });
-    await expect(within(plain).getAllByRole('listitem')).toHaveLength(ITEMS.length);
+    // Without a value model the list selects nothing but keeps the listbox machine.
+    const plain = canvas.getByRole('listbox', { name: 'Plain' });
+    await expect(within(plain).getAllByRole('option')).toHaveLength(ITEMS.length);
+    await userEvent.click(within(plain).getByRole('option', { name: 'Bravo' }));
+    await expect(within(plain).queryByRole('option', { selected: true })).toBeNull();
+
+    // `listboxSelection` adapts a set of ids to Ark's multiple selection.
+    const picked = canvas.getByRole('listbox', { name: 'Picked' });
+    await expect(picked).toHaveAttribute('aria-multiselectable', 'true');
+    await expect(within(picked).getByRole('option', { name: 'Bravo' })).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(within(picked).getByRole('option', { name: 'Delta' }));
+    await waitFor(() => expect(canvas.getByTestId('picked-md')).toHaveTextContent('bravo delta'));
 
     const long = canvas.getByRole('listbox', { name: 'Long' });
     await expect(within(long).getAllByRole('option')).toHaveLength(LONG.length);
     await userEvent.type(canvas.getByRole('textbox', { name: 'Filter' }), 'Item 1');
     await waitFor(() => expect(within(long).getAllByRole('option')).toHaveLength(11));
+    await expect(canvas.queryByText('No matches')).toBeNull();
+    await userEvent.type(canvas.getByRole('textbox', { name: 'Filter' }), 'x');
+    await waitFor(() => expect(canvas.getByText('No matches')).toBeVisible());
   },
 };

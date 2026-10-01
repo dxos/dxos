@@ -26,8 +26,9 @@ const OptionsContext = createContext<ReadonlyMap<string, Next.ListboxOption>>(ne
 
 type ListboxRootProps = Omit<NextRootProps, 'selectionMode' | 'value' | 'defaultValue' | 'onValueChange'> & {
   /**
-   * Selected option id (controlled). Supplying any of `value`/`defaultValue`/`onValueChange` makes the list a
-   * single-selection `listbox`; omitting all three renders a plain `list`.
+   * Selected option id (controlled). Supplying any of `value`/`defaultValue`/`onValueChange` makes the list
+   * single-selection; omitting all three selects nothing (`selectionMode='none'`), keeping zag's navigation. Multiple
+   * selection, or a `useListSelection`-shaped value, goes through `listboxSelection` on `Next.Listbox.Root`.
    */
   value?: string;
   defaultValue?: string;
@@ -38,7 +39,8 @@ type ListboxRootProps = Omit<NextRootProps, 'selectionMode' | 'value' | 'default
 
 /**
  * Next.Listbox with the current Listbox's selection model: selection is opt-in and single, keyed by option `value`
- * (the current API's item `id`). Keyboard navigation, typeahead and `aria-selected` are zag's.
+ * (the current API's item `id`). Ark owns the selection state; keyboard navigation, typeahead and `aria-selected` are
+ * zag's.
  */
 const ListboxRoot: ForwardRefExoticComponent<ListboxRootProps & RefAttributes<HTMLDivElement>> = forwardRef<
   HTMLDivElement,
@@ -107,6 +109,7 @@ export const Listbox: {
   Root: typeof ListboxRoot;
   Label: typeof Next.Listbox.Label;
   Content: typeof Next.Listbox.Content;
+  Empty: typeof Next.Listbox.Empty;
   Item: typeof ListboxItem;
   ItemIcon: typeof Next.Listbox.ItemIcon;
   ItemText: typeof Next.Listbox.ItemText;
@@ -118,6 +121,7 @@ export const Listbox: {
   Root: ListboxRoot,
   Label: Next.Listbox.Label,
   Content: Next.Listbox.Content,
+  Empty: Next.Listbox.Empty,
   Item: ListboxItem,
   ItemIcon: Next.Listbox.ItemIcon,
   ItemText: Next.Listbox.ItemText,
