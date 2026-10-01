@@ -34,6 +34,11 @@
       "types": "./dist/types/src/annotations.d.ts",
       "import": "./dist/lib/annotations.mjs"
     },
+    "./next": {
+      "source": "./src/next/index.ts",
+      "types": "./dist/types/src/next/index.d.ts",
+      "import": "./dist/lib/next.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",

@@ -23,19 +23,23 @@ export const SETTINGS_COLUMNS = 'minmax(0, 1fr) [control] minmax(0, 1fr)';
 //
 
 export type FormViewportProps = PropsWithChildren<{
-  /** Fill the parent and scroll, the rails hosting the scrollbar; a form in a `Next.Panel.Body` needs no Viewport. */
+  /**
+   * Fill the parent and scroll: the form becomes its own pane (a `Next.Panel` with a scrolling Body), so it is sized,
+   * collapses its rails against its own width and hosts the scrollbar in its end rail. A form already in a
+   * `Next.Panel.Body` needs no Viewport.
+   */
   scroll?: boolean;
+  /** The pane's size when `scroll`; otherwise the form inherits its host's. */
+  size?: Next.PanelRootProps['size'];
   gutter?: Next.Gutter;
 }>;
 
-/** The gutter Container that owns the form's rails, optionally the viewport of a composed ScrollArea. */
-export const FormViewport = ({ children, scroll, gutter = 'rail' }: FormViewportProps) =>
+/** The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. */
+export const FormViewport = ({ children, scroll, size, gutter = 'rail' }: FormViewportProps) =>
   scroll ? (
-    <Next.ScrollArea.Root>
-      <Next.ScrollArea.Viewport asChild>
-        <Next.Container gutter={gutter}>{children}</Next.Container>
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+    <Next.Panel.Root size={size}>
+      <Next.Panel.Body gutter={gutter}>{children}</Next.Panel.Body>
+    </Next.Panel.Root>
   ) : (
     <Next.Container gutter={gutter}>{children}</Next.Container>
   );

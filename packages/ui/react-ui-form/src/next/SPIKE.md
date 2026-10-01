@@ -349,6 +349,23 @@ Not in M6:
 - `resolveFieldRenderer` keeps returning current components until the migration PR (spike 48), so the translation
   table stays.
 
+### M7: settings pilots
+
+- **Export:** `@dxos/react-ui-form/next` is now a subpath export and a vite entry.
+- **`Form.Viewport scroll`:** now renders a pane of its own, a `Next.Panel` with a scrolling Body. A host that is a
+  current component then still gets a sized query container that fills it. A bare ScrollArea collapsed to zero width
+  in a flex host.
+- **Pilots:** plugin-excalidraw `ExcalidrawSettings` and plugin-pwa `PwaSettings` import `Form` from
+  `react-ui-form/next` and load `@dxos/react-ui/next/theme.css` in their lazy container modules (AUDIT point 12),
+  with no other changes.
+- **Story:** the Excalidraw settings story gains a `Test`: two row fields; the switch and the grid Select edit the
+  settings.
+- **Mixed controls:** PwaSettings' update button and the `SettingsScope` legend action are still current react-ui
+  controls inside Next rows. They render, but the button keeps the current control height (AUDIT 2.11) until
+  app-toolkit moves.
+- **Panel top:** the settings pane's first row starts at the Body's top edge. A Next Body has no block padding, and
+  the current settings Viewport had one. Settle this with the Panel parts in the migration PR.
+
 ## Verification
 
 Run locally in this worktree (not the cloud sandbox), headless Chromium.
