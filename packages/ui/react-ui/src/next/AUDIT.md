@@ -810,6 +810,13 @@ No open questions remain.
 - **Colour token naming:** not part of the cut-over. A follow-up PR renames the text emphasis tokens, utilities and
   `tone` values together with the other `subdued`/`description` colour uses (borders included); `fg`/`fg-muted`/
   `fg-subtle` is the proposal to review then.
+- **`Next.Panel.Body` is a plain slot.** The growing middle row between Header and Footer, with `asChild` and no
+  built-in ScrollArea or Container, so it adds no frame and carries no Container props. Scrolling is composed inside
+  it: `<Panel.Body asChild><ScrollArea.Root><ScrollArea.Viewport asChild><Container gutter='rail'>…`; a canvas or board
+  takes the slot directly with `asChild`. `Listbox.Content scroll={false}` is unchanged (it hands scrolling to such a
+  composed host). Every Next caller now composes the ScrollArea and the rail Container it relied on (react-ui Panel,
+  Listbox and MasterDetail stories, react-ui-form/next stories and `Form.Viewport scroll`, plugin-registry); no preset
+  prop was added (TASKS.md records the candidate).
 
 ### Milestone status
 

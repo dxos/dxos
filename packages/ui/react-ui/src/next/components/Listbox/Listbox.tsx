@@ -177,8 +177,8 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
   Pick<ContainerProps, 'gutter' | 'gap'> & {
     /**
-     * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (`Panel.Body`):
-     * the rows then inherit the host's rails (`gutter='inherit'` by default).
+     * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (a ScrollArea
+     * composed in `Panel.Body`): the rows then inherit the host's rails (`gutter='inherit'` by default).
      */
     scroll?: boolean;
   };

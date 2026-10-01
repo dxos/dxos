@@ -59,15 +59,21 @@ const DefaultStory = ({ system }: StoryArgs) => {
 
   return (
     <Next.Panel.Root size='sm'>
-      <Next.Panel.Body>
-        <ViewEditor
-          ref={projectionRef}
-          type={type}
-          view={view}
-          registry={space?.db.graph.registry}
-          db={space?.db}
-          onDelete={(fieldId) => projectionRef.current?.deleteFieldProjection(fieldId)}
-        />
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <ViewEditor
+                ref={projectionRef}
+                type={type}
+                view={view}
+                registry={space?.db.graph.registry}
+                db={space?.db}
+                onDelete={(fieldId) => projectionRef.current?.deleteFieldProjection(fieldId)}
+              />
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography truncate data-testid='fields'>

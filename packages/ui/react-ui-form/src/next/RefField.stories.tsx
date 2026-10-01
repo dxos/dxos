@@ -46,21 +46,27 @@ const DefaultStory = (_: PaneArgs) => {
   }, []);
   return (
     <Next.Panel.Root size='sm'>
-      <Next.Panel.Body>
-        <Form.Root
-          schema={RefSchema}
-          values={values}
-          getOptions={getOptions}
-          useType={useType}
-          createOptionLabel={['create-organization.label', { ns: STORY_NS }]}
-          createOptionIcon='ph--buildings--regular'
-          onCreate={handleCreate}
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          <Form.Content>
-            <Form.Fields />
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root
+                schema={RefSchema}
+                values={values}
+                getOptions={getOptions}
+                useType={useType}
+                createOptionLabel={['create-organization.label', { ns: STORY_NS }]}
+                createOptionIcon='ph--buildings--regular'
+                onCreate={handleCreate}
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <Form.Content>
+                  <Form.Fields />
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography truncate data-testid='values'>

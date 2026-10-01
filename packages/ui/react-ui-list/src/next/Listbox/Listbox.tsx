@@ -101,9 +101,10 @@ ListboxItem.displayName = 'Listbox.Item';
 
 /**
  * Selectable or plain list on Next parts, with Next.Listbox's part names. `Content` is itself the scrolling viewport (a
- * thin ScrollArea; `scroll={false}` inside a host that scrolls, such as `Panel.Body`), so there is no separate
- * `Viewport`; the current `ItemContent` becomes a row composed from `ItemIcon`, `ItemText`, `ItemDescription` and
- * trailing controls. Annotated so the declaration names Next's parts through `Next` rather than react-ui's modules.
+ * thin ScrollArea; `scroll={false}` inside a host that scrolls, such as a ScrollArea composed in `Panel.Body`), so
+ * there is no separate `Viewport`; the current `ItemContent` becomes a row composed from `ItemIcon`, `ItemText`,
+ * `ItemDescription` and trailing controls. Annotated so the declaration names Next's parts through `Next` rather than
+ * react-ui's modules.
  */
 export const Listbox: {
   Root: typeof ListboxRoot;

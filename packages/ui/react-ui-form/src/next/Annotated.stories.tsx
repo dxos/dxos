@@ -87,16 +87,22 @@ const DefaultStory = (_: PaneArgs) => {
   const [values, setValues] = useState<Values>(() => ({ apiKey: 'sk-1234', employer: Ref.make(organization) }));
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body>
-        <Form.Root
-          schema={AnnotatedSchema}
-          values={values}
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          <Form.Content>
-            <Form.Fields />
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root
+                schema={AnnotatedSchema}
+                values={values}
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <Form.Content>
+                  <Form.Fields />
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography truncate data-testid='values'>

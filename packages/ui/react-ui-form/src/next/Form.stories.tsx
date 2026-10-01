@@ -24,22 +24,28 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
   const [saved, setSaved] = useState(false);
   return (
     <Next.Panel.Root size={size}>
-      <Next.Panel.Body>
-        <Form.Root
-          schema={ScalarSchema}
-          values={values}
-          fieldMap={fieldMap}
-          testId='scalars'
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-          onSave={() => setSaved(true)}
-          onCancel={() => setValues(SCALAR_VALUES)}
-        >
-          <Form.Content>
-            <Form.Fields />
-            <Form.ErrorText>{saved ? undefined : 'Not saved yet.'}</Form.ErrorText>
-            <Form.Actions />
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root
+                schema={ScalarSchema}
+                values={values}
+                fieldMap={fieldMap}
+                testId='scalars'
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+                onSave={() => setSaved(true)}
+                onCancel={() => setValues(SCALAR_VALUES)}
+              >
+                <Form.Content>
+                  <Form.Fields />
+                  <Form.ErrorText>{saved ? undefined : 'Not saved yet.'}</Form.ErrorText>
+                  <Form.Actions />
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography truncate data-testid='values'>

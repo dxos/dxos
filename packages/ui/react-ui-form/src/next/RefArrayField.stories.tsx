@@ -98,20 +98,26 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
   });
   return (
     <Next.Panel.Root size='sm'>
-      <Next.Panel.Body>
-        <Form.Root
-          schema={schema}
-          values={values}
-          getOptions={getOptions}
-          useType={useType}
-          onCreate={handleCreate}
-          createInitialValuePath={display === 'tag' ? 'label' : 'name'}
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          <Form.Content>
-            <Form.Fields />
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root
+                schema={schema}
+                values={values}
+                getOptions={getOptions}
+                useType={useType}
+                onCreate={handleCreate}
+                createInitialValuePath={display === 'tag' ? 'label' : 'name'}
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <Form.Content>
+                  <Form.Fields />
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography truncate data-testid='values'>

@@ -39,8 +39,14 @@ const DefaultStory = (_: PaneArgs) => {
 
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body>
-        <FieldEditor projection={projection} field={view.projection.fields[0]} onSave={() => {}} />
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <FieldEditor projection={projection} field={view.projection.fields[0]} onSave={() => {}} />
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );

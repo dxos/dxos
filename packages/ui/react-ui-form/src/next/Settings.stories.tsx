@@ -24,22 +24,28 @@ const DefaultStory = (_: PaneArgs) => {
   const [values, setValues] = useState<SettingsValues>(INITIAL);
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body>
-        <Form.Root
-          variant='settings'
-          schema={SettingsSchema}
-          values={values}
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          <Form.Content>
-            <Form.FieldSet label='Editor' description='How documents open and look.' data-testid='editor'>
-              <Form.Fields include={['viewMode', 'toolbar', 'fontSize', 'numberedHeadings']} />
-            </Form.FieldSet>
-            <Form.FieldSet label='Sync' description='Replication with the sync server.' data-testid='sync'>
-              <Form.Fields include={['endpoint', 'interval', 'wifiOnly']} />
-            </Form.FieldSet>
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root
+                variant='settings'
+                schema={SettingsSchema}
+                values={values}
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <Form.Content>
+                  <Form.FieldSet label='Editor' description='How documents open and look.' data-testid='editor'>
+                    <Form.Fields include={['viewMode', 'toolbar', 'fontSize', 'numberedHeadings']} />
+                  </Form.FieldSet>
+                  <Form.FieldSet label='Sync' description='Replication with the sync server.' data-testid='sync'>
+                    <Form.Fields include={['endpoint', 'interval', 'wifiOnly']} />
+                  </Form.FieldSet>
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );

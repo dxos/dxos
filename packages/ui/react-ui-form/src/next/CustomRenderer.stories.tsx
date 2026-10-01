@@ -57,36 +57,42 @@ const DefaultStory = (_: PaneArgs) => {
   const [values, setValues] = useState({ name: 'Research' });
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body layout='row' align='start' columns='minmax(0, 1fr) minmax(0, 1fr)'>
-        <CurrentForm.Root
-          variant='settings'
-          schema={SpaceFormSchema}
-          values={values}
-          fieldMap={currentFieldMap}
-          testId='current'
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          <CurrentForm.Viewport>
-            <CurrentForm.Content>
-              <CurrentForm.Fields />
-            </CurrentForm.Content>
-          </CurrentForm.Viewport>
-        </CurrentForm.Root>
-        <Form.Root
-          variant='settings'
-          schema={SpaceFormSchema}
-          values={values}
-          fieldMap={nextFieldMap}
-          testId='next'
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          {/* A row cell is one track, so the form starts its own template there. */}
-          <Form.Viewport gutter='none'>
-            <Form.Content>
-              <Form.Fields />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail' layout='row' align='start' columns='minmax(0, 1fr) minmax(0, 1fr)'>
+              <CurrentForm.Root
+                variant='settings'
+                schema={SpaceFormSchema}
+                values={values}
+                fieldMap={currentFieldMap}
+                testId='current'
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <CurrentForm.Viewport>
+                  <CurrentForm.Content>
+                    <CurrentForm.Fields />
+                  </CurrentForm.Content>
+                </CurrentForm.Viewport>
+              </CurrentForm.Root>
+              <Form.Root
+                variant='settings'
+                schema={SpaceFormSchema}
+                values={values}
+                fieldMap={nextFieldMap}
+                testId='next'
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                {/* A row cell is one track, so the form starts its own template there. */}
+                <Form.Viewport gutter='none'>
+                  <Form.Content>
+                    <Form.Fields />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );

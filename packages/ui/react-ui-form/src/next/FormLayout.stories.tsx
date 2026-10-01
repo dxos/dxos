@@ -50,16 +50,22 @@ const DefaultStory = ({ layoutName }: StoryArgs) => {
   const [values, setValues] = useState<Values>({ airline: 'Air France', flightNumber: 'AF-1', cabin: 'economy' });
   return (
     <Next.Panel.Root>
-      <Next.Panel.Body>
-        <Form.Root
-          schema={Flight}
-          values={values}
-          onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-        >
-          <Form.Content>
-            <Form.Fields layoutName={layoutName} />
-          </Form.Content>
-        </Form.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='rail'>
+              <Form.Root
+                schema={Flight}
+                values={values}
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <Form.Content>
+                  <Form.Fields layoutName={layoutName} />
+                </Form.Content>
+              </Form.Root>
+            </Next.Container>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Next.Panel.Body>
       <Next.Panel.Footer>
         <Next.Typography truncate data-testid='values'>

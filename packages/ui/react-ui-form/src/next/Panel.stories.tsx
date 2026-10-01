@@ -30,10 +30,16 @@ const DefaultStory = (_: PaneArgs) => {
             <Next.Toolbar.Text>Profile</Next.Toolbar.Text>
           </Next.Toolbar.Root>
         </Next.Panel.Header>
-        <Next.Panel.Body>
-          <Form.Content>
-            <Form.Fields />
-          </Form.Content>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root>
+            <Next.ScrollArea.Viewport asChild>
+              <Next.Container gutter='rail'>
+                <Form.Content>
+                  <Form.Fields />
+                </Form.Content>
+              </Next.Container>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Next.Panel.Body>
         <Next.Panel.Footer>
           <Form.Actions />
