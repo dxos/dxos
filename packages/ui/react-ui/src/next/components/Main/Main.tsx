@@ -268,18 +268,20 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           event.preventDefault();
         }
       },
-      initialFocusEl: () => (autoFocusVetoed ? (document.activeElement as HTMLElement | null) : null),
+      initialFocusEl: () =>
+        autoFocusVetoed && document.activeElement instanceof HTMLElement ? document.activeElement : null,
     });
 
     // NOTE(thure): This is a workaround for something further down the tree grabbing focus on Escape. Adding this
     //   intervention to `Tabs.Root` or `Tabs.Tabpenel` instances is somehow ineffectual.
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
-        const focusGroupParent = (event.target as HTMLElement).closest(`[${FOCUS_GROUP_ATTR}]`);
+        const focusGroupParent =
+          event.target instanceof Element ? event.target.closest<HTMLElement>(`[${FOCUS_GROUP_ATTR}]`) : null;
         if (event.key === 'Escape' && focusGroupParent) {
           event.preventDefault();
           event.stopPropagation();
-          (focusGroupParent as HTMLElement).focus();
+          focusGroupParent.focus();
         }
         props.onKeyDown?.(event);
       },

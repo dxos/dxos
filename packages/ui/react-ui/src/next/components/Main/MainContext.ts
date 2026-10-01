@@ -42,16 +42,16 @@ export const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
-      const target = event.target as HTMLDivElement;
-      if (event.target === event.currentTarget && event.key === 'Tab' && target.hasAttribute(landmarkAttr)) {
+      const target = event.currentTarget;
+      if (event.target === target && event.key === 'Tab' && target.hasAttribute(landmarkAttr)) {
         event.preventDefault();
         const landmarks = Array.from(document.querySelectorAll(`[${landmarkAttr}]:not([inert])`))
-          .map((el) => (el.hasAttribute(landmarkAttr) ? parseInt(el.getAttribute(landmarkAttr)!) : NaN))
+          .map((el) => parseInt(el.getAttribute(landmarkAttr) ?? ''))
           .sort();
-        const l = landmarks.length;
-        const cursor = landmarks.indexOf(parseInt(target.getAttribute(landmarkAttr)!));
-        const nextLandmark = landmarks[(cursor + l + (event.getModifierState('Shift') ? -1 : 1)) % l];
-        (document.querySelector(`[${landmarkAttr}="${nextLandmark}"]`) as HTMLDivElement | null)?.focus();
+        const count = landmarks.length;
+        const cursor = landmarks.indexOf(parseInt(target.getAttribute(landmarkAttr) ?? ''));
+        const nextLandmark = landmarks[(cursor + count + (event.getModifierState('Shift') ? -1 : 1)) % count];
+        document.querySelector<HTMLElement>(`[${landmarkAttr}="${nextLandmark}"]`)?.focus();
       }
       onFocusGroupKeyDown(event);
       propsOnKeyDown?.(event);
