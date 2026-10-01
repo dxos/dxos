@@ -20,6 +20,13 @@ import {
   type ButtonValence as NextButtonValence,
   type ButtonVariant as NextButtonVariant,
   Card as NextCard,
+  Carousel as NextCarousel,
+  type CarouselCaptionProps as NextCarouselCaptionProps,
+  type CarouselIndicatorGroupProps as NextCarouselIndicatorGroupProps,
+  type CarouselItemGroupProps as NextCarouselItemGroupProps,
+  type CarouselItemProps as NextCarouselItemProps,
+  type CarouselRootProps as NextCarouselRootProps,
+  type CarouselTriggerProps as NextCarouselTriggerProps,
   Checkbox as NextCheckbox,
   type CheckboxProps as NextCheckboxProps,
   Collapsible as NextCollapsible,
@@ -39,12 +46,32 @@ import {
   type DragMoveDirection as NextDragMoveDirection,
   DragPreview as NextDragPreview,
   DropIndicator as NextDropIndicator,
+  Editable as NextEditable,
+  type EditableActivation as NextEditableActivation,
+  type EditableBlurBehavior as NextEditableBlurBehavior,
+  type EditableInputProps as NextEditableInputProps,
+  type EditablePreviewProps as NextEditablePreviewProps,
+  type EditableRootProps as NextEditableRootProps,
+  ErrorFallback as NextErrorFallback,
+  type ErrorFallbackProps as NextErrorFallbackProps,
+  ErrorStack as NextErrorStack,
+  type ErrorStackFrame as NextErrorStackFrame,
+  type ErrorStackProps as NextErrorStackProps,
   Field as NextField,
   Fieldset as NextFieldset,
   type FieldValence as NextFieldValence,
+  Focus as NextFocus,
+  type FocusContextValue as NextFocusContextValue,
+  type FocusGroupProps as NextFocusGroupProps,
+  type FocusItemProps as NextFocusItemProps,
+  type FocusState as NextFocusState,
   Group as NextGroup,
   type GroupProps as NextGroupProps,
   type Gutter as NextGutter,
+  HoverCard as NextHoverCard,
+  type HoverCardContentProps as NextHoverCardContentProps,
+  type HoverCardRootProps as NextHoverCardRootProps,
+  type HoverCardTriggerProps as NextHoverCardTriggerProps,
   Icon as NextIcon,
   type IconHue as NextIconHue,
   type IconProps as NextIconProps,
@@ -67,7 +94,14 @@ import {
   type MainDrawerState as NextMainDrawerState,
   type MainRootProps as NextMainRootProps,
   type MainSidebarState as NextMainSidebarState,
+  MediaPlayer as NextMediaPlayer,
+  type MediaPlayerFit as NextMediaPlayerFit,
+  type MediaPlayerKind as NextMediaPlayerKind,
+  type MediaPlayerProps as NextMediaPlayerProps,
   Menu as NextMenu,
+  MenuButton as NextMenuButton,
+  type MenuButtonItem as NextMenuButtonItem,
+  type MenuButtonProps as NextMenuButtonProps,
   type MenuOption as NextMenuOption,
   NumberInput as NextNumberInput,
   type NumberInputProps as NextNumberInputProps,
@@ -80,15 +114,31 @@ import {
   Popover as NextPopover,
   Progress as NextProgress,
   type ProgressProps as NextProgressProps,
+  QrCode as NextQrCode,
+  type QrCodeErrorCorrection as NextQrCodeErrorCorrection,
+  type QrCodeProps as NextQrCodeProps,
   ScrollArea as NextScrollArea,
+  ScrollContainer as NextScrollContainer,
+  type ScrollContainerContentProps as NextScrollContainerContentProps,
+  type ScrollContainerFadeProps as NextScrollContainerFadeProps,
+  type ScrollContainerRootProps as NextScrollContainerRootProps,
+  type ScrollContainerScrollDownButtonProps as NextScrollContainerScrollDownButtonProps,
+  type ScrollContainerViewportProps as NextScrollContainerViewportProps,
+  type ScrollController as NextScrollController,
   Select as NextSelect,
   type SelectOption as NextSelectOption,
   Separator as NextSeparator,
   type SeparatorProps as NextSeparatorProps,
+  Slider as NextSlider,
+  type SliderProps as NextSliderProps,
   Splitter as NextSplitter,
   type SplitterMode as NextSplitterMode,
   type SplitterOrientation as NextSplitterOrientation,
   type SplitterRootProps as NextSplitterRootProps,
+  type Step as NextStep,
+  Steps as NextSteps,
+  type StepsProps as NextStepsProps,
+  type StepState as NextStepState,
   Switch as NextSwitch,
   type SwitchProps as NextSwitchProps,
   SystemButton as NextSystemButton,
@@ -103,8 +153,12 @@ import {
   type TagProps as NextTagProps,
   Textarea as NextTextarea,
   type TextareaProps as NextTextareaProps,
+  TextCrawl as NextTextCrawl,
+  type TextCrawlProps as NextTextCrawlProps,
   TextTooltip as NextTextTooltip,
   type TextTooltipProps as NextTextTooltipProps,
+  Timestamp as NextTimestamp,
+  type TimestampProps as NextTimestampProps,
   Toast as NextToast,
   type ToastProviderProps as NextToastProviderProps,
   type ToastRootProps as NextToastRootProps,
@@ -114,10 +168,32 @@ import {
   Toolbar as NextToolbar,
   type ToolbarRootProps as NextToolbarRootProps,
   Tooltip as NextTooltip,
+  Tour as NextTour,
+  type TourActionsProps as NextTourActionsProps,
+  type TourActionTriggerProps as NextTourActionTriggerProps,
+  type TourCloseTriggerProps as NextTourCloseTriggerProps,
+  type TourContentProps as NextTourContentProps,
+  type TourControlProps as NextTourControlProps,
+  type TourDescriptionProps as NextTourDescriptionProps,
+  type TourHeaderProps as NextTourHeaderProps,
+  type TourProgressTextProps as NextTourProgressTextProps,
+  type TourRootProps as NextTourRootProps,
+  type TourStepAction as NextTourStepAction,
+  type TourStepDetails as NextTourStepDetails,
+  type TourStepPlacement as NextTourStepPlacement,
+  type TourTitleProps as NextTourTitleProps,
   Typography as NextTypography,
   type TypographyProps as NextTypographyProps,
+  type UseEditableOptions as NextUseEditableOptions,
+  type UseEditableReturn as NextUseEditableReturn,
+  type UseTourProps as NextUseTourProps,
+  type UseTourReturn as NextUseTourReturn,
   dragScope as nextDragScope,
+  useEditable as nextUseEditable,
+  useFocus as nextUseFocus,
   useMainSidebars as nextUseMainSidebars,
+  useTour as nextUseTour,
+  useTourContext as nextUseTourContext,
 } from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
@@ -237,4 +313,80 @@ export namespace Next {
   export type MainContentProps = NextMainContentProps;
   export type MainSidebarState = NextMainSidebarState;
   export type MainDrawerState = NextMainDrawerState;
+  export const ErrorFallback = NextErrorFallback;
+  export const ErrorStack = NextErrorStack;
+  export type ErrorFallbackProps = NextErrorFallbackProps;
+  export type ErrorStackFrame = NextErrorStackFrame;
+  export type ErrorStackProps = NextErrorStackProps;
+  export const Focus = NextFocus;
+  export const useFocus = nextUseFocus;
+  export type FocusGroupProps = NextFocusGroupProps;
+  export type FocusItemProps = NextFocusItemProps;
+  export type FocusState = NextFocusState;
+  export type FocusContextValue = NextFocusContextValue;
+  export const ScrollContainer = NextScrollContainer;
+  export type ScrollContainerContentProps = NextScrollContainerContentProps;
+  export type ScrollContainerFadeProps = NextScrollContainerFadeProps;
+  export type ScrollContainerRootProps = NextScrollContainerRootProps;
+  export type ScrollContainerScrollDownButtonProps = NextScrollContainerScrollDownButtonProps;
+  export type ScrollContainerViewportProps = NextScrollContainerViewportProps;
+  export type ScrollController = NextScrollController;
+  export const Carousel = NextCarousel;
+  export type CarouselRootProps = NextCarouselRootProps;
+  export type CarouselItemGroupProps = NextCarouselItemGroupProps;
+  export type CarouselItemProps = NextCarouselItemProps;
+  export type CarouselTriggerProps = NextCarouselTriggerProps;
+  export type CarouselIndicatorGroupProps = NextCarouselIndicatorGroupProps;
+  export type CarouselCaptionProps = NextCarouselCaptionProps;
+  export const MediaPlayer = NextMediaPlayer;
+  export type MediaPlayerProps = NextMediaPlayerProps;
+  export type MediaPlayerFit = NextMediaPlayerFit;
+  export type MediaPlayerKind = NextMediaPlayerKind;
+  export const QrCode = NextQrCode;
+  export type QrCodeProps = NextQrCodeProps;
+  export type QrCodeErrorCorrection = NextQrCodeErrorCorrection;
+  export const Timestamp = NextTimestamp;
+  export type TimestampProps = NextTimestampProps;
+  export const Tour = NextTour;
+  export const useTour = nextUseTour;
+  export const useTourContext = nextUseTourContext;
+  export type TourActionTriggerProps = NextTourActionTriggerProps;
+  export type TourActionsProps = NextTourActionsProps;
+  export type TourCloseTriggerProps = NextTourCloseTriggerProps;
+  export type TourContentProps = NextTourContentProps;
+  export type TourControlProps = NextTourControlProps;
+  export type TourDescriptionProps = NextTourDescriptionProps;
+  export type TourHeaderProps = NextTourHeaderProps;
+  export type TourProgressTextProps = NextTourProgressTextProps;
+  export type TourRootProps = NextTourRootProps;
+  export type TourStepAction = NextTourStepAction;
+  export type TourStepDetails = NextTourStepDetails;
+  export type TourStepPlacement = NextTourStepPlacement;
+  export type TourTitleProps = NextTourTitleProps;
+  export type UseTourProps = NextUseTourProps;
+  export type UseTourReturn = NextUseTourReturn;
+  export const Editable = NextEditable;
+  export const useEditable = nextUseEditable;
+  export type EditableRootProps = NextEditableRootProps;
+  export type EditablePreviewProps = NextEditablePreviewProps;
+  export type EditableInputProps = NextEditableInputProps;
+  export type EditableActivation = NextEditableActivation;
+  export type EditableBlurBehavior = NextEditableBlurBehavior;
+  export type UseEditableOptions = NextUseEditableOptions;
+  export type UseEditableReturn = NextUseEditableReturn;
+  export const HoverCard = NextHoverCard;
+  export type HoverCardContentProps = NextHoverCardContentProps;
+  export type HoverCardRootProps = NextHoverCardRootProps;
+  export type HoverCardTriggerProps = NextHoverCardTriggerProps;
+  export const MenuButton = NextMenuButton;
+  export type MenuButtonItem = NextMenuButtonItem;
+  export type MenuButtonProps = NextMenuButtonProps;
+  export const Slider = NextSlider;
+  export type SliderProps = NextSliderProps;
+  export const Steps = NextSteps;
+  export type Step = NextStep;
+  export type StepState = NextStepState;
+  export type StepsProps = NextStepsProps;
+  export const TextCrawl = NextTextCrawl;
+  export type TextCrawlProps = NextTextCrawlProps;
 }
