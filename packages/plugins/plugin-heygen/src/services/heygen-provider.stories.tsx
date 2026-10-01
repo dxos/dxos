@@ -140,10 +140,10 @@ const ProviderHarness = () => {
       <Next.Field.Root>
         <Next.Field.Label>HeyGen API key</Next.Field.Label>
         <Next.PasswordInput
-          noAutoFill
+          ignorePasswordManagers
           placeholder='Paste API key'
           value={apiKey}
-          onChange={(event) => setApiKey(event.target.value)}
+          onValueChange={setApiKey}
         />
       </Next.Field.Root>
       <div className='flex gap-2'>

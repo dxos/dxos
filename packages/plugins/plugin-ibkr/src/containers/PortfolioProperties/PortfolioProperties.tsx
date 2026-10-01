@@ -59,7 +59,7 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
         <Next.Switch
           checked={syncEnabled ?? false}
           disabled={pending}
-          onCheckedChange={({ checked }) => handleToggleSync(checked)}
+          onCheckedChange={() => handleToggleSync()}
         />
       </Next.Field.Root>
     </Form.FieldSet>

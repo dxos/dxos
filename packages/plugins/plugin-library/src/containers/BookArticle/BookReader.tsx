@@ -202,11 +202,9 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
     }
     return (
       <Flex center classNames='h-full p-4'>
-        <Next.Button asChild>
-          <a href={resolved.url} download>
-            {t('download-file.label')}
-          </a>
-        </Next.Button>
+        <Next.Link href={resolved.url} target='_self' download>
+          {t('download-file.label')}
+        </Next.Link>
       </Flex>
     );
   }

@@ -76,9 +76,9 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
               <Next.PasswordInput
                 placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
                 value={draft}
-                onChange={(event) => {
+                onValueChange={(value) => {
                   touchedRef.current = true;
-                  setDraft(event.target.value);
+                  setDraft(value);
                 }}
                 onBlur={handleCommit}
               />
