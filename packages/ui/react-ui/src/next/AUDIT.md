@@ -826,7 +826,14 @@ Nothing in the cut-over PR may be a new component; every Next counterpart lands 
    the list `Empty` parts, collapsible `OrderedList.Item`, the group B list decisions. Phase A3: Tree exported from
    `react-ui-list/next`.
 2. `react-ui-form/next` from the spike (draft PR #13550) through milestones 6–10.
-3. A Next action binding for `react-ui-menu` (`useMenuActions` → Next Menu and Toolbar).
+3. A Next action binding for `react-ui-menu` (`useMenuActions` → Next Menu and Toolbar). **Done:**
+   `@dxos/react-ui-menu/next` exports `ActionToolbar` and `ActionMenu` with the current props over the shared model
+   (hooks, `MenuBuilder`, types, re-exported), so a call site migrates by its import path. Groups render as
+   `Menu.Sub`/`TriggerItem`, `checked` members of a single-select group as a `RadioItemGroup`, of a multi-select group
+   as `CheckboxItem`s; a `toggle` action is a `Next.Toggle`. Gaps it works around, to close in Next: Button has no icon
+   slot (`iconClassNames` is dropped, `spin` styles the first svg through the button); `Toolbar.Separator` has no `gap`
+   spacer variant; `Switch` does not join the toolbar's roving focus; `Menu.TriggerItem` takes no `disabled`; Menu has
+   no per-instance icon size (`iconSize` is ignored).
 4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
    Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components.
 5. Translation keys: four `osTranslations` lookups use undefined keys (`drag-handle.label`, `toolbar-delete.label`,
