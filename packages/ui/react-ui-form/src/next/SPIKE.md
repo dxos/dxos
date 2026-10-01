@@ -366,6 +366,19 @@ Not in M6:
 - **Panel top:** the settings pane's first row starts at the Body's top edge. A Next Body has no block padding, and
   the current settings Viewport had one. Settle this with the Panel parts in the migration PR.
 
+### M8–M10: what is left
+
+Each of these depends on Next work that is not on this branch's base yet:
+
+- **M8, arrays and layout templates.** `ArrayField` (spike) and `SelectOptionField` (M6) are done. The `Form.Layout`
+  DSL's `<field span=…>` needs Container `span` (Phase A item 1); the rest of the DSL maps onto row Containers with
+  `columns` and `align='start'`.
+- **M9, ref and lookup fields.** `RefField` and the lookup Combobox use input mode. The RefField and ObjectPicker
+  rebuild needs Combobox trigger mode with its create row and descriptions, which is in PR #13549 and not yet on
+  `main`.
+- **M10, higher-level components** (ObjectProperties, ObjectForm, ViewEditor, FieldEditor). These need
+  `ControlFrame` (MarkdownField, RefEditor) and `Banner` (ViewEditor) from Phase A item 1, plus M8 and M9.
+
 ## Verification
 
 Run locally in this worktree (not the cloud sandbox), headless Chromium.
