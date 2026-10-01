@@ -67,7 +67,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
               </Next.Block>
             </Next.Card.Header>
             <Next.Card.Body>
-              <Next.Card.Row fullWidth>
+              <Next.Card.Row>
                 <pre className='p-2 text-xs text-description whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
               </Next.Card.Row>
             </Next.Card.Body>

@@ -1,18 +1,33 @@
 {
-  "generated": "2026-10-01T17:01:40.769Z",
-  "paths": ["packages"],
+  "generated": "2026-10-01T17:28:25.271Z",
+  "paths": [
+    "packages"
+  ],
   "changed": [
-    "packages/sdk/shell/src/components/IdentityList/IdentityListItem.tsx",
-    "packages/sdk/shell/src/stories/SpaceListItem.tsx"
+    "packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx",
+    "packages/plugins/plugin-chess/src/containers/ChessCard/ChessCard.tsx",
+    "packages/plugins/plugin-client/src/containers/CliLoginDialog/CliLoginDialog.tsx",
+    "packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx",
+    "packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.tsx",
+    "packages/plugins/plugin-kanban/src/testing/KanbanCardTileSimple.tsx",
+    "packages/plugins/plugin-markdown/src/containers/EditableMarkdownCard/EditableMarkdownCard.tsx",
+    "packages/plugins/plugin-markdown/src/containers/MarkdownCard/MarkdownCard.tsx",
+    "packages/plugins/plugin-registry/src/components/DisableDependentsAlert/DisableDependentsAlert.tsx",
+    "packages/plugins/plugin-registry/src/components/RegistrySettings/RegistrySettings.tsx",
+    "packages/plugins/plugin-spacetime/src/containers/SceneCard/SceneCard.tsx",
+    "packages/plugins/plugin-table/src/containers/TableCard/TableCard.tsx",
+    "packages/plugins/plugin-tldraw/src/containers/TldrawCard/TldrawCard.tsx"
   ],
   "transforms": [
     {
       "transform": "renames",
-      "filesScanned": 12235,
-      "filesChanged": 2,
+      "filesScanned": 12649,
+      "filesChanged": 13,
       "rules": {
-        "Select.Option → Select.Item": 9,
-        "Avatar.Root + Content + Label → Avatar.Root aria-labelledby + span": 2
+        "Select.Option → Select.Item": 5,
+        "AlertDialog.Cancel asChild around a Button merged": 4,
+        "AlertDialog.Action asChild around a Button merged": 5,
+        "Card.Row fullWidth dropped": 9
       },
       "residue": [
         {
@@ -49,75 +64,11 @@
         },
         {
           "transform": "renames",
-          "file": "packages/devtools/devtools/src/components/ControlledSelector.tsx",
-          "line": 18,
-          "column": 5,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[props.value]} onValueChange={({ value: [value] }) => props.setValue(value)}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/devtools/devtools/src/components/ControlledSelector.tsx",
-          "line": 22,
-          "column": 11,
-          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
-          "snippet": "<Next.Select.Item key={mode} value={mode}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/devtools/devtools/src/components/PublicKeySelector.tsx",
-          "line": 27,
-          "column": 5,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[value?.toHex()]} onValueChange={({ value: [id] }) => { id && onChange?.(PublicKey.fromHex(i..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/devtools/devtools/src/components/PublicKeySelector.tsx",
-          "line": 36,
-          "column": 11,
-          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
-          "snippet": "<Next.Select.Item key={key.toHex()} value={key.toHex()}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/devtools/devtools/src/components/Select.tsx",
-          "line": 17,
-          "column": 5,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root {...props}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/devtools/devtools/src/components/Select.tsx",
-          "line": 21,
-          "column": 11,
-          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
-          "snippet": "<Next.Select.Item key={value} value={value}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/devtools/devtools/src/containers/DataSpaceSelector.tsx",
-          "line": 51,
-          "column": 5,
-          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[space?.id]} onValueChange={({ value: [id] }) => { id && handleSelect?.(id as SpaceId); }} >"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/devtools/devtools/src/containers/DataSpaceSelector.tsx",
-          "line": 60,
-          "column": 11,
-          "reason": "Select.Item takes `item` data ({ value, label }); children replace the whole row",
-          "snippet": "<Next.Select.Item key={space.id} value={space.id}>"
-        },
-        {
-          "transform": "renames",
           "file": "packages/devtools/devtools/src/containers/panels/edge/WorkflowArticle/WorkflowDebugPanel.tsx",
           "line": 230,
           "column": 27,
           "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root size={6} variant='circle' icon='ph--drone--regular' />"
+          "snippet": "<Next.Avatar.Root size='sm' variant='circle' icon='ph--drone--regular' />"
         },
         {
           "transform": "renames",
@@ -785,67 +736,19 @@
         },
         {
           "transform": "renames",
-          "file": "packages/sdk/app-toolkit/src/playground/generator/Main.tsx",
-          "line": 57,
-          "column": 5,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
           "file": "packages/sdk/shell/src/components/AgentConfig/AgentConfig.tsx",
-          "line": 41,
+          "line": 42,
           "column": 13,
-          "reason": "Avatar.Root with an Avatar.Label: render the name with an id and pass aria-labelledby by hand",
-          "snippet": "<Next.Avatar.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/AgentConfig/AgentConfig.tsx",
-          "line": 48,
-          "column": 15,
-          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
-          "snippet": "<Next.Avatar.Label classNames='flex-1 text-sm truncate'>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
-          "line": 59,
-          "column": 5,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
-          "line": 93,
-          "column": 7,
-          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
-          "snippet": "<Listbox.ItemContent icon={ <Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(contact, 'hue') ?..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
-          "line": 95,
-          "column": 11,
           "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(contact, 'hue') ?? fallback.hue} fallback={pr..."
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} status={agentStatus === 'created' ? 'warning' : 'inactive'} variant='squa..."
         },
         {
           "transform": "renames",
           "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
-          "line": 126,
-          "column": 78,
-          "reason": "Next.Tag has no asChild",
-          "snippet": "asChild"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/DeviceList/DeviceList.tsx",
-          "line": 33,
+          "line": 96,
           "column": 9,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} size='md' hue={Next.toAvatarHue(profileString(contact, 'hue') ?? fallback..."
         },
         {
           "transform": "renames",
@@ -853,127 +756,63 @@
           "line": 65,
           "column": 9,
           "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root labelId={labelId}>"
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} status={ isCurrent && connectionState === ConnectionState.OFFLINE ? 'erro..."
         },
         {
           "transform": "renames",
-          "file": "packages/sdk/shell/src/components/DeviceList/DeviceListItem.tsx",
-          "line": 79,
-          "column": 11,
-          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
-          "snippet": "<Next.Avatar.Label classNames='flex-1 text-sm truncate'>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/IdentityList/SpaceMemberList.tsx",
-          "line": 55,
-          "column": 5,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/InvitationList/InvitationList.tsx",
-          "line": 25,
-          "column": 5,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
+          "file": "packages/sdk/shell/src/components/IdentityList/IdentityListItem.tsx",
+          "line": 41,
+          "column": 7,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inact..."
         },
         {
           "transform": "renames",
           "file": "packages/sdk/shell/src/components/InvitationList/InvitationListItem.tsx",
-          "line": 148,
+          "line": 53,
           "column": 7,
           "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root>"
+          "snippet": "<Next.Avatar.Root key={delay} aria-hidden size={AVATAR_SIZE} status={status} animation={animation} hueVariant='transp..."
         },
         {
           "transform": "renames",
-          "file": "packages/sdk/shell/src/components/Panel/Action.tsx",
-          "line": 108,
-          "column": 15,
-          "reason": "Menu.CheckboxItem takes item data: its label is not one text or expression; compose the row by hand",
-          "snippet": "<Next.Menu.CheckboxItem key={id} aria-labelledby={`${id}__label`} aria-describedby={`${id}__description`} checked={ac..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/SpaceInvitationList/SpaceInvitationList.tsx",
-          "line": 70,
-          "column": 5,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/SpaceInvitationList/SpaceInvitationList.tsx",
-          "line": 103,
-          "column": 7,
-          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
-          "snippet": "<Listbox.ItemContent icon={ <Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(invitation.sender..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/SpaceInvitationList/SpaceInvitationList.tsx",
-          "line": 105,
-          "column": 11,
-          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(invitation.sender, 'hue') ?? fallback.hue} fa..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/panels/IdentityPanel/IdentityPanel.tsx",
-          "line": 102,
-          "column": 7,
-          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/panels/IdentityPanel/IdentityPanel.tsx",
-          "line": 114,
+          "file": "packages/sdk/shell/src/components/InvitationList/InvitationListItem.tsx",
+          "line": 135,
           "column": 9,
-          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
-          "snippet": "<Next.Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>"
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root size={AVATAR_SIZE} animation={avatarAnimation} status={avatarStatus} fallback={hexToEmoji(invitatio..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/SpaceInvitationList/SpaceInvitationList.tsx",
+          "line": 106,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} size='md' hue={Next.toAvatarHue(profileString(invitation.sender, 'hue') ?..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/panels/IdentityPanel/IdentityPanel.tsx",
+          "line": 105,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root fill variant='circle' status={isConnected ? 'active' : 'error'} hue={Next.toAvatarHue(hue || fallba..."
         },
         {
           "transform": "renames",
           "file": "packages/sdk/shell/src/panels/JoinPanel/steps/IdentityAdded.tsx",
           "line": 50,
           "column": 9,
-          "reason": "Avatar.Root with an Avatar.Label: render the name with an id and pass aria-labelledby by hand",
-          "snippet": "<Next.Avatar.Root labelId={labelId}>"
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} status='active' hue={Next.toAvatarHue(profileString(addedIdentity, 'hue')..."
         },
         {
           "transform": "renames",
-          "file": "packages/sdk/shell/src/panels/JoinPanel/steps/IdentityAdded.tsx",
-          "line": 56,
-          "column": 11,
-          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
-          "snippet": "<Next.Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/stories/Invitations.stories.tsx",
-          "line": 104,
-          "column": 13,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/stories/Invitations.stories.tsx",
-          "line": 206,
-          "column": 11,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/stories/storybook-testing/src/modules/ObjectsModule.tsx",
-          "line": 62,
-          "column": 11,
-          "reason": "Select.Root items: Items are rendered by several expressions; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[type]} onValueChange={({ value: [value] }) => setType(value)}>"
+          "file": "packages/sdk/shell/src/stories/SpaceListItem.tsx",
+          "line": 26,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} fallback={fallbackValue} />"
         },
         {
           "transform": "renames",

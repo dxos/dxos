@@ -163,20 +163,16 @@ export const RegistrySettings = ({
           </Next.AlertDialog.Body>
           <Next.AlertDialog.Footer>
             <div className='grow' />
-            <Next.AlertDialog.Cancel asChild>
-              <Next.Button>{t('plugin-scope.rejoin-dialog.cancel.label')}</Next.Button>
-            </Next.AlertDialog.Cancel>
-            <Next.AlertDialog.Action asChild>
-              <Next.Button
-                data-testid='registrySettings.pluginScope.confirm'
-                variant='primary'
-                onClick={() => {
-                  onPluginScopeLocalChange?.(false);
-                  setRejoining(false);
-                }}
-              >
-                {t('plugin-scope.rejoin-dialog.confirm.label')}
-              </Next.Button>
+            <Next.AlertDialog.Cancel>{t('plugin-scope.rejoin-dialog.cancel.label')}</Next.AlertDialog.Cancel>
+            <Next.AlertDialog.Action
+              data-testid='registrySettings.pluginScope.confirm'
+              variant='primary'
+              onClick={() => {
+                onPluginScopeLocalChange?.(false);
+                setRejoining(false);
+              }}
+            >
+              {t('plugin-scope.rejoin-dialog.confirm.label')}
             </Next.AlertDialog.Action>
           </Next.AlertDialog.Footer>
         </Next.AlertDialog.Content>

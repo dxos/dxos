@@ -226,13 +226,9 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
             <Next.AlertDialog.Description>{t('delete-publication-dialog.description')}</Next.AlertDialog.Description>
           </Next.AlertDialog.Body>
           <Next.AlertDialog.Footer>
-            <Next.AlertDialog.Cancel asChild>
-              <Next.Button>{t('cancel.label')}</Next.Button>
-            </Next.AlertDialog.Cancel>
-            <Next.AlertDialog.Action asChild>
-              <Next.Button variant='destructive' onClick={handleDelete}>
-                {t('delete-publication-dialog.confirm.label')}
-              </Next.Button>
+            <Next.AlertDialog.Cancel>{t('cancel.label')}</Next.AlertDialog.Cancel>
+            <Next.AlertDialog.Action variant='destructive' onClick={handleDelete}>
+              {t('delete-publication-dialog.confirm.label')}
             </Next.AlertDialog.Action>
           </Next.AlertDialog.Footer>
         </Next.AlertDialog.Content>

@@ -42,10 +42,8 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
         </Flex>
       </Next.AlertDialog.Body>
       <Next.AlertDialog.Footer>
-        <Next.AlertDialog.Action asChild>
-          <Next.Button data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
-            {t('continue.label')}
-          </Next.Button>
+        <Next.AlertDialog.Action data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
+          {t('continue.label')}
         </Next.AlertDialog.Action>
       </Next.AlertDialog.Footer>
     </Next.AlertDialog.Content>

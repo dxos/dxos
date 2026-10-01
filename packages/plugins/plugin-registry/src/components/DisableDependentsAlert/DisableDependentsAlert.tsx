@@ -56,13 +56,9 @@ export const DisableDependentsAlert = ({
       </Next.AlertDialog.Body>
       <Next.AlertDialog.Footer>
         <div className='grow' />
-        <Next.AlertDialog.Cancel asChild>
-          <Next.Button>{t('cancel.label')}</Next.Button>
-        </Next.AlertDialog.Cancel>
-        <Next.AlertDialog.Action asChild>
-          <Next.Button variant='primary' onClick={onConfirm}>
-            {t('disable-dependents-dialog.confirm.label')}
-          </Next.Button>
+        <Next.AlertDialog.Cancel>{t('cancel.label')}</Next.AlertDialog.Cancel>
+        <Next.AlertDialog.Action variant='primary' onClick={onConfirm}>
+          {t('disable-dependents-dialog.confirm.label')}
         </Next.AlertDialog.Action>
       </Next.AlertDialog.Footer>
     </Next.AlertDialog.Content>

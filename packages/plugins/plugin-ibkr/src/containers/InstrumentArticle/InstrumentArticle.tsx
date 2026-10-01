@@ -77,7 +77,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
                 <Next.Block />
               </Next.Card.Header>
               <Next.Card.Body>
-                <Next.Card.Row fullWidth>
+                <Next.Card.Row>
                   <TradingViewChart symbol={tradingViewSymbol} className='h-[480px] w-full border-0' />
                 </Next.Card.Row>
                 <Next.Card.Row>

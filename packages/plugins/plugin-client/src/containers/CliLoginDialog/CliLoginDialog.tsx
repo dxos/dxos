@@ -129,10 +129,8 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
       <Next.AlertDialog.Footer>
         {status === 'confirm' || status === 'sending' ? (
           <>
-            <Next.AlertDialog.Cancel asChild>
-              <Next.Button data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
-                {t('cli-login-deny.label')}
-              </Next.Button>
+            <Next.AlertDialog.Cancel data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
+              {t('cli-login-deny.label')}
             </Next.AlertDialog.Cancel>
             <Next.Button
               data-testid='cliLogin.authorize'
@@ -144,15 +142,12 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
             </Next.Button>
           </>
         ) : (
-          <Next.AlertDialog.Action asChild>
-            {/* While the CLI is joining, closing cancels the invitation, so the action says so. */}
-            <Next.Button
-              data-testid='cliLogin.done'
-              variant={status === 'success' ? 'primary' : 'default'}
-              onClick={close}
-            >
-              {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
-            </Next.Button>
+          <Next.AlertDialog.Action
+            data-testid='cliLogin.done'
+            variant={status === 'success' ? 'primary' : 'default'}
+            onClick={close}
+          >
+            {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
           </Next.AlertDialog.Action>
         )}
       </Next.AlertDialog.Footer>
