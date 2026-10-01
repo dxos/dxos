@@ -19,11 +19,11 @@ the per-item residue, rerun the command: `--report` lists the file, line, reason
 ## Headline
 
 - **Converted:** 993 files change.
-- **Residue (Phase C's manual list):** 588 items in 299 files. By area: plugins 180 files, ui 75, sdk 22, devtools 16,
+- **Residue (Phase C's manual list):** 583 items in 296 files. By area: plugins 179 files, ui 73, sdk 22, devtools 16,
   apps 5, stories 1. A later transform does not repeat an item an earlier one reported.
 - **History:** the first dry run left 981 items in 570 files. Round 2 mapped the composites Next can build and added
   the `layout` transform; round 3 resolved button `density` from the enclosing scope.
-- **Round 4 (user decisions) took the residue from 983 items in 543 files to 588 in 299:**
+- **Round 4 (user decisions) took the residue from 983 items in 543 files to 583 in 296:**
   - **`Panel.Content` → `Panel.Body`** is a pure rename. Body is a plain slot, so `asChild` and the inner
     `ScrollArea` stay; the 135 `asChild` residue items are gone.
   - **react-ui-form** imports move to `@dxos/react-ui-form/next` (133 imports). Only `FormFieldHeader` and
@@ -62,9 +62,8 @@ the per-item residue, rerun the command: `--report` lists the file, line, reason
    component. Where every caller passes the same size, move it to the caller's scope by hand.
 4. **Master-detail Tabs** (`Viewport`, `BackButton`, `activePart`) and react-ui-list `MasterDetail` are removed
    (follow-ups decision): ChatOptions, Welcome and VideoArticle compose Tabs + `Splitter` by hand.
-5. **Small Next additions that would clear more (reported, not added):**
-   - `Card.Action` default labels for close and delete. Five `Card.ActionIconButton`s have no `label`.
-   - A `compact` variant on `Next.Block`, for `IconBlock compact`.
+5. **Card actions and compact blocks map directly:** `Card.ActionIconButton action` becomes `Card.Action system`
+   (the SystemButton preset, label optional; 7 converted), and `IconBlock compact` becomes `Block compact`.
 6. **Avatar** merges only when `Avatar.Root` holds a lone `Avatar.Content`. Twelve roots also hold a Label or
    Description, and avatar sizes stay numeric (reported).
 7. **Tabs orientation:** the current Tabs default to vertical and Next Tabs to horizontal. The transform adds
@@ -76,7 +75,7 @@ the per-item residue, rerun the command: `--report` lists the file, line, reason
 
 | Transform    | Files scanned | Files changed | Conversions | Residue items | Residue files |
 | ------------ | ------------: | ------------: | ----------: | ------------: | ------------: |
-| `renames`    |         12315 |           702 |        2593 |           234 |           150 |
+| `renames`    |         12315 |           702 |        2598 |           229 |           147 |
 | `layout`     |         12315 |            14 |          25 |           202 |           110 |
 | `theme`      |         12315 |            71 |          75 |             7 |             5 |
 | `classnames` |         12315 |            65 |          87 |            52 |            42 |
@@ -102,7 +101,7 @@ the per-item residue, rerun the command: `--report` lists the file, line, reason
 | Select.TriggerButton → Select.Trigger |    40 |
 | Select.Portal unwrapped               |    39 |
 | Select.Viewport unwrapped             |    39 |
-| (101 more)                            |   836 |
+| (101 more)                            |   841 |
 
 | Residue reason                                                                                                  | Count |
 | --------------------------------------------------------------------------------------------------------------- | ----: |
@@ -117,11 +116,11 @@ the per-item residue, rerun the command: `--report` lists the file, line, reason
 | size {iconSize} is computed; map it to xs–xl by hand                                                            |     9 |
 | Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand                   |     7 |
 | Avatar size is xs–xl (a block across) or fill in Next                                                           |     6 |
-| Card.ActionIconButton without a label: Card.Action requires one (Next addition: default close/delete labels)    |     5 |
 | size {size} is computed; map it to xs–xl by hand                                                                |     5 |
 | Toast.Title icon → Toast.Header icon                                                                            |     5 |
 | Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)                                  |     5 |
-| (38 more)                                                                                                       |    74 |
+| button density with a computed value renamed to size; check it is xs–xl                                         |     4 |
+| (37 more)                                                                                                       |    70 |
 
 ### `layout`
 
