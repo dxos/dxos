@@ -95,8 +95,10 @@ export const tagText = (
 ): string => {
   const { identity } = element;
   const tag = element.opening.tagName.getText(file.sourceFile);
-  const prefixLength = tag.length - identity.path.join('.').length;
-  const prefix = tag.slice(0, prefixLength);
+  // Counted in segments, not characters: an aliased root (`NaturalToolbar.Button`) is not a `Next.` prefix.
+  const segments = tag.split('.');
+  const prefixSegments = segments.length - identity.path.length;
+  const prefix = prefixSegments > 0 ? `${segments.slice(0, prefixSegments).join('.')}.` : '';
   const sameRoot = pkg === identity.pkg && path[0] === identity.path[0];
   if (prefix.length > 0 && pkg === identity.pkg) {
     return `${prefix}${path.join('.')}`;

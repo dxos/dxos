@@ -49,6 +49,32 @@ describe('renames', () => {
     expect(residue).toEqual([]);
   });
 
+  test('a part promoted out of an aliased namespace gets its own import', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Field as NaturalField, Toolbar as NaturalToolbar } from '@dxos/react-ui';
+
+        export const Bar = () => (
+          <NaturalToolbar.Root>
+            <NaturalToolbar.Button>go</NaturalToolbar.Button>
+            <NaturalField.Input />
+          </NaturalToolbar.Root>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Toolbar as NaturalToolbar, Button, Input } from '@dxos/react-ui';
+
+      export const Bar = () => (
+        <NaturalToolbar.Root>
+          <Button>go</Button>
+          <Input />
+        </NaturalToolbar.Root>
+      );
+    `);
+  });
+
   test('IconButton → Button; props mapped and the import swapped', () => {
     const { output, residue } = transformFixture(
       renames,
