@@ -19,6 +19,7 @@ import {
   unwrap,
 } from '../jsx.ts';
 import { type PackageName } from '../targets.ts';
+import { listboxRoot, menuItem, selectRoot } from './collections.ts';
 import {
   type RuleContext,
   cardActionButton,
@@ -284,6 +285,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Select.Arrow': UNWRAP,
     'Select.Option': { apply: selectItem },
     'Select.Group': { to: ['Select', 'ItemGroup'] },
+    'Select.Root': { apply: selectRoot },
     // Menu.
     'Menu.Portal': UNWRAP,
     'Menu.Viewport': UNWRAP,
@@ -293,6 +295,20 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Menu.SubTrigger': { to: ['Menu', 'TriggerItem'] },
     'Menu.SubContent': { to: ['Menu', 'Content'], residue: 'Menu.SubContent → a nested Menu.Content inside Menu.Sub' },
     'Menu.VirtualTrigger': { apply: virtualTrigger },
+    'Menu.Item': { apply: menuItem },
+    'Menu.CheckboxItem': { apply: menuItem },
+    // Card, ScrollArea.
+    'Card.Root': { drop: ['fullWidth'] },
+    'ScrollArea.Root': {
+      drop: ['thin', 'centered'],
+      review: { padding: 'ScrollArea padding dropped: compose Viewport asChild > Container gutter by hand' },
+      apply: ({ file, element }) => {
+        const padding = getAttr(element, 'padding');
+        if (padding) {
+          removeAttr(file, padding);
+        }
+      },
+    },
     // System buttons.
     ...Object.fromEntries(
       [
@@ -406,6 +422,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
       residue: 'Listbox.Viewport dropped: Listbox.Content scrolls (scroll={false} to defer to the host)',
     },
     'Listbox.ItemContent': { apply: listboxItemContent },
+    'Listbox.Root': { apply: listboxRoot },
     'OrderedList.Title': { to: ['OrderedList', 'ItemText'] },
     'OrderedList.Viewport': {
       unwrap: true,
@@ -481,7 +498,14 @@ const applyRule = (ctx: RuleContext, rule: Rule, key: string) => {
 export const hasRenameRule = (pkg: PackageName, key: string): boolean => RULES[pkg][key] !== undefined;
 
 /** Rules that rebuild the whole element from its source text, so generic prop edits would overlap them. */
-const REBUILT = new Set<Rule['apply']>([avatarRoot, bannerEmpty, selectItem, listboxItemContent, virtualTrigger]);
+const REBUILT = new Set<Rule['apply']>([
+  avatarRoot,
+  bannerEmpty,
+  selectItem,
+  listboxItemContent,
+  virtualTrigger,
+  menuItem,
+]);
 
 export const renames: Transform = {
   name: 'renames',

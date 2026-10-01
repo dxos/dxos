@@ -219,7 +219,10 @@ describe('renames', () => {
         </Select.Root>
       );
     `);
-    expect(residue).toEqual(['Select.Item takes `item` data ({ value, label }); children replace the whole row']);
+    expect(residue).toEqual([
+      'Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand',
+      'Select.Item takes `item` data ({ value, label }); children replace the whole row',
+    ]);
   });
 
   test('Phase A4 ports: Tabs, Splitter, Toast, Avatar, Progress, Icon size', () => {
