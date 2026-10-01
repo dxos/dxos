@@ -90,7 +90,7 @@ export const IMPORT_TARGETS: Record<PackageName, Record<string, ImportTarget>> =
     ...sameName('react-ui-list', [...REACT_UI_LIST_NEXT.values, ...REACT_UI_LIST_NEXT.types]),
     Combobox: next('react-ui', 'Combobox'),
     DropIndicator: next('react-ui', 'DropIndicator'),
-    MasterDetail: none('no Next MasterDetail'),
+    MasterDetail: none('MasterDetail is removed: compose the list with Splitter (collapseBelow)'),
     Picker: none('Picker → Next.Combobox trigger mode (decision 9)'),
     TREE_BLOCK: none('the Next Tree sizes rows from its scope'),
     createStaticTreeModel: none('the Next Tree is driven by TreeModel atoms; rewrite the model'),

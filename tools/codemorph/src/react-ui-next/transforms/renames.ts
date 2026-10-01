@@ -26,6 +26,7 @@ import {
   listboxItemContent,
   virtualTrigger,
 } from './composites.ts';
+import { buttonDensity, isButton } from './density.ts';
 import { type Transform } from './transform.ts';
 
 /** How one current part becomes its Next counterpart. */
@@ -101,11 +102,6 @@ const buttonProps = (ctx: RuleContext) => {
     } else if (value.kind !== 'string') {
       file.report(iconEnd, 'iconEnd is a boolean in the current Button and the icon name in Next');
     }
-  }
-  const density = getAttr(element, 'density');
-  if (density) {
-    removeAttr(file, density);
-    file.report(density, 'density dropped: Next Button sizes from its scope (set size on the host)');
   }
   const iconClassNames = getAttr(element, 'iconClassNames');
   if (iconClassNames) {
@@ -327,8 +323,8 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Tabs.Button': { to: ['Tabs', 'Trigger'] },
     'Tabs.IconButton': { to: ['Tabs', 'Trigger'] },
     'Tabs.Panel': { to: ['Tabs', 'Content'] },
-    'Tabs.Viewport': { residue: 'master-detail Tabs (Viewport, BackButton, activePart) are not ported' },
-    'Tabs.BackButton': { residue: 'master-detail Tabs (Viewport, BackButton, activePart) are not ported' },
+    'Tabs.Viewport': { residue: 'master-detail Tabs are removed: compose Tabs + Splitter (collapseBelow)' },
+    'Tabs.BackButton': { residue: 'master-detail Tabs are removed: compose Tabs + Splitter (collapseBelow)' },
     'Tabs.TabGroupHeading': { residue: 'Tabs.TabGroupHeading is not ported' },
     'Tabs.TabPrimitive': { residue: 'Tabs.TabPrimitive is not ported' },
     'Splitter.Handle': { to: ['Splitter', 'ResizeTrigger'] },
@@ -430,22 +426,11 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
   'react-ui-menu': {},
 };
 
-/** Elements whose Next counterpart takes no `size`, so `density` cannot become one. */
-const BUTTONS = new Set([
-  'IconButton',
-  'Button',
-  'Toolbar.IconButton',
-  'Toolbar.Button',
-  'OrderedList.IconButton',
-  'ToggleGroupIconItem',
-  'Toolbar.ToggleGroupIconItem',
-]);
-
 const DENSITIES = new Set(['sm', 'md', 'lg']);
 
 const density = ({ file, element }: RuleContext, key: string) => {
   const attr = getAttr(element, 'density');
-  if (!attr || BUTTONS.has(key) || key.startsWith('SystemIconButton.')) {
+  if (!attr || isButton(key)) {
     return;
   }
   const value = attrValue(attr);
@@ -519,7 +504,11 @@ export const renames: Transform = {
         continue;
       }
       if (!rule?.unwrap && !REBUILT.has(rule?.apply)) {
-        density(ctx, key);
+        if (isButton(key)) {
+          buttonDensity(file, element);
+        } else {
+          density(ctx, key);
+        }
         if (key === 'Icon') {
           iconSize(ctx, 'size');
         }

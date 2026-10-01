@@ -40,6 +40,11 @@ residue. Elements are matched by what their tag resolves to through the file's i
 names (`IconButton` must still be an `IconButton` to gain `iconOnly` handling); `imports` goes last and leaves names the
 renames transform owns in place, reporting them.
 
+Button `density` follows the enclosing JSX in the same file. If the nearest element that sets `density` or `size`
+already gives the button's value, `density` is dropped. If nothing sets one, and every button under the nearest scope
+element (Toolbar, Panel, Card, Container, a popup's Content, …) shares the density, it becomes `size` on that element,
+once. Otherwise the button gets `size`, and a button whose component's caller decides its scope is reported.
+
 `layout` emits `Next.Container` directly, since the current `Container` is a different component. A `Flex` row is
 never converted: `Group` pads the block axis and wraps, and a `Container` row needs `columns`, so neither is a drop-in
 replacement. A converted `Column.Root` drops its `ColumnContext`, so a descendant reading `useInColumn` sees no

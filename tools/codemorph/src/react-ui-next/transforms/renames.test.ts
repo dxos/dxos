@@ -77,7 +77,7 @@ describe('renames', () => {
         </Toolbar.Root>
       );
     `);
-    expect(residue).toEqual(['density dropped: Next Button sizes from its scope (set size on the host)']);
+    expect(residue).toEqual([]);
   });
 
   test('Next spelling is renamed in place', () => {
