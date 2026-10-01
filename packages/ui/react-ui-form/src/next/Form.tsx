@@ -14,6 +14,7 @@ import { useFormContext, useKeyHandler } from '../hooks/index.ts';
 import { FormField } from './FormField.tsx';
 import { FormFields } from './FormFieldDispatch.tsx';
 import { FormFieldSet } from './FormFieldSet.tsx';
+import { FormLayoutController } from './FormLayout.tsx';
 
 /** The settings variant's two tracks (AUDIT §3.2 option 1): label and description, then the control. */
 export const SETTINGS_COLUMNS = 'minmax(0, 1fr) [control] minmax(0, 1fr)';
@@ -178,6 +179,7 @@ export const Form = {
   Content: FormContent,
   FieldSet: FormFieldSet,
   Fields: FormFields,
+  Layout: FormLayoutController,
   Field: FormField,
   Actions: FormActions,
   Submit: FormSubmit,

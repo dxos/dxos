@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as String from 'effect/String';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
@@ -49,6 +49,7 @@ import {
 } from './fields/index.ts';
 import { FormFieldRow } from './FormField.tsx';
 import { FormFieldSet } from './FormFieldSet.tsx';
+import { FormLayout } from './FormLayout.tsx';
 
 /**
  * `resolveFieldRenderer` (shared with the current Form) answers a scalar with the current renderer component rather
@@ -278,7 +279,7 @@ export const FormFields = ({
   sort,
   filter,
   schema: schemaProp,
-  layoutName: _layoutName,
+  layoutName = Annotation.DEFAULT_LAYOUT_NAME,
   ...props
 }: FormFieldsProps<any>) => {
   const { form, variant: _variant, testId: _testId, ...contextProps } = useFormContext(FORM_FIELDS_NAME);
@@ -300,6 +301,22 @@ export const FormFields = ({
   const properties = useFormFieldsProperties({ schema, values, include, exclude, filter, sort, projection });
   if ((readonly || layout === 'static') && values == null) {
     return null;
+  }
+
+  // A schema carrying a layout template renders by the DSL instead of one row per property.
+  const layouts = schema ? Option.getOrUndefined(Annotation.FormLayoutAnnotation.get(schema)) : undefined;
+  if (schema && layouts?.[layoutName] !== undefined) {
+    return (
+      <FormLayout
+        schema={schema}
+        name={layoutName}
+        path={path}
+        readonly={readonly}
+        layout={layout}
+        projection={projection}
+        {...fieldContext}
+      />
+    );
   }
 
   return (

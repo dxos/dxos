@@ -40,7 +40,7 @@ Everything lives in `src/next/` (not exported from the package root); stories ar
 - **Exported from the root to be shared.** The next layer reuses these root-module helpers, which are now exported (and
   so reach the root barrel): `useFormFieldBindingAt`, `isEmptyValue`, `formatStaticValue`, `useFormFieldsProperties`,
   `isoToLocalDateTime`, `localDateTimeToIso`.
-- **Not ported (out of the spike's scope).** The `Form.Layout` DSL (M8, needs AUDIT point 7), options lookup
+- **Not ported (out of the spike's scope).** Options lookup
   (AsyncSelect/Combobox field), autofill, hue, markdown, inline refs, SelectOptionField, projection option titles in
   Select, and markdown in FieldSet descriptions (rendered as plain text; `MarkdownView` is a current component).
 
@@ -370,11 +370,13 @@ Not in M6:
 
 ### M8–M10: what is left
 
-Each of these depends on Next work that is not on this branch's base yet:
+The design branch (A1–A5) is merged in, so each now builds on its Next parts:
 
-- **M8, arrays and layout templates.** `ArrayField` (spike) and `SelectOptionField` (M6) are done. The `Form.Layout`
-  DSL's `<field span=…>` needs Container `span` (Phase A item 1); the rest of the DSL maps onto row Containers with
-  `columns` and `align='start'`.
+- **M8, arrays and layout templates: done.** `ArrayField` and `SelectOptionField` sit on the Listbox-based
+  `OrderedList` (A2). `Form.Layout` (`FormLayout.tsx`) renders the DSL: a `<grid cols=N>` is a row Container of N equal
+  tracks (`align='start'`), and a `<field span=N>` a cell Container with A1's `span`. `Form.Fields` hands off to it when
+  the schema carries `FormLayoutAnnotation` (`layoutName` picks the variant). `FormLayout.stories.tsx` checks paired
+  rows, spans and a named layout.
 - **M9, ref and lookup fields.** `RefField` and the lookup Combobox use input mode. The RefField and ObjectPicker
   rebuild needs Combobox trigger mode with its create row and descriptions, which is in PR #13549 and not yet on
   `main`.
