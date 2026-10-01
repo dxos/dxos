@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -22,8 +22,8 @@ const STORAGE_KEY = 'story.reviewed.dxos/dxos#13363';
 const DefaultStory = ({ diff }: StoryArgs) => {
   const files = usePullRequestFiles(diff, STORAGE_KEY);
   return (
-    <Panel.Root>
-      <Panel.Body>
+    <Next.Panel.Root>
+      <Next.Panel.Body>
         <PullRequestFiles
           tree={files.tree}
           file={files.file}
@@ -32,8 +32,8 @@ const DefaultStory = ({ diff }: StoryArgs) => {
           onSelect={files.select}
           onReviewedChange={files.setReviewed}
         />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

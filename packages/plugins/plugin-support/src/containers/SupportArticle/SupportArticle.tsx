@@ -7,18 +7,8 @@ import React, { useCallback } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import {
-  Button,
-  Column,
-  Field,
-  Flex,
-  Input,
-  Panel,
-  ScrollArea,
-  Textarea,
-  Toolbar,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Column, Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Support } from '#types';
@@ -72,58 +62,58 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
   const status = ticket.status ?? 'open';
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.Text>{t(`status-${status}.label`)}</Toolbar.Text>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Toolbar.Text>{t(`status-${status}.label`)}</Next.Toolbar.Text>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <Column.Root>
-          <ScrollArea.Root orientation='vertical' padding>
-            <ScrollArea.Viewport>
-              <Field.Root>
-                <Field.Label>{t('title.label')}</Field.Label>
-                <Input value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
-              </Field.Root>
+          <Next.ScrollArea.Root orientation='vertical' padding>
+            <Next.ScrollArea.Viewport>
+              <Next.Field.Root>
+                <Next.Field.Label>{t('title.label')}</Next.Field.Label>
+                <Next.Input value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
+              </Next.Field.Root>
 
-              <Field.Root>
-                <Field.Label>{t('body.label')}</Field.Label>
-                <Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
-              </Field.Root>
+              <Next.Field.Root>
+                <Next.Field.Label>{t('body.label')}</Next.Field.Label>
+                <Next.Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
+              </Next.Field.Root>
 
               {status === 'resolved' && (
-                <Field.Root>
-                  <Field.Label>{t('resolution.label')}</Field.Label>
-                  <Textarea
+                <Next.Field.Root>
+                  <Next.Field.Label>{t('resolution.label')}</Next.Field.Label>
+                  <Next.Textarea
                     value={ticket.resolution ?? ''}
                     onChange={(event) => handleSetResolution(event.target.value)}
                   />
-                </Field.Root>
+                </Next.Field.Root>
               )}
 
               <Flex gap='sm' align='center'>
                 {status === 'open' && (
-                  <Button variant='outline' onClick={() => handleStatus('in_progress')}>
+                  <Next.Button variant='outline' onClick={() => handleStatus('in_progress')}>
                     {t('mark-in-progress.button')}
-                  </Button>
+                  </Next.Button>
                 )}
                 {status !== 'resolved' && (
-                  <Button variant='primary' onClick={() => handleStatus('resolved')}>
+                  <Next.Button variant='primary' onClick={() => handleStatus('resolved')}>
                     {t('resolve.button')}
-                  </Button>
+                  </Next.Button>
                 )}
                 {status === 'resolved' && (
-                  <Button variant='outline' onClick={() => handleStatus('open')}>
+                  <Next.Button variant='outline' onClick={() => handleStatus('open')}>
                     {t('reopen.button')}
-                  </Button>
+                  </Next.Button>
                 )}
               </Flex>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Column.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Avatar, Button, Icon, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
+import { Trans, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -37,14 +38,14 @@ export const AgentConfig = ({
             className='my-2 flex gap-2 items-center'
             aria-describedby='devices-panel.create-agent.description'
           >
-            <Avatar.Root>
-              <Avatar.Content
+            <Next.Avatar.Root>
+              <Next.Avatar.Content
                 status={agentStatus === 'created' ? 'warning' : 'inactive'}
                 variant='square'
                 classNames={['place-self-center', agentStatus !== 'created' && 'opactiy-50']}
                 icon='ph--database--duotone'
               />
-              <Avatar.Label classNames='flex-1 text-sm truncate'>
+              <Next.Avatar.Label classNames='flex-1 text-sm truncate'>
                 {t(
                   agentStatus === 'created'
                     ? 'agent requested label'
@@ -54,11 +55,11 @@ export const AgentConfig = ({
                         ? 'destroying agent label'
                         : 'getting agent label',
                 )}
-              </Avatar.Label>
-            </Avatar.Root>
+              </Next.Avatar.Label>
+            </Next.Avatar.Root>
             {agentStatus === 'created' && (
-              <Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
-                <Button
+              <Next.Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
+                <Next.Button
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
@@ -67,7 +68,7 @@ export const AgentConfig = ({
                   iconOnly
                   onClick={onAgentDestroy}
                 />
-              </Tooltip.Trigger>
+              </Next.Tooltip.Trigger>
             )}
           </div>
           {agentStatus === 'created' && (
@@ -78,7 +79,7 @@ export const AgentConfig = ({
         </>
       ) : (
         <>
-          <Button
+          <Next.Button
             variant='ghost'
             classNames='my-2 w-full justify-start gap-2 ps-0 pe-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
@@ -87,15 +88,15 @@ export const AgentConfig = ({
           >
             <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
               {agentStatus === 'creatable' ? (
-                <Icon icon='ph--plus--light' size='xl' />
+                <Next.Icon icon='ph--plus--light' size='xl' />
               ) : (
-                <Icon icon='ph--arrows-clockwise--light' size='xl' />
+                <Next.Icon icon='ph--arrows-clockwise--light' size='xl' />
               )}
             </div>
             <span className='grow font-medium text-start'>
               {t(agentStatus === 'creatable' ? 'create-agent.label' : '')}
             </span>
-          </Button>
+          </Next.Button>
           {agentStatus === 'creatable' && (
             <div className='space-y-2' id='devices-panel.create-agent.description'>
               <p className='text-description'>
@@ -104,7 +105,7 @@ export const AgentConfig = ({
                     t,
                     i18nKey: 'create-agent-clickwrap',
                     components: {
-                      tosLink: <Link />,
+                      tosLink: <Next.Link />,
                     },
                   }}
                 />

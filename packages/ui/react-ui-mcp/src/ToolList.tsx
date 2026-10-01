@@ -14,7 +14,7 @@
 import React, { type ComponentProps, Fragment, type PropsWithChildren, type ReactNode } from 'react';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { mx } from '@dxos/ui-theme';
 
 /**

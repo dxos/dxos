@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
 type Subject = Repo.Repo | Issue.Issue | PullRequest.PullRequest;
@@ -39,8 +39,8 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
   const name = 'name' in subject ? subject.name : subject.repo;
 
   return (
-    <Card.Body>
-      <Card.Row>
+    <Next.Card.Body>
+      <Next.Card.Row>
         <div className='flex justify-between items-center gap-2 text-sm'>
           <span className='text-description'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</span>
           {state && (
@@ -54,34 +54,34 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
             </span>
           )}
         </div>
-      </Card.Row>
+      </Next.Card.Row>
       {author && (
-        <Card.Row>
+        <Next.Card.Row>
           <span className='text-sm text-description whitespace-nowrap'>{author}</span>
-        </Card.Row>
+        </Next.Card.Row>
       )}
       {(additions !== undefined || deletions !== undefined) && (
-        <Card.Row>
+        <Next.Card.Row>
           <div className='flex items-center gap-2 text-sm'>
             {additions !== undefined && <span className='text-green-500'>+{additions}</span>}
             {deletions !== undefined && <span className='text-red-500'>−{deletions}</span>}
           </div>
-        </Card.Row>
+        </Next.Card.Row>
       )}
       {description && (
-        <Card.Row>
-          <Card.Text classNames='line-clamp-3' variant='description'>
+        <Next.Card.Row>
+          <Next.Card.Text classNames='line-clamp-3' variant='description'>
             {description}
-          </Card.Text>
-        </Card.Row>
+          </Next.Card.Text>
+        </Next.Card.Row>
       )}
       {url && (
-        <Card.Row>
+        <Next.Card.Row>
           <a className='dx-link text-sm' href={url} target='_blank' rel='noopener noreferrer'>
             Open on GitHub
           </a>
-        </Card.Row>
+        </Next.Card.Row>
       )}
-    </Card.Body>
+    </Next.Card.Body>
   );
 };

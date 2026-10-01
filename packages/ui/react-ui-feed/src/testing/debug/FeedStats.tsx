@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Button, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { useMessageList } from '../../components/index.ts';
@@ -146,7 +147,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
         <span className='grow truncate' data-testid='feed.stream.state'>
           {streaming ? 'streaming…' : 'idle'}
         </span>
-        <Button
+        <Next.Button
           icon={recording ? 'ph--stop--regular' : 'ph--record--regular'}
           iconOnly
           label={recording ? 'End the pass' : 'Start a pass'}
@@ -155,7 +156,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
           data-testid='feed.debug.record'
           onClick={onRecord}
         />
-        <Button
+        <Next.Button
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset counters'

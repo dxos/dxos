@@ -9,8 +9,10 @@ import React, { type ChangeEvent, type ComponentProps, useCallback, useMemo } fr
 
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
-import { Button, Panel, SystemButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { type FormFieldMap } from '@dxos/react-ui-form';
+import { Form, createSelectField } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 export const CrawlOptions = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
@@ -87,16 +89,16 @@ export const CrawlPanel = ({
   );
 
   return (
-    <Panel.Root classNames={classNames}>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button
+    <Next.Panel.Root classNames={classNames}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button
             icon='ph--arrow-clockwise--regular'
             label='List channels'
             disabled={!options.token || !!busy}
             onClick={onListChannels}
           />
-          <Button
+          <Next.Button
             icon='ph--bulldozer--regular'
             iconOnly
             label='Crawl'
@@ -104,16 +106,16 @@ export const CrawlPanel = ({
             disabled={!options.token || !options.channel || !!busy}
             onClick={onCrawl}
           />
-          <SystemButton.Upload
+          <Next.SystemButton.Upload
             disabled={!!busy}
             accept='.txt,.md,text/plain,text/markdown'
             onFileChange={handleFileChange}
           />
-          <Toolbar.Separator />
-          <Button icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          <Next.Toolbar.Separator />
+          <Next.Button icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <Form.Root schema={CrawlOptions} values={options} fieldMap={fieldMap} onValuesChanged={onValuesChanged}>
           <Form.Viewport>
             <Form.Content>
@@ -121,14 +123,16 @@ export const CrawlPanel = ({
             </Form.Content>
           </Form.Viewport>
         </Form.Root>
-      </Panel.Body>
+      </Next.Panel.Body>
       {(error || status) && (
-        <Panel.Footer>
-          <Toolbar.Root classNames='bg-transparent'>
-            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued']}>{error ?? status}</Toolbar.Text>
-          </Toolbar.Root>
-        </Panel.Footer>
+        <Next.Panel.Footer>
+          <Next.Toolbar.Root classNames='bg-transparent'>
+            <Next.Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued']}>
+              {error ?? status}
+            </Next.Toolbar.Text>
+          </Next.Toolbar.Root>
+        </Next.Panel.Footer>
       )}
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };

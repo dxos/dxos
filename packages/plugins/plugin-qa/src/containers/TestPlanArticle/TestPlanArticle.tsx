@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Field, Icon, Input, Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { RunRow } from '#components';
 import { QaOperation, type TestCase, TestPlan, TestRun } from '#types';
@@ -83,13 +83,13 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
   }, [invokePromise, subject]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body classNames='flex flex-col gap-4 p-4' data-testid='qa.plan'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body classNames='flex flex-col gap-4 p-4' data-testid='qa.plan'>
         <header className='flex items-center gap-2'>
-          <Icon icon='ph--check-square-offset--regular' size='lg' />
+          <Next.Icon icon='ph--check-square-offset--regular' size='lg' />
           <h1 className='grow text-lg'>{plan.name}</h1>
           <button className='dx-button' disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
-            <Icon icon='ph--play--regular' size='md' />
+            <Next.Icon icon='ph--play--regular' size='md' />
             <span>Run</span>
           </button>
         </header>
@@ -101,16 +101,16 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         )}
 
         <section>
-          <Field.Label>Cases</Field.Label>
+          <Next.Field.Label>Cases</Next.Field.Label>
           <div className='flex gap-2 py-2'>
-            <Input
+            <Next.Input
               classNames='w-24'
               placeholder='Key'
               value={caseKey}
               onChange={(event) => setCaseKey(event.target.value)}
               data-testid='qa.plan.case-key'
             />
-            <Input
+            <Next.Input
               classNames='grow'
               placeholder='Title'
               value={caseTitle}
@@ -123,7 +123,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
               onClick={handleAddCase}
               data-testid='qa.plan.add-case'
             >
-              <Icon icon='ph--plus--regular' size='md' />
+              <Next.Icon icon='ph--plus--regular' size='md' />
               <span>Add case</span>
             </button>
           </div>
@@ -145,7 +145,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         </section>
 
         <section>
-          <Field.Label>Runs</Field.Label>
+          <Next.Field.Label>Runs</Next.Field.Label>
           {newestFirst.length === 0 ? (
             <p className='text-subdued' data-testid='qa.plan.no-runs'>
               No runs yet.
@@ -164,8 +164,8 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
             </ul>
           )}
         </section>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

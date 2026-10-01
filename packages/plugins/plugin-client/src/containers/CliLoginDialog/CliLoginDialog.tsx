@@ -10,7 +10,8 @@ import { EffectEx } from '@dxos/effect';
 import { type Invitation } from '@dxos/halo';
 import { useIdentity, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { ClientCapabilities, CliLogin } from '#types';
@@ -104,12 +105,12 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
   }, [identityService, callback, state]);
 
   return (
-    <AlertDialog.Content size='md'>
-      <AlertDialog.Body>
-        <AlertDialog.Title>{t('cli-login-dialog.title')}</AlertDialog.Title>
-        <AlertDialog.Description classNames='py-2'>
+    <Next.AlertDialog.Content size='md'>
+      <Next.AlertDialog.Body>
+        <Next.AlertDialog.Title>{t('cli-login-dialog.title')}</Next.AlertDialog.Title>
+        <Next.AlertDialog.Description classNames='py-2'>
           {identity ? t('cli-login-dialog.description') : t('cli-login-no-identity.message')}
-        </AlertDialog.Description>
+        </Next.AlertDialog.Description>
         {identity && (
           <div className='py-2'>
             <p className='text-sm text-subdued'>{t('cli-login-code.label')}</p>
@@ -124,34 +125,38 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
           {status === 'success' && t('cli-login-success.message')}
           {status === 'error' && t('cli-login-error.message', { error })}
         </p>
-      </AlertDialog.Body>
-      <AlertDialog.Footer>
+      </Next.AlertDialog.Body>
+      <Next.AlertDialog.Footer>
         {status === 'confirm' || status === 'sending' ? (
           <>
-            <AlertDialog.Cancel asChild>
-              <Button data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
+            <Next.AlertDialog.Cancel asChild>
+              <Next.Button data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
                 {t('cli-login-deny.label')}
-              </Button>
-            </AlertDialog.Cancel>
-            <Button
+              </Next.Button>
+            </Next.AlertDialog.Cancel>
+            <Next.Button
               data-testid='cliLogin.authorize'
               variant='primary'
               disabled={!identity || status === 'sending'}
               onClick={handleAuthorize}
             >
               {t('cli-login-authorize.label')}
-            </Button>
+            </Next.Button>
           </>
         ) : (
-          <AlertDialog.Action asChild>
+          <Next.AlertDialog.Action asChild>
             {/* While the CLI is joining, closing cancels the invitation, so the action says so. */}
-            <Button data-testid='cliLogin.done' variant={status === 'success' ? 'primary' : 'default'} onClick={close}>
+            <Next.Button
+              data-testid='cliLogin.done'
+              variant={status === 'success' ? 'primary' : 'default'}
+              onClick={close}
+            >
               {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
-            </Button>
-          </AlertDialog.Action>
+            </Next.Button>
+          </Next.AlertDialog.Action>
         )}
-      </AlertDialog.Footer>
-    </AlertDialog.Content>
+      </Next.AlertDialog.Footer>
+    </Next.AlertDialog.Content>
   );
 };
 

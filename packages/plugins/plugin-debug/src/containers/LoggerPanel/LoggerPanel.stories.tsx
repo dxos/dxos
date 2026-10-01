@@ -7,8 +7,8 @@ import React from 'react';
 
 import { type CallMetadata, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -37,11 +37,11 @@ const emit = (file: string, level: 'info' | 'warn' | 'error') => {
 /** The panel reads the process-wide log buffer, so the story emits into it rather than passing rows. */
 const Render = () => (
   <div className='grid grid-rows-[min-content_1fr] h-[24rem] w-[48rem] max-w-full'>
-    <Toolbar.Root>
-      <Button onClick={() => emit(FILES[0], 'info')}>Info</Button>
-      <Button onClick={() => emit(FILES[1], 'warn')}>Warn</Button>
-      <Button onClick={() => emit(FILES[2], 'error')}>Error</Button>
-    </Toolbar.Root>
+    <Next.Toolbar.Root>
+      <Next.Button onClick={() => emit(FILES[0], 'info')}>Info</Next.Button>
+      <Next.Button onClick={() => emit(FILES[1], 'warn')}>Warn</Next.Button>
+      <Next.Button onClick={() => emit(FILES[2], 'error')}>Error</Next.Button>
+    </Next.Toolbar.Root>
     <LoggerPanel />
   </div>
 );

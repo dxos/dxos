@@ -6,11 +6,12 @@ import React, { forwardRef, useId, useMemo, useState } from 'react';
 
 import { type Database, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Banner, Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { ObjectForm } from '@dxos/react-ui-form';
+import { ObjectForm } from '@dxos/react-ui-form/next';
 import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -42,19 +43,19 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
     );
 
     return (
-      <Panel.Root ref={forwardedRef}>
-        <Panel.Header>
-          <Toolbar.Root />
-        </Panel.Header>
-        <Panel.Body>
+      <Next.Panel.Root ref={forwardedRef}>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root />
+        </Next.Panel.Header>
+        <Next.Panel.Body>
           {selectedObjects.length === 0 ? (
-            <Banner.Root>
-              <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
-            </Banner.Root>
+            <Next.Banner.Root>
+              <Next.Banner.Title>{t('row-details-no-selection.label')}</Next.Banner.Title>
+            </Next.Banner.Root>
           ) : (
             <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-              <ScrollArea.Root orientation='vertical' centered padding>
-                <ScrollArea.Viewport ref={setViewport}>
+              <Next.ScrollArea.Root orientation='vertical' centered padding>
+                <Next.ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack
                     classNames='py-trim-md gap-trim-md'
                     draggable={false}
@@ -62,18 +63,18 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        <Card.Root fullWidth gutter='sm'>
+                        <Next.Card.Root fullWidth gutter='sm'>
                           <ObjectForm object={props.data} type={type} />
-                        </Card.Root>
+                        </Next.Card.Root>
                       </Mosaic.Tile>
                     )}
                   />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
+                </Next.ScrollArea.Viewport>
+              </Next.ScrollArea.Root>
             </Mosaic.Container>
           )}
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 );

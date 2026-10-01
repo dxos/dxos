@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { type EditableActivation } from '@dxos/react-ui';
+import type { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownEditable } from './MarkdownEditable.tsx';
@@ -14,7 +14,7 @@ import { MarkdownEditable } from './MarkdownEditable.tsx';
 type StoryArgs = {
   initialValue?: string;
   placeholder?: string;
-  activation?: EditableActivation;
+  activation?: Next.EditableActivation;
   readonly?: boolean;
   multiline?: boolean;
   editing?: boolean;

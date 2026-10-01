@@ -8,8 +8,9 @@ import { CardIconSlot, useActiveSpace, useObjectMenuItems } from '@dxos/app-tool
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
-import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
-import { ActionMenu } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionMenu } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -52,30 +53,30 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
   return (
     // `fullWidth`: a card defaults to `dx-card-max-width`, which is right where cards are laid out
     // beside each other and wrong in a message, where the thread's column is the width to fill.
-    <Card.Root fullWidth classNames='my-2' size='sm'>
-      <Card.Header>
-        <Block>
+    <Next.Card.Root fullWidth classNames='my-2' size='sm'>
+      <Next.Card.Header>
+        <Next.Block>
           <CardIconSlot subject={object}>
-            <Icon icon='ph--question--regular' />
+            <Next.Icon icon='ph--question--regular' />
           </CardIconSlot>
-        </Block>
+        </Next.Block>
         {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
             question is a sentence the reader has to read in full — so the body carries it. */}
-        <Card.Title>{object.title}</Card.Title>
+        <Next.Card.Title>{object.title}</Next.Card.Title>
         {/* The task's actions, as a task card anywhere else offers them. */}
-        <Block end>
+        <Next.Block end>
           <ActionMenu disabled={!menuItems.length} actions={menuItems}>
-            <Button
+            <Next.Button
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('question-actions.label')}
             />
           </ActionMenu>
-        </Block>
-      </Card.Header>
+        </Next.Block>
+      </Next.Card.Header>
       <QuestionCard task={object} questionId={questionId} />
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 

@@ -27,7 +27,7 @@ import {
   createLineSeparator,
   createMenuItemGroup,
   graphActions,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
 import { Position } from '@dxos/util';
 
 import { useMobileLayout } from '#components';

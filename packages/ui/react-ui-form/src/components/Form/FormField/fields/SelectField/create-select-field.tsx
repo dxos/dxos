@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Select } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
@@ -59,7 +59,7 @@ export const createSelectField = ({
         {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
       </p>
     ) : (
-      <Select.Root
+      <Next.Select.Root
         disabled={!!readonly}
         value={value ?? sentinel}
         // A choice is a commit: the select never blurs, so it commits itself.
@@ -68,16 +68,19 @@ export const createSelectField = ({
           onBlur();
         }}
       >
-        <Select.Trigger classNames='w-full' disabled={!!readonly} />
+        <Next.Select.Trigger classNames='w-full' disabled={!!readonly} />
         {normalized.length > 0 && (
-          <Select.Content>
-            {hasDefault && <Select.Item item={{ value: sentinel, label: defaultLabel }} />}
+          <Next.Select.Content>
+            {hasDefault && <Next.Select.Item item={{ value: sentinel, label: defaultLabel }} />}
             {normalized.map((option) => (
-              <Select.Item key={option.value} item={{ value: option.value, label: option.label ?? option.value }} />
+              <Next.Select.Item
+                key={option.value}
+                item={{ value: option.value, label: option.label ?? option.value }}
+              />
             ))}
-          </Select.Content>
+          </Next.Select.Content>
         )}
-      </Select.Root>
+      </Next.Select.Root>
     );
 
     return (

@@ -19,6 +19,7 @@
 
 import React, {
   type ChangeEvent,
+  type ComponentProps,
   type ComponentPropsWithRef,
   type PropsWithChildren,
   type ReactNode,
@@ -31,15 +32,13 @@ import React, {
 import {
   type Density,
   type Elevation,
-  Icon,
-  ScrollArea,
-  type ScrollAreaRootProps,
   type ThemedClassName,
   useControllableState,
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -49,6 +48,8 @@ import { SearchListInputContextProvider, SearchListItemContextProvider, useSearc
 //
 // Root — wraps `Picker.Root` and adds query state + debounced onSearch.
 //
+
+type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
 
 type SearchListRootProps = PropsWithChildren<{
   /** Controlled query value. */
@@ -240,14 +241,14 @@ const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>((
     ...rest
   } = props as PropsWithChildren<SearchListViewportProps & Record<string, unknown>>;
   return (
-    <ScrollArea.Root
+    <Next.ScrollArea.Root
       {...composableProps<HTMLDivElement>(rest)}
       {...{ thin, padding, centered }}
       role='listbox'
       ref={forwardedRef}
     >
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
+      <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 });
 
@@ -286,10 +287,10 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         classNames={mx('flex gap-2 items-center px-2 rounded-xs', classNames)}
         ref={forwardedRef}
       >
-        {icon && <Icon icon={icon} classNames={iconClassNames} />}
+        {icon && <Next.Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
-        {checked && <Icon icon='ph--check--regular' />}
+        {checked && <Next.Icon icon='ph--check--regular' />}
       </Picker.Item>
     );
   },

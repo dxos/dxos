@@ -21,7 +21,7 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { Button, Field, Flex, Icon, Input, Menu, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Flex, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
@@ -387,7 +387,7 @@ export const Welcome = ({
         {state === WelcomeState.INIT && !signupEnabled && loginTab}
 
         {state === WelcomeState.INIT && signupEnabled && (
-          <Tabs.Root
+          <Next.Tabs.Root
             asChild
             orientation='horizontal'
             defaultActivePart='panel'
@@ -402,19 +402,19 @@ export const Welcome = ({
               }
             }}
           >
-            <Tabs.Viewport classNames='flex flex-col gap-6'>
-              <Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
-                <Tabs.Trigger value='login' classNames={tabClassNames}>
+            <Next.Tabs.Viewport classNames='flex flex-col gap-6'>
+              <Next.Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
+                <Next.Tabs.Trigger value='login' classNames={tabClassNames}>
                   {t('login-tab.label')}
-                </Tabs.Trigger>
-                <Tabs.Trigger value='signup' classNames={tabClassNames}>
+                </Next.Tabs.Trigger>
+                <Next.Tabs.Trigger value='signup' classNames={tabClassNames}>
                   {t('signup-tab.label')}
-                </Tabs.Trigger>
-              </Tabs.List>
+                </Next.Tabs.Trigger>
+              </Next.Tabs.List>
 
-              <Tabs.Content value='login'>{loginTab}</Tabs.Content>
+              <Next.Tabs.Content value='login'>{loginTab}</Next.Tabs.Content>
 
-              <Tabs.Content value='signup'>
+              <Next.Tabs.Content value='signup'>
                 {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
                   <Flex column gap='xl'>
                     <Next.Container gap='md' gutter='none'>
@@ -531,9 +531,9 @@ export const Welcome = ({
                     <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
                   </Flex>
                 )}
-              </Tabs.Content>
-            </Tabs.Viewport>
-          </Tabs.Root>
+              </Next.Tabs.Content>
+            </Next.Tabs.Viewport>
+          </Next.Tabs.Root>
         )}
 
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
@@ -752,19 +752,19 @@ const LoginTab = ({
       {/* Primary method */}
       {primary === 'passkey' && methodAvailable.passkey && onPasskey && (
         <Next.Container gap='md' gutter='none'>
-          <Button
+          <Next.Button
             variant='primary'
             classNames='w-full justify-center gap-2 disabled:bg-neutral-800'
             disabled={pending}
             onClick={onPasskey}
           >
-            <Icon icon='ph--key--regular' size='lg' />
+            <Next.Icon icon='ph--key--regular' size='lg' />
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
-          </Button>
+          </Next.Button>
           {error?.startsWith('passkey-') && (
-            <Field.Root>
+            <Next.Field.Root>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
-            </Field.Root>
+            </Next.Field.Root>
           )}
         </Next.Container>
       )}
@@ -810,24 +810,24 @@ const LoginTab = ({
         </Next.Container>
       )}
       {!methodAvailable[primary] && moreOptions.length === 0 && (
-        <Field.Root>
+        <Next.Field.Root>
           <ValidationMessage>{t('login-unavailable.message')}</ValidationMessage>
-        </Field.Root>
+        </Next.Field.Root>
       )}
       {moreOptions.length > 0 && (
-        <Menu.Root>
-          <Menu.Trigger asChild>
+        <Next.Menu.Root>
+          <Next.Menu.Trigger asChild>
             <button
               type='button'
               className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4 outline-none'
             >
               <span>{t('more-ways-to-sign-in.label')}</span>
-              <Icon icon='ph--caret-down--regular' size='md' />
+              <Next.Icon icon='ph--caret-down--regular' size='md' />
             </button>
-          </Menu.Trigger>
+          </Next.Menu.Trigger>
           {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
                 onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
-          <Menu.Content
+          <Next.Menu.Content
             side='bottom'
             sideOffset={8}
             collisionPadding={16}
@@ -835,16 +835,16 @@ const LoginTab = ({
             onCloseAutoFocus={handleMoreMenuCloseAutoFocus}
           >
             {moreOptions.map((opt) => (
-              <Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
-                <Icon icon={opt.icon} size='xl' classNames={mx(opt.classNames)} />
+              <Next.Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
+                <Next.Icon icon={opt.icon} size='xl' classNames={mx(opt.classNames)} />
                 <Next.Container gap='sm' gutter='none'>
                   <span>{opt.label}</span>
                   <span className='text-xs text-description font-normal'>{opt.description}</span>
                 </Next.Container>
-              </Menu.Item>
+              </Next.Menu.Item>
             ))}
-          </Menu.Content>
-        </Menu.Root>
+          </Next.Menu.Content>
+        </Next.Menu.Root>
       )}
     </Flex>
   );
@@ -866,7 +866,7 @@ const InlineForm = ({
   validation,
   onSubmit,
 }: {
-  inputProps: Omit<ComponentProps<typeof Field.Input>, 'classNames'> & {
+  inputProps: Omit<ComponentProps<typeof Next.Field.Input>, 'classNames'> & {
     classNames?: string;
     ref?: Ref<HTMLInputElement>;
   };
@@ -879,25 +879,25 @@ const InlineForm = ({
 }) => {
   const { classNames: inputClasses, ref, ...rest } = inputProps;
   return (
-    <Field.Root>
+    <Next.Field.Root>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
-        <Input
+        <Next.Input
           {...rest}
           disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}
           ref={ref}
         />
-        <Button
+        <Next.Button
           variant='primary'
           classNames='disabled:bg-neutral-800 sm:rounded-l-none'
           disabled={submitDisabled}
           onClick={onSubmit}
         >
           {submitLabel}
-        </Button>
+        </Next.Button>
       </div>
       {validation && <ValidationMessage>{validation}</ValidationMessage>}
-    </Field.Root>
+    </Next.Field.Root>
   );
 };
 
@@ -907,7 +907,7 @@ const InlineForm = ({
  * `InlineForm` must supply their own `Field.Root` — it is context only and renders no markup.
  */
 const ValidationMessage = ({ children }: PropsWithChildren) => (
-  <Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Field.ErrorText>
+  <Next.Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Next.Field.ErrorText>
 );
 
 /** Horizontal "or" separator between alternative auth methods. */

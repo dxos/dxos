@@ -11,8 +11,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
-import { Textarea, type ThemedClassName } from '@dxos/react-ui';
-import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { type SceneViewAtoms } from '../../model/atoms.ts';
@@ -44,7 +46,7 @@ const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly, getVal
   const lines: string[] = getValue() ?? [];
   return (
     <Form.Field path={jsonPath} label={label} readonly={readonly}>
-      <Textarea
+      <Next.Textarea
         rows={4}
         classNames='font-mono'
         disabled={!!readonly}

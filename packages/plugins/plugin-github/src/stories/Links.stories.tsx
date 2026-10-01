@@ -13,7 +13,6 @@ import { EffectEx } from '@dxos/effect';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Block, Card, Icon, Popover } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
@@ -42,7 +41,7 @@ const PreviewCard = () => {
     return null;
   }
   return (
-    <Popover.Content
+    <Next.Popover.Content
       onOpenAutoFocus={(event) => event.preventDefault()}
       classNames={[
         'origin-(--transform-origin)',
@@ -50,21 +49,21 @@ const PreviewCard = () => {
         'data-[state=closed]:animate-popover-out',
       ]}
     >
-      <Popover.Body>
-        <Card.Root border={false} classNames='dx-card-popover'>
-          <Card.Header>
-            <Block>
-              <Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
-            </Block>
-            <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
-            <Popover.CloseTrigger asChild>
-              <Card.Action system='close' />
-            </Popover.CloseTrigger>
-          </Card.Header>
+      <Next.Popover.Body>
+        <Next.Card.Root border={false} classNames='dx-card-popover'>
+          <Next.Card.Header>
+            <Next.Block>
+              <Next.Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
+            </Next.Block>
+            <Next.Card.Title>{Obj.getLabel(target.object) ?? target.label}</Next.Card.Title>
+            <Next.Popover.CloseTrigger asChild>
+              <Next.Card.Action system='close' />
+            </Next.Popover.CloseTrigger>
+          </Next.Card.Header>
           <Surface.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
-        </Card.Root>
-      </Popover.Body>
-    </Popover.Content>
+        </Next.Card.Root>
+      </Next.Popover.Body>
+    </Next.Popover.Content>
   );
 };
 

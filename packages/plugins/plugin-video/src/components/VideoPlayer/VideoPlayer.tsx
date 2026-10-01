@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Icon, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -34,7 +35,7 @@ export const VideoPlayer = composable<HTMLDivElement, VideoPlayerProps>(
           })}
           ref={forwardedRef}
         >
-          <Icon icon='ph--video-camera-slash--regular' size='xl' />
+          <Next.Icon icon='ph--video-camera-slash--regular' size='xl' />
           <span>{t('player.empty.label')}</span>
         </div>
       );

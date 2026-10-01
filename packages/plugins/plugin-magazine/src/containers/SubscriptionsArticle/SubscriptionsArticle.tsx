@@ -11,8 +11,9 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
@@ -84,16 +85,16 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
   }, [space, invokePromise]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <SubscriptionStack id={attendableId} feeds={feeds} currentId={currentId} onAction={handleAction} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

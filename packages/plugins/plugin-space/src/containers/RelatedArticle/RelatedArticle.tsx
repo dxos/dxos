@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Next } from '@dxos/react-ui/next';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
@@ -26,20 +26,20 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
 
   return (
     <Masonry.Root Tile={ObjectCard}>
-      <Panel.Root role={role}>
+      <Next.Panel.Root role={role}>
         {/* TODO(burdon): Build this out into a real toolbar: text filter, and a table/card view
             toggle as TypeArticle has. */}
-        <Panel.Header>
-          <Toolbar.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             <RelatedTypeFilter types={types} onToggle={toggle} />
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Masonry.Content centered>
             <Masonry.Viewport items={items} />
           </Masonry.Content>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Masonry.Root>
   );
 };

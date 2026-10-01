@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Button, createContext, useTranslation } from '@dxos/react-ui';
+import { createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -20,6 +20,7 @@ import {
   type MessageRange,
   useMessageList,
 } from '@dxos/react-ui-feed';
+import { Next } from '@dxos/react-ui/next';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
@@ -216,7 +217,7 @@ const ScrollToBottom = () => {
   const hidden = atEnd || following;
 
   return (
-    <Button
+    <Next.Button
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly

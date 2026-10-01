@@ -2,20 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
+import React, { type ComponentProps, type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
-import {
-  ScrollArea,
-  type ScrollAreaRootProps,
-  type ThemedClassName,
-  composable,
-  composableProps,
-} from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks/index.ts';
 import { listTheme } from '../List.theme.ts';
 import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext.ts';
+
+type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
 
 const styles = listTheme.styles();
 
@@ -149,14 +146,14 @@ export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewpor
   // ref object would miss the element entirely (ref mutations don't re-run effects).
   const autoScrollRef = useReorderAutoScroll();
   return (
-    <ScrollArea.Root
+    <Next.ScrollArea.Root
       {...composableProps<HTMLDivElement>(rest, { classNames: styles.orderedListViewport() })}
       {...{ thin, padding, centered }}
       orientation='vertical'
       ref={forwardedRef}
     >
-      <ScrollArea.Viewport ref={autoScrollRef}>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
+      <Next.ScrollArea.Viewport ref={autoScrollRef}>{children}</Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 });
 

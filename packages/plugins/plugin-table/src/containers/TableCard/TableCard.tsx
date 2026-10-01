@@ -9,7 +9,6 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Card } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -19,6 +18,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
+import { Next } from '@dxos/react-ui/next';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 export type TableCardProps = AppSurface.ObjectCardProps<Table.Table>;
@@ -56,8 +56,8 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
-    <Card.Body>
-      <Card.Row fullWidth>
+    <Next.Card.Body>
+      <Next.Card.Row fullWidth>
         <TableComponent.Root ref={tableRef}>
           <TableComponent.Content
             key={Obj.getURI(object)}
@@ -67,8 +67,8 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
             classNames='scale-75'
           />
         </TableComponent.Root>
-      </Card.Row>
-    </Card.Body>
+      </Next.Card.Row>
+    </Next.Card.Body>
   );
 };
 

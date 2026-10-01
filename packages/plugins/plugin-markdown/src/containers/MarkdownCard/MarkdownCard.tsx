@@ -6,8 +6,9 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Card, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import { compactSlots } from '@dxos/ui-editor';
 
@@ -41,14 +42,14 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const info = getInfo(subject);
 
   return (
-    <Card.Body>
+    <Next.Card.Body>
       {snippet && (
         // The container the snippet's cap is measured against, so it scales with the card.
-        <Card.Section classNames='dx-container-type-inline-size'>
+        <Next.Card.Section classNames='dx-container-type-inline-size'>
           {/* The clipped snippet dissolves into whatever the card sits on: a mask on the content,
               not a colour painted over it, since the card surface differs per host (grid, popover,
               board) and a fade to the wrong surface reads as a grey band across the last line. */}
-          <Card.Row fullWidth classNames='mask-b-from-[calc(100%-8rem)] mask-b-to-100%'>
+          <Next.Card.Row fullWidth classNames='mask-b-from-[calc(100%-8rem)] mask-b-to-100%'>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}
             <MarkdownEditorProvider key={snippet} id={subject.id} viewMode='readonly' extensions={extensions}>
@@ -63,17 +64,17 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
                 </Editor.Root>
               )}
             </MarkdownEditorProvider>
-          </Card.Row>
-        </Card.Section>
+          </Next.Card.Row>
+        </Next.Card.Section>
       )}
-      <Card.Section>
-        <Card.Row fullWidth>
-          <Card.Text classNames='px-2 text-xs' variant='description'>
+      <Next.Card.Section>
+        <Next.Card.Row fullWidth>
+          <Next.Card.Text classNames='px-2 text-xs' variant='description'>
             {info.words} {t('words.label', { count: info.words })}
-          </Card.Text>
-        </Card.Row>
-      </Card.Section>
-    </Card.Body>
+          </Next.Card.Text>
+        </Next.Card.Row>
+      </Next.Card.Section>
+    </Next.Card.Body>
   );
 };
 

@@ -7,8 +7,8 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { Card } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
@@ -31,8 +31,8 @@ export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => 
   const identity = useIdentity();
 
   return (
-    <Card.Section classNames='overflow-hidden'>
-      <Card.Row fullWidth>
+    <Next.Card.Section classNames='overflow-hidden'>
+      <Next.Card.Row fullWidth>
         <MarkdownEditorProvider id={id} object={subject} viewMode='source' identity={identity}>
           {(editorRootProps) => (
             <Editor.Root {...editorRootProps}>
@@ -40,8 +40,8 @@ export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => 
             </Editor.Root>
           )}
         </MarkdownEditorProvider>
-      </Card.Row>
-    </Card.Section>
+      </Next.Card.Row>
+    </Next.Card.Section>
   );
 };
 

@@ -6,8 +6,9 @@ import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'r
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { keySymbols } from '@dxos/react-focus';
-import { Button, type ButtonProps, Icon, Menu, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 import { mx, osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -28,7 +29,7 @@ const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
   lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
 };
 
-export type AttentionSigilButtonProps = Omit<ButtonProps, 'variant'> &
+export type AttentionSigilButtonProps = Omit<Next.ButtonProps, 'variant'> &
   Attention.AttendableId &
   Attention.Related & {
     isMenu?: boolean;
@@ -60,7 +61,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     // TODO(wittjosiah): Disable hover styles when isMenu is false.
     return (
-      <Button
+      <Next.Button
         {...props}
         variant={variant}
         classNames={['shrink-0 px-0 min-h-0 relative dx-app-no-drag', sigilSizeClassNames[size], classNames]}
@@ -68,7 +69,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
       >
         {isMenu && <MenuSignifierHorizontal />}
         {children}
-      </Button>
+      </Next.Button>
     );
   },
 );
@@ -110,7 +111,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
         classNames={!hasActions && 'cursor-default'}
       >
         <span className='sr-only'>{triggerLabel}</span>
-        <Icon icon={icon} />
+        <Next.Icon icon={icon} />
       </AttentionSigilButton>
     );
 
@@ -119,13 +120,13 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
     }
 
     return (
-      <Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
-        <Menu.Trigger asChild ref={forwardedRef}>
+      <Next.Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
+        <Next.Menu.Trigger asChild ref={forwardedRef}>
           {button}
-        </Menu.Trigger>
-        <Menu.Content classNames='z-[31]'>
+        </Next.Menu.Trigger>
+        <Next.Menu.Content classNames='z-[31]'>
           {actionGroups?.map((actions, index) => {
-            const separator = index > 0 ? <Menu.Separator /> : null;
+            const separator = index > 0 ? <Next.Menu.Separator /> : null;
             return (
               <Fragment key={index}>
                 {separator}
@@ -133,7 +134,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                   const shortcut = resolveKeyBinding(action.properties.keyBinding);
 
                   const menuItemType = action.properties.menuItemType;
-                  const Root = menuItemType === 'toggle' ? Menu.CheckboxItem : Menu.Item;
+                  const Root = menuItemType === 'toggle' ? Next.Menu.CheckboxItem : Next.Menu.Item;
 
                   return (
                     <Root
@@ -152,12 +153,12 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                       checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
                       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                     >
-                      <Icon icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size='md' />
+                      <Next.Icon icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size='md' />
                       <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
                       {menuItemType === 'toggle' && (
-                        <Menu.ItemIndicator asChild>
-                          <Icon icon='ph--check--regular' size='md' />
-                        </Menu.ItemIndicator>
+                        <Next.Menu.ItemIndicator asChild>
+                          <Next.Icon icon='ph--check--regular' size='md' />
+                        </Next.Menu.ItemIndicator>
                       )}
                       {shortcut && (
                         <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>
@@ -169,8 +170,8 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
             );
           })}
           {children}
-        </Menu.Content>
-      </Menu.Root>
+        </Next.Menu.Content>
+      </Next.Menu.Root>
     );
   },
 );

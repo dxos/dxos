@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -39,12 +40,12 @@ export const DisableDependentsAlert = ({
   const { t } = useTranslation(meta.profile.key);
   const resolveName = onResolvePluginName ?? ((id: string) => id);
   return (
-    <AlertDialog.Content>
-      <AlertDialog.Body>
-        <AlertDialog.Title>{t('disable-dependents-dialog.title')}</AlertDialog.Title>
-        <AlertDialog.Description>
+    <Next.AlertDialog.Content>
+      <Next.AlertDialog.Body>
+        <Next.AlertDialog.Title>{t('disable-dependents-dialog.title')}</Next.AlertDialog.Title>
+        <Next.AlertDialog.Description>
           {t('disable-dependents-dialog.description', { plugin: resolveName(pluginId) })}
-        </AlertDialog.Description>
+        </Next.AlertDialog.Description>
         <ul className='mt-2 list-disc pl-6 text-sm text-description'>
           {dependents.map((dependentId) => (
             <li key={dependentId} title={dependentId}>
@@ -52,18 +53,18 @@ export const DisableDependentsAlert = ({
             </li>
           ))}
         </ul>
-      </AlertDialog.Body>
-      <AlertDialog.Footer>
+      </Next.AlertDialog.Body>
+      <Next.AlertDialog.Footer>
         <div className='grow' />
-        <AlertDialog.Cancel asChild>
-          <Button>{t('cancel.label')}</Button>
-        </AlertDialog.Cancel>
-        <AlertDialog.Action asChild>
-          <Button variant='primary' onClick={onConfirm}>
+        <Next.AlertDialog.Cancel asChild>
+          <Next.Button>{t('cancel.label')}</Next.Button>
+        </Next.AlertDialog.Cancel>
+        <Next.AlertDialog.Action asChild>
+          <Next.Button variant='primary' onClick={onConfirm}>
             {t('disable-dependents-dialog.confirm.label')}
-          </Button>
-        </AlertDialog.Action>
-      </AlertDialog.Footer>
-    </AlertDialog.Content>
+          </Next.Button>
+        </Next.AlertDialog.Action>
+      </Next.AlertDialog.Footer>
+    </Next.AlertDialog.Content>
   );
 };

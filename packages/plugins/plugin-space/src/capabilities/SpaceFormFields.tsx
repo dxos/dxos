@@ -11,9 +11,10 @@ import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Field } from '@dxos/react-ui';
-import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { SelectField } from '@dxos/react-ui-form/next';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
+import { Next } from '@dxos/react-ui/next';
 
 import { type TypeInputOptions, TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
 
@@ -31,10 +32,10 @@ export const HueField = ({ data, label, readonly, getValue, onValueChange }: Spa
   }
 
   return (
-    <Field.Root>
-      <Field.Label>{label}</Field.Label>
+    <Next.Field.Root>
+      <Next.Field.Label>{label}</Next.Field.Label>
       <HuePicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
-    </Field.Root>
+    </Next.Field.Root>
   );
 };
 
@@ -48,10 +49,10 @@ export const IconField = ({ data, label, readonly, getValue, onValueChange }: Sp
   }
 
   return (
-    <Field.Root>
-      <Field.Label>{label}</Field.Label>
+    <Next.Field.Root>
+      <Next.Field.Label>{label}</Next.Field.Label>
       <IconPicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
-    </Field.Root>
+    </Next.Field.Root>
   );
 };
 

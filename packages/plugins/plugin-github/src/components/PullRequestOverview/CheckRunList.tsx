@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Empty, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -54,7 +55,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
   const summary = useCheckSummary(runs);
 
   if (!sorted || sorted.length === 0) {
-    return <Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Empty>;
+    return <Next.Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Next.Empty>;
   }
 
   return (

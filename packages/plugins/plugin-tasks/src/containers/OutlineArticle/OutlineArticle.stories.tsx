@@ -15,9 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { createMenuAction } from '@dxos/react-ui-menu';
+import { createMenuAction } from '@dxos/react-ui-menu/next';
 import { TaskList } from '@dxos/react-ui-task';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -124,9 +123,9 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
   );
 
   return (
-    <Panel.Root>
-      <Panel.Header />
-      <Panel.Body>
+    <Next.Panel.Root>
+      <Next.Panel.Header />
+      <Next.Panel.Body>
         <TaskList.Root
           tasks={filtered}
           onTaskCreate={handleCreate}
@@ -136,8 +135,8 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           <TaskList.Content />
           <TaskList.Editor grid />
         </TaskList.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -158,12 +157,12 @@ const SourceView = ({ text }: { text: Text.Text }) => {
   );
 
   return (
-    <Panel.Root>
-      <Panel.Header />
-      <Panel.Body asChild>
+    <Next.Panel.Root>
+      <Next.Panel.Header />
+      <Next.Panel.Body asChild>
         <div ref={parentRef} className='overflow-auto text-sm p-trim-md' />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -13,7 +13,7 @@ import {
   type DebugPortStatus,
 } from '@dxos/react-client/devtools';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

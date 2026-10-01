@@ -4,9 +4,12 @@
 
 import React from 'react';
 
-import { Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
+import { useId } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { SpacePanel, type SpacePanelProps } from '../../panels/index.ts';
+
+type DialogContentProps = React.ComponentProps<typeof Next.Dialog.Content>;
 
 export interface SpaceDialogProps
   extends Omit<DialogContentProps, 'children'>, Omit<SpacePanelProps, 'doneActionParent'> {}
@@ -14,18 +17,18 @@ export interface SpaceDialogProps
 export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
   const titleId = useId('spaceDialog__title');
   return (
-    <Dialog.Root defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
-      <Dialog.Content aria-labelledby={titleId}>
-        <Dialog.Body>
+    <Next.Dialog.Root defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
+      <Next.Dialog.Content aria-labelledby={titleId}>
+        <Next.Dialog.Body>
           <SpacePanel
             {...{
               ...spacePanelProps,
               titleId,
-              doneActionParent: <Dialog.CloseTrigger asChild />,
+              doneActionParent: <Next.Dialog.CloseTrigger asChild />,
             }}
           />
-        </Dialog.Body>
-      </Dialog.Content>
-    </Dialog.Root>
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
   );
 };

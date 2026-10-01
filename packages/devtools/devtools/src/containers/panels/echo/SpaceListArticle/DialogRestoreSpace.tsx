@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { Button, Dialog, Icon, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type DialogRestoreSpaceProps = {
   handleFile: (backupFile: File) => Promise<void>;
@@ -25,19 +25,19 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
   const isImportIntoExisting = !!spaceName;
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(nextOpen) => setIsOpen(nextOpen)}>
-      <Toolbar.Root>
+    <Next.Dialog.Root open={isOpen} onOpenChange={(nextOpen) => setIsOpen(nextOpen)}>
+      <Next.Toolbar.Root>
         {!isControlled && (
-          <Dialog.Trigger asChild>
-            <Button>Import space</Button>
-          </Dialog.Trigger>
+          <Next.Dialog.Trigger asChild>
+            <Next.Button>Import space</Next.Button>
+          </Next.Dialog.Trigger>
         )}
-      </Toolbar.Root>
-      <Dialog.Content>
-        <Dialog.Header>
-          <Dialog.Title>{isImportIntoExisting ? 'Import into space' : 'Import space'}</Dialog.Title>
-        </Dialog.Header>
-        <Dialog.Body>
+      </Next.Toolbar.Root>
+      <Next.Dialog.Content>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title>{isImportIntoExisting ? 'Import into space' : 'Import space'}</Next.Dialog.Title>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>
           <p className='my-4'>
             {isImportIntoExisting
               ? `Import data into ${spaceName}. Only JSON snapshots are supported.`
@@ -49,18 +49,18 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
             dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
             handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setIsOpen(false))}
           >
-            <Icon icon='ph--file-plus--duotone' size='xl' />
+            <Next.Icon icon='ph--file-plus--duotone' size='xl' />
             <span>
               {isImportIntoExisting ? 'Drag JSON file here or click to browse' : 'Drag file here or click to browse'}
             </span>
           </FileUploader>
-        </Dialog.Body>
-        <Dialog.Footer>
-          <Dialog.CloseTrigger asChild>
-            <Button variant='primary'>{'Cancel'}</Button>
-          </Dialog.CloseTrigger>
-        </Dialog.Footer>
-      </Dialog.Content>
-    </Dialog.Root>
+        </Next.Dialog.Body>
+        <Next.Dialog.Footer>
+          <Next.Dialog.CloseTrigger asChild>
+            <Next.Button variant='primary'>{'Cancel'}</Next.Button>
+          </Next.Dialog.CloseTrigger>
+        </Next.Dialog.Footer>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
   );
 };

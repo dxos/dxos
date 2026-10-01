@@ -11,7 +11,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Type } from '@dxos/echo';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { omitId } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 
 import { SampleItem } from '#types';
 

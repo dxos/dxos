@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { Combobox } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui/next';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -92,7 +92,7 @@ export const ComboboxField = ({
   }
 
   return (
-    <Combobox.Root
+    <Next.Combobox.Root
       value={value}
       displayValue={displayLabel}
       onValueChange={handleValueChange}
@@ -100,14 +100,14 @@ export const ComboboxField = ({
       placeholder={placeholder}
     >
       {/* Full-width trigger (default renders value/placeholder + caret) to match the other fields. */}
-      <Combobox.Trigger disabled={!!readonly} classNames='w-full' />
-      <Combobox.Portal>
+      <Next.Combobox.Trigger disabled={!!readonly} classNames='w-full' />
+      <Next.Combobox.Portal>
         {/* Keep the first result highlighted as the list changes while typing. */}
-        <Combobox.Content resetSelectionOnChange>
-          <Combobox.Input autoFocus value={query} onValueChange={setQuery} placeholder={placeholder} />
-          <Combobox.List>
+        <Next.Combobox.Content resetSelectionOnChange>
+          <Next.Combobox.Input autoFocus value={query} onValueChange={setQuery} placeholder={placeholder} />
+          <Next.Combobox.List>
             {results.map((option) => (
-              <Combobox.Item
+              <Next.Combobox.Item
                 key={option.value}
                 value={option.value}
                 label={option.label ?? option.value}
@@ -115,11 +115,11 @@ export const ComboboxField = ({
               />
             ))}
             {/* The literal typed text as a fallback option at the bottom, unless a suggestion already is it. */}
-            {normalized.length > 0 && !hasExact && <Combobox.Item value={trimmed} label={trimmed} />}
-          </Combobox.List>
-        </Combobox.Content>
-      </Combobox.Portal>
-    </Combobox.Root>
+            {normalized.length > 0 && !hasExact && <Next.Combobox.Item value={trimmed} label={trimmed} />}
+          </Next.Combobox.List>
+        </Next.Combobox.Content>
+      </Next.Combobox.Portal>
+    </Next.Combobox.Root>
   );
 };
 

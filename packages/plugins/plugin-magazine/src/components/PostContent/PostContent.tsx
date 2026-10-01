@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import { Next } from '@dxos/react-ui/next';
 
 import { usePostContentAtom } from '#atoms';
 import { Subscription } from '#types';
@@ -56,14 +56,14 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
     );
 
     return (
-      <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
-        <ScrollArea.Viewport classNames='flex flex-col gap-3 p-4'>
+      <Next.ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
+        <Next.ScrollArea.Viewport classNames='flex flex-col gap-3 p-4'>
           {title && <h1 className='text-xl font-semibold'>{title}</h1>}
           {showHero && <img src={imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />}
           {content && <MarkdownView content={content} />}
           {meta && <div className='text-xs text-subdued'>{meta}</div>}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     );
   },
 );

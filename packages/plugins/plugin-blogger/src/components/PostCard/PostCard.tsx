@@ -6,7 +6,8 @@ import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Card, Icon, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Blog } from '#types';
@@ -46,7 +47,7 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
   );
 
   return (
-    <Card.Root
+    <Next.Card.Root
       fullWidth
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
@@ -54,27 +55,27 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <Card.Header>
-        <Block>
-          <Icon icon={icon} />
-        </Block>
-        <Card.Title lines={2}>{title}</Card.Title>
-      </Card.Header>
-      <Card.Body>
+      <Next.Card.Header>
+        <Next.Block>
+          <Next.Icon icon={icon} />
+        </Next.Block>
+        <Next.Card.Title lines={2}>{title}</Next.Card.Title>
+      </Next.Card.Header>
+      <Next.Card.Body>
         {post.description && (
-          <Card.Row>
-            <Card.Text variant='description' classNames='line-clamp-3'>
+          <Next.Card.Row>
+            <Next.Card.Text variant='description' classNames='line-clamp-3'>
               {post.description}
-            </Card.Text>
-          </Card.Row>
+            </Next.Card.Text>
+          </Next.Card.Row>
         )}
-        <Card.Row>
-          <Block>
-            <Icon icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
-          </Block>
-          <Card.Text variant='description'>{t(`post-card.status.${status}.label`)}</Card.Text>
-        </Card.Row>
-      </Card.Body>
-    </Card.Root>
+        <Next.Card.Row>
+          <Next.Block>
+            <Next.Icon icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
+          </Next.Block>
+          <Next.Card.Text variant='description'>{t(`post-card.status.${status}.label`)}</Next.Card.Text>
+        </Next.Card.Row>
+      </Next.Card.Body>
+    </Next.Card.Root>
   );
 };

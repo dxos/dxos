@@ -7,8 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Field, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 /** `Select` values must be non-empty strings, so "no type filter" needs a sentinel. */
 const ALL_TYPES = '__all__';
@@ -56,29 +56,29 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
   }, [objects, text, type]);
 
   return (
-    <Panel.Root classNames='relative'>
-      <Panel.Header>
-        <Toolbar.Root classNames='grid grid-cols-2'>
-          <Select.Root value={type} onValueChange={setType}>
-            <Select.Trigger placeholder='Type' />
-            <Select.Content>
-              <Select.Item item={{ value: ALL_TYPES, label: 'All types' }} />
+    <Next.Panel.Root classNames='relative'>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root classNames='grid grid-cols-2'>
+          <Next.Select.Root value={type} onValueChange={setType}>
+            <Next.Select.Trigger placeholder='Type' />
+            <Next.Select.Content>
+              <Next.Select.Item item={{ value: ALL_TYPES, label: 'All types' }} />
               {typenames.map((typename) => (
-                <Select.Item key={typename} item={{ value: typename, label: typename }} />
+                <Next.Select.Item key={typename} item={{ value: typename, label: typename }} />
               ))}
-            </Select.Content>
-          </Select.Root>
-          <Field.Root>
-            <Input
+            </Next.Select.Content>
+          </Next.Select.Root>
+          <Next.Field.Root>
+            <Next.Input
               classNames='grow'
               placeholder='Filter objects…'
               value={text}
               onChange={(event) => setText(event.target.value)}
             />
-          </Field.Root>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          </Next.Field.Root>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <Listbox.Root>
           <Listbox.Content aria-label='Objects'>
             {filtered.map((object) => (
@@ -91,10 +91,10 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
             ))}
           </Listbox.Content>
         </Listbox.Root>
-      </Panel.Body>
-      <Panel.Footer>
+      </Next.Panel.Body>
+      <Next.Panel.Footer>
         <div className='p-1 text-description text-sm'>{filtered.length}</div>
-      </Panel.Footer>
-    </Panel.Root>
+      </Next.Panel.Footer>
+    </Next.Panel.Root>
   );
 };

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useDevices, useIdentity } from '@dxos/react-client/halo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { JsonView } from '../../../../components/index.ts';
 import { VaultSelector } from '../../../../containers/index.ts';
@@ -16,15 +16,15 @@ export const IdentityArticle = ({ role }: ArticleProps) => {
   const devices = useDevices();
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           <VaultSelector />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <JsonView data={{ ...identity, devices }} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

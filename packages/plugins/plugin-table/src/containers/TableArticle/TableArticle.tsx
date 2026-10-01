@@ -16,8 +16,7 @@ import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel } from '@dxos/react-ui';
-import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu/next';
 import {
   Table as TableComponent,
   type TableController,
@@ -32,6 +31,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
+import { Next } from '@dxos/react-ui/next';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { downloadBlob } from '@dxos/util';
 
@@ -194,8 +194,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     return (
       <TableComponent.Root ref={tableRef}>
-        <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Header>
+        <Next.Panel.Root role={role} ref={forwardedRef}>
+          <Next.Panel.Header>
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
@@ -204,8 +204,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onExport={handleExport}
               onSave={handleSave}
             />
-          </Panel.Header>
-          <Panel.Body asChild>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
             <TableComponent.Content
               classNames='border-t border-subdued-separator'
               key={attendableId}
@@ -216,8 +216,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onCreate={handleCreate}
               onRowClick={handleRowClick}
             />
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </TableComponent.Root>
     );
   },

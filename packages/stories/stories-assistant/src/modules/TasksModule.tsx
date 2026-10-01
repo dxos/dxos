@@ -9,7 +9,6 @@ import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 import {
@@ -37,13 +36,13 @@ const TasksModuleContainer = ({ space }: { space: Space }) => {
   }
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root classNames='border-b border-subdued-separator'>
-          <Toolbar.Text>{Obj.getLabel(document)}</Toolbar.Text>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root classNames='border-b border-subdued-separator'>
+          <Next.Toolbar.Text>{Obj.getLabel(document)}</Next.Toolbar.Text>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <Editor.Root>
           <Editor.View
             id={document.id}
@@ -57,7 +56,7 @@ const TasksModuleContainer = ({ space }: { space: Space }) => {
             ]}
           />
         </Editor.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

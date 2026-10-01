@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { SystemButton, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type AudioInputDevice,
@@ -14,6 +14,7 @@ import {
   listAudioInputs,
   setPreferredAudioInput,
 } from '@dxos/react-ui-transcription';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Settings, TranscriptionCapabilities } from '#types';
@@ -158,7 +159,7 @@ export const Mic = ({ docId }: MicProps) => {
 
   return (
     <div className='flex items-center'>
-      <SystemButton.Mic
+      <Next.SystemButton.Mic
         iconOnly
         variant='ghost'
         disabled={microphoneDenied}

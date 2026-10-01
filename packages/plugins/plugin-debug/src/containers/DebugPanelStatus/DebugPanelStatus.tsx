@@ -8,8 +8,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Button, FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -22,9 +23,9 @@ import {
 } from '../DebugPanel/index.ts';
 
 /** Room for the log table to breathe; the console fits itself to whatever it is given. */
-const DEFAULT_SIZE: FloatingPanelSize = { width: 1024, height: 384 };
+const DEFAULT_SIZE: Next.FloatingPanelSize = { width: 1024, height: 384 };
 
-const MIN_SIZE: FloatingPanelSize = { width: 480, height: 240 };
+const MIN_SIZE: Next.FloatingPanelSize = { width: 480, height: 240 };
 
 /** Clear of the status bar the panel opens from. */
 const MARGIN = 8;
@@ -78,12 +79,12 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
     [update, invokePromise],
   );
   const handlePositionChangeEnd = useCallback(
-    (next: FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
+    (next: Next.FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
     [update],
   );
 
   const handleSizeChangeEnd = useCallback(
-    (next: FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
+    (next: Next.FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
     [update],
   );
   // First opening: centred above the status bar, where the popover it replaces used to sit. A
@@ -104,7 +105,7 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
   );
 
   return (
-    <FloatingPanel.Root
+    <Next.FloatingPanel.Root
       open={mode === 'floating' && floatingOpen}
       onOpenChange={setFloatingOpen}
       defaultSize={size}
@@ -118,11 +119,11 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       {/* IconButton is the direct trigger child so the trigger ref/handlers/ARIA attach to the button, not the container. */}
       <StatusBar.Item classNames='relative'>
         {mode === 'floating' ? (
-          <FloatingPanel.Trigger asChild>
-            <Button variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
-          </FloatingPanel.Trigger>
+          <Next.FloatingPanel.Trigger asChild>
+            <Next.Button variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
+          </Next.FloatingPanel.Trigger>
         ) : (
-          <Button
+          <Next.Button
             variant='ghost'
             icon='ph--terminal-window--regular'
             iconOnly
@@ -139,26 +140,26 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
           />
         )}
       </StatusBar.Item>
-      <FloatingPanel.Content>
+      <Next.FloatingPanel.Content>
         <DebugPanel.Root>
-          <FloatingPanel.Header classNames='pl-1'>
-            <FloatingPanel.DragTrigger>
-              <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
-            </FloatingPanel.DragTrigger>
+          <Next.FloatingPanel.Header classNames='pl-1'>
+            <Next.FloatingPanel.DragTrigger>
+              <Next.FloatingPanel.Title>{t('debug-panel.title')}</Next.FloatingPanel.Title>
+            </Next.FloatingPanel.DragTrigger>
             {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
-            <FloatingPanel.Control>
+            <Next.FloatingPanel.Control>
               <DebugPanelHeader mode={mode} onModeChange={handleModeChange} density='sm' />
-              <FloatingPanel.StageTrigger stage='minimized' />
-              <FloatingPanel.StageTrigger stage='default' />
-              <FloatingPanel.CloseTrigger />
-            </FloatingPanel.Control>
-          </FloatingPanel.Header>
-          <FloatingPanel.Body classNames='grid'>
+              <Next.FloatingPanel.StageTrigger stage='minimized' />
+              <Next.FloatingPanel.StageTrigger stage='default' />
+              <Next.FloatingPanel.CloseTrigger />
+            </Next.FloatingPanel.Control>
+          </Next.FloatingPanel.Header>
+          <Next.FloatingPanel.Body classNames='grid'>
             <DebugPanel.Body />
-          </FloatingPanel.Body>
+          </Next.FloatingPanel.Body>
         </DebugPanel.Root>
-      </FloatingPanel.Content>
-    </FloatingPanel.Root>
+      </Next.FloatingPanel.Content>
+    </Next.FloatingPanel.Root>
   );
 };
 

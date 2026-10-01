@@ -12,9 +12,11 @@ import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, ty
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
-import { SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form, FormFieldHeader, ViewEditor } from '@dxos/react-ui-form';
-import { OrderedList } from '@dxos/react-ui-list';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { FormFieldHeader } from '@dxos/react-ui-form';
+import { Form, ViewEditor } from '@dxos/react-ui-form/next';
+import { OrderedList } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
 import { arrayMove } from '@dxos/util';
@@ -171,7 +173,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
                 item={column}
                 title={column.name || t('untitled-column.title')}
                 trailing={
-                  <SystemButton.Remove
+                  <Next.SystemButton.Remove
                     label={t('delete-column.label')}
                     onClick={() => handleDelete(column)}
                     data-testid='column.delete'

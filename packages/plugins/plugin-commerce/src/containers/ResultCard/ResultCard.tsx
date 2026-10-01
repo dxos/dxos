@@ -5,7 +5,8 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Block, Card, Flex, SystemButton, composable, useTranslation } from '@dxos/react-ui';
+import { Flex, composable, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -47,31 +48,31 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
     );
 
     return (
-      <Card.Root
+      <Next.Card.Root
         ref={forwardedRef}
         fullWidth
         classNames={['dx-hover cursor-pointer', current && 'dx-current', classNames]}
         {...props}
       >
         {imageUrl && (
-          <Card.Poster
+          <Next.Card.Poster
             alt={result.title ?? t('product.label')}
             image={imageUrl}
             fit='cover'
             classNames='rounded-t-xs'
           />
         )}
-        <Card.Header>
-          <Block>
-            <SystemButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
-          </Block>
+        <Next.Card.Header>
+          <Next.Block>
+            <Next.SystemButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
+          </Next.Block>
           <Flex column gap='xs' classNames='min-w-0 py-2'>
-            <Card.Title lines={2}>{result.title}</Card.Title>
+            <Next.Card.Title lines={2}>{result.title}</Next.Card.Title>
             {price && <span className='text-sm text-description'>{price}</span>}
           </Flex>
-          <Block end />
-        </Card.Header>
-      </Card.Root>
+          <Next.Block end />
+        </Next.Card.Header>
+      </Next.Card.Root>
     );
   },
 );

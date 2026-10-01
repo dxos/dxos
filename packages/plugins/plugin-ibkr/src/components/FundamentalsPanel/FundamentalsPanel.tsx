@@ -5,8 +5,10 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { Banner, Button, Progress, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { type FormFieldProvider } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { formatForDisplay } from '@dxos/schema';
 
 import { Ibkr } from '#types';
@@ -105,7 +107,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
               {asOfDescription && <p className='text-description'>{asOfDescription}</p>}
             </div>
             {onRefresh ? (
-              <Button
+              <Next.Button
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -117,17 +119,17 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Progress indeterminate aria-label={t('fundamentals.heading')} />
+            <Next.Progress indeterminate aria-label={t('fundamentals.heading')} />
           ) : error ? (
-            <Banner.Root valence='error'>
-              <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
-              <Banner.Body>{error}</Banner.Body>
-            </Banner.Root>
+            <Next.Banner.Root valence='error'>
+              <Next.Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Next.Banner.Title>
+              <Next.Banner.Body>{error}</Next.Banner.Body>
+            </Next.Banner.Root>
           ) : empty ? (
-            <Banner.Root valence='neutral'>
-              <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
-              <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
-            </Banner.Root>
+            <Next.Banner.Root valence='neutral'>
+              <Next.Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Next.Banner.Title>
+              <Next.Banner.Body>{t('fundamentals.empty.label')}</Next.Banner.Body>
+            </Next.Banner.Root>
           ) : (
             <Form.Fields readonly fieldProvider={fieldProvider} />
           )}

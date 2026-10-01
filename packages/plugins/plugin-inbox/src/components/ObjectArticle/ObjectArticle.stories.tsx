@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -20,9 +20,9 @@ const DefaultStory = () => (
     toolbar={<div className='flex items-center px-2 text-sm text-description'>Toolbar</div>}
     header={
       <Header.Root>
-        <Card.Row>
-          <Card.Text classNames='text-lg'>Article header</Card.Text>
-        </Card.Row>
+        <Next.Card.Row>
+          <Next.Card.Text classNames='text-lg'>Article header</Next.Card.Text>
+        </Next.Card.Row>
       </Header.Root>
     }
   >

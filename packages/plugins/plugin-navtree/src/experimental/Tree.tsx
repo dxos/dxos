@@ -4,7 +4,8 @@
 
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
-import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
+import { type ClassNameValue, type Size } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { visitNodes } from './visit-nodes.ts';
@@ -22,7 +23,7 @@ export const IconButton = ({
   // TODO(burdon): Density aware.
   return (
     <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
-      <Icon icon={iconName} classNames='cursor-pointer' size={size} />
+      <Next.Icon icon={iconName} classNames='cursor-pointer' size={size} />
     </div>
   );
 };

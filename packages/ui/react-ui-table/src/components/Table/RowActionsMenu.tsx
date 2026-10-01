@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Menu, toLocalizedString, useTranslation, virtualAnchor } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -21,14 +22,19 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
     return null;
   }
   return (
-    <Menu.Root modal={false} open={true} onOpenChange={modals.close} positioning={virtualAnchor(modals.trigger)}>
-      <Menu.Content>
+    <Next.Menu.Root
+      modal={false}
+      open={true}
+      onOpenChange={modals.close}
+      positioning={Next.virtualAnchor(modals.trigger)}
+    >
+      <Next.Menu.Content>
         {/* Custom actions */}
         {model.rowActions?.length > 0 && (
           <>
-            <Menu.ItemGroup>
+            <Next.Menu.ItemGroup>
               {model.rowActions?.map((action) => (
-                <Menu.Item
+                <Next.Menu.Item
                   key={action.id}
                   data-testid={`row-action-${action.id}`}
                   onClick={() => {
@@ -37,19 +43,19 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                   }}
                 >
                   {toLocalizedString(action.label, t)}
-                </Menu.Item>
+                </Next.Menu.Item>
               ))}
-            </Menu.ItemGroup>
-            <Menu.Separator />
+            </Next.Menu.ItemGroup>
+            <Next.Menu.Separator />
           </>
         )}
         {/* Default actions */}
         {model.features.dataEditable !== false && (
-          <Menu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
+          <Next.Menu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
             {t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label')}
-          </Menu.Item>
+          </Next.Menu.Item>
         )}
-      </Menu.Content>
-    </Menu.Root>
+      </Next.Menu.Content>
+    </Next.Menu.Root>
   );
 };

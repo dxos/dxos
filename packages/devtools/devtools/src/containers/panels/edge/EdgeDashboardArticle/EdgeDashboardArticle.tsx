@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { PublicKey, useClient, useMulticastObservable } from '@dxos/react-client';
-import { Panel } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { arrayToString, deepMapValues } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';
@@ -20,11 +20,11 @@ export const EdgeDashboardArticle = ({ role }: ArticleProps) => {
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body asChild classNames='flex-1 flex-row'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body asChild classNames='flex-1 flex-row'>
         <JsonHighlighter data={formatData(serviceCredentials)} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

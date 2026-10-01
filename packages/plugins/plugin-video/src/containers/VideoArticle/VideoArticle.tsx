@@ -8,9 +8,10 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { Video } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -95,11 +96,11 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Header>
-      <Panel.Body classNames='grid grid-rows-[auto_1fr]'>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='grid grid-rows-[auto_1fr]'>
         <Surface.Surface
           type={AppSurface.Section}
           data={{
@@ -119,8 +120,8 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           isRegenerateDisabled={!hasTranscript || summarizing}
           isSummarizing={summarizing}
         />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -161,10 +162,10 @@ const TranscriptTabs = ({
   // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
   const tabs = useMemo(
     () => (
-      <Tabs.List>
-        <Tabs.Trigger value='transcript'>{t('transcript.tab.label')}</Tabs.Trigger>
-        <Tabs.Trigger value='summary'>{t('summary.tab.label')}</Tabs.Trigger>
-      </Tabs.List>
+      <Next.Tabs.List>
+        <Next.Tabs.Trigger value='transcript'>{t('transcript.tab.label')}</Next.Tabs.Trigger>
+        <Next.Tabs.Trigger value='summary'>{t('summary.tab.label')}</Next.Tabs.Trigger>
+      </Next.Tabs.List>
     ),
     [t],
   );
@@ -201,34 +202,34 @@ const TranscriptTabs = ({
   );
 
   return (
-    <Panel.Root asChild role={role}>
-      <Tabs.Root
+    <Next.Panel.Root asChild role={role}>
+      <Next.Tabs.Root
         orientation='horizontal'
         value={tab}
         selectedVariant={hasAttention ? 'primary' : 'default'}
         onValueChange={onTabChange}
       >
-        <Panel.Header>
+        <Next.Panel.Header>
           {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and `disabled`
               would otherwise cascade `*:opacity-20` onto it as a direct child of the toolbar root. */}
           <ActionToolbar {...regenerateActions} attendableId={attendableId} alwaysActive />
-        </Panel.Header>
-        <Panel.Body asChild>
-          <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
-            <Tabs.Content value='transcript' tabIndex={-1} classNames='overflow-hidden'>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
+          <Next.Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
+            <Next.Tabs.Content value='transcript' tabIndex={-1} classNames='overflow-hidden'>
               <Surface.Surface
                 type={AppSurface.Tabpanel}
                 data={{ subject, attendableId, part: 'transcript' }}
                 limit={1}
               />
-            </Tabs.Content>
-            <Tabs.Content value='summary' tabIndex={-1} classNames='overflow-hidden'>
+            </Next.Tabs.Content>
+            <Next.Tabs.Content value='summary' tabIndex={-1} classNames='overflow-hidden'>
               <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
-            </Tabs.Content>
-          </Tabs.Viewport>
-        </Panel.Body>
-      </Tabs.Root>
-    </Panel.Root>
+            </Next.Tabs.Content>
+          </Next.Tabs.Viewport>
+        </Next.Panel.Body>
+      </Next.Tabs.Root>
+    </Next.Panel.Root>
   );
 };
 

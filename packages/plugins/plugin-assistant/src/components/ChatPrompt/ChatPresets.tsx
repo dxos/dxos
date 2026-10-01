@@ -4,19 +4,19 @@
 
 import React from 'react';
 
-import { Select } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { AssistantPreset } from '#types';
 
 export const ChatPresets = ({ presets, preset, onPresetChange }: AssistantPreset.ChatPresetProps) => {
   return (
-    <Select.Root value={preset} onValueChange={onPresetChange}>
-      <Select.Trigger classNames='text-sm' />
-      <Select.Content>
+    <Next.Select.Root value={preset} onValueChange={onPresetChange}>
+      <Next.Select.Trigger classNames='text-sm' />
+      <Next.Select.Content>
         {presets?.map(({ id, label }) => (
-          <Select.Item key={id} classNames='text-sm' item={{ value: id, label: label }} />
+          <Next.Select.Item key={id} classNames='text-sm' item={{ value: id, label: label }} />
         ))}
-      </Select.Content>
-    </Select.Root>
+      </Next.Select.Content>
+    </Next.Select.Root>
   );
 };

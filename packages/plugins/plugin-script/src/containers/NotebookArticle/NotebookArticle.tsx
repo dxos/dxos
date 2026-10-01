@@ -20,8 +20,9 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Graph from '@dxos/plugin-explorer/Graph';
-import { Button, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -174,25 +175,25 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   );
 
   return (
-    <Panel.Root role={role} width='document'>
-      <Panel.Header>
-        <Toolbar.Root disabled={!hasAttention}>
-          <Menu.Root>
-            <Menu.Trigger asChild>
-              <Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
-            </Menu.Trigger>
+    <Next.Panel.Root role={role} width='document'>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root disabled={!hasAttention}>
+          <Next.Menu.Root>
+            <Next.Menu.Trigger asChild>
+              <Next.Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
+            </Next.Menu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
-          </Menu.Root>
-          <Button
+          </Next.Menu.Root>
+          <Next.Button
             icon='ph--play--fill'
             iconOnly
             label={t('compute.label')}
             classNames='text-success-text'
             onClick={handleCompute}
           />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <NotebookStack
           db={db}
           notebook={notebook}
@@ -202,8 +203,8 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

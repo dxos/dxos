@@ -7,7 +7,12 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
-import { type ActionGraphProps, createGapSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  createGapSeparator,
+  createMenuAction,
+  createMenuItemGroup,
+} from '@dxos/react-ui-menu/next';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

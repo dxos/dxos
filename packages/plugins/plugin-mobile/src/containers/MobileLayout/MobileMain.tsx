@@ -10,8 +10,8 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { Loading, MobileAppBar, MobileNavBar, NavigationStack, useExpandPath, useMobileLayout } from '#components';
 import { useMobileAppBar, useMobileNavbarActions, useMobileStack } from '#hooks';
@@ -49,7 +49,7 @@ const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
       type={AppSurface.Article}
       data={data}
       limit={1}
-      fallback={ErrorFallback}
+      fallback={Next.ErrorFallback}
       placeholder={placeholder}
     />
   );
@@ -80,11 +80,11 @@ export const MobileMain = () => {
   const showNavBar = !keyboardOpen && drawerClosed;
 
   return (
-    <Panel.Root {...attentionAttrs} width='document'>
-      <Panel.Header>
+    <Next.Panel.Root {...attentionAttrs} width='document'>
+      <Next.Panel.Header>
         <MobileAppBar {...appBarProps} />
-      </Panel.Header>
-      <Panel.Body role='article' classNames='dx-base-surface'>
+      </Next.Panel.Header>
+      <Next.Panel.Body role='article' classNames='dx-base-surface'>
         <NavigationStack
           classNames='size-full'
           items={stack}
@@ -92,13 +92,13 @@ export const MobileMain = () => {
           onIndexChange={pop}
           renderItem={(itemId) => <MainPanel id={itemId} popoverAnchorId={state.popoverAnchorId} />}
         />
-      </Panel.Body>
+      </Next.Panel.Body>
       {showNavBar && (
-        <Panel.Footer>
+        <Next.Panel.Footer>
           <MobileNavBar actions={actions} onAction={onAction} />
-        </Panel.Footer>
+        </Next.Panel.Footer>
       )}
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };
 

@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Block, Card, Flex } from '@dxos/react-ui';
+import { Flex } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
+import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util/index.ts';
@@ -14,26 +15,26 @@ import { getMessageProps } from '../../util/index.ts';
 export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
   const { date, email, from, snippet } = getMessageProps(message, new Date(), { compact: true });
   return (
-    <Card.Body>
-      <Card.Header>
-        <Block>
+    <Next.Card.Body>
+      <Next.Card.Header>
+        <Next.Block>
           <Avatar actor={message.sender} name={from} variant='square' size={7} />
-        </Block>
+        </Next.Block>
         <Flex gap='md' align='center' justify='between' classNames='col-span-2'>
           <span className='grow truncate'>{from}</span>
           <span className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</span>
         </Flex>
-      </Card.Header>
-      <Card.Row>
+      </Next.Card.Header>
+      <Next.Card.Row>
         <p className='text-xs text-description text-info-text'>{email}</p>
-      </Card.Row>
-      <Card.Row>
-        <Card.Text variant='description'>{snippet}</Card.Text>
-      </Card.Row>
-      <Card.Row>
+      </Next.Card.Row>
+      <Next.Card.Row>
+        <Next.Card.Text variant='description'>{snippet}</Next.Card.Text>
+      </Next.Card.Row>
+      <Next.Card.Row>
         <Row.Tags tags={message.properties?.tags} />
-      </Card.Row>
-    </Card.Body>
+      </Next.Card.Row>
+    </Next.Card.Body>
   );
 };
 

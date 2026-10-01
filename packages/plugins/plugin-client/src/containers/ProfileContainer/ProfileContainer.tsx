@@ -9,9 +9,11 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Flex, Input, SystemButton, useControlledState, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
+import { Flex, useControlledState, useTranslation } from '@dxos/react-ui';
+import { type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import { Next } from '@dxos/react-ui/next';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -132,7 +134,7 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input
+            <Next.Input
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -179,12 +181,12 @@ export const ProfileContainer = () => {
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <ButtonGroup classNames='w-full'>
+            <Next.Group classNames='w-full'>
               {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
                     stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
-              <Input value={getValue()} disabled classNames='w-full min-w-0' />
-              <SystemButton.Clipboard iconOnly value={getValue() ?? ''} />
-            </ButtonGroup>
+              <Next.Input value={getValue()} disabled classNames='w-full min-w-0' />
+              <Next.SystemButton.Clipboard iconOnly value={getValue() ?? ''} />
+            </Next.Group>
           </Form.Field>
         );
       },

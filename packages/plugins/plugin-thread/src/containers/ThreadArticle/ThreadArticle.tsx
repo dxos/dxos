@@ -9,9 +9,10 @@ import React, { useMemo } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
+import { Next } from '@dxos/react-ui/next';
 import { Message, type Thread } from '@dxos/types';
 
 import { MessageThread } from '#components';
@@ -72,9 +73,9 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     }
 
     return (
-      <Panel.Root>
-        <Panel.Header></Panel.Header>
-        <Panel.Body asChild>
+      <Next.Panel.Root>
+        <Next.Panel.Header></Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <MessageThread
             {...composableProps(props)}
             id={id}
@@ -87,8 +88,8 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
             current={current}
             ref={forwardedRef}
           />
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 );

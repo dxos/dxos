@@ -6,8 +6,9 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Block, Button, Card, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
+import { Next } from '@dxos/react-ui/next';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -79,40 +80,40 @@ export const EventDetails = ({
   return (
     <>
       {title === 'heading' && (
-        <Card.Row>
-          <Block>
+        <Next.Card.Row>
+          <Next.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Block>
-          <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
+          </Next.Block>
+          <Next.Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Next.Card.Text>
           {meeting && (
-            <Block end>
-              <Button
+            <Next.Block end>
+              <Next.Button
                 iconOnly
                 variant='ghost'
                 icon='ph--handshake--regular'
                 label={Obj.getLabel(meeting) ?? 'Meeting'}
                 onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
               />
-            </Block>
+            </Next.Block>
           )}
-        </Card.Row>
+        </Next.Card.Row>
       )}
 
       {title === 'text' && (
-        <Card.Row>
-          <Block>
+        <Next.Card.Row>
+          <Next.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Block>
-          <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
-        </Card.Row>
+          </Next.Block>
+          <Next.Card.Text>{data.title ?? t('event-untitled.label')}</Next.Card.Text>
+        </Next.Card.Row>
       )}
 
       <Row.Date start={new Date(data.startDate)} end={new Date(data.endDate)} />
 
       {description && data.description && (
-        <Card.Row>
-          <Card.Text variant='description'>{data.description}</Card.Text>
-        </Card.Row>
+        <Next.Card.Row>
+          <Next.Card.Text variant='description'>{data.description}</Next.Card.Text>
+        </Next.Card.Row>
       )}
 
       {attendees.map((attendee, index) => (

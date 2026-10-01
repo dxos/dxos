@@ -4,8 +4,9 @@
 
 import React, { useRef } from 'react';
 
-import { Button, Empty, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { type EntityItem } from '../types.ts';
 
@@ -31,22 +32,24 @@ export type EntityListProps = ThemedClassName<{
 export const EntityList = ({ entities, selected, onSelect, classNames }: EntityListProps) => {
   const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);
   return (
-    <Panel.Root classNames={classNames}>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.Text classNames='grow'>Entities{entities.length > 0 ? ` (${entities.length})` : ''}</Toolbar.Text>
-          <Button
+    <Next.Panel.Root classNames={classNames}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Toolbar.Text classNames='grow'>
+            Entities{entities.length > 0 ? ` (${entities.length})` : ''}
+          </Next.Toolbar.Text>
+          <Next.Button
             icon='ph--x--regular'
             iconOnly
             label='Clear'
             disabled={!selected}
             onClick={() => onSelect(undefined)}
           />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body classNames='overflow-auto'>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='overflow-auto'>
         {entities.length === 0 ? (
-          <Empty>No entities.</Empty>
+          <Next.Empty>No entities.</Next.Empty>
         ) : (
           <Listbox.Root value={selected} onValueChange={onSelect}>
             <Listbox.Content aria-label='Entities'>
@@ -78,7 +81,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
             </Listbox.Content>
           </Listbox.Root>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

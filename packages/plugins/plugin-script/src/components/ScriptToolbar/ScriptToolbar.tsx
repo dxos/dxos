@@ -15,7 +15,7 @@ import {
   type ActionToolbarProps,
   createGapSeparator,
   useMenuActions,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
 
 import {
   type CreateDeployOptions,

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Button, Flex, Grid, SystemButton, Tooltip } from '@dxos/react-ui';
+import { Flex, Grid } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
@@ -139,7 +139,7 @@ export const SurfaceProfilerCard = ({
         title='Surfaces'
         action={
           onClear && (
-            <Button iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
+            <Next.Button iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
           )
         }
       />
@@ -174,9 +174,9 @@ export const SurfaceProfilerCard = ({
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}
           >
-            <Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
+            <Next.Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
               <span className='truncate text-start'>{group.role}</span>
-            </Tooltip.Trigger>
+            </Next.Tooltip.Trigger>
             <span className='text-description'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
@@ -191,7 +191,7 @@ export const SurfaceProfilerCard = ({
             <StatCard.Row
               key={surface.id ?? index}
               label={selectedGroup.role}
-              control={<SystemButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
+              control={<Next.SystemButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
             >
               <JsonHighlighter
                 classNames='text-sm'

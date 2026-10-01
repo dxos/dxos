@@ -4,10 +4,13 @@
 
 import React from 'react';
 
-import { AlertDialog, type AlertDialogContentProps, useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
+import { useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { JoinPanel, type JoinPanelProps } from '../../panels/index.ts';
 import { translationKey } from '../../translations.ts';
+
+type AlertDialogContentProps = React.ComponentProps<typeof Next.AlertDialog.Content>;
 
 export interface JoinDialogProps
   extends Omit<AlertDialogContentProps, 'children'>, Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
@@ -18,25 +21,25 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   // todo(thure): This doesn’t work within an iframe on iOS Safari.
   const { height } = useVisualViewport();
   return (
-    <AlertDialog.Root
+    <Next.AlertDialog.Root
       defaultOpen
       onOpenChange={(open) => open || (joinPanelProps.onExit ? joinPanelProps.onExit() : joinPanelProps.onDone?.(null))}
     >
-      <AlertDialog.Content aria-labelledby={titleId}>
-        <AlertDialog.Body>
-          <AlertDialog.Description srOnly>
+      <Next.AlertDialog.Content aria-labelledby={titleId}>
+        <Next.AlertDialog.Body>
+          <Next.AlertDialog.Description srOnly>
             {t(joinPanelProps.mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
-          </AlertDialog.Description>
+          </Next.AlertDialog.Description>
           <JoinPanel
             {...{
               ...joinPanelProps,
               titleId,
-              exitActionParent: <AlertDialog.Cancel asChild />,
-              doneActionParent: <AlertDialog.Action asChild />,
+              exitActionParent: <Next.AlertDialog.Cancel asChild />,
+              doneActionParent: <Next.AlertDialog.Action asChild />,
             }}
           />
-        </AlertDialog.Body>
-      </AlertDialog.Content>
-    </AlertDialog.Root>
+        </Next.AlertDialog.Body>
+      </Next.AlertDialog.Content>
+    </Next.AlertDialog.Root>
   );
 };

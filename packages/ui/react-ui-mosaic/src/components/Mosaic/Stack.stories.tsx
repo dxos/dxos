@@ -8,8 +8,8 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { arrayMove } from '@dxos/util';
 
@@ -72,13 +72,13 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
     <Dnd.Root>
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
-            <Toolbar.Text>Items: {items.length}</Toolbar.Text>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Toolbar.Text>Items: {items.length}</Next.Toolbar.Text>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Focus.Group asChild>
             <Mosaic.Container
               asChild
@@ -88,20 +88,20 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
               debug={debugHandler}
               placeholderDebug={props.debug}
             >
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport ref={setViewport}>
+              <Next.ScrollArea.Root orientation='vertical'>
+                <Next.ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack {...props} items={items} />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
+                </Next.ScrollArea.Viewport>
+              </Next.ScrollArea.Root>
             </Mosaic.Container>
           </Focus.Group>
-        </Panel.Body>
+        </Next.Panel.Body>
         {props.debug && (
-          <Panel.Footer classNames='h-[40dvh]'>
+          <Next.Panel.Footer classNames='h-[40dvh]'>
             <DebugInfo />
-          </Panel.Footer>
+          </Next.Panel.Footer>
         )}
-      </Panel.Root>
+      </Next.Panel.Root>
     </Dnd.Root>
   );
 };
@@ -113,13 +113,13 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
     <Dnd.Root>
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             <div className='flex grow justify-center'>{JSON.stringify(info)}</div>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Mosaic.Container
             asChild
             orientation='vertical'
@@ -128,8 +128,8 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
             debug={debugHandler}
             placeholderDebug={props.debug}
           >
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport ref={setViewport}>
+            <Next.ScrollArea.Root orientation='vertical'>
+              <Next.ScrollArea.Viewport ref={setViewport}>
                 <Mosaic.VirtualStack
                   {...props}
                   items={items}
@@ -139,16 +139,16 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
                     setInfo({ range: virtualizer.range });
                   }}
                 />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
           </Mosaic.Container>
-        </Panel.Body>
+        </Next.Panel.Body>
         {props.debug && (
-          <Panel.Footer classNames='h-[40dvh]'>
+          <Next.Panel.Footer classNames='h-[40dvh]'>
             <DebugInfo />
-          </Panel.Footer>
+          </Next.Panel.Footer>
         )}
-      </Panel.Root>
+      </Next.Panel.Root>
     </Dnd.Root>
   );
 };

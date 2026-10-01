@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Button, type SelectRootProps, Select as UiSelect } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
+
+type SelectRootProps = React.ComponentProps<typeof Next.Select.Root>;
 
 export type SelectProps = SelectRootProps & {
   items?: { value: string; label: string }[];
@@ -12,17 +14,17 @@ export type SelectProps = SelectRootProps & {
 
 export const Select = ({ items = [], ...props }: SelectProps) => {
   return (
-    <UiSelect.Root {...props}>
-      <Button asChild>
-        <UiSelect.Trigger placeholder={'Select value'} />
-      </Button>
-      <UiSelect.Content>
+    <Next.Select.Root {...props}>
+      <Next.Button asChild>
+        <Next.Select.Trigger placeholder={'Select value'} />
+      </Next.Button>
+      <Next.Select.Content>
         {items?.map(({ value, label }) => (
-          <UiSelect.Item key={value} value={value}>
+          <Next.Select.Item key={value} value={value}>
             <span className='font-mono'>{label}</span>
-          </UiSelect.Item>
+          </Next.Select.Item>
         ))}
-      </UiSelect.Content>
-    </UiSelect.Root>
+      </Next.Select.Content>
+    </Next.Select.Root>
   );
 };

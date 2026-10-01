@@ -5,7 +5,8 @@
 import React, { useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, Panel, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -28,19 +29,19 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
   const readerRef = useRef<EpubReaderHandle>(null);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           {/* Paging controls for the reader — shown only in reading mode; no-op for PDF/no content. */}
           {viewMode === 'read' && (
             <>
-              <Button
+              <Next.Button
                 icon='ph--caret-left--regular'
                 iconOnly
                 label={t('previous-page.label')}
                 onClick={() => readerRef.current?.goLeft()}
               />
-              <Button
+              <Next.Button
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('next-page.label')}
@@ -49,7 +50,7 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
             </>
           )}
           <div className='grow' />
-          <Toolbar.ToggleGroup
+          <Next.Toolbar.ToggleGroup
             type='single'
             value={viewMode}
             onValueChange={(value) => {
@@ -58,17 +59,17 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
               }
             }}
           >
-            <ToggleGroup.Item value='info' icon='ph--info--regular' iconOnly label={t('view-info.label')} />
-            <ToggleGroup.Item value='read' icon='ph--book-open--regular' iconOnly label={t('view-read.label')} />
-          </Toolbar.ToggleGroup>
-        </Toolbar.Root>
-      </Panel.Header>
+            <Next.ToggleGroup.Item value='info' icon='ph--info--regular' iconOnly label={t('view-info.label')} />
+            <Next.ToggleGroup.Item value='read' icon='ph--book-open--regular' iconOnly label={t('view-read.label')} />
+          </Next.Toolbar.ToggleGroup>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
       {/* A single full-height grid track sizes the child by the track rather than a percentage: a plain
           grid item does not resolve a child's `block-size: 100%`, collapsing full-bleed content (the
           EPUB/PDF reader) to zero height. */}
-      <Panel.Body classNames='grid grid-rows-[minmax(0,1fr)]'>
+      <Next.Panel.Body classNames='grid grid-rows-[minmax(0,1fr)]'>
         {viewMode === 'read' ? <BookReader ref={readerRef} book={subject} /> : <BookInfo book={subject} />}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

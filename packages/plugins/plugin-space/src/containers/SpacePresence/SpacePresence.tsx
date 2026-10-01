@@ -12,19 +12,16 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import {
-  Avatar,
   type AvatarContentProps,
   type DxAvatar,
-  Popover,
   type Size,
   type ThemedClassName,
-  Tooltip,
   useDefaultValue,
   useTranslation,
 } from '@dxos/react-ui';
-import { AttentionGlyph, type AttentionGlyphProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -122,7 +119,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
   return (
     <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
-        <Tooltip.Trigger
+        <Next.Tooltip.Trigger
           key={member.identityKey}
           side='bottom'
           content={getName(member)}
@@ -135,24 +132,24 @@ export const FullPresence = (props: MemberPresenceProps) => {
             onClick={() => onMemberClick?.(member)}
             size={size}
           />
-        </Tooltip.Trigger>
+        </Next.Tooltip.Trigger>
       ))}
 
       {members.length > 3 && (
-        <Popover.Root>
-          <Popover.Trigger className='grid focus:outline-hidden'>
-            <Avatar.Root>
+        <Next.Popover.Root>
+          <Next.Popover.Trigger className='grid focus:outline-hidden'>
+            <Next.Avatar.Root>
               {/* TODO(wittjosiah): Make text fit. */}
-              <Avatar.Content
+              <Next.Avatar.Content
                 status='inactive'
                 style={{ zIndex: members.length - 4 }}
                 fallback={`+${members.length - 3}`}
                 size={size}
               />
-            </Avatar.Root>
-          </Popover.Trigger>
-          <Popover.Content side='bottom'>
-            <Popover.Body classNames='max-h-56'>
+            </Next.Avatar.Root>
+          </Next.Popover.Trigger>
+          <Next.Popover.Content side='bottom'>
+            <Next.Popover.Body classNames='max-h-56'>
               <Listbox.Root>
                 <Listbox.Content aria-label='members'>
                   {members.map((member) => (
@@ -169,9 +166,9 @@ export const FullPresence = (props: MemberPresenceProps) => {
                   ))}
                 </Listbox.Content>
               </Listbox.Root>
-            </Popover.Body>
-          </Popover.Content>
-        </Popover.Root>
+            </Next.Popover.Body>
+          </Next.Popover.Content>
+        </Next.Popover.Root>
       )}
     </div>
   );
@@ -190,8 +187,8 @@ const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
     const status = match ? 'current' : 'active';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
     return (
-      <Avatar.Root>
-        <Avatar.Content
+      <Next.Avatar.Root>
+        <Next.Avatar.Content
           status={status}
           hue={member.data?.hue || fallbackValue.hue}
           data-testid='spacePlugin.presence.member'
@@ -202,8 +199,10 @@ const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
           fallback={member.data?.emoji || fallbackValue.emoji}
           ref={forwardedRef}
         />
-        <Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>{getName(member)}</Avatar.Label>
-      </Avatar.Root>
+        <Next.Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>
+          {getName(member)}
+        </Next.Avatar.Label>
+      </Next.Avatar.Root>
     );
   },
 );
@@ -244,20 +243,20 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
 
 export type SmallPresenceProps = {
   count?: number;
-} & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
+} & Pick<Next.AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
-      <AttentionGlyph
+    <Next.Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
+      <Next.AttentionGlyph
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
         classNames='self-center mx-1'
       />
-    </Tooltip.Trigger>
+    </Next.Tooltip.Trigger>
   );
 };
 

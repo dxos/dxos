@@ -4,8 +4,9 @@
 
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { Block, Card, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 
 import { Row } from '../Row/index.ts';
 
@@ -42,9 +43,9 @@ const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
       classNames={classNames ?? 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator'}
     >
       <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
-        <Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
+        <Next.Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef} data-testid={testId}>
           {children}
-        </Card.Root>
+        </Next.Card.Root>
       </Focus.Item>
     </Mosaic.Tile>
   ),
@@ -80,13 +81,13 @@ type CardTileHeaderProps = {
  * tiles (with menu) and event tiles (star + title only).
  */
 const CardTileHeader = ({ title, starred, menu = false, menuItems, onToggleStar }: CardTileHeaderProps) => (
-  <Card.Header>
-    <Block>
+  <Next.Card.Header>
+    <Next.Block>
       <Row.Star starred={starred} onToggle={onToggleStar} />
-    </Block>
-    <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
-    {menu && <Card.Menu items={menuItems} />}
-  </Card.Header>
+    </Next.Block>
+    <Next.Card.Title classNames='flex items-center gap-3'>{title}</Next.Card.Title>
+    {menu && <Next.Card.Menu items={menuItems} />}
+  </Next.Card.Header>
 );
 
 CardTileHeader.displayName = 'CardTile.Header';

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Menu, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Notebook } from '#types';
@@ -19,16 +20,22 @@ export type NotebookMenuProps = {
 export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Menu.Content>
-      <Menu.Item onClick={() => onCellInsert?.('script', cell?.id)}>{t('notebook-cell-insert-script.label')}</Menu.Item>
-      <Menu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>{t('notebook-cell-insert-prompt.label')}</Menu.Item>
-      <Menu.Item onClick={() => onCellInsert?.('query', cell?.id)}>{t('notebook-cell-insert-query.label')}</Menu.Item>
-      <Menu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
+    <Next.Menu.Content>
+      <Next.Menu.Item onClick={() => onCellInsert?.('script', cell?.id)}>
+        {t('notebook-cell-insert-script.label')}
+      </Next.Menu.Item>
+      <Next.Menu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>
+        {t('notebook-cell-insert-prompt.label')}
+      </Next.Menu.Item>
+      <Next.Menu.Item onClick={() => onCellInsert?.('query', cell?.id)}>
+        {t('notebook-cell-insert-query.label')}
+      </Next.Menu.Item>
+      <Next.Menu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
         {t('notebook-cell-insert-markdown.label')}
-      </Menu.Item>
+      </Next.Menu.Item>
       {cell && onCellDelete && (
-        <Menu.Item onClick={() => onCellDelete?.(cell.id)}>{t('notebook-cell-delete.label')}</Menu.Item>
+        <Next.Menu.Item onClick={() => onCellDelete?.(cell.id)}>{t('notebook-cell-delete.label')}</Next.Menu.Item>
       )}
-    </Menu.Content>
+    </Next.Menu.Content>
   );
 };

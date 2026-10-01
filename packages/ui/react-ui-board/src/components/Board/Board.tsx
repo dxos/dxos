@@ -17,16 +17,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import {
-  Button,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  composeRefs,
-  usePx,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps, composeRefs, usePx, useTranslation } from '@dxos/react-ui';
 import {
   type DndContainerHandler,
   type DndPlaceholderData,
@@ -34,6 +25,7 @@ import {
   useContainerId,
   useDndRootContext,
 } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -801,14 +793,14 @@ const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwa
   return (
     // Forward the composable props + ref to ScrollArea.Root so this can be the `asChild` target of a
     // parent slot (e.g. `<Panel.Content asChild><Board.Container/></Panel.Content>`).
-    <ScrollArea.Root orientation='all' {...composableProps(props)} ref={forwardedRef}>
+    <Next.ScrollArea.Root orientation='all' {...composableProps(props)} ref={forwardedRef}>
       {/* `flex` so the viewport's `m-auto` centers the board; overflow scrolls both axes. (Scroll-snap
           was removed: proximity snapping re-snapped the viewport after programmatic scrolls, fighting
           the zoom-anchor / auto-scroll compensation.) */}
-      <ScrollArea.Viewport ref={ref} classNames='flex'>
+      <Next.ScrollArea.Viewport ref={ref} classNames='flex'>
         {children}
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+      </Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 });
 
@@ -909,7 +901,7 @@ const BoardDropTarget = ({ position, rect, containerId, debug, onAddClick }: Boa
         </span>
       )}
       {onAddClick && (
-        <Button
+        <Next.Button
           icon='ph--plus--regular'
           iconOnly
           label={t('add-object.button')}
@@ -935,14 +927,20 @@ const BoardZoom = ({ classNames }: BoardZoomProps) => {
   const { zoom, minZoom, zoomIn, zoomOut } = useBoardContext(BOARD_ZOOM_NAME);
   return (
     <div role='group' className={mx('flex items-center rounded-sm dx-modal-surface', classNames)}>
-      <Button
+      <Next.Button
         icon='ph--minus--regular'
         iconOnly
         label={t('zoom-out.button')}
         disabled={zoom <= minZoom}
         onClick={zoomOut}
       />
-      <Button icon='ph--plus--regular' iconOnly label={t('zoom-in.button')} disabled={zoom >= 1} onClick={zoomIn} />
+      <Next.Button
+        icon='ph--plus--regular'
+        iconOnly
+        label={t('zoom-in.button')}
+        disabled={zoom >= 1}
+        onClick={zoomIn}
+      />
     </div>
   );
 };

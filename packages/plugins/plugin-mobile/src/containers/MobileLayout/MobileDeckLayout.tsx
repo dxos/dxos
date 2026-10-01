@@ -6,8 +6,8 @@ import React, { useLayoutEffect, useState } from 'react';
 
 import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '@dxos/plugin-deck/overlays';
-import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 
 import { DebugOverlay, MobileLayout } from '#components';
 
@@ -25,7 +25,7 @@ export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
   const { state } = useDeckState();
   const { toasts } = state;
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
+  const [splitterMode, setSplitterMode] = useState<Next.SplitterMode>('start');
 
   // The keyboard owns the splitter mode while it is open (the drawer yields the screen to it), so the
   // drawer state is only projected onto the splitter once the keyboard is closed again.
@@ -45,14 +45,14 @@ export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
             onKeyboardOpenChange={setKeyboardOpen}
           >
             <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'start' }}>
-              <Splitter.Root orientation='vertical' mode={splitterMode} size={24}>
-                <Splitter.Panel position='start'>
+              <Next.Splitter.Root orientation='vertical' mode={splitterMode} size={24}>
+                <Next.Splitter.Panel position='start'>
                   <MobileMain />
-                </Splitter.Panel>
-                <Splitter.Panel position='end'>
+                </Next.Splitter.Panel>
+                <Next.Splitter.Panel position='end'>
                   <MobileDrawer />
-                </Splitter.Panel>
-              </Splitter.Root>
+                </Next.Splitter.Panel>
+              </Next.Splitter.Root>
               <Dialog />
               <PopoverContent />
               <Toaster toasts={toasts} onDismissToast={onDismissToast} />

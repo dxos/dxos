@@ -13,9 +13,10 @@ import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -64,10 +65,10 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
   );
 
   return (
-    <Panel.Root>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
+    <Next.Panel.Root>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport>
             <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
               <Form.Viewport>
                 <Form.Content>
@@ -77,7 +78,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
                       label={t('add-connection.label')}
                       description={t('connect-service.description')}
                     >
-                      <Button onClick={handleAdd}>{t('connect.label')}</Button>
+                      <Next.Button onClick={handleAdd}>{t('connect.label')}</Next.Button>
                     </Form.Field>
                   </Form.FieldSet>
 
@@ -95,10 +96,10 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

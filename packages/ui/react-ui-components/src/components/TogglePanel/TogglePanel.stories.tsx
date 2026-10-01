@@ -10,7 +10,6 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -73,21 +72,23 @@ const DefaultStory = (props: TogglePanelRootProps) => {
   }, [running]);
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Field.Root>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Field.Root>
             <Next.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
-          </Field.Root>
+          </Next.Field.Root>
           <div className='grow' />
           <div>{count}</div>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <TogglePanel.Root {...props}>
           <TogglePanel.Content>
             <TogglePanel.Header
-              icon={running ? <Icon icon={'ph--circle-notch--regular'} size='md' tone='subdued' spin /> : undefined}
+              icon={
+                running ? <Next.Icon icon={'ph--circle-notch--regular'} size='md' tone='subdued' spin /> : undefined
+              }
             >
               Test
             </TogglePanel.Header>
@@ -98,8 +99,8 @@ const DefaultStory = (props: TogglePanelRootProps) => {
             </TogglePanel.Body>
           </TogglePanel.Content>
         </TogglePanel.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

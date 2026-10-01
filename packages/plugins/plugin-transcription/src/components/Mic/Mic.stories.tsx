@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { SystemButton, Toolbar } from '@dxos/react-ui';
 import { type AudioInputDevice, MicSettings, type RecordMode } from '@dxos/react-ui-transcription';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -26,8 +26,8 @@ const DefaultStory = () => {
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
 
   return (
-    <Toolbar.Root>
-      <SystemButton.Mic
+    <Next.Toolbar.Root>
+      <Next.SystemButton.Mic
         iconOnly
         variant='ghost'
         label={recording ? 'Stop recording' : recordMode === 'hold' ? 'Hold to record' : 'Start recording'}
@@ -46,7 +46,7 @@ const DefaultStory = () => {
         onRecordModeChange={setRecordMode}
         onSelectDevice={setSelectedDeviceId}
       />
-    </Toolbar.Root>
+    </Next.Toolbar.Root>
   );
 };
 

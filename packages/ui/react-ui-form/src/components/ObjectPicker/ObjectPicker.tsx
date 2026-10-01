@@ -5,9 +5,9 @@
 import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useState } from 'react';
 
-import { Popover, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
-import { Combobox } from '@dxos/react-ui-list';
+import { type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { useSearchListResults } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type RefOption } from '#types';
@@ -95,11 +95,11 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
 
     if (showForm && createSchema) {
       return (
-        <Combobox.Content {...props} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
+        <Next.Combobox.Content {...props} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
           {/* `Form.Content` trims only its bottom (`pb-form-padding`) because a host normally supplies
               the top — a dialog header, a card title. A popover has nothing above the first field, so
               the top trim is added here. */}
-          <Popover.Body classNames='pt-form-padding'>
+          <Next.Popover.Body classNames='pt-form-padding'>
             <FormRoot
               testId='create-referenced-object-form'
               schema={createSchema}
@@ -115,22 +115,22 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
                 </FormContent>
               </FormViewport>
             </FormRoot>
-          </Popover.Body>
-        </Combobox.Content>
+          </Next.Popover.Body>
+        </Next.Combobox.Content>
       );
     }
 
     return (
-      <Combobox.Content {...props} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
-        <Combobox.Input
+      <Next.Combobox.Content {...props} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
+        <Next.Combobox.Input
           placeholder={t('ref-field-combobox-input.placeholder')}
           autoFocus
           value={query}
           onValueChange={handleSearch}
         />
-        <Combobox.List>
+        <Next.Combobox.List>
           {results.map((option) => (
-            <Combobox.Item
+            <Next.Combobox.Item
               key={option.id}
               value={option.id}
               label={option.label}
@@ -151,8 +151,8 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
               }}
             />
           )}
-        </Combobox.List>
-      </Combobox.Content>
+        </Next.Combobox.List>
+      </Next.Combobox.Content>
     );
   },
 );
@@ -175,7 +175,7 @@ const CreateItem = ({
     : t('create-option.label');
 
   return (
-    <Combobox.Item
+    <Next.Combobox.Item
       value='__create__'
       label={label}
       icon={createOptionIcon}
@@ -191,9 +191,9 @@ const CreateItem = ({
 ObjectPickerContent.displayName = 'ObjectPicker.Content';
 
 export const ObjectPicker = {
-  Root: Combobox.Root,
-  Portal: Combobox.Portal,
-  Trigger: Combobox.Trigger,
-  VirtualTrigger: Combobox.VirtualTrigger,
+  Root: Next.Combobox.Root,
+  Portal: Next.Combobox.Portal,
+  Trigger: Next.Combobox.Trigger,
+  VirtualTrigger: Next.Combobox.VirtualTrigger,
   Content: ObjectPickerContent,
 };

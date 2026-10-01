@@ -9,9 +9,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, ChatStatusIndicator } from '@dxos/react-ui-chat';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
+import { Next } from '@dxos/react-ui/next';
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -220,7 +221,13 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
         />
         {/* TODO(burdon): Create new session; move to menu. */}
         {filteredMessages.length > 0 && (
-          <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('chat.clear.button')} onClick={handleClear} />
+          <Next.Button
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('chat.clear.button')}
+            onClick={handleClear}
+          />
         )}
       </div>
     </div>

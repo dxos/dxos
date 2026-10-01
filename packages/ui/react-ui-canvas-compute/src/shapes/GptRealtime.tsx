@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import { Next } from '@dxos/react-ui/next';
 
 import { type GptRealtimeShape } from './gpt-realtime-def.ts';
 
@@ -132,7 +132,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
 
   return (
     <div className='flex w-full justify-center items-center'>
-      <Icon
+      <Next.Icon
         icon={isReady ? 'ph--waveform--regular' : isLive ? 'ph--pulse--regular' : 'ph--play--regular'}
         size='xl'
         classNames={!isLive && 'cursor-pointer'}

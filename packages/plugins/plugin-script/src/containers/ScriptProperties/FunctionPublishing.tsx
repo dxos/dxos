@@ -12,8 +12,9 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Banner, Button, Flex, SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -97,21 +98,21 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
     <Form.FieldSet label={t('script-publish-settings.label')} description={t('script-publish-settings.description')}>
       {!githubToken && (
         <Flex column classNames='py-form-gap'>
-          <Banner.Root valence='info'>
-            <Banner.Title>{t('no-github-token.label')}</Banner.Title>
-          </Banner.Root>
+          <Next.Banner.Root valence='info'>
+            <Next.Banner.Title>{t('no-github-token.label')}</Next.Banner.Title>
+          </Next.Banner.Root>
           <Flex classNames='pt-form-gap'>
-            <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
+            <Next.Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Next.Button>
           </Flex>
         </Flex>
       )}
 
       {githubToken && (
         <Flex gap='sm' justify='end'>
-          {gistUrl && <SystemButton.Clipboard iconOnly value={gistUrl} />}
-          <Button disabled={publishing} onClick={handlePublish}>
+          {gistUrl && <Next.SystemButton.Clipboard iconOnly value={gistUrl} />}
+          <Next.Button disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}
-          </Button>
+          </Next.Button>
         </Flex>
       )}
     </Form.FieldSet>

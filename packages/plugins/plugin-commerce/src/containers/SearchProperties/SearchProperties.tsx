@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
@@ -95,7 +95,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
         </Form.Root>
       )}
 
-      <Button
+      <Next.Button
         icon='ph--shopping-cart--regular'
         label={running ? t('running.label') : t('run.label')}
         disabled={selectedProviders.length === 0 || running}

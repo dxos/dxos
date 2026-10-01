@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -115,16 +115,16 @@ const WithToolbarStory = () => {
   const filtered = allItems.filter((item) => item.name.toLowerCase().includes(filter.toLowerCase()));
   return (
     <Listbox.Root value={selected} onValueChange={setSelected}>
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
-            <Field.Root>
-              <Field.Label srOnly>Filter items</Field.Label>
-              <Input placeholder='Filter…' value={filter} onChange={(event) => setFilter(event.target.value)} />
-            </Field.Root>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Field.Root>
+              <Next.Field.Label srOnly>Filter items</Next.Field.Label>
+              <Next.Input placeholder='Filter…' value={filter} onChange={(event) => setFilter(event.target.value)} />
+            </Next.Field.Root>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Listbox.Viewport>
             <Listbox.Content aria-label='Items'>
               {filtered.map((item) => (
@@ -134,8 +134,8 @@ const WithToolbarStory = () => {
               ))}
             </Listbox.Content>
           </Listbox.Viewport>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Listbox.Root>
   );
 };
@@ -217,9 +217,9 @@ const DisclosureStory = () => {
                   type='button'
                   className='flex items-center gap-2 px-3 py-2 text-start dx-hover dx-focus-ring-inset'
                 >
-                  <Icon icon='ph--package--regular' size='lg' />
+                  <Next.Icon icon='ph--package--regular' size='lg' />
                   <span className='flex-1 min-w-0 truncate'>{item.name}</span>
-                  <Icon
+                  <Next.Icon
                     icon='ph--caret-right--regular'
                     size='md'
                     classNames={mx('transition-transform', expanded && 'rotate-90')}

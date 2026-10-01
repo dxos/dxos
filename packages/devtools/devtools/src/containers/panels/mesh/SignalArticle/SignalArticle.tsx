@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { type ArticleProps } from '../../types.ts';
 import { SignalMessageTable } from './SignalMessageTable.tsx';
@@ -12,11 +12,11 @@ import { SignalStatusTable } from './SignalStatusTable.tsx';
 
 export const SignalArticle = ({ role }: ArticleProps) => {
   return (
-    <Panel.Root role={role}>
-      <Panel.Body classNames='grid grid-rows-[2fr_5fr]'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body classNames='grid grid-rows-[2fr_5fr]'>
         <SignalStatusTable />
         <SignalMessageTable />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

@@ -15,8 +15,8 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { Next } from '@dxos/react-ui/next';
 
 import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -101,9 +101,9 @@ export const FeedsArticle = ({ role, ...props }: ArticleProps & { space?: Space 
   }, [tableRows]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <PublicKeySelector
             placeholder='Select feed'
@@ -113,16 +113,16 @@ export const FeedsArticle = ({ role, ...props }: ArticleProps & { space?: Space 
             onChange={handleSelect}
           />
 
-          <Button icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          <Next.Button icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <div className='h-full'>
           <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
           <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

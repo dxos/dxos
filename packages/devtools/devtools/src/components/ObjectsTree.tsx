@@ -19,15 +19,15 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Button, Icon, Menu, ScrollArea } from '@dxos/react-ui';
 import {
   type ColumnRenderer,
   type IconRenderer,
-  Tree,
   TREE_BLOCK,
   type TreeItemDataProps,
   type TreeModel,
 } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {
@@ -69,8 +69,8 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
 
   return (
     <ObjectsTreeContext.Provider value={contextValue}>
-      <ScrollArea.Root classNames='dx-expand' thin>
-        <ScrollArea.Viewport>
+      <Next.ScrollArea.Root classNames='dx-expand' thin>
+        <Next.ScrollArea.Viewport>
           <Tree<ObjectsTreeItem>
             id={ROOT_ANCHOR}
             model={model.treeModel}
@@ -89,8 +89,8 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
             onOpenChange={handleOpenChange}
             onSelect={handleSelect}
           />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     </ObjectsTreeContext.Provider>
   );
 };
@@ -102,9 +102,13 @@ const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
   const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
   return (
     <>
-      {scoped.type === 'outgoing-relation' && <Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />}
-      {scoped.type === 'incoming-relation' && <Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />}
-      <Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
+      {scoped.type === 'outgoing-relation' && (
+        <Next.Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />
+      )}
+      {scoped.type === 'incoming-relation' && (
+        <Next.Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />
+      )}
+      <Next.Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
     </>
   );
 };
@@ -148,9 +152,9 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
   return (
     <div className='flex shrink-0 items-center gap-1'>
       {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
-      <Menu.Root>
-        <Menu.Trigger asChild>
-          <Button
+      <Next.Menu.Root>
+        <Next.Menu.Trigger asChild>
+          <Next.Button
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon='ph--dots-three-vertical--regular'
@@ -158,42 +162,42 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
             label='Actions'
             data-testid='objects-tree.row.actions'
           />
-        </Menu.Trigger>
-        <Menu.Content>
+        </Next.Menu.Trigger>
+        <Next.Menu.Content>
           {showOpen && (
-            <Menu.Item onClick={handleOpen}>
-              <Icon icon='ph--arrow-square-out--regular' />
+            <Next.Menu.Item onClick={handleOpen}>
+              <Next.Icon icon='ph--arrow-square-out--regular' />
               Open
-            </Menu.Item>
+            </Next.Menu.Item>
           )}
           {!node.deleted && (
-            <Menu.Item onClick={handleDelete}>
-              <Icon icon='ph--trash--regular' />
+            <Next.Menu.Item onClick={handleDelete}>
+              <Next.Icon icon='ph--trash--regular' />
               Delete
-            </Menu.Item>
+            </Next.Menu.Item>
           )}
           {node.deleted && (
-            <Menu.Item onClick={handleRestore}>
-              <Icon icon='ph--arrow-counter-clockwise--regular' />
+            <Next.Menu.Item onClick={handleRestore}>
+              <Next.Icon icon='ph--arrow-counter-clockwise--regular' />
               Restore
-            </Menu.Item>
+            </Next.Menu.Item>
           )}
 
-          <Menu.Separator />
-          <Menu.Item onClick={handleCopyDXN}>
-            <Icon icon='ph--copy--regular' />
+          <Next.Menu.Separator />
+          <Next.Menu.Item onClick={handleCopyDXN}>
+            <Next.Icon icon='ph--copy--regular' />
             Copy DXN
-          </Menu.Item>
-          <Menu.Item onClick={handleCopyJSON}>
-            <Icon icon='ph--brackets-curly--regular' />
+          </Next.Menu.Item>
+          <Next.Menu.Item onClick={handleCopyJSON}>
+            <Next.Icon icon='ph--brackets-curly--regular' />
             Copy JSON
-          </Menu.Item>
-          <Menu.Item onClick={handlePrintToConsole}>
-            <Icon icon='ph--terminal-window--regular' />
+          </Next.Menu.Item>
+          <Next.Menu.Item onClick={handlePrintToConsole}>
+            <Next.Icon icon='ph--terminal-window--regular' />
             Print to console
-          </Menu.Item>
-        </Menu.Content>
-      </Menu.Root>
+          </Next.Menu.Item>
+        </Next.Menu.Content>
+      </Next.Menu.Root>
     </div>
   );
 };

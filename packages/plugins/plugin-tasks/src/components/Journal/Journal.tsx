@@ -7,8 +7,9 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -60,8 +61,8 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
   }, [journal, date]);
 
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-      <ScrollArea.Viewport>
+    <Next.ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <Next.ScrollArea.Viewport>
         {entryRefs.map(({ dateKey, ref }, i) => (
           <JournalEntry
             key={dateKey}
@@ -73,11 +74,11 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
         ))}
         {!hasTodayEntry && (
           <div className='p-2'>
-            <Button label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
+            <Next.Button label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
           </div>
         )}
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+      </Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 });
 
@@ -122,7 +123,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
       <div className='flex items-center gap-2 bg-transparent'>
-        <Button
+        <Next.Button
           label={date ? format(date, 'MMM d, yyyy') : ''}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}

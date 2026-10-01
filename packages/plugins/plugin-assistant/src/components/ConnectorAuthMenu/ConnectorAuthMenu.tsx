@@ -13,8 +13,9 @@ import { Connection } from '@dxos/link';
 import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -87,7 +88,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
 
   return (
     <ActionMenu {...menuActions} onAction={handleAction}>
-      <Button variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
+      <Next.Button variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
     </ActionMenu>
   );
 };

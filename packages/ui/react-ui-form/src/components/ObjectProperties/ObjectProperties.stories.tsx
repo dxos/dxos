@@ -10,7 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { Annotation, DXN, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -104,11 +104,11 @@ const PipelineStory = () => {
     return <Loading />;
   }
   return (
-    <Panel.Root>
-      <Panel.Body asChild>
+    <Next.Panel.Root>
+      <Next.Panel.Body asChild>
         <ObjectProperties object={object} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -126,11 +126,11 @@ const ArticleStory = () => {
     return <Loading />;
   }
   return (
-    <Panel.Root>
-      <Panel.Body asChild>
+    <Next.Panel.Root>
+      <Next.Panel.Body asChild>
         <ObjectProperties object={object} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -187,11 +187,11 @@ const NotebookStory = () => {
     return <Loading />;
   }
   return (
-    <Panel.Root>
-      <Panel.Body asChild>
+    <Next.Panel.Root>
+      <Next.Panel.Body asChild>
         <ObjectProperties object={object} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

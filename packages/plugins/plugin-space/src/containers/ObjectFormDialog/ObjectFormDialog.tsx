@@ -20,8 +20,9 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Dialog, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useSubmitOnEnter } from '@dxos/react-ui-form';
+import { Next } from '@dxos/react-ui/next';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
@@ -338,18 +339,18 @@ export const ObjectFormDialog = ({
   return (
     // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
     // the overlay would discard it with no undo. Escape and the close button remain.
-    <Dialog.Content onInteractOutside={(event) => event.preventDefault()}>
-      <Dialog.Header>
-        <Dialog.Title>
+    <Next.Dialog.Content onInteractOutside={(event) => event.preventDefault()}>
+      <Next.Dialog.Header>
+        <Next.Dialog.Title>
           {t('create-object-dialog.title', {
             object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
-        </Dialog.Title>
-        <Dialog.CloseTrigger asChild>
-          <SystemButton.Close ref={closeRef} />
-        </Dialog.CloseTrigger>
-      </Dialog.Header>
-      <Dialog.Body ref={bodyRef}>
+        </Next.Dialog.Title>
+        <Next.Dialog.CloseTrigger asChild>
+          <Next.SystemButton.Close ref={closeRef} />
+        </Next.Dialog.CloseTrigger>
+      </Next.Dialog.Header>
+      <Next.Dialog.Body ref={bodyRef}>
         <CreateObjectPanel
           options={options}
           spaces={spaces}
@@ -366,27 +367,27 @@ export const ObjectFormDialog = ({
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
         />
-      </Dialog.Body>
+      </Next.Dialog.Body>
       {object ? (
-        <Dialog.Footer>
-          <Dialog.CloseTrigger asChild>
-            <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
-          </Dialog.CloseTrigger>
-          <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+        <Next.Dialog.Footer>
+          <Next.Dialog.CloseTrigger asChild>
+            <Next.Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Next.Button>
+          </Next.Dialog.CloseTrigger>
+          <Next.Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
-          </Button>
-        </Dialog.Footer>
+          </Next.Button>
+        </Next.Dialog.Footer>
       ) : (
         showTypeSelector &&
         registryAvailable && (
-          <Dialog.Footer>
-            <Dialog.CloseTrigger asChild>
+          <Next.Dialog.Footer>
+            <Next.Dialog.CloseTrigger asChild>
               <PluginRegistryButton />
-            </Dialog.CloseTrigger>
-          </Dialog.Footer>
+            </Next.Dialog.CloseTrigger>
+          </Next.Dialog.Footer>
         )
       )}
-    </Dialog.Content>
+    </Next.Dialog.Content>
   );
 };
 

@@ -22,8 +22,9 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Button, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useId, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -265,7 +266,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-description'>
-          <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
+          <Next.QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
           </Centered>
@@ -273,11 +274,11 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
-        <SystemButton.Clipboard value={url ?? 'never'} />
+        <Next.SystemButton.Clipboard value={url ?? 'never'} />
       </div>
-      <Button variant='ghost' onClick={onCancel}>
+      <Next.Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button>
+      </Next.Button>
     </>
   );
 };
@@ -292,18 +293,18 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-description'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
-      <Button variant='ghost' onClick={onCancel}>
+      <Next.Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button>
+      </Next.Button>
     </>
   );
 };
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
   return statusValue > 0 ? (
-    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
+    <Next.Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
+    <Next.Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

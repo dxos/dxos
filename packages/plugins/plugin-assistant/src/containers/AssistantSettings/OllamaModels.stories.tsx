@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

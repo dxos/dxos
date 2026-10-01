@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -163,11 +163,11 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
   const telemetry = useMemo(() => buildTelemetry(objects, seaRadius(values)), [objects, values]);
 
   return (
-    <Panel.Root role='article'>
-      <Panel.Header classNames='dx-expand'>
+    <Next.Panel.Root role='article'>
+      <Next.Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={STORY_ATTENDABLE_ID} />
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <div className='relative grow overflow-hidden'>
           <TerraMap
             objects={objects}
@@ -180,8 +180,8 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

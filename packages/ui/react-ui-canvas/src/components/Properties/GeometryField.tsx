@@ -12,8 +12,9 @@
 
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
-import { Field, NumberInput } from '@dxos/react-ui';
-import { Form, type FormFieldRenderer } from '@dxos/react-ui-form';
+import { type FormFieldRenderer } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '../../model/types.ts';
 
@@ -116,9 +117,9 @@ export const createGeometryField =
           {keys.map((key) => (
             // `Field.Root` lays out as `contents`, so each cell needs its own box in the grid.
             <div key={key}>
-              <Field.Root>
-                <Field.Label>{LABELS[key] ?? key}</Field.Label>
-                <NumberInput
+              <Next.Field.Root>
+                <Next.Field.Label>{LABELS[key] ?? key}</Next.Field.Label>
+                <Next.NumberInput
                   step={grid}
                   disabled={!!readonly}
                   value={text[key] ?? ''}
@@ -126,7 +127,7 @@ export const createGeometryField =
                   onKeyDown={handleKeyDown(key)}
                   onBlur={handleBlur(key)}
                 />
-              </Field.Root>
+              </Next.Field.Root>
             </div>
           ))}
         </div>

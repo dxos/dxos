@@ -5,18 +5,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useHotkeys } from '@dxos/react-focus';
-import {
-  Button,
-  Field,
-  Icon,
-  Input,
-  MediaPlayer,
-  Toolbar,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -111,17 +102,17 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
   );
 
   return (
-    <Toolbar.Root {...composableProps(props, { classNames: '@container' })} ref={forwardedRef}>
+    <Next.Toolbar.Root {...composableProps(props, { classNames: '@container' })} ref={forwardedRef}>
       {children}
       {paged && (
         <>
-          <Button
+          <Next.Button
             iconOnly
             icon={paged.fit === 'width' ? 'ph--arrows-out-line-horizontal--regular' : 'ph--corners-out--regular'}
             label={paged.fit === 'width' ? t('fit-page.label') : t('fit-width.label')}
             onClick={() => paged.setFit(paged.fit === 'width' ? 'page' : 'width')}
           />
-          <Button
+          <Next.Button
             compact
             iconOnly
             icon='ph--caret-line-left--regular'
@@ -130,7 +121,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             disabled={paged.currentPage <= 1}
             onClick={() => paged.api?.goToPage(1, 'instant')}
           />
-          <Button
+          <Next.Button
             iconOnly
             icon='ph--caret-left--regular'
             label={t('previous-page.label')}
@@ -141,22 +132,22 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
               box, so stepping 9 → 10 does not shove the buttons beside it. Padding with spaces
               cannot do this (HTML collapses them) and zero-padding shows a leading zero.
               `Toolbar.Text` also truncates by default — right for a label, wrong for a counter. */}
-          <Toolbar.Text classNames='grid justify-items-end shrink-0 overflow-visible text-nowrap text-sm tabular-nums'>
+          <Next.Toolbar.Text classNames='grid justify-items-end shrink-0 overflow-visible text-nowrap text-sm tabular-nums'>
             <span aria-hidden className='invisible col-start-1 row-start-1'>
               {t('page-of.label', { page: paged.pageCount, count: paged.pageCount })}
             </span>
             <span className='col-start-1 row-start-1'>
               {t('page-of.label', { page: paged.currentPage, count: paged.pageCount })}
             </span>
-          </Toolbar.Text>
-          <Button
+          </Next.Toolbar.Text>
+          <Next.Button
             iconOnly
             icon='ph--caret-right--regular'
             label={t('next-page.label')}
             disabled={paged.currentPage >= paged.pageCount}
             onClick={() => paged.api?.stepPage(1)}
           />
-          <Button
+          <Next.Button
             compact
             iconOnly
             icon='ph--caret-line-right--regular'
@@ -165,9 +156,9 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             disabled={paged.currentPage >= paged.pageCount}
             onClick={() => paged.api?.goToPage(paged.pageCount, 'instant')}
           />
-          <Toolbar.Separator />
-          <Field.Root>
-            <Input
+          <Next.Toolbar.Separator />
+          <Next.Field.Root>
+            <Next.Input
               ref={searchRef}
               placeholder={t('search.placeholder')}
               value={query}
@@ -175,7 +166,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
               spellCheck={false}
               autoCorrect='off'
               autoCapitalize='off'
-              end={<Icon icon='ph--magnifying-glass--regular' size='md' />}
+              end={<Next.Icon icon='ph--magnifying-glass--regular' size='md' />}
               onChange={(event) => handleSearch(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -183,22 +174,22 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
                 }
               }}
             />
-          </Field.Root>
+          </Next.Field.Root>
           {query.trim().length > 0 && (
             <>
-              <Toolbar.Text classNames='shrink-0 overflow-visible text-nowrap tabular-nums'>
+              <Next.Toolbar.Text classNames='shrink-0 overflow-visible text-nowrap tabular-nums'>
                 {paged.matches === 0
                   ? t('no-matches.label')
                   : t('match-of.label', { match: paged.activeMatch, count: paged.matches })}
-              </Toolbar.Text>
-              <Button
+              </Next.Toolbar.Text>
+              <Next.Button
                 iconOnly
                 icon='ph--caret-up--regular'
                 label={t('previous-match.label')}
                 disabled={paged.matches === 0}
                 onClick={() => paged.api?.goToMatch(paged.activeMatch - 1)}
               />
-              <Button
+              <Next.Button
                 iconOnly
                 icon='ph--caret-down--regular'
                 label={t('next-match.label')}
@@ -209,13 +200,18 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
           )}
         </>
       )}
-      <Toolbar.Separator />
+      <Next.Toolbar.Separator />
       {/* An anchor rather than a button: `download` is what makes the browser save instead of
           navigate, and it works for the `data:`/`blob:`/presigned URLs every backend produces. */}
-      <Toolbar.Link href={url} download={name ?? true} aria-label={t('download.label')} title={t('download.label')}>
-        <Icon icon='ph--download-simple--regular' size='lg' />
-      </Toolbar.Link>
-    </Toolbar.Root>
+      <Next.Toolbar.Link
+        href={url}
+        download={name ?? true}
+        aria-label={t('download.label')}
+        title={t('download.label')}
+      >
+        <Next.Icon icon='ph--download-simple--regular' size='lg' />
+      </Next.Toolbar.Link>
+    </Next.Toolbar.Root>
   );
 });
 
@@ -268,7 +264,7 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
   if (type.startsWith('image/') || type.startsWith('video/') || type.startsWith('audio/')) {
     return (
       <div {...composableProps(props, { classNames: 'grid dx-fill min-h-0' })} ref={forwardedRef}>
-        <MediaPlayer
+        <Next.MediaPlayer
           classNames='dx-fill'
           src={url}
           // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/
@@ -284,7 +280,7 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <div {...composableProps(props, { classNames: 'grid place-items-center dx-fill p-8' })} ref={forwardedRef}>
       <div className='flex flex-col items-center gap-2 text-center'>
-        <Icon icon='ph--file--regular' size='xl' tone='subdued' />
+        <Next.Icon icon='ph--file--regular' size='xl' tone='subdued' />
         {name && <span className='text-sm'>{name}</span>}
         <span className='text-xs text-subdued'>
           {size === undefined ? type : t('file-details.label', { type, size: formatBytes(size) })}

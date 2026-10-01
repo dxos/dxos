@@ -11,8 +11,8 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
@@ -122,7 +122,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
   }, [registry, refreshingAtom, subject, post.link, invokePromise]);
 
   return (
-    <Panel.Root role={role}>
+    <Next.Panel.Root role={role}>
       <PostToolbar
         post={subject}
         refreshingAtom={refreshingAtom}
@@ -133,10 +133,10 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
         onOpenOriginal={handleOpenOriginal}
         onRefresh={() => void handleRefresh()}
       />
-      <Panel.Body asChild>
+      <Next.Panel.Body asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

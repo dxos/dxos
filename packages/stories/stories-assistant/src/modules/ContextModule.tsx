@@ -11,9 +11,9 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 
 export const ContextModule = () => {
   const space = useActiveSpace();
@@ -56,22 +56,22 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.Text>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Toolbar.Text>
             Context Objects ({objects.length}); Artifacts ({artifacts.length})
-          </Toolbar.Text>
-        </Toolbar.Root>
-      </Panel.Header>
+          </Next.Toolbar.Text>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
       <Masonry.Root Tile={Tile}>
-        <Panel.Body asChild>
+        <Next.Panel.Body asChild>
           <Masonry.Content centered padding thin classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
-        </Panel.Body>
+        </Next.Panel.Body>
       </Masonry.Root>
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };
 
@@ -117,20 +117,20 @@ const Tile = ({ data }: { data: ContextItem }) => {
 
   // Render via a card Surface (PreviewPlugin provides the generic `card--content` fallback).
   return (
-    <Card.Root>
+    <Next.Card.Root>
       <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject }} />
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 
 const DebugTile = ({ data }: { data: ContextItem }) => {
   return (
-    <Card.Root>
-      <Card.Body>
-        <Card.Row fullWidth classNames='max-h-50'>
+    <Next.Card.Root>
+      <Next.Card.Body>
+        <Next.Card.Row fullWidth classNames='max-h-50'>
           <JsonHighlighter data={data} classNames='text-xs' />
-        </Card.Row>
-      </Card.Body>
-    </Card.Root>
+        </Next.Card.Row>
+      </Next.Card.Body>
+    </Next.Card.Root>
   );
 };

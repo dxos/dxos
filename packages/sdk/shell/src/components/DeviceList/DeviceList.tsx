@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { getSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -45,18 +46,18 @@ export const DeviceList = ({
           </Listbox.Content>
         </Listbox.Root>
       )}
-      <Button
+      <Next.Button
         variant='ghost'
         classNames='justify-start gap-2 ps-0 pe-3 w-full'
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >
         <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
-          <Icon icon='ph--plus--light' size='xl' />
+          <Next.Icon icon='ph--plus--light' size='xl' />
         </div>
         <span className='grow font-medium text-start'>{t('choose-add-device.label')}</span>
-        <Icon icon='ph--caret-right--bold' size='md' />
-      </Button>
+        <Next.Icon icon='ph--caret-right--bold' size='md' />
+      </Next.Button>
     </div>
   );
 };

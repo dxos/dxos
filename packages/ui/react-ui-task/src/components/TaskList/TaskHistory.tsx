@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Column, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
+import { Column, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -129,7 +130,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
           {/* The hue comes from the event table, through the same palette the status and priority
               glyphs read. */}
           <div className={TASK_GRID_ICON}>
-            <Icon icon={item.icon} classNames={item.hue} size='md' />
+            <Next.Icon icon={item.icon} classNames={item.hue} size='md' />
           </div>
           {/* The time rides with the description rather than in a column of its own: flush right
               against the content's edge is where the eye reads it, and a third track would make the
@@ -146,7 +147,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
             </span>
             {/* Compact and live, because the log is read as "what has been happening" rather than
                 as a record to cite — and the record is a hover away, in the tooltip. */}
-            <Timestamp date={item.date} classNames='shrink-0 text-right' />
+            <Next.Timestamp date={item.date} classNames='shrink-0 text-right' />
           </div>
         </div>
       ))}

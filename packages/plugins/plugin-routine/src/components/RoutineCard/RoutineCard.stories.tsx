@@ -12,7 +12,7 @@ import { Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -32,12 +32,12 @@ const DefaultStory = () => {
 
   // The surface host supplies Card.Root and the header; RoutineCard emits only the body.
   return (
-    <Card.Root fullWidth>
-      <Card.Header>
-        <Card.Title>{routine.name ?? 'Untitled'}</Card.Title>
-      </Card.Header>
+    <Next.Card.Root fullWidth>
+      <Next.Card.Header>
+        <Next.Card.Title>{routine.name ?? 'Untitled'}</Next.Card.Title>
+      </Next.Card.Header>
       <RoutineCard subject={routine} />
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 

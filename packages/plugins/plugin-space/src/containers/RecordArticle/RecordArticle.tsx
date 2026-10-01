@@ -9,7 +9,7 @@ import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Block, Card, Field, Flex, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -19,7 +19,8 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
@@ -54,33 +55,33 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
   const singleColumn = related.length === 1;
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Card.Root fullWidth>
-              <Card.Header>
-                <Block>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport classNames='p-4 space-y-4'>
+            <Next.Card.Root fullWidth>
+              <Next.Card.Header>
+                <Next.Block>
                   <CardIconSlot subject={subject}>
-                    <Icon icon={icon} />
+                    <Next.Icon icon={icon} />
                   </CardIconSlot>
-                </Block>
-                <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-              </Card.Header>
-              <Card.Body>
+                </Next.Block>
+                <Next.Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Next.Card.Title>
+              </Next.Card.Header>
+              <Next.Card.Body>
                 <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
-              </Card.Body>
-            </Card.Root>
+              </Next.Card.Body>
+            </Next.Card.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
             <Flex column gap='form'>
-              <Field.Root>
-                <Field.Label>{t('related-actions.label')}</Field.Label>
-              </Field.Root>
+              <Next.Field.Root>
+                <Next.Field.Label>{t('related-actions.label')}</Next.Field.Label>
+              </Next.Field.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </Flex>
 
@@ -89,9 +90,9 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <div
                 className={mx('dx-expand flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
               >
-                <Field.Root>
-                  <Field.Label>{t('related-objects.label')}</Field.Label>
-                </Field.Root>
+                <Next.Field.Root>
+                  <Next.Field.Label>{t('related-objects.label')}</Next.Field.Label>
+                </Next.Field.Root>
                 {/* `self-start` so the group sizes to its icons rather than stretching this column. */}
                 <RelatedTypeFilter classNames='self-start' types={types} onToggle={toggle} />
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
@@ -106,10 +107,10 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 </Masonry.Root>
               </div>
             )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

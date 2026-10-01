@@ -10,7 +10,8 @@ import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -62,7 +63,7 @@ export const InlineRefField = (props: RefFieldProps) => {
       ) : (
         !readonly &&
         onCreate && (
-          <Button
+          <Next.Button
             classNames='w-full gap-form-gap'
             disabled={!createType || !db}
             icon='ph--plus--regular'

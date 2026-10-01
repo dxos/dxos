@@ -7,9 +7,10 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
-import { Button, Flex, Icon, SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
+import { Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';
@@ -75,7 +76,7 @@ export const InvitationsContainer = () => {
               label={t('generate-invitation.label')}
               description={t('generate-invitation.description', { count: remaining })}
             >
-              <Button
+              <Next.Button
                 icon='ph--plus--regular'
                 label={t('generate-invitation.label')}
                 variant='primary'
@@ -116,12 +117,12 @@ export const InvitationsContainer = () => {
 
 const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => (
   <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
-    <Icon icon='ph--paper-plane-tilt--duotone' size='lg' tone='description' />
+    <Next.Icon icon='ph--paper-plane-tilt--duotone' size='lg' tone='description' />
     <Flex column classNames='min-w-0'>
       <div className='font-mono truncate'>{row.code}</div>
       <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
     </Flex>
-    <SystemButton.Clipboard iconOnly value={row.code} />
+    <Next.SystemButton.Clipboard iconOnly value={row.code} />
   </Listbox.Item>
 );
 
@@ -129,7 +130,7 @@ const RedeemedInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitat
   const date = row.redeemedAt ?? row.createdAt;
   return (
     <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
-      <Icon icon='ph--check-circle--duotone' size='lg' valence='success' />
+      <Next.Icon icon='ph--check-circle--duotone' size='lg' valence='success' />
       <Flex column classNames='min-w-0'>
         <div className='font-mono truncate'>{row.code}</div>
         <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>

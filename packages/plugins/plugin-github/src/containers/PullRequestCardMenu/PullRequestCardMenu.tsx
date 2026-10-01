@@ -11,7 +11,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
-import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
+import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu/next';
 import { PullRequest } from '@dxos/types';
 
 import { meta } from '#meta';

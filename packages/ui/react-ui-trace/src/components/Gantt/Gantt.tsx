@@ -17,15 +17,8 @@ import React, {
 } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import {
-  Button,
-  HoverCard,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Hue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -412,7 +405,7 @@ const GanttAxisToggle = (_: GanttAxisToggleProps) => {
 
   // The icon names the axis in use; the label names the one a click switches to.
   return (
-    <Button
+    <Next.Button
       variant='ghost'
       size='sm'
       iconSize='xs'
@@ -720,8 +713,8 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
   }, [scale.width]);
 
   return (
-    <ScrollArea.Root thin orientation='horizontal' classNames={classNames} ref={forwardedRef}>
-      <ScrollArea.Viewport ref={viewportRef}>
+    <Next.ScrollArea.Root thin orientation='horizontal' classNames={classNames} ref={forwardedRef}>
+      <Next.ScrollArea.Viewport ref={viewportRef}>
         <svg
           // Pixel coordinates against the drawing's own width, with no viewBox: a viewBox would
           // letterbox the drawing to the column's aspect ratio and shrink every node with it.
@@ -983,8 +976,8 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                     className='animate-ping transform-fill origin-center pointer-events-none fill-error-500'
                   />
                 )}
-                <HoverCard.Root>
-                  <HoverCard.Trigger asChild>
+                <Next.HoverCard.Root>
+                  <Next.HoverCard.Trigger asChild>
                     <circle
                       cx={cx}
                       cy={rowY(row.index)}
@@ -1016,8 +1009,8 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       }
                       onClick={() => onMarkerSelect?.(marker)}
                     />
-                  </HoverCard.Trigger>
-                  <HoverCard.Content classNames='p-2 max-w-72 text-xs'>
+                  </Next.HoverCard.Trigger>
+                  <Next.HoverCard.Content classNames='p-2 max-w-72 text-xs'>
                     <div className='font-medium truncate'>{marker.label}</div>
                     <div className='text-description tabular-nums'>
                       {marker.kind && `${marker.kind} · `}
@@ -1033,14 +1026,14 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       )}
                     </div>
                     <div className='text-description truncate'>{row.lane.label}</div>
-                  </HoverCard.Content>
-                </HoverCard.Root>
+                  </Next.HoverCard.Content>
+                </Next.HoverCard.Root>
               </Fragment>
             ) : null;
           })}
         </svg>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+      </Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 });
 

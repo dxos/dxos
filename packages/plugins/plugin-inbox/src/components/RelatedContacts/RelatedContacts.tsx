@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
 import { Avatar } from '@dxos/react-ui-card';
+import { Next } from '@dxos/react-ui/next';
 import { type Person } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -23,9 +23,9 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
   }
 
   return (
-    <Card.Section title={t('related-contacts.title')}>
+    <Next.Card.Section title={t('related-contacts.title')}>
       {contacts.map((contact) => (
-        <Card.Action
+        <Next.Card.Action
           key={contact.id}
           label={contact.fullName || contact.emails?.[0]?.value || contact.id}
           // The avatar, not a generic glyph: a row standing for a person reads the same here as it does
@@ -35,6 +35,6 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
           onClick={() => onContactClick?.(contact)}
         />
       ))}
-    </Card.Section>
+    </Next.Card.Section>
   );
 };

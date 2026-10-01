@@ -5,7 +5,8 @@
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import { Field, NumberInput, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -62,9 +63,9 @@ export const GeoPointField = ({
     // label and input would land in the grid as two items of their own.
     <div className='grid grid-cols-2 gap-form-gap'>
       <div>
-        <Field.Root>
-          {resolved.showLabel && <Field.Label>{t('latitude.label')}</Field.Label>}
-          <NumberInput
+        <Next.Field.Root>
+          {resolved.showLabel && <Next.Field.Label>{t('latitude.label')}</Next.Field.Label>}
+          <Next.NumberInput
             step='0.00001'
             min='-90'
             max='90'
@@ -74,12 +75,12 @@ export const GeoPointField = ({
             onChange={handleChange('latitude', setLatitudeText)}
             onBlur={onBlur}
           />
-        </Field.Root>
+        </Next.Field.Root>
       </div>
       <div>
-        <Field.Root>
-          {resolved.showLabel && <Field.Label>{t('longitude.label')}</Field.Label>}
-          <NumberInput
+        <Next.Field.Root>
+          {resolved.showLabel && <Next.Field.Label>{t('longitude.label')}</Next.Field.Label>}
+          <Next.NumberInput
             step='0.00001'
             min='-180'
             max='180'
@@ -89,7 +90,7 @@ export const GeoPointField = ({
             onChange={handleChange('longitude', setLongitudeText)}
             onBlur={onBlur}
           />
-        </Field.Root>
+        </Next.Field.Root>
       </div>
     </div>
   );

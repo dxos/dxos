@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Button, Field, Icon, Input, Select, ToggleGroup, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
@@ -27,51 +27,51 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
   useEffect(() => onViewChange?.(view), [view]);
 
   return (
-    <Toolbar.Root>
-      <Button icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
-      <Field.Root>
-        <Input
+    <Next.Toolbar.Root>
+      <Next.Button icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
+      <Next.Field.Root>
+        <Next.Input
           classNames='max-w-16 text-right'
           value={count}
           onChange={(event) => setCount(safeParseInt(event.target.value) ?? count)}
         />
-      </Field.Root>
+      </Next.Field.Root>
       {!!types?.length && (
-        <Select.Root value={type} onValueChange={(type) => setType(type)}>
-          <Button asChild>
-            <Select.Trigger />
-          </Button>
-          <Select.Content>
+        <Next.Select.Root value={type} onValueChange={(type) => setType(type)}>
+          <Next.Button asChild>
+            <Next.Select.Trigger />
+          </Next.Button>
+          <Next.Select.Content>
             {types.map((type) => (
-              <Select.Item key={type} value={type}>
+              <Next.Select.Item key={type} value={type}>
                 <span className='font-mono'>{type}</span>
-              </Select.Item>
+              </Next.Select.Item>
             ))}
-          </Select.Content>
-        </Select.Root>
+          </Next.Select.Content>
+        </Next.Select.Root>
       )}
       {onFilterChange && (
-        <Field.Root>
-          <Input
+        <Next.Field.Root>
+          <Next.Input
             placeholder='Filter objects...'
             value={filter ?? ''}
             onChange={(event) => setFilter(event.target.value)}
           />
-        </Field.Root>
+        </Next.Field.Root>
       )}
       {onViewChange && (
-        <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
-          <ToggleGroup.Item value='table'>
-            <Icon icon='ph--table--regular' />
-          </ToggleGroup.Item>
-          <ToggleGroup.Item value='list'>
-            <Icon icon='ph--list--regular' />
-          </ToggleGroup.Item>
-          <ToggleGroup.Item value='debug'>
-            <Icon icon='ph--list-magnifying-glass--regular' />
-          </ToggleGroup.Item>
-        </Toolbar.ToggleGroup>
+        <Next.Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
+          <Next.ToggleGroup.Item value='table'>
+            <Next.Icon icon='ph--table--regular' />
+          </Next.ToggleGroup.Item>
+          <Next.ToggleGroup.Item value='list'>
+            <Next.Icon icon='ph--list--regular' />
+          </Next.ToggleGroup.Item>
+          <Next.ToggleGroup.Item value='debug'>
+            <Next.Icon icon='ph--list-magnifying-glass--regular' />
+          </Next.ToggleGroup.Item>
+        </Next.Toolbar.ToggleGroup>
       )}
-    </Toolbar.Root>
+    </Next.Toolbar.Root>
   );
 };

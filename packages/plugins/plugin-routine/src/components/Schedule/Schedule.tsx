@@ -5,16 +5,7 @@
 import React, { type PropsWithChildren, createContext, forwardRef, useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import {
-  Field,
-  Input,
-  NumberInput,
-  ThemedClassName,
-  ToggleGroup,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import { ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
@@ -269,18 +260,18 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
   );
 
   return (
-    <ToggleGroup
+    <Next.ToggleGroup
       classNames='overflow-x-auto scrollbar-none'
       type='single'
       value={value.kind}
       onValueChange={handleKindChange}
     >
       {kinds.map((kind) => (
-        <ToggleGroup.Item key={kind} value={kind}>
+        <Next.ToggleGroup.Item key={kind} value={kind}>
           {t(KIND_LABEL_KEYS[kind])}
-        </ToggleGroup.Item>
+        </Next.ToggleGroup.Item>
       ))}
-    </ToggleGroup>
+    </Next.ToggleGroup>
   );
 });
 
@@ -347,8 +338,8 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
     case 'hourly':
       return (
         <LabelledRow label={t('schedule.minute.label')}>
-          <Field.Root>
-            <NumberInput
+          <Next.Field.Root>
+            <Next.NumberInput
               min={0}
               max={59}
               step={1}
@@ -359,16 +350,20 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 onChange({ kind: 'hourly', minute });
               }}
             />
-          </Field.Root>
+          </Next.Field.Root>
         </LabelledRow>
       );
 
     case 'daily':
       return (
         <LabelledRow label={t('schedule.at.label')}>
-          <Field.Root>
-            <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ kind: 'daily', time })} />
-          </Field.Root>
+          <Next.Field.Root>
+            <Next.Field.Time
+              hourCycle={12}
+              value={value.time}
+              onValueChange={(time) => onChange({ kind: 'daily', time })}
+            />
+          </Next.Field.Root>
         </LabelledRow>
       );
 
@@ -376,9 +371,13 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <LabelledRow label={t('schedule.at.label')}>
-            <Field.Root>
-              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
-            </Field.Root>
+            <Next.Field.Root>
+              <Next.Field.Time
+                hourCycle={12}
+                value={value.time}
+                onValueChange={(time) => onChange({ ...value, time })}
+              />
+            </Next.Field.Root>
           </LabelledRow>
           <div className='flex shrink-0 items-center gap-2'>
             <span className='shrink-0 text-sm'>{t('schedule.on.label')}</span>
@@ -387,7 +386,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 const checked = value.days.includes(day);
                 return (
                   <div key={day} className='flex shrink-0 items-center gap-1'>
-                    <Field.Root>
+                    <Next.Field.Root>
                       <Next.Checkbox
                         checked={checked}
                         onCheckedChange={(next) => {
@@ -400,9 +399,13 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                           onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
                         }}
                       />
-                      <Field.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Field.Label>
-                      <Field.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Field.Label>
-                    </Field.Root>
+                      <Next.Field.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>
+                        {label}
+                      </Next.Field.Label>
+                      <Next.Field.Label classNames='inline-block @min-[32rem]:hidden text-xs'>
+                        {label.charAt(0)}
+                      </Next.Field.Label>
+                    </Next.Field.Root>
                   </div>
                 );
               })}
@@ -415,8 +418,8 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <div className='flex items-center gap-3'>
           <LabelledRow label={t('schedule.day.label')}>
-            <Field.Root>
-              <NumberInput
+            <Next.Field.Root>
+              <Next.NumberInput
                 min={1}
                 max={31}
                 step={1}
@@ -427,12 +430,16 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   onChange({ ...value, day });
                 }}
               />
-            </Field.Root>
+            </Next.Field.Root>
           </LabelledRow>
           <LabelledRow label={t('schedule.at.label')}>
-            <Field.Root>
-              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
-            </Field.Root>
+            <Next.Field.Root>
+              <Next.Field.Time
+                hourCycle={12}
+                value={value.time}
+                onValueChange={(time) => onChange({ ...value, time })}
+              />
+            </Next.Field.Root>
           </LabelledRow>
         </div>
       );
@@ -440,14 +447,14 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
     case 'custom':
       return (
         <LabelledRow label={t('schedule.cron.label')}>
-          <Field.Root>
-            <Input
+          <Next.Field.Root>
+            <Next.Input
               classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}
               onChange={(event) => onChange({ kind: 'custom', cron: event.target.value })}
             />
-          </Field.Root>
+          </Next.Field.Root>
         </LabelledRow>
       );
   }

@@ -10,10 +10,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Block, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -39,8 +39,8 @@ export const Home = (_: HomeProps) => {
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
-          <ScrollArea.Viewport>
+        <Next.ScrollArea.Root centered padding thin>
+          <Next.ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='py-2 gap-1'
               draggable={false}
@@ -48,8 +48,8 @@ export const Home = (_: HomeProps) => {
               getId={(item) => item.id}
               Tile={WorkspaceTile}
             />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Mosaic.Container>
     </SearchPanel>
   );
@@ -89,7 +89,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   }, [isSelected]);
 
   return (
-    <Card.Root
+    <Next.Card.Root
       role='button'
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
@@ -102,12 +102,12 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       onClick={handleSelect}
       ref={cardRef}
     >
-      <Card.Header>
-        <Avatar.Root>
+      <Next.Card.Header>
+        <Next.Avatar.Root>
           {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
               `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Block>
-            <Avatar.Content
+          <Next.Block>
+            <Next.Avatar.Content
               icon={data.properties.icon}
               hue={data.properties.hue}
               hueVariant='transparent'
@@ -115,14 +115,14 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
               size={8}
               fallback={name}
             />
-          </Block>
-          <Avatar.Label asChild>
-            <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
-          </Avatar.Label>
-          <Block end>{!pending && <Icon icon='ph--caret-right--regular' />}</Block>
-        </Avatar.Root>
-      </Card.Header>
-    </Card.Root>
+          </Next.Block>
+          <Next.Avatar.Label asChild>
+            <Next.Card.Title classNames='cursor-pointer'>{name}</Next.Card.Title>
+          </Next.Avatar.Label>
+          <Next.Block end>{!pending && <Next.Icon icon='ph--caret-right--regular' />}</Next.Block>
+        </Next.Avatar.Root>
+      </Next.Card.Header>
+    </Next.Card.Root>
   );
 };
 

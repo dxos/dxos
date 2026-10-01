@@ -6,9 +6,10 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, us
 
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { Button, type ChromaticPalette, Field, Input, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list';
+import { type ChromaticPalette, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { OrderedList } from '@dxos/react-ui-list/next';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 import { hues } from '@dxos/ui-types';
 
@@ -138,7 +139,7 @@ export const SelectOptionField = ({
                     <OrderedList.DragHandle />
                     {/* TODO(ZaymonFC): Move spacer into Tag component. */}
                     <div className='flex grow items-center truncate px-2' onClick={() => handleClick(item.id)}>
-                      <Tag hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
+                      <Next.Tag hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Next.Tag>
                     </div>
                     <ToggleIconButton
                       iconOnly
@@ -151,9 +152,9 @@ export const SelectOptionField = ({
                   </div>
                   {selected === item.id && (
                     <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
-                      <Field.Label classNames='text-sm'>{t('select-option.label')}</Field.Label>
+                      <Next.Field.Label classNames='text-sm'>{t('select-option.label')}</Next.Field.Label>
                       <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
-                        <Input
+                        <Next.Input
                           disabled={!!readonly}
                           placeholder={t('select-option-label.placeholder')}
                           ref={selected === item.id ? inputRef : undefined}
@@ -163,7 +164,7 @@ export const SelectOptionField = ({
                           classNames='flex-1'
                         />
                         <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
-                        <Button
+                        <Next.Button
                           disabled={!!readonly}
                           icon='ph--trash--fill'
                           iconOnly
@@ -175,7 +176,7 @@ export const SelectOptionField = ({
                   )}
                 </OrderedList.Item>
               ))}
-              <Button
+              <Next.Button
                 classNames='w-full'
                 variant='ghost'
                 icon='ph--plus--regular'

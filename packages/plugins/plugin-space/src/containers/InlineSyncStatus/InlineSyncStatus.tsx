@@ -8,9 +8,9 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
-import { Tooltip, useTranslation } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { useEdgeStatus } from '#hooks';
 import { meta } from '#meta';
@@ -28,14 +28,14 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const syncing = connectedToEdge && edgeSyncEnabled && syncState && syncState.missingOnLocal > 0;
 
   return (
-    <Tooltip.Trigger asChild content={t('syncing.label')} side='bottom'>
-      <AttentionGlyph
+    <Next.Tooltip.Trigger asChild content={t('syncing.label')} side='bottom'>
+      <Next.AttentionGlyph
         syncing={syncing}
         attended={attended}
         containsAttended={containsAttended}
         classNames='self-center mx-1'
       />
-    </Tooltip.Trigger>
+    </Next.Tooltip.Trigger>
   );
 };
 

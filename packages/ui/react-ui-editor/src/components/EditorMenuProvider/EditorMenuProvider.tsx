@@ -19,17 +19,12 @@ import { useControllableState } from '@dxos/react-hooks';
 import {
   DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
-  Field,
-  Icon,
-  Input,
-  Popover,
-  ScrollArea,
   toLocalizedString,
   useDynamicRef,
   useThemeContext,
   useTranslation,
-  virtualAnchor,
 } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -184,9 +179,9 @@ export const EditorMenuProvider = ({
   );
 
   return (
-    <Popover.Root modal={false} open={open} onOpenChange={setOpen} positioning={virtualAnchor(triggerRef)}>
+    <Next.Popover.Root modal={false} open={open} onOpenChange={setOpen} positioning={Next.virtualAnchor(triggerRef)}>
       {/* Menu. */}
-      <Popover.Content
+      <Next.Popover.Content
         align='start'
         classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
         style={{
@@ -204,8 +199,8 @@ export const EditorMenuProvider = ({
         onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
       >
         {search && (
-          <Field.Root>
-            <Input
+          <Next.Field.Root>
+            <Next.Input
               ref={searchInputRef}
               size='sm'
               variant='subdued'
@@ -218,22 +213,22 @@ export const EditorMenuProvider = ({
               onChange={(event) => onQueryChange?.(event.target.value)}
               onKeyDown={handleSearchKeyDown}
             />
-          </Field.Root>
+          </Next.Field.Root>
         )}
-        <Popover.Body asChild classNames='dx-expand'>
-          <ScrollArea.Root thin>
-            <ScrollArea.Viewport>
+        <Next.Popover.Body asChild classNames='dx-expand'>
+          <Next.ScrollArea.Root thin>
+            <Next.ScrollArea.Viewport>
               <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Popover.Body>
-      </Popover.Content>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Popover.Body>
+      </Next.Popover.Content>
 
       {/* Content */}
       <div className='contents' ref={setRoot}>
         {children}
       </div>
-    </Popover.Root>
+    </Next.Popover.Root>
   );
 };
 
@@ -314,7 +309,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
 
   return (
     <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hover-surface'])} onClick={handleSelect}>
-      {item.icon && <Icon icon={item.icon} />}
+      {item.icon && <Next.Icon icon={item.icon} />}
       <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
     </li>
   );

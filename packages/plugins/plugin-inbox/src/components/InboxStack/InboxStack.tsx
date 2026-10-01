@@ -9,11 +9,11 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { Block, Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 import { type Actor, type Message, Person } from '@dxos/types';
 
 import { useVisibleTags } from '#hooks';
@@ -281,8 +281,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
           selectedIds={effectiveSelectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root padding centered>
-            <ScrollArea.Viewport ref={setViewport}>
+          <Next.ScrollArea.Root padding centered>
+            <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
                 items={tileItems}
@@ -295,7 +295,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
               />
               {loading && (
                 <div role='status' className='grid place-items-center px-2 py-3'>
-                  <Icon
+                  <Next.Icon
                     icon='ph--spinner-gap--regular'
                     size='lg'
                     classNames='[animation:spin_1s_linear_infinite]'
@@ -303,8 +303,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                   />
                 </div>
               )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Mosaic.Container>
       </Focus.Group>
     );
@@ -439,7 +439,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
           </>
         }
       />
-      <Card.Body>
+      <Next.Card.Body>
         <Row.Person
           actor={message.sender}
           role='from'
@@ -449,14 +449,14 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         />
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
-          <Card.Row>
-            <Card.Text variant='description'>
+          <Next.Card.Row>
+            <Next.Card.Text variant='description'>
               {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
-            </Card.Text>
-          </Card.Row>
+            </Next.Card.Text>
+          </Next.Card.Row>
         )}
         <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
-      </Card.Body>
+      </Next.Card.Body>
     </CardTile.Root>
   );
 });
@@ -570,7 +570,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           onToggleStar={onAction ? handleToggleStar : undefined}
           title={<span className='grow truncate font-medium'>{subject}</span>}
         />
-        <Card.Body>
+        <Next.Card.Body>
           {messages.map((message) => (
             <ConversationMessageRow
               key={message.id}
@@ -582,11 +582,11 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
             />
           ))}
           {remaining > 0 && (
-            <Card.Row>
-              <Card.Text variant='description'>{`+${remaining} more`}</Card.Text>
-            </Card.Row>
+            <Next.Card.Row>
+              <Next.Card.Text variant='description'>{`+${remaining} more`}</Next.Card.Text>
+            </Next.Card.Row>
           )}
-        </Card.Body>
+        </Next.Card.Body>
       </CardTile.Root>
     );
   },
@@ -627,10 +627,10 @@ const ConversationMessageRow = ({
   );
 
   return (
-    <Card.Row classNames='items-start'>
-      <Block classNames='h-8 items-center'>
+    <Next.Card.Row classNames='items-start'>
+      <Next.Block classNames='h-8 items-center'>
         <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
-      </Block>
+      </Next.Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>
@@ -642,7 +642,7 @@ const ConversationMessageRow = ({
           </button>
         )}
       </div>
-    </Card.Row>
+    </Next.Card.Row>
   );
 };
 

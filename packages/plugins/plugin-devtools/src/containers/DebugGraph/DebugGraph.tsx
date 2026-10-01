@@ -6,21 +6,21 @@ import React from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Tree } from '@dxos/devtools';
-import { Panel, ScrollArea } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type DebugGraphProps = { role?: string; graph: AppGraph.Graph; root: string };
 
 export const DebugGraph = ({ role, graph, root }: DebugGraphProps) => {
   return (
-    <Panel.Root role={role}>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='all'>
-          <ScrollArea.Viewport>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='all'>
+          <Next.ScrollArea.Viewport>
             <Tree data={AppGraph.toJSON(graph, root)} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type ControlledSelectorProps<T> = {
   values: T[];
@@ -15,17 +15,17 @@ export type ControlledSelectorProps<T> = {
 
 export const ControlledSelector = <T extends string>(props: ControlledSelectorProps<T>) => {
   return (
-    <Select.Root value={props.value} onValueChange={props.setValue}>
-      <Select.Trigger placeholder={props.placeholder ?? 'Select space'} />
-      <Select.Content>
+    <Next.Select.Root value={props.value} onValueChange={props.setValue}>
+      <Next.Select.Trigger placeholder={props.placeholder ?? 'Select space'} />
+      <Next.Select.Content>
         {props.values.map((mode) => (
-          <Select.Item key={mode} value={mode}>
+          <Next.Select.Item key={mode} value={mode}>
             <div className='flex items-center gap-2'>
               <span className='font-mono text-neutral-250'>{mode}</span>
             </div>
-          </Select.Item>
+          </Next.Select.Item>
         ))}
-      </Select.Content>
-    </Select.Root>
+      </Next.Select.Content>
+    </Next.Select.Root>
   );
 };

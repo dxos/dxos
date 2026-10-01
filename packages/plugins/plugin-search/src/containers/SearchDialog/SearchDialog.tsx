@@ -11,9 +11,10 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { type SearchResult } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 
 import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
 import { meta } from '#meta';
@@ -62,21 +63,21 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
   );
 
   return (
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
-        <Dialog.CloseTrigger asChild>
-          <SystemButton.Close />
-        </Dialog.CloseTrigger>
-      </Dialog.Header>
-      <Dialog.Body>
+    <Next.Dialog.Content>
+      <Next.Dialog.Header>
+        <Next.Dialog.Title>{t('search-dialog.title')}</Next.Dialog.Title>
+        <Next.Dialog.CloseTrigger asChild>
+          <Next.SystemButton.Close />
+        </Next.Dialog.CloseTrigger>
+      </Next.Dialog.Header>
+      <Next.Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
           <SearchList.Input
             classNames='px-0'
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('search.placeholder')}
-            {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            {...{ [Next.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
           />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {query && allResults.length === 0 && <SearchList.Empty />}
@@ -92,8 +93,8 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
             ))}
           </SearchList.Viewport>
         </SearchList.Root>
-      </Dialog.Body>
-    </Dialog.Content>
+      </Next.Dialog.Body>
+    </Next.Dialog.Content>
   );
 };
 

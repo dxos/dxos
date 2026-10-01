@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Field } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -74,18 +74,18 @@ export const DateField = ({
     case Format.TypeFormat.Date:
       return (
         <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-          <Field.Date
+          <Next.Field.Date
             classNames='overflow-hidden'
             disabled={readonly}
             value={value ?? ''}
             onValueChange={handleSimpleChange}
           />
-          <Field.TriggerIcon />
+          <Next.Field.TriggerIcon />
         </div>
       );
     case Format.TypeFormat.Time:
       return (
-        <Field.Time
+        <Next.Field.Time
           classNames='tabular-nums'
           disabled={!!readonly}
           value={value ?? ''}
@@ -96,13 +96,13 @@ export const DateField = ({
     default:
       return (
         <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-          <Field.DateTime
+          <Next.Field.DateTime
             classNames='overflow-hidden'
             disabled={readonly}
             value={isoToLocalDateTime(value)}
             onValueChange={handleDateTimeChange}
           />
-          <Field.TriggerIcon />
+          <Next.Field.TriggerIcon />
         </div>
       );
   }

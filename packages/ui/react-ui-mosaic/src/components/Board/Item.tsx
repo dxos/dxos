@@ -6,8 +6,9 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 
 import { Obj } from '@dxos/echo';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Block, Button, Card, DragHandle, Icon, Tag, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -67,45 +68,45 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         debug={debug}
       >
         <Focus.Item asChild>
-          <Card.Root
+          <Next.Card.Root
             classNames={classNames}
             data-testid='board-item'
             ref={composedRef}
             onClick={(event) => event.currentTarget.focus()}
           >
-            <Card.Header>
-              <DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
-              <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
+            <Next.Card.Header>
+              <Next.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
+              <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Block end>
+              <Next.Block end>
                 <ActionMenu disabled={!items?.length} actions={items}>
-                  <Button
+                  <Next.Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Block>
-            </Card.Header>
+              </Next.Block>
+            </Next.Card.Header>
             {/* TODO(burdon): Replace with surface. */}
-            <Card.Row classNames='text-description'>
-              <Block>
-                <Icon icon='ph--note--regular' />
-              </Block>
-              <Card.Text>{description}</Card.Text>
-            </Card.Row>
-            <Card.Row>
-              <Block>
-                <Icon icon='ph--tag--regular' />
-              </Block>
+            <Next.Card.Row classNames='text-description'>
+              <Next.Block>
+                <Next.Icon icon='ph--note--regular' />
+              </Next.Block>
+              <Next.Card.Text>{description}</Next.Card.Text>
+            </Next.Card.Row>
+            <Next.Card.Row>
+              <Next.Block>
+                <Next.Icon icon='ph--tag--regular' />
+              </Next.Block>
               {label && (
                 <div className='shrink-0 flex gap-1 items-center text-xs'>
-                  <Tag hue={getHashStyles(label).hue}>{label}</Tag>
+                  <Next.Tag hue={getHashStyles(label).hue}>{label}</Next.Tag>
                 </div>
               )}
-            </Card.Row>
-          </Card.Root>
+            </Next.Card.Row>
+          </Next.Card.Root>
         </Focus.Item>
       </Mosaic.Tile>
     );

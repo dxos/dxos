@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentProps,
   type ComponentType,
   type CSSProperties,
   type JSX,
@@ -18,14 +19,17 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
+import { ThemedClassName, usePx } from '@dxos/react-ui';
 import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip.ts';
 import { useMasonryLayout } from './useMasonryLayout.ts';
 
 /** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
+type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
+
 const REVEAL_SETTLE_MS = 80;
 
 /** Reveal the grid no later than this after mount, so churning content never hides it indefinitely. */
@@ -116,7 +120,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
   ({ children, scrollbars, centered = true, thin = true, padding = true, ...props }, forwardedRef) => {
     const { gap } = useMasonryContext('Masonry.Content');
     return (
-      <ScrollArea.Root
+      <Next.ScrollArea.Root
         // Drive the ScrollArea gutter to the grid gap so the left/right perimeter
         // matches the inter-column gap: the centered+padding theme resolves this to
         // pl = gap and pr = gap - scrollbar, keeping both sides symmetric with the
@@ -130,7 +134,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
         ref={forwardedRef}
       >
         {children}
-      </ScrollArea.Root>
+      </Next.ScrollArea.Root>
     );
   },
 );
@@ -338,7 +342,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
     // the grid's height comes from the computed layout.
     return scroll ? (
-      <ScrollArea.Viewport ref={viewportRef}>{grid}</ScrollArea.Viewport>
+      <Next.ScrollArea.Viewport ref={viewportRef}>{grid}</Next.ScrollArea.Viewport>
     ) : (
       <div className='flex-1 w-full min-w-0' ref={viewportRef}>
         {grid}

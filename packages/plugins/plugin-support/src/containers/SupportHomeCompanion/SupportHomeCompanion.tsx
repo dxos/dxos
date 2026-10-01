@@ -5,7 +5,8 @@
 import React, { memo, useMemo } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { Button, Carousel, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
@@ -20,25 +21,25 @@ export const SupportHomeCompanion = () => {
   const { invokePromise } = useOperationInvoker();
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button
             icon='ph--path--regular'
             label={t('start-tour.button')}
             onClick={() => invokePromise(HelpOperation.Start)}
             data-testid='supportPlugin.startTour'
           />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-3'>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport classNames='p-3'>
             <WelcomePanel />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -71,17 +72,17 @@ const WelcomePanel = memo(() => {
       <h1 className='text-lg font-semibold'>{t('welcome.title')}</h1>
       <p className='text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
-        <Carousel.Root count={slides.length} continuous autoAdvance={10_000}>
-          <Carousel.PrevTrigger />
-          <Carousel.ItemGroup>
+        <Next.Carousel.Root count={slides.length} continuous autoAdvance={10_000}>
+          <Next.Carousel.PrevTrigger />
+          <Next.Carousel.ItemGroup>
             {slides.map((slide, index) => (
-              <Carousel.Item key={slide.key} index={index} src={slide.src} alt={slide.description} />
+              <Next.Carousel.Item key={slide.key} index={index} src={slide.src} alt={slide.description} />
             ))}
-          </Carousel.ItemGroup>
-          <Carousel.NextTrigger />
-          <Carousel.IndicatorGroup />
-          <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
-        </Carousel.Root>
+          </Next.Carousel.ItemGroup>
+          <Next.Carousel.NextTrigger />
+          <Next.Carousel.IndicatorGroup />
+          <Next.Carousel.Caption>{(index) => slides[index]?.description}</Next.Carousel.Caption>
+        </Next.Carousel.Root>
       )}
     </Flex>
   );

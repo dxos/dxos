@@ -11,7 +11,8 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { Banner, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { MoveTaskPanel } from '#components';
@@ -68,23 +69,23 @@ export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
   );
 
   return (
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{t('move-task-dialog.title')}</Dialog.Title>
-        <Dialog.CloseTrigger asChild>
-          <SystemButton.Close />
-        </Dialog.CloseTrigger>
-      </Dialog.Header>
-      <Dialog.Body>
+    <Next.Dialog.Content>
+      <Next.Dialog.Header>
+        <Next.Dialog.Title>{t('move-task-dialog.title')}</Next.Dialog.Title>
+        <Next.Dialog.CloseTrigger asChild>
+          <Next.SystemButton.Close />
+        </Next.Dialog.CloseTrigger>
+      </Next.Dialog.Header>
+      <Next.Dialog.Body>
         {error && (
-          <Banner.Root valence='error'>
-            <Banner.Title icon='ph--warning--regular'>{t('move-task-error.title')}</Banner.Title>
-            <Banner.Body>{error}</Banner.Body>
-          </Banner.Root>
+          <Next.Banner.Root valence='error'>
+            <Next.Banner.Title icon='ph--warning--regular'>{t('move-task-error.title')}</Next.Banner.Title>
+            <Next.Banner.Body>{error}</Next.Banner.Body>
+          </Next.Banner.Root>
         )}
         <MoveTaskPanel projects={candidates} onSelect={handleSelect} />
-      </Dialog.Body>
-    </Dialog.Content>
+      </Next.Dialog.Body>
+    </Next.Dialog.Content>
   );
 };
 

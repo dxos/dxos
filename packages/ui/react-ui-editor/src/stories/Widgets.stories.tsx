@@ -13,7 +13,6 @@ import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, us
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
-import { Block, Card, Icon, Popover } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -76,7 +75,7 @@ const PreviewCard = () => {
     return null;
   }
   return (
-    <Popover.Content
+    <Next.Popover.Content
       onOpenAutoFocus={(event) => event.preventDefault()}
       classNames={[
         'origin-(--transform-origin)',
@@ -84,23 +83,23 @@ const PreviewCard = () => {
         'data-[state=closed]:animate-popover-out',
       ]}
     >
-      <Popover.Body>
-        <Card.Root border={false} classNames='dx-card-popover'>
-          <Card.Header>
-            <Block>
-              <Icon icon='ph--file-text--regular' />
-            </Block>
-            <Card.Title>{target.label}</Card.Title>
-            <Popover.CloseTrigger asChild>
-              <Card.Action system='close' />
-            </Popover.CloseTrigger>
-          </Card.Header>
-          <Card.Row>
-            <Card.Text variant='description'>{target.label}</Card.Text>
-          </Card.Row>
-        </Card.Root>
-      </Popover.Body>
-    </Popover.Content>
+      <Next.Popover.Body>
+        <Next.Card.Root border={false} classNames='dx-card-popover'>
+          <Next.Card.Header>
+            <Next.Block>
+              <Next.Icon icon='ph--file-text--regular' />
+            </Next.Block>
+            <Next.Card.Title>{target.label}</Next.Card.Title>
+            <Next.Popover.CloseTrigger asChild>
+              <Next.Card.Action system='close' />
+            </Next.Popover.CloseTrigger>
+          </Next.Card.Header>
+          <Next.Card.Row>
+            <Next.Card.Text variant='description'>{target.label}</Next.Card.Text>
+          </Next.Card.Row>
+        </Next.Card.Root>
+      </Next.Popover.Body>
+    </Next.Popover.Content>
   );
 };
 
@@ -125,19 +124,19 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
     setText(Array.from({ length: 2 }, () => random.lorem.paragraphs()).join('\n\n'));
   }, [eid]);
   return (
-    <Card.Root>
-      <Card.Header>
-        <Block>
-          <Icon icon='ph--arrow-square-up--regular' />
-        </Block>
-        <Card.Title>{label}</Card.Title>
-      </Card.Header>
+    <Next.Card.Root>
+      <Next.Card.Header>
+        <Next.Block>
+          <Next.Icon icon='ph--arrow-square-up--regular' />
+        </Next.Block>
+        <Next.Card.Title>{label}</Next.Card.Title>
+      </Next.Card.Header>
       {text && (
-        <Card.Row>
-          <Card.Text variant='description'>{text}</Card.Text>
-        </Card.Row>
+        <Next.Card.Row>
+          <Next.Card.Text variant='description'>{text}</Next.Card.Text>
+        </Next.Card.Row>
       )}
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 

@@ -5,7 +5,8 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { Action, TextInput } from '../components/index.ts';
 import { translationKey } from '../translations.ts';
@@ -78,10 +79,10 @@ export const ConfirmReset = ({
 
   return (
     <>
-      <Banner.Root valence='error'>
-        <Banner.Title>{resolvedTitle}</Banner.Title>
-        <Banner.Body>{resolvedMessage}</Banner.Body>
-      </Banner.Root>
+      <Next.Banner.Root valence='error'>
+        <Next.Banner.Title>{resolvedTitle}</Next.Banner.Title>
+        <Next.Banner.Body>{resolvedMessage}</Next.Banner.Body>
+      </Next.Banner.Root>
       <TextInput
         {...{ validationMessage }}
         disabled={disabled}
@@ -89,7 +90,7 @@ export const ConfirmReset = ({
         placeholder={t('confirmation.placeholder', { confirmationValue })}
         onChange={({ target: { value } }) => setInputValue(value)}
       />
-      <Dialog.Footer classNames='grid grid-cols-2 gap-2'>
+      <Next.Dialog.Footer classNames='grid grid-cols-2 gap-2'>
         {onCancel && (
           <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
             {resolvedCancelLabel}
@@ -105,7 +106,7 @@ export const ConfirmReset = ({
             {pending ? resolvedPendingLabel : resolvedConfirmLabel}
           </Action>
         )}
-      </Dialog.Footer>
+      </Next.Dialog.Footer>
     </>
   );
 };

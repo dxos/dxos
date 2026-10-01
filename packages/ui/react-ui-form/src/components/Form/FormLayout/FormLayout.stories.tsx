@@ -9,7 +9,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Annotation, DXN, Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Card, DragHandle } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
@@ -343,24 +342,24 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
       {card ? (
         <>
           <div>
-            <Card.Root fullWidth>
-              <Card.Header>
-                <DragHandle />
-                <Card.Title>Read-only</Card.Title>
-                <Card.Action system='close' onClick={() => console.log('close')} />
-              </Card.Header>
-              <Card.Body>{renderForm(true)}</Card.Body>
-            </Card.Root>
+            <Next.Card.Root fullWidth>
+              <Next.Card.Header>
+                <Next.DragHandle />
+                <Next.Card.Title>Read-only</Next.Card.Title>
+                <Next.Card.Action system='close' onClick={() => console.log('close')} />
+              </Next.Card.Header>
+              <Next.Card.Body>{renderForm(true)}</Next.Card.Body>
+            </Next.Card.Root>
           </div>
           <div>
-            <Card.Root fullWidth>
-              <Card.Header>
-                <DragHandle />
-                <Card.Title>Editable</Card.Title>
-                <Card.Action system='close' onClick={() => console.log('close')} />
-              </Card.Header>
-              <Card.Body>{renderForm(false)}</Card.Body>
-            </Card.Root>
+            <Next.Card.Root fullWidth>
+              <Next.Card.Header>
+                <Next.DragHandle />
+                <Next.Card.Title>Editable</Next.Card.Title>
+                <Next.Card.Action system='close' onClick={() => console.log('close')} />
+              </Next.Card.Header>
+              <Next.Card.Body>{renderForm(false)}</Next.Card.Body>
+            </Next.Card.Root>
           </div>
         </>
       ) : (

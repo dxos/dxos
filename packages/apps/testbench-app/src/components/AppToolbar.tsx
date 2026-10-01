@@ -6,7 +6,7 @@ import React from 'react';
 
 import { toPublicKey } from '@dxos/protocols/buf';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type AppToolbarProps = {
   onHome: () => void;
@@ -22,7 +22,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
 
   return (
     <div className='flex shrink-0 items-center p-1'>
-      <Button
+      <Next.Button
         classNames='px-[5px] text-primary-500'
         icon='ph--bug--regular'
         iconOnly
@@ -30,7 +30,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
         onClick={onHome}
         variant='ghost'
       />
-      <Button
+      <Next.Button
         classNames='px-[5px] text-primary-500'
         icon='ph--toolbox--regular'
         iconOnly
@@ -41,7 +41,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
       <div className='grow' />
       <div className='flex gap-2 items-center'>
         <div className='font-mono'>{toPublicKey(identity?.identityKey)?.truncate()}</div>
-        <Button classNames='px-[7px]' icon='ph--user--regular' iconOnly label='Profile' onClick={onProfile} />
+        <Next.Button classNames='px-[7px]' icon='ph--user--regular' iconOnly label='Profile' onClick={onProfile} />
       </div>
     </div>
   );

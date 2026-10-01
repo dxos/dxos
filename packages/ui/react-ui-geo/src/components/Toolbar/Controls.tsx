@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Button, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -18,20 +19,20 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
   const { t } = useTranslation(translationKey);
 
   return (
-    <Toolbar.Root classNames={['gap-2', classNames]}>
-      <Button
+    <Next.Toolbar.Root classNames={['gap-2', classNames]}>
+      <Next.Button
         icon='ph--plus--regular'
         iconOnly
         label={t('zoom-in-icon.button')}
         onClick={() => onAction?.('zoom-in')}
       />
-      <Button
+      <Next.Button
         icon='ph--minus--regular'
         iconOnly
         label={t('zoom-out-icon.button')}
         onClick={() => onAction?.('zoom-out')}
       />
-    </Toolbar.Root>
+    </Next.Toolbar.Root>
   );
 };
 
@@ -39,14 +40,19 @@ export const ActionControls = ({ classNames, onAction }: ControlProps) => {
   const { t } = useTranslation(translationKey);
 
   return (
-    <Toolbar.Root classNames={['gap-2', classNames]}>
-      <Button icon='ph--path--regular' iconOnly label={t('start-icon.button')} onClick={() => onAction?.('start')} />
-      <Button
+    <Next.Toolbar.Root classNames={['gap-2', classNames]}>
+      <Next.Button
+        icon='ph--path--regular'
+        iconOnly
+        label={t('start-icon.button')}
+        onClick={() => onAction?.('start')}
+      />
+      <Next.Button
         icon='ph--globe-hemisphere-west--regular'
         iconOnly
         label={t('toggle-icon.button')}
         onClick={() => onAction?.('toggle')}
       />
-    </Toolbar.Root>
+    </Next.Toolbar.Root>
   );
 };

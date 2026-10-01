@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, Card, Panel, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Masonry, type MasonryRootProps } from './Masonry.tsx';
@@ -89,27 +89,27 @@ const StoryItem = ({ data: person }: { data: PersonData }) => {
   const { fullName, jobTitle, department, image, emails, notes } = person;
   const role = [jobTitle, department].filter(Boolean).join(' · ');
   return (
-    <Card.Root>
-      <Card.Header>
-        <Card.Title>{fullName}</Card.Title>
-      </Card.Header>
-      {image && <Card.Poster alt={fullName ?? ''} image={image} />}
+    <Next.Card.Root>
+      <Next.Card.Header>
+        <Next.Card.Title>{fullName}</Next.Card.Title>
+      </Next.Card.Header>
+      {image && <Next.Card.Poster alt={fullName ?? ''} image={image} />}
       {role && (
-        <Card.Row classNames='px-2'>
-          <Card.Text variant='description'>{role}</Card.Text>
-        </Card.Row>
+        <Next.Card.Row classNames='px-2'>
+          <Next.Card.Text variant='description'>{role}</Next.Card.Text>
+        </Next.Card.Row>
       )}
       {emails && emails.length > 0 && (
-        <Card.Row classNames='px-2'>
-          <Card.Text variant='description'>{emails.map((email) => email.value).join(', ')}</Card.Text>
-        </Card.Row>
+        <Next.Card.Row classNames='px-2'>
+          <Next.Card.Text variant='description'>{emails.map((email) => email.value).join(', ')}</Next.Card.Text>
+        </Next.Card.Row>
       )}
       {notes && (
-        <Card.Row classNames='px-2 pb-2'>
-          <Card.Text variant='description'>{notes}</Card.Text>
-        </Card.Row>
+        <Next.Card.Row classNames='px-2 pb-2'>
+          <Next.Card.Text variant='description'>{notes}</Next.Card.Text>
+        </Next.Card.Row>
       )}
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 
@@ -142,27 +142,27 @@ const DefaultStory = (props: MasonryRootProps) => {
     });
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           {ITEM_COUNTS.map((count) => (
-            <Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
+            <Next.Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
               {count}
-            </Button>
+            </Next.Button>
           ))}
-          <Button onClick={addOne}>Add one</Button>
-          <Button onClick={removeOne}>Remove one</Button>
-          <Button onClick={() => setVisible([])}>Clear</Button>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          <Next.Button onClick={addOne}>Add one</Next.Button>
+          <Next.Button onClick={removeOne}>Remove one</Next.Button>
+          <Next.Button onClick={() => setVisible([])}>Clear</Next.Button>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <Masonry.Root {...props} Tile={StoryItem}>
           <Masonry.Content>
             <Masonry.Viewport items={visible} getId={(person) => person.id} />
           </Masonry.Content>
         </Masonry.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

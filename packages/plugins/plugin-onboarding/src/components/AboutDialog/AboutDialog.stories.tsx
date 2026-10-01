@@ -9,7 +9,7 @@ import React from 'react';
 
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Dialog } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations.ts';
@@ -36,9 +36,9 @@ const makeConfig = ({ build, env, edgeUrl }: ConfigInput = {}) =>
 const FIXED_TIMESTAMP = '2026-05-19T20:34:24.000Z';
 
 const DefaultStory = () => (
-  <Dialog.Root defaultOpen>
+  <Next.Dialog.Root defaultOpen>
     <AboutDialog />
-  </Dialog.Root>
+  </Next.Dialog.Root>
 );
 
 const meta = {

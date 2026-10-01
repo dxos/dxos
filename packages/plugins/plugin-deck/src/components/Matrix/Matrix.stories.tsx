@@ -15,12 +15,12 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { Button, Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
@@ -48,18 +48,18 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
   const attentionAttrs = useAttentionAttributes(props.data.id);
   return (
     <Mosaic.Tile {...props} asChild>
-      <Focus.Item asChild border current={props.current}>
-        <Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
-          <Panel.Header>
-            <Toolbar.Root>
+      <Next.Focus.Item asChild border current={props.current}>
+        <Next.Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
+          <Next.Panel.Header>
+            <Next.Toolbar.Root>
               <p>{Obj.getLabel(props.data)}</p>
-            </Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body asChild>
+            </Next.Toolbar.Root>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
             <JsonHighlighter data={props.data} />
-          </Panel.Body>
-        </Panel.Root>
-      </Focus.Item>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
+      </Next.Focus.Item>
     </Mosaic.Tile>
   );
 };
@@ -135,22 +135,22 @@ const DefaultStory = ({ Tile }: StoryArgs) => {
   return (
     <Dnd.Root>
       <Matrix.Root Tile={Tile} items={items} current={current} onCurrentChange={handleCurrentChange} ref={controller}>
-        <Panel.Root>
-          <Panel.Header>
-            <Toolbar.Root>
-              <Button icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
-              <Button icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
-              <Toolbar.Text>
+        <Next.Panel.Root>
+          <Next.Panel.Header>
+            <Next.Toolbar.Root>
+              <Next.Button icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
+              <Next.Button icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
+              <Next.Toolbar.Text>
                 {currentIndex + 1} / {items.length}
-              </Toolbar.Text>
-            </Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body asChild>
+              </Next.Toolbar.Text>
+            </Next.Toolbar.Root>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
             <Matrix.Content>
               <Matrix.Viewport />
             </Matrix.Content>
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </Matrix.Root>
     </Dnd.Root>
   );

@@ -17,8 +17,8 @@ import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { Next } from '@dxos/react-ui/next';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../../components/index.ts';
 
@@ -201,7 +201,7 @@ const ToggleConnection: FC<{
   connection: ConnectionState;
   onToggleConnection: () => void;
 }> = ({ connection, onToggleConnection }) => (
-  <Button
+  <Next.Button
     icon={connection === ConnectionState.ONLINE ? 'ph--wifi-high--regular' : 'ph--wifi-slash--regular'}
     iconOnly
     iconSize='xl'
@@ -258,7 +258,7 @@ export const SignalMessageTable = () => {
 
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
-      <Toolbar.Root>
+      <Next.Toolbar.Root>
         <Select
           items={views.map(({ id, title }) => ({ value: id, label: title }))}
           value={viewType}
@@ -266,7 +266,7 @@ export const SignalMessageTable = () => {
         />
         <Searchbar onChange={setSearch} />
         <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
-      </Toolbar.Root>
+      </Next.Toolbar.Root>
 
       {view && (
         <MasterDetailTable properties={view.properties} data={tableData} detailsTransform={(d) => d._original} />

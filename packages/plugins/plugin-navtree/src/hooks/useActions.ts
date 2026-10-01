@@ -8,7 +8,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
-import { applyPresentation } from '@dxos/react-ui-menu';
+import { applyPresentation } from '@dxos/react-ui-menu/next';
 
 import { NavTreeNode } from '#types';
 

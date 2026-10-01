@@ -4,7 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Card, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 //
@@ -23,9 +24,14 @@ type HeaderRootProps = ThemedClassName<
  * one header structure.
  */
 const HeaderRoot = ({ classNames, children, ...props }: HeaderRootProps) => (
-  <Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...props}>
-    <Card.Body>{children}</Card.Body>
-  </Card.Root>
+  <Next.Card.Root
+    border={false}
+    fullWidth
+    classNames={mx('p-1 border-b border-subdued-separator', classNames)}
+    {...props}
+  >
+    <Next.Card.Body>{children}</Next.Card.Body>
+  </Next.Card.Root>
 );
 
 HeaderRoot.displayName = 'Header.Root';

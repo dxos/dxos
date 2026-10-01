@@ -9,7 +9,8 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Column, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { omitId } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';

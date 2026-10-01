@@ -18,7 +18,6 @@ import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import {
   Editor,
@@ -27,7 +26,8 @@ import {
   defaultViewModeItems,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 
@@ -324,7 +324,7 @@ const MarkdownArticleImpl = forwardRef<
     );
 
     if (binding.loading) {
-      return <Panel.Root role={role} ref={forwardedRef} />;
+      return <Next.Panel.Root role={role} ref={forwardedRef} />;
     }
 
     return (
@@ -351,24 +351,24 @@ const MarkdownArticleImpl = forwardRef<
             <RegisterEditorView id={id} attendableId={attendableId} />
             <RefocusEditor request={focusRequest} />
             {binding.overlays}
-            <Panel.Root role={role} ref={forwardedRef}>
+            <Next.Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
-                <Panel.Header>
+                <Next.Panel.Header>
                   <MarkdownEditor.Toolbar
                     classNames='dx-document'
                     customActions={customActions}
                     viewModes={viewModes}
                   />
-                </Panel.Header>
+                </Next.Panel.Header>
               )}
-              <Panel.Body classNames='flex flex-col'>
+              <Next.Panel.Body classNames='flex flex-col'>
                 {binding.banner}
                 <MarkdownEditor.Content initialValue={binding.initialValue} />
                 <Editor.Blocks />
                 {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
                 {settings.debug && <Editor.Diagnostics />}
-              </Panel.Body>
-            </Panel.Root>
+              </Next.Panel.Body>
+            </Next.Panel.Root>
           </Editor.Root>
         )}
       </MarkdownEditorProvider>

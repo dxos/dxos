@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Countdown, type CountdownProps } from './Countdown.tsx';
@@ -16,24 +16,24 @@ const DefaultStory = (props: CountdownProps) => {
   const [done, setDone] = useState(false);
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button
             onClick={() => {
               setDone(false);
               setTake((take) => take + 1);
             }}
           >
             Replay
-          </Button>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body classNames='flex items-center justify-center'>
+          </Next.Button>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='flex items-center justify-center'>
         {done ? 'Rolling.' : null}
         <Countdown key={take} {...props} onComplete={() => setDone(true)} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

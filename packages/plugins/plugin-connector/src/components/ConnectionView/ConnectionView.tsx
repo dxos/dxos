@@ -8,9 +8,10 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Button, Empty, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 
 import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
@@ -110,10 +111,10 @@ export const ConnectionView = ({
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport>
             <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
               <Form.Viewport>
                 <Form.Content>
@@ -122,7 +123,7 @@ export const ConnectionView = ({
 
                     {onRename && (
                       <Form.Field label={t('connection-name.label')}>
-                        <Input
+                        <Next.Input
                           // Remounted when the stored name changes. The input is uncontrolled, so
                           // React would otherwise keep the old text after a replicated rename
                           // arrives — and the next blur would write that stale value back over it.
@@ -166,9 +167,9 @@ export const ConnectionView = ({
                     {/* Hide Sync now entirely when the connector has no `sync` op. */}
                     {canSync && (
                       <Form.Field standalone label={t('sync-now.label')} description={t('sync-now.description')}>
-                        <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
+                        <Next.Button onClick={onSync} disabled={syncing || bindings.length === 0}>
                           {syncing ? t('syncing.label') : t('sync-now.label')}
-                        </Button>
+                        </Next.Button>
                       </Form.Field>
                     )}
 
@@ -186,9 +187,9 @@ export const ConnectionView = ({
                         }
                         error={testStatus === 'invalid' && testError ? testError : undefined}
                       >
-                        <Button onClick={onTestConnection} disabled={testing}>
+                        <Next.Button onClick={onTestConnection} disabled={testing}>
                           {testing ? t('testing-connection.label') : t('test-connection.label')}
-                        </Button>
+                        </Next.Button>
                       </Form.Field>
                     )}
 
@@ -199,9 +200,9 @@ export const ConnectionView = ({
                         label={t('reauthenticate.label')}
                         description={t('reauthenticate.description')}
                       >
-                        <Button onClick={onReauthenticate} disabled={reauthenticating}>
+                        <Next.Button onClick={onReauthenticate} disabled={reauthenticating}>
                           {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
-                        </Button>
+                        </Next.Button>
                       </Form.Field>
                     )}
 
@@ -212,9 +213,9 @@ export const ConnectionView = ({
                         label={t('change-targets.label')}
                         description={t('change-targets.description')}
                       >
-                        <Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
+                        <Next.Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
                           {loadingTargets ? t('loading.label') : t('change-targets.label')}
-                        </Button>
+                        </Next.Button>
                       </Form.Field>
                     )}
 
@@ -223,9 +224,9 @@ export const ConnectionView = ({
                       label={t('delete-connection.label')}
                       description={t('delete-connection.description')}
                     >
-                      <Button variant='destructive' onClick={onDelete}>
+                      <Next.Button variant='destructive' onClick={onDelete}>
                         {t('delete-connection.label')}
-                      </Button>
+                      </Next.Button>
                     </Form.Field>
                   </Form.FieldSet>
 
@@ -233,7 +234,9 @@ export const ConnectionView = ({
                   {canSync && (
                     <Form.FieldSet label={t('targets.label')}>
                       {bindings.length === 0 ? (
-                        <Empty>{canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}</Empty>
+                        <Next.Empty>
+                          {canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}
+                        </Next.Empty>
                       ) : (
                         bindings.map((binding) => (
                           <BindingRow
@@ -249,10 +252,10 @@ export const ConnectionView = ({
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -318,7 +321,7 @@ const BindingRow = ({
       description={status}
       error={!missing && binding.lastError ? binding.lastError : undefined}
     >
-      {missing ? <Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button> : undefined}
+      {missing ? <Next.Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Next.Button> : undefined}
 
       {/* Per-binding options: flat (default variant) so fields render inline rather than each in a border. */}
       {optionsSchema && !missing && (

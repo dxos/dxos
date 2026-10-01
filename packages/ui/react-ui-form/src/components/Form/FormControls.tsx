@@ -6,13 +6,8 @@ import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import {
-  Button,
   Column,
   type ColumnRootProps,
-  DIALOG_AUTOFOCUS_ATTRIBUTE,
-  Field,
-  type IconButtonProps,
-  ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
@@ -21,6 +16,7 @@ import {
   useTranslation,
   withColumn,
 } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type MakeOptional, type Merge } from '@dxos/util';
 
@@ -128,9 +124,9 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
           gutter={gutter}
           ref={forwardedRef}
         >
-          <ScrollArea.Root orientation='vertical' centered padding thin>
-            <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-          </ScrollArea.Root>
+          <Next.ScrollArea.Root orientation='vertical' centered padding thin>
+            <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Column.Root>
       );
     }
@@ -234,18 +230,18 @@ export const FormActions = ({ classNames, submitLabel, submitIcon, submitDisable
   return (
     <div className={mx(withColumn.center(), formTheme.styles().actions(), classNames)}>
       {onCancel && (
-        <Button
+        <Next.Button
           iconEnd='ph--x--regular'
           label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
           // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than
           // commits; the attribute is inert anywhere else.
-          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+          {...{ [Next.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (
-        <Button
+        <Next.Button
           type='submit'
           variant='primary'
           disabled={!canSave || submitDisabled}
@@ -267,7 +263,7 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SUBMIT_NAME = 'Form.Submit';
 
-export type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>>;
+export type FormSubmitProps = ThemedClassName<Partial<Pick<Next.ButtonProps, 'icon' | 'label' | 'disabled'>>>;
 
 export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
@@ -283,7 +279,7 @@ export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProp
 
   return (
     <div className={mx(formTheme.styles().submit(), classNames)}>
-      <Button
+      <Next.Button
         classNames='w-full'
         type='submit'
         variant='primary'
@@ -314,11 +310,11 @@ export const FormErrorText = ({ children, classNames }: FormErrorTextProps) => {
   }
 
   return (
-    <Field.Root validationValence='error'>
-      <Field.ErrorText classNames={classNames} data-testid='form.error'>
+    <Next.Field.Root validationValence='error'>
+      <Next.Field.ErrorText classNames={classNames} data-testid='form.error'>
         {children}
-      </Field.ErrorText>
-    </Field.Root>
+      </Next.Field.ErrorText>
+    </Next.Field.Root>
   );
 };
 

@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { Button, Toolbar } from '@dxos/react-ui';
 import { type WindowController } from '@dxos/react-ui-virtual';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
@@ -49,8 +49,8 @@ const DefaultStory = ({
 
   return (
     <div className='flex flex-col h-full'>
-      <Toolbar.Root>
-        <Button
+      <Next.Toolbar.Root>
+        <Next.Button
           icon='ph--plus--regular'
           iconOnly
           label='Append'
@@ -65,14 +65,14 @@ const DefaultStory = ({
             ])
           }
         />
-        <Button
+        <Next.Button
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'
           data-testid='bridge.bottom'
           onClick={() => controller.current?.scrollToIndex(messages.length - 1, 'end')}
         />
-      </Toolbar.Root>
+      </Next.Toolbar.Root>
       <div ref={bodyRef} className='dx-grow'>
         <MessageWindow
           messages={messages}

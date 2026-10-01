@@ -9,7 +9,8 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -61,12 +62,12 @@ export const ResetDialog = ({ mode, invitationCode, onBeforeReset }: ResetDialog
   }, [invokePromise]);
 
   return (
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{t('logout.label')}</Dialog.Title>
-      </Dialog.Header>
-      <Dialog.Body>
-        <Dialog.Description classNames='sr-only'>{t('logout.description')}</Dialog.Description>
+    <Next.Dialog.Content>
+      <Next.Dialog.Header>
+        <Next.Dialog.Title>{t('logout.label')}</Next.Dialog.Title>
+      </Next.Dialog.Header>
+      <Next.Dialog.Body>
+        <Next.Dialog.Description classNames='sr-only'>{t('logout.description')}</Next.Dialog.Description>
         <ConfirmReset
           active
           mode={mode}
@@ -74,8 +75,8 @@ export const ResetDialog = ({ mode, invitationCode, onBeforeReset }: ResetDialog
           onConfirm={handleReset}
           onCancel={handleCancel}
         />
-      </Dialog.Body>
-    </Dialog.Content>
+      </Next.Dialog.Body>
+    </Next.Dialog.Content>
   );
 };
 

@@ -4,8 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
-import { type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { type IconRenderer, createStaticTreeModel } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -98,7 +100,7 @@ export const RepositoryFileTree = ({
   const renderIcon = useMemo<IconRenderer<FileNode>>(
     () =>
       ({ item }) => (
-        <Icon
+        <Next.Icon
           icon={
             item.type === 'directory'
               ? expanded.has(item.path)

@@ -22,21 +22,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import {
-  Button,
-  Flex,
-  Main,
-  type MainContentProps,
-  ScrollArea,
-  Splitter,
-  type ThemedClassName,
-  toLocalizedString,
-  useOnTransition,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Flex, type ThemedClassName, toLocalizedString, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
 import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { FoldSpine, SPINE_PX } from '#components';
@@ -183,7 +173,7 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
   const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
 
   return (
-    <Main.Content
+    <Next.Main.Content
       bounce
       handlesFocus
       classNames={[
@@ -206,11 +196,11 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
               : complementarySidebarState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
-        } as MainContentProps['style']
+        } as Next.MainContentProps['style']
       }
     >
       {children}
-    </Main.Content>
+    </Next.Main.Content>
   );
 };
 
@@ -401,7 +391,7 @@ const PlankSplit = ({
   });
 
   return (
-    <Splitter.Root
+    <Next.Splitter.Root
       orientation='horizontal'
       anchor='end'
       mode={companion ? 'split' : 'start'}
@@ -411,14 +401,14 @@ const PlankSplit = ({
       onSizeChange={onSizeChange}
       classNames={classNames}
     >
-      <Splitter.Panel position='start'>
+      <Next.Splitter.Panel position='start'>
         <DeckPlank id={id} part='main' active={active} classNames='size-full' />
-      </Splitter.Panel>
-      <Splitter.ResizeTrigger />
-      <Splitter.Panel position='end'>
+      </Next.Splitter.Panel>
+      <Next.Splitter.ResizeTrigger />
+      <Next.Splitter.Panel position='end'>
         {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
-      </Splitter.Panel>
-    </Splitter.Root>
+      </Next.Splitter.Panel>
+    </Next.Splitter.Root>
   );
 };
 
@@ -1793,8 +1783,8 @@ export const DeckPlanks = () => {
           // surviving plank on every message open/close (the mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
           <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
-            <ScrollArea.Root orientation='horizontal' classNames='size-full'>
-              <ScrollArea.Viewport
+            <Next.ScrollArea.Root orientation='horizontal' classNames='size-full'>
+              <Next.ScrollArea.Viewport
                 ref={viewportRef}
                 data-testid='deck.viewport'
                 // Scroll anchoring off: the deck owns its scroll position, and the browser's anchor
@@ -1831,8 +1821,8 @@ export const DeckPlanks = () => {
                   Tile={DeckPlankTile}
                   draggable={false}
                 />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
           </Mosaic.Container>
         )}
       </div>
@@ -1862,7 +1852,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <Button
+      <Next.Button
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

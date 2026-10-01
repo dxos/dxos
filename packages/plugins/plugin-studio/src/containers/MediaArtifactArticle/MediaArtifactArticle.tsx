@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { type MediaArtifact } from '#types';
 
@@ -38,8 +38,8 @@ export const MediaArtifactArticle = ({
   const produced = (snapshot?.variants?.length ?? 0) > 0;
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body classNames={produced ? 'grid grid-rows-[1fr_1fr] gap-2' : 'grid grid-rows-[1fr]'}>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body classNames={produced ? 'grid grid-rows-[1fr_1fr] gap-2' : 'grid grid-rows-[1fr]'}>
         <MediaArtifactForm artifact={artifact} attendableId={attendableId} nodeId={nodeId} />
         {produced && (
           <MediaArtifactVariants
@@ -48,8 +48,8 @@ export const MediaArtifactArticle = ({
             attendableId={attendableId}
           />
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

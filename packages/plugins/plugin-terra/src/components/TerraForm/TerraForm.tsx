@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback } from 'react';
 
-import { Button, Slider } from '@dxos/react-ui';
-import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { Terra } from '#types';
@@ -79,7 +79,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
         labelEnd={<span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
-        <Slider
+        <Next.Slider
           value={[current]}
           min={spec.min}
           max={spec.max}
@@ -137,7 +137,7 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
         </Form.Viewport>
       </Form.Root>
 
-      <Button icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
+      <Next.Button icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
       <Next.Checkbox onCheckedChange={handleWaterSheenChange} label='Water sheen' />
     </div>

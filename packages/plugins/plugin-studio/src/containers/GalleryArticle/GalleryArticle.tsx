@@ -10,9 +10,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Button, Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Next } from '@dxos/react-ui/next';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
@@ -36,7 +37,7 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
     <div className='relative'>
       <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
       {selected && (
-        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-primary-500' />
+        <Next.Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-primary-500' />
       )}
     </div>
   );
@@ -109,24 +110,24 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
   const handleSelect = useCallback((id: string, _event: MouseEvent) => bind(id).toggle(), [bind]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button
             icon='ph--plus--regular'
             label={t('create.label')}
             disabled={!db}
             onClick={() => void handleCreate()}
           />
-          <Button
+          <Next.Button
             icon='ph--trash--regular'
             label={t('delete.label')}
             disabled={selectedIds.size === 0}
             onClick={handleDelete}
           />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         {items.length === 0 ? (
           <Flex role='status' center classNames='h-full text-subdued'>
             {t('empty.message')}
@@ -143,8 +144,8 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

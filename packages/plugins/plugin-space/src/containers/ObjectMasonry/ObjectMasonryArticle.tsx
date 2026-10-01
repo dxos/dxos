@@ -8,9 +8,10 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Empty, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -94,19 +95,23 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root role={role}>
-        <Panel.Header>
-          <Toolbar.Root>
+      <Next.Panel.Root role={role}>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             <SearchList.Input placeholder={t('search-placeholder.label')} />
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body>
-          {empty ? <Empty classNames='h-full'>{empty}</Empty> : <ObjectMasonry cacheKey={attendableId} items={items} />}
-        </Panel.Body>
-        <Panel.Footer classNames='flex items-center p-1 border-t border-subdued-separator'>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body>
+          {empty ? (
+            <Next.Empty classNames='h-full'>{empty}</Next.Empty>
+          ) : (
+            <ObjectMasonry cacheKey={attendableId} items={items} />
+          )}
+        </Next.Panel.Body>
+        <Next.Panel.Footer classNames='flex items-center p-1 border-t border-subdued-separator'>
           {t('item-count.label', { count: items.length })}
-        </Panel.Footer>
-      </Panel.Root>
+        </Next.Panel.Footer>
+      </Next.Panel.Root>
     </SearchList.Root>
   );
 };

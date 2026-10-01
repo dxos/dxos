@@ -47,6 +47,7 @@
 //   - Multi-select. Future expansion — the aspect (`useListSelection`) already supports it.
 
 import React, {
+  type ComponentProps,
   type ComponentPropsWithRef,
   type FocusEvent,
   type ForwardedRef,
@@ -60,16 +61,8 @@ import React, {
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { List, ListItem } from '@dxos/react-list';
-import {
-  Icon,
-  type IconProps,
-  ScrollArea,
-  type ScrollAreaRootProps,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useMergeRefs,
-} from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps, useMergeRefs } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../hooks/index.ts';
@@ -83,6 +76,8 @@ import {
   useListboxItemContext,
 } from './ListboxContext.ts';
 import { ListItemContent, type ListItemContentProps } from './ListItemContent.tsx';
+
+type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
 
 const styles = listTheme.styles();
 
@@ -177,14 +172,14 @@ const Viewport = composable<HTMLDivElement, ViewportProps>((props, forwardedRef)
     ViewportProps & Record<string, unknown>
   >;
   return (
-    <ScrollArea.Root
+    <Next.ScrollArea.Root
       {...composableProps<HTMLDivElement>(rest, { classNames: styles.listboxViewport() })}
       {...{ thin, padding, centered }}
       orientation='vertical'
       ref={forwardedRef}
     >
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
+      <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 });
 
@@ -414,12 +409,12 @@ ItemLabel.displayName = LISTBOX_ITEM_LABEL_NAME;
 // Indicator — checkmark icon for the selected item.
 //
 
-type IndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;
+type IndicatorProps = Omit<Next.IconProps, 'icon'> & Partial<Pick<Next.IconProps, 'icon'>>;
 
 const Indicator = forwardRef<SVGSVGElement, IndicatorProps>(({ classNames, ...rootProps }, forwardedRef) => {
   const { selected } = useListboxItemContext(LISTBOX_INDICATOR_NAME);
   return (
-    <Icon
+    <Next.Icon
       icon='ph--check--regular'
       {...rootProps}
       classNames={mx(!selected && 'invisible', classNames)}

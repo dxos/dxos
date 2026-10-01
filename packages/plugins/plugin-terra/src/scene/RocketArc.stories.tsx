@@ -9,8 +9,8 @@ import { type Scene } from '@babylonjs/core/scene';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef } from 'react';
 
-import { Panel } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -128,17 +128,17 @@ const RocketArcScene = () => {
   );
 
   return (
-    <Panel.Root role='article'>
-      <Panel.Header classNames='dx-expand'>
+    <Next.Panel.Root role='article'>
+      <Next.Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={STORY_ATTENDABLE_ID} />
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <div className='relative grow'>
           {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
           <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

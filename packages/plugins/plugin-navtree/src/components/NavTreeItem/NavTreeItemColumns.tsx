@@ -4,7 +4,8 @@
 
 import React, { Fragment, memo, useMemo } from 'react';
 
-import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';
@@ -23,7 +24,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const allActions = useMemo(() => getListActions(flattenedActions), [flattenedActions]);
 
   const anchored = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}`;
-  const ActionRoot = anchored ? Popover.Anchor : Fragment;
+  const ActionRoot = anchored ? Next.Popover.Anchor : Fragment;
 
   return (
     // `data-popover-anchor` lets the enclosing row highlight itself while a popover (e.g. rename) is open on it.

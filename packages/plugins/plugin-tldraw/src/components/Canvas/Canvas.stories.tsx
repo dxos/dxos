@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { RecordBuilder } from '#model';
@@ -38,24 +38,24 @@ const DefaultStory = () => {
   };
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button variant='primary' onClick={handleClear}>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button variant='primary' onClick={handleClear}>
             Clear
-          </Button>
-          <Button variant='ghost' onClick={handleCreate}>
+          </Next.Button>
+          <Next.Button variant='ghost' onClick={handleCreate}>
             Create
-          </Button>
-          <Button variant='ghost' onClick={handleMigrate}>
+          </Next.Button>
+          <Next.Button variant='ghost' onClick={handleMigrate}>
             Load V1 Sample
-          </Button>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
+          </Next.Button>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -92,11 +92,11 @@ const BuilderStory = () => {
   );
 
   return (
-    <Panel.Root>
-      <Panel.Body asChild>
+    <Next.Panel.Root>
+      <Next.Panel.Body asChild>
         <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

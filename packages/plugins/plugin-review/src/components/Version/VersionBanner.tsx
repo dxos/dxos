@@ -5,7 +5,8 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/ui';
-import { Button, Icon, Tag, TextTooltip, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -87,21 +88,21 @@ export const VersionBanner = ({
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (
-    <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
+    <Next.Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
       <div className='flex items-center gap-1 px-2 truncate'>
-        <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
-        <Tag hue={hue}>{name}</Tag>
+        <Next.Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
+        <Next.Tag hue={hue}>{name}</Next.Tag>
         {timestamp && (
-          <TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
-            <Tag hue='sky'>{relativeTime(timestamp)}</Tag>
-          </TextTooltip>
+          <Next.TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
+            <Next.Tag hue='sky'>{relativeTime(timestamp)}</Next.Tag>
+          </Next.TextTooltip>
         )}
       </div>
-      <Toolbar.Separator />
+      <Next.Toolbar.Separator />
       {mode === 'checkpoint' && onRestore && (
-        <Button variant='ghost' onClick={onRestore}>
+        <Next.Button variant='ghost' onClick={onRestore}>
           {t('restore.label')}
-        </Button>
+        </Next.Button>
       )}
       {mode === 'checkpoint' && onBranchFrom && (
         <NamePopover
@@ -114,27 +115,27 @@ export const VersionBanner = ({
             onBranchFrom(name);
           }}
         >
-          <Button variant='ghost' onClick={() => setNamingBranch(true)}>
+          <Next.Button variant='ghost' onClick={() => setNamingBranch(true)}>
             {t('branch-from.label')}
-          </Button>
+          </Next.Button>
         </NamePopover>
       )}
       {mode === 'branch' && view && onViewChange && (
-        <Toolbar.ToggleGroup
+        <Next.Toolbar.ToggleGroup
           type='single'
           value={view}
           // Radix emits '' when the active item is toggled off; ignore it so a view is always selected.
           onValueChange={(next) => isBranchView(next) && onViewChange(next)}
         >
           {BRANCH_VIEWS.map((option) => (
-            <ToggleGroup.Item key={option} value={option} data-testid={`version-banner-view-${option}`}>
+            <Next.ToggleGroup.Item key={option} value={option} data-testid={`version-banner-view-${option}`}>
               {t(`branch-view-${option}.label`)}
-            </ToggleGroup.Item>
+            </Next.ToggleGroup.Item>
           ))}
-        </Toolbar.ToggleGroup>
+        </Next.Toolbar.ToggleGroup>
       )}
-      <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
-    </Toolbar.Root>
+      <Next.Button variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
+    </Next.Toolbar.Root>
   );
 };
 

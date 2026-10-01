@@ -6,8 +6,8 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Accordion, Empty, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 
@@ -42,22 +42,22 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
   const runs = useRoutineRuns(db, subject);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root />
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root />
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Empty>{t('history.empty.message')}</Empty>
+              <Next.Empty>{t('history.empty.message')}</Next.Empty>
             ) : (
-              <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
+              <Next.Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
                 {({ items }) => (
                   <Next.Container gutter='none'>
                     {items.map((run) => (
-                      <Accordion.Item key={run.pid} item={run}>
-                        <Accordion.ItemTrigger hover>
+                      <Next.Accordion.Item key={run.pid} item={run}>
+                        <Next.Accordion.ItemTrigger hover>
                           <Listbox.ItemIcon
                             icon={STATUS_ICONS[run.status]}
                             size='lg'
@@ -67,24 +67,24 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                             {<span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>}
                           </Listbox.ItemText>
                           <Listbox.ItemDescription>{`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}</Listbox.ItemDescription>
-                        </Accordion.ItemTrigger>
+                        </Next.Accordion.ItemTrigger>
                         {/* Match `ItemContent`'s rail/content grid so the JSON aligns under the title column. */}
-                        <Accordion.ItemContent classNames='grid grid-cols-[var(--dx-rail-item)_1fr] gap-x-2'>
+                        <Next.Accordion.ItemContent classNames='grid grid-cols-[var(--dx-rail-item)_1fr] gap-x-2'>
                           <JsonHighlighter
                             data={toJsonData(run)}
                             classNames='col-start-2 [&_pre]:!text-xs [&_code]:!text-xs'
                           />
-                        </Accordion.ItemContent>
-                      </Accordion.Item>
+                        </Next.Accordion.ItemContent>
+                      </Next.Accordion.Item>
                     ))}
                   </Next.Container>
                 )}
-              </Accordion.Root>
+              </Next.Accordion.Root>
             )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

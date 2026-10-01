@@ -12,7 +12,7 @@ import { type AppSurface, useAppGraph, useDetailNavigation } from '@dxos/app-too
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
@@ -22,8 +22,9 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
@@ -201,22 +202,22 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   return (
     <div role={role} className='@container dx-expand'>
       <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
-        <Panel.Root classNames='hidden @2xl:block'>
+        <Next.Panel.Root classNames='hidden @2xl:block'>
           <NaturalCalendar.Root ref={calendarRef}>
-            <Panel.Header>
+            <Next.Panel.Header>
               <NaturalCalendar.Toolbar />
-            </Panel.Header>
-            <Panel.Body asChild>
+            </Next.Panel.Header>
+            <Next.Panel.Body asChild>
               <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
-            </Panel.Body>
+            </Next.Panel.Body>
           </NaturalCalendar.Root>
-        </Panel.Root>
-        <Panel.Root>
-          <Panel.Header>
+        </Next.Panel.Root>
+        <Next.Panel.Root>
+          <Next.Panel.Header>
             <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-          </Panel.Header>
+          </Next.Panel.Header>
 
-          <Panel.Body asChild>
+          <Next.Panel.Body asChild>
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
@@ -229,8 +230,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
                 onAction={handleAction}
               />
             )}
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </div>
     </div>
   );

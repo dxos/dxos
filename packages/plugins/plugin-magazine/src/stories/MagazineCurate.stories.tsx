@@ -29,7 +29,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -109,16 +109,16 @@ const DefaultStory = () => {
   }
 
   return (
-    <Panel.Root classNames='border-is border-separator'>
-      <Panel.Body classNames='px-3 grid grid-cols-2 gap-3'>
+    <Next.Panel.Root classNames='border-is border-separator'>
+      <Next.Panel.Body classNames='px-3 grid grid-cols-2 gap-3'>
         {/* Rendered directly: the `article` role is shared with plugin-space's catch-all RecordArticle
             (position:last), so a raw `Surface type={Article}` here is ambiguous and resolves to the
             fallback — the deck disambiguates via the app-graph node, which a story has no equivalent of. */}
         <MagazineArticle role='article' subject={magazine} attendableId='story' />
         {/* The object-properties companion surface (plugin-space DefaultProperties); 'settings' is unambiguous. */}
         <Surface.Surface type={AppSurface.Article} data={{ subject: 'settings', companionTo: magazine }} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

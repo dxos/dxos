@@ -10,7 +10,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { ObjectProperties } from '@dxos/react-ui-form';
+import { ObjectProperties } from '@dxos/react-ui-form/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Outline } from '@dxos/types';

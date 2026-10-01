@@ -12,7 +12,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { raise } from '@dxos/debug';
 import { random } from '@dxos/random';
-import { Icon } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { Path } from '../../util/index.ts';
@@ -306,7 +306,7 @@ const DefaultStory = ({
       compact={compact}
       renderColumns={() => (
         <div className='flex items-center'>
-          <Icon icon='ph--circle-dashed--regular' />
+          <Next.Icon icon='ph--circle-dashed--regular' />
         </div>
       )}
       onOpenChange={handleOpenChange}

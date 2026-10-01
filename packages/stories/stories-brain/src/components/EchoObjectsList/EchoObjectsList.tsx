@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Empty, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 export type EchoObjectItem = {
   id: string;
@@ -23,31 +24,31 @@ export type EchoObjectsListProps = ThemedClassName<{
  * Presentational: the container resolves objects (via `useQuery` over a space) into this shape.
  */
 export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) => (
-  <Panel.Root classNames={classNames}>
-    <Panel.Header>
-      <Toolbar.Root>
-        <Toolbar.Text>Objects{objects.length > 0 ? ` (${objects.length})` : ''}</Toolbar.Text>
-      </Toolbar.Root>
-    </Panel.Header>
-    <Panel.Body asChild>
-      <ScrollArea.Root>
-        <ScrollArea.Viewport>
+  <Next.Panel.Root classNames={classNames}>
+    <Next.Panel.Header>
+      <Next.Toolbar.Root>
+        <Next.Toolbar.Text>Objects{objects.length > 0 ? ` (${objects.length})` : ''}</Next.Toolbar.Text>
+      </Next.Toolbar.Root>
+    </Next.Panel.Header>
+    <Next.Panel.Body asChild>
+      <Next.ScrollArea.Root>
+        <Next.ScrollArea.Viewport>
           {objects.length === 0 ? (
-            <Empty>No objects.</Empty>
+            <Next.Empty>No objects.</Next.Empty>
           ) : (
             <Listbox.Root>
               <Listbox.Content aria-label='ECHO objects'>
                 {objects.map((object) => (
                   <Listbox.Item classNames='gap-2' key={object.id} id={object.id}>
                     <Listbox.ItemText>{object.label}</Listbox.ItemText>
-                    <Tag hue='neutral'>{object.typename}</Tag>
+                    <Next.Tag hue='neutral'>{object.typename}</Next.Tag>
                   </Listbox.Item>
                 ))}
               </Listbox.Content>
             </Listbox.Root>
           )}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Panel.Body>
-  </Panel.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
+    </Next.Panel.Body>
+  </Next.Panel.Root>
 );

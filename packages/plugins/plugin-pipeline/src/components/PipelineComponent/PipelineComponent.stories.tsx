@@ -10,7 +10,8 @@ import { Collection, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dx
 import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { omitId } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';

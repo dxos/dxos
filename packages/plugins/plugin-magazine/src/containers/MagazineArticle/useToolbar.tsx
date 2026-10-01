@@ -12,7 +12,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
 
 import { type MagazineView } from '#atoms';
 import { meta } from '#meta';

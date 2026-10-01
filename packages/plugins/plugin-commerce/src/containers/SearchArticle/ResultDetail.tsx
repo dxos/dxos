@@ -5,7 +5,8 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Button, Carousel, Empty, Flex, Grid, SystemButton, useTranslation } from '@dxos/react-ui';
+import { Flex, Grid, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Result } from '#types';
@@ -24,7 +25,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
   if (!result) {
-    return <Empty>{t('no-result-selected.message')}</Empty>;
+    return <Next.Empty>{t('no-result-selected.message')}</Next.Empty>;
   }
 
   const properties = Object.entries(result.properties ?? {});
@@ -33,9 +34,9 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
     <Flex column gap='md' classNames='p-3 overflow-y-auto'>
       <Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
-        <SystemButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
+        <Next.SystemButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
         {onClose && (
-          <Button iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
+          <Next.Button iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
         )}
       </Grid>
 
@@ -53,16 +54,16 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
       )}
 
       {result.images.length > 0 && (
-        <Carousel.Root count={result.images.length}>
-          <Carousel.PrevTrigger />
-          <Carousel.ItemGroup>
+        <Next.Carousel.Root count={result.images.length}>
+          <Next.Carousel.PrevTrigger />
+          <Next.Carousel.ItemGroup>
             {result.images.map((image, index) => (
-              <Carousel.Item key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
+              <Next.Carousel.Item key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
             ))}
-          </Carousel.ItemGroup>
-          <Carousel.NextTrigger />
-          <Carousel.IndicatorGroup />
-        </Carousel.Root>
+          </Next.Carousel.ItemGroup>
+          <Next.Carousel.NextTrigger />
+          <Next.Carousel.IndicatorGroup />
+        </Next.Carousel.Root>
       )}
 
       {properties.length > 0 && (

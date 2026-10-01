@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { Button, Field, PasswordInput } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type GenerationOption } from './heygen-provider-types.ts';
@@ -137,25 +137,25 @@ const ProviderHarness = () => {
 
   return (
     <div className='dx-expand flex flex-col gap-4 p-4 max-w-[40rem]'>
-      <Field.Root>
-        <Field.Label>HeyGen API key</Field.Label>
-        <PasswordInput
+      <Next.Field.Root>
+        <Next.Field.Label>HeyGen API key</Next.Field.Label>
+        <Next.PasswordInput
           noAutoFill
           placeholder='Paste API key'
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
         />
-      </Field.Root>
+      </Next.Field.Root>
       <div className='flex gap-2'>
-        <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
+        <Next.Button disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
           {busy === 'avatars' ? 'Loading avatars…' : 'List avatars'}
-        </Button>
-        <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('voices')}>
+        </Next.Button>
+        <Next.Button disabled={!apiKey.trim() || busy != null} onClick={() => run('voices')}>
           {busy === 'voices' ? 'Loading voices…' : 'List voices'}
-        </Button>
-        <Button disabled={!apiKey.trim()} onClick={() => void inspect()}>
+        </Next.Button>
+        <Next.Button disabled={!apiKey.trim()} onClick={() => void inspect()}>
           Inspect raw fields
-        </Button>
+        </Next.Button>
       </div>
 
       <div className='dx-expand flex flex-col gap-2 overflow-y-auto'>

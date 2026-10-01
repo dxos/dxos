@@ -6,19 +6,11 @@ import { Prec } from '@codemirror/state';
 import React, { type Ref, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import {
-  Button,
-  Column,
-  Field,
-  Icon,
-  Input,
-  ScrollArea,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Column, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { EMAIL_REGEX, RefEditor } from '@dxos/react-ui-form';
+import { EMAIL_REGEX } from '@dxos/react-ui-form';
+import { RefEditor } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { type Message as MessageType, Person } from '@dxos/types';
 import { type Extension, keymap } from '@dxos/ui-editor';
 
@@ -209,8 +201,8 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
     const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
 
     return (
-      <ScrollArea.Root>
-        <ScrollArea.Viewport>
+      <Next.ScrollArea.Root>
+        <Next.ScrollArea.Viewport>
           <Column.Root
             {...composableProps(props, {
               // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height participates in
@@ -227,7 +219,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               <Column.Center classNames='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
-                  <Button
+                  <Next.Button
                     iconOnly
                     variant='ghost'
                     icon='ph--trash--regular'
@@ -297,9 +289,9 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 </>
               )}
 
-              <Field.Root>
-                <Field.Label srOnly>{t('draft-subject.label')}</Field.Label>
-                <Input
+              <Next.Field.Root>
+                <Next.Field.Label srOnly>{t('draft-subject.label')}</Next.Field.Label>
+                <Next.Input
                   ref={subjectRef}
                   classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
@@ -313,7 +305,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                     }
                   }}
                 />
-              </Field.Root>
+              </Next.Field.Root>
             </Column.Center>
 
             <Column.Center classNames='flex flex-col dx-grow py-3'>
@@ -328,14 +320,14 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             </Column.Center>
 
             <Column.Center classNames='pb-form-padding'>
-              <Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
-                <Icon icon='ph--paper-plane-right--regular' size='lg' />
+              <Next.Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
+                <Next.Icon icon='ph--paper-plane-right--regular' size='lg' />
                 <span className='ms-2'>{t('send-email-button.label')}</span>
-              </Button>
+              </Next.Button>
             </Column.Center>
           </Column.Root>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     );
   },
 );

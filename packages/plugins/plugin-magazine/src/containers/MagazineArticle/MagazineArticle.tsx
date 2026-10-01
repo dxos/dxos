@@ -11,11 +11,12 @@ import { type AppSurface, useProgressMonitor, useShowItem } from '@dxos/app-tool
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Flex, Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionToolbar } from '@dxos/react-ui-menu';
+import { ActionToolbar } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
@@ -90,12 +91,12 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
-      </Panel.Header>
+      </Next.Panel.Header>
 
-      <Panel.Body>
+      <Next.Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
           <Flex center classNames='h-full text-subdued text-sm'>
@@ -109,11 +110,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Body>
-      <Panel.Footer classNames='border-t border-subdued-separator'>
+      </Next.Panel.Body>
+      <Next.Panel.Footer classNames='border-t border-subdued-separator'>
         <ProgressMeter state={curateProgress} />
-      </Panel.Footer>
-    </Panel.Root>
+      </Next.Panel.Footer>
+    </Next.Panel.Root>
   );
 };
 

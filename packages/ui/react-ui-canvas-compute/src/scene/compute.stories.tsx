@@ -10,7 +10,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import {
@@ -22,6 +21,7 @@ import {
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { DiagnosticOverlay } from '../components/index.ts';
@@ -122,18 +122,18 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
       </ComputeContext.Provider>
       {sidebar && (
         <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
-          <Toolbar.Root>
-            <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as Sidebar)}>
-              <Select.Trigger classNames='w-full'>{sidebar}</Select.Trigger>
-              <Select.Content>
+          <Next.Toolbar.Root>
+            <Next.Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as Sidebar)}>
+              <Next.Select.Trigger classNames='w-full'>{sidebar}</Next.Select.Trigger>
+              <Next.Select.Content>
                 {sidebarTypes.map((type) => (
-                  <Select.Item key={type} value={type}>
+                  <Next.Select.Item key={type} value={type}>
                     {type}
-                  </Select.Item>
+                  </Next.Select.Item>
                 ))}
-              </Select.Content>
-            </Select.Root>
-          </Toolbar.Root>
+              </Next.Select.Content>
+            </Next.Select.Root>
+          </Next.Toolbar.Root>
           <SidebarJson sidebar={sidebar} controller={controller} projection={projection} atoms={atoms} />
         </div>
       )}

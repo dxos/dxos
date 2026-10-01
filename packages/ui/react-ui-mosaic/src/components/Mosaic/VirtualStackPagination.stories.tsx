@@ -13,8 +13,8 @@ import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { persistentClientServices, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Card, Field, NumberInput, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Focus } from '../Focus/index.ts';
@@ -89,11 +89,11 @@ const usePaginatedItems = (total: number) => {
 const ListItemTile: FC<MosaicTileProps<ListItem>> = ({ data, location, current }) => (
   <Mosaic.Tile id={data.id} data={data} location={location} current={current} asChild>
     <Focus.Item asChild>
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>Item #{data.index}</Card.Title>
-        </Card.Header>
-      </Card.Root>
+      <Next.Card.Root>
+        <Next.Card.Header>
+          <Next.Card.Title>Item #{data.index}</Next.Card.Title>
+        </Next.Card.Header>
+      </Next.Card.Root>
     </Focus.Item>
   </Mosaic.Tile>
 );
@@ -107,18 +107,18 @@ const VirtualStackPaginationStory = () => {
 
   return (
     <Dnd.Root>
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             <div className='flex grow justify-center'>
               Range {range} of {TOTAL_ITEMS} ({items.length} loaded) {atHead && '(at head)'}
             </div>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Mosaic.Container asChild eventHandler={{ id: 'virtual-stack-pagination', canDrop: () => false }}>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport ref={setViewport}>
+            <Next.ScrollArea.Root orientation='vertical'>
+              <Next.ScrollArea.Viewport ref={setViewport}>
                 <Mosaic.VirtualStack
                   Tile={ListItemTile}
                   items={items}
@@ -129,11 +129,11 @@ const VirtualStackPaginationStory = () => {
                   gap={4}
                   pagination={pagination}
                 />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
           </Mosaic.Container>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Dnd.Root>
   );
 };
@@ -223,13 +223,13 @@ const orderFor = (field: SortField, direction: SortDirection) => {
 const CounterItemTile: FC<MosaicTileProps<CounterItem>> = ({ data, location, current }) => (
   <Mosaic.Tile id={data.id} data={data} location={location} current={current} asChild>
     <Focus.Item asChild>
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>
+      <Next.Card.Root>
+        <Next.Card.Header>
+          <Next.Card.Title>
             #{data.index} · {data.word}
-          </Card.Title>
-        </Card.Header>
-      </Card.Root>
+          </Next.Card.Title>
+        </Next.Card.Header>
+      </Next.Card.Root>
     </Focus.Item>
   </Mosaic.Tile>
 );
@@ -287,59 +287,62 @@ const FeedPaginationStory = () => {
 
   return (
     <Dnd.Root>
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             <div className='shrink-0' style={{ inlineSize: '6rem' }}>
-              <Field.Root>
-                <NumberInput
+              <Next.Field.Root>
+                <Next.NumberInput
                   min={1}
                   value={addCount}
                   onChange={(event) => setAddCount(event.target.valueAsNumber || 0)}
                   classNames='w-full'
                 />
-              </Field.Root>
+              </Next.Field.Root>
             </div>
-            <Button onClick={handleAdd} classNames='shrink-0'>
+            <Next.Button onClick={handleAdd} classNames='shrink-0'>
               Add
-            </Button>
-            <Button onClick={handleReset} classNames='shrink-0'>
+            </Next.Button>
+            <Next.Button onClick={handleReset} classNames='shrink-0'>
               Reset
-            </Button>
-            <Select.Root
+            </Next.Button>
+            <Next.Select.Root
               value={sortField}
               onValueChange={(value) => setSortField(value === 'number' || value === 'word' ? value : 'natural')}
             >
-              <Button asChild>
-                <Select.Trigger classNames='shrink-0' />
-              </Button>
-              <Select.Content>
-                <Select.Item item={{ value: 'natural', label: 'Natural' }} />
-                <Select.Item item={{ value: 'number', label: 'Number' }} />
-                <Select.Item item={{ value: 'word', label: 'Word' }} />
-              </Select.Content>
-            </Select.Root>
-            <Select.Root value={direction} onValueChange={(value) => setDirection(value === 'asc' ? 'asc' : 'desc')}>
-              <Button asChild>
-                <Select.Trigger classNames='shrink-0' />
-              </Button>
-              <Select.Content>
-                <Select.Item item={{ value: 'asc', label: 'Ascending' }} />
-                <Select.Item item={{ value: 'desc', label: 'Descending' }} />
-              </Select.Content>
-            </Select.Root>
+              <Next.Button asChild>
+                <Next.Select.Trigger classNames='shrink-0' />
+              </Next.Button>
+              <Next.Select.Content>
+                <Next.Select.Item item={{ value: 'natural', label: 'Natural' }} />
+                <Next.Select.Item item={{ value: 'number', label: 'Number' }} />
+                <Next.Select.Item item={{ value: 'word', label: 'Word' }} />
+              </Next.Select.Content>
+            </Next.Select.Root>
+            <Next.Select.Root
+              value={direction}
+              onValueChange={(value) => setDirection(value === 'asc' ? 'asc' : 'desc')}
+            >
+              <Next.Button asChild>
+                <Next.Select.Trigger classNames='shrink-0' />
+              </Next.Button>
+              <Next.Select.Content>
+                <Next.Select.Item item={{ value: 'asc', label: 'Ascending' }} />
+                <Next.Select.Item item={{ value: 'desc', label: 'Descending' }} />
+              </Next.Select.Content>
+            </Next.Select.Root>
             <div className='grow text-end truncate whitespace-nowrap'>
               {items.length} loaded of {total}
               {!atHead && ' · detached'}
               {isLoading && ' · loading…'}
               {!hasMore && ' · end'}
             </div>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Mosaic.Container asChild eventHandler={{ id: 'virtual-stack-feed-pagination', canDrop: () => false }}>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport ref={setViewport}>
+            <Next.ScrollArea.Root orientation='vertical'>
+              <Next.ScrollArea.Viewport ref={setViewport}>
                 <Mosaic.VirtualStack
                   Tile={CounterItemTile}
                   items={items}
@@ -350,11 +353,11 @@ const FeedPaginationStory = () => {
                   gap={4}
                   pagination={pagination}
                 />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
           </Mosaic.Container>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Dnd.Root>
   );
 };

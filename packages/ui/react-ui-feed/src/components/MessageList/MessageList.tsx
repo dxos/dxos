@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentProps,
   type ComponentType,
   type PropsWithChildren,
   type ReactNode,
@@ -14,18 +15,9 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  Button,
-  Column,
-  ColumnRootProps,
-  ScrollArea,
-  type ScrollAreaRootProps,
-  composable,
-  composableProps,
-  createContext,
-  setRef,
-} from '@dxos/react-ui';
+import { Column, ColumnRootProps, composable, composableProps, createContext, setRef } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
+import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
@@ -46,6 +38,8 @@ import { useJumpDetector, usePositionLog } from './position-log.ts';
 //
 // Context
 //
+
+type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
 
 const MESSAGE_LIST_NAME = 'MessageList';
 
@@ -635,7 +629,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
     }
 
     return (
-      <ScrollArea.Root
+      <Next.ScrollArea.Root
         {...composableProps(props)}
         orientation='vertical'
         autoHide={autoHide}
@@ -645,7 +639,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         scrollbars={scrollbars}
         thin={thin}
       >
-        <ScrollArea.Viewport
+        <Next.ScrollArea.Viewport
           data-testid='feed.viewport'
           // Off deliberately: the browser adjusting the scroll as well would be a second party
           // anchoring the same thing, and the defect this design exists to remove is exactly that.
@@ -663,9 +657,9 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
           >
             {rows}
           </div>
-        </ScrollArea.Viewport>
+        </Next.ScrollArea.Viewport>
         {overlay}
-      </ScrollArea.Root>
+      </Next.ScrollArea.Root>
     );
   },
 );
@@ -785,7 +779,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
   return (
     <div role='group' {...composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
       {ends && (
-        <Button
+        <Next.Button
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='First message'
@@ -794,7 +788,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
           onClick={() => navigation.first()}
         />
       )}
-      <Button
+      <Next.Button
         icon='ph--caret-up--regular'
         iconOnly
         label='Previous message'
@@ -802,7 +796,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         data-testid='feed.nav.back'
         onClick={() => navigation.step(-1)}
       />
-      <Button
+      <Next.Button
         icon='ph--caret-down--regular'
         iconOnly
         label='Next message'
@@ -811,7 +805,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         onClick={() => navigation.step(1)}
       />
       {ends && (
-        <Button
+        <Next.Button
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Last message'

@@ -5,7 +5,8 @@
 import React, { useState } from 'react';
 
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Button, Toast as NaturalToast, type ToastRootProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -19,7 +20,7 @@ export const Toast = ({
   actionAlt,
   onAction,
   onOpenChange,
-}: LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
+}: LayoutOperation.Toast & Pick<Next.ToastRootProps, 'onOpenChange'>) => {
   const { t } = useTranslation(meta.profile.key);
 
   // Control the open state so closing flips Radix's `open` (playing the exit animation) rather than
@@ -31,21 +32,21 @@ export const Toast = ({
   };
 
   return (
-    <NaturalToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
-      <NaturalToast.Title icon={icon} onClose={() => handleOpenChange(false)}>
+    <Next.Toast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
+      <Next.Toast.Title icon={icon} onClose={() => handleOpenChange(false)}>
         {title && <span>{toLocalizedString(title, t)}</span>}
-      </NaturalToast.Title>
-      {description && <NaturalToast.Description>{toLocalizedString(description, t)}</NaturalToast.Description>}
+      </Next.Toast.Title>
+      {description && <Next.Toast.Description>{toLocalizedString(description, t)}</Next.Toast.Description>}
       {onAction && actionAlt && actionLabel && (
-        <NaturalToast.Footer>
-          <NaturalToast.ActionTrigger asChild>
-            <Button data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
+        <Next.Toast.Footer>
+          <Next.Toast.ActionTrigger asChild>
+            <Next.Button data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
               {toLocalizedString(actionLabel, t)}
-            </Button>
-          </NaturalToast.ActionTrigger>
-        </NaturalToast.Footer>
+            </Next.Button>
+          </Next.Toast.ActionTrigger>
+        </Next.Toast.Footer>
       )}
-    </NaturalToast.Root>
+    </Next.Toast.Root>
   );
 };
 

@@ -6,8 +6,9 @@ import React, { useCallback } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { Version } from '@dxos/versioning';
 
 import { useVersioning } from '#hooks';
@@ -52,7 +53,11 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
         }
       />
       <div className='flex gap-1'>
-        <Button icon='ph--bookmark-simple--regular' label={t('create-checkpoint.label')} onClick={handleCheckpoint} />
+        <Next.Button
+          icon='ph--bookmark-simple--regular'
+          label={t('create-checkpoint.label')}
+          onClick={handleCheckpoint}
+        />
       </div>
     </Form.FieldSet>
   );

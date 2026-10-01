@@ -16,7 +16,8 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import { Column, ScrollArea } from '@dxos/react-ui';
+import { Column } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type EscapeBehavior, Picker } from './Picker.tsx';
@@ -78,8 +79,8 @@ const DefaultStory = ({
             {...(controlled && { value: query, onValueChange: setQuery })}
           />
         </Column.Center>
-        <ScrollArea.Root classNames='max-h-[20rem] py-form-gap' thin>
-          <ScrollArea.Viewport>
+        <Next.ScrollArea.Root classNames='max-h-[20rem] py-form-gap' thin>
+          <Next.ScrollArea.Viewport>
             <ul role='listbox' className='flex flex-col'>
               {visible.map(({ item, originalIndex }) => {
                 const disabled = disabledIndices.includes(originalIndex);
@@ -101,8 +102,8 @@ const DefaultStory = ({
                 </li>
               )}
             </ul>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Picker.Root>
       <Column.Center classNames='text-sm text-description'>
         Picked: <span className='font-mono'>{picked ?? '—'}</span>

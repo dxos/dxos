@@ -4,9 +4,12 @@
 
 import React from 'react';
 
-import { Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
+import { useId } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { IdentityPanel, type IdentityPanelProps } from '../../panels/index.ts';
+
+type DialogContentProps = React.ComponentProps<typeof Next.Dialog.Content>;
 
 export interface IdentityDialogProps
   extends Omit<DialogContentProps, 'children'>, Omit<IdentityPanelProps, 'doneActionParent'> {
@@ -16,18 +19,18 @@ export interface IdentityDialogProps
 export const IdentityDialog = (props: IdentityDialogProps) => {
   const titleId = useId('identityDialog__title', props.title);
   return (
-    <Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
-      <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
-        <Dialog.Body>
+    <Next.Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
+      <Next.Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
+        <Next.Dialog.Body>
           <IdentityPanel
             {...{
               ...props,
               titleId,
-              doneActionParent: <Dialog.CloseTrigger asChild />,
+              doneActionParent: <Next.Dialog.CloseTrigger asChild />,
             }}
           />
-        </Dialog.Body>
-      </Dialog.Content>
-    </Dialog.Root>
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
   );
 };

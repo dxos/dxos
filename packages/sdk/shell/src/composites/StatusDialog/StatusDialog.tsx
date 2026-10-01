@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { AlertDialog, useId, useTranslation } from '@dxos/react-ui';
+import { useId, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { StatusPanel } from '../../panels/index.ts';
 import { translationKey } from '../../translations.ts';
@@ -13,13 +14,13 @@ export const StatusDialog = () => {
   const { t } = useTranslation(translationKey);
   const titleId = useId('statusDialog__title');
   return (
-    <AlertDialog.Root open>
-      <AlertDialog.Content aria-labelledby={titleId}>
-        <AlertDialog.Body>
-          <AlertDialog.Description srOnly>{t('resetting.message')}</AlertDialog.Description>
+    <Next.AlertDialog.Root open>
+      <Next.AlertDialog.Content aria-labelledby={titleId}>
+        <Next.AlertDialog.Body>
+          <Next.AlertDialog.Description srOnly>{t('resetting.message')}</Next.AlertDialog.Description>
           <StatusPanel titleId={titleId} />
-        </AlertDialog.Body>
-      </AlertDialog.Content>
-    </AlertDialog.Root>
+        </Next.AlertDialog.Body>
+      </Next.AlertDialog.Content>
+    </Next.AlertDialog.Root>
   );
 };

@@ -8,8 +8,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Card, Flex, Image, Panel } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Flex } from '@dxos/react-ui';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
@@ -80,37 +81,37 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header classNames='dx-expand'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Header>
-      <Panel.Body classNames='flex flex-col'>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='flex flex-col'>
         <Flex justify='center'>
           <div className='dx-document py-3'>
-            <Card.Root fullWidth border={false}>
-              <Card.Header>
-                <Block>
+            <Next.Card.Root fullWidth border={false}>
+              <Next.Card.Header>
+                <Next.Block>
                   <img src={bookmark.favicon} alt={bookmark.title} />
-                </Block>
-                <Card.Title>{bookmark.title}</Card.Title>
-              </Card.Header>
-              <Card.Body>
-                <Card.Section>
-                  <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
+                </Next.Block>
+                <Next.Card.Title>{bookmark.title}</Next.Card.Title>
+              </Next.Card.Header>
+              <Next.Card.Body>
+                <Next.Card.Section>
+                  <Next.Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
                     {bookmark.url}
-                  </Card.Text>
-                  <Card.Text>{bookmark.excerpt}</Card.Text>
+                  </Next.Card.Text>
+                  <Next.Card.Text>{bookmark.excerpt}</Next.Card.Text>
                   {bookmark.image && imageLoads && (
-                    <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
+                    <Next.Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
                   )}
-                </Card.Section>
-              </Card.Body>
-            </Card.Root>
+                </Next.Card.Section>
+              </Next.Card.Body>
+            </Next.Card.Root>
           </div>
         </Flex>
         {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -5,7 +5,8 @@
 import React, { type ChangeEvent, useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
-import { Field, PinInput, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
@@ -49,25 +50,25 @@ export const InvitationAuthenticator = ({
   return (
     <>
       <div className='grow flex flex-col justify-center gap-4'>
-        <Field.Root
+        <Next.Field.Root
           {...(failed && {
             validationValence: 'error',
           })}
         >
           {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
-            <Field.Label asChild>
+            <Next.Field.Label asChild>
               <InputLabel>{t('auth-code-input.label')}</InputLabel>
-            </Field.Label>
+            </Next.Field.Label>
           ) : (
             <>
-              <Field.Label>
+              <Next.Field.Label>
                 <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
-              </Field.Label>
+              </Next.Field.Label>
               <div className='grow' />
             </>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-            <PinInput
+            <Next.PinInput
               {...{
                 disabled,
                 'density': 'lg',
@@ -83,8 +84,10 @@ export const InvitationAuthenticator = ({
               }}
             />
           )}
-          {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
-        </Field.Root>
+          {failed && (
+            <Next.Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Next.Field.ErrorText>
+          )}
+        </Next.Field.Root>
 
         {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
           <>

@@ -8,8 +8,8 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { LogLevel } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, Panel, ScrollArea, ScrollContainer, Toolbar, useInterval } from '@dxos/react-ui';
-import { type ScrollController } from '@dxos/react-ui';
+import { useInterval } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { defaultOptions } from './timeline-options.ts';
@@ -136,11 +136,11 @@ const DefaultStory = (props: Omit<TimelineProps, 'scroller'>) => {
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
   return (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport ref={setViewport}>
+    <Next.ScrollArea.Root>
+      <Next.ScrollArea.Viewport ref={setViewport}>
         <Timeline {...props} scroller={viewport} />
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+      </Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 };
 
@@ -377,30 +377,30 @@ export const Streaming: Story = {
       [running],
     );
 
-    const scrollerRef = useRef<ScrollController>(null);
+    const scrollerRef = useRef<Next.ScrollController>(null);
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
     return (
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
-            <Button onClick={() => setRunning(true)}>Start</Button>
-            <Button onClick={() => setRunning(false)}>Stop</Button>
-            <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
-            <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body>
-          <ScrollContainer.Root pin ref={scrollerRef}>
-            <ScrollContainer.Content thin>
-              <ScrollContainer.Viewport ref={setViewport}>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Button onClick={() => setRunning(true)}>Start</Next.Button>
+            <Next.Button onClick={() => setRunning(false)}>Stop</Next.Button>
+            <Next.Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Next.Button>
+            <Next.Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Next.Button>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body>
+          <Next.ScrollContainer.Root pin ref={scrollerRef}>
+            <Next.ScrollContainer.Content thin>
+              <Next.ScrollContainer.Viewport ref={setViewport}>
                 <Timeline branches={branches} commits={commits} showTimestamp scroller={viewport} />
-              </ScrollContainer.Viewport>
-              <ScrollContainer.ScrollDownButton />
-            </ScrollContainer.Content>
-          </ScrollContainer.Root>
-        </Panel.Body>
-      </Panel.Root>
+              </Next.ScrollContainer.Viewport>
+              <Next.ScrollContainer.ScrollDownButton />
+            </Next.ScrollContainer.Content>
+          </Next.ScrollContainer.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 };

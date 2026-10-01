@@ -4,7 +4,8 @@
 
 import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components/index.ts';
@@ -24,15 +25,15 @@ export const JoinHeading = forwardRef(
     const { t } = useTranslation(translationKey);
 
     const exitButton = (
-      <Button
+      <Next.Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
         classNames={mx('text-description', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
         data-testid='join-exit'
       >
-        <Icon icon='ph--x--bold' size='md' />
+        <Next.Icon icon='ph--x--bold' size='md' />
         <span className='sr-only'>{t('exit.label')}</span>
-      </Button>
+      </Next.Button>
     );
 
     return (

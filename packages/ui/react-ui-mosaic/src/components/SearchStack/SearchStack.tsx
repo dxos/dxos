@@ -4,9 +4,9 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Block, Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
 
@@ -55,8 +55,8 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
-          <ScrollArea.Root orientation='vertical' padding centered thin>
-            <ScrollArea.Viewport ref={setViewport}>
+          <Next.ScrollArea.Root orientation='vertical' padding centered thin>
+            <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchTile}
                 gap={8}
@@ -66,8 +66,8 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
               />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Mosaic.Container>
       </Focus.Group>
     );
@@ -113,19 +113,19 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       current={current}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth ref={forwardedRef}>
-          <Card.Header>
-            <Block />
-            <Card.Title>{result.label}</Card.Title>
-          </Card.Header>
+        <Next.Card.Root fullWidth ref={forwardedRef}>
+          <Next.Card.Header>
+            <Next.Block />
+            <Next.Card.Title>{result.label}</Next.Card.Title>
+          </Next.Card.Header>
           {result.snippet && (
-            <Card.Body>
-              <Card.Row>
-                <Card.Text variant='description'>{result.snippet}</Card.Text>
-              </Card.Row>
-            </Card.Body>
+            <Next.Card.Body>
+              <Next.Card.Row>
+                <Next.Card.Text variant='description'>{result.snippet}</Next.Card.Text>
+              </Next.Card.Row>
+            </Next.Card.Body>
           )}
-        </Card.Root>
+        </Next.Card.Root>
       </Focus.Item>
     </Mosaic.Tile>
   );

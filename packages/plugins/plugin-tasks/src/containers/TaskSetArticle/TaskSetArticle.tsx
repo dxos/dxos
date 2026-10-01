@@ -17,7 +17,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Switch, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -28,7 +28,7 @@ import {
   useViewStateActions,
 } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { createMenuAction } from '@dxos/react-ui-menu';
+import { createMenuAction } from '@dxos/react-ui-menu/next';
 import {
   type TaskCreateHandler,
   type TaskGroup,
@@ -36,6 +36,7 @@ import {
   type TaskPlacement,
   type TaskSelectModifiers,
 } from '@dxos/react-ui-task';
+import { Next } from '@dxos/react-ui/next';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -324,12 +325,12 @@ export const TaskSetArticle = ({
     <Switch.Root
       on={role}
       fallback={
-        <Panel.Root role={role}>
-          <Panel.Header>
-            <Toolbar.Root disabled={!hasAttention}>{filterRow}</Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body>{content}</Panel.Body>
-        </Panel.Root>
+        <Next.Panel.Root role={role}>
+          <Next.Panel.Header>
+            <Next.Toolbar.Root disabled={!hasAttention}>{filterRow}</Next.Toolbar.Root>
+          </Next.Panel.Header>
+          <Next.Panel.Body>{content}</Next.Panel.Body>
+        </Next.Panel.Root>
       }
     >
       {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
@@ -337,7 +338,7 @@ export const TaskSetArticle = ({
           collapse width, but the filter has to come along or the host's copy of the list has none. */}
       <Switch.Match when={AppSurface.Section.role}>
         <div className='flex flex-col dx-grow'>
-          <Toolbar.Root>{filterRow}</Toolbar.Root>
+          <Next.Toolbar.Root>{filterRow}</Next.Toolbar.Root>
           {content}
         </div>
       </Switch.Match>

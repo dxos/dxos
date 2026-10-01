@@ -7,7 +7,8 @@ import React, { useMemo } from 'react';
 import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Obj, Type } from '@dxos/echo';
-import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, useFormValues } from '@dxos/react-ui-form';
+import { SelectField } from '@dxos/react-ui-form/next';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
 export type PivotColumnFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &

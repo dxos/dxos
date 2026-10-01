@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { Button, Field, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 import {
@@ -49,32 +49,32 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
   );
 
   return (
-    <Panel.Root classNames={classNames}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root classNames={classNames}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           {parse && (
-            <Field.Root>
+            <Next.Field.Root>
               <div className='flex items-center gap-2'>
                 <Next.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
-                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
+                <Next.Field.Label classNames='text-sm text-description'>POS</Next.Field.Label>
               </div>
-            </Field.Root>
+            </Next.Field.Root>
           )}
           <div className='grow' />
-          <Button
+          <Next.Button
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly
             label='Run pipeline'
             disabled={busy || !onRun}
             onClick={() => onRun?.(text)}
           />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <Editor.Root>
           <Editor.View value={text} onChange={setText} extensions={extensions} />
         </Editor.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

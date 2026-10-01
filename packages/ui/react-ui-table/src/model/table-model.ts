@@ -11,7 +11,6 @@ import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
-import { type Label } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import { parseValue } from '@dxos/react-ui-form';
 import {
@@ -21,6 +20,7 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
+import type { Next } from '@dxos/react-ui/next';
 import { formatForEditing } from '@dxos/schema';
 import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
 
@@ -83,7 +83,7 @@ export type TableRow = Record<SchemaEx.JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
-  label: Label;
+  label: Next.Label;
 };
 
 export type TableFeatures = {

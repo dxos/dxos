@@ -5,13 +5,14 @@
 import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
-import { ErrorFallback, type ErrorFallbackProps, Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 /** User-facing error fallback for a plank's content Surface. */
-export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
+export const PlankErrorFallback = ({ error }: Next.ErrorFallbackProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
   }, [error]);
 
   if (process.env.NODE_ENV === 'development') {
-    return <ErrorFallback title='Plank Error' error={error} />;
+    return <Next.ErrorFallback title='Plank Error' error={error} />;
   }
 
   // Show only a generic message to end users; raw error details stay in logs / the dev fallback above.

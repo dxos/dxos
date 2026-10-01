@@ -7,7 +7,7 @@ import React from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Dialog } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '#plugin';
@@ -16,9 +16,9 @@ import { translations } from '#translations';
 import { ResetDialog, type ResetDialogProps } from './ResetDialog.tsx';
 
 const DefaultStory = (props: ResetDialogProps) => (
-  <Dialog.Root open>
+  <Next.Dialog.Root open>
     <ResetDialog {...props} />
-  </Dialog.Root>
+  </Next.Dialog.Root>
 );
 
 const meta = {

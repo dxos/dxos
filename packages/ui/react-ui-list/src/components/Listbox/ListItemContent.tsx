@@ -4,7 +4,8 @@
 
 import React, { type ReactElement, type ReactNode } from 'react';
 
-import { Icon, composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { listTheme } from '../List.theme.ts';
@@ -40,7 +41,7 @@ export const ListItemContent = composable<HTMLDivElement, ListItemContentProps>(
       <div {...composableProps<HTMLDivElement>(props, { classNames: styles.itemContentRoot() })} ref={forwardedRef}>
         {hasIcon && (
           <div className={styles.itemContentIcon()}>
-            {typeof icon === 'string' ? <Icon icon={icon} size='lg' /> : icon}
+            {typeof icon === 'string' ? <Next.Icon icon={icon} size='lg' /> : icon}
           </div>
         )}
         <span className={styles.itemContentTitle()}>{title}</span>

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Card, Icon } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createIssue, createPullRequest, createRepo } from '../testing/index.ts';
@@ -29,15 +29,15 @@ type StoryArgs = {
 const DefaultStory = ({ kind }: StoryArgs) => {
   const subject = useMemo(() => subjects[kind](), [kind]);
   return (
-    <Card.Root classNames='dx-card-popover'>
-      <Card.Header>
-        <Block>
-          <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular'} />
-        </Block>
-        <Card.Title>{Obj.getLabel(subject)}</Card.Title>
-      </Card.Header>
+    <Next.Card.Root classNames='dx-card-popover'>
+      <Next.Card.Header>
+        <Next.Block>
+          <Next.Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular'} />
+        </Next.Block>
+        <Next.Card.Title>{Obj.getLabel(subject)}</Next.Card.Title>
+      </Next.Card.Header>
       <GitHubCard role='card--content' subject={subject} />
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 

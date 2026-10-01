@@ -6,17 +6,9 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import {
-  Button,
-  Icon,
-  Panel,
-  Splitter,
-  SystemButton,
-  type ThemedClassName,
-  Toolbar,
-  useTranslation,
-} from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { OrderedList } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { useCountdown } from '#hooks';
 import { meta } from '#meta';
@@ -154,23 +146,23 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   }, []);
 
   return (
-    <Splitter.Root orientation='vertical' mode={selectedLayer ? 'split' : 'start'} classNames={classNames}>
-      <Splitter.Panel asChild position='start'>
-        <Panel.Root>
-          <Panel.Header>
-            <Toolbar.Root>
-              <Button icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
-              <Toolbar.Separator />
+    <Next.Splitter.Root orientation='vertical' mode={selectedLayer ? 'split' : 'start'} classNames={classNames}>
+      <Next.Splitter.Panel asChild position='start'>
+        <Next.Panel.Root>
+          <Next.Panel.Header>
+            <Next.Toolbar.Root>
+              <Next.Button icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
+              <Next.Toolbar.Separator />
               {playing && timed && <span className='tabular-nums text-description p-1'>{formattedTime}</span>}
-              <Button
+              <Next.Button
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={playing ? 'Stop' : 'Play'}
                 onClick={handlePlay}
               />
-            </Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body>
+            </Next.Toolbar.Root>
+          </Next.Panel.Header>
+          <Next.Panel.Body>
             <OrderedList.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}
@@ -192,14 +184,14 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
                 </OrderedList.Content>
               )}
             </OrderedList.Root>
-          </Panel.Body>
-        </Panel.Root>
-      </Splitter.Panel>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
+      </Next.Splitter.Panel>
 
-      <Splitter.Panel asChild position='end'>
+      <Next.Splitter.Panel asChild position='end'>
         {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleUpdate} />}
-      </Splitter.Panel>
-    </Splitter.Root>
+      </Next.Splitter.Panel>
+    </Next.Splitter.Root>
   );
 };
 
@@ -233,11 +225,11 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
       onClick={() => onLayerSelect(item.id)}
     >
       <OrderedList.DragHandle />
-      <Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
+      <Next.Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
       {/* Plain title row — there's no disclosure panel here, so we don't want
           `OrderedList.Title`'s aria-expanded / trigger semantics. */}
       <div className='flex grow items-center truncate'>{item.name ?? Sequence.getSourceLabel(item.source)}</div>
-      <Button
+      <Next.Button
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {
@@ -245,7 +237,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
           onLayerUpdate({ ...item, muted: !item.muted });
         }}
       />
-      <SystemButton.Remove
+      <Next.SystemButton.Remove
         onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);

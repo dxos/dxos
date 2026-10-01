@@ -11,7 +11,7 @@ import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
@@ -67,11 +67,11 @@ export const ScriptArticle = ({
   }
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ScriptToolbar script={script} attendableId={attendableId} state={state} role={role} />
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <TypescriptEditor
           classNames={editorClassNames(role)}
           id={script.id}
@@ -81,8 +81,8 @@ export const ScriptArticle = ({
           inputMode={settings.editorInputMode}
           toolbar
         />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -4,17 +4,9 @@
 
 import React, { Children, type PropsWithChildren, useId } from 'react';
 
-import {
-  Block,
-  Collapsible,
-  Fieldset,
-  Icon,
-  type ThemedClassName,
-  Tooltip,
-  composable,
-  composableProps,
-} from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks/index.ts';
@@ -77,21 +69,21 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     const tooltip = descriptionPlacement === 'tooltip' && !!description;
     // A question mark after the label carries the description, so the group's chrome stays one line.
     const hint = tooltip && (
-      <Tooltip.Trigger
+      <Next.Tooltip.Trigger
         content={description}
         side='bottom'
         aria-label={description}
         className='grid size-6 place-items-center rounded-xs text-description hover:bg-hover-surface'
       >
-        <Icon icon='ph--question--regular' size='md' />
-      </Tooltip.Trigger>
+        <Next.Icon icon='ph--question--regular' size='md' />
+      </Next.Tooltip.Trigger>
     );
 
     // In the legend row, not positioned: WebKit starts a fieldset's containing block below its legend.
     const trailing = actions && <div className={styles.fieldSetActions()}>{actions}</div>;
 
     const legend = showLabel && (
-      <Fieldset.Legend
+      <Next.Fieldset.Legend
         classNames={styles.fieldSetLegend({
           class: mx(
             description && !tooltip ? undefined : styles.fieldSetHeader(),
@@ -109,19 +101,19 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
             actions={
               <>
                 {trailing}
-                <Block>
+                <Next.Block>
                   {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
-                  <Collapsible.Trigger
+                  <Next.Collapsible.Trigger
                     aria-labelledby={labelId}
                     classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
                   >
-                    <Icon
+                    <Next.Icon
                       icon='ph--caret-right--regular'
                       size='xs'
                       classNames='transition-transform group-data-[state=open]:rotate-90'
                     />
-                  </Collapsible.Trigger>
-                </Block>
+                  </Next.Collapsible.Trigger>
+                </Next.Block>
               </>
             }
           />
@@ -137,20 +129,20 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
         ) : (
           <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} actions={trailing || undefined} />
         )}
-      </Fieldset.Legend>
+      </Next.Fieldset.Legend>
     );
 
     const helper = description && !tooltip && (
-      <Fieldset.HelperText asChild classNames={styles.fieldSetHeader({ class: styles.fieldSetDescription() })}>
+      <Next.Fieldset.HelperText asChild classNames={styles.fieldSetHeader({ class: styles.fieldSetDescription() })}>
         <MarkdownView content={description} />
-      </Fieldset.HelperText>
+      </Next.Fieldset.HelperText>
     );
 
     // A nested group's body is the bordered box, under the legend; the root's fields sit in the fieldset itself.
     const body = (
       <FormFieldSetDepthContext.Provider value={depth + 1}>
         {canCollapse ? (
-          <Collapsible.Content classNames={styles.fieldSetBody()}>{children}</Collapsible.Content>
+          <Next.Collapsible.Content classNames={styles.fieldSetBody()}>{children}</Next.Collapsible.Content>
         ) : depth > 0 ? (
           <div className={styles.fieldSetBody()}>{children}</div>
         ) : (
@@ -160,7 +152,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     );
 
     const fieldset = (
-      <Fieldset.Root
+      <Next.Fieldset.Root
         {...composableProps(props, { classNames: styles.fieldSet() })}
         aria-labelledby={showLabel ? labelId : undefined}
         ref={forwardedRef}
@@ -169,15 +161,15 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
         {!showLabel && trailing}
         {helper}
         {body}
-      </Fieldset.Root>
+      </Next.Fieldset.Root>
     );
 
     // The box is the fieldset and the `Collapsible` at once, so the group's name, border and
     // disclosure state sit on one element.
     return canCollapse ? (
-      <Collapsible.Root defaultOpen asChild>
+      <Next.Collapsible.Root defaultOpen asChild>
         {fieldset}
-      </Collapsible.Root>
+      </Next.Collapsible.Root>
     ) : (
       fieldset
     );

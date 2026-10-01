@@ -13,7 +13,7 @@ import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu/next';
 
 import { meta } from '#meta';
 

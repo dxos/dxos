@@ -31,7 +31,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
+import { ElevationProvider } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -42,7 +42,8 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -447,14 +448,14 @@ export const MailboxArticle = ({
   });
 
   return (
-    <Panel.Root data-testid='inbox.mailbox'>
+    <Next.Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
-        <Panel.Header>
+        <Next.Panel.Header>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-        </Panel.Header>
+        </Next.Panel.Header>
       </ElevationProvider>
-      <Panel.Body>
-        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+      <Next.Panel.Body>
+        <Next.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -470,16 +471,16 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred>
-      </Panel.Body>
-      <Panel.Footer>
+        </Next.Deferred>
+      </Next.Panel.Body>
+      <Next.Panel.Footer>
         <ProgressMeter
           classNames='border-t border-subdued-separator'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />
-      </Panel.Footer>
-    </Panel.Root>
+      </Next.Panel.Footer>
+    </Next.Panel.Root>
   );
 };
 

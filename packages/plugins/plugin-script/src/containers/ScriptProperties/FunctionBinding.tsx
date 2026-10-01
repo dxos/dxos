@@ -11,8 +11,9 @@ import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { Field, Input, SystemButton, useControlledState, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useControlledState, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -52,9 +53,9 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
   return (
     <Form.FieldSet label={t('remote-function-settings.heading')}>
       {functionUrl && (
-        <Field.Root>
-          <Field.Label>{t('function-url.label')}</Field.Label>
-          <Input
+        <Next.Field.Root>
+          <Next.Field.Label>{t('function-url.label')}</Next.Field.Label>
+          <Next.Input
             disabled
             value={functionUrl}
             onChange={(event) => {
@@ -63,19 +64,19 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
               });
             }}
           />
-          <SystemButton.Clipboard iconOnly value={functionUrl} />
-        </Field.Root>
+          <Next.SystemButton.Clipboard iconOnly value={functionUrl} />
+        </Next.Field.Root>
       )}
 
-      <Field.Root>
-        <Field.Label>{t('function-binding.label')}</Field.Label>
-        <Input
+      <Next.Field.Root>
+        <Next.Field.Label>{t('function-binding.label')}</Next.Field.Label>
+        <Next.Input
           placeholder={t('function-binding.placeholder')}
           value={binding}
           onChange={handleBindingChange}
           onBlur={handleBindingBlur}
         />
-      </Field.Root>
+      </Next.Field.Root>
     </Form.FieldSet>
   );
 };

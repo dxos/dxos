@@ -6,8 +6,9 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Button, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -15,7 +16,7 @@ import { meta } from '#meta';
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
-}: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
+}: ThemedClassName<Pick<Next.ButtonProps, 'variant'>>) => {
   const { updateState } = useDeckState();
   const { t } = useTranslation(meta.profile.key);
 
@@ -27,7 +28,7 @@ export const ToggleSidebarButton = ({
   }, [updateState]);
 
   return (
-    <Button
+    <Next.Button
       variant={variant}
       icon='ph--sidebar--regular'
       iconOnly
@@ -48,7 +49,7 @@ export const CloseSidebarButton = () => {
   }, [updateState]);
 
   return (
-    <Button
+    <Next.Button
       variant='ghost'
       icon='ph--caret-line-left--regular'
       iconOnly
@@ -87,7 +88,7 @@ export const ToggleComplementarySidebarButton = ({
   );
 
   return (
-    <Button
+    <Next.Button
       variant='ghost'
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'

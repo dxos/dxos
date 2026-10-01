@@ -8,8 +8,9 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, SystemButton, Tag, ThemedClassName, Tooltip, useId, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
@@ -91,7 +92,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
     <Listbox.Item classNames='p-2 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
       <Listbox.ItemContent
         icon={
-          <Avatar.Root
+          <Next.Avatar.Root
             aria-labelledby={labelId}
             size={8}
             hue={profileString(contact, 'hue') ?? fallback.hue}
@@ -104,10 +105,10 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
               {displayName}
             </span>
             <div className='flex items-center gap-1 text-sm text-description'>
-              <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
+              <Next.Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
                 <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
-              </Tooltip.Trigger>
-              <SystemButton.Clipboard
+              </Next.Tooltip.Trigger>
+              <Next.SystemButton.Clipboard
                 iconOnly
                 size='sm'
                 variant='ghost'
@@ -122,11 +123,11 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
             {common.length > 0 && (
               <div className='flex flex-wrap gap-1'>
                 {common.map((space) => (
-                  <Tag key={space.id} hue={getHashStyles(space.id).hue} asChild>
+                  <Next.Tag key={space.id} hue={getHashStyles(space.id).hue} asChild>
                     <button type='button' onClick={() => onSelectSpace?.(space)} data-testid='contact-list.space'>
                       {space.name ?? t('unnamed-space.label')}
                     </button>
-                  </Tag>
+                  </Next.Tag>
                 ))}
               </div>
             )}

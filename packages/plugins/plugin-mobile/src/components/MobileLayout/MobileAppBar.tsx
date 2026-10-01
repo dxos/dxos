@@ -6,9 +6,10 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { Fragment } from 'react';
 
-import { Button, DensityProvider, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -54,11 +55,11 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
     const displayTitle = title ?? t('current-app.name', { ns: osTranslations });
 
     // Wrap the menu trigger with Popover.Anchor when the popoverAnchorId is set.
-    const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
+    const AnchorRoot = popoverAnchorId ? Next.Popover.Anchor : Fragment;
 
     return (
       <DensityProvider size='md'>
-        <Toolbar.Root
+        <Next.Toolbar.Root
           {...composableProps(props, {
             role: 'banner',
             // `min-h` rather than `h`: the Panel toolbar slot pins the row to `--dx-toolbar-size`,
@@ -70,9 +71,15 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           ref={forwardedRef}
         >
           {keyboardOpen ? (
-            <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('done.label')} classNames={TOUCH_TARGET} />
+            <Next.Button
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              label={t('done.label')}
+              classNames={TOUCH_TARGET}
+            />
           ) : showBackButton ? (
-            <Button
+            <Next.Button
               variant='ghost'
               icon='ph--caret-left--regular'
               iconOnly
@@ -87,7 +94,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           {hasActions ? (
             <AnchorRoot>
               <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
-                <Button
+                <Next.Button
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
                   iconOnly
@@ -99,7 +106,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           ) : (
             <span />
           )}
-        </Toolbar.Root>
+        </Next.Toolbar.Root>
       </DensityProvider>
     );
   },

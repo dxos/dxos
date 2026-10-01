@@ -19,8 +19,9 @@ import { useResizeDetector } from 'react-resize-detector';
 import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -159,7 +160,7 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
       ref={forwardedRef}
     >
       <div className='flex justify-start'>
-        <Button
+        <Next.Button
           variant='ghost'
           icon='ph--calendar--regular'
           iconOnly

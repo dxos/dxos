@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -38,9 +39,9 @@ export const ScriptSettings = ({ settings, onSettingsChange, scope, onAuthentica
               label={t('authenticate-action.label')}
               description={t('authenticate-action.description')}
             >
-              <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
+              <Next.Button disabled={!onSettingsChange} onClick={onAuthenticate}>
                 {t('authenticate-button.label')}
-              </Button>
+              </Next.Button>
             </Form.Field>
             <Form.Fields />
           </Form.FieldSet>

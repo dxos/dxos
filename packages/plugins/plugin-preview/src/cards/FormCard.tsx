@@ -10,8 +10,10 @@ import { Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { Card, useTranslation } from '@dxos/react-ui';
-import { Form, type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -96,18 +98,18 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
 
   if (!schema || !hasRenderableContent) {
     return (
-      <Card.Body>
-        <Card.Row>
-          <Card.Text variant='description'>{t('unable-to-create-preview.message')}</Card.Text>
-        </Card.Row>
-      </Card.Body>
+      <Next.Card.Body>
+        <Next.Card.Row>
+          <Next.Card.Text variant='description'>{t('unable-to-create-preview.message')}</Next.Card.Text>
+        </Next.Card.Row>
+      </Next.Card.Body>
     );
   }
 
   const { icon, hue } = Obj.getIcon(subject) ?? { icon: 'ph--circle-dashed--regular', hue: 'neutral' };
 
   return (
-    <Card.Body>
+    <Next.Card.Body>
       <Form.Root
         schema={schema}
         projection={projection}
@@ -123,6 +125,6 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Card.Body>
+    </Next.Card.Body>
   );
 };

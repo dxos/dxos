@@ -8,8 +8,8 @@ import React, { useState } from 'react';
 import { Filter, Query, Tag, Type } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
@@ -39,9 +39,9 @@ const meta = {
 
     return (
       <div>
-        <Toolbar.Root classNames='border-b border-subdued-separator'>
+        <Next.Toolbar.Root classNames='border-b border-subdued-separator'>
           <QueryForm {...args} onChange={setQuery} />
-        </Toolbar.Root>
+        </Next.Toolbar.Root>
 
         <JsonHighlighter data={query} classNames='p-2 text-xs' />
       </div>

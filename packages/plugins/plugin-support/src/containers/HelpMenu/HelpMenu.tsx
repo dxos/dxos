@@ -10,7 +10,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useConfig } from '@dxos/react-client';
-import { Button, Flex, Icon, Menu, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -49,49 +50,49 @@ export const HelpMenu = () => {
   const downloadHref = downloadUrl(getEnvString(config, 'DX_ENVIRONMENT'));
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
+    <Next.Menu.Root>
+      <Next.Menu.Trigger asChild>
         <StatusBar.Item>
-          <Button variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
+          <Next.Button variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
-      </Menu.Trigger>
-      <Menu.Content side='left' align='end'>
-        <Menu.Item asChild>
+      </Next.Menu.Trigger>
+      <Next.Menu.Content side='left' align='end'>
+        <Next.Menu.Item asChild>
           <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
-            <Icon icon='ph--book-open--regular' size='md' />
+            <Next.Icon icon='ph--book-open--regular' size='md' />
             <span>{t('docs.label')}</span>
           </a>
-        </Menu.Item>
-        <Menu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
-          <Icon icon='ph--keyboard--regular' size='md' />
+        </Next.Menu.Item>
+        <Next.Menu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
+          <Next.Icon icon='ph--keyboard--regular' size='md' />
           <span>{t('shortcuts.label')}</span>
-        </Menu.Item>
-        <Menu.Separator />
-        <Menu.Item asChild>
+        </Next.Menu.Item>
+        <Next.Menu.Separator />
+        <Next.Menu.Item asChild>
           <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
-            <Icon icon='ph--discord-logo--regular' size='md' />
+            <Next.Icon icon='ph--discord-logo--regular' size='md' />
             <span>{t('discord.label')}</span>
           </a>
-        </Menu.Item>
-        <Menu.Item asChild>
+        </Next.Menu.Item>
+        <Next.Menu.Item asChild>
           <a href={GITHUB_URL} target='_blank' rel='noopener noreferrer'>
-            <Icon icon='ph--github-logo--regular' size='md' />
+            <Next.Icon icon='ph--github-logo--regular' size='md' />
             <span>{t('github.label')}</span>
           </a>
-        </Menu.Item>
+        </Next.Menu.Item>
         {!isTauri() && (
-          <Menu.Item asChild>
+          <Next.Menu.Item asChild>
             <a href={downloadHref} target='_blank' rel='noopener noreferrer'>
-              <Icon icon='ph--download-simple--regular' size='md' />
+              <Next.Icon icon='ph--download-simple--regular' size='md' />
               <span>{t('download-apps.label')}</span>
             </a>
-          </Menu.Item>
+          </Next.Menu.Item>
         )}
-        <Menu.Separator />
-        <Menu.Item onClick={openDialog(ABOUT_DIALOG)}>
-          <Icon icon='ph--info--regular' size='md' />
+        <Next.Menu.Separator />
+        <Next.Menu.Item onClick={openDialog(ABOUT_DIALOG)}>
+          <Next.Icon icon='ph--info--regular' size='md' />
           <span>{t('about.label')}</span>
-        </Menu.Item>
+        </Next.Menu.Item>
         {version && (
           <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
             <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
@@ -106,8 +107,8 @@ export const HelpMenu = () => {
             )}
           </Flex>
         )}
-      </Menu.Content>
-    </Menu.Root>
+      </Next.Menu.Content>
+    </Next.Menu.Root>
   );
 };
 

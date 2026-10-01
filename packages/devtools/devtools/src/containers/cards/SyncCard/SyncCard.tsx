@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Button, Grid, SystemButton, Tooltip } from '@dxos/react-ui';
+import { Grid } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -41,7 +42,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
         title='Sync'
         info={pending > 0 ? `${pending} syncing` : `${spaces.length} spaces`}
         action={
-          onCopy && <Button iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
+          onCopy && <Next.Button iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
         }
       />
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
@@ -65,8 +66,8 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
             iconClassNames={syncing ? 'text-warning-text' : 'text-success-text'}
           >
             <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
-              <Tooltip.Trigger asChild content={row.name}>
-                <SystemButton.Clipboard
+              <Next.Tooltip.Trigger asChild content={row.name}>
+                <Next.SystemButton.Clipboard
                   size='sm'
                   variant='ghost'
                   compact
@@ -75,7 +76,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
                   label={row.spaceId.slice(0, 8)}
                   onCopy={() => row.spaceId}
                 />
-              </Tooltip.Trigger>
+              </Next.Tooltip.Trigger>
               <Metric pending={unsynced} total={row.state.totalDocumentCount ?? 0} />
               <Metric pending={feedPending} total={row.feedState?.total ?? 0} />
             </Grid>

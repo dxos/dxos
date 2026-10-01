@@ -5,21 +5,21 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Organization } from '@dxos/types';
 
 export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organization.Organization>) => {
   const { name, image, description, website } = subject;
 
   return (
-    <Card.Body>
-      {image && <Card.Poster alt={name ?? ''} image={image} />}
+    <Next.Card.Body>
+      {image && <Next.Card.Poster alt={name ?? ''} image={image} />}
       {description && (
-        <Card.Row>
-          <Card.Text variant='description'>{description}</Card.Text>
-        </Card.Row>
+        <Next.Card.Row>
+          <Next.Card.Text variant='description'>{description}</Next.Card.Text>
+        </Next.Card.Row>
       )}
-      {website && <Card.Link label={website} href={website} />}
-    </Card.Body>
+      {website && <Next.Card.Link label={website} href={website} />}
+    </Next.Card.Body>
   );
 };

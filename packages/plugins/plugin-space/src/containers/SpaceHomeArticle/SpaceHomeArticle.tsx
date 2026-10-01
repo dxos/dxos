@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
+import { Column, Flex } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -16,7 +16,8 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -40,26 +41,26 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
   const gutter = layout.mode === 'mobile' ? 'md' : 'lg';
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Header>
+      </Next.Panel.Header>
 
-      <Panel.Body asChild>
+      <Next.Panel.Body asChild>
         <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
-          <ScrollArea.Root orientation='vertical' centered padding>
-            <ScrollArea.Viewport>
+          <Next.ScrollArea.Root orientation='vertical' centered padding>
+            <Next.ScrollArea.Viewport>
               <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
               </Flex>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>
             <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

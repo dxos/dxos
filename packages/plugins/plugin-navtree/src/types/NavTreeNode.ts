@@ -5,8 +5,8 @@
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { type Label } from '@dxos/react-ui';
 import { type TreeData } from '@dxos/react-ui-list';
+import type { Next } from '@dxos/react-ui/next';
 import { type MaybePromise, type Position } from '@dxos/util';
 
 export type NavTreeItemGraphNode = AppGraphNode.Node<
@@ -42,7 +42,7 @@ type SharedProperties = {
   testId?: string;
   disabled?: boolean;
   position?: Position.Position;
-  label: Label;
+  label: Next.Label;
   className?: string;
   headingClassName?: string;
   icon?: string;

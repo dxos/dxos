@@ -7,7 +7,8 @@ import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -23,9 +24,9 @@ const DefaultStory = () => {
   }, [client]);
 
   return (
-    <AlertDialog.Root open={!!recoveryCode}>
+    <Next.AlertDialog.Root open={!!recoveryCode}>
       <RecoveryCodeDialog code={recoveryCode ?? ''} />
-    </AlertDialog.Root>
+    </Next.AlertDialog.Root>
   );
 };
 

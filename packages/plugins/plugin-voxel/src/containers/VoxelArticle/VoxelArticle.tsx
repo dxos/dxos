@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Hue } from '@dxos/ui-theme';
 
 import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '#components';
@@ -118,8 +118,8 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
   }, [updateVoxels]);
 
   return (
-    <Panel.Root>
-      <Panel.Header>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
         <VoxelToolbar
           toolMode={toolMode}
           selectedHue={selectedHue}
@@ -133,8 +133,8 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
           onToggleLife={handleToggleLife}
           onSeedLife={handleSeedLife}
         />
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <div className='relative grow'>
           <VoxelEditor
             voxels={voxels}
@@ -152,8 +152,8 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
             <Hint toolMode={toolMode} />
           </div>
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

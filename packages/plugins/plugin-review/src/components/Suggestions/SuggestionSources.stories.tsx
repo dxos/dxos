@@ -10,7 +10,7 @@ import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
@@ -102,20 +102,20 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
   }
 
   return (
-    <Panel.Root>
+    <Next.Panel.Root>
       {swap && (
-        <Panel.Header>
-          <Toolbar.Root>
-            <Button
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Button
               data-testid='swap-document'
               onClick={() => setActive((current) => (current + 1) % documents.length)}
             >
               Swap
-            </Button>
-          </Toolbar.Root>
-        </Panel.Header>
+            </Next.Button>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
       )}
-      <Panel.Body>
+      <Next.Panel.Body>
         <SuggestionSources document={documents[active]} onResolved={onResolved}>
           {(resolved) => (
             <div data-testid='resolved-content'>
@@ -125,8 +125,8 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
             </div>
           )}
         </SuggestionSources>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

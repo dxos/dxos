@@ -11,15 +11,8 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions, useNode } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import {
-  Button,
-  Icon,
-  type IconButtonProps,
-  Toolbar as NaturalToolbar,
-  type ThemedClassName,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
@@ -72,7 +65,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NaturalToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
+      <Next.Toolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}
           state={{
@@ -107,10 +100,10 @@ export const Toolbar = ({
 
         {(participants !== undefined && (
           <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-subdued'>
-            <Icon icon='ph--users--regular' />
+            <Next.Icon icon='ph--users--regular' />
             <div>{participants}</div>
           </div>
-        )) || <NaturalToolbar.Separator variant='gap' />}
+        )) || <Next.Toolbar.Separator variant='gap' />}
 
         {inRoom && (
           <>
@@ -135,7 +128,7 @@ export const Toolbar = ({
             {actions
               .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
-                <Button
+                <Next.Button
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
@@ -163,9 +156,14 @@ export const Toolbar = ({
           </>
         )}
         {inRoom ? (
-          <Button variant='destructive' icon='ph--phone-x--regular' label={t('leave-call.button')} onClick={onLeave} />
+          <Next.Button
+            variant='destructive'
+            icon='ph--phone-x--regular'
+            label={t('leave-call.button')}
+            onClick={onLeave}
+          />
         ) : (
-          <Button
+          <Next.Button
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
@@ -173,28 +171,28 @@ export const Toolbar = ({
             onClick={onJoin}
           />
         )}
-      </NaturalToolbar.Root>
+      </Next.Toolbar.Root>
     </div>
   );
 };
 
 Toolbar.displayName = 'MeetingToolbar';
 
-type ToolbarButtonProps = Pick<IconButtonProps, 'disabled'> & {
+type ToolbarButtonProps = Pick<Next.ButtonProps, 'disabled'> & {
   active?: boolean;
   state: {
-    on: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
-    off: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+    on: Pick<Next.ButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+    off: Pick<Next.ButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
   };
 };
 
-const defaultButtonProps: Partial<IconButtonProps> = {
+const defaultButtonProps: Partial<Next.ButtonProps> = {
   size: 5,
   iconOnly: true,
 };
 
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
-  <Button
+  <Next.Button
     {...defaultButtonProps}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}

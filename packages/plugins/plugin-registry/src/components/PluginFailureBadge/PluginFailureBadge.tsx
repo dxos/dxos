@@ -5,7 +5,8 @@
 import React from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Button, Popover, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -30,9 +31,9 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
-        <Button
+    <Next.Popover.Root>
+      <Next.Popover.Trigger asChild>
+        <Next.Button
           variant='destructive'
           icon='ph--warning--bold'
           iconOnly
@@ -42,9 +43,9 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
           data-testid={`pluginFailureBadge.${failure.id}`}
           onClick={(event) => event.stopPropagation()}
         />
-      </Popover.Trigger>
-      <Popover.Content>
-        <Popover.Body>
+      </Next.Popover.Trigger>
+      <Next.Popover.Content>
+        <Next.Popover.Body>
           <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
             <p className='font-medium text-sm'>
               {t('failure-title.label', {
@@ -55,8 +56,8 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
             </p>
             <p className='text-description text-sm break-words'>{failure.error.message}</p>
           </div>
-        </Popover.Body>
-      </Popover.Content>
-    </Popover.Root>
+        </Next.Popover.Body>
+      </Next.Popover.Content>
+    </Next.Popover.Root>
   );
 };

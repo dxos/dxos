@@ -16,7 +16,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { Block, Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover, virtualAnchor } from '@dxos/react-ui';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
 
@@ -71,30 +72,30 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
   }, [handleActivate]);
 
   return (
-    <Popover.Root
+    <Next.Popover.Root
       open={open}
       onOpenChange={setOpen}
-      positioning={virtualAnchor(triggerRef as RefObject<HTMLButtonElement>)}
+      positioning={Next.virtualAnchor(triggerRef as RefObject<HTMLButtonElement>)}
     >
       {children}
       {link && (
-        <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-          <Popover.Body classNames='dx-card-popover-width'>
-            <Card.Root border={false} data-testid='contact-preview'>
-              <Card.Header>
-                <Block>
-                  <Icon icon='ph--user--regular' />
-                </Block>
-                <Card.Title>{link.title ?? link.label}</Card.Title>
-              </Card.Header>
-              <Card.Row>
-                <Card.Text variant='description'>{link.eid}</Card.Text>
-              </Card.Row>
-            </Card.Root>
-          </Popover.Body>
-        </Popover.Content>
+        <Next.Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+          <Next.Popover.Body classNames='dx-card-popover-width'>
+            <Next.Card.Root border={false} data-testid='contact-preview'>
+              <Next.Card.Header>
+                <Next.Block>
+                  <Next.Icon icon='ph--user--regular' />
+                </Next.Block>
+                <Next.Card.Title>{link.title ?? link.label}</Next.Card.Title>
+              </Next.Card.Header>
+              <Next.Card.Row>
+                <Next.Card.Text variant='description'>{link.eid}</Next.Card.Text>
+              </Next.Card.Row>
+            </Next.Card.Root>
+          </Next.Popover.Body>
+        </Next.Popover.Content>
       )}
-    </Popover.Root>
+    </Next.Popover.Root>
   );
 };
 
@@ -127,14 +128,14 @@ const DefaultStory = () => {
 
   return (
     <CardPreviewHost>
-      <Card.Root border={false} fullWidth classNames='p-1'>
-        <Card.Body>
-          <Card.Row>
-            <Block>
+      <Next.Card.Root border={false} fullWidth classNames='p-1'>
+        <Next.Card.Body>
+          <Next.Card.Row>
+            <Next.Block>
               <Row.Star starred={starred} onToggle={handleToggleStar} />
-            </Block>
-            <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
-          </Card.Row>
+            </Next.Block>
+            <Next.Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Next.Card.Text>
+          </Next.Card.Row>
           {/* Neither `db` nor `getContact`: no contact resolution, so the avatar is inert. */}
           <Row.Person actor={KNOWN_ACTOR} role='from' />
           {/* The interactive avatar's two states, at both sizes in use: 6 for a dense list row, 9 for
@@ -169,8 +170,8 @@ const DefaultStory = () => {
             ]}
             onTagClick={() => {}}
           />
-        </Card.Body>
-      </Card.Root>
+        </Next.Card.Body>
+      </Next.Card.Root>
     </CardPreviewHost>
   );
 };

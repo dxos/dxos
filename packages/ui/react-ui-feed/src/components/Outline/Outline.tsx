@@ -12,7 +12,8 @@ import React, {
   useState,
 } from 'react';
 
-import { Popover, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
@@ -265,7 +266,7 @@ export const Outline = ({
   const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
   return (
-    <Popover.Root open={hoveredMarker != null}>
+    <Next.Popover.Root open={hoveredMarker != null}>
       <div
         role='navigation'
         className={mx('relative flex flex-col justify-center overflow-hidden', classNames)}
@@ -350,12 +351,12 @@ export const Outline = ({
             with a real pointer: `data-pointer` stayed on the tick after the pointer had gone.
             A zero-height anchor moved to the shown tick's offset keeps every tick stable; the
             popover is keyed to the marker so it still re-measures when the anchor moves. */}
-        <Popover.Anchor asChild>
+        <Next.Popover.Anchor asChild>
           <div className='absolute left-0' style={{ top: anchorOffset, width, height: 0 }} />
-        </Popover.Anchor>
+        </Next.Popover.Anchor>
       </div>
       {hoveredMarker && (
-        <Popover.Content
+        <Next.Popover.Content
           // Keyed to the tick: the popover measures its anchor when it mounts, and moving the anchor
           // to a different element does not make it measure again — the card stayed put while the
           // pointer walked the rail, drifting further from the tick with every step. Remounting per
@@ -367,16 +368,16 @@ export const Outline = ({
           avoidCollisions={false}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Popover.Body>
+          <Next.Popover.Body>
             <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>
               <p className='truncate font-medium'>{hoveredMarker.title}</p>
               {hoveredMarker.description && (
                 <p className='mt-1 text-sm text-description line-clamp-3'>{hoveredMarker.description}</p>
               )}
             </div>
-          </Popover.Body>
-        </Popover.Content>
+          </Next.Popover.Body>
+        </Next.Popover.Content>
       )}
-    </Popover.Root>
+    </Next.Popover.Root>
   );
 };

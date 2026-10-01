@@ -10,9 +10,11 @@ import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { omitId } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
@@ -136,14 +138,14 @@ export const OutlineArticle = ({
 
   if (task) {
     return (
-      <Panel.Root role={role}>
-        <Panel.Header>
+      <Next.Panel.Root role={role}>
+        <Next.Panel.Header>
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Header>
-        <Panel.Body>
+        </Next.Panel.Header>
+        <Next.Panel.Body>
           <TaskForm task={task} classNames='dx-document' />
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   }
 
@@ -160,16 +162,16 @@ export const OutlineArticle = ({
           resolveLinkLabel={resolveLinkLabel}
           extensions={extensions}
         >
-          <Panel.Root role={role}>
+          <Next.Panel.Root role={role}>
             <Show when={toolbar}>
-              <Panel.Header>
+              <Next.Panel.Header>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
-              </Panel.Header>
+              </Next.Panel.Header>
             </Show>
-            <Panel.Body asChild>
+            <Next.Panel.Body asChild>
               <Outline.Content classNames='dx-document' />
-            </Panel.Body>
-          </Panel.Root>
+            </Next.Panel.Body>
+          </Next.Panel.Root>
         </Outline.Root>
       )}
     </Show>

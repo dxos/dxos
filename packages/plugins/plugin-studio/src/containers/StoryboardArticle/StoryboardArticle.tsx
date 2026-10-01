@@ -11,9 +11,10 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Empty, Panel, ScrollArea, Splitter, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { FrameStack, StoryboardPlayer } from '#components';
 import { meta } from '#meta';
@@ -153,17 +154,24 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
     // The splitter is the article: the stack (with the storyboard's toolbar) opens at a navtree
     // sidebar's width so previews read at that scale, and the handle lets the reader trade it
     // against the main panel — the selected frame's variants, or the storyboard playing.
-    <Splitter.Root role={role} orientation='horizontal' anchor='start' resizable defaultSize={STACK_SIZE} minSize={8}>
-      <Splitter.Panel position='start'>
-        <Panel.Root>
-          <Panel.Header>
+    <Next.Splitter.Root
+      role={role}
+      orientation='horizontal'
+      anchor='start'
+      resizable
+      defaultSize={STACK_SIZE}
+      minSize={8}
+    >
+      <Next.Splitter.Panel position='start'>
+        <Next.Panel.Root>
+          <Next.Panel.Header>
             <ActionToolbar {...menuActions} attendableId={attendableId} />
-          </Panel.Header>
-          <Panel.Body asChild>
-            <ScrollArea.Root>
-              <ScrollArea.Viewport>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
+            <Next.ScrollArea.Root>
+              <Next.ScrollArea.Viewport>
                 {frames.length === 0 ? (
-                  <Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty>
+                  <Next.Empty classNames='h-full'>{t('storyboard-empty.message')}</Next.Empty>
                 ) : (
                   <FrameStack<Frame.Frame>
                     items={frames}
@@ -174,13 +182,13 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
                     {(frame, index) => <FrameThumbnail frame={frame} index={index} />}
                   </FrameStack>
                 )}
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Panel.Body>
-        </Panel.Root>
-      </Splitter.Panel>
-      <Splitter.ResizeTrigger />
-      <Splitter.Panel position='end'>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
+      </Next.Splitter.Panel>
+      <Next.Splitter.ResizeTrigger />
+      <Next.Splitter.Panel position='end'>
         {playing ? (
           <StoryboardPlayer clips={clips} attendableId={attendableId} onClose={handleStop} />
         ) : selectedFrame ? (
@@ -188,8 +196,8 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
         ) : (
           <EmptyPanel label={t('storyboard-empty.message')} attendableId={attendableId} />
         )}
-      </Splitter.Panel>
-    </Splitter.Root>
+      </Next.Splitter.Panel>
+    </Next.Splitter.Root>
   );
 };
 

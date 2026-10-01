@@ -13,9 +13,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldMap } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { type FormFieldMap } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
+import { Next } from '@dxos/react-ui/next';
 
 import { useActiveFileSystemWorkspace } from '#hooks';
 import { meta } from '#meta';
@@ -146,9 +148,9 @@ export const WorkspaceSettingsContainer = () => {
           </Form.FieldSet>
           <Form.FieldSet label={t('remove-folder.label')}>
             <Form.Field standalone label={t('remove-folder.label')} description={t('remove-folder.description')}>
-              <Button variant='destructive' onClick={handleRemove}>
+              <Next.Button variant='destructive' onClick={handleRemove}>
                 {t('remove-folder.label')}
-              </Button>
+              </Next.Button>
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
-import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { type ColumnRenderer, type IconRenderer, createStaticTreeModel } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
@@ -81,7 +82,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
             data-testid='pull-request.files.reviewed'
           />
         ) : (
-          <Icon icon='ph--folder--regular' size='md' />
+          <Next.Icon icon='ph--folder--regular' size='md' />
         ),
     [reviewed, onReviewedChange, t],
   );

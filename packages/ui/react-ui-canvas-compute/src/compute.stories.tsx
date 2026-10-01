@@ -9,12 +9,12 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { DiagnosticOverlay } from './components/index.ts';
@@ -142,18 +142,18 @@ const DefaultStory = ({
 
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
-          <Toolbar.Root>
-            <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-              <Select.Trigger classNames='w-full'>{sidebar}</Select.Trigger>
-              <Select.Content>
+          <Next.Toolbar.Root>
+            <Next.Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
+              <Next.Select.Trigger classNames='w-full'>{sidebar}</Next.Select.Trigger>
+              <Next.Select.Content>
                 {sidebarTypes.map((type) => (
-                  <Select.Item key={type} value={type}>
+                  <Next.Select.Item key={type} value={type}>
                     {type}
-                  </Select.Item>
+                  </Next.Select.Item>
                 ))}
-              </Select.Content>
-            </Select.Root>
-          </Toolbar.Root>
+              </Next.Select.Content>
+            </Next.Select.Root>
+          </Next.Toolbar.Root>
 
           <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
             {/* TODO(burdon): Provide schema. */}

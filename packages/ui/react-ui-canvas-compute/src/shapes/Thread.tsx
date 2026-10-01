@@ -4,8 +4,9 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { Box } from './common/index.ts';
@@ -22,13 +23,13 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
 
   return (
     <Box shape={shape}>
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='gap-2 p-2' ref={scrollRef}>
+      <Next.ScrollArea.Root orientation='vertical'>
+        <Next.ScrollArea.Viewport classNames='gap-2 p-2' ref={scrollRef}>
           {[...items].map((item, i) => (
             <ThreadItem key={i} item={item} />
           ))}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     </Box>
   );
 };

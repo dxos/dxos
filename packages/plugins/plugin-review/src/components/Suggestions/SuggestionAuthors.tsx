@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Icon, Tag, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -40,7 +41,7 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
     <div role='group' aria-label={t('suggestion-authors.label')} className='flex flex-wrap gap-1 p-2'>
       {authors.map(({ author, label, hue, hidden }) => (
         // The tag IS the toggle: no outer button chrome, the eye renders inside the dx-tag.
-        <Tag key={author} asChild hue={hue} classNames={hidden && 'opacity-50'}>
+        <Next.Tag key={author} asChild hue={hue} classNames={hidden && 'opacity-50'}>
           <button
             type='button'
             aria-pressed={!hidden}
@@ -52,9 +53,9 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
             onClick={() => onToggle(author)}
           >
             {label}
-            <Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size='xs' />
+            <Next.Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size='xs' />
           </button>
-        </Tag>
+        </Next.Tag>
       ))}
     </div>
   );

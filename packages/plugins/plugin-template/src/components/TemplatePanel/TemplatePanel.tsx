@@ -6,16 +6,16 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type TemplatePanelProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
 export const TemplatePanel = ({ role, subject: object, attendableId: _attendableId }: TemplatePanelProps) => {
   return (
-    <Panel.Root role={role} width='document'>
-      <Panel.Body>
+    <Next.Panel.Root role={role} width='document'>
+      <Next.Panel.Body>
         <span>{Obj.getURI(object)}</span>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

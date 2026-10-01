@@ -5,7 +5,7 @@ import React, { type ComponentType } from 'react';
 
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 
 import { translationKey } from '../../translations.ts';
 import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem.tsx';

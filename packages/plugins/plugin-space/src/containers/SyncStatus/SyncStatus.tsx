@@ -8,7 +8,8 @@ import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Button, Flex, Grid, Icon, Popover, useTranslation } from '@dxos/react-ui';
+import { Flex, Grid, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
@@ -54,17 +55,17 @@ export const SyncStatusIndicator = ({
   const icon = getIcon(status);
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Next.Popover.Root>
+      <Next.Popover.Trigger asChild>
         <StatusBar.Item>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
-          <Button variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
+          <Next.Button variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>
-      </Popover.Trigger>
-      <Popover.Content side='left'>
+      </Next.Popover.Trigger>
+      <Next.Popover.Content side='left'>
         <EdgeConnectionPopover status={edgeStatus} />
-      </Popover.Content>
-    </Popover.Root>
+      </Next.Popover.Content>
+    </Next.Popover.Root>
   );
 };
 
@@ -79,7 +80,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
     <Flex column gap='sm' classNames='w-[240px] p-2' style={iconSize(4)}>
       {/* Connection Status Header */}
       <Flex gap='sm' align='center' classNames='mb-2'>
-        <Icon
+        <Next.Icon
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
           classNames={mx(isConnected ? 'text-success-text' : 'text-error-text animate-pulse')}
         />
@@ -91,7 +92,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
       {/* Connection Details */}
       {!isConnected && (
         <Grid cols={SYNC_COLS} grow={false} gap='sm'>
-          <Icon icon='ph--cloud-x--regular' />
+          <Next.Icon icon='ph--cloud-x--regular' />
           <span className='text-description'>{t('sync-no-connection.label')}</span>
         </Grid>
       )}
@@ -100,7 +101,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
         <Grid cols={SYNC_COLS} grow={false} gap='sm' classNames='gap-y-1'>
           {/* Latency */}
           <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
-            <Icon icon='ph--timer--regular' />
+            <Next.Icon icon='ph--timer--regular' />
             <span className='text-description'>{t('sync-latency.label')}</span>
             <div />
             <UnitValue value={status.rtt} format={Unit.Millisecond} />
@@ -108,7 +109,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
 
           {/* Upload Speed */}
           <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
-            <Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
+            <Next.Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
             <span className='text-description'>{t('sync-upload.label')}</span>
             <UnitValue value={status.messagesSent} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesUp} format={Unit.Kilobyte} suffix='/s' />
@@ -116,7 +117,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
 
           {/* Download Speed */}
           <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
-            <Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
+            <Next.Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
             <span className='text-description'>{t('sync-download.label')}</span>
             <UnitValue value={status.messagesReceived} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesDown} format={Unit.Kilobyte} suffix='/s' />

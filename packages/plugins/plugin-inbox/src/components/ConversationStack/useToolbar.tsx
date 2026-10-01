@@ -3,7 +3,7 @@
 //
 
 import type * as AppGraph from '@dxos/app-graph/AppGraph';
-import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { meta } from '#meta';

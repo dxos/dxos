@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { mx } from '@dxos/ui-theme';
 
 export type ToolFormProps<S extends Schema.Codec<any, any>> = ThemedClassName<{

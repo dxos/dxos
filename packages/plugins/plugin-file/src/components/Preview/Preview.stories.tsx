@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -19,16 +19,16 @@ const PNG_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGUlEQVR4nGN47mMDRwx6ZwrhiMFkxm04AgBTKBIF1eRh+AAAAABJRU5ErkJggg==';
 
 const DefaultStory = ({ type, url, name, size }: { type: string; url: string; name?: string; size?: number }) => (
-  <Panel.Root>
+  <Next.Panel.Root>
     <Preview.Root type={type} url={url} name={name} size={size}>
-      <Panel.Header>
+      <Next.Panel.Header>
         <Preview.Toolbar />
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <Preview.Content />
-      </Panel.Body>
+      </Next.Panel.Body>
     </Preview.Root>
-  </Panel.Root>
+  </Next.Panel.Root>
 );
 
 const meta = {

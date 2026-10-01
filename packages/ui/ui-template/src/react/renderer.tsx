@@ -14,9 +14,9 @@
 import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { type Align, Button, Field, Flex, type Gap, Grid, Input, type Justify, Tabs } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Combobox, Listbox } from '@dxos/react-ui-list';
+import { type Align, Flex, type Gap, Grid, type Justify } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
@@ -163,23 +163,23 @@ export const createReactRenderer = ({
       // published state, never a component callback.
       const disabled = node.data?.enabled ? !present(data.enabled) : undefined;
       return (
-        <Button key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
+        <Next.Button key={path} disabled={disabled} onClick={() => handlers.activate?.()}>
           {asText(props.label)}
-        </Button>
+        </Next.Button>
       );
     } else {
       return (
-        <Field.Root key={path}>
+        <Next.Field.Root key={path}>
           <Next.Container gutter='none'>
-            {props.label ? <Field.Label>{asText(props.label)}</Field.Label> : null}
-            <Input
+            {props.label ? <Next.Field.Label>{asText(props.label)}</Next.Field.Label> : null}
+            <Next.Input
               placeholder={asText(props.placeholder)}
               value={asText(data.value)}
               // MVU: the input is controlled from published state; each change dispatches.
               onChange={(event) => handlers.input?.(event.target.value)}
             />
           </Next.Container>
-        </Field.Root>
+        </Next.Field.Root>
       );
     }
   },
@@ -315,28 +315,30 @@ export const createReactRenderer = ({
   combobox: ({ path, node, props, data, handlers, scope }) => {
     const items = Array.isArray(data.items) ? data.items : [];
     return (
-      <Combobox.Root
+      <Next.Combobox.Root
         key={path}
         placeholder={asText(props.placeholder) || undefined}
         value={asText(data.value)}
         onValueChange={(next) => handlers.select?.(next)}
       >
-        <Combobox.Trigger />
-        <Combobox.Content>
-          <Combobox.Input
+        <Next.Combobox.Trigger />
+        <Next.Combobox.Content>
+          <Next.Combobox.Input
             placeholder={asText(props.placeholder) || undefined}
             value={asText(data.filter)}
             onValueChange={(next) => handlers.input?.(next)}
           />
-          <Combobox.List>
+          <Next.Combobox.List>
             {items.map((item, index) => {
               const id = asText(itemField(node, scope, item, 'id') ?? index);
-              return <Combobox.Item key={id} value={id} label={asText(itemField(node, scope, item, 'label') ?? id)} />;
+              return (
+                <Next.Combobox.Item key={id} value={id} label={asText(itemField(node, scope, item, 'label') ?? id)} />
+              );
             })}
-            {items.length === 0 && <Combobox.Empty />}
-          </Combobox.List>
-        </Combobox.Content>
-      </Combobox.Root>
+            {items.length === 0 && <Next.Combobox.Empty />}
+          </Next.Combobox.List>
+        </Next.Combobox.Content>
+      </Next.Combobox.Root>
     );
   },
 
@@ -351,25 +353,25 @@ export const createReactRenderer = ({
    * dispatches `select`. The panels live in a sibling `switch` — tabs only set state.
    */
   tabs: ({ path, node, data, handlers }) => (
-    <Tabs.Root
+    <Next.Tabs.Root
       key={path}
       orientation='horizontal'
       value={asText(data.value) || undefined}
       onValueChange={(next) => handlers.select?.(next)}
     >
-      <Tabs.List>
+      <Next.Tabs.List>
         {(node.children ?? [])
           .filter((child) => child.tag === 'tab')
           .map((tab) => {
             const value = asText(tab.props?.value);
             return (
-              <Tabs.Trigger key={value} value={value}>
+              <Next.Tabs.Trigger key={value} value={value}>
                 {asText(tab.props?.label ?? value)}
-              </Tabs.Trigger>
+              </Next.Tabs.Trigger>
             );
           })}
-      </Tabs.List>
-    </Tabs.Root>
+      </Next.Tabs.List>
+    </Next.Tabs.Root>
   ),
 
   // Rendered by `tabs` from its props; never on its own.

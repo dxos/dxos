@@ -9,8 +9,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import { Panel, useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Meeting, MeetingOperation } from '#types';
@@ -117,22 +118,22 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   }, [tab, attendableId, notes, transcript, summary, hasSummary]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Header>
+      </Next.Panel.Header>
 
       {tab === 'call' && callData && (
-        <Panel.Body>
+        <Next.Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />
-        </Panel.Body>
+        </Next.Panel.Body>
       )}
       {tab !== 'call' && articleData && (
-        <Panel.Body>
+        <Next.Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
-        </Panel.Body>
+        </Next.Panel.Body>
       )}
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };
 

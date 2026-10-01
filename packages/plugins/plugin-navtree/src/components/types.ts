@@ -2,15 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { FC } from 'react';
+import type { ComponentProps, FC } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type { Density } from '@dxos/react-ui';
-import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
+import type { TreeModel } from '@dxos/react-ui-list';
+import type { Tree } from '@dxos/react-ui-list/next';
 
 import { NavTreeNode } from '#types';
 
 import type { L1PanelProps } from './Sidebar/index.ts';
+
+type TreeProps = ComponentProps<typeof Tree>;
 
 export type NavTreeContextValue = {
   model: TreeModel<NavTreeNode.NavTreeItemGraphNode>;

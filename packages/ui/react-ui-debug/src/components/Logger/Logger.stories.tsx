@@ -7,8 +7,8 @@ import React from 'react';
 
 import { type CallMetadata, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -38,34 +38,34 @@ const emit = (file: string, level: 'info' | 'warn' | 'error') => {
 const DefaultStory = () => (
   <ViewStateProvider>
     <Logger.Root initialFilter='info'>
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             {FILES.map((file) => (
-              <Button key={file} onClick={() => emit(file, 'info')}>
+              <Next.Button key={file} onClick={() => emit(file, 'info')}>
                 {file.split('/').pop()}
-              </Button>
+              </Next.Button>
             ))}
-            <Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Button>
-            <Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Button>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
-          <Panel.Root>
-            <Panel.Header>
+            <Next.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Next.Button>
+            <Next.Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Next.Button>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
+          <Next.Panel.Root>
+            <Next.Panel.Header>
               <Logger.Toolbar />
-            </Panel.Header>
-            <Panel.Body asChild>
+            </Next.Panel.Header>
+            <Next.Panel.Body asChild>
               <Logger.Content>
                 <Logger.List />
               </Logger.Content>
-            </Panel.Body>
-            <Panel.Footer>
+            </Next.Panel.Body>
+            <Next.Panel.Footer>
               <Logger.Filter />
-            </Panel.Footer>
-          </Panel.Root>
-        </Panel.Body>
-      </Panel.Root>
+            </Next.Panel.Footer>
+          </Next.Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Logger.Root>
   </ViewStateProvider>
 );

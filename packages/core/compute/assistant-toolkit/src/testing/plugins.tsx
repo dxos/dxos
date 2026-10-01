@@ -10,8 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DXN, Format, type Obj, Type } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { Position } from '@dxos/util';
 
 export const MapSchema = Schema.Struct({
@@ -41,7 +41,7 @@ export const capabilities: Capability.AnyContribution[] = [
       filter: Surface.makeFilter(AppSurface.CardContent),
       position: Position.last,
       component: ({ data }) => (
-        <Card.Body>
+        <Next.Card.Body>
           <Syntax.Root data={data}>
             <Syntax.Content>
               <Syntax.Filter />
@@ -50,7 +50,7 @@ export const capabilities: Capability.AnyContribution[] = [
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>
-        </Card.Body>
+        </Next.Card.Body>
       ),
     }),
   ),

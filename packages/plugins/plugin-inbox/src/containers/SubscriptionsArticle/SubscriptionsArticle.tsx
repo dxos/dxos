@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import { Block, Button, Card, Empty, Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Next } from '@dxos/react-ui/next';
@@ -36,27 +36,27 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
         data={data}
         location={location}
       >
-        <Card.Root fullWidth border={false} ref={forwardedRef} data-testid='subscription-card'>
-          <Card.Header>
-            <Block>
-              <Field.Root>
+        <Next.Card.Root fullWidth border={false} ref={forwardedRef} data-testid='subscription-card'>
+          <Next.Card.Header>
+            <Next.Block>
+              <Next.Field.Root>
                 <Next.Checkbox
                   checked={selected}
                   onCheckedChange={() => onToggle(subscription.email)}
                   data-testid='subscription-checkbox'
                 />
-              </Field.Root>
-            </Block>
-            <Card.Title>{subscription.name ?? subscription.email}</Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <Card.Row>
-              <Card.Text variant='description'>
+              </Next.Field.Root>
+            </Next.Block>
+            <Next.Card.Title>{subscription.name ?? subscription.email}</Next.Card.Title>
+          </Next.Card.Header>
+          <Next.Card.Body>
+            <Next.Card.Row>
+              <Next.Card.Text variant='description'>
                 {t('subscriptions.count.label', { email: subscription.email, count: subscription.count })}
-              </Card.Text>
-            </Card.Row>
-          </Card.Body>
-        </Card.Root>
+              </Next.Card.Text>
+            </Next.Card.Row>
+          </Next.Card.Body>
+        </Next.Card.Root>
       </Mosaic.Tile>
     );
   },
@@ -160,19 +160,19 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root role={role}>
-        <Panel.Header>
-          <Toolbar.Root classNames='dx-document px-3'>
-            <Field.Root>
+      <Next.Panel.Root role={role}>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root classNames='dx-document px-3'>
+            <Next.Field.Root>
               <Next.Checkbox
                 checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                 disabled={results.length === 0}
                 onCheckedChange={toggleAll}
                 data-testid='subscriptions-select-all'
               />
-            </Field.Root>
+            </Next.Field.Root>
             <SearchList.Input classNames='grow' placeholder={t('subscriptions.filter.placeholder')} />
-            <Button
+            <Next.Button
               icon='ph--trash--regular'
               iconOnly={false}
               disabled={selected.size === 0}
@@ -180,14 +180,14 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
               onClick={() => void removeSelected()}
               data-testid='subscriptions-remove'
             />
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           {empty ? (
-            <Empty>{empty}</Empty>
+            <Next.Empty>{empty}</Next.Empty>
           ) : (
-            <ScrollArea.Root orientation='vertical' padding thin>
-              <ScrollArea.Viewport classNames='dx-document'>
+            <Next.ScrollArea.Root orientation='vertical' padding thin>
+              <Next.ScrollArea.Viewport classNames='dx-document'>
                 <Mosaic.Container asChild>
                   <Mosaic.Stack
                     Tile={SubscriptionTile}
@@ -196,11 +196,11 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
                     getId={(item) => item.subscription.email}
                   />
                 </Mosaic.Container>
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
           )}
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </SearchList.Root>
   );
 };

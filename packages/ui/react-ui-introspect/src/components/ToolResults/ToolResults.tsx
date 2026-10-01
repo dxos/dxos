@@ -13,20 +13,11 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  Banner,
-  Empty,
-  Field,
-  Input,
-  Panel,
-  ScrollArea,
-  type ThemedClassName,
-  Toolbar,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -56,12 +47,12 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
       <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
-          <Banner.Root valence='error'>
-            {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
-            <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
-          </Banner.Root>
+          <Next.Banner.Root valence='error'>
+            {error instanceof Error && <Next.Banner.Title>{error.name}</Next.Banner.Title>}
+            <Next.Banner.Body>{error instanceof Error ? error.message : String(error)}</Next.Banner.Body>
+          </Next.Banner.Root>
         )}
-        {state === 'empty' && <Empty>{t('no-result.message')}</Empty>}
+        {state === 'empty' && <Next.Empty>{t('no-result.message')}</Next.Empty>}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -119,26 +110,26 @@ const ResultTable = ({ data }: { data: unknown }) => {
   // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
     <Listbox.Root>
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
-            <Field.Root>
-              <Field.Label srOnly>{t('filter-results.placeholder')}</Field.Label>
-              <Input
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Field.Root>
+              <Next.Field.Label srOnly>{t('filter-results.placeholder')}</Next.Field.Label>
+              <Next.Input
                 ref={filterInputRef}
                 autoFocus
                 placeholder={t('filter-results.placeholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
-            </Field.Root>
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>
-          <ScrollArea.Root thin>
-            <ScrollArea.Viewport>
+            </Next.Field.Root>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root thin>
+            <Next.ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <Empty>{t('no-matching-rows.message')}</Empty>
+                <Next.Empty>{t('no-matching-rows.message')}</Next.Empty>
               ) : (
                 <Listbox.Content
                   aria-label={t('tool-result.label')}
@@ -151,10 +142,10 @@ const ResultTable = ({ data }: { data: unknown }) => {
                   ))}
                 </Listbox.Content>
               )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Body>
-      </Panel.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Listbox.Root>
   );
 };

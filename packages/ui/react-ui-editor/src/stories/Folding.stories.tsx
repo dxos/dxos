@@ -13,7 +13,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Panel, SystemButton, Toolbar } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -78,10 +77,10 @@ const DefaultStory = ({ text }: StoryArgs) => {
   const { parentRef, view } = useTextEditor({ initialValue: text, extensions });
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root classNames='dx-document'>
-          <SystemButton.Disclosure
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root classNames='dx-document'>
+          <Next.SystemButton.Disclosure
             active={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {
@@ -97,12 +96,12 @@ const DefaultStory = ({ text }: StoryArgs) => {
               }
             }}
           />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body classNames='grid overflow-hidden'>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='grid overflow-hidden'>
         <div ref={parentRef} className='dx-expand' />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

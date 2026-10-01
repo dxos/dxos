@@ -10,8 +10,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Empty, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Frame, MediaArtifact, type Storyboard } from '#types';
@@ -76,7 +77,7 @@ export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameC
   );
 
   if (!frame) {
-    return <Empty classNames='h-full'>{t('storyboard-empty.message')}</Empty>;
+    return <Next.Empty classNames='h-full'>{t('storyboard-empty.message')}</Next.Empty>;
   }
 
   return <FrameDetail key={frame.id} frame={frame} attendableId={attendableId} onAddArtifact={handleAddArtifact} />;

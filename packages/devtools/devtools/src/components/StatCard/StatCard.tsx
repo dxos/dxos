@@ -2,22 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type ComponentProps, type PropsWithChildren, type ReactNode } from 'react';
 
-import {
-  Block,
-  Button,
-  Card,
-  type CardMenuProps,
-  type CardRootProps,
-  Flex,
-  Icon,
-  type ThemedClassName,
-  Tooltip,
-} from '@dxos/react-ui';
+import { Flex, type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
 /** One hue per category of card, so a stack reads by colour before it reads by title. */
+type CardMenuProps = ComponentProps<typeof Next.Card.Menu>;
+type CardRootProps = ComponentProps<typeof Next.Card.Root>;
+
 export const STAT_CARD_HUES = {
   /** Rendering: surfaces, frame rate. */
   ui: 'violet',
@@ -37,9 +31,9 @@ type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string; densit
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, density = 'sm', classNames, children }: StatCardRootProps) => (
-  <Card.Root id={id} size={density} fullWidth classNames={classNames}>
+  <Next.Card.Root id={id} size={density} fullWidth classNames={classNames}>
     {children}
-  </Card.Root>
+  </Next.Card.Root>
 );
 
 StatCardRoot.displayName = 'StatCard.Root';
@@ -61,17 +55,17 @@ type StatCardHeaderProps = {
 };
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
-  <Card.Header>
-    <Block>
-      <Icon icon={icon} classNames={hue && getStyles(hue).text} />
-    </Block>
+  <Next.Card.Header>
+    <Next.Block>
+      <Next.Icon icon={icon} classNames={hue && getStyles(hue).text} />
+    </Next.Block>
     <Flex align='center' gap='sm' classNames='min-w-0'>
-      <Card.Title>{title}</Card.Title>
+      <Next.Card.Title>{title}</Next.Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
     </Flex>
-    {action && <Block end>{action}</Block>}
-    {menu && <Card.Menu items={menu} />}
-  </Card.Header>
+    {action && <Next.Block end>{action}</Next.Block>}
+    {menu && <Next.Card.Menu items={menu} />}
+  </Next.Card.Header>
 );
 
 StatCardHeader.displayName = 'StatCard.Header';
@@ -134,15 +128,15 @@ const StatCardRow = ({
 }: StatCardRowProps) => {
   const trailing = action ?? (unit && <span className='text-xs text-description'>{unit}</span>);
   return (
-    <Card.Row
+    <Next.Card.Row
       classNames={[classNames, onClick && 'cursor-pointer hover:bg-hover-surface', current && 'bg-hover-surface']}
       onClick={onClick}
       current={current}
     >
-      <Block compact>
+      <Next.Block compact>
         {control ??
           (onToggle ? (
-            <Button
+            <Next.Button
               variant='ghost'
               icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
               iconOnly
@@ -151,9 +145,9 @@ const StatCardRow = ({
               onClick={() => onToggle(!open)}
             />
           ) : (
-            icon && <Icon icon={icon} classNames={iconClassNames} />
+            icon && <Next.Icon icon={icon} classNames={iconClassNames} />
           ))}
-      </Block>
+      </Next.Block>
       <Flex
         align='center'
         justify='between'
@@ -163,9 +157,9 @@ const StatCardRow = ({
         {children ?? (
           <>
             {tooltip ? (
-              <Tooltip.Trigger asChild content={tooltip}>
+              <Next.Tooltip.Trigger asChild content={tooltip}>
                 <span className='truncate'>{label}</span>
-              </Tooltip.Trigger>
+              </Next.Tooltip.Trigger>
             ) : (
               <span className='truncate'>{label}</span>
             )}
@@ -177,11 +171,11 @@ const StatCardRow = ({
       </Flex>
       {trailing && (
         // A unit reads on from its value, so it sits at the gutter's start; a control stays centred.
-        <Block end compact classNames={!action && 'justify-items-start'}>
+        <Next.Block end compact classNames={!action && 'justify-items-start'}>
           {trailing}
-        </Block>
+        </Next.Block>
       )}
-    </Card.Row>
+    </Next.Card.Row>
   );
 };
 
@@ -195,7 +189,7 @@ type StatCardSectionProps = PropsWithChildren<{ title: string }>;
 
 /** A titled group of rows, for a card whose rows are of more than one kind. */
 const StatCardSection = ({ title, children }: StatCardSectionProps) => (
-  <Card.Section title={title}>{children}</Card.Section>
+  <Next.Card.Section title={title}>{children}</Next.Card.Section>
 );
 
 StatCardSection.displayName = 'StatCard.Section';
@@ -208,11 +202,11 @@ type StatCardContentProps = PropsWithChildren<ThemedClassName>;
 
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
-  <Card.Row>
+  <Next.Card.Row>
     <Flex column grow={false} classNames={['min-w-0 text-xs [grid-column-end:span_2]', classNames]}>
       {children}
     </Flex>
-  </Card.Row>
+  </Next.Card.Row>
 );
 
 StatCardContent.displayName = 'StatCard.Content';

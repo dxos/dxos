@@ -5,9 +5,10 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Button, Card, DragHandle, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 
 import { type KanbanCardProps, useKanbanBoard } from '#components';
 import { meta } from '#meta';
@@ -49,28 +50,28 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         dragHandle={dragHandle}
       >
         <Focus.Item asChild>
-          <Card.Root ref={forwardedRef} data-testid='board-item'>
-            <Card.Header>
-              <DragHandle ref={dragHandleRef} />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+          <Next.Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Next.Card.Header>
+              <Next.DragHandle ref={dragHandleRef} />
+              <Next.Card.Title>{Obj.getLabel(data)}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Block end>
+              <Next.Block end>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Button
+                  <Next.Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Block>
-            </Card.Header>
-            <Card.Body>
-              <Card.Row fullWidth>
+              </Next.Block>
+            </Next.Card.Header>
+            <Next.Card.Body>
+              <Next.Card.Row fullWidth>
                 <pre className='p-2 text-xs text-description whitespace-pre-wrap'>{JSON.stringify(data, null, 2)}</pre>
-              </Card.Row>
-            </Card.Body>
-          </Card.Root>
+              </Next.Card.Row>
+            </Next.Card.Body>
+          </Next.Card.Root>
         </Focus.Item>
       </Mosaic.Tile>
     );

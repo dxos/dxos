@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Focus } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { Result } from '#types';
 
@@ -27,14 +27,14 @@ export const ResultTile = ({ result, current, starred, onSelect, onToggleStar }:
   }, [onSelect, result]);
 
   return (
-    <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+    <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
       <ResultCard
         subject={result}
         current={current}
         starred={starred}
         onToggleStar={onToggleStar ? () => onToggleStar(result) : undefined}
       />
-    </Focus.Item>
+    </Next.Focus.Item>
   );
 };
 

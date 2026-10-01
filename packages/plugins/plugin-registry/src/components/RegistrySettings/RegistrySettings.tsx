@@ -6,8 +6,8 @@ import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { AlertDialog, Banner, Button, Field, Input, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
@@ -104,7 +104,7 @@ export const RegistrySettings = ({
           {pluginScopeLocal !== undefined && (
             <Form.FieldSet label={t('plugin-registry.label')} actions={scope}>
               <Form.Field label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
-                <Field.Root>
+                <Next.Field.Root>
                   <Next.Switch
                     data-testid='registrySettings.pluginScope'
                     // The scope is still worth showing without a handler; flipping it is not.
@@ -113,16 +113,16 @@ export const RegistrySettings = ({
                     // Only rejoining asks: it replaces this device's choices with the account's.
                     onCheckedChange={(local) => (local ? onPluginScopeLocalChange?.(true) : setRejoining(true))}
                   />
-                </Field.Root>
+                </Next.Field.Root>
               </Form.Field>
             </Form.FieldSet>
           )}
           <Form.FieldSet label={t('dev-plugin.section.title')}>
-            <Banner.Root valence='neutral'>
-              <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
-            </Banner.Root>
+            <Next.Banner.Root valence='neutral'>
+              <Next.Banner.Body>{t('dev-plugin.description')}</Next.Banner.Body>
+            </Next.Banner.Root>
             <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Input
+              <Next.Input
                 data-testid='registrySettings.devPluginUrl'
                 disabled={!onSettingsChange || enabled || busy}
                 value={url}
@@ -136,36 +136,36 @@ export const RegistrySettings = ({
               label={t('dev-plugin.toggle.label')}
               description={t('dev-plugin.toggle.description')}
             >
-              <Button
+              <Next.Button
                 data-testid='registrySettings.devPluginToggle'
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
                 onClick={() => void handleToggle()}
               >
                 {buttonLabel}
-              </Button>
+              </Next.Button>
             </Form.Field>
             {enabled && !loadedDevId && !busy && (
-              <Banner.Root valence='warning'>
-                <Banner.Body>{t('dev-plugin.not-loaded.message')}</Banner.Body>
-              </Banner.Root>
+              <Next.Banner.Root valence='warning'>
+                <Next.Banner.Body>{t('dev-plugin.not-loaded.message')}</Next.Banner.Body>
+              </Next.Banner.Root>
             )}
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
-      <AlertDialog.Root open={rejoining} onOpenChange={setRejoining}>
-        <AlertDialog.Content>
-          <AlertDialog.Body>
-            <AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</AlertDialog.Title>
-            <AlertDialog.Description>{t('plugin-scope.rejoin-dialog.description')}</AlertDialog.Description>
-          </AlertDialog.Body>
-          <AlertDialog.Footer>
+      <Next.AlertDialog.Root open={rejoining} onOpenChange={setRejoining}>
+        <Next.AlertDialog.Content>
+          <Next.AlertDialog.Body>
+            <Next.AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</Next.AlertDialog.Title>
+            <Next.AlertDialog.Description>{t('plugin-scope.rejoin-dialog.description')}</Next.AlertDialog.Description>
+          </Next.AlertDialog.Body>
+          <Next.AlertDialog.Footer>
             <div className='grow' />
-            <AlertDialog.Cancel asChild>
-              <Button>{t('plugin-scope.rejoin-dialog.cancel.label')}</Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action asChild>
-              <Button
+            <Next.AlertDialog.Cancel asChild>
+              <Next.Button>{t('plugin-scope.rejoin-dialog.cancel.label')}</Next.Button>
+            </Next.AlertDialog.Cancel>
+            <Next.AlertDialog.Action asChild>
+              <Next.Button
                 data-testid='registrySettings.pluginScope.confirm'
                 variant='primary'
                 onClick={() => {
@@ -174,11 +174,11 @@ export const RegistrySettings = ({
                 }}
               >
                 {t('plugin-scope.rejoin-dialog.confirm.label')}
-              </Button>
-            </AlertDialog.Action>
-          </AlertDialog.Footer>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
+              </Next.Button>
+            </Next.AlertDialog.Action>
+          </Next.AlertDialog.Footer>
+        </Next.AlertDialog.Content>
+      </Next.AlertDialog.Root>
     </Form.Root>
   );
 };

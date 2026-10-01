@@ -7,9 +7,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { DxAnchorActivate, Icon, Panel, ToggleGroup, Toolbar } from '@dxos/react-ui';
+import { DxAnchorActivate } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type TreeNode } from '@dxos/react-ui-graph';
+import { Next } from '@dxos/react-ui/next';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type ExplorerArticleVariant, VARIANTS, Visualization, isVariant } from '#components';
@@ -85,22 +86,22 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   }
 
   return (
-    <Panel.Root role={role}>
+    <Next.Panel.Root role={role}>
       {showToolbar && (
-        <Panel.Header>
-          <Toolbar.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             <QueryEditor db={db} onFilterChange={handleFilterChange} />
-            <Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
+            <Next.Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
-                <ToggleGroup.Item key={value} value={value} aria-label={label} title={label}>
-                  <Icon icon={icon} size='md' />
-                </ToggleGroup.Item>
+                <Next.ToggleGroup.Item key={value} value={value} aria-label={label} title={label}>
+                  <Next.Icon icon={icon} size='md' />
+                </Next.ToggleGroup.Item>
               ))}
-            </Toolbar.ToggleGroup>
-          </Toolbar.Root>
-        </Panel.Header>
+            </Next.Toolbar.ToggleGroup>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
       )}
-      <Panel.Body asChild>
+      <Next.Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           variant={selected}
@@ -109,8 +110,8 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

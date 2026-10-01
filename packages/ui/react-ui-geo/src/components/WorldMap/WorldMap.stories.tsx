@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Flex } from '@dxos/react-ui';
+import { Flex } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -36,14 +37,14 @@ const DefaultStory = ({ view }: StoryArgs) => {
       </Flex>
       <Flex wrap gap='sm' classNames='p-2'>
         {markers.map((marker) => (
-          <Button
+          <Next.Button
             key={marker.id}
             data-testid='worldMap.marker'
             variant={marker.id === selected ? 'primary' : 'default'}
             onClick={() => setSelected(marker.id)}
           >
             {marker.title}
-          </Button>
+          </Next.Button>
         ))}
       </Flex>
     </Flex>

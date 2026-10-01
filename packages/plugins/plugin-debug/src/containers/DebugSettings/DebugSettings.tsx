@@ -11,8 +11,8 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { Button, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { gzip, setDeep } from '@dxos/util';
@@ -174,7 +174,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.tracing-panel.label')}
               description={t('settings.tracing-panel.description')}
             >
-              <Button
+              <Next.Button
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
@@ -186,7 +186,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
-              <Button
+              <Next.Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-diagnostics.label')}
@@ -198,7 +198,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-logs.label')}
               description={t('settings.download-logs.description')}
             >
-              <Button
+              <Next.Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
@@ -206,7 +206,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               />
             </Form.Field>
             <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
-              <Button
+              <Next.Button
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}
@@ -228,7 +228,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.choose-storage-adaptor.label')}
               description={t('settings.choose-storage-adaptor.description')}
             >
-              <Select.Root
+              <Next.Select.Root
                 disabled={!onSettingsChange}
                 value={
                   Object.entries(StorageAdapters).find(
@@ -237,13 +237,16 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
                 }
                 onValueChange={handleStorageAdapterChange}
               >
-                <Select.Trigger disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
-                <Select.Content>
+                <Next.Select.Trigger disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
+                <Next.Select.Content>
                   {Object.keys(StorageAdapters).map((key) => (
-                    <Select.Item key={key} item={{ value: key, label: t(`settings.storage-adaptor.${key}.label`) }} />
+                    <Next.Select.Item
+                      key={key}
+                      item={{ value: key, label: t(`settings.storage-adaptor.${key}.label`) }}
+                    />
                   ))}
-                </Select.Content>
-              </Select.Root>
+                </Next.Select.Content>
+              </Next.Select.Root>
             </Form.Field>
           </Form.FieldSet>
 

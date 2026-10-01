@@ -6,7 +6,6 @@ import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Button, Field, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
@@ -20,8 +19,8 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
   ({ objects, debug, onDelete, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
-        <ScrollArea.Viewport>
+      <Next.ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
+        <Next.ScrollArea.Viewport>
           {objects
             .slice(0, MAX_RENDERED_COUNT)
             .map(
@@ -33,8 +32,8 @@ export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
           {objects.length > MAX_RENDERED_COUNT && (
             <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
           )}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     );
   },
 );
@@ -72,25 +71,25 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
           <div key={property} className='flex'>
             {/* TODO(burdon): Check if editable or meta prop (e.g., id). */}
             {property === 'id' && (
-              <Field.Root>
-                <Field.Label classNames={labelProps}>{property}</Field.Label>
+              <Next.Field.Root>
+                <Next.Field.Label classNames={labelProps}>{property}</Next.Field.Label>
                 <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
-              </Field.Root>
+              </Next.Field.Root>
             )}
             {type === 'boolean' && (
-              <Field.Root>
-                <Field.Label classNames={labelProps}>{property}</Field.Label>
+              <Next.Field.Root>
+                <Next.Field.Label classNames={labelProps}>{property}</Next.Field.Label>
                 <Next.Checkbox
                   checked={(object as any)[property]}
                   onCheckedChange={(state) => setValue(object, property, !!state)}
                 />
-              </Field.Root>
+              </Next.Field.Root>
             )}
             {property !== 'id' && type === 'string' && (
-              <Field.Root>
-                <Field.Label classNames={labelProps}>{property}</Field.Label>
+              <Next.Field.Root>
+                <Next.Field.Label classNames={labelProps}>{property}</Next.Field.Label>
                 <Editor object={object} prop={property} />
-              </Field.Root>
+              </Next.Field.Root>
             )}
           </div>
         ))}
@@ -98,7 +97,13 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
       {/* TODO(burdon): Check if mutable. */}
       <div className='flex flex-col shrink-0'>
-        <Button icon='ph--x--regular' iconOnly label='Delete' onClick={() => onDelete(object.id)} variant='ghost' />
+        <Next.Button
+          icon='ph--x--regular'
+          iconOnly
+          label='Delete'
+          onClick={() => onDelete(object.id)}
+          variant='ghost'
+        />
       </div>
     </div>
   );
@@ -128,7 +133,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
-      <Button icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
+      <Next.Button icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>
   );
 };

@@ -13,16 +13,17 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
+import type { Next } from '@dxos/react-ui/next';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-const getLabel = (object: Obj.Unknown): Label => {
+const getLabel = (object: Obj.Unknown): Next.Label => {
   const typename = Obj.getTypename(object);
   // A typeless object cannot key a translation namespace, so it falls back to the literal.
-  const placeholder: Label = typename
+  const placeholder: Next.Label = typename
     ? ['object-name.placeholder', { ns: typename, defaultValue: 'New object' }]
     : 'New object';
   return Obj.getLabel(object) ?? placeholder;

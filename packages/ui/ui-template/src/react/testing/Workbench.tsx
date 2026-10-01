@@ -11,9 +11,9 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { ReactNode, useRef } from 'react';
 
-import { Empty, Flex } from '@dxos/react-ui';
+import { Flex } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -144,7 +144,7 @@ export const OperationLog = ({ entries }: OperationLogProps) => (
           </Listbox.ItemText>
         </Listbox.Item>
       ))}
-      {entries.length === 0 && <Empty>No operations dispatched.</Empty>}
+      {entries.length === 0 && <Next.Empty>No operations dispatched.</Next.Empty>}
     </Listbox.Content>
   </Listbox.Root>
 );

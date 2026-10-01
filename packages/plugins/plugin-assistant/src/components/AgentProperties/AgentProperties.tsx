@@ -9,8 +9,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Field, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
@@ -85,9 +85,9 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
 
   return (
     <Form.FieldSet>
-      <Field.Root>
-        <Field.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Field.Label>
-      </Field.Root>
+      <Next.Field.Root>
+        <Next.Field.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Next.Field.Label>
+      </Next.Field.Root>
 
       {subscribedObjects.map((object) => (
         <Next.Checkbox

@@ -13,10 +13,11 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useAtomState } from '@dxos/react-hooks';
-import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
-import { Listbox } from '@dxos/react-ui-list';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { Ibkr, IbkrOperation } from '#types';
 
@@ -147,14 +148,14 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
   useArticleKeyboardNavigation({ articleId: id, items: sorted, currentId, onSelect: handleNavigate });
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-      </Panel.Header>
+      </Next.Panel.Header>
 
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport>
             <Listbox.Root value={currentId} onValueChange={handleNavigate}>
               <Listbox.Content aria-label={t('reports.label')}>
                 {rows.map((row) => (
@@ -169,10 +170,10 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
                 ))}
               </Listbox.Content>
             </Listbox.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

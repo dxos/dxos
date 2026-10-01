@@ -5,18 +5,20 @@
 import React from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { Select, type SelectRootProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 // TODO(burdon): Factor out.
+type SelectRootProps = React.ComponentProps<typeof Next.Select.Root>;
+
 export const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.Trigger variant='ghost' classNames='w-full px-0!' />
-      <Select.Content>
+    <Next.Select.Root value={value} onValueChange={onValueChange}>
+      <Next.Select.Trigger variant='ghost' classNames='w-full px-0!' />
+      <Next.Select.Content>
         {ComputeValueType.literals.map((type) => (
-          <Select.Item key={type} item={{ value: type, label: type }} />
+          <Next.Select.Item key={type} item={{ value: type, label: type }} />
         ))}
-      </Select.Content>
-    </Select.Root>
+      </Next.Select.Content>
+    </Next.Select.Root>
   );
 };

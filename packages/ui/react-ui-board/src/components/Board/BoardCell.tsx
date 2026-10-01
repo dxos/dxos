@@ -12,8 +12,9 @@ import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Block, Button, Card, DragHandle, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -254,7 +255,7 @@ export const BoardCell = ({
 
   return (
     <>
-      <Card.Root
+      <Next.Card.Root
         classNames={mx(
           'absolute grid-rows-[auto_1fr]',
           // Animate position/size changes so displaced tiles glide out of the way (and spring back),
@@ -274,12 +275,12 @@ export const BoardCell = ({
         aria-selected={selectable ? isSelected : undefined}
         onClick={selectable ? (event) => toggleSelection(item.id, event.shiftKey) : undefined}
       >
-        <Card.Header>
-          <DragHandle ref={dragHandleRef} />
+        <Next.Card.Header>
+          <Next.DragHandle ref={dragHandleRef} />
           {title}
           {onDelete && (
-            <Block end>
-              <Button
+            <Next.Block end>
+              <Next.Button
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly
@@ -289,13 +290,13 @@ export const BoardCell = ({
                   onDelete(item.id);
                 }}
               />
-            </Block>
+            </Next.Block>
           )}
-        </Card.Header>
+        </Next.Card.Header>
         {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
             poster image — fills the full tile width, not just the first gutter track. */}
         {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}
-      </Card.Root>
+      </Next.Card.Root>
 
       {/* Resize handle: a sibling (not clipped by the card's overflow/rounding) straddling the
           bottom-right corner so the resize cursor appears right at the tile's edge. Always mounted
@@ -329,16 +330,16 @@ export const BoardCell = ({
       {/* Drag preview: a same-sized clone following the cursor (see onGenerateDragPreview). */}
       {preview &&
         createPortal(
-          <Card.Root
+          <Next.Card.Root
             classNames={mx('grid-rows-[auto_1fr]', classNames)}
             style={{ width: preview.width, height: preview.height, ...sizeOverride }}
           >
-            <Card.Header>
-              <DragHandle />
+            <Next.Card.Header>
+              <Next.DragHandle />
               {title}
-            </Card.Header>
+            </Next.Card.Header>
             {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}
-          </Card.Root>,
+          </Next.Card.Root>,
           preview.container,
         )}
     </>

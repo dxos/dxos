@@ -8,8 +8,8 @@ import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
@@ -91,14 +91,14 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   );
 
   return (
-    <Panel.Root role={role} width='document'>
-      <Panel.Header>
+    <Next.Panel.Root role={role} width='document'>
+      <Next.Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <EditMessage key={generation} message={subject} extensions={extensions} onSend={onSend} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

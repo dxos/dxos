@@ -11,8 +11,8 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Button, Field, Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { useSyncTrigger } from '#hooks';
@@ -42,8 +42,8 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
 
   return (
     <Form.FieldSet>
-      <Field.Root>
-        <Field.Label>{t('mailbox-sync.label')}</Field.Label>
+      <Next.Field.Root>
+        <Next.Field.Label>{t('mailbox-sync.label')}</Next.Field.Label>
         <Flex align='center'>
           {/* TODO(burdon): Pad Switch like button/icon (square with padding). */}
           <Next.Switch
@@ -54,10 +54,15 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+            <Next.Button
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('view-trigger.label')}
+              onClick={handleViewTrigger}
+            />
           )}
         </Flex>
-      </Field.Root>
+      </Next.Field.Root>
     </Form.FieldSet>
   );
 };

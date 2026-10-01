@@ -7,8 +7,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { Flashcard } from '#components';
 import { meta } from '#meta';
@@ -94,11 +95,11 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header classNames='dx-expand'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} />
-      </Panel.Header>
-      <Panel.Body classNames='flex flex-col'>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='flex flex-col'>
         {word ? (
           <Flashcard
             key={word.id}
@@ -113,8 +114,8 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
             {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
           </div>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

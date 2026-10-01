@@ -9,7 +9,7 @@ import { beforeEach, describe, test, vi } from 'vitest';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 import { render } from '@dxos/app-framework/testing-react';
-import { Toast } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { ThemePlugin } from '#plugin';
 
@@ -36,9 +36,9 @@ describe('ThemePlugin ReactContext', () => {
     // provider tree decides whether the close button, a tooltip trigger, finds its provider.
     const result = render(
       harness,
-      <Toast.Root open duration={Infinity}>
-        <Toast.Title onClose={() => {}}>Deleted</Toast.Title>
-      </Toast.Root>,
+      <Next.Toast.Root open duration={Infinity}>
+        <Next.Toast.Title onClose={() => {}}>Deleted</Next.Toast.Title>
+      </Next.Toast.Root>,
     );
     await act(async () => {});
 

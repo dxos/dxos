@@ -7,7 +7,8 @@ import React, { useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Card, Grid } from '@dxos/react-ui';
+import { Grid } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { Subscription } from '#types';
 
@@ -42,22 +43,22 @@ export const PostCard = ({ subject }: PostCardProps) => {
   const snippet = useMemo(() => getSnippet(post) || undefined, [post.description]);
 
   return (
-    <Card.Body>
-      {imageUrl && <Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
+    <Next.Card.Body>
+      {imageUrl && <Next.Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
-        <Card.Row>
-          <Card.Title lines={2}>{post.title}</Card.Title>
-        </Card.Row>
+        <Next.Card.Row>
+          <Next.Card.Title lines={2}>{post.title}</Next.Card.Title>
+        </Next.Card.Row>
       )}
       {snippet && (
-        <Card.Row>
-          <Card.Text variant='description' classNames='line-clamp-3'>
+        <Next.Card.Row>
+          <Next.Card.Text variant='description' classNames='line-clamp-3'>
             {snippet}
-          </Card.Text>
-        </Card.Row>
+          </Next.Card.Text>
+        </Next.Card.Row>
       )}
       {(feedName || published) && (
-        <Card.Row>
+        <Next.Card.Row>
           <Grid
             cols={['minmax(0, 1fr)', 'auto']}
             grow={false}
@@ -68,10 +69,10 @@ export const PostCard = ({ subject }: PostCardProps) => {
             <span className='truncate'>{feedName ?? ''}</span>
             <span className='text-end shrink-0'>{published ?? ''}</span>
           </Grid>
-        </Card.Row>
+        </Next.Card.Row>
       )}
-      {post.link && <Card.Link label={post.link} href={post.link} />}
-    </Card.Body>
+      {post.link && <Next.Card.Link label={post.link} href={post.link} />}
+    </Next.Card.Body>
   );
 };
 

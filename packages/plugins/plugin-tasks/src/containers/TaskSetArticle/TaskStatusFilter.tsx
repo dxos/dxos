@@ -4,9 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Button, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, createLineSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionMenu, createLineSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu/next';
 import { statusIcon, statusTextStyle } from '@dxos/react-ui-task';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -90,7 +91,7 @@ export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterPr
 
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
-      <Button
+      <Next.Button
         // Filled and accented while anything narrows the list, so the trigger says rows are missing
         // without the reader opening it; the accent survives the toolbar dimming icons at rest.
         icon={narrowed ? 'ph--funnel--fill' : 'ph--funnel--regular'}

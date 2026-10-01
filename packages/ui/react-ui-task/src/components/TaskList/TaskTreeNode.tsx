@@ -8,8 +8,10 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type ColumnRenderer, type HeadingRenderer, isTreeDataFor } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -465,7 +467,7 @@ const TaskGroupHeading = ({
       )}
       data-testid='taskList.group.header'
     >
-      {group.icon && <Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
+      {group.icon && <Next.Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
       <span className='truncate font-medium'>{toLocalizedString(group.label, t)}</span>
       <span className='text-sm text-description' data-testid='taskList.group.count'>
         {group.count}

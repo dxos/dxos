@@ -12,8 +12,9 @@ import { Filter, Obj, Query, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { parentId } from '@dxos/graph/GraphNode';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import { Empty, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 import { type Event, Message } from '@dxos/types';
 
 import { EventArticle, MessageArticle } from '#containers';
@@ -90,7 +91,7 @@ export const MailboxMessageCompanion = ({ role, attendableId, mailbox }: Mailbox
   const selected = useSelection(attendableId, 'single');
   const message = messages.find(({ id }) => id === selected);
   if (!message) {
-    return <Empty>{t('no-message-selected.message')}</Empty>;
+    return <Next.Empty>{t('no-message-selected.message')}</Next.Empty>;
   }
 
   return <MessageArticle role={role} subject={message} attendableId={`${attendableId}/message`} mailbox={mailbox} />;

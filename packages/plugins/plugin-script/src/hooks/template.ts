@@ -5,7 +5,7 @@
 import { FUNCTIONS_PRESET_META_KEY } from '@dxos/compute-runtime';
 import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
-import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu/next';
 
 import { templates } from '../templates/index.ts';
 

@@ -13,7 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useCardPivot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages, messageDigest } from '#components';
@@ -130,10 +130,10 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   );
 
   return (
-    <Card.Body ref={cardRef}>
+    <Next.Card.Body ref={cardRef}>
       <RelatedMessages messages={relatedMessages} summaries={summaries} onMessageClick={handleMessageClick} />
       <RelatedEvents recent={sortedRecentEvents} upcoming={sortedUpcomingEvents} onEventClick={handleEventClick} />
-    </Card.Body>
+    </Next.Card.Body>
   );
 };
 

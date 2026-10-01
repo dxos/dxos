@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, Field, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { ThemedClassName } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -63,13 +63,13 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
       data-testid='feed.message'
     >
       <div className='flex flex-col items-center gap-1'>
-        <Field.Root>
+        <Next.Field.Root>
           <Next.Checkbox
             checked={selected}
             onCheckedChange={() => onSelect(message.id, true)}
             data-testid='feed.message.select'
           />
-        </Field.Root>
+        </Next.Field.Root>
       </div>
 
       {/*
@@ -78,9 +78,15 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
         a pointer moving down the list during a scroll then shifts every row below it.
       */}
       <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
-        <Button icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' iconSize='xs' />
-        <Button icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' iconSize='xs' />
-        <Button icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' iconSize='xs' />
+        <Next.Button icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' iconSize='xs' />
+        <Next.Button
+          icon='ph--arrow-counter-clockwise--regular'
+          iconOnly
+          label='Rewind'
+          variant='ghost'
+          iconSize='xs'
+        />
+        <Next.Button icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' iconSize='xs' />
       </div>
 
       <div className='min-w-0'>
@@ -266,43 +272,43 @@ export const FeedStory = ({
           stickyBottom={definition?.stickyBottom ?? true}
           tailLines={tailLines}
         >
-          <Panel.Root>
-            <Panel.Header>
-              <Toolbar.Root>
-                <Button
+          <Next.Panel.Root>
+            <Next.Panel.Header>
+              <Next.Toolbar.Root>
+                <Next.Button
                   icon={streaming ? 'ph--stop--regular' : 'ph--play--regular'}
                   iconOnly
                   label={streaming ? 'Stop' : 'Start'}
                   data-testid='feed.stream.toggle'
                   onClick={() => setStreaming((value) => !value)}
                 />
-                <Button
+                <Next.Button
                   icon='ph--plus--regular'
                   iconOnly
                   label='Add message'
                   data-testid='feed.stream.append'
                   onClick={handleAppend}
                 />
-                <Button icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-                <Button
+                <Next.Button icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+                <Next.Button
                   icon={debug ? 'ph--bounding-box--fill' : 'ph--bounding-box--regular'}
                   iconOnly
                   label={debug ? 'Hide block outlines' : 'Show block outlines'}
                   data-testid='feed.debug.toggle'
                   onClick={toggleDebug}
                 />
-                <Toolbar.Separator />
-                <Field.Root>
-                  <Input
+                <Next.Toolbar.Separator />
+                <Next.Field.Root>
+                  <Next.Input
                     placeholder='Search…'
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     data-testid='feed.search'
                   />
-                </Field.Root>
+                </Next.Field.Root>
                 <FindButton hits={hits} />
-                <Button icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
-                <Button
+                <Next.Button icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
+                <Next.Button
                   icon={sweeping ? 'ph--stop--regular' : 'ph--arrows-down-up--regular'}
                   iconOnly
                   label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
@@ -311,16 +317,16 @@ export const FeedStory = ({
                 />
                 <div className='grow' />
                 <MessageList.Nav classNames='contents' />
-              </Toolbar.Root>
-            </Panel.Header>
+              </Next.Toolbar.Root>
+            </Next.Panel.Header>
 
-            <Panel.Body classNames='relative'>
+            <Next.Panel.Body classNames='relative'>
               <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
                 <FeedOutline classNames='row-start-2' messages={messages} />
               </div>
               <MessageList.Viewport classNames='dx-fullscreen' padding ref={viewportRef} />
-            </Panel.Body>
-          </Panel.Root>
+            </Next.Panel.Body>
+          </Next.Panel.Root>
           <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
         </MessageList.Root>
       </ItemSelectionProvider>
@@ -397,5 +403,5 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
     }
   }, [hits, scrollToIndex]);
 
-  return <Button icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
+  return <Next.Button icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
 };

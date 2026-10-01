@@ -5,9 +5,9 @@
 import React, { type ReactNode } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
@@ -56,21 +56,21 @@ export const SpaceSettings = ({
           </Form.FieldSet>
           <Form.FieldSet label={t('space-settings.label')} description={t('space-settings.description')}>
             <Form.Field label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
-              <Select.Root
+              <Next.Select.Root
                 value={defaultSpaceId}
                 onValueChange={(value) => onDefaultSpaceChange?.(value)}
                 disabled={!onDefaultSpaceChange}
               >
-                <Select.Trigger placeholder={t('settings.default-space.placeholder')} />
-                <Select.Content>
+                <Next.Select.Trigger placeholder={t('settings.default-space.placeholder')} />
+                <Next.Select.Content>
                   {eligibleDefaultSpaces?.map((space) => (
-                    <Select.Item
+                    <Next.Select.Item
                       key={space.id}
                       item={{ value: space.id, label: toLocalizedString(getSpaceDisplayName(space), t) }}
                     />
                   ))}
-                </Select.Content>
-              </Select.Root>
+                </Next.Select.Content>
+              </Next.Select.Root>
             </Form.Field>
             <Form.Field
               standalone
@@ -85,7 +85,7 @@ export const SpaceSettings = ({
                       <Listbox.ItemText classNames='min-h-0!'>
                         {toLocalizedString(getSpaceDisplayName(space), t)}
                       </Listbox.ItemText>
-                      <Button
+                      <Next.Button
                         icon='ph--faders--regular'
                         iconOnly
                         label={t('settings.open-settings.label')}

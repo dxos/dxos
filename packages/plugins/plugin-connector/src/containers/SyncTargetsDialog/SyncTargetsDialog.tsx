@@ -11,8 +11,8 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Dialog, Empty, Field, Flex, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -104,32 +104,32 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   }, [availableTargets, selected, connection, db, existingTarget, manager, invokePromise]);
 
   return (
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{t('sync-targets-dialog.title')}</Dialog.Title>
-        <Dialog.CloseTrigger asChild>
-          <SystemButton.Close />
-        </Dialog.CloseTrigger>
-      </Dialog.Header>
-      <Dialog.Body>
-        <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
+    <Next.Dialog.Content>
+      <Next.Dialog.Header>
+        <Next.Dialog.Title>{t('sync-targets-dialog.title')}</Next.Dialog.Title>
+        <Next.Dialog.CloseTrigger asChild>
+          <Next.SystemButton.Close />
+        </Next.Dialog.CloseTrigger>
+      </Next.Dialog.Header>
+      <Next.Dialog.Body>
+        <Next.Dialog.Description>{t('sync-targets-dialog.description')}</Next.Dialog.Description>
 
         {availableTargets.length > 0 && (
           <Flex gap='sm' classNames='py-form-gap'>
-            <Button onClick={handleSelectAll} disabled={submitting}>
+            <Next.Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Button>
-            <Button onClick={handleSelectNone} disabled={submitting}>
+            </Next.Button>
+            <Next.Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Button>
+            </Next.Button>
           </Flex>
         )}
 
         {availableTargets.length === 0 ? (
-          <Empty>{t('no-available-targets.message')}</Empty>
+          <Next.Empty>{t('no-available-targets.message')}</Next.Empty>
         ) : (
-          <ScrollArea.Root padding>
-            <ScrollArea.Viewport>
+          <Next.ScrollArea.Root padding>
+            <Next.ScrollArea.Viewport>
               <Listbox.Root>
                 <Listbox.Content>
                   {availableTargets.map((target) => {
@@ -137,7 +137,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                     const checkboxId = `sync-target-${target.id}`;
                     return (
                       <Listbox.Item key={target.id} id={target.id}>
-                        <Field.Root>
+                        <Next.Field.Root>
                           <Listbox.ItemContent
                             icon={
                               <Next.Checkbox
@@ -149,33 +149,33 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                               />
                             }
                             title={
-                              <Field.Label htmlFor={checkboxId} classNames='text-base text-base-fg'>
+                              <Next.Field.Label htmlFor={checkboxId} classNames='text-base text-base-fg'>
                                 {target.name}
-                              </Field.Label>
+                              </Next.Field.Label>
                             }
                             description={target.description}
                           />
-                        </Field.Root>
+                        </Next.Field.Root>
                       </Listbox.Item>
                     );
                   })}
                 </Listbox.Content>
               </Listbox.Root>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         )}
 
         {error && <p className='mt-form-gap text-error-text'>{error}</p>}
-      </Dialog.Body>
-      <Dialog.Footer>
-        <Dialog.CloseTrigger asChild>
-          <Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button>
-        </Dialog.CloseTrigger>
-        <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
+      </Next.Dialog.Body>
+      <Next.Dialog.Footer>
+        <Next.Dialog.CloseTrigger asChild>
+          <Next.Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Next.Button>
+        </Next.Dialog.CloseTrigger>
+        <Next.Button variant='primary' onClick={handleSubmit} disabled={submitting}>
           {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
-        </Button>
-      </Dialog.Footer>
-    </Dialog.Content>
+        </Next.Button>
+      </Next.Dialog.Footer>
+    </Next.Dialog.Content>
   );
 };
 

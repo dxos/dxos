@@ -8,7 +8,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Button, Flex, Popover, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
@@ -70,10 +70,10 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   }, [isEnabled, state?.invocations]);
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Next.Popover.Root>
+      <Next.Popover.Trigger asChild>
         <StatusBar.Item>
-          <Button
+          <Next.Button
             variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
@@ -81,8 +81,8 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
             classNames={getIconClassNames(triggerState)}
           />
         </StatusBar.Item>
-      </Popover.Trigger>
-      <Popover.Content side='left'>
+      </Next.Popover.Trigger>
+      <Next.Popover.Content side='left'>
         <TriggerStatusPopover
           state={triggerState}
           currentFunctionName={
@@ -90,8 +90,8 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
           }
           lastInvocation={state?.invocations.at(-1)}
         />
-      </Popover.Content>
-    </Popover.Root>
+      </Next.Popover.Content>
+    </Next.Popover.Root>
   );
 };
 

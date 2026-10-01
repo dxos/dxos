@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 
 import { meta } from '#meta';
 

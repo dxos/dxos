@@ -8,7 +8,6 @@ import * as Struct from 'effect/Struct';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Input } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -31,7 +30,7 @@ const currentFieldMap: FormFieldMap = {
     );
     return (
       <CurrentForm.Field label={label} description='The name shown for this space.'>
-        <Input value={getValue()} onChange={handleChange} placeholder='Space name' />
+        <Next.Input value={getValue()} onChange={handleChange} placeholder='Space name' />
       </CurrentForm.Field>
     );
   },

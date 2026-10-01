@@ -8,7 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { type InvitationResult } from '@dxos/react-client/invitations';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -37,21 +38,21 @@ export const JoinDialog = (props: JoinPanelProps) => {
 
   // TODO(burdon): Move JoinHeading into Dialog.Heading.
   return (
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
-      </Dialog.Header>
-      <Dialog.Body>
+    <Next.Dialog.Content>
+      <Next.Dialog.Header>
+        <Next.Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Next.Dialog.Title>
+      </Next.Dialog.Header>
+      <Next.Dialog.Body>
         <JoinPanel
           {...props}
           mode='halo-only'
-          exitActionParent={<Dialog.CloseTrigger asChild />}
-          doneActionParent={<Dialog.CloseTrigger asChild />}
+          exitActionParent={<Next.Dialog.CloseTrigger asChild />}
+          doneActionParent={<Next.Dialog.CloseTrigger asChild />}
           onCancelResetStorage={handleCancelResetStorage}
           onDone={handleDone}
         />
-      </Dialog.Body>
-    </Dialog.Content>
+      </Next.Dialog.Body>
+    </Next.Dialog.Content>
   );
 };
 

@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Flex, Panel } from '@dxos/react-ui';
+import { Flex } from '@dxos/react-ui';
 import { Oscilloscope } from '@dxos/react-ui-audio';
+import { Next } from '@dxos/react-ui/next';
 
 import { Mixer } from '#components';
 import { useMixerEngine } from '#hooks';
@@ -18,14 +19,14 @@ export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }
   const { engine, playing, outputNode } = useMixerEngine();
 
   return (
-    <Panel.Root role={role} width='document'>
-      <Panel.Body classNames='grid grid-rows-[3fr_1fr]'>
+    <Next.Panel.Root role={role} width='document'>
+      <Next.Panel.Body classNames='grid grid-rows-[3fr_1fr]'>
         <Mixer dream={dream} engine={engine} />
         <Flex column classNames='p-2'>
           <Oscilloscope mode='waveform' active={playing} source={outputNode} />
         </Flex>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useViewport, useWheel } from '../../hooks/index.ts';
@@ -89,32 +89,32 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
         scale={camera.zoom}
         offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
       />
-      <Toolbar.Root
+      <Next.Toolbar.Root
         size='sm'
         classNames='absolute top-2 left-2 w-fit gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <Button
+        <Next.Button
           variant='ghost'
           iconOnly
           icon='ph--magnifying-glass-plus--regular'
           label='Zoom in'
           onClick={() => zoomBy(ZOOM_STEP)}
         />
-        <Button
+        <Next.Button
           variant='ghost'
           iconOnly
           icon='ph--magnifying-glass-minus--regular'
           label='Zoom out'
           onClick={() => zoomBy(1 / ZOOM_STEP)}
         />
-        <Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
-        <Toolbar.Separator variant='line' />
-        <Toolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
+        <Next.Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
+        <Next.Toolbar.Separator variant='line' />
+        <Next.Toolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
           {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}
           {format(bottomRight.y)}]
-        </Toolbar.Text>
-      </Toolbar.Root>
+        </Next.Toolbar.Text>
+      </Next.Toolbar.Root>
     </div>
   );
 };

@@ -10,8 +10,10 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
-import { Button, Field, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { type FormFieldMap, type FormFieldRendererProps, useFormValues } from '@dxos/react-ui-form';
+import { Form, SelectField } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
@@ -315,11 +317,11 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
       {kind ? (
         <>
           <div className='flex items-center'>
-            <Field.Root>
-              <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
-            </Field.Root>
+            <Next.Field.Root>
+              <Next.Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Next.Field.Label>
+            </Next.Field.Root>
             {!readonly && (
-              <Button
+              <Next.Button
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly

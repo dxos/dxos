@@ -7,7 +7,7 @@ import React from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Type } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

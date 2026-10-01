@@ -23,7 +23,7 @@ import * as TranscriptionCapabilities from '@dxos/plugin-transcription/Transcrip
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { getSpace, useSpaces } from '@dxos/react-client/echo';
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
@@ -117,15 +117,20 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
 
   return (
     <div className='dx-expand flex flex-col gap-2'>
-      <Toolbar.Root>
-        <Button icon='ph--phone-call--regular' label='Start call' disabled={!callManager} onClick={handleStartCall} />
+      <Next.Toolbar.Root>
+        <Next.Button
+          icon='ph--phone-call--regular'
+          label='Start call'
+          disabled={!callManager}
+          onClick={handleStartCall}
+        />
         {/* TODO(burdon): Replace with SystemIconButton.Mic. */}
-        <Button
+        <Next.Button
           icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
           label={recording ? 'Stop transcription' : 'Start transcription'}
           onClick={toggleRecording}
         />
-      </Toolbar.Root>
+      </Next.Toolbar.Root>
       <div className='grid grid-cols-2 gap-2 dx-grow'>
         <div className='dx-expand'>
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId }, attendableId: roomId }} limit={1} />

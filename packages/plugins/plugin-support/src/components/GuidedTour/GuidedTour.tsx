@@ -9,7 +9,8 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Button, Icon, Tour as TourComponent, type TourStepDetails, useTour, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -22,7 +23,7 @@ const toStep = (
   step: Tour.Step,
   index: number,
   capabilities: CapabilityManager.CapabilityManager,
-): TourStepDetails => ({
+): Next.TourStepDetails => ({
   id: step.id ?? String(index + 1),
   type: 'tooltip',
   target: resolveTarget(step.target),
@@ -72,7 +73,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
-  const tour = useTour({
+  const tour = Next.useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
     onStepChange: ({ stepId }) => {
@@ -137,15 +138,15 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
         stop: () => setRunning(false),
       }}
     >
-      <TourComponent.Root tour={tour}>
-        <TourComponent.Content
+      <Next.Tour.Root tour={tour}>
+        <Next.Tour.Content
           classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
           data-testid='helpPlugin.tooltip'
         >
           <div className='flex items-start'>
-            <TourComponent.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
+            <Next.Tour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
             <TourCompoTour.CloseTrigger asChild ref={closeRef}>
-              <Button
+              <Next.Button
                 size='md'
                 icon='ph--x--bold'
                 iconOnly
@@ -156,9 +157,9 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
               />
             </TourCompoTour.CloseTrigger>
           </div>
-          <TourComponent.Description classNames='grow px-4 my-2 text-accent-fg' />
-          <TourComponent.Control>
-            <Button
+          <Next.Tour.Description classNames='grow px-4 my-2 text-accent-fg' />
+          <Next.Tour.Control>
+            <Next.Button
               classNames={[!tour.hasPrevStep && 'invisible']}
               icon='ph--caret-left--regular'
               iconOnly
@@ -169,7 +170,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
             />
             <div className='flex grow justify-center'>
               {Array.from({ length: tour.totalSteps }).map((_, index) => (
-                <Icon
+                <Next.Icon
                   key={index}
                   icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
                   size='xs'
@@ -179,12 +180,12 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
             </div>
             {last ? (
               <TourCompoTour.CloseTrigger asChild>
-                <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+                <Next.Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
                   {t('tour-done.label')}
-                </Button>
+                </Next.Button>
               </TourCompoTour.CloseTrigger>
             ) : (
-              <Button
+              <Next.Button
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('tour-next.label')}
@@ -194,9 +195,9 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 data-testid='helpPlugin.tooltip.next'
               />
             )}
-          </TourComponent.Control>
-        </TourComponent.Content>
-      </TourComponent.Root>
+          </Next.Tour.Control>
+        </Next.Tour.Content>
+      </Next.Tour.Root>
     </TourContext.Provider>
   );
 };

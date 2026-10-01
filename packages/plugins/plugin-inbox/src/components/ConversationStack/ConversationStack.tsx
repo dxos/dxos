@@ -13,21 +13,12 @@ import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { createContext } from '@dxos/react-hooks';
-import {
-  Block,
-  Card,
-  Collapsible,
-  Icon,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
-import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -318,7 +309,7 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
     return (
       <Mosaic.Container asChild orientation='vertical'>
-        <ScrollArea.Root
+        <Next.ScrollArea.Root
           {...composableProps(props)}
           orientation='vertical'
           centered
@@ -327,7 +318,7 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
           data-testid={testId}
           ref={forwardedRef}
         >
-          <ScrollArea.Viewport ref={viewportRef}>
+          <Next.ScrollArea.Viewport ref={viewportRef}>
             <Mosaic.Stack
               Tile={ConversationMessageTile}
               classNames='dx-document gap-2 py-2'
@@ -338,8 +329,8 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
             {/* Outside the stack: the summary describes the conversation, not a message, so it must not
                 be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
             {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Mosaic.Container>
     );
   },
@@ -432,7 +423,7 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
     >
       <div className='p-2'>
         <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
-          <Icon icon='ph--text-align-left--regular' size='lg' tone='subdued' />
+          <Next.Icon icon='ph--text-align-left--regular' size='lg' tone='subdued' />
         </div>
       </div>
       <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
@@ -549,7 +540,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   // passes no `onExpandedChange`, which disables the machine: the heading keeps its box but stops
   // being a control, so there is no dead tab stop and nothing to fold.
   return (
-    <Collapsible.Root
+    <Next.Collapsible.Root
       asChild
       open={isExpanded}
       onOpenChange={onExpandedChange && ((open) => onExpandedChange(id, open))}
@@ -586,12 +577,12 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
               the button, whose own line boxes it counts — on the heading it would see the button as one
               atomic box and clamp nothing. */}
             <h2 className='text-lg min-w-0'>
-              <Collapsible.Trigger
+              <Next.Collapsible.Trigger
                 classNames='line-clamp-2'
                 data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
               >
                 {sender}
-              </Collapsible.Trigger>
+              </Next.Collapsible.Trigger>
             </h2>
             {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
                 tiles at once, and a summary line shorter than a subject line makes the two read as
@@ -624,7 +615,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
 
         {/* `unmountOnExit` keeps a folded message's body out of the tree entirely, as the previous
           conditional did — a thread holds many messages and each body is a rendered document. */}
-        <Collapsible.Content asChild>
+        <Next.Collapsible.Content asChild>
           <div className='col-span-full grid grid-cols-subgrid items-start'>
             {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
             <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
@@ -634,9 +625,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
               <MessageBody message={message} mailbox={mailbox} options={options} />
             </div>
           </div>
-        </Collapsible.Content>
+        </Next.Collapsible.Content>
       </div>
-    </Collapsible.Root>
+    </Next.Collapsible.Root>
   );
 };
 
@@ -742,26 +733,26 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   // `subgrid` so the card adopts the tile's columns: row icons land in the avatar column and row
   // content aligns with the sender/subject/body, rather than the card defining its own gutters.
   return (
-    <Card.Root subgrid classNames='bg-transparent' border={false} data-testid='message-header'>
-      <Card.Body>
+    <Next.Card.Root subgrid classNames='bg-transparent' border={false} data-testid='message-header'>
+      <Next.Card.Body>
         {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
         {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
             tile's own heading, so `"NAME" <addr>` would just repeat it. */}
         {recipients.length > 0 && (
-          <Card.Row>
-            <Block>
+          <Next.Card.Row>
+            <Next.Block>
               {/* One recipient reads as a person, so it gets the same avatar treatment as every other
                   person row; several are a group, which an avatar would misrepresent. */}
               {recipients.length === 1 ? (
                 <Avatar actor={{ email: recipients[0] }} size={5} />
               ) : (
-                <Icon icon='ph--users--regular' />
+                <Next.Icon icon='ph--users--regular' />
               )}
-            </Block>
-            <Card.Text classNames='text-sm' variant='description'>
+            </Next.Block>
+            <Next.Card.Text classNames='text-sm' variant='description'>
               {recipients.join(', ')}
-            </Card.Text>
-          </Card.Row>
+            </Next.Card.Text>
+          </Next.Card.Row>
         )}
 
         {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
@@ -777,8 +768,8 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
 
         {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
         <Row.Tags tags={messageTags} />
-      </Card.Body>
-    </Card.Root>
+      </Next.Card.Body>
+    </Next.Card.Root>
   );
 };
 

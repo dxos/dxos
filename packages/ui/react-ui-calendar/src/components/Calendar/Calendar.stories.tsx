@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { addDays, addMinutes, format, startOfDay, startOfWeek } from 'date-fns';
 import React, { useMemo, useRef, useState } from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -57,14 +57,14 @@ export const Column: Story = {
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-auto' })],
   render: () => (
     <Calendar.Root>
-      <Panel.Root>
-        <Panel.Header>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
           <Calendar.Toolbar />
-        </Panel.Header>
-        <Panel.Body asChild>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Calendar.Grid />
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Calendar.Root>
   ),
 };
@@ -90,10 +90,10 @@ export const Week: StoryObj<typeof Calendar.Week> = {
 
     return (
       <Calendar.Root>
-        <Panel.Root>
-          <Panel.Header>
+        <Next.Panel.Root>
+          <Next.Panel.Header>
             <Calendar.Toolbar />
-          </Panel.Header>
+          </Next.Panel.Header>
           <Calendar.Week
             events={events}
             onEventCreate={({ start, end }) =>
@@ -103,7 +103,7 @@ export const Week: StoryObj<typeof Calendar.Week> = {
               setEvents((current) => current.map((event) => (event.id === id ? { ...event, start, end } : event)))
             }
           />
-        </Panel.Root>
+        </Next.Panel.Root>
       </Calendar.Root>
     );
   },

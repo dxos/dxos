@@ -4,9 +4,9 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Block, Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 
 import { Subscription } from '#types';
 
@@ -60,8 +60,8 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered>
-            <ScrollArea.Viewport ref={setViewport}>
+          <Next.ScrollArea.Root orientation='vertical' padding centered>
+            <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SubscriptionTile}
                 gap={8}
@@ -71,8 +71,8 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
               />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Mosaic.Container>
       </Focus.Group>
     );
@@ -128,15 +128,15 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current' id={feed.id} data={data} location={location}>
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-          <Card.Root ref={forwardedRef}>
-            <Card.Header>
-              <Block>
-                <Icon icon={icon} classNames={iconClassName} />
-              </Block>
-              <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
-              <Card.Menu items={menuItems} />
-            </Card.Header>
-            <Card.Body>
+          <Next.Card.Root ref={forwardedRef}>
+            <Next.Card.Header>
+              <Next.Block>
+                <Next.Icon icon={icon} classNames={iconClassName} />
+              </Next.Block>
+              <Next.Card.Title>{feed.name ?? 'Untitled feed'}</Next.Card.Title>
+              <Next.Card.Menu items={menuItems} />
+            </Next.Card.Header>
+            <Next.Card.Body>
               {/* {feed.url && (
                 <Card.Row>
                   <Card.Text classNames='truncate' variant='description'>
@@ -145,12 +145,12 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
                 </Card.Row>
               )} */}
               {feed.description && (
-                <Card.Row>
-                  <Card.Text variant='description'>{feed.description}</Card.Text>
-                </Card.Row>
+                <Next.Card.Row>
+                  <Next.Card.Text variant='description'>{feed.description}</Next.Card.Text>
+                </Next.Card.Row>
               )}
-            </Card.Body>
-          </Card.Root>
+            </Next.Card.Body>
+          </Next.Card.Root>
         </Focus.Item>
       </Mosaic.Tile>
     );

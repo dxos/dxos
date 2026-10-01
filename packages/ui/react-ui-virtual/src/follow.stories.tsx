@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -114,23 +114,29 @@ const DefaultStory = ({
   }, [viewport, follower]);
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
             data-testid='follow.toggle'
             onClick={handleToggle}
           />
-          <Button icon='ph--arrow-line-up--regular' iconOnly label='Top' data-testid='follow.top' onClick={handleTop} />
-        </Toolbar.Root>
-      </Panel.Header>
+          <Next.Button
+            icon='ph--arrow-line-up--regular'
+            iconOnly
+            label='Top'
+            data-testid='follow.top'
+            onClick={handleTop}
+          />
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
 
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport data-testid='follow.viewport' ref={setViewport}>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport data-testid='follow.viewport' ref={setViewport}>
             {items.map(({ index }) => (
               <div
                 key={index}
@@ -140,11 +146,11 @@ const DefaultStory = ({
                 <span className='text-sm text-description'>{index}</span>
               </div>
             ))}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
 
-      <Panel.Footer>
+      <Next.Panel.Footer>
         <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
           <span data-testid='follow.items'>{items.length} items</span>
           <span data-testid='follow.position'>
@@ -158,8 +164,8 @@ const DefaultStory = ({
           </span>
           <span className='text-right'>{running ? 'following' : 'idle'}</span>
         </div>
-      </Panel.Footer>
-    </Panel.Root>
+      </Next.Panel.Footer>
+    </Next.Panel.Root>
   );
 };
 

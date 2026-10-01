@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Icon } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 // TODO(burdon): Use theme.
 export const BooleanIcon = ({ value }: { value: boolean | undefined }) => (
-  <Icon icon={value ? 'ph--check--regular' : 'ph--stop--regular'} />
+  <Next.Icon icon={value ? 'ph--check--regular' : 'ph--stop--regular'} />
 );

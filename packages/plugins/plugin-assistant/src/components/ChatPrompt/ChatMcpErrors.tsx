@@ -5,8 +5,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
-import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -33,9 +34,9 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
   }
 
   return (
-    <Banner.Root valence='warning'>
-      <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
-      <Banner.Body>
+    <Next.Banner.Root valence='warning'>
+      <Next.Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Next.Banner.Title>
+      <Next.Banner.Body>
         <Listbox.Root>
           <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
             {errors.map((error) => (
@@ -51,7 +52,7 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
             ))}
           </Listbox.Content>
         </Listbox.Root>
-      </Banner.Body>
-    </Banner.Root>
+      </Next.Banner.Body>
+    </Next.Banner.Root>
   );
 };

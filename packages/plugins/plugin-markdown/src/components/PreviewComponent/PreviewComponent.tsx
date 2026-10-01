@@ -12,9 +12,10 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -320,7 +321,7 @@ export const PreviewComponent = ({
   if (unresolved) {
     return (
       <span className='dx-tag dx-tag--red inline-flex items-center gap-1 align-baseline'>
-        <Icon icon='ph--warning--regular' size='md' />
+        <Next.Icon icon='ph--warning--regular' size='md' />
         {t('object-not-found.label')}
       </span>
     );
@@ -358,13 +359,13 @@ export const PreviewComponent = ({
 
           <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
             <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-              {objectIcon && <Icon icon={objectIcon.icon} size='md' />}
+              {objectIcon && <Next.Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
             </span>
           </div>
 
           <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-            <Button
+            <Next.Button
               size='sm'
               icon='ph--arrow-square-out--regular'
               iconOnly
@@ -391,15 +392,15 @@ export const PreviewComponent = ({
         <div className='outline-hidden' {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
-            <Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
-              <Card.Header>
-                <Block />
-                <Card.Title>{objectLabel}</Card.Title>
-              </Card.Header>
-              <Card.Body>
+            <Next.Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
+              <Next.Card.Header>
+                <Next.Block />
+                <Next.Card.Title>{objectLabel}</Next.Card.Title>
+              </Next.Card.Header>
+              <Next.Card.Body>
                 <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-              </Card.Body>
-            </Card.Root>
+              </Next.Card.Body>
+            </Next.Card.Root>
           </div>
         </div>
       );

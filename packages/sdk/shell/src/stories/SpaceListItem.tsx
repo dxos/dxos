@@ -5,7 +5,8 @@
 import React, { type ForwardedRef, forwardRef } from 'react';
 
 import type { Space } from '@dxos/react-client/echo';
-import { Avatar, useId } from '@dxos/react-ui';
+import { useId } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { humanize, keyToEmoji } from '@dxos/util';
 
@@ -22,10 +23,10 @@ export const SpaceListItem = forwardRef(
         ref={ref}
         data-testid='space-list-item'
       >
-        <Avatar.Root labelId={labelId}>
-          <Avatar.Content fallback={fallbackValue} />
-          <Avatar.Label classNames='text-sm truncate'>{displayName}</Avatar.Label>
-        </Avatar.Root>
+        <Next.Avatar.Root labelId={labelId}>
+          <Next.Avatar.Content fallback={fallbackValue} />
+          <Next.Avatar.Label classNames='text-sm truncate'>{displayName}</Next.Avatar.Label>
+        </Next.Avatar.Root>
       </li>
     );
   },

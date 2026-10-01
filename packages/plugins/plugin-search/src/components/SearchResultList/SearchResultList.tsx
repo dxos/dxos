@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { Empty, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -31,7 +32,7 @@ export const SearchResultList = ({ results, query, onSelect }: SearchResultListP
       {results.length === 0 ? (
         // `Empty` renders a `<div>`; keep it out of `Listbox.Content`'s `<ul>` rather than
         // nesting a non-`<li>` child inside the list.
-        <Empty>{t('search-result-list.empty.label')}</Empty>
+        <Next.Empty>{t('search-result-list.empty.label')}</Next.Empty>
       ) : (
         <Listbox.Content aria-label={t('search-result-list.label')}>
           {results.map((result) => (

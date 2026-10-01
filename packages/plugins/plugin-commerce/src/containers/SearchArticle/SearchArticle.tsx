@@ -9,10 +9,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Empty, Panel, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Result, Search } from '#types';
@@ -140,12 +141,12 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...menuActions} attendableId={id} />
-      </Panel.Header>
+      </Next.Panel.Header>
 
-      <Panel.Body>
+      <Next.Panel.Body>
         {(selectedResult && (
           <ResultDetail
             result={selectedResult}
@@ -155,9 +156,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <Empty classNames='h-full'>
+            <Next.Empty classNames='h-full'>
               {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            </Empty>
+            </Next.Empty>
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content thin centered padding>
@@ -165,8 +166,8 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
               </Masonry.Content>
             </Masonry.Root>
           ))}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

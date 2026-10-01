@@ -10,9 +10,10 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Select, Tabs, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
@@ -346,34 +347,34 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header classNames='dx-expand'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <div className='grow' />
           {view === 'camera' && (
             <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
           )}
-          <Tabs.Root
+          <Next.Tabs.Root
             orientation='horizontal'
             value={view}
             onValueChange={handleViewChange}
             selectedVariant={hasAttention ? 'primary' : 'default'}
           >
-            <Tabs.List>
-              <Tabs.Trigger value='scene' data-testid='terra.toolbar.view-scene'>
+            <Next.Tabs.List>
+              <Next.Tabs.Trigger value='scene' data-testid='terra.toolbar.view-scene'>
                 {t('scene-view.label')}
-              </Tabs.Trigger>
-              <Tabs.Trigger value='map' data-testid='terra.toolbar.view-map'>
+              </Next.Tabs.Trigger>
+              <Next.Tabs.Trigger value='map' data-testid='terra.toolbar.view-map'>
                 {t('map-view.label')}
-              </Tabs.Trigger>
-              <Tabs.Trigger value='camera' data-testid='terra.toolbar.view-camera'>
+              </Next.Tabs.Trigger>
+              <Next.Tabs.Trigger value='camera' data-testid='terra.toolbar.view-camera'>
                 {t('camera-view.label')}
-              </Tabs.Trigger>
-            </Tabs.List>
-          </Tabs.Root>
+              </Next.Tabs.Trigger>
+            </Next.Tabs.List>
+          </Next.Tabs.Root>
         </ActionToolbar>
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <div className='relative grow'>
           {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
@@ -392,8 +393,8 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -409,17 +410,20 @@ type CameraTargetSelectProps = {
 const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Select.Root value={value} onValueChange={onChange}>
-      <Select.Trigger
+    <Next.Select.Root value={value} onValueChange={onChange}>
+      <Next.Select.Trigger
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'
         classNames='min-w-32'
       />
-      <Select.Content>
+      <Next.Select.Content>
         {definitions.map((definition) => (
-          <Select.Item key={definition.id} item={{ value: definition.id, label: definition.name ?? definition.kind }} />
+          <Next.Select.Item
+            key={definition.id}
+            item={{ value: definition.id, label: definition.name ?? definition.kind }}
+          />
         ))}
-      </Select.Content>
-    </Select.Root>
+      </Next.Select.Content>
+    </Next.Select.Root>
   );
 };

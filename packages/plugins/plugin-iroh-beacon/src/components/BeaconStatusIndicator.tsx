@@ -6,7 +6,8 @@ import React from 'react';
 
 import { useOptionalAtomCapability } from '@dxos/app-framework/ui';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Button, Icon, Popover, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -25,10 +26,10 @@ export const BeaconStatusIndicator = () => {
   const iconClass = onlineCount > 0 ? 'text-green-500' : state?.status === 'connecting' ? 'animate-pulse' : undefined;
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Next.Popover.Root>
+      <Next.Popover.Trigger asChild>
         <StatusBar.Item>
-          <Button
+          <Next.Button
             variant='ghost'
             icon='ph--broadcast--regular'
             iconOnly
@@ -36,11 +37,11 @@ export const BeaconStatusIndicator = () => {
             classNames={iconClass}
           />
         </StatusBar.Item>
-      </Popover.Trigger>
-      <Popover.Content side='left' classNames=''>
+      </Next.Popover.Trigger>
+      <Next.Popover.Content side='left' classNames=''>
         <BeaconPopover />
-      </Popover.Content>
-    </Popover.Root>
+      </Next.Popover.Content>
+    </Next.Popover.Root>
   );
 };
 
@@ -57,7 +58,10 @@ const BeaconPopover = () => {
     <div className='flex flex-col gap-2 w-[280px] p-2'>
       {/* Header. */}
       <div className='flex items-center gap-2 mb-1'>
-        <Icon icon='ph--broadcast--regular' classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-description')} />
+        <Next.Icon
+          icon='ph--broadcast--regular'
+          classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-description')}
+        />
         <span className='font-medium text-sm'>{t('beacon-title.label')}</span>
       </div>
 
@@ -96,7 +100,7 @@ const BeaconPopover = () => {
 const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
   return (
     <div className='flex items-center gap-2 text-sm'>
-      <Icon
+      <Next.Icon
         icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
         classNames={mx(peer.online ? 'text-green-500' : 'text-description')}
         size='xs'

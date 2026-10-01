@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Book } from '#types';
@@ -31,12 +31,12 @@ const meta = {
       stars,
     });
     return (
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>{book.catalog.title}</Card.Title>
-        </Card.Header>
+      <Next.Card.Root>
+        <Next.Card.Header>
+          <Next.Card.Title>{book.catalog.title}</Next.Card.Title>
+        </Next.Card.Header>
         <BookCard subject={book} />
-      </Card.Root>
+      </Next.Card.Root>
     );
   },
   decorators: [withTheme(), withLayout()],

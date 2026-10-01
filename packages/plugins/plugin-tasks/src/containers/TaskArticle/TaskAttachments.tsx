@@ -22,8 +22,9 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { CardMasonry } from '@dxos/plugin-space/components';
-import { Column, Icon, useTranslation } from '@dxos/react-ui';
-import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
+import { Column, useTranslation } from '@dxos/react-ui';
+import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -294,7 +295,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [] }: TaskAttachmen
           </RemoveAttachmentContext.Provider>
         ) : (
           <>
-            <Icon icon='ph--paperclip--regular' />
+            <Next.Icon icon='ph--paperclip--regular' />
             {t('task-attachments.drop-area.label')}
           </>
         )}

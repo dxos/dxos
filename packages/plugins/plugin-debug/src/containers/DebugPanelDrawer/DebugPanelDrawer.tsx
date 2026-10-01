@@ -6,7 +6,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -55,16 +56,16 @@ const DebugPanelDrawerContent = () => {
   );
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root size='sm'>
-          <Toolbar.Text classNames='grow'>{t('debug-panel.title')}</Toolbar.Text>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root size='sm'>
+          <Next.Toolbar.Text classNames='grow'>{t('debug-panel.title')}</Next.Toolbar.Text>
           <DebugPanelHeader mode={mode} onModeChange={handleModeChange} onClose={handleClose} />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body classNames='grid'>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='grid'>
         <DebugPanel.Body />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

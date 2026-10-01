@@ -5,8 +5,8 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Block, Card, Icon, Popover } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 
 const DEFAULT_BLOCK_SIZE = 22;
 const MIN_BLOCK_SIZE = 8;
@@ -48,26 +48,26 @@ export const PopoverCardContainer = ({
   icon = 'ph--arrow-line-down--regular',
 }: PopoverCardContainerProps) => {
   return (
-    <Popover.Root open>
-      <Popover.Trigger asChild>
-        <Icon icon={icon} />
-      </Popover.Trigger>
-      <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-        <Popover.Body>
+    <Next.Popover.Root open>
+      <Next.Popover.Trigger asChild>
+        <Next.Icon icon={icon} />
+      </Next.Popover.Trigger>
+      <Next.Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
+        <Next.Popover.Body>
           {/* Mirrors the deck's popover card host (plugin-deck Overlays/Popover.tsx) so card
                 stories exercise the real composition: Card.Root grid + header + content. */}
-          <Card.Root border={false} classNames='dx-card-popover'>
-            <Card.Header>
-              <Block>
-                <Icon icon={icon} />
-              </Block>
-              <Card.Title>Popover</Card.Title>
-            </Card.Header>
+          <Next.Card.Root border={false} classNames='dx-card-popover'>
+            <Next.Card.Header>
+              <Next.Block>
+                <Next.Icon icon={icon} />
+              </Next.Block>
+              <Next.Card.Title>Popover</Next.Card.Title>
+            </Next.Card.Header>
             {children}
-          </Card.Root>
-        </Popover.Body>
-      </Popover.Content>
-    </Popover.Root>
+          </Next.Card.Root>
+        </Next.Popover.Body>
+      </Next.Popover.Content>
+    </Next.Popover.Root>
   );
 };
 

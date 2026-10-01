@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading } from '@dxos/react-ui/testing';
 
 export type ProjectModuleProps = {
@@ -53,25 +53,25 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
 
   if (error) {
     return (
-      <Panel.Root>
-        <Panel.Body>
+      <Next.Panel.Root>
+        <Next.Panel.Body>
           <div role='alert'>{error}</div>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   }
 
   if (!project) {
     return (
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
-            <Button data-testid='projects.story.setup' onClick={() => handleCreate(mailbox)}>
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Button data-testid='projects.story.setup' onClick={() => handleCreate(mailbox)}>
               Set up project
-            </Button>
-          </Toolbar.Root>
-        </Panel.Header>
-      </Panel.Root>
+            </Next.Button>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+      </Next.Panel.Root>
     );
   }
 

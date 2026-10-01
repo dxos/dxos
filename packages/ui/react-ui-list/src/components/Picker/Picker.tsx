@@ -25,15 +25,7 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  type Density,
-  type Elevation,
-  Field,
-  Input,
-  type ThemedClassName,
-  composableProps,
-  slottable,
-} from '@dxos/react-ui';
+import { type Density, type Elevation, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
@@ -320,8 +312,8 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     // Only force-control when `value` is provided; otherwise leave the
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
-      <Field.Root>
-        <Input
+      <Next.Field.Root>
+        <Next.Input
           {...props}
           autoFocus={shouldAutoFocus}
           {...(value !== undefined && { value })}
@@ -336,7 +328,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
             }
           }}
         />
-      </Field.Root>
+      </Next.Field.Root>
     );
   },
 );

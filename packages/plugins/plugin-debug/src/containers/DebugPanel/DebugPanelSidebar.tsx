@@ -9,9 +9,11 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useGraphTreeModel } from '@dxos/plugin-graph/hooks';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
-import { Path, Tree } from '@dxos/react-ui-list';
+import { Path } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';
@@ -105,8 +107,8 @@ export const DebugPanelSidebar = () => {
   );
 
   return (
-    <ScrollArea.Root thin orientation='vertical'>
-      <ScrollArea.Viewport>
+    <Next.ScrollArea.Root thin orientation='vertical'>
+      <Next.ScrollArea.Viewport>
         <Tree
           id={contextId}
           rootId={DebugNodes.DEBUG_ROOT_ID}
@@ -117,8 +119,8 @@ export const DebugPanelSidebar = () => {
           onOpenChange={handleOpenChange}
           onSelect={handleSelect}
         />
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+      </Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 };
 

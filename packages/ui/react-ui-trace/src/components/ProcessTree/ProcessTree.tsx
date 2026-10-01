@@ -8,8 +8,10 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { Button, Icon, ScrollArea, Tooltip, composable, composableProps } from '@dxos/react-ui';
-import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import { composable, composableProps } from '@dxos/react-ui';
+import { type ColumnRenderer, type IconRenderer, createStaticTreeModel } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
@@ -125,8 +127,8 @@ export const ProcessTree = React.memo(
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
 
       return (
-        <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
-          <ScrollArea.Viewport>
+        <Next.ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+          <Next.ScrollArea.Viewport>
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
@@ -140,8 +142,8 @@ export const ProcessTree = React.memo(
               onOpenChange={handleOpenChange}
               onSelect={handleSelect}
             />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       );
     },
   ),
@@ -152,8 +154,8 @@ const makeIconRenderer =
   (): IconRenderer<ProcessNode> =>
   ({ item: { process } }) =>
     process === undefined ? null : (
-      <Tooltip.Trigger content={process.state.toString()}>
-        <Icon
+      <Next.Tooltip.Trigger content={process.state.toString()}>
+        <Next.Icon
           size='md'
           synchronized
           classNames={mx(
@@ -172,7 +174,7 @@ const makeIconRenderer =
             Match.orElse(() => 'ph--spinner-gap--regular'),
           )}
         />
-      </Tooltip.Trigger>
+      </Next.Tooltip.Trigger>
     );
 
 /** Trailing columns: elapsed time for finished processes, and the terminate control. */
@@ -188,7 +190,7 @@ const makeColumnRenderer =
         </div>
         <div className='flex items-center mx-1'>
           {onProcessTerminate && process.state !== Process.State.TERMINATED && (
-            <Button
+            <Next.Button
               classNames='min-h-0 p-1'
               icon='ph--x--regular'
               iconOnly

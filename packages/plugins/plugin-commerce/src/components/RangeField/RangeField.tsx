@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent } from 'react';
 
-import { Field, NumberInput } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type RangeValue = { min?: number; max?: number };
 
@@ -23,12 +23,12 @@ export const RangeField = ({ label, value, onValueChange }: RangeFieldProps) => 
     onValueChange?.({ ...value, [key]: parsed != null && Number.isNaN(parsed) ? undefined : parsed });
   };
   return (
-    <Field.Root>
-      {label && <Field.Label>{label}</Field.Label>}
+    <Next.Field.Root>
+      {label && <Next.Field.Label>{label}</Next.Field.Label>}
       <div className='grid grid-cols-2 gap-2'>
-        <NumberInput placeholder='Min' value={value?.min ?? ''} onChange={update('min')} />
-        <NumberInput placeholder='Max' value={value?.max ?? ''} onChange={update('max')} />
+        <Next.NumberInput placeholder='Min' value={value?.min ?? ''} onChange={update('min')} />
+        <Next.NumberInput placeholder='Max' value={value?.max ?? ''} onChange={update('max')} />
       </div>
-    </Field.Root>
+    </Next.Field.Root>
   );
 };

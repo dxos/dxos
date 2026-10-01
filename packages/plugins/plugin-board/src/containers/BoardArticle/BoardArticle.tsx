@@ -13,7 +13,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -23,7 +23,9 @@ import {
   resizeToFit,
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
-import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
+import { type ObjectPickerContentProps } from '@dxos/react-ui-form';
+import { ObjectPicker } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
 import { Board } from '#types';
@@ -169,25 +171,25 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
         onAdd={handleAdd}
         onDelete={handleDelete}
       >
-        <Panel.Root role={role}>
+        <Next.Panel.Root role={role}>
           {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
-          <Panel.Header>
-            <Toolbar.Root>
-              <Button
+          <Next.Panel.Header>
+            <Next.Toolbar.Root>
+              <Next.Button
                 icon='ph--crosshair--regular'
                 iconOnly
                 label={t('move-to-center.button')}
                 disabled={!hasAttention}
                 onClick={() => controller.current?.center()}
               />
-              <Button
+              <Next.Button
                 icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
                 iconOnly
                 label={t('toggle-zoom.button')}
                 disabled={!hasAttention}
                 onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
               />
-              <Button
+              <Next.Button
                 icon='ph--plus--regular'
                 iconOnly
                 label={t('add-object.button')}
@@ -197,9 +199,9 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                   setPickerState({ position: DEFAULT_POSITION });
                 }}
               />
-            </Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body asChild>
+            </Next.Toolbar.Root>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
             <BoardComponent.Container classNames='dx-fullscreen'>
               <BoardComponent.Viewport>
                 <BoardComponent.Backdrop />
@@ -221,8 +223,8 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
               {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
               <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
             </BoardComponent.Container>
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </BoardComponent.Root>
       <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
       <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />

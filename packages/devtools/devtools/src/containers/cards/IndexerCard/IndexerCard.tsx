@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Grid, SystemButton, Tooltip } from '@dxos/react-ui';
+import { Grid } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type IndexerRow } from '../../../hooks/index.ts';
@@ -53,8 +54,8 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
         return (
           <StatCard.Row key={row.spaceId} icon={icon} iconClassNames={className}>
             <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
-              <Tooltip.Trigger asChild content={row.error ?? row.name}>
-                <SystemButton.Clipboard
+              <Next.Tooltip.Trigger asChild content={row.error ?? row.name}>
+                <Next.SystemButton.Clipboard
                   size='sm'
                   variant='ghost'
                   compact
@@ -63,7 +64,7 @@ export const IndexerCard = ({ spaces = [], onRefresh, onCopy }: IndexerCardProps
                   label={row.spaceId.slice(0, 8)}
                   onCopy={() => row.spaceId}
                 />
-              </Tooltip.Trigger>
+              </Next.Tooltip.Trigger>
               <span className={className}>{rowStatus(row)}</span>
             </Grid>
           </StatCard.Row>

@@ -8,9 +8,10 @@ import { Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
+import { type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
@@ -25,18 +26,18 @@ import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
 
 /** The panel chrome: a captioned, scrollable region. */
 export const DemoPanel = ({ label, children, testId }: { label: string; children: ReactNode; testId: string }) => (
-  <Panel.Root classNames='min-w-0 dx-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
-    <Panel.Header>
-      <Toolbar.Root>
-        <Toolbar.Text>{label}</Toolbar.Text>
-      </Toolbar.Root>
-    </Panel.Header>
-    <Panel.Body asChild>
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Panel.Body>
-  </Panel.Root>
+  <Next.Panel.Root classNames='min-w-0 dx-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
+    <Next.Panel.Header>
+      <Next.Toolbar.Root>
+        <Next.Toolbar.Text>{label}</Next.Toolbar.Text>
+      </Next.Toolbar.Root>
+    </Next.Panel.Header>
+    <Next.Panel.Body asChild>
+      <Next.ScrollArea.Root orientation='vertical'>
+        <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
+    </Next.Panel.Body>
+  </Next.Panel.Root>
 );
 
 /**
@@ -167,9 +168,9 @@ export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
 
 /** A labelled JSON block, capped so a long value scrolls inside the pane. */
 const JsonSection = ({ title, data, testId }: { title: string; data: unknown; testId: string }) => (
-  <Card.Section title={title}>
+  <Next.Card.Section title={title}>
     <JsonHighlighter data={data} classNames='max-h-64' testId={testId} />
-  </Card.Section>
+  </Next.Card.Section>
 );
 
 /**
@@ -189,15 +190,15 @@ export const RawInspector = ({ task }: { task: Obj.Unknown }) => {
 
   return (
     <DemoPanel label='Raw object' testId='inspector-panel'>
-      <Card.Root fullWidth border={false}>
-        <Card.Section title='typename'>
-          <Card.Row fullWidth>
-            <Card.Text data-testid='inspector-typename'>{Obj.getTypename(task)}</Card.Text>
-          </Card.Row>
-        </Card.Section>
+      <Next.Card.Root fullWidth border={false}>
+        <Next.Card.Section title='typename'>
+          <Next.Card.Row fullWidth>
+            <Next.Card.Text data-testid='inspector-typename'>{Obj.getTypename(task)}</Next.Card.Text>
+          </Next.Card.Row>
+        </Next.Card.Section>
         <JsonSection title='properties (Task schema)' data={properties} testId='inspector-properties' />
         <JsonSection title='meta.annotations — lens overlay' data={overlays} testId='inspector-overlay' />
-      </Card.Root>
+      </Next.Card.Root>
     </DemoPanel>
   );
 };

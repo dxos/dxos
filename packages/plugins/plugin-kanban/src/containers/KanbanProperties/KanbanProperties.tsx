@@ -9,7 +9,8 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
-import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldMap } from '@dxos/react-ui-form';
+import { Form, SelectField } from '@dxos/react-ui-form/next';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '#hooks';

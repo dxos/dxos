@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Dialog } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { ClientPlugin } from '#plugin';
 import { translations } from '#translations';
@@ -15,9 +15,9 @@ import { translations } from '#translations';
 import { JoinDialog } from './JoinDialog.tsx';
 
 const DefaultStory = () => (
-  <Dialog.Root defaultOpen>
+  <Next.Dialog.Root defaultOpen>
     <JoinDialog />
-  </Dialog.Root>
+  </Next.Dialog.Root>
 );
 
 const meta = {

@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type ComponentProps, useCallback } from 'react';
 
-import { Select, type SelectRootProps } from '@dxos/react-ui';
-import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import type { FeedbackPluginOption } from './types.ts';
 
@@ -19,6 +20,8 @@ import type { FeedbackPluginOption } from './types.ts';
  * Binds `undefined` to Radix's reserved empty string: passing `undefined` itself would flip the
  * select to uncontrolled and strand its internal state.
  */
+type SelectRootProps = ComponentProps<typeof Next.Select.Root>;
+
 export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & {
   plugins: ReadonlyArray<FeedbackPluginOption>;
 };
@@ -58,24 +61,24 @@ export const AreaSelectField = ({
       {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
-        <Select.Root value={value ?? ''} onValueChange={handleValueChange}>
-          <Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
-          <Select.Content>
+        <Next.Select.Root value={value ?? ''} onValueChange={handleValueChange}>
+          <Next.Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
+          <Next.Select.Content>
             {value != null && (
-              <Select.Item value={CLEAR_VALUE}>
+              <Next.Select.Item value={CLEAR_VALUE}>
                 <span className='text-description italic'>(none)</span>
-              </Select.Item>
+              </Next.Select.Item>
             )}
             {plugins.map((plugin) => (
-              <Select.Item key={plugin.id} value={plugin.id} classNames='flex'>
+              <Next.Select.Item key={plugin.id} value={plugin.id} classNames='flex'>
                 <div className='flex flex-col w-full text-left'>
                   <div>{plugin.name}</div>
                   <div className='text-xs text-description font-mono py-1'>{plugin.id}</div>
                 </div>
-              </Select.Item>
+              </Next.Select.Item>
             ))}
-          </Select.Content>
-        </Select.Root>
+          </Next.Select.Content>
+        </Next.Select.Root>
       )}
     </Form.Field>
   );

@@ -8,7 +8,7 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Flex, Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -17,7 +17,8 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Provider } from '#types';
@@ -65,11 +66,11 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
   }
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Header>
-      <Panel.Body classNames='flex flex-col gap-2 p-3'>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='flex flex-col gap-2 p-3'>
         <span className='text-sm text-description'>{t('search-fields.label')}</span>
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
@@ -83,8 +84,8 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
         ) : (
           <span className='text-sm text-subdued'>{t('search-fields.message')}</span>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

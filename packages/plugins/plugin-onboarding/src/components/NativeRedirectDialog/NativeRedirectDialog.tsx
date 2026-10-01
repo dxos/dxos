@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '../../meta.ts';
 
@@ -21,9 +22,9 @@ export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void })
         composer
       </h1>
       <p className='text-lg text-subdued'>{t('native-redirect.message')}</p>
-      <Button variant='ghost' onClick={onOpenHere}>
+      <Next.Button variant='ghost' onClick={onOpenHere}>
         {t('open-in-browser-button.label')}
-      </Button>
+      </Next.Button>
     </div>
   );
 };

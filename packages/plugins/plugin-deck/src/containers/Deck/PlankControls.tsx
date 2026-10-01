@@ -6,7 +6,8 @@ import React, { forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { DeckOperation } from '#types';
@@ -48,15 +49,19 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
   },
 );
 
-const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return <Button label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
+const PlankControl = ({
+  icon,
+  label,
+  ...props
+}: Omit<Next.ButtonProps, 'children'> & { label: string; icon: string }) => {
+  return <Next.Button label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
 };
 
 //
 // PlankControls
 //
 
-export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
+export type PlankControlsProps = Omit<Next.GroupProps, 'onClick'> & {
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
   close?: boolean | 'minify-start' | 'minify-end';
@@ -92,7 +97,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
       variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 
     return (
-      <ButtonGroup {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
+      <Next.Group {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
         {capabilities.expandToggle && (
           <PlankControl
             label={t(expanded ? 'collapse-plank.label' : 'expand-plank.label')}
@@ -156,7 +161,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )}
         {children}
-      </ButtonGroup>
+      </Next.Group>
     );
   },
 );

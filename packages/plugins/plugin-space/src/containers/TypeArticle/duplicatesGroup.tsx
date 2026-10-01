@@ -8,7 +8,7 @@ import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
+import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu/next';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';

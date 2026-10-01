@@ -4,7 +4,8 @@
 
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
+import { useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
+import type { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Convert to radix primitive and move to react-ui.
@@ -16,7 +17,7 @@ export interface CompoundButtonSlots {
   description: ComponentPropsWithoutRef<'p'>;
 }
 
-export interface CompoundButtonProps extends ButtonProps {
+export interface CompoundButtonProps extends Next.ButtonProps {
   children?: ReactNode;
   description?: ReactNode;
   before?: ReactNode;

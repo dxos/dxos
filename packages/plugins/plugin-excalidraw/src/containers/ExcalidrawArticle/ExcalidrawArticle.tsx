@@ -17,7 +17,7 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Flex, Panel, composable, composableProps } from '@dxos/react-ui';
+import { Flex, composable, composableProps } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { useStoreAdapter } from '#hooks';
@@ -211,9 +211,12 @@ export const ExcalidrawArticle = ({
 };
 
 const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
-  <Panel.Root {...composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })} ref={forwardedRef}>
-    <Panel.Body>{props.children}</Panel.Body>
-  </Panel.Root>
+  <Next.Panel.Root
+    {...composableProps(props, { classNames: 'aspect-square w-full max-h-full min-h-0' })}
+    ref={forwardedRef}
+  >
+    <Next.Panel.Body>{props.children}</Next.Panel.Body>
+  </Next.Panel.Root>
 ));
 
 const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (

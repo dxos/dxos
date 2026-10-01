@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Grid, Panel, useTranslation } from '@dxos/react-ui';
+import { Grid, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -67,8 +68,8 @@ export const RepositoryViewer = ({
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
 
   return (
-    <Panel.Root role={role} classNames='dx-expand'>
-      <Panel.Header>
+    <Next.Panel.Root role={role} classNames='dx-expand'>
+      <Next.Panel.Header>
         <RepositoryToolbar
           branches={branches}
           currentRef={currentRef}
@@ -77,8 +78,8 @@ export const RepositoryViewer = ({
           onViewChange={onViewChange}
           onRefresh={onRefresh}
         />
-      </Panel.Header>
-      <Panel.Body asChild>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         {error ? (
           <Message testId='repository.error'>{error}</Message>
         ) : empty ? (
@@ -118,8 +119,8 @@ export const RepositoryViewer = ({
             </div>
           </Grid>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

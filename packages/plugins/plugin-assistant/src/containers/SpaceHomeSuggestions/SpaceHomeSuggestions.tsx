@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { Block, Card, Icon, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { useHomeSuggestions } from '#hooks';
@@ -57,14 +57,14 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
             className='cursor-pointer w-full text-start'
             onClick={() => handleRunPrompt(prompt)}
           >
-            <Card.Root fullWidth>
-              <Card.Header>
-                <Block>
-                  <Icon icon='ph--sparkle--regular' />
-                </Block>
-                <Card.Title>{prompt}</Card.Title>
-              </Card.Header>
-            </Card.Root>
+            <Next.Card.Root fullWidth>
+              <Next.Card.Header>
+                <Next.Block>
+                  <Next.Icon icon='ph--sparkle--regular' />
+                </Next.Block>
+                <Next.Card.Title>{prompt}</Next.Card.Title>
+              </Next.Card.Header>
+            </Next.Card.Root>
           </button>
         ))}
       </Next.Container>

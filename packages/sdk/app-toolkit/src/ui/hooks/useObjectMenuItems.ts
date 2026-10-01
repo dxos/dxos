@@ -12,7 +12,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
+import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu/next';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { GraphPath } from '../../app/index.ts';

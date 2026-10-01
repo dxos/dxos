@@ -9,7 +9,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';
@@ -23,11 +23,11 @@ const meta = {
   component: PullRequestOverview,
   decorators: [
     (Story) => (
-      <Panel.Root>
-        <Panel.Body>
+      <Next.Panel.Root>
+        <Next.Panel.Body>
           <Story />
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     ),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

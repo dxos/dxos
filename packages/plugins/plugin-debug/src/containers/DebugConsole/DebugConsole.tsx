@@ -5,8 +5,9 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { Button, Panel, SystemButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Terminal, type TerminalApi } from '@dxos/react-ui-terminal';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -53,8 +54,8 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
   }, []);
 
   return (
-    <Panel.Root>
-      <Panel.Body>
+    <Next.Panel.Root>
+      <Next.Panel.Body>
         <Terminal
           ref={apiRef}
           command={cli.command}
@@ -63,27 +64,27 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
           banner={BANNER}
           dimensions={fit ? undefined : FIXED_GRID}
         />
-      </Panel.Body>
-      <Panel.Footer>
-        <Toolbar.Root classNames='bg-transparent'>
-          <Button
+      </Next.Panel.Body>
+      <Next.Panel.Footer>
+        <Next.Toolbar.Root classNames='bg-transparent'>
+          <Next.Button
             variant='ghost'
             iconOnly
             icon='ph--eraser--regular'
             label={t('console.clear.label')}
             onClick={handleClear}
           />
-          <SystemButton.Clipboard
+          <Next.SystemButton.Clipboard
             variant='ghost'
             iconOnly
             label={t('console.copy.label')}
             onCopy={() => lastResultRef.current}
           />
-          <Toolbar.Separator />
-          {onClose && <SystemButton.Close variant='ghost' iconOnly onClick={onClose} />}
-        </Toolbar.Root>
-      </Panel.Footer>
-    </Panel.Root>
+          <Next.Toolbar.Separator />
+          {onClose && <Next.SystemButton.Close variant='ghost' iconOnly onClick={onClose} />}
+        </Next.Toolbar.Root>
+      </Next.Panel.Footer>
+    </Next.Panel.Root>
   );
 };
 

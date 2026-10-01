@@ -13,8 +13,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Button, Field, Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
@@ -79,8 +79,8 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
 
   return (
     <Form.FieldSet>
-      <Field.Root>
-        <Field.Label>{t('feed-sync.label')}</Field.Label>
+      <Next.Field.Root>
+        <Next.Field.Label>{t('feed-sync.label')}</Next.Field.Label>
         <Flex align='center'>
           <Next.Switch
             checked={syncEnabled ?? false}
@@ -90,10 +90,15 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+            <Next.Button
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('view-trigger.label')}
+              onClick={handleViewTrigger}
+            />
           )}
         </Flex>
-      </Field.Root>
+      </Next.Field.Root>
     </Form.FieldSet>
   );
 };

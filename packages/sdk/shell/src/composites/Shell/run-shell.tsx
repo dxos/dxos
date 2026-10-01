@@ -9,8 +9,9 @@ import { createRoot } from 'react-dom/client';
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import { AppContextRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
-import { Button, Dialog, ThemeProvider, useTranslation } from '@dxos/react-ui';
+import { ThemeProvider, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { translationKey, translations } from '../../translations.ts';
@@ -60,17 +61,17 @@ const Fallback = ({ onClose }: { onClose?: () => void }) => {
   const { t } = useTranslation(translationKey);
 
   return (
-    <Dialog.Root modal open onOpenChange={() => onClose?.()}>
-      <Dialog.Content>
-        <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
-        <Dialog.Footer>
-          <Dialog.CloseTrigger asChild onClick={() => onClose?.()}>
-            <Button variant='primary' classNames='w-full'>
+    <Next.Dialog.Root modal open onOpenChange={() => onClose?.()}>
+      <Next.Dialog.Content>
+        <Next.Dialog.Title>{t('shell-fallback.title')}</Next.Dialog.Title>
+        <Next.Dialog.Footer>
+          <Next.Dialog.CloseTrigger asChild onClick={() => onClose?.()}>
+            <Next.Button variant='primary' classNames='w-full'>
               {t('close.label')}
-            </Button>
-          </Dialog.CloseTrigger>
-        </Dialog.Footer>
-      </Dialog.Content>
-    </Dialog.Root>
+            </Next.Button>
+          </Next.Dialog.CloseTrigger>
+        </Next.Dialog.Footer>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
   );
 };

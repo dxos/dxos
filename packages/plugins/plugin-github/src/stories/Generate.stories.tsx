@@ -11,7 +11,7 @@ import React, { useCallback, useState } from 'react';
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
-import { Button, Field, Icon, Input } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { WalkthroughView } from '../components/WalkthroughView/index.ts';
@@ -95,21 +95,21 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
   return (
     <div className='dx-fill grid grid-rows-[auto_1fr]'>
       <div className='flex items-center gap-2 p-2 border-be border-separator'>
-        <Field.Root classNames='flex-1'>
-          <Input
+        <Next.Field.Root classNames='flex-1'>
+          <Next.Input
             placeholder='https://github.com/owner/repo/pull/123'
             value={url}
             disabled={busy}
             onChange={(event) => setUrl(event.target.value)}
           />
-        </Field.Root>
-        <Button disabled={busy} onClick={handleGenerate}>
-          <Icon
+        </Next.Field.Root>
+        <Next.Button disabled={busy} onClick={handleGenerate}>
+          <Next.Icon
             icon={busy ? 'ph--circle-notch--regular' : 'ph--path--regular'}
             classNames={busy ? 'animate-spin' : ''}
           />
           <span className='ms-2'>{busy ? PHASE_LABEL[phase] : 'Generate'}</span>
-        </Button>
+        </Next.Button>
         {result && (
           <span className='text-sm text-description whitespace-nowrap'>
             {result.covered} of {result.total} hunks narrated

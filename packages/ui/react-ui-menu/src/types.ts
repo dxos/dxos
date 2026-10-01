@@ -3,14 +3,17 @@
 //
 
 import type * as Atom from 'effect/unstable/reactivity/Atom';
+import { type ComponentProps } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
+import type { Next } from '@dxos/react-ui/next';
 import {
   type DropdownMenuItemGroupProperties,
   type MenuActionProperties,
   type ToggleGroupMenuItemGroupProperties,
 } from '@dxos/ui-types';
+
+type ToolbarSeparatorProps = ComponentProps<typeof Next.Toolbar.Separator>;
 
 export type MenuAction<P extends {} = {}> = AppGraphNode.Action<P & MenuActionProperties>;
 
@@ -58,7 +61,7 @@ export type MenuActionsOptions = {
   onAction?: ActionExecutor;
   /** Identifies the component that owns the menu (passed to action handlers). */
   caller?: string;
-  iconSize?: IconButtonProps['size'];
+  iconSize?: Next.ButtonProps['size'];
 };
 
 /**

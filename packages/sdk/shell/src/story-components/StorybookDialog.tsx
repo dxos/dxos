@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Dialog } from '@dxos/react-ui';
 import { type DialogSize } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */
@@ -21,13 +21,13 @@ export type StorybookDialogProps = PropsWithChildren & {
  */
 export const StorybookDialog = ({ children, size = 'md', blockAlign = 'center' }: StorybookDialogProps) => {
   return (
-    <Dialog.Root defaultOpen modal>
-      <Dialog.Content size={size}>
-        <Dialog.Header>
-          <Dialog.Title classNames='sr-only'>Storybook Dialog</Dialog.Title>
-        </Dialog.Header>
-        <Dialog.Body>{children}</Dialog.Body>
-      </Dialog.Content>
-    </Dialog.Root>
+    <Next.Dialog.Root defaultOpen modal>
+      <Next.Dialog.Content size={size}>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title classNames='sr-only'>Storybook Dialog</Next.Dialog.Title>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>{children}</Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
   );
 };

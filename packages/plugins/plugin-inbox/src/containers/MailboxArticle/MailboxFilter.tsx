@@ -5,9 +5,10 @@
 import React, { type Ref } from 'react';
 
 import { type Database, Filter, Tag } from '@dxos/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -51,7 +52,7 @@ export const MailboxFilter = ({
         onFilterChange={({ filter }) => onFilterChange(filter)}
         ref={editorRef}
       />
-      <Button
+      <Next.Button
         disabled={!filter}
         icon='ph--folder-plus--regular'
         iconOnly
@@ -59,7 +60,7 @@ export const MailboxFilter = ({
         onClick={onSave}
         ref={saveButtonRef}
       />
-      <Button icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
+      <Next.Button icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
     </>
   );
 };

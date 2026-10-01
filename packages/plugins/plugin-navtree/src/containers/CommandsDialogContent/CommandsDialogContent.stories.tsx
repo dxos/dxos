@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { Dialog } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { NavTreePlugin } from '#plugin';
@@ -18,9 +18,9 @@ import { translations } from '#translations';
 import { CommandsDialogContent } from './CommandsDialogContent.tsx';
 
 const DefaultStory = () => (
-  <Dialog.Root defaultOpen>
+  <Next.Dialog.Root defaultOpen>
     <CommandsDialogContent />
-  </Dialog.Root>
+  </Next.Dialog.Root>
 );
 
 const meta = {

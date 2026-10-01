@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { useConfig } from '@dxos/react-client';
-import { Panel } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
 
@@ -34,8 +34,8 @@ export const FeedbackPanel = () => {
   const hidden = useMemo(() => ({ version }), [version]);
 
   return (
-    <Panel.Root>
-      <Panel.Body>
+    <Next.Panel.Root>
+      <Next.Panel.Body>
         <FeedbackForm.Root hidden={hidden} plugins={plugins} onSubmit={handleSubmit}>
           <Form.Viewport>
             <Form.Content>
@@ -45,8 +45,8 @@ export const FeedbackPanel = () => {
             </Form.Content>
           </Form.Viewport>
         </FeedbackForm.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

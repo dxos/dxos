@@ -8,8 +8,8 @@ import { DXN, Entity, Format, Type } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, Placeholder, Searchbar } from '../../../../components/index.ts';
@@ -127,14 +127,14 @@ export const SchemaArticle = ({ role, ...props }: ArticleProps & { space?: Space
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
           <div className='flex flex-col w-full overflow-hidden'>
             <DynamicTable
@@ -168,7 +168,7 @@ export const SchemaArticle = ({ role, ...props }: ArticleProps & { space?: Space
             </div>
           </div>
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

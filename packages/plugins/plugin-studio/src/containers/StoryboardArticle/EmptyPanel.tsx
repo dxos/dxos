@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Empty, Panel } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 export type EmptyPanelProps = {
   label: string;
@@ -31,14 +31,14 @@ export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
   );
 
   return (
-    <Panel.Root>
-      <Panel.Header>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Header>
-      <Panel.Body classNames='bg-scrim-surface'>
-        <Empty classNames='h-full'>{label}</Empty>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='bg-scrim-surface'>
+        <Next.Empty classNames='h-full'>{label}</Next.Empty>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

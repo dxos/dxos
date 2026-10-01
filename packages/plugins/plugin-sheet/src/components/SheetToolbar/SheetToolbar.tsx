@@ -17,7 +17,7 @@ import {
   graphActions,
   isToolbarAction,
   useMenuActions,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
 
 import { type SheetModel } from '../../model/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';

@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Button, Field, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { PostContent } from '#components';
@@ -57,11 +57,11 @@ const DefaultStory = () => {
   }, [url]);
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Field.Root>
-            <Input
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Field.Root>
+            <Next.Input
               placeholder='Article URL'
               value={url}
               onChange={(event) => setUrl(event.target.value)}
@@ -72,40 +72,40 @@ const DefaultStory = () => {
               }}
               classNames='w-full min-w-[24rem]'
             />
-          </Field.Root>
-          <Select.Root
+          </Next.Field.Root>
+          <Next.Select.Root
             value={url}
             onValueChange={(sample) => {
               setUrl(sample);
               setState({ status: 'idle' });
             }}
           >
-            <Button asChild>
-              <Select.Trigger placeholder='Sample URL' />
-            </Button>
-            <Select.Content>
+            <Next.Button asChild>
+              <Next.Select.Trigger placeholder='Sample URL' />
+            </Next.Button>
+            <Next.Select.Content>
               {SAMPLE_URLS.map((sample) => (
-                <Select.Item key={sample} item={{ value: sample, label: new URL(sample).hostname }} />
+                <Next.Select.Item key={sample} item={{ value: sample, label: new URL(sample).hostname }} />
               ))}
-            </Select.Content>
-          </Select.Root>
-          <Button
+            </Next.Select.Content>
+          </Next.Select.Root>
+          <Next.Button
             icon='ph--arrow-clockwise--regular'
             iconOnly
             label='Fetch'
             onClick={() => void handleFetch()}
             disabled={state.status === 'loading'}
           />
-          <Button
+          <Next.Button
             label={showMarkdown ? 'Show preview' : 'Show Markdown'}
             icon={showMarkdown ? 'ph--article--regular' : 'ph--code--regular'}
             iconOnly
             aria-pressed={showMarkdown}
             onClick={() => setShowMarkdown((showMarkdown) => !showMarkdown)}
           />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         {state.status === 'ok' ? (
           <ResultView article={state.article} sourceLength={state.sourceLength} showMarkdown={showMarkdown} />
         ) : (
@@ -119,8 +119,8 @@ const DefaultStory = () => {
             )}
           </div>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -157,13 +157,13 @@ const ResultView = composable<HTMLDivElement, ResultViewProps>(
 
     if (showMarkdown) {
       return (
-        <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
-          <ScrollArea.Viewport>
+        <Next.ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
+          <Next.ScrollArea.Viewport>
             <SyntaxHighlighter language='markdown' classNames='m-4'>
               {article.markdown}
             </SyntaxHighlighter>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       );
     }
 

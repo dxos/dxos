@@ -7,7 +7,7 @@ import React from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Entity, Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/schema.ts';
@@ -30,22 +30,22 @@ const ResearchInputModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.Text>Research Input</Toolbar.Text>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Toolbar.Text>Research Input</Next.Toolbar.Text>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
             {objects.map((object) => (
               <DebugCard key={object.id} object={object} />
             ))}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

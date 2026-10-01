@@ -9,9 +9,9 @@ import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { List, ListItem } from '@dxos/react-list';
-import { Button, Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Combobox } from '@dxos/react-ui-list';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { AssistantCapabilities, Ollama } from '#types';
@@ -120,7 +120,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 >
                   <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium'>{model.name}</span>
-                    <Button
+                    <Next.Button
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
                       iconOnly
                       label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
@@ -131,7 +131,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         )()
                       }
                     />
-                    <Button
+                    <Next.Button
                       icon='ph--trash--regular'
                       iconOnly
                       label={t('settings.ollama.remove.label')}
@@ -163,7 +163,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 >
                   <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
-                    <Button
+                    <Next.Button
                       icon='ph--x--regular'
                       iconOnly
                       label={t('settings.ollama.cancel.label')}
@@ -189,17 +189,17 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
           ))}
         {/* Root value is held empty so the trigger always shows the placeholder; the live text is
             the separate `query` driving the input and suggestion filter. */}
-        <Combobox.Root
+        <Next.Combobox.Root
           open={open}
           onOpenChange={setOpen}
           value=''
           onValueChange={() => {}}
           placeholder={t('settings.ollama.pull.placeholder')}
         >
-          <Combobox.Trigger classNames='w-full' />
-          <Combobox.Portal>
-            <Combobox.Content>
-              <Combobox.Input
+          <Next.Combobox.Trigger classNames='w-full' />
+          <Next.Combobox.Portal>
+            <Next.Combobox.Content>
+              <Next.Combobox.Input
                 value={query}
                 onValueChange={setQuery}
                 placeholder={t('settings.ollama.pull.placeholder')}
@@ -209,9 +209,9 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   }
                 }}
               />
-              <Combobox.List>
+              <Next.Combobox.List>
                 {offerCustom && (
-                  <Combobox.Item
+                  <Next.Combobox.Item
                     value={filter}
                     label={t('settings.ollama.pull-custom.label', { name: filter })}
                     icon='ph--download-simple--regular'
@@ -219,12 +219,12 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   />
                 )}
                 {suggestions.map((pick) => (
-                  <Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
+                  <Next.Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
                 ))}
-              </Combobox.List>
-            </Combobox.Content>
-          </Combobox.Portal>
-        </Combobox.Root>
+              </Next.Combobox.List>
+            </Next.Combobox.Content>
+          </Next.Combobox.Portal>
+        </Next.Combobox.Root>
       </Form.Field>
     </Form.FieldSet>
   );

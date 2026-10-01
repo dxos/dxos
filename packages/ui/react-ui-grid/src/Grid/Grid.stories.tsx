@@ -8,10 +8,10 @@ import React, { type MouseEvent, type RefObject, useCallback, useRef, useState }
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { Menu, virtualAnchor } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
+import { type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';
@@ -72,22 +72,22 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
       </Grid.Root>
 
       {/* Menu */}
-      <Menu.Root open={menuOpen} onOpenChange={setMenuOpen} positioning={virtualAnchor(triggerRef)}>
-        <Menu.Content>
-          <Menu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</Menu.Item>
-        </Menu.Content>
-      </Menu.Root>
+      <Next.Menu.Root open={menuOpen} onOpenChange={setMenuOpen} positioning={Next.virtualAnchor(triggerRef)}>
+        <Next.Menu.Content>
+          <Next.Menu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</Next.Menu.Item>
+        </Next.Menu.Content>
+      </Next.Menu.Root>
 
       {/* Multiselect */}
-      <Combobox.Root
+      <Next.Combobox.Root
         open={popoverOpen}
         onOpenChange={setPopoverOpen}
         value={multiSelectValue}
         onValueChange={setMultiselectValue}
-        positioning={virtualAnchor(triggerRef)}
+        positioning={Next.virtualAnchor(triggerRef)}
       >
         <ComboboxContentWithFiltering />
-      </Combobox.Root>
+      </Next.Combobox.Root>
     </div>
   );
 };
@@ -98,14 +98,14 @@ const ComboboxContentWithFiltering = () => {
   });
 
   return (
-    <Combobox.Content>
-      <Combobox.Input placeholder='Search...' value={query} onValueChange={handleSearch} />
-      <Combobox.List>
+    <Next.Combobox.Content>
+      <Next.Combobox.Input placeholder='Search...' value={query} onValueChange={handleSearch} />
+      <Next.Combobox.List>
         {results.map((value) => (
-          <Combobox.Item key={value} value={value} label={value} />
+          <Next.Combobox.Item key={value} value={value} label={value} />
         ))}
-      </Combobox.List>
-    </Combobox.Content>
+      </Next.Combobox.List>
+    </Next.Combobox.Content>
   );
 };
 

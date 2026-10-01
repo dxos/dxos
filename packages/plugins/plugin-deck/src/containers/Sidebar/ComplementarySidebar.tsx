@@ -7,8 +7,9 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } fro
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, type Label, Main, Panel, Tabs, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 import { iconSize, mx } from '@dxos/ui-theme';
 
 import { PlankLoading } from '#components';
@@ -19,7 +20,7 @@ import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
-const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
+const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Next.Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -66,12 +67,12 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   }, [hasPersistedPanel, invokePromise]);
 
   return (
-    <Main.ComplementarySidebar
+    <Next.Main.ComplementarySidebar
       label={label}
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       {/* R0 Tabs */}
-      <Tabs.Root classNames='contents' orientation='vertical' value={selectedVariant} keepMounted>
+      <Next.Tabs.Root classNames='contents' orientation='vertical' value={selectedVariant} keepMounted>
         <div
           data-tauri-drag-region
           style={iconSize(5)}
@@ -81,9 +82,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] dx-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.List classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
+          <Next.Tabs.List classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
             {companions.map((companion) => (
-              <Tabs.Trigger
+              <Next.Tabs.Trigger
                 key={Attention.getLinkedVariant(companion.id)}
                 value={Attention.getLinkedVariant(companion.id)}
                 classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
@@ -103,7 +104,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 onClick={handleTabClick}
               />
             ))}
-          </Tabs.List>
+          </Next.Tabs.List>
           <div
             className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
@@ -117,7 +118,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
         {/* R1 Content. */}
         {companions.map((companion) => (
-          <Tabs.Content
+          <Next.Tabs.Content
             key={Attention.getLinkedVariant(companion.id)}
             value={Attention.getLinkedVariant(companion.id)}
             classNames={[
@@ -135,10 +136,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 sidebarState: state.fullscreen ? 'closed' : state.complementarySidebarState,
               })}
             />
-          </Tabs.Content>
+          </Next.Tabs.Content>
         ))}
-      </Tabs.Root>
-    </Main.ComplementarySidebar>
+      </Next.Tabs.Root>
+    </Next.Main.ComplementarySidebar>
   );
 };
 
@@ -156,10 +157,10 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
   }
 
   return (
-    <Panel.Root>
-      <Panel.Header size='lg'>
-        <Toolbar.Root style={iconSize(5)} classNames='dx-header-surface'>
-          <Button
+    <Next.Panel.Root>
+      <Next.Panel.Header size='lg'>
+        <Next.Toolbar.Root style={iconSize(5)} classNames='dx-header-surface'>
+          <Next.Button
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
             label={toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
@@ -169,17 +170,17 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
             variant='default'
           />
           <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body classNames='dx-r1-surface'>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='dx-r1-surface'>
         <Surface.Surface
           type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}
         />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

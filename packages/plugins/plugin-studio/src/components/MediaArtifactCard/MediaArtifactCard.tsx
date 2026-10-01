@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { type MediaArtifact } from '#types';
 
@@ -26,14 +26,14 @@ export const MediaArtifactCard = ({ subject }: MediaArtifactCardProps) => {
   const label = Obj.getLabel(subject) ?? '';
   const isVideo = contentType?.startsWith('video/') ?? false;
   return (
-    <Card.Body>
+    <Next.Card.Body>
       {src && isVideo ? (
         // A video cover shows its first frame; `Card.Poster` renders images only.
         <video src={src} muted playsInline preload='metadata' className='block w-full aspect-video object-cover' />
       ) : (
-        <Card.Poster alt={label} image={src} icon={src ? undefined : 'ph--image--regular'} fit='cover' />
+        <Next.Card.Poster alt={label} image={src} icon={src ? undefined : 'ph--image--regular'} fit='cover' />
       )}
-    </Card.Body>
+    </Next.Card.Body>
   );
 };
 

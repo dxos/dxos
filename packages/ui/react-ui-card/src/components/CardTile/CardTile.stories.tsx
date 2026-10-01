@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -15,7 +15,7 @@ import { CardTile } from './CardTile.tsx';
 // CardTile.Header standalone inside Card chrome; CardTile.Root's mosaic shell is exercised by the
 // EventStack / InboxStack stories (it requires a Mosaic.Container ancestor).
 const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) => (
-  <Card.Root fullWidth border={false} classNames='p-1'>
+  <Next.Card.Root fullWidth border={false} classNames='p-1'>
     <CardTile.Header
       menu={menu}
       starred={starred}
@@ -27,12 +27,12 @@ const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) 
         </>
       }
     />
-    <Card.Body>
-      <Card.Row>
-        <Card.Text variant='description'>Body content rendered beneath the tile header.</Card.Text>
-      </Card.Row>
-    </Card.Body>
-  </Card.Root>
+    <Next.Card.Body>
+      <Next.Card.Row>
+        <Next.Card.Text variant='description'>Body content rendered beneath the tile header.</Next.Card.Text>
+      </Next.Card.Row>
+    </Next.Card.Body>
+  </Next.Card.Root>
 );
 
 const meta = {

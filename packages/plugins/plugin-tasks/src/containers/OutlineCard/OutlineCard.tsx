@@ -6,7 +6,8 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useResolveRef } from '@dxos/echo-react';
-import { Card, Show } from '@dxos/react-ui';
+import { Show } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Outline as OutlineType } from '@dxos/types';
 
 import { Outline } from '#components';
@@ -21,11 +22,11 @@ export const OutlineCard = ({ subject }: OutlineCardProps) => {
       {(text) => (
         // Read-only: a card is a preview, so no editing, no drag grips, and no floating menu.
         <Outline.Root id={text.id} text={text} readonly>
-          <Card.Body>
-            <Card.Row>
+          <Next.Card.Body>
+            <Next.Card.Row>
               <Outline.Content />
-            </Card.Row>
-          </Card.Body>
+            </Next.Card.Row>
+          </Next.Card.Body>
         </Outline.Root>
       )}
     </Show>

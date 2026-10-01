@@ -11,8 +11,9 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Button, ButtonGroup, Field, Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
@@ -40,24 +41,29 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
 
   return (
     <Form.FieldSet>
-      <Field.Root>
-        <Field.Label>{t('calendar-sync.label')}</Field.Label>
+      <Next.Field.Root>
+        <Next.Field.Label>{t('calendar-sync.label')}</Next.Field.Label>
         {/* TODO(burdon): Replace custom components with Field.Switch. */}
         <Flex gap='xs'>
-          <ButtonGroup>
-            <Button onClick={handleToggleSync} disabled={pending}>
+          <Next.Group>
+            <Next.Button onClick={handleToggleSync} disabled={pending}>
               {pending
                 ? t('enabling-background-sync.label')
                 : syncEnabled
                   ? t('disable-background-sync.label')
                   : t('enable-background-sync.label')}
-            </Button>
+            </Next.Button>
             {syncTrigger && (
-              <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+              <Next.Button
+                iconOnly
+                icon='ph--gear--regular'
+                label={t('view-trigger.label')}
+                onClick={handleViewTrigger}
+              />
             )}
-          </ButtonGroup>
+          </Next.Group>
         </Flex>
-      </Field.Root>
+      </Next.Field.Root>
     </Form.FieldSet>
   );
 };

@@ -8,10 +8,12 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Flex, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
+import { Flex, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
+import { Form, ObjectForm } from '@dxos/react-ui-form/next';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
@@ -200,13 +202,13 @@ const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => 
       <Form.Fields />
       <Flex gap='sm' justify='end' classNames='pt-form-padding'>
         {onCancel && (
-          <Button onClick={onCancel} data-testid='cancel-button'>
+          <Next.Button onClick={onCancel} data-testid='cancel-button'>
             {t('object-form-cancel.label')}
-          </Button>
+          </Next.Button>
         )}
-        <Button variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+        <Next.Button variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
           {t('object-form-confirm.label')}
-        </Button>
+        </Next.Button>
       </Flex>
     </Form.Content>
   );
@@ -246,7 +248,7 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             // Keyed by typename, since the label is localized and, for database types, user-authored.
             data-testid={`create-object-form.type.${option.id}`}
           >
-            <Icon
+            <Next.Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
               size='xl'
               classNames={getIconHueStyles(option.iconHue)}

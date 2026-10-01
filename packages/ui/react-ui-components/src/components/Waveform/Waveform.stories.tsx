@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Waveform, type WaveformProps } from './Waveform.tsx';
@@ -15,9 +15,9 @@ const DefaultStory = ({ active: _active }: WaveformProps) => {
 
   return (
     <div className='flex flex-col grow'>
-      <Toolbar.Root>
-        <Button onClick={() => setActive((active) => !active)}>Toggle</Button>
-      </Toolbar.Root>
+      <Next.Toolbar.Root>
+        <Next.Button onClick={() => setActive((active) => !active)}>Toggle</Next.Button>
+      </Next.Toolbar.Root>
       <div className='flex flex-col gap-4 grow items-center justify-center'>
         <div className='flex gap-4 items-center'>
           <Waveform active={active} size={3} />
@@ -26,28 +26,28 @@ const DefaultStory = ({ active: _active }: WaveformProps) => {
           <Waveform active={active} size={6} />
         </div>
         <div className='flex gap-4 items-center'>
-          <Button
+          <Next.Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             iconSize='xs'
           />
-          <Button
+          <Next.Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             iconSize='md'
           />
-          <Button
+          <Next.Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             iconSize='lg'
           />
-          <Button
+          <Next.Button
             classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly

@@ -9,9 +9,10 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Button, Column, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { ActionMenu } from '@dxos/react-ui-menu';
+import { Column, useTranslation } from '@dxos/react-ui';
+import { ActionMenu } from '@dxos/react-ui-menu/next';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -72,18 +73,18 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
   const openQuestions = useMemo(() => Task.getQuestions(history ?? []).filter(({ answer }) => !answer), [history]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root classNames='dx-document'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root classNames='dx-document'>
           {/* Actions only: what the task IS — its status, estimate and priority — reads with the
               text below, while the toolbar carries what can be done to it. */}
-          <Toolbar.Separator variant='gap' />
+          <Next.Toolbar.Separator variant='gap' />
           <TaskActions task={task} />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root thin>
-          <ScrollArea.Viewport classNames='dx-document'>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root thin>
+          <Next.ScrollArea.Viewport classNames='dx-document'>
             <TaskAttachmentDropZone onFiles={handleAttach}>
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
@@ -134,10 +135,10 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
                 <TaskArtifacts task={task} />
               </Column.Root>
             </TaskAttachmentDropZone>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -158,7 +159,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button
+      <Next.Button
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { Select } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { humanize } from '@dxos/util';
 
 export type PublicKeySelectorProps = {
@@ -24,24 +24,24 @@ export const PublicKeySelector = ({
   onChange,
 }: PublicKeySelectorProps) => {
   return (
-    <Select.Root
+    <Next.Select.Root
       value={value?.toHex()}
       onValueChange={(id) => {
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
-      <Select.Trigger placeholder={placeholder} />
-      <Select.Content>
+      <Next.Select.Trigger placeholder={placeholder} />
+      <Next.Select.Content>
         {removeDuplicates(keys).map((key) => (
-          <Select.Item key={key.toHex()} value={key.toHex()}>
+          <Next.Select.Item key={key.toHex()} value={key.toHex()}>
             <div className='flex items-center gap-2'>
               <span className='font-mono text-neutral-250'>{key.truncate()}</span>
               {getLabel(key)}
             </div>
-          </Select.Item>
+          </Next.Select.Item>
         ))}
-      </Select.Content>
-    </Select.Root>
+      </Next.Select.Content>
+    </Next.Select.Root>
   );
 };
 

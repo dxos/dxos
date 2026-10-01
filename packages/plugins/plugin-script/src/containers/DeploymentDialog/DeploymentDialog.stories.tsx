@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { Dialog } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -35,9 +35,9 @@ const DeploymentDialogStory = () => {
     [],
   );
   return (
-    <Dialog.Root defaultOpen={true}>
+    <Next.Dialog.Root defaultOpen={true}>
       <DeploymentDialog accessToken={accessToken} scriptTemplates={scriptTemplates} />
-    </Dialog.Root>
+    </Next.Dialog.Root>
   );
 };
 

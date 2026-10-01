@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { Button, type IconButtonProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export const TEST_ID = 'test';
 
-export type TestProps = IconButtonProps;
+export type TestProps = Next.ButtonProps;
 
 export const Test = (props: TestProps) => {
-  return <Button {...props} />;
+  return <Next.Button {...props} />;
 };

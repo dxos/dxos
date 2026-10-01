@@ -16,8 +16,9 @@ import {
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
-import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
+import { type CreateEntryOverride } from '@dxos/react-ui-form';
+import { ObjectProperties } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
@@ -61,17 +62,17 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
     );
 
     return (
-      <Panel.Root role={role} ref={forwardedRef}>
-        <Panel.Header>
-          <Toolbar.Root classNames='dx-document' />
-        </Panel.Header>
-        <Panel.Body asChild>
+      <Next.Panel.Root role={role} ref={forwardedRef}>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root classNames='dx-document' />
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
             <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
           </ObjectProperties>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 );

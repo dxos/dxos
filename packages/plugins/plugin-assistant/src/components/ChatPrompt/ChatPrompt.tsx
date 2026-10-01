@@ -21,7 +21,7 @@ import {
   ChatStatusIndicator,
   commands,
 } from '@dxos/react-ui-chat';
-import { type ActionGraphProps } from '@dxos/react-ui-menu';
+import type { ActionGraphProps } from '@dxos/react-ui-menu/next';
 import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';

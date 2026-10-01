@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -39,9 +39,9 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
   );
 
   return (
-    <Panel.Header>
+    <Next.Panel.Header>
       <ActionToolbar {...menuActions} attendableId={attendableId} />
-    </Panel.Header>
+    </Next.Panel.Header>
   );
 };
 

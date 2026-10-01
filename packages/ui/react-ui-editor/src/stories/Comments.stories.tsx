@@ -12,11 +12,10 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Listbox } from '@dxos/react-ui-list';
-import { createMenuAction } from '@dxos/react-ui-menu';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { createMenuAction } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -198,7 +197,7 @@ const CommentsList = ({
                 title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
                 description={range ? `${range.from}–${range.to}` : comment.cursor}
               />
-              <Button
+              <Next.Button
                 variant='ghost'
                 iconOnly
                 icon='ph--x--regular'

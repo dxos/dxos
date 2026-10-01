@@ -17,7 +17,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Avatar, Button, type ThemedClassName, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
@@ -64,7 +64,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     // Columns mirror Thread.Header (avatar/rail · content · controls) so trailing
     // controls align with the thread header's controls.
     return (
-      <Avatar.Root>
+      <Next.Avatar.Root>
         <div
           data-testid='thread.message'
           {...rootProps}
@@ -72,7 +72,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           ref={forwardedRef}
         >
           <div className='flex flex-col items-center gap-2 pt-1'>
-            <Avatar.Content
+            <Next.Avatar.Content
               size={avatarSize}
               hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
               fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
@@ -83,7 +83,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           <div className='py-1 min-w-0'>{children}</div>
           {controls && <div className='self-start'>{controls}</div>}
         </div>
-      </Avatar.Root>
+      </Next.Avatar.Root>
     );
   },
 );
@@ -116,9 +116,9 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>
+    <Next.Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>
       {authorName ?? t('anonymous.label')}
-    </Avatar.Label>
+    </Next.Avatar.Label>
   );
 };
 
@@ -401,7 +401,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <Button
+          <Next.Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -412,7 +412,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAccept && (
-          <Button
+          <Next.Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -423,7 +423,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAcceptChange && (
-          <Button
+          <Next.Button
             data-testid='thread.message.accept-change'
             variant='ghost'
             icon='ph--check--regular'
@@ -434,7 +434,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showRejectChange && (
-          <Button
+          <Next.Button
             data-testid='thread.message.reject-change'
             variant='ghost'
             icon='ph--x--regular'
@@ -445,7 +445,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showDelete && (
-          <Button
+          <Next.Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'
@@ -535,7 +535,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <Button
+          <Next.Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -546,7 +546,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showAccept && (
-          <Button
+          <Next.Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -557,7 +557,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showDelete && (
-          <Button
+          <Next.Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'

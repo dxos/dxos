@@ -14,9 +14,10 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Flex, Panel } from '@dxos/react-ui';
+import { Flex } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
-import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
+import { graphActions, isPromptAction } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -111,11 +112,11 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         onEvent={onEvent}
         onSubmit={onSubmit}
       >
-        <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Header>
+        <Next.Panel.Root role={role} ref={forwardedRef}>
+          <Next.Panel.Header>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
-          </Panel.Header>
-          <Panel.Body asChild>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
             <ChatComponent.Content>
               <div className='dx-expand relative'>
                 {/* Thread outline (Table of Contents). */}
@@ -160,8 +161,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 />
               </div>
             </ChatComponent.Content>
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </ChatComponent.Root>
     );
   },

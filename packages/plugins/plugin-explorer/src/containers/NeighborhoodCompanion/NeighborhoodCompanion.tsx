@@ -5,8 +5,9 @@
 import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DxAnchorActivate, Panel, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
+import { DxAnchorActivate, useTranslation } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-graph';
+import { Next } from '@dxos/react-ui/next';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { Visualization } from '#components';
@@ -68,25 +69,25 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
   }
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           <div className='grow' />
-          <Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
+          <Next.Toolbar.ToggleGroup type='single' value={String(depth)} onValueChange={handleDepthChange}>
             {DEPTHS.map((value) => (
-              <ToggleGroup.Item
+              <Next.ToggleGroup.Item
                 key={value}
                 value={String(value)}
                 aria-label={t('depth.label', { count: value })}
                 title={t('depth.label', { count: value })}
               >
                 {value}
-              </ToggleGroup.Item>
+              </Next.ToggleGroup.Item>
             ))}
-          </Toolbar.ToggleGroup>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
+          </Next.Toolbar.ToggleGroup>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           model={model}
@@ -96,8 +97,8 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

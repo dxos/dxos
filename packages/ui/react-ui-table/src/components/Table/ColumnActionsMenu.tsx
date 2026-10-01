@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Menu, useTranslation, virtualAnchor } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -27,34 +28,39 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
   const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (
-    <Menu.Root modal={false} open={true} onOpenChange={modals.close} positioning={virtualAnchor(modals.trigger)}>
-      <Menu.Content>
+    <Next.Menu.Root
+      modal={false}
+      open={true}
+      onOpenChange={modals.close}
+      positioning={Next.virtualAnchor(modals.trigger)}
+    >
+      <Next.Menu.Content>
         {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
-          <Menu.Item data-testid='column-sort-descending' onClick={() => model.setSort(state.fieldId, 'desc')}>
+          <Next.Menu.Item data-testid='column-sort-descending' onClick={() => model.setSort(state.fieldId, 'desc')}>
             {t('column-action-sort-descending.menu')}
-          </Menu.Item>
+          </Next.Menu.Item>
         )}
         {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
-          <Menu.Item data-testid='column-sort-ascending' onClick={() => model.setSort(state.fieldId, 'asc')}>
+          <Next.Menu.Item data-testid='column-sort-ascending' onClick={() => model.setSort(state.fieldId, 'asc')}>
             {t('column-action-sort-ascending.menu')}
-          </Menu.Item>
+          </Next.Menu.Item>
         )}
         {isCurrentColumnSorted && (
-          <Menu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
+          <Next.Menu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
             {t('column-action-clear-sorting.menu')}
-          </Menu.Item>
+          </Next.Menu.Item>
         )}
         {model.getColumnCount() > 1 && model.features.schemaEditable && (
-          <Menu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
+          <Next.Menu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
             {t('column-action-delete.menu')}
-          </Menu.Item>
+          </Next.Menu.Item>
         )}
         {model.features.schemaEditable && (
-          <Menu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
+          <Next.Menu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
             {t('column-action-settings.menu')}
-          </Menu.Item>
+          </Next.Menu.Item>
         )}
-      </Menu.Content>
-    </Menu.Root>
+      </Next.Menu.Content>
+    </Next.Menu.Root>
   );
 };

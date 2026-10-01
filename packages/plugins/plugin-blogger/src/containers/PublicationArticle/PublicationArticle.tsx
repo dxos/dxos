@@ -14,10 +14,11 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
-import { ObjectForm } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { ObjectForm } from '@dxos/react-ui-form/next';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';
@@ -196,11 +197,11 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
 
   return (
     <>
-      <Panel.Root role={role}>
-        <Panel.Header>
+      <Next.Panel.Root role={role}>
+        <Next.Panel.Header>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Header>
-        <Panel.Body>
+        </Next.Panel.Header>
+        <Next.Panel.Body>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
             <div className='dx-expand'>
@@ -215,27 +216,27 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
               )}
             </div>
           </div>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
 
-      <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialog.Content>
-          <AlertDialog.Body>
-            <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
-            <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
-          </AlertDialog.Body>
-          <AlertDialog.Footer>
-            <AlertDialog.Cancel asChild>
-              <Button>{t('cancel.label')}</Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action asChild>
-              <Button variant='destructive' onClick={handleDelete}>
+      <Next.AlertDialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <Next.AlertDialog.Content>
+          <Next.AlertDialog.Body>
+            <Next.AlertDialog.Title>{t('delete-publication-dialog.title')}</Next.AlertDialog.Title>
+            <Next.AlertDialog.Description>{t('delete-publication-dialog.description')}</Next.AlertDialog.Description>
+          </Next.AlertDialog.Body>
+          <Next.AlertDialog.Footer>
+            <Next.AlertDialog.Cancel asChild>
+              <Next.Button>{t('cancel.label')}</Next.Button>
+            </Next.AlertDialog.Cancel>
+            <Next.AlertDialog.Action asChild>
+              <Next.Button variant='destructive' onClick={handleDelete}>
                 {t('delete-publication-dialog.confirm.label')}
-              </Button>
-            </AlertDialog.Action>
-          </AlertDialog.Footer>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
+              </Next.Button>
+            </Next.AlertDialog.Action>
+          </Next.AlertDialog.Footer>
+        </Next.AlertDialog.Content>
+      </Next.AlertDialog.Root>
     </>
   );
 };

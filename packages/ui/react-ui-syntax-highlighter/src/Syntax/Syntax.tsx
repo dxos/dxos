@@ -5,8 +5,8 @@
 import { JSONPath } from 'jsonpath-plus';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Field, Input, NumberInput, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter/index.ts';
@@ -160,8 +160,8 @@ const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
     }
 
     return (
-      <Field.Root validationValence={filterError ? 'error' : 'success'}>
-        <Input
+      <Next.Field.Root validationValence={filterError ? 'error' : 'success'}>
+        <Next.Input
           classNames={['p-1 px-2 font-mono', filterError && 'border-rose-500', classNames]}
           variant='subdued'
           value={filterText}
@@ -169,7 +169,7 @@ const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
           onChange={(event) => setFilterText(event.target.value)}
           ref={forwardedRef}
         />
-      </Field.Root>
+      </Next.Field.Root>
     );
   },
 );
@@ -191,8 +191,8 @@ type SyntaxDepthProps = ComposableProps;
 const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames }, forwardedRef) => {
   const { depth, setDepth } = useSyntaxContext(SYNTAX_DEPTH_NAME);
   return (
-    <Field.Root>
-      <NumberInput
+    <Next.Field.Root>
+      <Next.NumberInput
         classNames={['p-1 px-2 font-mono', classNames]}
         variant='subdued'
         min={0}
@@ -202,7 +202,7 @@ const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames
         onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
         ref={forwardedRef}
       />
-    </Field.Root>
+    </Next.Field.Root>
   );
 });
 
@@ -219,9 +219,9 @@ type SyntaxViewportProps = ComposableProps;
 /** Optional scroll wrapper. Compose around `Syntax.Code` to make it scrollable. */
 const SyntaxViewport = composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='all' thin ref={forwardedRef}>
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <Next.ScrollArea.Root {...composableProps(props)} orientation='all' thin ref={forwardedRef}>
+      <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
+    </Next.ScrollArea.Root>
   );
 });
 

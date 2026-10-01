@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
+import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form/next';
 import { ViewModel } from '@dxos/schema';
 
 import { SpaceOperation } from '#types';

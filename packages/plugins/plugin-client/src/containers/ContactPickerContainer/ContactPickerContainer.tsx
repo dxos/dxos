@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Field, Flex, Input, Select, SystemButton, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { ContactPicker } from '@dxos/shell/react';
 
@@ -85,20 +85,20 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           }}
           disabled={!canAdmit}
         />
-        <Select.Root
+        <Next.Select.Root
           value={String(role)}
           onValueChange={(value) =>
             setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
           }
         >
-          <Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
-          <Select.Content>
+          <Next.Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
+          <Next.Select.Content>
             {ROLES.map((value) => (
-              <Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />
+              <Next.Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />
             ))}
-          </Select.Content>
-        </Select.Root>
-        <SystemButton.Add
+          </Next.Select.Content>
+        </Next.Select.Root>
+        <Next.SystemButton.Add
           iconOnly
           label={t('contact-picker-add.label')}
           disabled={!canAdmit || pending || !selected}
@@ -108,10 +108,10 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
       </Flex>
       {joinUrl && (
         <Flex gap='sm'>
-          <Field.Root readOnly>
-            <Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
-          </Field.Root>
-          <SystemButton.Clipboard value={joinUrl} />
+          <Next.Field.Root readOnly>
+            <Next.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+          </Next.Field.Root>
+          <Next.SystemButton.Clipboard value={joinUrl} />
         </Flex>
       )}
     </Next.Container>

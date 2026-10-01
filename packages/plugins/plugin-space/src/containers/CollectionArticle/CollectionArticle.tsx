@@ -11,10 +11,10 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
-import { Block, ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Icon } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
@@ -30,8 +30,8 @@ export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectAr
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
-          <ScrollArea.Viewport>
+        <Next.ScrollArea.Root centered padding thin>
+          <Next.ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='gap-1'
               draggable={false}
@@ -39,8 +39,8 @@ export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectAr
               getId={(item) => item.id}
               Tile={ObjectTile}
             />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Mosaic.Container>
     </SearchPanel>
   );
@@ -71,20 +71,20 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { archived, item: archiveItem } = useArchiveMenuItem(item.object);
 
   return (
-    <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
-      <Card.Header>
-        <Block>
-          <Icon icon={item.icon} classNames={styles?.fg} />
-        </Block>
-        <Card.Title>{label}</Card.Title>
-        <Card.Menu items={archiveItem ? [archiveItem] : undefined} />
-      </Card.Header>
+    <Next.Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
+      <Next.Card.Header>
+        <Next.Block>
+          <Next.Icon icon={item.icon} classNames={styles?.fg} />
+        </Next.Block>
+        <Next.Card.Title>{label}</Next.Card.Title>
+        <Next.Card.Menu items={archiveItem ? [archiveItem] : undefined} />
+      </Next.Card.Header>
       {archived && (
-        <Card.Row>
-          <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
-        </Card.Row>
+        <Next.Card.Row>
+          <Next.Tag classNames='justify-self-start'>{t('archived.label')}</Next.Tag>
+        </Next.Card.Row>
       )}
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 

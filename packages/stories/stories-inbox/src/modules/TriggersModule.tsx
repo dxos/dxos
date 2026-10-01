@@ -13,7 +13,6 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 
@@ -71,20 +70,20 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
   const activeTriggers = triggers.filter((trigger) => trigger.enabled);
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.Text>Triggers</Toolbar.Text>
-          <Toolbar.Separator />
-          <Button onClick={start} disabled={state?.enabled}>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Toolbar.Text>Triggers</Next.Toolbar.Text>
+          <Next.Toolbar.Separator />
+          <Next.Button onClick={start} disabled={state?.enabled}>
             Start dispatcher
-          </Button>
-          <Button onClick={stop} disabled={!state?.enabled}>
+          </Next.Button>
+          <Next.Button onClick={stop} disabled={!state?.enabled}>
             Stop dispatcher
-          </Button>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
+          </Next.Button>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
         <JsonHighlighter
           data={{
             dispatcher: state?.enabled ? 'running' : 'stopped',
@@ -118,20 +117,20 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                     </div>
                   )}
                   {Trigger.isManuallyInvokable(trigger.spec) && (
-                    <Button
+                    <Next.Button
                       onClick={() => handleInvoke(trigger)}
                       disabled={!state?.enabled || invokingId === trigger.id}
                     >
                       {invokingId === trigger.id ? 'Invoking…' : 'Invoke now'}
-                    </Button>
+                    </Next.Button>
                   )}
                 </li>
               );
             })}
           </ul>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

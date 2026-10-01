@@ -11,8 +11,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Avatar, Block, Card, Icon } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
+import { Next } from '@dxos/react-ui/next';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
@@ -41,10 +41,10 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
   }, [invoke, organization]);
 
   return (
-    <Card.Body ref={cardRef}>
+    <Next.Card.Body ref={cardRef}>
       {image && (
-        <Card.Row>
-          <Avatar.Root
+        <Next.Card.Row>
+          <Next.Avatar.Root
             src={image}
             icon='ph--user--regular'
             size={20}
@@ -52,23 +52,23 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
             hue='neutral'
             variant='square'
           />
-        </Card.Row>
+        </Next.Card.Row>
       )}
       {organization?.name && (
-        <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
+        <Next.Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
       )}
       {emails.length > 0 && (
-        <Card.Row>
-          <Block>
-            <Icon icon='ph--at--regular' />
-          </Block>
-          <Card.Text truncate classNames='text-sky-text text-sm'>
+        <Next.Card.Row>
+          <Next.Block>
+            <Next.Icon icon='ph--at--regular' />
+          </Next.Block>
+          <Next.Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>
             ))}
-          </Card.Text>
-        </Card.Row>
+          </Next.Card.Text>
+        </Next.Card.Row>
       )}
-    </Card.Body>
+    </Next.Card.Body>
   );
 };

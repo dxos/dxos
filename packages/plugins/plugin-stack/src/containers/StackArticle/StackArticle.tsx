@@ -10,10 +10,11 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu/next';
 import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 import { arrayMove, isNonNullable } from '@dxos/util';
 
 import { Stack, type StackSectionItem } from '#components';
@@ -176,28 +177,28 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   );
 
   return (
-    <Panel.Root>
-      <Panel.Header classNames='dx-toolbar-surface'>
-        <Toolbar.Root classNames='dx-document'>
-          <Button
+    <Next.Panel.Root>
+      <Next.Panel.Header classNames='dx-toolbar-surface'>
+        <Next.Toolbar.Root classNames='dx-document'>
+          <Next.Button
             icon='ph--plus--regular'
             iconOnly
             label={t('add-section.label')}
             data-testid='stack.addSection'
             onClick={handleAddSection}
           />
-          <Toolbar.Separator />
+          <Next.Toolbar.Separator />
           <ActionMenu actions={optionsMenu}>
-            <Button
+            <Next.Button
               icon='ph--dots-three-vertical--regular'
               iconOnly
               label={t('options.label')}
               data-testid='stack.options'
             />
           </ActionMenu>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <Stack.Root
           id={Obj.getURI(collection)}
           attendableId={attendableId}
@@ -215,8 +216,8 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
             </Stack.Viewport>
           </Stack.Content>
         </Stack.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -15,6 +15,7 @@
 // https://www.w3.org/WAI/ARIA/apg/patterns/combobox
 
 import React, {
+  type ComponentProps,
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
   type PropsWithChildren,
@@ -23,14 +24,7 @@ import React, {
 } from 'react';
 
 import {
-  Button,
-  type ButtonProps,
-  Icon,
-  type IconProps,
-  Popover,
-  type PopoverContentProps,
   type PopoverVirtualTriggerProps,
-  ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
@@ -38,10 +32,13 @@ import {
   useControllableState,
   useThemeContext,
 } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme.ts';
 import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker/index.ts';
+
+type PopoverContentProps = ComponentProps<typeof Next.Popover.Content>;
 
 const styles = listTheme.styles();
 
@@ -106,7 +103,7 @@ const ComboboxRoot = ({
   });
 
   return (
-    <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
+    <Next.Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <ComboboxProvider
         isCombobox
         placeholder={placeholder}
@@ -118,7 +115,7 @@ const ComboboxRoot = ({
       >
         {children}
       </ComboboxProvider>
-    </Popover.Root>
+    </Next.Popover.Root>
   );
 };
 
@@ -136,7 +133,7 @@ type ComboboxContentProps = PopoverContentProps & {
 const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
   ({ children, classNames, resetSelectionOnChange, collisionPadding = 0, ...props }, forwardedRef) => {
     return (
-      <Popover.Content
+      <Next.Popover.Content
         {...props}
         // Zero, not the Popover default of 8: the content is exactly trigger-width, so a trigger
         // flush with a viewport edge would otherwise be shifted sideways out of alignment.
@@ -156,12 +153,12 @@ const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
         ]}
         ref={forwardedRef}
       >
-        <Popover.Body classNames='w-full min-w-0'>
+        <Next.Popover.Body classNames='w-full min-w-0'>
           <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>{children}</Picker.Root>
-        </Popover.Body>
+        </Next.Popover.Body>
         {/* Beside the viewport, never inside it: the arrow is positioned against the content, so
             nested in the scrolling viewport it lands over the first row instead of beyond the edge. */}
-      </Popover.Content>
+      </Next.Popover.Content>
     );
   },
 );
@@ -172,7 +169,7 @@ ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 // Trigger — the button that opens the popover.
 //
 
-type ComboboxTriggerProps = ButtonProps;
+type ComboboxTriggerProps = Next.ButtonProps;
 
 const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
   ({ children, classNames, onClick, ...props }, forwardedRef) => {
@@ -183,8 +180,8 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
     const custom = children !== null && children !== undefined;
 
     return (
-      <Popover.Trigger asChild>
-        <Button
+      <Next.Popover.Trigger asChild>
+        <Next.Button
           {...props}
           // The `Select` trigger slot, so the two controls are indistinguishable in a form
           // (input surface, 1fr/auto grid, control sizing). That second column belongs to the caret
@@ -205,11 +202,11 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
               <span className={styles.comboboxTriggerText({ class: !value && 'text-placeholder' })}>
                 {displayValue || value || placeholder}
               </span>
-              <Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
+              <Next.Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
             </>
           )}
-        </Button>
-      </Popover.Trigger>
+        </Next.Button>
+      </Next.Popover.Trigger>
     );
   },
 );
@@ -222,7 +219,7 @@ ComboboxTrigger.displayName = COMBOBOX_TRIGGER_NAME;
 
 type ComboboxVirtualTriggerProps = PopoverVirtualTriggerProps;
 
-const ComboboxVirtualTrigger = Popover.VirtualTrigger;
+const ComboboxVirtualTrigger = Next.Popover.VirtualTrigger;
 
 //
 // Input — text input wired to Picker.Input. Caller controls value.
@@ -247,14 +244,14 @@ type ComboboxListProps = PropsWithChildren<{ classNames?: string | string[] }>;
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root
+      <Next.ScrollArea.Root
         {...composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
         role='listbox'
         thin
         ref={forwardedRef}
       >
-        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-      </ScrollArea.Root>
+        <Next.ScrollArea.Viewport>{children}</Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     );
   },
 );
@@ -276,7 +273,7 @@ type ComboboxItemProps = ThemedClassName<
     /** Optional icon id (Phosphor) shown before the label. */
     icon?: string;
     /** Additional class names for the icon. */
-    iconClassNames?: IconProps['classNames'];
+    iconClassNames?: Next.IconProps['classNames'];
     /** Show a check icon on the right (commonly used for confirming the picked item). */
     checked?: boolean;
     /** Suffix text after the label. */
@@ -336,7 +333,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       >
         {children ?? (
           <>
-            {icon && <Icon icon={icon} classNames={iconClassNames} />}
+            {icon && <Next.Icon icon={icon} classNames={iconClassNames} />}
             {description ? (
               <span className='w-0 grow flex flex-col'>
                 <span className='truncate'>{label}</span>
@@ -346,7 +343,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
               <span className='w-0 grow truncate'>{label}</span>
             )}
             {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
-            {checked && <Icon icon='ph--check--regular' />}
+            {checked && <Next.Icon icon='ph--check--regular' />}
           </>
         )}
       </Picker.Item>
@@ -376,9 +373,9 @@ ComboboxEmpty.displayName = 'Combobox.Empty';
 // Portal
 //
 
-type ComboboxPortalProps = ComponentPropsWithoutRef<typeof Popover.Portal>;
+type ComboboxPortalProps = ComponentPropsWithoutRef<typeof Next.Popover.Portal>;
 
-const ComboboxPortal = Popover.Portal;
+const ComboboxPortal = Next.Popover.Portal;
 
 //
 // Combobox

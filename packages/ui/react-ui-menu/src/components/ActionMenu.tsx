@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentProps,
   type MouseEvent,
   type ReactNode,
   type RefObject,
@@ -13,7 +14,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Icon, Menu, type MenuRootProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type MenuItemChrome } from '@dxos/ui-types';
 
@@ -33,6 +34,8 @@ import { ActionLabel } from './ActionLabel.tsx';
 //
 // Items (private): the graph's items as `Menu` parts.
 //
+
+type MenuRootProps = ComponentProps<typeof Next.Menu.Root>;
 
 const isMultiSelect = (group?: MenuGroupContext): boolean => group?.properties?.selectCardinality === 'multiple';
 
@@ -74,7 +77,7 @@ const ActionMenuItem = ({
   const handleSelect = useCallback((event: Event) => multiple && event.preventDefault(), [multiple]);
 
   return (
-    <Menu.Item
+    <Next.Menu.Item
       onClick={handleClick}
       onSelect={handleSelect}
       classNames='gap-2'
@@ -83,7 +86,7 @@ const ActionMenuItem = ({
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
       {action.properties?.icon && (
-        <Icon
+        <Next.Icon
           icon={action.properties.icon}
           size={iconSize}
           classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
@@ -91,8 +94,8 @@ const ActionMenuItem = ({
       )}
       <ActionLabel action={action} />
       {/* Trailing check marks the current value of a single-select group (`checked`). */}
-      {action.properties?.checked && <Icon icon='ph--check--regular' size={iconSize} classNames='ms-auto' />}
-    </Menu.Item>
+      {action.properties?.checked && <Next.Icon icon='ph--check--regular' size={iconSize} classNames='ms-auto' />}
+    </Next.Menu.Item>
   );
 };
 
@@ -101,16 +104,16 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
   const { iconSize = 5 } = menu;
   const { icon, testId } = group.properties;
   return (
-    <Menu.Sub>
-      <Menu.TriggerItem classNames='gap-2' {...(testId && { 'data-testid': testId })}>
-        {icon && <Icon icon={icon} size={iconSize} />}
+    <Next.Menu.Sub>
+      <Next.Menu.TriggerItem classNames='gap-2' {...(testId && { 'data-testid': testId })}>
+        {icon && <Next.Icon icon={icon} size={iconSize} />}
         <ActionLabel action={group} />
-        <Icon icon='ph--caret-right--regular' size={iconSize} classNames='ms-auto' />
-      </Menu.TriggerItem>
-      <Menu.Content>
+        <Next.Icon icon='ph--caret-right--regular' size={iconSize} classNames='ms-auto' />
+      </Next.Menu.TriggerItem>
+      <Next.Menu.Content>
         <ActionMenuItems menu={menu} group={group} />
-      </Menu.Content>
-    </Menu.Sub>
+      </Next.Menu.Content>
+    </Next.Menu.Sub>
   );
 };
 
@@ -128,7 +131,7 @@ const ActionMenuItems = ({
     <>
       {items?.map((item) =>
         isSeparator(item) ? (
-          <Menu.Separator key={item.id} />
+          <Next.Menu.Separator key={item.id} />
         ) : isMenuGroup(item) ? (
           // A graph group's properties are an open record, validated by the plugin that contributed them.
           <ActionSubMenu key={item.id} menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />
@@ -247,21 +250,21 @@ export const ActionMenu = ({
   }
 
   return (
-    <Menu.Root
+    <Next.Menu.Root
       open={deferred ? deferredOpen : open}
       defaultOpen={defaultOpen}
       onOpenChange={deferred ? handleDeferredOpenChange : onOpenChange}
     >
-      {virtualRef ? <Menu.VirtualTrigger virtualRef={virtualRef} /> : null}
+      {virtualRef ? <Next.Menu.VirtualTrigger virtualRef={virtualRef} /> : null}
       {children && (
-        <Menu.Trigger asChild disabled={disabled}>
+        <Next.Menu.Trigger asChild disabled={disabled}>
           {children}
-        </Menu.Trigger>
+        </Next.Menu.Trigger>
       )}
-      <Menu.Content>
+      <Next.Menu.Content>
         <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
-      </Menu.Content>
-    </Menu.Root>
+      </Next.Menu.Content>
+    </Next.Menu.Root>
   );
 };
 

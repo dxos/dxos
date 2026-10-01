@@ -20,10 +20,7 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import {
-  Button,
   type ComposableProps,
-  Icon,
-  ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
@@ -182,7 +179,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
         ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
-          <Button
+          <Next.Button
             iconOnly
             variant='ghost'
             size='sm'
@@ -391,8 +388,8 @@ const ThreadMessages = ({
       currentId={currentId}
       eventHandler={eventHandler}
     >
-      <ScrollArea.Root classNames={mx('col-span-2 dx-grow', classNames)} orientation='vertical'>
-        <ScrollArea.Viewport ref={setViewport}>
+      <Next.ScrollArea.Root classNames={mx('col-span-2 dx-grow', classNames)} orientation='vertical'>
+        <Next.ScrollArea.Viewport ref={setViewport}>
           <Mosaic.VirtualStack
             Tile={ThreadItemAdapter}
             items={items}
@@ -401,8 +398,8 @@ const ThreadMessages = ({
             getScrollElement={() => viewport}
             estimateSize={() => estimateSize}
           />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     </Mosaic.Container>
   );
 };
@@ -497,7 +494,7 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
         )}
         ref={forwardedRef}
       >
-        <Icon
+        <Next.Icon
           icon='ph--spinner--bold'
           classNames='w-6 h-4 invisible data-[visible=show]:visible animate-spin-slow'
           data-visible={activity ? 'show' : 'hide'}

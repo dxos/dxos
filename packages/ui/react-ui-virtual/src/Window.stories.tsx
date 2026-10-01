@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -143,39 +143,39 @@ const DefaultStory = ({
 
   return (
     <div className='flex flex-col h-full'>
-      <Toolbar.Root>
-        <Button
+      <Next.Toolbar.Root>
+        <Next.Button
           icon='ph--caret-up--regular'
           iconOnly
           label='Previous'
           data-testid='window.prev'
           onClick={() => step(-1)}
         />
-        <Button
+        <Next.Button
           icon='ph--caret-down--regular'
           iconOnly
           label='Next'
           data-testid='window.next'
           onClick={() => step(1)}
         />
-        <Toolbar.Separator />
-        <Button
+        <Next.Toolbar.Separator />
+        <Next.Button
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='Top'
           data-testid='window.top'
           onClick={() => controller.current?.scrollToIndex(0)}
         />
-        <Button
+        <Next.Button
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'
           data-testid='window.bottom'
           onClick={() => controller.current?.scrollToIndex(total - 1, 'end')}
         />
-        {(append || prepend || grow) && <Toolbar.Separator />}
+        {(append || prepend || grow) && <Next.Toolbar.Separator />}
         {prepend && (
-          <Button
+          <Next.Button
             icon='ph--arrow-u-left-up--regular'
             iconOnly
             label='Prepend'
@@ -191,7 +191,7 @@ const DefaultStory = ({
           />
         )}
         {append && (
-          <Button
+          <Next.Button
             icon='ph--arrow-u-right-down--regular'
             iconOnly
             label='Append'
@@ -207,7 +207,7 @@ const DefaultStory = ({
           />
         )}
         {grow && (
-          <Button
+          <Next.Button
             icon='ph--arrows-out-line-vertical--regular'
             iconOnly
             label='Grow'
@@ -223,7 +223,7 @@ const DefaultStory = ({
             }}
           />
         )}
-      </Toolbar.Root>
+      </Next.Toolbar.Root>
 
       <div ref={bodyRef} className='dx-grow flex gap-2'>
         <Window

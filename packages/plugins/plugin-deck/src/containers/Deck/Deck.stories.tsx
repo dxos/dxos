@@ -31,7 +31,7 @@ import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Editor } from '@dxos/react-ui-editor';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Next } from '@dxos/react-ui/next';
 import {

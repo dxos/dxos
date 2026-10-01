@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type File } from '@dxos/types';
 
 import { Preview } from '#components';
@@ -26,7 +26,7 @@ export const FileArticle = ({ role, subject: file, attendableId }: FileArticlePr
   return (
     // No `dx-document`: that constrains content to the reading column, which is right for prose and
     // wrong for a preview — a PDF or image should use the full plank width.
-    <Panel.Root role={role}>
+    <Next.Panel.Root role={role}>
       <Preview.Root
         type={rendered.type}
         url={rendered.url}
@@ -34,14 +34,14 @@ export const FileArticle = ({ role, subject: file, attendableId }: FileArticlePr
         size={rendered.size}
         attendableId={attendableId}
       >
-        <Panel.Header>
+        <Next.Panel.Header>
           <Preview.Toolbar />
-        </Panel.Header>
-        <Panel.Body asChild>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Preview.Content />
-        </Panel.Body>
+        </Next.Panel.Body>
       </Preview.Root>
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };
 

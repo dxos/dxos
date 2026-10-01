@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, Field, Input, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -48,7 +48,7 @@ export const DropdownMenu: Story = {
 
     return (
       <ActionMenu {...menu}>
-        <Button icon='ph--list-checks--regular' label='Options' />
+        <Next.Button icon='ph--list-checks--regular' label='Options' />
       </ActionMenu>
     );
   },
@@ -119,9 +119,9 @@ export const TrailingChildren: Story = {
 
     return (
       <ActionToolbar {...menu} alwaysActive>
-        <Field.Root>
-          <Input variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
-        </Field.Root>
+        <Next.Field.Root>
+          <Next.Input variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
+        </Next.Field.Root>
       </ActionToolbar>
     );
   },
@@ -136,13 +136,13 @@ export const EmbeddedMenu: Story = {
     const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
 
     return (
-      <Toolbar.Root>
-        <Button>Foo</Button>
-        <Toolbar.Separator />
+      <Next.Toolbar.Root>
+        <Next.Button>Foo</Next.Button>
+        <Next.Toolbar.Separator />
         <ActionMenu {...menu}>
-          <Button icon='ph--dots-three-vertical--regular' label='More' />
+          <Next.Button icon='ph--dots-three-vertical--regular' label='More' />
         </ActionMenu>
-      </Toolbar.Root>
+      </Next.Toolbar.Root>
     );
   },
 };

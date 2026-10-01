@@ -10,8 +10,9 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { sourceHash } from '@dxos/nlp';
-import { Panel, useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { HasSubject } from '@dxos/types';
 
 import { ReaderPane } from '#components';
@@ -461,12 +462,12 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   };
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header classNames='dx-expand'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} alwaysActive />
-      </Panel.Header>
+      </Next.Panel.Header>
       {/* The editor scrolls itself, so the panel must not: it only supplies the box to fill. */}
-      <Panel.Body classNames='flex flex-col'>
+      <Next.Panel.Body classNames='flex flex-col'>
         {text === undefined ? (
           <div className='p-8 text-description'>{t('no-text.message')}</div>
         ) : passageText === undefined ? (
@@ -476,8 +477,8 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
         ) : (
           <ReaderPane {...paneProps} side='target' content={passageText} images={false} />
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

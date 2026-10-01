@@ -38,8 +38,9 @@ import React, {
   useState,
 } from 'react';
 
-import { Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
+import { Next } from '@dxos/react-ui/next';
 import {
   getStyles,
   hoverableControls,
@@ -978,7 +979,7 @@ const TreeWindow = ({
 };
 
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
-const TreeSectionHeader = ({ label }: { label: Label }) => {
+const TreeSectionHeader = ({ label }: { label: Next.Label }) => {
   const { t } = useTranslation();
   const { toggle } = useTreeRender();
   return (
@@ -1495,7 +1496,7 @@ const TreeNodeHeading = <T extends { id: string }>({
   const styles = props.iconHue ? getStyles(props.iconHue) : undefined;
   const text = toLocalizedString(props.label, t);
   return (
-    <TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
+    <Next.TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
       <div
         data-testid='treeItem.heading'
         className={mx('flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none', props.headingClassName)}
@@ -1504,7 +1505,7 @@ const TreeNodeHeading = <T extends { id: string }>({
           <RenderIcon item={item} path={path} props={props} />
         ) : (
           props.icon && (
-            <Icon
+            <Next.Icon
               size='lg'
               icon={props.icon}
               // Centred in a block, the column a child row's toggle sits in.
@@ -1517,7 +1518,7 @@ const TreeNodeHeading = <T extends { id: string }>({
         </span>
         <CountBadge count={props.count} modifiedCount={props.modifiedCount} />
       </div>
-    </TextTooltip>
+    </Next.TextTooltip>
   );
 };
 
@@ -1528,17 +1529,17 @@ const TreeNodeHeading = <T extends { id: string }>({
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
+      <Next.Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
-      </Tag>
+      </Next.Tag>
     );
   }
 
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
+      <Next.Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
-      </Tag>
+      </Next.Tag>
     );
   }
 

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type InputProps, NumberInput } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
@@ -58,7 +58,7 @@ export const NumberField = ({
     }
   }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<Next.InputProps['onChange']>>(
     (event) => {
       const value = event.target.value;
       setRaw(value);
@@ -92,7 +92,7 @@ export const NumberField = ({
   }
 
   return (
-    <NumberInput
+    <Next.NumberInput
       disabled={!!readonly}
       placeholder={placeholder}
       value={raw}

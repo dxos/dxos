@@ -11,7 +11,7 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list/next';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 

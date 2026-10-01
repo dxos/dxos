@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Field, Input } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client/index.ts';
@@ -17,7 +17,7 @@ import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepea
 const meta = {
   title: 'sdk/react-client/ClientRepeater',
   decorators: [withTheme()],
-} satisfies Meta<typeof Field>;
+} satisfies Meta<typeof Next.Field>;
 
 export default meta;
 
@@ -39,8 +39,8 @@ const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
 
   return (
     <div className='flex flex-col'>
-      <Field.Root>
-        <Input
+      <Next.Field.Root>
+        <Next.Input
           placeholder='Name'
           value={space.properties.name}
           onChange={(event) =>
@@ -49,7 +49,7 @@ const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
             })
           }
         />
-      </Field.Root>
+      </Next.Field.Root>
       <JsonPanel value={client.toJSON()} />
     </div>
   );

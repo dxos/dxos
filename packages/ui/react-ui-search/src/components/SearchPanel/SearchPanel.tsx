@@ -4,7 +4,8 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -19,16 +20,16 @@ export const SearchPanel = ({ children, ...props }: SearchPanelProps) => {
 
   return (
     <SearchList.Root {...props}>
-      <Panel.Root classNames='dx-expand dx-base-surface'>
-        <Panel.Body asChild>
+      <Next.Panel.Root classNames='dx-expand dx-base-surface'>
+        <Next.Panel.Body asChild>
           <SearchList.Content>{children}</SearchList.Content>
-        </Panel.Body>
-        <Panel.Footer>
-          <Toolbar.Root>
+        </Next.Panel.Body>
+        <Next.Panel.Footer>
+          <Next.Toolbar.Root>
             <SearchList.Input placeholder={t('search.placeholder')} autoFocus={autoFocus} />
-          </Toolbar.Root>
-        </Panel.Footer>
-      </Panel.Root>
+          </Next.Toolbar.Root>
+        </Next.Panel.Footer>
+      </Next.Panel.Root>
     </SearchList.Root>
   );
 };

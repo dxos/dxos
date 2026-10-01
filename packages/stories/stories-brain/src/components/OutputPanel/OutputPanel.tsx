@@ -5,7 +5,8 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { Button, Empty, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -37,43 +38,43 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
   const active = tabs.includes(tab) ? tab : 'facts';
 
   return (
-    <Panel.Root classNames={classNames}>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
+    <Next.Panel.Root classNames={classNames}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
             Facts
-          </Button>
-          <Button variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
+          </Next.Button>
+          <Next.Button variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
             Objects
-          </Button>
-          <Button variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
+          </Next.Button>
+          <Next.Button variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
             Stats
-          </Button>
+          </Next.Button>
           {details.map((detail) => (
-            <Button
+            <Next.Button
               key={detail.id}
               variant={active === detail.id ? 'primary' : 'ghost'}
               onClick={() => setTab(detail.id)}
             >
               {detail.label}
-            </Button>
+            </Next.Button>
           ))}
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         {active === 'facts' && <FactPanel facts={facts} classNames='h-full' />}
         {active === 'objects' && <EchoObjectsList objects={objects} classNames='h-full' />}
         {active === 'stats' && <StatsView stats={stats} />}
         {details.map((detail) => (active === detail.id ? <Fragment key={detail.id}>{detail.content}</Fragment> : null))}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
 const StatsView = ({ stats }: { stats: StatItem[] }) => (
-  <ScrollArea.Root padding classNames='h-full'>
-    <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
-      {stats.length === 0 && <Empty>No stats.</Empty>}
+  <Next.ScrollArea.Root padding classNames='h-full'>
+    <Next.ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
+      {stats.length === 0 && <Next.Empty>No stats.</Next.Empty>}
       {stats.map((stat) => (
         <div
           key={stat.label}
@@ -83,6 +84,6 @@ const StatsView = ({ stats }: { stats: StatItem[] }) => (
           <span className='font-medium tabular-nums'>{stat.value}</span>
         </div>
       ))}
-    </ScrollArea.Viewport>
-  </ScrollArea.Root>
+    </Next.ScrollArea.Viewport>
+  </Next.ScrollArea.Root>
 );

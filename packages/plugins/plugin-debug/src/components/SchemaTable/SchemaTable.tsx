@@ -6,7 +6,8 @@ import React, { useCallback, useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Button, ThemedClassName } from '@dxos/react-ui';
+import { ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 export type SchemaTableProps = ThemedClassName<{
@@ -59,7 +60,7 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
             <div className='px-2 text-right font-mono'>
               {typeof type.presetLabel === 'string' ? '—' : typename ? (objects[typename] ?? 0) : 0}
             </div>
-            <Button
+            <Next.Button
               variant='ghost'
               icon={pending === typename ? 'ph--spinner--regular' : 'ph--plus--regular'}
               iconOnly

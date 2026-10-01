@@ -9,7 +9,8 @@ import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useArchiveMenuItem } from '@dxos/plugin-space/hooks';
-import { Block, Card, Icon, Tag, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -54,7 +55,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   );
 
   return (
-    <Card.Root
+    <Next.Card.Root
       fullWidth
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
@@ -62,24 +63,24 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <Card.Header>
-        <Block>
+      <Next.Card.Header>
+        <Next.Block>
           <CardIconSlot subject={object}>
-            <Icon icon={icon} />
+            <Next.Icon icon={icon} />
           </CardIconSlot>
-        </Block>
-        <Card.Title lines={2}>{label}</Card.Title>
-        {menuItems.length > 0 && <Card.Menu items={menuItems} />}
-      </Card.Header>
+        </Next.Block>
+        <Next.Card.Title lines={2}>{label}</Next.Card.Title>
+        {menuItems.length > 0 && <Next.Card.Menu items={menuItems} />}
+      </Next.Card.Header>
       {archived && (
-        <Card.Row>
-          <Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag>
-        </Card.Row>
+        <Next.Card.Row>
+          <Next.Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Next.Tag>
+        </Next.Card.Row>
       )}
       {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
       <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
-    </Card.Root>
+    </Next.Card.Root>
   );
 };

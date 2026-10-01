@@ -8,8 +8,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, CardMenuSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import { useTranslation } from '@dxos/react-ui';
+import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -42,26 +43,31 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu }: ObjectCardPr
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
-    <Card.Root ref={cardRef} classNames={classNames}>
-      <Card.Header>
-        <Block>
+    <Next.Card.Root ref={cardRef} classNames={classNames}>
+      <Next.Card.Header>
+        <Next.Block>
           <CardIconSlot subject={subject}>
-            <Icon icon={icon} />
+            <Next.Icon icon={icon} />
           </CardIconSlot>
-        </Block>
-        <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-        <Block end>
+        </Next.Block>
+        <Next.Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Next.Card.Title>
+        <Next.Block end>
           <CardMenuSlot subject={subject} menu={menu} />
           {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
           <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('more-actions.label')} />
+            <Next.Button
+              iconOnly
+              variant='ghost'
+              icon='ph--dots-three-vertical--regular'
+              label={t('more-actions.label')}
+            />
           </ActionMenu>
-        </Block>
-      </Card.Header>
-      <Card.Body>
+        </Next.Block>
+      </Next.Card.Header>
+      <Next.Card.Body>
         <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-      </Card.Body>
-    </Card.Root>
+      </Next.Card.Body>
+    </Next.Card.Root>
   );
 };
 

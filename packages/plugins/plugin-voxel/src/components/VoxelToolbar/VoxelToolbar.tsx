@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Button, ToggleGroup, Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import { Next } from '@dxos/react-ui/next';
 import { type Hue } from '@dxos/ui-theme';
 
 import { type ToolMode } from '../VoxelEditor/index.ts';
 
-export type VoxelToolbarProps = ToolbarRootProps & {
+export type VoxelToolbarProps = Next.ToolbarRootProps & {
   /** Currently selected tool mode. */
   toolMode: ToolMode;
   /** Currently selected hue. */
@@ -63,17 +63,17 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
     forwardedRef,
   ) => {
     return (
-      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-        <Toolbar.ToggleGroup
+      <Next.Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+        <Next.Toolbar.ToggleGroup
           type='single'
           value={toolMode}
           onValueChange={(value) => value && onToolModeChange(value as ToolMode)}
         >
           {TOOL_OPTIONS.map((tool) => (
-            <ToggleGroup.Item key={tool.value} value={tool.value} icon={tool.icon} iconOnly label={tool.label} />
+            <Next.ToggleGroup.Item key={tool.value} value={tool.value} icon={tool.icon} iconOnly label={tool.label} />
           ))}
-        </Toolbar.ToggleGroup>
-        <Button
+        </Next.Toolbar.ToggleGroup>
+        <Next.Button
           icon={showGrid ? 'ph--grid-four--fill' : 'ph--grid-four--regular'}
           iconOnly
           variant='ghost'
@@ -81,12 +81,18 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
           onClick={onToggleGrid}
         />
         {onGenerate && (
-          <Button icon='ph--shapes--regular' iconOnly variant='ghost' label='Generate shape' onClick={onGenerate} />
+          <Next.Button
+            icon='ph--shapes--regular'
+            iconOnly
+            variant='ghost'
+            label='Generate shape'
+            onClick={onGenerate}
+          />
         )}
-        {onClear && <Button icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />}
-        <Toolbar.Separator />
+        {onClear && <Next.Button icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />}
+        <Next.Toolbar.Separator />
         {onSeedLife && (
-          <Button
+          <Next.Button
             icon='ph--dna--regular'
             iconOnly
             variant='ghost'
@@ -95,7 +101,7 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
           />
         )}
         {onToggleLife && (
-          <Button
+          <Next.Button
             icon={lifeRunning ? 'ph--pause--fill' : 'ph--play--fill'}
             iconOnly
             variant='ghost'
@@ -103,9 +109,9 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
             onClick={onToggleLife}
           />
         )}
-        <Toolbar.Separator />
+        <Next.Toolbar.Separator />
         <HuePicker value={selectedHue} onChange={(hue) => onHueChange(hue as Hue)} />
-      </Toolbar.Root>
+      </Next.Toolbar.Root>
     );
   },
 );

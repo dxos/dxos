@@ -11,10 +11,11 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/index.ts';
@@ -55,11 +56,11 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Panel.Root classNames='relative h-full'>
-      <Panel.Header>
+    <Next.Panel.Root classNames='relative h-full'>
+      <Next.Panel.Header>
         <SearchBar space={space} onSubmit={handleSubmit} />
-      </Panel.Header>
-      <Panel.Body classNames='relative min-h-0'>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='relative min-h-0'>
         <ForceGraph classNames='min-h-[50vh]' model={model} />
 
         {open && (
@@ -74,7 +75,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <Button
+          <Next.Button
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -82,8 +83,8 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => setOpen((open) => !open)}
           />
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -94,15 +95,15 @@ export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, on
   const editorRef = useRef<EditorController>(null);
 
   return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+    <Next.Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
       <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} ref={editorRef} />
-      <Button
+      <Next.Button
         icon='ph--magnifying-glass--regular'
         iconOnly
         label='Search'
         onClick={() => onSubmit?.(editorRef.current?.getText() ?? '')}
       />
-      <Button
+      <Next.Button
         disabled={flushState === 'flushing'}
         icon={Match.value(flushState).pipe(
           Match.when('idle', () => 'ph--floppy-disk--regular'),
@@ -114,7 +115,7 @@ export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, on
         label='flush'
         onClick={handleFlush}
       />
-    </Toolbar.Root>
+    </Next.Toolbar.Root>
   );
 });
 

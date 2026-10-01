@@ -2,19 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React, { type ComponentProps, useEffect } from 'react';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import { Next } from '@dxos/react-ui/next';
 
 import { FunctionBody, getHeight } from './common/index.ts';
 import { type TriggerShape } from './trigger-def.ts';
 import { createTriggerSpec, getOutputSchema } from './trigger-spec.ts';
+
+type SelectRootProps = ComponentProps<typeof Next.Select.Root>;
 
 export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 
@@ -64,13 +66,13 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 // TODO(burdon): Factor out.
 const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.Trigger variant='ghost' classNames='w-full px-0!' />
-      <Select.Content>
+    <Next.Select.Root value={value} onValueChange={onValueChange}>
+      <Next.Select.Trigger variant='ghost' classNames='w-full px-0!' />
+      <Next.Select.Content>
         {Trigger.Kinds.map((kind) => (
-          <Select.Item key={kind} item={{ value: kind, label: kind }} />
+          <Next.Select.Item key={kind} item={{ value: kind, label: kind }} />
         ))}
-      </Select.Content>
-    </Select.Root>
+      </Next.Select.Content>
+    </Next.Select.Root>
   );
 };

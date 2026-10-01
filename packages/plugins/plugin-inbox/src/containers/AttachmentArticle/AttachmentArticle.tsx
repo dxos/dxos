@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Panel, ScrollArea } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
 
 import { AttachmentViewer } from '#components';
@@ -31,10 +31,10 @@ export const AttachmentArticle = ({ role, subject, attachmentIndex = 0 }: Attach
   const { url, type, pending } = useBlobUrl(attachment?.ref, db);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='h-full'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport classNames='h-full'>
             <AttachmentViewer
               url={url}
               // The blob's own MIME type is the only one available: `Message.Attachment` records just
@@ -45,10 +45,10 @@ export const AttachmentArticle = ({ role, subject, attachmentIndex = 0 }: Attach
               pending={pending}
               classNames='h-full'
             />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -6,8 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Block, Button, Column, Empty, Icon, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
-import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Column, type ThemedClassName } from '@dxos/react-ui';
+import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { OrderedList } from '../OrderedList/index.ts';
@@ -72,7 +73,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   orientation = 'vertical',
   detail,
 }: MasterDetailProps<T>) => {
-  const list = (items.length === 0 && <Empty>{emptyLabel}</Empty>) || (
+  const list = (items.length === 0 && <Next.Empty>{emptyLabel}</Next.Empty>) || (
     // The list carries a selection, so a reader arrows between entries rather than their menus.
     <OrderedList.Root<T> items={items} navigationMode='listbox'>
       {({ items }) => (
@@ -104,16 +105,16 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     // parent (`dx-grow`).
     return (
       <div className={mx('flex dx-grow gap-2 overflow-hidden', classNames)}>
-        <Panel.Root classNames='shrink-0 w-max max-w-xs'>
-          <Panel.Body asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport>{list}</ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Panel.Body>
-        </Panel.Root>
-        <Panel.Root classNames='flex-1 min-w-0'>
-          <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
-        </Panel.Root>
+        <Next.Panel.Root classNames='shrink-0 w-max max-w-xs'>
+          <Next.Panel.Body asChild>
+            <Next.ScrollArea.Root orientation='vertical'>
+              <Next.ScrollArea.Viewport>{list}</Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
+        <Next.Panel.Root classNames='flex-1 min-w-0'>
+          <Next.Panel.Body classNames='flex flex-col dx-grow'>{detail}</Next.Panel.Body>
+        </Next.Panel.Root>
       </div>
     );
   }
@@ -166,19 +167,19 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
       onClick={() => onSelect?.(selected ? undefined : item.id)}
     >
       {icon && (
-        <Block>
-          <Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
-        </Block>
+        <Next.Block>
+          <Next.Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
+        </Next.Block>
       )}
       <span className='grow truncate'>{label}</span>
       {adornment && (
-        <Tooltip.Trigger asChild side='bottom' content={adornment.label}>
-          <Icon icon={adornment.icon} />
-        </Tooltip.Trigger>
+        <Next.Tooltip.Trigger asChild side='bottom' content={adornment.label}>
+          <Next.Icon icon={adornment.icon} />
+        </Next.Tooltip.Trigger>
       )}
       {getMenu && (
         <ActionMenu {...menu}>
-          <Button
+          <Next.Button
             iconOnly
             variant='ghost'
             size='sm'

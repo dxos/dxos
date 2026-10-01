@@ -5,8 +5,9 @@
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
-import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -63,7 +64,7 @@ export const ChatActions = ({
       {children}
       {customActions && <ContributedActions actions={customActions} attendableId={attendableId} />}
       {debug && (
-        <Button
+        <Next.Button
           variant='ghost'
           icon='ph--wrench--regular'
           iconOnly
@@ -73,7 +74,7 @@ export const ChatActions = ({
       )}
 
       {tasksVisible != null && (
-        <Button
+        <Next.Button
           variant='ghost'
           classNames={TOUCH_TARGET}
           icon='ph--list-checks--regular'
@@ -90,7 +91,7 @@ export const ChatActions = ({
           submit, and a touch keyboard offers no such affordance. */}
       {onSend && (
         // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
-        <Button
+        <Next.Button
           disabled={!showStop && !canSend}
           variant='ghost'
           classNames={mx(TOUCH_TARGET, 'transition duration-300 ease-in-out', canSend && 'text-accent-text rotate-90')}

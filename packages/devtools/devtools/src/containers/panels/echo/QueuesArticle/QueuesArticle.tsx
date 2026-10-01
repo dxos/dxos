@@ -5,9 +5,9 @@
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { Searchbar } from '../../../../components/index.ts';
@@ -60,14 +60,14 @@ export const QueuesArticle = ({ role }: ArticleProps) => {
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           {/* <DataSpaceSelector /> */}
           <Searchbar onChange={setQueueInput} />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         {/* TODO(burdon): Convert to MasterDetailTable. */}
         <div className='flex grow flex-col overflow-hidden divide-y divide-subdued-separator'>
           <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
@@ -75,8 +75,8 @@ export const QueuesArticle = ({ role }: ArticleProps) => {
             {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
           </div>
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

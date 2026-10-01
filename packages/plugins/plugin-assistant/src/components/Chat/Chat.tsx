@@ -18,7 +18,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Button, type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ChatThreadController,
   type ChatThreadEvent,
@@ -32,8 +32,9 @@ import {
   isPrompt,
   useFeedModel,
 } from '@dxos/react-ui-feed';
-import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu/next';
 import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import { Next } from '@dxos/react-ui/next';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
@@ -601,31 +602,31 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
       </NaturalChatThread.Root>
 
       {/* TODO(burdon): Why is this required? */}
-      <Toast.Root
+      <Next.Toast.Root
         data-testid='assistant.error'
         open={!!toastError}
         duration={20_000}
         onOpenChange={(open) => !open && setToastError(undefined)}
       >
-        <Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
+        <Next.Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
           {t('ai-service-error.label')}
-        </Toast.Title>
-        <Toast.Description>{toastError?.message}</Toast.Description>
+        </Next.Toast.Title>
+        <Next.Toast.Description>{toastError?.message}</Next.Toast.Description>
         {toastAction && onViewUsage && (
-          <Toast.Footer>
-            <Toast.ActionTrigger asChild>
-              <Button
+          <Next.Toast.Footer>
+            <Next.Toast.ActionTrigger asChild>
+              <Next.Button
                 onClick={() => {
                   setToastError(undefined);
                   onViewUsage();
                 }}
               >
                 {t(toastAction.labelKey)}
-              </Button>
-            </Toast.ActionTrigger>
-          </Toast.Footer>
+              </Next.Button>
+            </Next.Toast.ActionTrigger>
+          </Next.Toast.Footer>
         )}
-      </Toast.Root>
+      </Next.Toast.Root>
     </>
   );
 };

@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Button, Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
@@ -110,21 +110,21 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
         onDelete={handleDelete}
       >
         {/* Scroll viewport: sized to the full grid bounds; auto-scrolls when dragging/resizing near an edge. */}
-        <Panel.Root>
-          <Panel.Header>
-            <Toolbar.Root>
-              <Button
+        <Next.Panel.Root>
+          <Next.Panel.Header>
+            <Next.Toolbar.Root>
+              <Next.Button
                 icon='ph--crosshair--regular'
                 iconOnly
                 label='Center board'
                 onClick={() => controller.current?.center()}
               />
-              <Button onClick={() => setZoom(1)} disabled={zoom === 1}>
+              <Next.Button onClick={() => setZoom(1)} disabled={zoom === 1}>
                 100%
-              </Button>
-            </Toolbar.Root>
-          </Panel.Header>
-          <Panel.Body asChild>
+              </Next.Button>
+            </Next.Toolbar.Root>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
             <Board.Container>
               <Board.Viewport>
                 <Board.Backdrop />
@@ -136,7 +136,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
                         item={item}
                         layout={itemLayout}
                         key={item.id}
-                        title={<Card.Text>{item.title}</Card.Text>}
+                        title={<Next.Card.Text>{item.title}</Next.Card.Text>}
                       >
                         {item.image ? <img src={item.image} alt='' className='size-full object-cover' /> : null}
                       </Board.Cell>
@@ -151,8 +151,8 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
                 <Board.Map classNames='w-40' />
               </div>
             </Board.Container>
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </Board.Root>
     </Dnd.Root>
   );

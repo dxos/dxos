@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Button, Panel, SystemButton, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { useFileDownload } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { JsonView } from '../../../../components/index.ts';
@@ -55,32 +55,32 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
   }, []);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           <Next.Checkbox
             checked={recording}
             onCheckedChange={(recording) => handleSetRecording(!!recording)}
             label='Record metrics'
           />
           <div className='grow' />
-          <Button onClick={handleRefresh}>Run Diagnostics</Button>
-          <Button icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
-          <Button onClick={handleResetMetrics}>Reset metrics</Button>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          <Next.Button onClick={handleRefresh}>Run Diagnostics</Next.Button>
+          <Next.Button icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
+          <Next.Button onClick={handleResetMetrics}>Reset metrics</Next.Button>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <JsonView data={data} />
-      </Panel.Body>
+      </Next.Panel.Body>
       {info && (
-        <Panel.Footer>
+        <Next.Panel.Footer>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
             {info.map((text) => (
-              <SystemButton.Clipboard key={text} variant='ghost' label={text} value={text} />
+              <Next.SystemButton.Clipboard key={text} variant='ghost' label={text} value={text} />
             ))}
           </div>
-        </Panel.Footer>
+        </Next.Panel.Footer>
       )}
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };

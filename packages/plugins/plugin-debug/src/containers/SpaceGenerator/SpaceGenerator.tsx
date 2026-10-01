@@ -18,20 +18,11 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import {
-  Button,
-  Field,
-  Flex,
-  NumberInput,
-  Panel,
-  ScrollArea,
-  ThemedClassName,
-  useAsyncEffect,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Flex, ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
@@ -183,11 +174,11 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       // `alwaysActive`: the toolbar gates itself on the menu scope's attention, and this debug panel
       // is not an attendable surface, so without it every action renders disabled.
 
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Header>
+      <Next.Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Next.Panel.Header>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
-            <Field.Root>
-              <NumberInput
+            <Next.Field.Root>
+              <Next.NumberInput
                 placeholder='Count'
                 classNames='w-[4rem] text-right'
                 min={1}
@@ -196,12 +187,12 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 value={count}
                 onChange={(event) => setCount(parseInt(event.target.value))}
               />
-            </Field.Root>
+            </Next.Field.Root>
           </ActionToolbar>
-        </Panel.Header>
-        <Panel.Body asChild>
-          <ScrollArea.Root thin orientation='vertical'>
-            <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root thin orientation='vertical'>
+            <Next.ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
               <SchemaTable
                 classNames='py-1'
                 types={staticTypes}
@@ -233,10 +224,10 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 />
               )}
               <ProgressGenerator classNames='py-1' />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Body>
-      </Panel.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 );
@@ -345,13 +336,18 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
       <Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
-          <Button
+          <Next.Button
             icon='ph--x--regular'
             label='Cancel test progress'
             onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
           />
         ) : (
-          <Button icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+          <Next.Button
+            icon='ph--play--regular'
+            label='Start test progress'
+            disabled={!registry}
+            onClick={handleStart}
+          />
         )}
       </Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (

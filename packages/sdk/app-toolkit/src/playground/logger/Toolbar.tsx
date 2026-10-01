@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { Button } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { PlaygroundRoles } from '../roles.ts';
 import { LogOperation } from './schema.ts';
@@ -16,7 +16,7 @@ import { LogOperation } from './schema.ts';
 export const Logger = () => {
   const { invokePromise } = useOperationInvoker();
   const handleClick = useCallback(() => invokePromise(LogOperation, { message: 'Hello, world!' }), []);
-  return <Button onClick={handleClick}>Log</Button>;
+  return <Next.Button onClick={handleClick}>Log</Next.Button>;
 };
 
 export default Capability.makeModule(() =>

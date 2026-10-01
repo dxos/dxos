@@ -6,8 +6,9 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, Button, Icon, Menu, Tag, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { hexToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -61,8 +62,8 @@ export const DeviceListItem = forwardRef<
         data-testid={`device-list-item${isCurrent ? '-current' : ''}`}
         ref={forwardedRef}
       >
-        <Avatar.Root labelId={labelId}>
-          <Avatar.Content
+        <Next.Avatar.Root labelId={labelId}>
+          <Next.Avatar.Content
             status={
               isCurrent && connectionState === ConnectionState.OFFLINE
                 ? 'error'
@@ -75,8 +76,8 @@ export const DeviceListItem = forwardRef<
             classNames='place-self-center'
             {...(device.kind ? { icon: KIND_ICONS[device.kind] } : { fallback: fallbackValue.emoji })}
           />
-          <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
-          {isCurrent && <Tag color='primary'>{t('current-device-tag.label')}</Tag>}
+          <Next.Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Next.Avatar.Label>
+          {isCurrent && <Next.Tag color='primary'>{t('current-device-tag.label')}</Next.Tag>}
           {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
           {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
             <Tooltip.Root>
@@ -99,44 +100,44 @@ export const DeviceListItem = forwardRef<
             </Tooltip.Root>
           )} */}
           {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
-            <Menu.Root>
-              <Menu.Trigger asChild>
-                <Button
+            <Next.Menu.Root>
+              <Next.Menu.Trigger asChild>
+                <Next.Button
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
                 >
                   <span className='sr-only'>{t('more-options.label')}</span>
-                  <Icon icon='ph--dots-three--regular' />
-                </Button>
-              </Menu.Trigger>
-              <Menu.Content>
+                  <Next.Icon icon='ph--dots-three--regular' />
+                </Next.Button>
+              </Next.Menu.Trigger>
+              <Next.Menu.Content>
                 {/* <Menu.Item disabled onClick={onClickEdit}> */}
                 {/*  <PencilSimpleLine className={getSize(5)} /> */}
                 {/*  {t('edit-device.label')} */}
                 {/* </Menu.Item> */}
                 {onClickJoinExisting && (
-                  <Menu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                    <Icon icon='ph--share-fat--regular' />
+                  <Next.Menu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
+                    <Next.Icon icon='ph--share-fat--regular' />
                     {t('choose-join-new-identity.label')}
-                  </Menu.Item>
+                  </Next.Menu.Item>
                 )}
                 {onClickRecover && (
-                  <Menu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                    <Icon icon='ph--first-aid-kit--regular' />
+                  <Next.Menu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
+                    <Next.Icon icon='ph--first-aid-kit--regular' />
                     {t('choose-recover-identity.label')}
-                  </Menu.Item>
+                  </Next.Menu.Item>
                 )}
                 {onClickReset && (
-                  <Menu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                    <Icon icon='ph--power--regular' />
+                  <Next.Menu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                    <Next.Icon icon='ph--power--regular' />
                     {t('reset-device.label')}
-                  </Menu.Item>
+                  </Next.Menu.Item>
                 )}
-              </Menu.Content>
-            </Menu.Root>
+              </Next.Menu.Content>
+            </Next.Menu.Root>
           )}
-        </Avatar.Root>
+        </Next.Avatar.Root>
       </Listbox.Item>
     );
   },

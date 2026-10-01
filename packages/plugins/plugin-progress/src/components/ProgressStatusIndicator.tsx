@@ -8,8 +8,9 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Button, Popover, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -25,10 +26,10 @@ export const ProgressStatusIndicator = () => {
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Next.Popover.Root>
+      <Next.Popover.Trigger asChild>
         <StatusBar.Item>
-          <Button
+          <Next.Button
             variant='ghost'
             icon='ph--circle-notch--regular'
             iconOnly
@@ -36,9 +37,9 @@ export const ProgressStatusIndicator = () => {
             iconClassNames={active.length > 0 && 'animate-spin-slow text-amber-500'}
           />
         </StatusBar.Item>
-      </Popover.Trigger>
+      </Next.Popover.Trigger>
       {active.length > 0 && (
-        <Popover.Content side='left' border>
+        <Next.Popover.Content side='left' border>
           <div className='flex flex-col gap-1 w-[18rem] p-1 overflow-hidden'>
             {active.map((monitor) => (
               <ProgressMeter
@@ -49,9 +50,9 @@ export const ProgressStatusIndicator = () => {
               />
             ))}
           </div>
-        </Popover.Content>
+        </Next.Popover.Content>
       )}
-    </Popover.Root>
+    </Next.Popover.Root>
   );
 };
 

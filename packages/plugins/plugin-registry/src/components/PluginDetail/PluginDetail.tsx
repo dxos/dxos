@@ -7,19 +7,7 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import {
-  Button,
-  Carousel,
-  Field,
-  Grid,
-  Icon,
-  Link,
-  ScrollArea,
-  Select,
-  Tag,
-  ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Grid, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Next } from '@dxos/react-ui/next';
@@ -152,8 +140,8 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
 
     return (
-      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-        <ScrollArea.Viewport>
+      <Next.ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+        <Next.ScrollArea.Viewport>
           {/*
            * 3-column grid: [icon/prev | content/viewport | next].
            * Most sections occupy `col-start-2 col-span-2` so they stretch from
@@ -169,7 +157,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
-            <Icon
+            <Next.Icon
               classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)}
               icon={iconKey}
               size={isMobile ? 8 : 14}
@@ -185,13 +173,13 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {failure && <PluginFailureBadge failure={failure} size={5} />}
               </div>
               {onInstall ? (
-                <Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Next.Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
-                </Button>
+                </Next.Button>
               ) : (
-                <Field.Root>
+                <Next.Field.Root>
                   <Next.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                </Field.Root>
+                </Next.Field.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
                 {slug}
@@ -219,14 +207,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
-                  <Carousel.Root count={resolvedScreenshots.length}>
-                    <Carousel.ItemGroup>
+                  <Next.Carousel.Root count={resolvedScreenshots.length}>
+                    <Next.Carousel.ItemGroup>
                       {resolvedScreenshots.map((src, index) => (
-                        <Carousel.Item key={src} index={index} src={src} alt={name} />
+                        <Next.Carousel.Item key={src} index={index} src={src} alt={name} />
                       ))}
-                    </Carousel.ItemGroup>
-                    <Carousel.IndicatorGroup />
-                  </Carousel.Root>
+                    </Next.Carousel.ItemGroup>
+                    <Next.Carousel.IndicatorGroup />
+                  </Next.Carousel.Root>
                 </Section.Body>
               </Section.Root>
             )}
@@ -236,17 +224,17 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Body>
                 <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Link href={homePage} classNames='text-sm text-description'>
+                    <Next.Link href={homePage} classNames='text-sm text-description'>
                       {t('home-page.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
-                    </Link>
+                      <Next.Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
+                    </Next.Link>
                   )}
 
                   {source && (
-                    <Link href={source} classNames='text-sm text-description'>
+                    <Next.Link href={source} classNames='text-sm text-description'>
                       {t('source.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
-                    </Link>
+                      <Next.Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
+                    </Next.Link>
                   )}
 
                   {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
@@ -295,26 +283,26 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('versions.label')} />
                 <Section.Body>
                   <div className='flex gap-2 items-center'>
-                    <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
-                      <Select.Trigger classNames='min-w-32' />
-                      <Select.Content>
+                    <Next.Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
+                      <Next.Select.Trigger classNames='min-w-32' />
+                      <Next.Select.Content>
                         {versions.map((versionEntry) => (
-                          <Select.Item key={versionEntry.version} value={versionEntry.version}>
+                          <Next.Select.Item key={versionEntry.version} value={versionEntry.version}>
                             {versionEntry.version}
                             {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
-                          </Select.Item>
+                          </Next.Select.Item>
                         ))}
-                      </Select.Content>
-                    </Select.Root>
+                      </Next.Select.Content>
+                    </Next.Select.Root>
                     {onInstallVersion && (
-                      <Button
+                      <Next.Button
                         size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}
                       >
                         {installing ? t('installing.label') : t('install-version.label')}
-                      </Button>
+                      </Next.Button>
                     )}
                   </div>
                 </Section.Body>
@@ -324,20 +312,20 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             {(onUninstall || (hasUpdate && onUpdate) || updating) && (
               <div className='col-start-2 col-span-2 flex gap-2'>
                 {updating ? (
-                  <Button variant='primary' disabled>
+                  <Next.Button variant='primary' disabled>
                     {t('updating.label')}
-                  </Button>
+                  </Next.Button>
                 ) : hasUpdate && onUpdate ? (
-                  <Button variant='primary' onClick={onUpdate}>
+                  <Next.Button variant='primary' onClick={onUpdate}>
                     {t('update.label')}
-                  </Button>
+                  </Next.Button>
                 ) : null}
-                {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
+                {onUninstall && <Next.Button onClick={onUninstall}>{t('uninstall.label')}</Next.Button>}
               </div>
             )}
           </Grid>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     );
   },
 );
@@ -361,7 +349,7 @@ const Section = {
 };
 
 const Chip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
-  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
+  <Next.Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
     {name}
-  </Tag>
+  </Next.Tag>
 );

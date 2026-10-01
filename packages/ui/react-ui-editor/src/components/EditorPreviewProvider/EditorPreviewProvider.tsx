@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover, virtualAnchor } from '@dxos/react-ui';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext.ts';
@@ -87,15 +88,15 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   return (
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
-      <Popover.Root
+      <Next.Popover.Root
         open={open}
         onOpenChange={handleOpenChange}
-        positioning={virtualAnchor(triggerRef as unknown as RefObject<HTMLButtonElement>)}
+        positioning={Next.virtualAnchor(triggerRef as unknown as RefObject<HTMLButtonElement>)}
       >
         <div className='contents' ref={setRoot}>
           {children}
         </div>
-      </Popover.Root>
+      </Next.Popover.Root>
     </EditorPreviewContextProvider>
   );
 };

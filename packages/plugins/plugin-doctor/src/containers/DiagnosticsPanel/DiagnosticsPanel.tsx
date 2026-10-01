@@ -6,20 +6,8 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import {
-  Banner,
-  Button,
-  Flex,
-  Icon,
-  Panel,
-  Progress,
-  ScrollArea,
-  Tag,
-  type TFunction,
-  Toolbar,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Flex, type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -113,34 +101,34 @@ export const DiagnosticsPanel = () => {
   }, []);
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
-            <Icon icon='ph--play--regular' size='md' />
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
+            <Next.Icon icon='ph--play--regular' size='md' />
             <span className='ps-1'>{t('run-diagnostics.label')}</span>
-          </Button>
+          </Next.Button>
           {isRunning && (
-            <Button variant='ghost' onClick={handleCancel}>
+            <Next.Button variant='ghost' onClick={handleCancel}>
               {t('cancel-diagnostics.label')}
-            </Button>
+            </Next.Button>
           )}
           <span className='grow' />
           <span className='text-xs text-description'>
             {t('providers-count.label', { count: sortedProviders.length })}
           </span>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root>
+          <Next.ScrollArea.Viewport>
             {runState.status === 'idle' && <p className='p-2 text-sm text-description'>{t('idle.description')}</p>}
             {runState.status === 'running' && <RunProgress state={runState} t={t} />}
             {runState.status === 'done' && <RunSummary results={runState.results} t={t} />}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -154,7 +142,7 @@ const RunProgress = ({
   const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
     <Flex column gap='sm' classNames='p-2'>
-      <Progress value={progress} classNames='block' />
+      <Next.Progress value={progress} classNames='block' />
       <span className='text-xs text-description'>
         {t('progress.label', {
           current: state.current,
@@ -190,17 +178,19 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
       <header className='flex items-center justify-between gap-2 p-2'>
         <span className='text-sm font-medium truncate'>{label}</span>
         {status === 'pass' && (
-          <Tag hue='emerald'>
-            <Icon icon='ph--check--regular' size='xs' />
-          </Tag>
+          <Next.Tag hue='emerald'>
+            <Next.Icon icon='ph--check--regular' size='xs' />
+          </Next.Tag>
         )}
-        {status === 'issues' && <Tag hue='amber'>{t('result.issues.label', { count: result.issues.length })}</Tag>}
-        {status === 'error' && <Tag hue='rose'>{t('result.error.label')}</Tag>}
+        {status === 'issues' && (
+          <Next.Tag hue='amber'>{t('result.issues.label', { count: result.issues.length })}</Next.Tag>
+        )}
+        {status === 'error' && <Next.Tag hue='rose'>{t('result.error.label')}</Next.Tag>}
       </header>
       {result.error && (
-        <Banner.Root valence='error'>
-          <Banner.Body>{result.error}</Banner.Body>
-        </Banner.Root>
+        <Next.Banner.Root valence='error'>
+          <Next.Banner.Body>{result.error}</Next.Banner.Body>
+        </Next.Banner.Root>
       )}
       {result.issues.length > 0 && (
         <ul className='border-t border-separator divide-y divide-subdued-separator'>
@@ -215,7 +205,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
 
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
   <li className='flex items-center gap-2 p-2'>
-    <Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={mx(paletteToText(issue.severity))} />
+    <Next.Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={mx(paletteToText(issue.severity))} />
     <Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
       <span className='wrap-break-words break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (

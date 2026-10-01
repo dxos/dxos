@@ -4,8 +4,9 @@
 
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { Button, Dialog, Icon, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
+import { type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Factor out.
@@ -67,9 +68,9 @@ const ChatDialogRoot = ({
       size={size}
       setSize={setSize}
     >
-      <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
+      <Next.Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
         <div className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
-          <Dialog.Content
+          <Next.Dialog.Content
             size='md'
             inOverlayLayout
             classNames={[
@@ -79,9 +80,9 @@ const ChatDialogRoot = ({
             onInteractOutside={(event) => event.preventDefault()}
           >
             {children}
-          </Dialog.Content>
+          </Next.Dialog.Content>
         </div>
-      </Dialog.Root>
+      </Next.Dialog.Root>
     </ChatDialogContextProvider>
   );
 };
@@ -106,18 +107,18 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
       className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
     >
       <Endcap>
-        <Dialog.CloseTrigger>
-          <Icon icon='ph--x--regular' />
-        </Dialog.CloseTrigger>
+        <Next.Dialog.CloseTrigger>
+          <Next.Icon icon='ph--x--regular' />
+        </Next.Dialog.CloseTrigger>
       </Endcap>
-      <Dialog.Title
+      <Next.Dialog.Title
         classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
-      </Dialog.Title>
+      </Next.Dialog.Title>
       <Endcap>
-        <Button
+        <Next.Button
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly

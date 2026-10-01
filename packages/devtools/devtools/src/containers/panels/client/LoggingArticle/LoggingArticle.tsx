@@ -17,8 +17,9 @@ import {
 } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
-import { Button, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { useFileDownload } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { Next } from '@dxos/react-ui/next';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -143,18 +144,18 @@ export const LoggingArticle = ({ role }: ArticleProps) => {
   }, [logs, text, fileDownload]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           <Select items={presets} onValueChange={handleSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={handleSearchChange} />
-          <Button icon='ph--download--regular' iconOnly onClick={handleDownload} label='Download logs' />
-          <Button icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          <Next.Button icon='ph--download--regular' iconOnly onClick={handleDownload} label='Download logs' />
+          <Next.Button icon='ph--x--regular' iconOnly onClick={() => setLogs([])} label='Clear logs' />
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

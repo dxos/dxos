@@ -9,8 +9,8 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { EntityId } from '@dxos/keys';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 export type DebugObjectPanelProps = Pick<
@@ -37,15 +37,15 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
   const [selectedObject] = useQuery(db, selectionQuery);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <Toolbar.Root />
-      </Panel.Header>
-      <Panel.Body asChild>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root />
+      </Next.Panel.Header>
+      <Next.Panel.Body asChild>
         <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
           {db && (
-            <ScrollArea.Root>
-              <ScrollArea.Viewport>
+            <Next.ScrollArea.Root>
+              <Next.ScrollArea.Viewport>
                 <ObjectsTree
                   db={db}
                   root={companionTo}
@@ -53,30 +53,30 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
                   onOpen={onOpen}
                   canOpen={canOpen}
                 />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
+              </Next.ScrollArea.Viewport>
+            </Next.ScrollArea.Root>
           )}
           <Syntax.Root
             data={selectedObject}
             getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
           >
-            <Panel.Root>
-              <Panel.Header>
-                <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+            <Next.Panel.Root>
+              <Next.Panel.Header>
+                <Next.Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
                   <Syntax.Filter />
                   <Syntax.Depth />
-                </Toolbar.Root>
-              </Panel.Header>
-              <Panel.Body asChild>
+                </Next.Toolbar.Root>
+              </Next.Panel.Header>
+              <Next.Panel.Body asChild>
                 <Syntax.Viewport>
                   <Syntax.Code />
                 </Syntax.Viewport>
-              </Panel.Body>
-            </Panel.Root>
+              </Next.Panel.Body>
+            </Next.Panel.Root>
           </Syntax.Root>
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

@@ -9,8 +9,9 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, Button, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -101,7 +102,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
     <Listbox.Item classNames='p-2 rounded-sm' id={invitation.id} data-testid='space-invitation-list.item'>
       <Listbox.ItemContent
         icon={
-          <Avatar.Root
+          <Next.Avatar.Root
             aria-labelledby={labelId}
             size={8}
             hue={profileString(invitation.sender, 'hue') ?? fallback.hue}
@@ -114,7 +115,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
               {contactDisplayName(invitation.sender)}
             </span>
             <div className='flex items-center gap-1'>
-              <Button
+              <Next.Button
                 size='sm'
                 variant='primary'
                 disabled={disabled}
@@ -122,8 +123,8 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
                 data-testid='space-invitation-list.join'
               >
                 {t('join-space-invitation.label')}
-              </Button>
-              <Button
+              </Next.Button>
+              <Next.Button
                 iconOnly
                 size='sm'
                 variant='ghost'

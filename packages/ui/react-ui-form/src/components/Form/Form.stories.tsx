@@ -14,7 +14,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Toolbar, Tooltip } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { hues } from '@dxos/ui-types';
@@ -449,14 +449,19 @@ const ReactiveBufferedStory = () => {
   return (
     <TestLayout json={{ source }}>
       <div className='flex flex-col h-full'>
-        <Toolbar.Root>
-          <Button
+        <Next.Toolbar.Root>
+          <Next.Button
             icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
             label={running ? 'Stop external ticks' : 'Start external ticks'}
             onClick={() => setRunning((value) => !value)}
           />
-          <Button icon='ph--plus--regular' label='Tick counter once (external)' disabled={running} onClick={tick} />
-        </Toolbar.Root>
+          <Next.Button
+            icon='ph--plus--regular'
+            label='Tick counter once (external)'
+            disabled={running}
+            onClick={tick}
+          />
+        </Next.Toolbar.Root>
         <Form.Root schema={ReactiveSchema} values={source} onValuesChanged={handleValuesChanged}>
           <Form.Viewport>
             <Form.Content>

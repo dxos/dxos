@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -22,11 +22,11 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
   return (
     <>
       {recent.length > 0 ? (
-        <Card.Section title={t('recent-events.title')}>
+        <Next.Card.Section title={t('recent-events.title')}>
           {recent
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Card.Action
+              <Next.Card.Action
                 key={event.id}
                 onClick={() => onEventClick?.(event)}
                 label={event.title ?? event.description!}
@@ -34,14 +34,14 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
                 actionIcon='ph--arrow-right--regular'
               />
             ))}
-        </Card.Section>
+        </Next.Card.Section>
       ) : null}
       {upcoming.length > 0 ? (
-        <Card.Section title={t('upcoming-events.title')}>
+        <Next.Card.Section title={t('upcoming-events.title')}>
           {upcoming
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Card.Action
+              <Next.Card.Action
                 key={event.id}
                 onClick={() => onEventClick?.(event)}
                 label={event.title ?? event.description!}
@@ -49,7 +49,7 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
                 actionIcon='ph--arrow-right--regular'
               />
             ))}
-        </Card.Section>
+        </Next.Card.Section>
       ) : null}
     </>
   );

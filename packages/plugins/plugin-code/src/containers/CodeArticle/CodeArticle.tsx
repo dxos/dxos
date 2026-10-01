@@ -14,7 +14,7 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Grid, Panel, useTranslation } from '@dxos/react-ui';
+import { Grid, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 import {
@@ -215,8 +215,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
     const fileEntries = useMemo(() => resolvedFiles.map(({ path }) => ({ path })), [resolvedFiles]);
 
     return (
-      <Panel.Root classNames='dx-expand' role={role} ref={forwardedRef}>
-        <Panel.Header>
+      <Next.Panel.Root classNames='dx-expand' role={role} ref={forwardedRef}>
+        <Next.Panel.Header>
           <CodeToolbar
             attendableId={attendableId}
             role={role}
@@ -224,8 +224,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             onBuild={handleBuild}
             onRun={handleRun}
           />
-        </Panel.Header>
-        <Panel.Body asChild>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Grid cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
             <Grid rows={[1, 2]} classNames='divide-y divide-subdued-separator'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
@@ -244,8 +244,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
           </Grid>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     );
   },
 );

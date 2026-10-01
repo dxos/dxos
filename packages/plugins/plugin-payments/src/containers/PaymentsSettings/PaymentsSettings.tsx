@@ -10,8 +10,9 @@ import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Banner, Button, Flex, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
@@ -101,20 +102,20 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
           >
             <Form.Fields />
             <Flex column gap='sm' classNames='my-2'>
-              <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
+              <Next.Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
-              </Button>
-              <Button disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
+              </Next.Button>
+              <Next.Button disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
                 {pending ? t('pending.label') : t('buy-credits.label')}
-              </Button>
+              </Next.Button>
               {status.kind === 'result' && (
                 <pre className='text-xs whitespace-pre-wrap overflow-auto'>{status.text}</pre>
               )}
               {status.kind === 'error' && (
-                <Banner.Root valence='error'>
-                  <Banner.Title>{t('error.label')}</Banner.Title>
-                  <Banner.Body>{status.text}</Banner.Body>
-                </Banner.Root>
+                <Next.Banner.Root valence='error'>
+                  <Next.Banner.Title>{t('error.label')}</Next.Banner.Title>
+                  <Next.Banner.Body>{status.text}</Next.Banner.Body>
+                </Next.Banner.Root>
               )}
             </Flex>
           </Form.FieldSet>

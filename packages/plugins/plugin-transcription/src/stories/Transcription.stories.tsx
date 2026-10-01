@@ -16,8 +16,8 @@ import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
-import { Button, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
+import { Next } from '@dxos/react-ui/next';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators } from '#testing';
@@ -128,10 +128,10 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
   return (
     <>
       <audio ref={audioRef} autoPlay />
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
-            <Button
+      <Next.Panel.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Button
               iconOnly
               disabled={!stream}
               icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
@@ -139,24 +139,24 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
               onClick={() => setRunning((value) => !value)}
             />
             <input ref={fileInputRef} type='file' accept='audio/*' className='hidden' onChange={handleFileChange} />
-            <Button
+            <Next.Button
               iconOnly
               icon='ph--upload--regular'
               label='Upload audio'
               onClick={() => fileInputRef.current?.click()}
             />
-          </Toolbar.Root>
-        </Panel.Header>
-        <ScrollContainer.Root pin>
-          <Panel.Body asChild>
-            <ScrollContainer.Content>
-              <ScrollContainer.Viewport>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.ScrollContainer.Root pin>
+          <Next.Panel.Body asChild>
+            <Next.ScrollContainer.Content>
+              <Next.ScrollContainer.Viewport>
                 <Transcription model={model} />
-              </ScrollContainer.Viewport>
-            </ScrollContainer.Content>
-          </Panel.Body>
-        </ScrollContainer.Root>
-      </Panel.Root>
+              </Next.ScrollContainer.Viewport>
+            </Next.ScrollContainer.Content>
+          </Next.Panel.Body>
+        </Next.ScrollContainer.Root>
+      </Next.Panel.Root>
     </>
   );
 };

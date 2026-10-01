@@ -2,29 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { FeedbackForm } from '@dxos/plugin-support/components';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
-import {
-  AlertDialog,
-  type AlertDialogRootProps,
-  Banner,
-  Button,
-  Menu,
-  Popover,
-  SystemButton,
-  useFileDownload,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useFileDownload, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util/index.ts';
 
 // TODO(burdon): Factor out.
+type AlertDialogRootProps = ComponentProps<typeof Next.AlertDialog.Root>;
+
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
   const context = 'context' in error && error.context && typeof error.context === 'object' ? error.context : {};
 
@@ -138,22 +130,24 @@ export const ResetDialog = ({
   }, []);
 
   return (
-    <AlertDialog.Root
+    <Next.AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
         ? { defaultOpen: true }
         : { defaultOpen, open, onOpenChange })}
     >
-      <AlertDialog.Content size='md' data-testid='resetDialog'>
-        <AlertDialog.Header>
-          <AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</AlertDialog.Title>
-        </AlertDialog.Header>
-        <AlertDialog.Body>
-          <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
+      <Next.AlertDialog.Content size='md' data-testid='resetDialog'>
+        <Next.AlertDialog.Header>
+          <Next.AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</Next.AlertDialog.Title>
+        </Next.AlertDialog.Header>
+        <Next.AlertDialog.Body>
+          <Next.AlertDialog.Description>
+            {t(error ? error.message : 'reset-dialog.message')}
+          </Next.AlertDialog.Description>
           {error && (
             <>
               <div>
                 <div className='flex items-center justify-between py-3'>
-                  <Button
+                  <Next.Button
                     icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                     variant='ghost'
                     classNames='flex items-center'
@@ -162,8 +156,8 @@ export const ResetDialog = ({
                     data-testid='resetDialog.showStackTrace'
                   />
                   <div className='flex items-center gap-1'>
-                    <SystemButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
-                    <Button
+                    <Next.SystemButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
+                    <Next.Button
                       icon='ph--download-simple--regular'
                       iconOnly
                       label={t('download-logs.label')}
@@ -173,27 +167,27 @@ export const ResetDialog = ({
                 </div>
               </div>
               {showStack && (
-                <Banner.Root key={error.message}>
-                  <Banner.Body asChild>
+                <Next.Banner.Root key={error.message}>
+                  <Next.Banner.Body asChild>
                     <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
                       {error.stack}
                     </pre>
-                  </Banner.Body>
-                </Banner.Root>
+                  </Next.Banner.Body>
+                </Next.Banner.Root>
               )}
             </>
           )}
-        </AlertDialog.Body>
+        </Next.AlertDialog.Body>
 
-        <AlertDialog.Footer>
-          <Button
+        <Next.AlertDialog.Footer>
+          <Next.Button
             variant='primary'
             icon='ph--barricade--regular'
             iconOnly={!isNotMobile}
             label={t('safe-mode.label')}
             onClick={handleSafeMode}
           />
-          <Button
+          <Next.Button
             icon='ph--stethoscope--regular'
             iconOnly={!isNotMobile}
             label={t('recovery.label')}
@@ -201,36 +195,36 @@ export const ResetDialog = ({
             data-testid='resetDialog.recovery'
           />
           {onReset && (
-            <Menu.Root>
-              <Menu.Trigger asChild>
-                <Button
+            <Next.Menu.Root>
+              <Next.Menu.Trigger asChild>
+                <Next.Button
                   icon='ph--trash--regular'
                   iconOnly
                   label={t('reset-app.label')}
                   data-testid='resetDialog.reset'
                   variant='destructive'
                 />
-              </Menu.Trigger>
-              <Menu.Content side='top'>
-                <Menu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
+              </Next.Menu.Trigger>
+              <Next.Menu.Content side='top'>
+                <Next.Menu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
                   {t('reset-app-confirm.label')}
-                </Menu.Item>
-              </Menu.Content>
-            </Menu.Root>
+                </Next.Menu.Item>
+              </Next.Menu.Content>
+            </Next.Menu.Root>
           )}
 
           <div className='flex-grow' />
           {onSubmitReport &&
             isNotMobile &&
             (feedbackSent ? (
-              <Button icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
+              <Next.Button icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
             ) : (
-              <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                <Popover.Trigger asChild>
-                  <Button icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
-                </Popover.Trigger>
-                <Popover.Content>
-                  <Popover.Body>
+              <Next.Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                <Next.Popover.Trigger asChild>
+                  <Next.Button icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
+                </Next.Popover.Trigger>
+                <Next.Popover.Content>
+                  <Next.Popover.Body>
                     <FeedbackForm.Root onSubmit={handleSaveFeedback}>
                       <Form.Viewport>
                         <Form.Content>
@@ -239,18 +233,18 @@ export const ResetDialog = ({
                         </Form.Content>
                       </Form.Viewport>
                     </FeedbackForm.Root>
-                  </Popover.Body>
-                </Popover.Content>
-              </Popover.Root>
+                  </Next.Popover.Body>
+                </Next.Popover.Content>
+              </Next.Popover.Root>
             ))}
-          <Button
+          <Next.Button
             icon='ph--arrow-clockwise--regular'
             iconOnly={!!isNotMobile}
             label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}
             onClick={handleRefresh}
           />
-        </AlertDialog.Footer>
-      </AlertDialog.Content>
-    </AlertDialog.Root>
+        </Next.AlertDialog.Footer>
+      </Next.AlertDialog.Content>
+    </Next.AlertDialog.Root>
   );
 };

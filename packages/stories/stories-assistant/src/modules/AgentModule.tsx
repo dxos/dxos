@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
-import { Button, Field, Icon, Input, Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { ContentBlock } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -138,13 +138,13 @@ export const AgentModule = () => {
   );
 
   return (
-    <Panel.Root classNames='dx-fill flex flex-col gap-2 p-2 overflow-hidden'>
-      <Panel.Header classNames='shrink-0 justify-end'>
+    <Next.Panel.Root classNames='dx-fill flex flex-col gap-2 p-2 overflow-hidden'>
+      <Next.Panel.Header classNames='shrink-0 justify-end'>
         <div className='flex items-center gap-1 text-xs text-description'>
-          <Icon icon='ph--git-commit--regular' size='md' />
+          <Next.Icon icon='ph--git-commit--regular' size='md' />
           {session ? `session ${session.slice(0, 8)}` : 'no session'}
         </div>
-      </Panel.Header>
+      </Next.Panel.Header>
 
       <div ref={scroller} className='dx-grow overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
@@ -167,8 +167,8 @@ export const AgentModule = () => {
       </div>
 
       <div className='flex gap-2 items-center shrink-0'>
-        <Field.Root>
-          <Input
+        <Next.Field.Root>
+          <Next.Input
             classNames='flex-1 min-w-0'
             placeholder='Ask the agent…'
             value={prompt}
@@ -181,15 +181,15 @@ export const AgentModule = () => {
               }
             }}
           />
-        </Field.Root>
-        <Button
+        </Next.Field.Root>
+        <Next.Button
           classNames='shrink-0'
           icon='ph--paper-plane-right--regular'
           label='Send'
           disabled={running}
           onClick={() => void send()}
         />
-        <Button
+        <Next.Button
           classNames='shrink-0'
           icon='ph--git-branch--regular'
           label='Fork'
@@ -197,6 +197,6 @@ export const AgentModule = () => {
           onClick={() => void send(true)}
         />
       </div>
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };

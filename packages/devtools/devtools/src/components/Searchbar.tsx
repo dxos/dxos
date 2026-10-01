@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { Field, Input, type InputProps, useControlledState } from '@dxos/react-ui';
+import { useControlledState } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
-export type SearchbarProps = Pick<InputProps, 'placeholder'> & {
+export type SearchbarProps = Pick<Next.InputProps, 'placeholder'> & {
   delay?: number;
   value?: string;
   onChange?: (text: string) => void;
@@ -17,9 +18,9 @@ export const Searchbar = ({ placeholder, value, onChange }: SearchbarProps) => {
 
   return (
     <div className='flex w-full items-center'>
-      <Field.Root>
-        <Input placeholder={placeholder} value={text} onChange={({ target }) => setText(target.value)} />
-      </Field.Root>
+      <Next.Field.Root>
+        <Next.Input placeholder={placeholder} value={text} onChange={({ target }) => setText(target.value)} />
+      </Next.Field.Root>
     </div>
   );
 };

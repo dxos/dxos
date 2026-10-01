@@ -10,8 +10,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Column, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Column, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
@@ -90,17 +91,17 @@ export const CustomTokenDialog = ({
 
   if (!credentialForm) {
     return (
-      <Dialog.Content>
-        <Dialog.Header>
-          <Dialog.Title>{connectorLabel ?? connectorId}</Dialog.Title>
-          <Dialog.CloseTrigger asChild>
-            <SystemButton.Close />
-          </Dialog.CloseTrigger>
-        </Dialog.Header>
-        <Dialog.Body>
+      <Next.Dialog.Content>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title>{connectorLabel ?? connectorId}</Next.Dialog.Title>
+          <Next.Dialog.CloseTrigger asChild>
+            <Next.SystemButton.Close />
+          </Next.Dialog.CloseTrigger>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>
           <p className='text-error-text'>{t('provider-form-dialog.no-form.message')}</p>
-        </Dialog.Body>
-      </Dialog.Content>
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
     );
   }
 
@@ -109,14 +110,14 @@ export const CustomTokenDialog = ({
     : t('custom-token-dialog.title');
 
   return (
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.CloseTrigger asChild>
-          <SystemButton.Close />
-        </Dialog.CloseTrigger>
-      </Dialog.Header>
-      <Dialog.Body>
+    <Next.Dialog.Content>
+      <Next.Dialog.Header>
+        <Next.Dialog.Title>{title}</Next.Dialog.Title>
+        <Next.Dialog.CloseTrigger asChild>
+          <Next.SystemButton.Close />
+        </Next.Dialog.CloseTrigger>
+      </Next.Dialog.Header>
+      <Next.Dialog.Body>
         <Form.Root
           autoFocus
           schema={credentialForm.schema}
@@ -131,8 +132,8 @@ export const CustomTokenDialog = ({
           </Column.Center>
         </Form.Root>
         {error && <p className='text-error-text'>{error}</p>}
-      </Dialog.Body>
-    </Dialog.Content>
+      </Next.Dialog.Body>
+    </Next.Dialog.Content>
   );
 };
 

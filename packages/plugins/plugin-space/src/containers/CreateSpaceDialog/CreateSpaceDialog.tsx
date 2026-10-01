@@ -14,9 +14,10 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Dialog, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
@@ -94,7 +95,7 @@ export const CreateSpaceDialog = () => {
   );
 
   return (
-    <Dialog.Content data-testid='create-space-dialog'>
+    <Next.Dialog.Content data-testid='create-space-dialog'>
       {/* The form spans the whole dialog rather than just its body, so the action row can stay pinned
           below the scrolling fields while still reading the form's context. */}
       <Form.Root
@@ -107,17 +108,17 @@ export const CreateSpaceDialog = () => {
         onSave={handleCreateSpace}
         onCancel={handleCancel}
       >
-        <Dialog.Header>
-          <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
-          <Dialog.CloseTrigger asChild>
-            <SystemButton.Close ref={closeRef} />
-          </Dialog.CloseTrigger>
-        </Dialog.Header>
-        <Dialog.Body>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title>{t('create-space-dialog.title')}</Next.Dialog.Title>
+          <Next.Dialog.CloseTrigger asChild>
+            <Next.SystemButton.Close ref={closeRef} />
+          </Next.Dialog.CloseTrigger>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>
           {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second
               gutter inside the one Dialog.Body already propagates and inset the fields twice. */}
-          <ScrollArea.Root orientation='vertical' padding thin>
-            <ScrollArea.Viewport>
+          <Next.ScrollArea.Root orientation='vertical' padding thin>
+            <Next.ScrollArea.Viewport>
               <Form.Content>
                 <Form.Fields />
                 <Form.ErrorText>{error}</Form.ErrorText>
@@ -139,12 +140,12 @@ export const CreateSpaceDialog = () => {
                   </Form.FieldSet>
                 )}
               </Form.Content>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Dialog.Body>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Dialog.Body>
         <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
       </Form.Root>
-    </Dialog.Content>
+    </Next.Dialog.Content>
   );
 };
 

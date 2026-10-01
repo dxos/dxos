@@ -17,9 +17,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { Panel, Toolbar } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
+import { Next } from '@dxos/react-ui/next';
 
 import { Mic } from '#components';
 import { createStoryDecorators } from '#testing';
@@ -51,14 +51,14 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
   useSpeechRecognition({ active: recording, onTranscript: handleTranscript });
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           <Mic docId={DOC_ID} />
-        </Toolbar.Root>
-      </Panel.Header>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
 
-      <Panel.Body>
+      <Next.Panel.Body>
         <Listbox.Root value={matched}>
           <Listbox.Content aria-label='Keywords'>
             {keywords.map((keyword) => (
@@ -68,8 +68,8 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
             ))}
           </Listbox.Content>
         </Listbox.Root>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

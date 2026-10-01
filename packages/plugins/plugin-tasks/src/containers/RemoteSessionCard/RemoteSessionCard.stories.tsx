@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Card, Icon } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { RemoteSession } from '@dxos/types';
 
@@ -59,15 +59,15 @@ type StoryArgs = { kind: keyof typeof sessions };
 const DefaultStory = ({ kind }: StoryArgs) => {
   const subject = useMemo(() => sessions[kind](), [kind]);
   return (
-    <Card.Root classNames='dx-card-popover'>
-      <Card.Header>
-        <Block>
-          <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--robot--regular'} />
-        </Block>
-        <Card.Title>{RemoteSession.harnessName(subject) ?? 'Session'}</Card.Title>
-      </Card.Header>
+    <Next.Card.Root classNames='dx-card-popover'>
+      <Next.Card.Header>
+        <Next.Block>
+          <Next.Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--robot--regular'} />
+        </Next.Block>
+        <Next.Card.Title>{RemoteSession.harnessName(subject) ?? 'Session'}</Next.Card.Title>
+      </Next.Card.Header>
       <RemoteSessionCard role='card--content' subject={subject} />
-    </Card.Root>
+    </Next.Card.Root>
   );
 };
 

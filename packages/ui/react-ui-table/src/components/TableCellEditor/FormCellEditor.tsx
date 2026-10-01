@@ -8,9 +8,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Entity, Ref, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type Label, Popover, virtualAnchor } from '@dxos/react-ui';
-import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
+import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form/next';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
+import { Next } from '@dxos/react-ui/next';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
@@ -19,7 +19,7 @@ import { translationKey } from '#translations';
 import { type ModalController, type TableModel, type TableRow } from '../../model/index.ts';
 import { narrowSchema } from '../../util/index.ts';
 
-const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
+const createOptionLabel: Next.Label = ['create-new-object.label', { ns: translationKey }];
 
 export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 
@@ -162,9 +162,9 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   }
 
   return (
-    <Popover.Root open={editing} onOpenChange={handleOpenChange} positioning={virtualAnchor(anchorRef)}>
-      <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
-        <Popover.Body>
+    <Next.Popover.Root open={editing} onOpenChange={handleOpenChange} positioning={Next.virtualAnchor(anchorRef)}>
+      <Next.Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
+        <Next.Popover.Body>
           <Form.Root
             {...formProps}
             autoFocus
@@ -187,8 +187,8 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
-        </Popover.Body>
-      </Popover.Content>
-    </Popover.Root>
+        </Next.Popover.Body>
+      </Next.Popover.Content>
+    </Next.Popover.Root>
   );
 };

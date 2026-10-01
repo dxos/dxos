@@ -12,22 +12,12 @@ import { type EntityId } from '@dxos/keys';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
-import {
-  Block,
-  Button,
-  Card,
-  Icon,
-  Panel,
-  ScrollArea,
-  ToggleGroup,
-  Toolbar,
-  composable,
-  composableProps,
-} from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 type DatabaseView = 'graph' | 'object-tree' | 'cards';
@@ -92,19 +82,19 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Panel.Root classNames='relative h-full'>
-      <Panel.Header>
+    <Next.Panel.Root classNames='relative h-full'>
+      <Next.Panel.Header>
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
-      </Panel.Header>
-      <Panel.Body classNames='relative min-h-0'>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='relative min-h-0'>
         {view === 'graph' && <ForceGraph classNames='min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
-          <ScrollArea.Root classNames='h-full'>
-            <ScrollArea.Viewport>
+          <Next.ScrollArea.Root classNames='h-full'>
+            <Next.ScrollArea.Viewport>
               <ObjectsTree db={space.db} onSelect={(entity) => setSelectedId(entity.id)} />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         )}
 
         {view === 'cards' && (
@@ -140,7 +130,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <Button
+          <Next.Button
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -148,8 +138,8 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => setOpen((open) => !open)}
           />
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 
@@ -165,15 +155,15 @@ const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
     const editorRef = useRef<EditorController>(null);
 
     return (
-      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <Next.Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
         <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
-        <Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
+        <Next.Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
           {VIEW_OPTIONS.map(({ value, icon, label }) => (
-            <ToggleGroup.Item key={value} value={value} aria-label={label} title={label}>
-              <Icon icon={icon} size='md' />
-            </ToggleGroup.Item>
+            <Next.ToggleGroup.Item key={value} value={value} aria-label={label} title={label}>
+              <Next.Icon icon={icon} size='md' />
+            </Next.ToggleGroup.Item>
           ))}
-        </Toolbar.ToggleGroup>
+        </Next.Toolbar.ToggleGroup>
         {/* <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly
@@ -192,7 +182,7 @@ const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
         label='Flush'
         onClick={handleFlush}
       /> */}
-      </Toolbar.Root>
+      </Next.Toolbar.Root>
     );
   },
 );
@@ -248,17 +238,17 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
   const iconAnnotation = Obj.getIcon(object);
 
   return (
-    <Card.Root
+    <Next.Card.Root
       fullWidth
       classNames={['cursor-pointer', current && 'ring-2 ring-focus']}
       onClick={() => onSelect(object.id)}
     >
-      <Card.Header>
-        <Block>
-          <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subdued' />
-        </Block>
-        <Card.Title truncate>{label}</Card.Title>
-      </Card.Header>
-    </Card.Root>
+      <Next.Card.Header>
+        <Next.Block>
+          <Next.Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subdued' />
+        </Next.Block>
+        <Next.Card.Title truncate>{label}</Next.Card.Title>
+      </Next.Card.Header>
+    </Next.Card.Root>
   );
 };

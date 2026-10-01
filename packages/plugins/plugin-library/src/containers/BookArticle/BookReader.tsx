@@ -9,7 +9,8 @@ import React, { type RefObject, forwardRef, useCallback, useEffect, useRef, useS
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useObject } from '@dxos/react-client/echo';
-import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -33,7 +34,7 @@ const fileType = (file: File): string => {
 
 const Spinner = () => (
   <Flex center classNames='h-full text-description'>
-    <Icon icon='ph--spinner-gap--regular' size='xl' spin />
+    <Next.Icon icon='ph--spinner-gap--regular' size='xl' spin />
   </Flex>
 );
 
@@ -201,11 +202,11 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
     }
     return (
       <Flex center classNames='h-full p-4'>
-        <Button asChild>
+        <Next.Button asChild>
           <a href={resolved.url} download>
             {t('download-file.label')}
           </a>
-        </Button>
+        </Next.Button>
       </Flex>
     );
   }
@@ -237,7 +238,7 @@ type UploadPromptProps = {
 
 const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: UploadPromptProps) => (
   <Flex column gap='md' center classNames='h-full p-4 text-center'>
-    <Icon icon='ph--book-open--regular' size='xl' tone='description' />
+    <Next.Icon icon='ph--book-open--regular' size='xl' tone='description' />
     <p className='text-sm text-description'>{message}</p>
     <input
       ref={inputRef}
@@ -252,9 +253,9 @@ const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: Upload
         event.target.value = '';
       }}
     />
-    <Button disabled={busy} onClick={() => inputRef.current?.click()}>
-      <Icon icon='ph--upload-simple--regular' size='md' classNames='me-2' />
+    <Next.Button disabled={busy} onClick={() => inputRef.current?.click()}>
+      <Next.Icon icon='ph--upload-simple--regular' size='md' classNames='me-2' />
       {label}
-    </Button>
+    </Next.Button>
   </Flex>
 );

@@ -8,8 +8,8 @@ import { Format } from '@dxos/echo/Format';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_PresenceState, useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { Next } from '@dxos/react-ui/next';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -64,22 +64,22 @@ export const MembersArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   }, [members]);
 
   return (
-    <Panel.Root role={role}>
+    <Next.Panel.Root role={role}>
       {!props.space && (
-        <Panel.Header>
-          <Toolbar.Root>
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
             <DataSpaceSelector />
-          </Toolbar.Root>
-        </Panel.Header>
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
       )}
-      <Panel.Body>
+      <Next.Panel.Body>
         <MasterDetailTable
           properties={properties}
           data={data}
           detailsTransform={(item) => item._original}
           detailsPosition='bottom'
         />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

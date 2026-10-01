@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { type ContentMap, Ui } from '@dxos/diagram';
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { applyCommands } from '#model';
@@ -51,11 +51,11 @@ const DefaultStory = () => {
   return (
     <div className='grid grid-cols-[20rem_1fr] dx-fill'>
       <pre className='overflow-auto p-4 text-xs border-ie border-separator'>{ascii}</pre>
-      <Panel.Root>
-        <Panel.Body asChild>
+      <Next.Panel.Root>
+        <Next.Panel.Body asChild>
           <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </div>
   );
 };

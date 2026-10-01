@@ -12,10 +12,10 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Block, Empty, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -111,12 +111,12 @@ export const NavBranch = ({ id }: NavBranchProps) => {
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
-          <ScrollArea.Viewport>
+        <Next.ScrollArea.Root centered padding thin>
+          <Next.ScrollArea.Viewport>
             {results.length === 0 ? (
               // A branch with no openable children is a legitimate state (an unpopulated section, or a
               // search that matched nothing); rendering nothing at all reads as a broken screen.
-              <Empty>{t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}</Empty>
+              <Next.Empty>{t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}</Next.Empty>
             ) : (
               <Mosaic.Stack
                 classNames='py-2 gap-1'
@@ -126,8 +126,8 @@ export const NavBranch = ({ id }: NavBranchProps) => {
                 Tile={NavBranchTile}
               />
             )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
       </Mosaic.Container>
     </SearchPanel>
   );
@@ -165,7 +165,7 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   }, [isSelected]);
 
   return (
-    <Card.Root
+    <Next.Card.Root
       ref={ref}
       role='button'
       fullWidth
@@ -176,12 +176,12 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface pointer-coarse:bg-transparent')}
       onClick={handleSelect}
     >
-      <Card.Header>
-        <Avatar.Root>
+      <Next.Card.Header>
+        <Next.Avatar.Root>
           {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
               `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Block>
-            <Avatar.Content
+          <Next.Block>
+            <Next.Avatar.Content
               hue={data.properties.hue}
               icon={data.properties.icon}
               hueVariant='transparent'
@@ -189,15 +189,15 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
               size={8}
               fallback={name}
             />
-          </Block>
-          <Avatar.Label asChild>
-            <Card.Title>{name}</Card.Title>
-          </Avatar.Label>
-          <Block end>
-            <Icon icon='ph--caret-right--regular' />
-          </Block>
-        </Avatar.Root>
-      </Card.Header>
-    </Card.Root>
+          </Next.Block>
+          <Next.Avatar.Label asChild>
+            <Next.Card.Title>{name}</Next.Card.Title>
+          </Next.Avatar.Label>
+          <Next.Block end>
+            <Next.Icon icon='ph--caret-right--regular' />
+          </Next.Block>
+        </Next.Avatar.Root>
+      </Next.Card.Header>
+    </Next.Card.Root>
   );
 };

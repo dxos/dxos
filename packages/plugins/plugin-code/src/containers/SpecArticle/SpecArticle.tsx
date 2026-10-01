@@ -10,7 +10,6 @@ import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 import {
@@ -73,16 +72,16 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 
     return (
       <Editor.Root extensions={extensions}>
-        <Panel.Root role={role} ref={forwardedRef}>
+        <Next.Panel.Root role={role} ref={forwardedRef}>
           {!readOnly && (
-            <Panel.Header>
+            <Next.Panel.Header>
               <Editor.Toolbar role={role} attendableId={attendableId} />
-            </Panel.Header>
+            </Next.Panel.Header>
           )}
-          <Panel.Body>
+          <Next.Panel.Body>
             <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </Editor.Root>
     );
   },

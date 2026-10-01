@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { CardTile } from '@dxos/react-ui-card';
 import {
@@ -14,6 +14,7 @@ import {
   type MosaicTileProps,
   useMosaicContainer,
 } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -86,8 +87,8 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root padding centered>
-            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+          <Next.ScrollArea.Root padding centered>
+            <Next.ScrollArea.Viewport classNames='py-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
                 items={items}
@@ -97,8 +98,8 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
                 estimateSize={() => 100}
                 gap={4}
               />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Mosaic.Container>
       </Focus.Group>
     );
@@ -146,9 +147,9 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
         onToggleStar={onAction ? handleToggleStar : undefined}
         title={<span className='grow truncate font-medium'>{event.title ?? t('event-untitled.label')}</span>}
       />
-      <Card.Body>
+      <Next.Card.Body>
         <EventDetails event={event} title={false} maxAttendees={8} />
-      </Card.Body>
+      </Next.Card.Body>
     </CardTile.Root>
   );
 });

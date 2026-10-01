@@ -4,9 +4,10 @@
 
 import React, { memo } from 'react';
 
-import { Button, type IconButtonProps, composable } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
-export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label'> & {
+export type TreeItemToggleProps = Omit<Next.ButtonProps, 'icon' | 'size' | 'label'> & {
   open?: boolean;
   isBranch?: boolean;
   hidden?: boolean;
@@ -22,7 +23,7 @@ export const TreeItemToggle = memo(
   composable<HTMLButtonElement, TreeItemToggleProps>(
     ({ classNames, open, isBranch, hidden, density = 'md', ...props }, forwardedRef) => {
       return (
-        <Button
+        <Next.Button
           ref={forwardedRef}
           data-testid='treeItem.toggle'
           aria-expanded={open}

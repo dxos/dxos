@@ -6,7 +6,7 @@ import EmojiPicker from '@emoji-mart/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker.tsx';
@@ -23,9 +23,9 @@ const ToolbarButtonStory = (props: EmojiPickerProps) => {
   const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '😀');
 
   return (
-    <Toolbar.Root>
+    <Next.Toolbar.Root>
       <EmojiPickerToolbarButton {...props} emoji={emoji} onChangeEmoji={setEmoji} />
-    </Toolbar.Root>
+    </Next.Toolbar.Root>
   );
 };
 

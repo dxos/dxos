@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Avatar, type AvatarStatus, type Size } from '@dxos/react-ui';
+import { type Size } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { hexToFallback } from '@dxos/util';
 
 import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
@@ -14,7 +15,7 @@ export type UserAccountAvatarProps = {
   userId?: string;
   hue?: string;
   emoji?: string;
-  status?: AvatarStatus;
+  status?: Next.AvatarStatus;
   /** Shows a dot on the avatar, e.g. while invitations are pending. */
   badge?: boolean;
 };
@@ -32,7 +33,7 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status, badge }: U
       >
         {/* Sized by the avatar so the badge sits on its corner, not the cell's. */}
         <span className='relative inline-grid'>
-          <Avatar.Root
+          <Next.Avatar.Root
             variant='circle'
             size={size ?? 12}
             {...(resolved && { status: status ?? 'active' })}

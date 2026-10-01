@@ -14,7 +14,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
 
 import { translationKey } from '#translations';
 

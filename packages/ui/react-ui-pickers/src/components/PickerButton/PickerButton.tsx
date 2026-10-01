@@ -5,10 +5,11 @@
 import React, { type FC, useEffect, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Button, Icon, type IconProps, Menu, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 export type PickerButtonProps = ThemedClassName<{
-  Component: FC<{ value: string; size?: IconProps['size'] }>;
+  Component: FC<{ value: string; size?: Next.IconProps['size'] }>;
   label: string;
   icon: string;
   values: readonly string[];
@@ -18,7 +19,7 @@ export type PickerButtonProps = ThemedClassName<{
   onChange?: (value: string) => void;
   onReset?: () => void;
   rootVariant?: 'button' | 'toolbar-button';
-  iconSize?: IconProps['size'];
+  iconSize?: Next.IconProps['size'];
 }>;
 
 export const PickerButton = ({
@@ -44,43 +45,43 @@ export const PickerButton = ({
   useEffect(() => setValue(valueProp), [valueProp]);
 
   const [open, setOpen] = useState<boolean>(false);
-  const TriggerRoot = rootVariant === 'toolbar-button' ? Toolbar.Button : Button;
+  const TriggerRoot = rootVariant === 'toolbar-button' ? Next.Toolbar.Button : Next.Button;
 
   return (
-    <Menu.Root modal={false} open={open} onOpenChange={setOpen}>
+    <Next.Menu.Root modal={false} open={open} onOpenChange={setOpen}>
       {/* The menu trigger is outermost: both machines find the button by its id, and the tooltip adopts
           the id it is handed while the menu would lose its own to one set above it. */}
-      <Menu.Trigger asChild>
-        <Tooltip.Trigger asChild content={label} side='bottom'>
+      <Next.Menu.Trigger asChild>
+        <Next.Tooltip.Trigger asChild content={label} side='bottom'>
           <TriggerRoot classNames={['gap-2 py-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>
-            {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
-            <Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
+            {(value && <Component value={value} size={iconSize} />) || <Next.Icon icon={icon} size={iconSize} />}
+            <Next.Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
           </TriggerRoot>
-        </Tooltip.Trigger>
-      </Menu.Trigger>
-      <Menu.Content side='bottom' classNames='!w-min'>
+        </Next.Tooltip.Trigger>
+      </Next.Menu.Trigger>
+      <Next.Menu.Content side='bottom' classNames='!w-min'>
         {values.map((_value) => {
           return (
-            <Menu.CheckboxItem
+            <Next.Menu.CheckboxItem
               key={_value}
               checked={_value === value}
               onCheckedChange={() => setValue(_value)}
               classNames={'p-1 items-center justify-center aspect-square'}
             >
               <Component value={_value} size={iconSize} />
-            </Menu.CheckboxItem>
+            </Next.Menu.CheckboxItem>
           );
         })}
         {onReset && (
-          <Menu.CheckboxItem
+          <Next.Menu.CheckboxItem
             onCheckedChange={() => onReset()}
             classNames={'p-1 items-center justify-center aspect-square'}
           >
-            <Icon icon='ph--x--regular' size={iconSize} />
-          </Menu.CheckboxItem>
+            <Next.Icon icon='ph--x--regular' size={iconSize} />
+          </Next.Menu.CheckboxItem>
         )}
-      </Menu.Content>
-    </Menu.Root>
+      </Next.Menu.Content>
+    </Next.Menu.Root>
   );
 };

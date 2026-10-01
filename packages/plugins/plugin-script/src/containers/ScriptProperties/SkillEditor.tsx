@@ -11,8 +11,9 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Field, Textarea, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -81,21 +82,21 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
 
   return (
     <Form.FieldSet label={t('skill-editor.label')} description={t('skill-editor.description')}>
-      <Field.Root>
-        <Field.Label>{t('skill-instructions.label')}</Field.Label>
-        <Textarea
+      <Next.Field.Root>
+        <Next.Field.Label>{t('skill-instructions.label')}</Next.Field.Label>
+        <Next.Textarea
           placeholder={t('skill-instructions.placeholder')}
           rows={6}
           value={instructions}
           onChange={(event) => setInstructions(event.target.value)}
           classNames='resize-y'
         />
-      </Field.Root>
+      </Next.Field.Root>
 
       <div className='pt-2'>
-        <Button disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
+        <Next.Button disabled={(!existingSkill && !fnKey) || creating} onClick={handleSave}>
           {t(existingSkill ? 'update-skill.label' : 'create-skill.label')}
-        </Button>
+        </Next.Button>
       </div>
     </Form.FieldSet>
   );

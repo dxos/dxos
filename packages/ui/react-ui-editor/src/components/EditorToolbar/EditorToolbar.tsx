@@ -14,7 +14,7 @@ import {
   type MenuAction,
   MenuBuilder,
   useMenuActions,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { addBlocks } from './blocks.ts';

@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { type ThemedClassName, type UseEditableOptions, useEditable } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 import {
@@ -31,7 +31,7 @@ import { MarkdownView, type MarkdownViewProps } from '../MarkdownView/index.ts';
  * The value is markdown SOURCE either way: what the reader edits is what the preview renders.
  */
 export type MarkdownEditableProps = ThemedClassName<
-  UseEditableOptions & {
+  Next.UseEditableOptions & {
     /** Shown, dimmed, when the value is empty. */
     placeholder?: string;
     /** Renderers for the preview, as `MarkdownView` takes them. */
@@ -86,7 +86,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
     }: MarkdownEditableProps,
     forwardedRef,
   ) => {
-    const { value, draft, editing, setDraft, commit, revert, previewProps } = useEditable({
+    const { value, draft, editing, setDraft, commit, revert, previewProps } = Next.useEditable({
       ...options,
       disabled: options.disabled || readonly,
     });

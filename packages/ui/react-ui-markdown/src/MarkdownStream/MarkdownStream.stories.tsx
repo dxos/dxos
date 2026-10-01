@@ -9,8 +9,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import '@dxos/lit-ui';
 import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { Button, Field, Toolbar } from '@dxos/react-ui';
-import { Panel } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
@@ -130,36 +128,36 @@ const DefaultStory = ({
   }, [controller]);
 
   return (
-    <Panel.Root data-hue={userHue}>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Button
+    <Next.Panel.Root data-hue={userHue}>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
+          <Next.Button
             disabled={streaming}
             icon='ph--play--regular'
             iconOnly
             label='Start'
             onClick={() => setStreaming(true)}
           />
-          <Button
+          <Next.Button
             disabled={!streaming}
             icon='ph--stop--regular'
             iconOnly
             label='Stop'
             onClick={() => setStreaming(false)}
           />
-          <Button icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-          <Button disabled={streaming} icon='ph--plus--regular' iconOnly label='Append' onClick={handleAppend} />
-          <Toolbar.Separator />
-          <Field.Root>
-            <Field.Label classNames='pr-1'>Debug</Field.Label>
+          <Next.Button icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+          <Next.Button disabled={streaming} icon='ph--plus--regular' iconOnly label='Append' onClick={handleAppend} />
+          <Next.Toolbar.Separator />
+          <Next.Field.Root>
+            <Next.Field.Label classNames='pr-1'>Debug</Next.Field.Label>
             <Next.Switch checked={debug} onCheckedChange={setDebug} />
-          </Field.Root>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          </Next.Field.Root>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <MarkdownStream {...props} debug={debug} ref={setController} />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

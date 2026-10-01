@@ -10,7 +10,8 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Flex, SystemButton, Tooltip } from '@dxos/react-ui';
+import { Flex } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -122,8 +123,8 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
         icon={row.ok ? undefined : 'ph--warning--regular'}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
       >
-        <Tooltip.Trigger asChild content={<SpaceDetail row={row} />}>
-          <SystemButton.Clipboard
+        <Next.Tooltip.Trigger asChild content={<SpaceDetail row={row} />}>
+          <Next.SystemButton.Clipboard
             size='sm'
             variant='ghost'
             compact
@@ -132,7 +133,7 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
             label={row.spaceId.slice(0, 8)}
             onCopy={() => row.spaceId}
           />
-        </Tooltip.Trigger>
+        </Next.Tooltip.Trigger>
         {row.flags.length > 0 && (
           <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags.length}</span>
         )}

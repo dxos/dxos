@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Button, Empty, Flex, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 
@@ -49,11 +49,11 @@ export const WalkthroughPlaceholder = ({ generating, onGenerate }: WalkthroughPl
   const { t } = useTranslation(meta.profile.key);
   return (
     <Flex column center gap='md' classNames='dx-expand'>
-      <Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Empty>
+      <Next.Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Next.Empty>
       {!generating && (
-        <Button variant='primary' onClick={onGenerate}>
+        <Next.Button variant='primary' onClick={onGenerate}>
           {t('generate-walkthrough.label')}
-        </Button>
+        </Next.Button>
       )}
     </Flex>
   );

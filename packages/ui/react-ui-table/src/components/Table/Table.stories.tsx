@@ -14,10 +14,10 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { ViewEditor } from '@dxos/react-ui-form';
+import { ViewEditor } from '@dxos/react-ui-form/next';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
@@ -121,15 +121,15 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <TableComponent.Root ref={tableRef}>
-        <Panel.Root>
-          <Panel.Header>
+        <Next.Panel.Root>
+          <Next.Panel.Header>
             <TableComponent.Toolbar
               classNames='border-b border-subdued-separator'
               onAdd={handleInsertRow}
               onSave={handleSaveView}
             />
-          </Panel.Header>
-          <Panel.Body asChild>
+          </Next.Panel.Header>
+          <Next.Panel.Body asChild>
             <TableComponent.Content
               schema={schema}
               model={model}
@@ -137,15 +137,15 @@ const DefaultStory = () => {
               onRowClick={handleRowClick}
               ignoreAttention
             />
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </TableComponent.Root>
-      <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
-        <ScrollArea.Viewport>
+      <Next.ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
+        <Next.ScrollArea.Viewport>
           <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
           <JsonHighlighter data={{ view: table.view.target, schema }} classNames='text-xs' />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     </div>
   );
 };
@@ -361,15 +361,15 @@ const ExternalMutationStory = () => {
 
   return (
     <div className='flex flex-col h-full'>
-      <Toolbar.Root>
-        <Button onClick={handleMutate}>Mutate row externally</Button>
-      </Toolbar.Root>
+      <Next.Toolbar.Root>
+        <Next.Button onClick={handleMutate}>Mutate row externally</Next.Button>
+      </Next.Toolbar.Root>
       <TableComponent.Root ref={tableRef}>
-        <Panel.Root>
-          <Panel.Body asChild>
+        <Next.Panel.Root>
+          <Next.Panel.Body asChild>
             <TableComponent.Content schema={schema} model={model} presentation={presentation} ignoreAttention />
-          </Panel.Body>
-        </Panel.Root>
+          </Next.Panel.Body>
+        </Next.Panel.Root>
       </TableComponent.Root>
     </div>
   );

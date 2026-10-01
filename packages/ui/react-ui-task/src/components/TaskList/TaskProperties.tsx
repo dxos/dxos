@@ -6,8 +6,9 @@ import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Column, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
-import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
+import { Column, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -76,7 +77,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
       {createdAt !== undefined && (
         <TaskProperty
           icon='ph--calendar-plus--regular'
-          label={<Timestamp date={createdAt} />}
+          label={<Next.Timestamp date={createdAt} />}
           unset
           testId='taskList.property.created'
         />
@@ -218,7 +219,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
           not carry. A value keeps the hue its option table gives it. */}
       <div className={TASK_GRID_ICON}>
-        <Icon icon={icon} classNames={mx(unset ? 'text-description' : iconClassNames)} />
+        <Next.Icon icon={icon} classNames={mx(unset ? 'text-description' : iconClassNames)} />
       </div>
       <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-description')}>{label}</span>
     </>
@@ -241,7 +242,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           grid would size the glyph column to the glyph instead of to the shared 24px. `w-fit`, since
           a property is as wide as its value and a full-width button would paint a bar across the
           pane on hover. */}
-      <Button
+      <Next.Button
         variant='ghost'
         size='sm'
         // `items-center`, overriding the shared grid's `items-start`: a property is one line, and the
@@ -252,7 +253,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
         data-testid={testId}
       >
         {content}
-      </Button>
+      </Next.Button>
     </ActionMenu>
   );
 };

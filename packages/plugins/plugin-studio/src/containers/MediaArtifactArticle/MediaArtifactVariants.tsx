@@ -8,8 +8,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Button, Flex, Icon, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Flex, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { VariantGallery } from '#components';
@@ -128,17 +128,17 @@ export const MediaArtifactVariants = ({
           label: ['all.tab.label', { ns: meta.profile.key }],
           render: () => (
             <>
-              <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
+              <Next.Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
                 {t('all.tab.label')}
-              </Button>
+              </Next.Button>
               {variants.map((variant, index) => (
-                <Button
+                <Next.Button
                   key={variant.id}
                   variant={selected === index ? 'primary' : 'ghost'}
                   onClick={() => setSelected(index)}
                 >
-                  {variant.jobId ? <Icon icon='ph--spinner-gap--regular' size='md' spin /> : index + 1}
-                </Button>
+                  {variant.jobId ? <Next.Icon icon='ph--spinner-gap--regular' size='md' spin /> : index + 1}
+                </Next.Button>
               ))}
             </>
           ),
@@ -172,11 +172,11 @@ export const MediaArtifactVariants = ({
   );
 
   return (
-    <Panel.Root classNames={classNames}>
-      <Panel.Header>
+    <Next.Panel.Root classNames={classNames}>
+      <Next.Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Header>
-      <Panel.Body classNames='bg-scrim-surface'>
+      </Next.Panel.Header>
+      <Next.Panel.Body classNames='bg-scrim-surface'>
         {selected === 'all' ? (
           <VariantGallery
             variants={galleryItems}
@@ -210,8 +210,8 @@ export const MediaArtifactVariants = ({
             />
           ))
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

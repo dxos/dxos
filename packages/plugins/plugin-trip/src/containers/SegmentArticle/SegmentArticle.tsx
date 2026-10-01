@@ -7,8 +7,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Panel, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { omitId } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { BookingSearch } from '#containers';
 import { meta } from '#meta';
@@ -50,31 +52,31 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   }
 
   return (
-    <Panel.Root role={role} width='document'>
-      <Panel.Header>
-        <Toolbar.Root>
+    <Next.Panel.Root role={role} width='document'>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root>
           <div className='grow' />
-          <Toolbar.ToggleGroup
+          <Next.Toolbar.ToggleGroup
             type='single'
             value={viewMode}
             onValueChange={(value) => value && setViewMode(value as ViewMode)}
           >
-            <ToggleGroup.Item
+            <Next.ToggleGroup.Item
               value='form'
               icon='ph--list-bullets--regular'
               iconOnly
               label={t('segment.view.form.label')}
             />
-            <ToggleGroup.Item
+            <Next.ToggleGroup.Item
               value='search'
               icon='ph--magnifying-glass--regular'
               iconOnly
               label={t('segment.view.search.label')}
             />
-          </Toolbar.ToggleGroup>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
+          </Next.Toolbar.ToggleGroup>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         {viewMode === 'search' ? (
           // Key by segment id so switching/adding a segment resets the search form state.
           <BookingSearch key={segment.id} segment={segment} />
@@ -87,8 +89,8 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
             </Form.Viewport>
           </Form.Root>
         )}
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

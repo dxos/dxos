@@ -7,7 +7,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { RegistryOperation } from '@dxos/plugin-registry/operations';
-import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -73,7 +74,7 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   return (
     <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
       <Flex gap='sm' align='center'>
-        <Icon icon='ph--plugs--regular' size='lg' tone='subdued' />
+        <Next.Icon icon='ph--plugs--regular' size='lg' tone='subdued' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-prompt.title', { plugin: label })}</p>
           {/* A plugin's own description runs to paragraphs and would dwarf the chat. */}
@@ -89,9 +90,9 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
       {failed && <p className='text-sm text-error-text'>{t('plugin-prompt.failed', { plugin: label })}</p>}
       {plugin && !isEnabled && (
         <Flex justify='end'>
-          <Button variant='primary' disabled={pending} onClick={handleEnable}>
+          <Next.Button variant='primary' disabled={pending} onClick={handleEnable}>
             {t('plugin-prompt.button')}
-          </Button>
+          </Next.Button>
         </Flex>
       )}
     </Flex>

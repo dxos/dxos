@@ -8,7 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -55,40 +56,40 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
   }, [loadFundamentals]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Card.Root fullWidth border={false}>
-              <Card.Header>
-                <Block />
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body asChild>
+        <Next.ScrollArea.Root orientation='vertical'>
+          <Next.ScrollArea.Viewport classNames='p-4 space-y-4'>
+            <Next.Card.Root fullWidth border={false}>
+              <Next.Card.Header>
+                <Next.Block />
                 <Flex column gap='xs' classNames='min-w-0'>
-                  <Card.Title>
+                  <Next.Card.Title>
                     {instrument.symbol}
                     {instrument.name ? ` · ${instrument.name}` : ''}
-                  </Card.Title>
+                  </Next.Card.Title>
                   {(instrument.exchange || instrument.sector) && (
-                    <Card.Text variant='description'>
+                    <Next.Card.Text variant='description'>
                       {[instrument.exchange, instrument.sector, instrument.industry].filter(Boolean).join(' · ')}
-                    </Card.Text>
+                    </Next.Card.Text>
                   )}
                 </Flex>
-                <Block />
-              </Card.Header>
-              <Card.Body>
-                <Card.Row fullWidth>
+                <Next.Block />
+              </Next.Card.Header>
+              <Next.Card.Body>
+                <Next.Card.Row fullWidth>
                   <TradingViewChart symbol={tradingViewSymbol} className='h-[480px] w-full border-0' />
-                </Card.Row>
-                <Card.Row>
-                  <Card.Text variant='description'>{t('instrument.chart-attribution.label')}</Card.Text>
-                </Card.Row>
-              </Card.Body>
-            </Card.Root>
+                </Next.Card.Row>
+                <Next.Card.Row>
+                  <Next.Card.Text variant='description'>{t('instrument.chart-attribution.label')}</Next.Card.Text>
+                </Next.Card.Row>
+              </Next.Card.Body>
+            </Next.Card.Root>
             <FundamentalsPanel snapshot={fundamentals} loading={loading} error={error} onRefresh={loadFundamentals} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.ScrollArea.Viewport>
+        </Next.ScrollArea.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

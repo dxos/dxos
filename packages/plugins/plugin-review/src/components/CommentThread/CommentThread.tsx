@@ -6,7 +6,7 @@ import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 
 
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import {
   Message as MessageComponent,
   type MessageMetadata,
@@ -14,6 +14,7 @@ import {
   type ThreadComponents,
   ThreadStatusProps,
 } from '@dxos/react-ui-thread';
+import { Next } from '@dxos/react-ui/next';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
@@ -141,9 +142,9 @@ export const CommentThread = ({
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>
-      {status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
+      {status === 'staged' && <Next.Tag hue='neutral'>{t('draft.button')}</Next.Tag>}
       {onAcceptChange && !detached && status !== 'resolved' && (
-        <Button
+        <Next.Button
           data-testid='thread.accept-change'
           variant='ghost'
           icon='ph--check-circle--regular'
@@ -154,7 +155,7 @@ export const CommentThread = ({
         />
       )}
       {onResolve && !(status === 'staged') && (
-        <Button
+        <Next.Button
           data-testid='thread.resolve'
           variant='ghost'
           icon={status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
@@ -165,7 +166,7 @@ export const CommentThread = ({
         />
       )}
       {onThreadDelete && (
-        <Button
+        <Next.Button
           data-testid='thread.delete'
           variant='ghost'
           icon='ph--x--regular'
@@ -179,7 +180,7 @@ export const CommentThread = ({
   );
 
   const header = detached ? (
-    <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
+    <Next.Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
       <Thread.Header
         detached
         current={current}
@@ -187,7 +188,7 @@ export const CommentThread = ({
         onSelect={handleActivate}
         controls={headerControls}
       />
-    </Tooltip.Trigger>
+    </Next.Tooltip.Trigger>
   ) : (
     <Thread.Header current={current} title={thread.name} onSelect={handleActivate} controls={headerControls} />
   );

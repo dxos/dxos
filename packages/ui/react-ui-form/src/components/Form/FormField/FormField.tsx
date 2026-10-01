@@ -9,7 +9,8 @@ import React, { Component, type PropsWithChildren, type ReactNode, type Ref, use
 
 import { Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldLabelPlacement, type FormFieldRendererProps, type FormPresentation } from '#types';
@@ -90,9 +91,9 @@ export const FormFieldLabel = ({
         {label}
       </span>
     ) : (
-      <Field.Label id={id} classNames={labelClassNames}>
+      <Next.Field.Label id={id} classNames={labelClassNames}>
         {label}
-      </Field.Label>
+      </Next.Field.Label>
     );
 
   const content = (
@@ -100,9 +101,9 @@ export const FormFieldLabel = ({
       {labelNode}
       {labelEnd}
       {error ? (
-        <Tooltip.Trigger asChild content={error} side='bottom'>
-          <Icon icon='ph--warning--regular' size='md' valence='error' />
-        </Tooltip.Trigger>
+        <Next.Tooltip.Trigger asChild content={error} side='bottom'>
+          <Next.Icon icon='ph--warning--regular' size='md' valence='error' />
+        </Next.Tooltip.Trigger>
       ) : (
         <span />
       )}
@@ -362,7 +363,7 @@ export const FormFieldRow = <T,>({
   }
 
   const row = (
-    <Field.Root
+    <Next.Field.Root
       validationValence={binding?.status ?? (error ? 'error' : undefined)}
       required={!!required}
       readOnly={readonly}
@@ -382,16 +383,16 @@ export const FormFieldRow = <T,>({
           />
         )}
         {showDescription && description && (
-          <Field.HelperText classNames={styles.fieldDescription()}>{description}</Field.HelperText>
+          <Next.Field.HelperText classNames={styles.fieldDescription()}>{description}</Next.Field.HelperText>
         )}
         {labelPlacement !== 'beside' && <div className={styles.fieldControl()}>{control}</div>}
         {resolved.showError && error && (
           <div className={styles.fieldValidation()}>
-            <Field.ErrorText>{error}</Field.ErrorText>
+            <Next.Field.ErrorText>{error}</Next.Field.ErrorText>
           </div>
         )}
       </div>
-    </Field.Root>
+    </Next.Field.Root>
   );
 
   return binding ? <FormFieldBindingProvider {...binding}>{row}</FormFieldBindingProvider> : row;

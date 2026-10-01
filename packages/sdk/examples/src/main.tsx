@@ -14,7 +14,7 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Icon, Progress, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
@@ -84,7 +84,7 @@ const main = async () => {
       <ThemeProvider tx={defaultTx} themeMode='light'>
         <div className='demo'>
           <div className='buttons'>
-            <Tooltip.Trigger asChild content='Offline mode' className='flex'>
+            <Next.Tooltip.Trigger asChild content='Offline mode' className='flex'>
               <Next.Switch
                 data-testid='airplane-mode'
                 classNames='mr-2'
@@ -94,12 +94,12 @@ const main = async () => {
                 }}
                 label={
                   <>
-                    <Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
+                    <Next.Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
                   </>
                 }
               />
-            </Tooltip.Trigger>
-            <Tooltip.Trigger content='Write batching' className='flex'>
+            </Next.Tooltip.Trigger>
+            <Next.Tooltip.Trigger content='Write batching' className='flex'>
               <Next.Switch
                 data-testid='batching'
                 classNames='mr-2'
@@ -109,11 +109,11 @@ const main = async () => {
                 }}
                 label={
                   <>
-                    <Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
+                    <Next.Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
                   </>
                 }
               />
-            </Tooltip.Trigger>
+            </Next.Tooltip.Trigger>
           </div>
           {clients.map((client, index) => (
             <ClientProvider key={index} client={client}>
@@ -132,7 +132,7 @@ const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Progress indeterminate aria-label='Initializing' />
+        <Next.Progress indeterminate aria-label='Initializing' />
       </div>
     </ThemeProvider>,
   );

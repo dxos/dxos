@@ -12,11 +12,12 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Empty, Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
+import { Next } from '@dxos/react-ui/next';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -279,13 +280,18 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)} orientation='vertical'>
-        <Panel.Root role={role}>
-          <Panel.Header classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
+      <Next.Tabs.Root
+        asChild
+        value={layout}
+        onValueChange={(value) => setLayout(value as Layout)}
+        orientation='vertical'
+      >
+        <Next.Panel.Root role={role}>
+          <Next.Panel.Header classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
             {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
             <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
-          </Panel.Header>
-          <Panel.Body>
+          </Next.Panel.Header>
+          <Next.Panel.Body>
             <LayoutPanel value='masonry' empty={noResults}>
               <ObjectMasonry cacheKey={typeUri} items={tileItems} />
             </LayoutPanel>
@@ -307,21 +313,21 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
                 <ObjectMasonry cacheKey={typeUri} items={tileItems} />
               </LayoutPanel>
             )}
-          </Panel.Body>
-          <Panel.Footer classNames='flex items-center p-1 border-t border-subdued-separator'>
+          </Next.Panel.Body>
+          <Next.Panel.Footer classNames='flex items-center p-1 border-t border-subdued-separator'>
             {t('item-count.label', { count: tileItems.length })}
-          </Panel.Footer>
-        </Panel.Root>
-      </Tabs.Root>
+          </Next.Panel.Footer>
+        </Next.Panel.Root>
+      </Next.Tabs.Root>
     </SearchList.Root>
   );
 };
 
 /** One layout's content, or the message standing in for it when the layout has nothing to show. */
 const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
-  <Tabs.Content value={value} classNames='contents'>
-    {empty ? <Empty classNames='h-full'>{empty}</Empty> : children}
-  </Tabs.Content>
+  <Next.Tabs.Content value={value} classNames='contents'>
+    {empty ? <Next.Empty classNames='h-full'>{empty}</Next.Empty> : children}
+  </Next.Tabs.Content>
 );
 
 TypeArticle.displayName = 'TypeArticle';

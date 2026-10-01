@@ -9,8 +9,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, DraftMessage, Message, Person } from '@dxos/types';
@@ -113,20 +113,20 @@ const DefaultStory = ({ reply }: StoryArgs) => {
         onContactCreate={handleContactCreate}
       >
         <Dnd.Root>
-          <Panel.Root role='article'>
+          <Next.Panel.Root role='article'>
             {reply && (
-              <Panel.Header>
-                <Toolbar.Root>
-                  <Button onClick={handleReply} data-testid='story-reply'>
+              <Next.Panel.Header>
+                <Next.Toolbar.Root>
+                  <Next.Button onClick={handleReply} data-testid='story-reply'>
                     Reply
-                  </Button>
-                </Toolbar.Root>
-              </Panel.Header>
+                  </Next.Button>
+                </Next.Toolbar.Root>
+              </Next.Panel.Header>
             )}
-            <Panel.Body asChild>
+            <Next.Panel.Body asChild>
               <ConversationStack.Content />
-            </Panel.Body>
-          </Panel.Root>
+            </Next.Panel.Body>
+          </Next.Panel.Root>
         </Dnd.Root>
       </ConversationStack.Root>
     </ContactPreview>

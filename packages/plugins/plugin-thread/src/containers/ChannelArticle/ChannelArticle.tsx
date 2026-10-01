@@ -13,8 +13,8 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
@@ -112,18 +112,18 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   }
 
   return (
-    <Panel.Root role={role}>
+    <Next.Panel.Root role={role}>
       {canStartCall && (
-        <Panel.Header>
+        <Next.Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Header>
+        </Next.Panel.Header>
       )}
       {showCall ? (
-        <Panel.Body>
+        <Next.Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
-        </Panel.Body>
+        </Next.Panel.Body>
       ) : (
-        <Panel.Body asChild>
+        <Next.Panel.Body asChild>
           <MessageThread
             id={id}
             classNames='dx-document'
@@ -134,9 +134,9 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
             onSend={handleSend}
             readOnly={readOnly}
           />
-        </Panel.Body>
+        </Next.Panel.Body>
       )}
-    </Panel.Root>
+    </Next.Panel.Root>
   );
 };
 

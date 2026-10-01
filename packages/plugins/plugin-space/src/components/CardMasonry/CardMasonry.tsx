@@ -8,8 +8,8 @@ import React, { createContext, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Block, Card, Icon } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
 import { ObjectCard } from '../ObjectCard/index.ts';
@@ -103,14 +103,14 @@ const CardMasonryTile = ({ data: tile }: { data: Tile }) => {
 
 /** An object still being added: its header alone, the title saying what is on its way. */
 const PendingCard = ({ label }: { label: string }) => (
-  <Card.Root data-testid='cardMasonry.pending' aria-busy='true'>
-    <Card.Header>
-      <Block>
-        <Icon icon='ph--spinner-gap--regular' spin />
-      </Block>
-      <Card.Title truncate tone='description'>
+  <Next.Card.Root data-testid='cardMasonry.pending' aria-busy='true'>
+    <Next.Card.Header>
+      <Next.Block>
+        <Next.Icon icon='ph--spinner-gap--regular' spin />
+      </Next.Block>
+      <Next.Card.Title truncate tone='description'>
         {label}
-      </Card.Title>
-    </Card.Header>
-  </Card.Root>
+      </Next.Card.Title>
+    </Next.Card.Header>
+  </Next.Card.Root>
 );

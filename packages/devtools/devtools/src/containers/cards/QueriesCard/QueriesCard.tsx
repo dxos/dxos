@@ -4,8 +4,9 @@
 
 import React, { Fragment, useState } from 'react';
 
-import { Grid, Tooltip } from '@dxos/react-ui';
+import { Grid } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -40,9 +41,9 @@ export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
           <Fragment key={shape}>
             <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? shape : undefined)} unit='ms'>
               <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end'>
-                <Tooltip.Trigger asChild content={shape}>
+                <Next.Tooltip.Trigger asChild content={shape}>
                   <span className='truncate text-start'>{shape}</span>
-                </Tooltip.Trigger>
+                </Next.Tooltip.Trigger>
                 <span className='text-description'>×{group.length}</span>
                 <span className={mx('tabular-nums', slowest > SLOW_TIME && 'text-error-text')}>{Unit.ms(slowest)}</span>
               </Grid>

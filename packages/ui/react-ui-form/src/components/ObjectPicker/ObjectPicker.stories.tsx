@@ -10,7 +10,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Button } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
@@ -78,9 +78,9 @@ const DefaultStory = () => {
     <div className='w-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
-          <Button variant='primary' data-testid='trigger' classNames='w-full'>
+          <Next.Button variant='primary' data-testid='trigger' classNames='w-full'>
             Select Person
-          </Button>
+          </Next.Button>
         </ObjectPicker.Trigger>
         <ObjectPicker.Content
           classNames='dx-card-popover-width'

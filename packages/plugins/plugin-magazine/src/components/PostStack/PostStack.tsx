@@ -5,10 +5,11 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { Block, Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Next } from '@dxos/react-ui/next';
 
 import { Subscription } from '#types';
 
@@ -53,8 +54,8 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered>
-            <ScrollArea.Viewport ref={setViewport}>
+          <Next.ScrollArea.Root orientation='vertical' padding centered>
+            <Next.ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={PostTile}
                 gap={8}
@@ -64,8 +65,8 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
                 getScrollElement={() => viewport}
                 estimateSize={() => 120}
               />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
         </Mosaic.Container>
       </Focus.Group>
     );
@@ -101,49 +102,49 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth>
-          <Card.Header>
-            <Block>
-              <Icon icon='ph--rss-simple--regular' />
-            </Block>
-            <Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Card.Text>
+        <Next.Card.Root ref={forwardedRef} fullWidth>
+          <Next.Card.Header>
+            <Next.Block>
+              <Next.Icon icon='ph--rss-simple--regular' />
+            </Next.Block>
+            <Next.Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Next.Card.Text>
             {post.link && (
-              <Block end>
+              <Next.Block end>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
-                  <Icon icon='ph--arrow-square-out--regular' size='md' />
+                  <Next.Icon icon='ph--arrow-square-out--regular' size='md' />
                 </a>
-              </Block>
+              </Next.Block>
             )}
-          </Card.Header>
-          <Card.Body>
+          </Next.Card.Header>
+          <Next.Card.Body>
             {post.author && (
-              <Card.Row>
-                <Block>
-                  <Icon icon='ph--user--regular' />
-                </Block>
-                <Card.Text variant='description'>{post.author}</Card.Text>
-              </Card.Row>
+              <Next.Card.Row>
+                <Next.Block>
+                  <Next.Icon icon='ph--user--regular' />
+                </Next.Block>
+                <Next.Card.Text variant='description'>{post.author}</Next.Card.Text>
+              </Next.Card.Row>
             )}
             {(post.description || post.content) && (
-              <Card.Row>
+              <Next.Card.Row>
                 <MarkdownView
                   content={post.description ?? post.content}
                   classNames='line-clamp-5 text-sm text-description'
                 />
-              </Card.Row>
+              </Next.Card.Row>
             )}
             {published && (
-              <Card.Row>
-                <Block>
-                  <Icon icon='ph--calendar--regular' />
-                </Block>
-                <Card.Text variant='description' classNames='text-info-text'>
+              <Next.Card.Row>
+                <Next.Block>
+                  <Next.Icon icon='ph--calendar--regular' />
+                </Next.Block>
+                <Next.Card.Text variant='description' classNames='text-info-text'>
                   {published}
-                </Card.Text>
-              </Card.Row>
+                </Next.Card.Text>
+              </Next.Card.Row>
             )}
-          </Card.Body>
-        </Card.Root>
+          </Next.Card.Body>
+        </Next.Card.Root>
       </Focus.Item>
     </Mosaic.Tile>
   );

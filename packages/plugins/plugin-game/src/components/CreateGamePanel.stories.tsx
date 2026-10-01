@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Obj, Type } from '@dxos/echo';
-import { Dialog } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -53,12 +53,12 @@ const dummyVariants: GameCapabilities.GameVariant[] = [
 const DefaultStory = () => {
   const [submitted, setSubmitted] = useState<Record<string, any> | undefined>(undefined);
   return (
-    <Dialog.Root open>
-      <Dialog.Content>
-        <Dialog.Header>
-          <Dialog.Title>Create game</Dialog.Title>
-        </Dialog.Header>
-        <Dialog.Body>
+    <Next.Dialog.Root open>
+      <Next.Dialog.Content>
+        <Next.Dialog.Header>
+          <Next.Dialog.Title>Create game</Next.Dialog.Title>
+        </Next.Dialog.Header>
+        <Next.Dialog.Body>
           <CreateGamePanel
             target={{} as any}
             variants={dummyVariants}
@@ -71,9 +71,9 @@ const DefaultStory = () => {
               {JSON.stringify(submitted, null, 2)}
             </pre>
           )}
-        </Dialog.Body>
-      </Dialog.Content>
-    </Dialog.Root>
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
   );
 };
 

@@ -6,7 +6,8 @@ import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
-import { Button, Icon, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useContextObjects } from '#hooks';
@@ -26,14 +27,15 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
       {objects.map((obj) => {
         const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);
-        const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
+        const label: Next.Label =
+          Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
         const { icon, hue } = Obj.getIcon(obj) ?? { icon: DEFAULT_OBJECT_ICON, hue: undefined };
         const styles = hue ? getStyles(hue) : undefined;
         return (
           <li key={uri.toString()} className='dx-tag py-0 flex items-center gap-1' data-hue='neutral'>
-            <Icon icon={icon} size='md' />
+            <Next.Icon icon={icon} size='md' />
             {toLocalizedString(label, t)}
-            <Button
+            <Next.Button
               icon='ph--x--bold'
               iconOnly
               variant='ghost'

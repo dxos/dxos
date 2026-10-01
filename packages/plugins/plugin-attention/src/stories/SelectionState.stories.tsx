@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { ViewState, useManager, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { OrderedList } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {

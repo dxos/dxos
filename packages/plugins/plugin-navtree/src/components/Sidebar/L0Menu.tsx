@@ -27,19 +27,9 @@ import React, {
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import {
-  Button,
-  Icon,
-  ScrollArea,
-  Tabs,
-  type ThemedClassName,
-  Tooltip,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
-import { DropIndicator } from '@dxos/react-ui-list';
-import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
+import { type ThemedClassName, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -131,8 +121,8 @@ const L0ItemRoot = memo(
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
 
       return (
-        <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
-          <Tabs.TabPrimitive
+        <Next.Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
+          <Next.Tabs.TabPrimitive
             className={mx(
               'group/l0item flex w-full justify-center items-center relative',
               'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer aria-disabled:cursor-default',
@@ -149,8 +139,8 @@ const L0ItemRoot = memo(
             ref={forwardedRef}
           >
             {children}
-          </Tabs.TabPrimitive>
-        </Tooltip.Trigger>
+          </Next.Tabs.TabPrimitive>
+        </Next.Tooltip.Trigger>
       );
     },
   ),
@@ -250,7 +240,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <DropIndicator edge={closestEdge} />}
+      {closestEdge && <Next.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });
@@ -266,7 +256,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
-    return <Icon icon={item.properties.icon} size='xl' {...hueFgStyle} />;
+    return <Next.Icon icon={item.properties.icon} size='xl' {...hueFgStyle} />;
   }
 
   const type = l0ItemType(item);
@@ -335,7 +325,7 @@ export const L0Menu = ({
   const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
 
   return (
-    <Tabs.List
+    <Next.Tabs.List
       data-tauri-drag-region
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
@@ -349,7 +339,7 @@ export const L0Menu = ({
       <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
         {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
         <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
-          <Button
+          <Next.Button
             size='lg'
             variant='ghost'
             iconSize='lg'
@@ -361,8 +351,8 @@ export const L0Menu = ({
       </ActionMenu>
 
       {/* Space list. */}
-      <ScrollArea.Root centered thin orientation='vertical'>
-        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+      <Next.ScrollArea.Root centered thin orientation='vertical'>
+        <Next.ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
           {topLevelItems.map((item) => (
             <L0Item
               key={item.id}
@@ -373,8 +363,8 @@ export const L0Menu = ({
               {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
             />
           ))}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
 
       {/* Actions. */}
       <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
@@ -401,6 +391,6 @@ export const L0Menu = ({
           </div>
         )}
       </div>
-    </Tabs.List>
+    </Next.Tabs.List>
   );
 };

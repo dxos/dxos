@@ -13,7 +13,6 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Card, Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board,
@@ -23,7 +22,8 @@ import {
   type Layout,
   resizeToFit,
 } from '@dxos/react-ui-board';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Lightbox, MediaArtifact } from '#types';
@@ -199,11 +199,11 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
       onChange={handleChange}
       onAdd={({ x, y }) => void handleAddArtifact({ x, y })}
     >
-      <Panel.Root role={role}>
-        <Panel.Header>
+      <Next.Panel.Root role={role}>
+        <Next.Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Header>
-        <Panel.Body asChild>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
           <Board.Container>
             <Board.Viewport>
               <Board.Backdrop />
@@ -215,7 +215,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
                       item={artifact}
                       key={artifact.id}
                       layout={itemLayout}
-                      title={<Card.Title>{Obj.getLabel(artifact)}</Card.Title>}
+                      title={<Next.Card.Title>{Obj.getLabel(artifact)}</Next.Card.Title>}
                     >
                       <Surface.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
                     </Board.Cell>
@@ -224,8 +224,8 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
               </Board.Content>
             </Board.Viewport>
           </Board.Container>
-        </Panel.Body>
-      </Panel.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
     </Board.Root>
   );
 };

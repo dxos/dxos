@@ -5,8 +5,9 @@
 import React, { type MouseEvent, type ReactNode, useMemo } from 'react';
 
 import { type Obj, type Ref } from '@dxos/echo';
-import { Icon, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -50,7 +51,7 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
     <div className='relative'>
       <GalleryImage src={src} contentType={data.variant.contentType} alt={data.variant.label} />
       {selected && (
-        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-primary-500' />
+        <Next.Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-primary-500' />
       )}
     </div>
   );

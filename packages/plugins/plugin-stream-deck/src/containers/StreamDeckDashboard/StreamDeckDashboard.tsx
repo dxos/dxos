@@ -9,7 +9,7 @@ import { useOptionalAtomCapability, usePluginManager } from '@dxos/app-framework
 import { type AppSurface, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { useQuery } from '@dxos/echo-react';
 import { SPACE_STATS_QUERY, toMetrics, toSpaceStats } from '@dxos/plugin-space/dashboard';
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { VirtualStreamDeck } from '#components';
 import * as Protocol from '#protocol';
@@ -44,8 +44,8 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
   const frame = useFrame({ device: DEVICE, keys, dials });
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body>
         <div className='flex flex-col gap-2'>
           <VirtualStreamDeck device={DEVICE} frame={frame} />
           <div className='text-xs text-description'>
@@ -56,8 +56,8 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
                 : 'No device connected'}
           </div>
         </div>
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

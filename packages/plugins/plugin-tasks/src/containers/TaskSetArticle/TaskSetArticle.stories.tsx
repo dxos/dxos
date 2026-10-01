@@ -23,7 +23,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
@@ -141,9 +141,9 @@ const RemountStory = () => {
   const [mount, setMount] = useState(0);
   return (
     <div className='flex flex-col dx-expand'>
-      <Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
+      <Next.Button data-testid='story.remount' onClick={() => setMount((mount) => mount + 1)}>
         Remount
-      </Button>
+      </Next.Button>
       <DefaultStory key={mount} />
     </div>
   );

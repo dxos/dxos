@@ -7,7 +7,8 @@ import '@fontsource/poiret-one';
 import React from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Flex, Icon, useTranslation } from '@dxos/react-ui';
+import { Flex, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta.ts';
@@ -36,7 +37,7 @@ export const AuthorizingDeviceDialog = () => {
         </span>
 
         <Flex column align='center' justify='center' gap='lg' classNames='flex-1'>
-          <Icon icon='ph--spinner-gap--regular' size='xl' spin tone='description' />
+          <Next.Icon icon='ph--spinner-gap--regular' size='xl' spin tone='description' />
           <h1 className='text-2xl text-center'>{t('authorizing-device.title')}</h1>
         </Flex>
 

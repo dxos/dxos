@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Button, useControlledState, useTranslation } from '@dxos/react-ui';
+import { useControlledState, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
@@ -75,7 +75,7 @@ export const WorldMap = ({ markers = [], selected, view: viewProp = 'map', onVie
           features={features}
         />
         <Globe.Panel position='topright'>
-          <Button
+          <Next.Button
             data-testid='worldMap.toggle'
             icon={view === 'globe' ? 'ph--map-trifold--regular' : 'ph--globe-hemisphere-west--regular'}
             iconOnly

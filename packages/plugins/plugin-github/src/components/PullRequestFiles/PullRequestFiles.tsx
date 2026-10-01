@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Empty, Field, Grid, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Grid, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -47,13 +48,13 @@ export const PullRequestFiles = ({
 
   if (error) {
     return (
-      <Empty icon='ph--warning--regular' classNames='dx-expand'>
+      <Next.Empty icon='ph--warning--regular' classNames='dx-expand'>
         {error}
-      </Empty>
+      </Next.Empty>
     );
   }
   if (!tree) {
-    return <Empty classNames='dx-expand'>{t('files-loading.message')}</Empty>;
+    return <Next.Empty classNames='dx-expand'>{t('files-loading.message')}</Next.Empty>;
   }
 
   return (
@@ -62,13 +63,15 @@ export const PullRequestFiles = ({
         // Keyed by file so the next file opens at its top rather than at the previous one's scroll.
         <WalkthroughView key={file?.path} value={fence} onLineComment={onLineComment} />
       ) : (
-        <Empty classNames='dx-expand'>{t(file ? 'file-no-diff.message' : 'no-files.message')}</Empty>
+        <Next.Empty classNames='dx-expand'>{t(file ? 'file-no-diff.message' : 'no-files.message')}</Next.Empty>
       )}
-      <ScrollArea.Root thin classNames='border-s border-subdued-separator'>
-        <ScrollArea.Viewport classNames='p-2'>
-          <Field.Root>
-            <Field.Label classNames='px-2'>{t('files-reviewed.label', { reviewed: reviewed.size, total })}</Field.Label>
-          </Field.Root>
+      <Next.ScrollArea.Root thin classNames='border-s border-subdued-separator'>
+        <Next.ScrollArea.Viewport classNames='p-2'>
+          <Next.Field.Root>
+            <Next.Field.Label classNames='px-2'>
+              {t('files-reviewed.label', { reviewed: reviewed.size, total })}
+            </Next.Field.Label>
+          </Next.Field.Root>
           <FileTree
             root={tree}
             selected={file?.path}
@@ -76,8 +79,8 @@ export const PullRequestFiles = ({
             onSelect={onSelect}
             onReviewedChange={onReviewedChange}
           />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     </Grid>
   );
 };

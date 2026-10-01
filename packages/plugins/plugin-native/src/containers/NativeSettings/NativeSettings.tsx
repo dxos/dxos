@@ -8,7 +8,7 @@ import React from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface, SettingsScope, useUpdateRow } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 
 import { meta } from '#meta';
 import { NativeCapabilities, Settings } from '#types';

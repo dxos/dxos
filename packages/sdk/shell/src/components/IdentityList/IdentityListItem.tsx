@@ -8,8 +8,9 @@ import { generateName } from '@dxos/display-name';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { Avatar, type ThemedClassName, useId } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { type ThemedClassName, useId } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { keyToFallback } from '@dxos/util';
 
 import { profileString } from '../../util/index.ts';
@@ -37,15 +38,15 @@ export const IdentityListItem = forwardRef<
       data-testid='identity-list-item'
       ref={forwardedRef}
     >
-      <Avatar.Root labelId={labelId}>
-        <Avatar.Content
+      <Next.Avatar.Root labelId={labelId}>
+        <Next.Avatar.Content
           status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
           hue={profileString(identity, 'hue') ?? fallbackValue.hue}
           fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
           classNames='place-self-center'
         />
-        <Avatar.Label classNames='text-sm truncate px-2'>{displayName}</Avatar.Label>
-      </Avatar.Root>
+        <Next.Avatar.Label classNames='text-sm truncate px-2'>{displayName}</Next.Avatar.Label>
+      </Next.Avatar.Root>
     </Listbox.Item>
   );
 });

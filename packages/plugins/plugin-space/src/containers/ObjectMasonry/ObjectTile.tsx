@@ -11,7 +11,8 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { CardAnnotation } from '@dxos/schema';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
@@ -104,25 +105,25 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
   );
 
   return (
-    <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
-        <Card.Header>
-          <Block>
+    <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+      <Next.Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
+        <Next.Card.Header>
+          <Next.Block>
             <CardIconSlot subject={live}>
-              <Icon icon={icon} classNames={iconStyles?.text} />
+              <Next.Icon icon={icon} classNames={iconStyles?.text} />
             </CardIconSlot>
-          </Block>
-          <Card.Title>{label}</Card.Title>
-          {menuItems.length > 0 && <Card.Menu items={menuItems} />}
-        </Card.Header>
+          </Next.Block>
+          <Next.Card.Title>{label}</Next.Card.Title>
+          {menuItems.length > 0 && <Next.Card.Menu items={menuItems} />}
+        </Next.Card.Header>
         {archived && (
-          <Card.Row>
-            <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
-          </Card.Row>
+          <Next.Card.Row>
+            <Next.Tag classNames='justify-self-start'>{t('archived.label')}</Next.Tag>
+          </Next.Card.Row>
         )}
         {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
-      </Card.Root>
-    </Focus.Item>
+      </Next.Card.Root>
+    </Next.Focus.Item>
   );
 };
 

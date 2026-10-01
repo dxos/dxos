@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { type AttachmentKind } from '#hooks';
@@ -31,7 +32,7 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
   if (pending) {
     return (
       <div className={mx('grid place-items-center p-8 text-description', classNames)} role='status'>
-        <Icon icon='ph--spinner-gap--regular' size='xl' classNames='[animation:spin_1s_linear_infinite]' />
+        <Next.Icon icon='ph--spinner-gap--regular' size='xl' classNames='[animation:spin_1s_linear_infinite]' />
       </div>
     );
   }
@@ -39,7 +40,7 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
   if (!url) {
     return (
       <div className={mx('grid place-items-center gap-2 p-8 text-description', classNames)}>
-        <Icon icon='ph--warning--regular' size='xl' />
+        <Next.Icon icon='ph--warning--regular' size='xl' />
         <span data-testid='attachment.unavailable'>Attachment could not be loaded.</span>
       </div>
     );
@@ -89,7 +90,7 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
       // client turns an attachment into an execution surface.
       return (
         <div className={mx('grid place-items-center gap-2 p-8 text-description', classNames)}>
-          <Icon icon='ph--file--regular' size='xl' />
+          <Next.Icon icon='ph--file--regular' size='xl' />
           <span data-testid='attachment.unsupported'>{type ? `No preview for ${type}` : 'No preview available'}</span>
           <a href={url} download={name} className='dx-link-hover underline' data-testid='attachment.download'>
             Download{name ? ` ${name}` : ''}

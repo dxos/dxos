@@ -15,7 +15,6 @@ import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -24,7 +23,8 @@ import {
   graphActions,
   isToolbarAction,
   useMenuBuilder,
-} from '@dxos/react-ui-menu';
+} from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
@@ -62,19 +62,19 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Header>
-      <Panel.Body>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
         <SampleItemView
           name={snapshot.name}
           description={snapshot.description}
           status={snapshot.status}
           onValuesChanged={handleValuesChanged}
         />
-      </Panel.Body>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
 

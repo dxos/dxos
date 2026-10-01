@@ -11,17 +11,9 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import {
-  Avatar,
-  type AvatarContentProps,
-  Button,
-  SystemButton,
-  type ThemedClassName,
-  Tooltip,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { type AvatarContentProps, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -153,9 +145,13 @@ export const InvitationListItemImpl = ({
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
-      <Avatar.Root>
-        <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
-          <Avatar.Content
+      <Next.Avatar.Root>
+        <Next.Tooltip.Trigger
+          asChild
+          content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
+          side='left'
+        >
+          <Next.Avatar.Content
             {...avatarProps}
             animation={avatarAnimation}
             status={avatarStatus}
@@ -163,26 +159,26 @@ export const InvitationListItemImpl = ({
             tabIndex={0}
             classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
           />
-        </Tooltip.Trigger>
-      </Avatar.Root>
+        </Next.Tooltip.Trigger>
+      </Next.Avatar.Root>
       {showShare && invitationUrl ? (
         <>
-          <Tooltip.Trigger
+          <Next.Tooltip.Trigger
             asChild
             content={
               invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
             }
           >
-            <Button
+            <Next.Button
               variant='ghost'
               classNames='grow justify-start font-medium'
               data-testid='show-qrcode'
               onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
-            </Button>
-          </Tooltip.Trigger>
-          <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
+            </Next.Button>
+          </Next.Tooltip.Trigger>
+          <Next.SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
@@ -202,7 +198,7 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <Button
+        <Next.Button
           icon='ph--x--regular'
           iconSize='md'
           label={t('cancel-invitation.label')}
@@ -213,7 +209,7 @@ export const InvitationListItemImpl = ({
           data-testid='cancel-invitation'
         />
       ) : (
-        <Button
+        <Next.Button
           icon='ph--x--regular'
           iconSize='md'
           label={t('remove-invitation.label')}

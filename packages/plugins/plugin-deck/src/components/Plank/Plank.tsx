@@ -14,8 +14,9 @@ import React, {
 import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
-import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -122,7 +123,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     );
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
-    const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Next.Popover.Anchor : Fragment;
 
     return (
       <Pane.Root
@@ -154,7 +155,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   style={pending ? pendingStyle : undefined}
                 >
                   <span className='sr-only'>{label}</span>
-                  <Icon icon={icon} />
+                  <Next.Icon icon={icon} />
                 </Pane.Sigil>
               )}
             </ActionRoot>
@@ -164,11 +165,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               // attention-aware Pane.Title, sized to its content so it keeps a stable width.
               // `ps-1`, matching `Pane.Title`'s own `px-1`: the two branches below render at the same
               // origin, so the leading label must not shift as a trail appears or disappears.
-              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
-                <Breadcrumb.List classNames='gap-1'>
+              <Next.Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
+                <Next.Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
-                      <Breadcrumb.Item asChild>
+                      <Next.Breadcrumb.Item asChild>
                         <button
                           type='button'
                           className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
@@ -176,11 +177,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                         >
                           {crumb.label}
                         </button>
-                      </Breadcrumb.Item>
-                      <Breadcrumb.Separator />
+                      </Next.Breadcrumb.Item>
+                      <Next.Breadcrumb.Separator />
                     </Fragment>
                   ))}
-                  <Breadcrumb.Item>
+                  <Next.Breadcrumb.Item>
                     <Pane.Title
                       attendableId={attendableId}
                       related={related}
@@ -188,9 +189,9 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                     >
                       {label}
                     </Pane.Title>
-                  </Breadcrumb.Item>
-                </Breadcrumb.List>
-              </Breadcrumb.Root>
+                  </Next.Breadcrumb.Item>
+                </Next.Breadcrumb.List>
+              </Next.Breadcrumb.Root>
             ) : (
               <Pane.Title
                 attendableId={attendableId}

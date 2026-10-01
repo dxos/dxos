@@ -5,8 +5,9 @@
 import React, { useCallback } from 'react';
 
 import { type Key } from '@dxos/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -46,7 +47,13 @@ const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
         <div>{forignKey.source}</div>
         <div className='text-description text-sm truncate'>{forignKey.id}</div>
       </div>
-      <Button iconOnly icon='ph--x--regular' variant='ghost' label={t('delete-key.button')} onClick={handleDelete} />
+      <Next.Button
+        iconOnly
+        icon='ph--x--regular'
+        variant='ghost'
+        label={t('delete-key.button')}
+        onClick={handleDelete}
+      />
     </Listbox.Item>
   );
 };

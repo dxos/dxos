@@ -10,18 +10,11 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import {
-  Button,
-  DensityProvider,
-  Empty,
-  Icon,
-  ScrollArea,
-  Tabs,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Tree, TREE_BLOCK } from '@dxos/react-ui-list';
-import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
+import { DensityProvider, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { TREE_BLOCK } from '@dxos/react-ui-list';
+import { Tree } from '@dxos/react-ui-list/next';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
@@ -67,7 +60,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
   const shouldRenderContent = isCurrent || isActivated;
 
   return (
-    <Tabs.Content
+    <Next.Tabs.Content
       key={id}
       value={id}
       classNames={[
@@ -98,22 +91,22 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
             className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
-            <Icon icon='ph--spinner-gap--regular' size='xl' spin />
+            <Next.Icon icon='ph--spinner-gap--regular' size='xl' spin />
           </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           unavailable && (
-            <Empty
+            <Next.Empty
               key={id}
               classNames='row-start-2 self-start animate-fade-in'
               style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
             >
               {t('workspace-unavailable.description')}
-            </Empty>
+            </Next.Empty>
           )
         ))}
-    </Tabs.Content>
+    </Next.Tabs.Content>
   );
 };
 
@@ -147,8 +140,8 @@ const L1PanelContent = ({
   return (
     <DensityProvider size='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
-      <ScrollArea.Root centered padding thin orientation='vertical'>
-        <ScrollArea.Viewport>
+      <Next.ScrollArea.Root centered padding thin orientation='vertical'>
+        <Next.ScrollArea.Viewport>
           <Tree
             classNames='pt-[2px]'
             model={navTreeContext.model}
@@ -166,8 +159,8 @@ const L1PanelContent = ({
             onSelect={navTreeContext.onSelect}
             onItemHover={navTreeContext.onItemHover}
           />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+        </Next.ScrollArea.Viewport>
+      </Next.ScrollArea.Root>
     </DensityProvider>
   );
 };
@@ -192,7 +185,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
-        <Button
+        <Next.Button
           classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
@@ -241,7 +234,7 @@ const MenuActions = ({
 
   if (menuActions.length === 1) {
     return (
-      <Button
+      <Next.Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
@@ -256,7 +249,7 @@ const MenuActions = ({
 
   return (
     <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
-      <Button
+      <Next.Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon='ph--dots-three-vertical--regular'

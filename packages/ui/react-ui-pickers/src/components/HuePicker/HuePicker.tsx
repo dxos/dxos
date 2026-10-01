@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { type ButtonProps, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import type { Next } from '@dxos/react-ui/next';
 import { getSize, osTranslations } from '@dxos/ui-theme';
 import { hues } from '@dxos/ui-types';
 
@@ -17,7 +18,7 @@ export type HuePickerProps = {
   defaultValue?: string;
   value?: string;
   onChange?: (nextHue: string) => void;
-  onReset?: ButtonProps['onClick'];
+  onReset?: Next.ButtonProps['onClick'];
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
 export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) => {
@@ -34,7 +35,7 @@ export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) 
   );
 };
 
-const HuePreview = ({ value, size = 5 }: { value: string; size?: IconProps['size'] }) => {
+const HuePreview = ({ value, size = 5 }: { value: string; size?: Next.IconProps['size'] }) => {
   return (
     <div className='flex justify-center items-center'>
       <svg viewBox={`0 0 ${size} ${size}`} className={getSize(size)}>

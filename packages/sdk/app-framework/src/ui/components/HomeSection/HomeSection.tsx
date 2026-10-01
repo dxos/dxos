@@ -4,7 +4,8 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { Block, SystemButton, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 //
@@ -52,9 +53,9 @@ const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
       {!title && <span className='grow' />}
       {children}
       {onClose && (
-        <Block>
-          <SystemButton.Close variant='ghost' size='sm' iconOnly onClick={onClose} />
-        </Block>
+        <Next.Block>
+          <Next.SystemButton.Close variant='ghost' size='sm' iconOnly onClick={onClose} />
+        </Next.Block>
       )}
     </div>
   ),

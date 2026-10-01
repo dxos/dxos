@@ -7,8 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
 
@@ -148,5 +149,7 @@ const CreateTextButton = ({ db, disabled, onCreate }: CreateTextButtonProps) => 
     onCreate(Ref.make(db.add(Text.make())));
   }, [db, onCreate]);
 
-  return <Button icon='ph--plus--regular' label={t('create-text.label')} onClick={handleClick} disabled={disabled} />;
+  return (
+    <Next.Button icon='ph--plus--regular' label={t('create-text.label')} onClick={handleClick} disabled={disabled} />
+  );
 };

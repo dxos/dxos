@@ -6,19 +6,11 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import {
-  Block,
-  Button,
-  Icon,
-  Tag,
-  Tooltip,
-  composable,
-  composableProps,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Listbox, TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
-import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
+import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { type Actor, PullRequest, Task } from '@dxos/types';
 import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
@@ -559,8 +551,8 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   const [only] = actions;
   if (actions.length === 1 && isMenuAction(only)) {
     return (
-      <Block>
-        <Button
+      <Next.Block>
+        <Next.Button
           variant='ghost'
           iconOnly
           icon={only.properties?.icon ?? fallbackIcon}
@@ -573,17 +565,17 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
             void executeMenuAction(only);
           }}
         />
-      </Block>
+      </Next.Block>
     );
   }
 
   return (
-    <Block>
+    <Next.Block>
       {/* The button is the trigger, not the block: the button stops the click so the row is not selected
           too, and a trigger above it would never receive it. The block still gives every control in
           the row one rail-item square. */}
       <ActionMenu deferUntilOpen actions={actions}>
-        <Button
+        <Next.Button
           variant='ghost'
           iconOnly
           icon='ph--dots-three-vertical--regular'
@@ -593,7 +585,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </Block>
+    </Next.Block>
   );
 };
 
@@ -668,9 +660,9 @@ const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.
   return (
     <>
       {labelled.map((tag) => (
-        <Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
+        <Next.Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
           {tag.label}
-        </Tag>
+        </Next.Tag>
       ))}
     </>
   );
@@ -692,7 +684,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 
   if (PullRequest.instanceOf(artifact)) {
     return (
-      <Button
+      <Next.Button
         {...anchor}
         variant='tag'
         size='sm'
@@ -707,9 +699,9 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   }
 
   return (
-    <Tag {...anchor} hue='amber' classNames='cursor-pointer'>
+    <Next.Tag {...anchor} hue='amber' classNames='cursor-pointer'>
       {label}
-    </Tag>
+    </Next.Tag>
   );
 };
 
@@ -750,23 +742,23 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
   }
 
   const tag = (
-    <Tag
+    <Next.Tag
       hue={agent ? 'purple' : 'indigo'}
       data-testid='taskList.item.assignee'
       // A button when there is a session to open, so the keyboard reaches it as the pointer does.
       {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
       classNames={session && 'cursor-pointer'}
     >
-      {(agent || iconOnly) && <Icon icon={icon} size='xs' classNames={mx('inline-block', !iconOnly && 'me-1')} />}
+      {(agent || iconOnly) && <Next.Icon icon={icon} size='xs' classNames={mx('inline-block', !iconOnly && 'me-1')} />}
       {iconOnly ? <span className='sr-only'>{label}</span> : label}
-    </Tag>
+    </Next.Tag>
   );
 
   // A session shows its card on hover, which already names the run; a tooltip would stack on it.
   return iconOnly && !session && label ? (
-    <Tooltip.Trigger asChild content={label}>
+    <Next.Tooltip.Trigger asChild content={label}>
       {tag}
-    </Tooltip.Trigger>
+    </Next.Tooltip.Trigger>
   ) : (
     tag
   );

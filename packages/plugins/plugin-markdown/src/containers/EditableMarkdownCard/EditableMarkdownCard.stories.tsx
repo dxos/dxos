@@ -14,9 +14,9 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Card, DragHandle } from '@dxos/react-ui';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import { Next } from '@dxos/react-ui/next';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -36,14 +36,14 @@ const EditableMarkdownCardStory = ({ ...args }: Omit<EditableMarkdownCardProps, 
 
   return (
     <CardContainer icon='ph--text-aa--regular'>
-      <Card.Root border={false}>
-        <Card.Header>
-          <DragHandle />
-          <Card.Title>{Obj.getLabel(doc)}</Card.Title>
-          <Card.Menu />
-        </Card.Header>
+      <Next.Card.Root border={false}>
+        <Next.Card.Header>
+          <Next.DragHandle />
+          <Next.Card.Title>{Obj.getLabel(doc)}</Next.Card.Title>
+          <Next.Card.Menu />
+        </Next.Card.Header>
         <EditableMarkdownCard subject={doc} {...args} />
-      </Card.Root>
+      </Next.Card.Root>
     </CardContainer>
   );
 };

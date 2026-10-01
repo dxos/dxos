@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Banner, Panel, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -23,15 +24,15 @@ export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body classNames='grid place-items-center p-8'>
-        <Banner.Root valence='info' icon='ph--puzzle-piece--regular'>
-          <Banner.Title>{t('unsupported-type.title')}</Banner.Title>
-          <Banner.Body data-testid='previewPlugin.unsupportedType'>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body classNames='grid place-items-center p-8'>
+        <Next.Banner.Root valence='info' icon='ph--puzzle-piece--regular'>
+          <Next.Banner.Title>{t('unsupported-type.title')}</Next.Banner.Title>
+          <Next.Banner.Body data-testid='previewPlugin.unsupportedType'>
             {t('unsupported-type.message', { typename })}
-          </Banner.Body>
-        </Banner.Root>
-      </Panel.Body>
-    </Panel.Root>
+          </Next.Banner.Body>
+        </Next.Banner.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };

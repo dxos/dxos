@@ -19,8 +19,9 @@ import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { useMediaQuery, useSidebars } from '@dxos/react-ui';
+import { useMediaQuery } from '@dxos/react-ui';
 import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui/next';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -105,7 +106,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { getItem, setItem, pick } = useNavTreeState();
     const layout = useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
-    const { navigationSidebarState } = useSidebars(meta.profile.key);
+    const { navigationSidebarState } = Next.useMainSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,

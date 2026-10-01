@@ -8,9 +8,10 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { Banner, Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
+import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form/next';
+import { Listbox } from '@dxos/react-ui-list/next';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
@@ -64,7 +65,7 @@ export const RecoveryCredentialsContainer = () => {
         <Form.Content>
           <Form.FieldSet label={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
             <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
-              <Button
+              <Next.Button
                 label={t('create-passkey.label')}
                 icon='ph--key--duotone'
                 variant='primary'
@@ -76,7 +77,7 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create-recovery-code.label')}
               description={t('create-recovery-code.description')}
             >
-              <Button
+              <Next.Button
                 label={t('create-recovery-code.label')}
                 icon='ph--receipt--duotone'
                 variant='default'
@@ -87,10 +88,10 @@ export const RecoveryCredentialsContainer = () => {
           </Form.FieldSet>
           <Form.FieldSet label={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
-              <Banner.Root valence='error'>
-                <Banner.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Banner.Title>
-                <Banner.Body>{t('no-credentials.message')}</Banner.Body>
-              </Banner.Root>
+              <Next.Banner.Root valence='error'>
+                <Next.Banner.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Next.Banner.Title>
+                <Next.Banner.Body>{t('no-credentials.message')}</Next.Banner.Body>
+              </Next.Banner.Root>
             ) : (
               <Listbox.Root>
                 <Listbox.Content classNames='gap-1'>
@@ -98,7 +99,7 @@ export const RecoveryCredentialsContainer = () => {
                     const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
                     return (
                       <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
-                        <Icon icon={KIND_ICONS[kind]} />
+                        <Next.Icon icon={KIND_ICONS[kind]} />
                         <Listbox.ItemText classNames={revoked ? 'text-subdued line-through' : undefined}>
                           {label ?? t(`recovery-kind-${kind}.label`)}
                         </Listbox.ItemText>
@@ -110,7 +111,7 @@ export const RecoveryCredentialsContainer = () => {
                           // identity, and there is no self-service way back.
                           lookupKey &&
                           activeCount > 1 && (
-                            <Button
+                            <Next.Button
                               iconOnly
                               label={t('revoke-credential.label')}
                               icon='ph--trash--regular'
@@ -126,18 +127,18 @@ export const RecoveryCredentialsContainer = () => {
               </Listbox.Root>
             )}
             {revokeError && (
-              <Banner.Root valence='error'>
-                <Banner.Body>{revokeError}</Banner.Body>
-              </Banner.Root>
+              <Next.Banner.Root valence='error'>
+                <Next.Banner.Body>{revokeError}</Next.Banner.Body>
+              </Next.Banner.Root>
             )}
             {activeCount === 1 && (
-              <Banner.Root valence='warning'>
-                <Banner.Body>{t('last-credential.message')}</Banner.Body>
-              </Banner.Root>
+              <Next.Banner.Root valence='warning'>
+                <Next.Banner.Body>{t('last-credential.message')}</Next.Banner.Body>
+              </Next.Banner.Root>
             )}
             {recoveryCredentials.length > 0 && (
               <Form.Field standalone label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
-                <Button
+                <Next.Button
                   label={t('manage-passkeys.label')}
                   icon='ph--arrow-square-out--regular'
                   variant='default'

@@ -9,18 +9,14 @@ import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxo
 import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import {
-  Block,
-  Button,
-  Card,
-  Icon,
-  Popover,
   type PopoverContentInteractOutsideEvent,
   toLocalizedString,
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu/next';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
@@ -30,13 +26,13 @@ const DEBOUNCE_DELAY = 40;
 
 /** A card surface that threw still fills the card's rows; the default fallback lands in the icon column. */
 const CardFallback = ({ error }: { error: Error }) => (
-  <Card.Body>
-    <Card.Row>
-      <Card.Text variant='description' role='alert' data-testid='error-boundary-fallback'>
+  <Next.Card.Body>
+    <Next.Card.Row>
+      <Next.Card.Text variant='description' role='alert' data-testid='error-boundary-fallback'>
         {error.message}
-      </Card.Text>
-    </Card.Row>
-  </Card.Body>
+      </Next.Card.Text>
+    </Next.Card.Row>
+  </Next.Card.Body>
 );
 
 type DeckPopoverContextValue = {
@@ -75,10 +71,10 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
 
   return (
     <DeckPopoverProvider setOpen={setOpen}>
-      <Popover.Root modal={modal} open={open}>
-        {state.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
+      <Next.Popover.Root modal={modal} open={open}>
+        {state.popoverAnchor && <Next.Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
         {children}
-      </Popover.Root>
+      </Next.Popover.Root>
     </DeckPopoverProvider>
   );
 };
@@ -153,7 +149,7 @@ export const PopoverContent = () => {
   const roundedClassNames = 'rounded-sm';
 
   return (
-    <Popover.Content
+    <Next.Popover.Content
       side={side}
       border
       hideWhenDetached
@@ -169,7 +165,7 @@ export const PopoverContent = () => {
         ],
       ]}
     >
-      <Popover.Body>
+      <Next.Popover.Body>
         {isComponentPopover && content && 'component' in content ? (
           /*
            * Base popover: a plugin-provided component (e.g., editor link preview).
@@ -184,37 +180,37 @@ export const PopoverContent = () => {
            * objects like a raw Feed that have no registered card and no renderable fields).
            */
 
-          <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]} size='sm'>
-            <Card.Header>
-              <Block>
+          <Next.Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]} size='sm'>
+            <Next.Card.Header>
+              <Next.Block>
                 <CardIconSlot subject={popoverSubject}>
-                  {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
+                  {icon && <Next.Icon icon={icon} classNames={iconStyles?.text} />}
                 </CardIconSlot>
-              </Block>
-              <Card.Title>{title}</Card.Title>
+              </Next.Block>
+              <Next.Card.Title>{title}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Block end>
+              <Next.Block end>
                 {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
                 <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                  <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+                  <Next.Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
                 </ActionMenu>
-              </Block>
-            </Card.Header>
+              </Next.Block>
+            </Next.Card.Header>
 
             {content && 'subject' in content ? (
               /** CardContent must render the Card.Body. */
               <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
             ) : (
-              <Card.Body classNames='min-h-8'>
-                <Card.Row>
-                  <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
-                </Card.Row>
-              </Card.Body>
+              <Next.Card.Body classNames='min-h-8'>
+                <Next.Card.Row>
+                  <Next.Card.Text variant='description'>{t('popover-no-preview.message')}</Next.Card.Text>
+                </Next.Card.Row>
+              </Next.Card.Body>
             )}
-          </Card.Root>
+          </Next.Card.Root>
         )}
-      </Popover.Body>
-    </Popover.Content>
+      </Next.Popover.Body>
+    </Next.Popover.Content>
   );
 };
 
