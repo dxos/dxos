@@ -141,10 +141,6 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     [dream],
   );
 
-  const isSequence = useCallback((item: unknown): item is Sequence.Sequence => {
-    return typeof item === 'object' && item !== null && 'id' in item && 'source' in item;
-  }, []);
-
   return (
     <Next.Splitter.Root orientation='vertical' mode={selectedLayer ? 'split' : 'start'} classNames={classNames}>
       <Next.Splitter.Panel asChild position='start'>
@@ -166,7 +162,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
             <OrderedList.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}
-              isItem={isSequence}
+              getLabel={(item) => item.name ?? Sequence.getSourceLabel(item.source)}
               onMove={handleMove}
             >
               {({ items }) => (
@@ -216,19 +212,10 @@ type LayerListItemProps = {
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <OrderedList.Item
-      id={item.id}
-      item={item}
-      hover
-      selected={selected}
-      classNames='grid grid-cols-[var(--dx-rail-item)_var(--dx-rail-item)_1fr_var(--dx-rail-item)_var(--dx-rail-item)] gap-1 items-center cursor-pointer'
-      onClick={() => onLayerSelect(item.id)}
-    >
+    <OrderedList.Item id={item.id} highlightOnHover current={selected} onClick={() => onLayerSelect(item.id)}>
       <OrderedList.DragHandle />
-      <Next.Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
-      {/* Plain title row — there's no disclosure panel here, so we don't want
-          `OrderedList.Title`'s aria-expanded / trigger semantics. */}
-      <div className='flex grow items-center truncate'>{item.name ?? Sequence.getSourceLabel(item.source)}</div>
+      <OrderedList.ItemIcon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
+      <OrderedList.ItemText>{item.name ?? Sequence.getSourceLabel(item.source)}</OrderedList.ItemText>
       <Next.Button
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
