@@ -31,6 +31,25 @@ fixed by hand batch by batch, then the current components deleted and Next made 
 - **Kept:** `Flex`/`Grid` layout utilities (`src/layout`, theme-free), `Show`/`Switch`, the hooks, `tools/codemorph`
   (it still targets `@dxos/react-ui/next` by design: it is the record of the migration).
 
+### Step 3 verification
+
+- `moon exec --on-failure continue --quiet :build`: green.
+- `tsc -b tsconfig.all.json`: no error in a package the cut-over touched (only the pre-existing ones listed below).
+- `moon exec :lint`: clean except `eslint-plugin-rules`, whose tsconfig fails on its own fixtures' emitted
+  `dist/types` (pre-existing; unrelated).
+- Node test sweep (`MOON_CONCURRENCY=4 moon exec :test -- --no-file-parallelism`): green apart from a
+  `SearchResultList` test still querying `listitem` (fixed: Next rows are `option`s), the codemorph exports snapshot
+  (regenerated; the sibling entries now read `src/components`), and failures outside the cut-over that also fail
+  alone: plugin-sandbox (macOS `realpath -e`), plugin-google Gmail paging and echo-client-e2e merge convergence.
+- Storybook vitest, all 118 packages one at a time: 111 green; the seven that failed under load all pass alone
+  (plugin-debug `DebugPanelStatus`, plugin-search `SearchDialog`, plugin-space `AddToCollectionDialog`, plugin-tasks
+  `Outline`, worker-framework, react-ui-experimental `Ghost`), except react-ui `AttentionGlyph`, which exposed a real
+  regression: with the current components gone no utility class named `--color-attention-contains`, so Tailwind
+  tree-shook it. ui-theme now scans plain stylesheets (`@source '../../../**/src/**/*.css'`) so every variable Next's
+  CSS reads is kept.
+- Boot budget (`DX_ENVIRONMENT=dev moon run composer-app:check-boot-budget`): 20 preload entries, 4.50 MB against
+  25 entries / 4.55 MB. Passes with 50 KB to spare. (`DX_ENVIRONMENT` must be `dev|preview|staging` for the bundle.)
+
 ## Status at the end of step 2 (every batch on Next)
 
 Every batch type-checks: `tsc -b` over the whole repo reports no error in a package the cut-over touched. The errors
