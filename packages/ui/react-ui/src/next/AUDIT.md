@@ -848,6 +848,15 @@ Each codemod reports what it could not convert; that list is the manual residue 
 4. Verification: build, lint, full test sweep, every storybook play test, the boot-budget gate, and a visual pass
    over Composer's main surfaces.
 
+### `classNames` policy (decided)
+
+The cut-over PR keeps `classNames` (Next accepts `className`, DESIGN decision 6), so it stays codemod-only. It
+applies only the fixed rules (Icon valence colours, `truncate`, `font-mono`, `col-span`, dropped no-ops) and the
+element swaps the part renames already require. Conversions that need a visual check follow in per-package batches
+with a story or screenshot each. Phase A adds the six props that make the commonest leftovers mechanical: Container
+`width='document'`, Typography `lines`, `tone` and `mono`, Icon `tone` and `spin`, Button `align='start'`. Research:
+[MIGRATION-CLASSNAMES.md](MIGRATION-CLASSNAMES.md) (about a third of the 1,139 props are removable by rule).
+
 ### Risks
 
 - **`classNames`:** 1,139 props in 490 files. Next keeps `className` as an escape hatch (DESIGN decision 6), so
