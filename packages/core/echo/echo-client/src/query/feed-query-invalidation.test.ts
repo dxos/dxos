@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { QueryExecutor } from '@dxos/echo-host';
@@ -15,6 +15,7 @@ import { EchoTestBuilder } from '../testing/index.ts';
 describe('feed query invalidation', () => {
   test('a write to the space does not re-run a live feed query of another type', async () => {
     const builder = await new EchoTestBuilder().open();
+    onTestFinished(() => builder.close());
     const { db, host } = await builder.createDatabase({ types: [TestSchema.Task, TestSchema.Person, Feed.Feed] });
     const feed = db.add(Feed.make({}));
     await db.appendToFeed(
@@ -26,15 +27,16 @@ describe('feed query invalidation', () => {
     const feedUri = Obj.getURI(feed);
     let feedQueryRuns = 0;
     const execQuery = QueryExecutor.prototype.execQuery;
-    vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(function (this: QueryExecutor) {
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(function (this: QueryExecutor) {
       if (JSON.stringify(this.query).includes(feedUri)) {
         feedQueryRuns++;
       }
       return execQuery.call(this);
     });
+    onTestFinished(() => spy.mockRestore());
 
     const result = db.query(Query.select(Filter.type(TestSchema.Person)).from(feed));
-    const unsubscribe = result.subscribe(() => {});
+    onTestFinished(result.subscribe(() => {}));
     await vi.waitFor(() => expect(result.results).toHaveLength(50));
     expect(feedQueryRuns).toBe(1);
 
@@ -47,8 +49,5 @@ describe('feed query invalidation', () => {
     await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'person-50' })]);
     await vi.waitFor(() => expect(result.results).toHaveLength(51));
     expect(feedQueryRuns).toBe(2);
-
-    unsubscribe();
-    await builder.close();
   });
 });
