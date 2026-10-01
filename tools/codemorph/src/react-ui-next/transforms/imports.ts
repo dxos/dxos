@@ -143,6 +143,10 @@ export const imports: Transform = {
         file.count(`${MODULES[pkg].current} → ${module.next}`);
         continue;
       }
+      // A type-only `Label` is the i18n label type (ui-types), not the Label component.
+      if (pkg === 'react-ui' && imported === 'Label' && binding.typeOnly) {
+        continue;
+      }
       const target = IMPORT_TARGETS[pkg][imported];
       if (!target) {
         if ((pkg === 'react-ui' || pkg === 'react-ui-list') && /^[A-Z]\w*Props$/.test(imported)) {

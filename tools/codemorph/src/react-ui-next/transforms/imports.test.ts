@@ -94,6 +94,22 @@ describe('imports', () => {
     ]);
   });
 
+  test('a type-only Label is the i18n label type and stays', () => {
+    const { output } = transformFixture(
+      imports,
+      code`
+        import { type Label } from '@dxos/react-ui';
+
+        export const label: Label = 'x';
+      `,
+    );
+    expect(output).toBe(code`
+      import { type Label } from '@dxos/react-ui';
+
+      export const label: Label = 'x';
+    `);
+  });
+
   test('type-only imports become a type-only Next import', () => {
     const { output } = transformFixture(
       imports,
