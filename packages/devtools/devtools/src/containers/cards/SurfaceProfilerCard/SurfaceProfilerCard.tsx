@@ -146,7 +146,7 @@ export const SurfaceProfilerCard = ({
       {onDebugChange && (
         <StatCard.Row
           label='Highlight surfaces'
-          action={<Next.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
+          action={<Next.Switch checked={!!debug} onCheckedChange={({ checked }) => onDebugChange(checked)} />}
         />
       )}
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}

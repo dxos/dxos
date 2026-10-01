@@ -178,7 +178,11 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 </Next.Button>
               ) : (
                 <Next.Field.Root>
-                  <Next.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                  <Next.Switch
+                    classNames='self-center'
+                    checked={enabled}
+                    onCheckedChange={({ checked }) => onEnabledChange(checked)}
+                  />
                 </Next.Field.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>

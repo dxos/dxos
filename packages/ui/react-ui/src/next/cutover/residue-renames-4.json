@@ -1,22 +1,94 @@
 {
-  "generated": "2026-10-01T15:25:28.563Z",
+  "generated": "2026-10-01T15:33:47.888Z",
   "paths": ["packages"],
   "changed": [
-    "packages/plugins/plugin-github/src/components/PullRequestOverview/ArtifactPill.tsx",
-    "packages/plugins/plugin-testing/src/components/Layout/Layout.tsx",
-    "packages/ui/react-ui-card/src/components/Row/Row.stories.tsx",
-    "packages/ui/react-ui-feed/src/components/Outline/Outline.tsx",
-    "packages/ui/react-ui-graph/src/components/Graph/Graph.stories.tsx",
-    "packages/ui/react-ui-mosaic/src/testing/CardContainer.tsx",
-    "packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx"
+    "packages/apps/composer-crx/src/components/Options/Options.tsx",
+    "packages/apps/testbench-app/src/components/ItemList.tsx",
+    "packages/devtools/devtools/src/containers/cards/SurfaceProfilerCard/SurfaceProfilerCard.tsx",
+    "packages/devtools/devtools/src/containers/panels/client/DiagnosticsArticle/DiagnosticsArticle.tsx",
+    "packages/plugins/plugin-assistant/src/components/AgentProperties/AgentProperties.tsx",
+    "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+    "packages/plugins/plugin-calls/src/containers/CallDebugPanel/CallDebugPanel.tsx",
+    "packages/plugins/plugin-client/src/containers/RecoveryCodeDialog/RecoveryCodeDialog.tsx",
+    "packages/plugins/plugin-debug/src/containers/DebugPortSettings/DebugPortSettings.tsx",
+    "packages/plugins/plugin-debug/src/containers/DebugSettings/DebugSettings.tsx",
+    "packages/plugins/plugin-github/src/components/PullRequestFiles/FileTree.tsx",
+    "packages/plugins/plugin-ibkr/src/containers/PortfolioProperties/PortfolioProperties.tsx",
+    "packages/plugins/plugin-inbox/src/components/Event/EventEditor.tsx",
+    "packages/plugins/plugin-inbox/src/containers/SubscriptionsArticle/SubscriptionsArticle.tsx",
+    "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+    "packages/plugins/plugin-registry/src/components/RegistrySettings/RegistrySettings.tsx",
+    "packages/plugins/plugin-routine/src/components/Schedule/Schedule.tsx",
+    "packages/plugins/plugin-routine/src/containers/RoutineSettings/RoutineSettings.tsx",
+    "packages/plugins/plugin-sidekick/src/components/Permissions.tsx",
+    "packages/plugins/plugin-space/src/containers/SpaceSettings/SpaceSettings.tsx",
+    "packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.tsx",
+    "packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactVariants.tsx",
+    "packages/plugins/plugin-terra/src/components/TerraForm/TerraForm.tsx",
+    "packages/sdk/app-framework/src/ui/components/Surface/SurfaceComponent.stories.tsx",
+    "packages/sdk/examples/src/main.tsx",
+    "packages/sdk/examples/src/template/src/components/NetworkToggle.tsx",
+    "packages/stories/stories-assistant/src/modules/SpaceTemplateToolbar.tsx",
+    "packages/stories/stories-brain/src/components/DocumentEditor/DocumentEditor.tsx",
+    "packages/stories/stories-brain/src/components/InputPanel/InputPanel.tsx",
+    "packages/stories/stories-inbox/src/modules/TriggersModule.tsx",
+    "packages/ui/react-ui-canvas-compute/src/shapes/Constant.tsx",
+    "packages/ui/react-ui-canvas-compute/src/shapes/Switch.tsx",
+    "packages/ui/react-ui-components/src/components/TogglePanel/TogglePanel.stories.tsx",
+    "packages/ui/react-ui-form/src/components/Form/FormField/FormField.stories.tsx",
+    "packages/ui/react-ui-form/src/components/Form/FormField/fields/BooleanField/BooleanField.tsx",
+    "packages/ui/react-ui-form/src/components/Form/FormFieldSet/FormFieldSet.stories.tsx",
+    "packages/ui/react-ui-list/src/components/Combobox/Combobox.tsx",
+    "packages/ui/react-ui-list/src/components/Listbox/ListItemContent.stories.tsx",
+    "packages/ui/react-ui-list/src/components/Listbox/ListItemContent.tsx",
+    "packages/ui/react-ui-list/src/components/Listbox/Listbox.stories.tsx",
+    "packages/ui/react-ui-list/src/components/OrderedList/OrderedList.stories.tsx",
+    "packages/ui/react-ui-list/src/components/OrderedList/OrderedListItem.tsx",
+    "packages/ui/react-ui-list/src/components/Tree/Tree.tsx",
+    "packages/ui/react-ui-list/src/components/Tree/TreeItemToggle.tsx",
+    "packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.stories.tsx",
+    "packages/ui/react-ui-menu/src/components/ActionMenu.stories.tsx",
+    "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+    "packages/ui/react-ui-menu/src/components/ActionToolbar.stories.tsx",
+    "packages/ui/react-ui-menu/src/components/ActionToolbar.tsx"
   ],
   "transforms": [
     {
       "transform": "renames",
       "filesScanned": 12386,
-      "filesChanged": 7,
+      "filesChanged": 49,
       "rules": {
-        "Popover.Content onOpenAutoFocus preventDefault → Root autoFocus={false}": 7
+        "Switch onCheckedChange(checked) → ({ checked })": 30,
+        "Checkbox onCheckedChange(checked) → ({ checked })": 14,
+        "Popover.Root onOpenChange(open) → ({ open })": 1,
+        "Popover.Viewport → Popover.Body": 1,
+        "Popover.Arrow unwrapped": 1,
+        "size={n} → size='xs–xl'": 7,
+        "ScrollArea.Root thin dropped": 1,
+        "Panel.Toolbar asChild dropped": 1,
+        "Panel.Toolbar → Panel.Header": 1,
+        "Field.Input → Input": 2,
+        "Panel.Content → Panel.Body": 1,
+        "Field.Checkbox → Checkbox": 1,
+        "Field.Checkbox onCheckedChange(checked) → ({ checked })": 1,
+        "IconButton → Button": 8,
+        "noTooltip → showTooltip={false}": 2,
+        "IconBlock → Block": 1,
+        "button density → size": 1,
+        "size={n} → iconSize='xs–xl'": 1,
+        "Menu.SubTrigger → Menu.TriggerItem": 1,
+        "Menu.Portal unwrapped": 2,
+        "Menu.SubContent → Menu.Content": 1,
+        "Menu.Viewport unwrapped": 2,
+        "Menu.Root onOpenChange(open) → ({ open })": 1,
+        "Menu.Arrow unwrapped": 1,
+        "Toolbar.Button → Button": 3,
+        "Toolbar.IconButton → Button": 3,
+        "Field.Switch → Switch": 1,
+        "Field.Switch onCheckedChange(checked) → ({ checked })": 1,
+        "Field.Block → Block": 2,
+        "Toolbar.ToggleGroupIconItem → ToggleGroup.Item": 1,
+        "Toolbar.ToggleGroupItem → ToggleGroup.Item": 1
       },
       "residue": [
         {
@@ -309,14 +381,6 @@
         },
         {
           "transform": "renames",
-          "file": "packages/plugins/plugin-github/src/stories/Links.stories.tsx",
-          "line": 45,
-          "column": 7,
-          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
-          "snippet": "onOpenAutoFocus={(event) => event.preventDefault()}"
-        },
-        {
-          "transform": "renames",
           "file": "packages/plugins/plugin-inbox/src/components/Event/EventEditor.tsx",
           "line": 207,
           "column": 15,
@@ -330,14 +394,6 @@
           "column": 17,
           "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
           "snippet": "<Next.Field.TriggerIcon icon='ph--calendar--regular' />"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/plugins/plugin-inbox/src/testing/contact-preview.tsx",
-          "line": 27,
-          "column": 27,
-          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
-          "snippet": "onOpenAutoFocus={(event) => event.preventDefault()}"
         },
         {
           "transform": "renames",
@@ -721,7 +777,7 @@
           "line": 165,
           "column": 13,
           "reason": "Popover.Content side → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
-          "snippet": "<Next.Popover.Content side={layout.popoverSide} onOpenAutoFocus={(event) => event.preventDefault()} onInteractOutside..."
+          "snippet": "<Next.Popover.Content side={layout.popoverSide} onInteractOutside={handleInteractOutside} onEscapeKeyDown={handleInte..."
         },
         {
           "transform": "renames",
@@ -1013,62 +1069,6 @@
         },
         {
           "transform": "renames",
-          "file": "packages/ui/react-ui-debug/src/components/Logger/Logger.tsx",
-          "line": 324,
-          "column": 21,
-          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-debug/src/components/Logger/Logger.tsx",
-          "line": 341,
-          "column": 31,
-          "reason": "Select.Root items: Items are rendered by several expressions; pass the options by hand",
-          "snippet": "<Next.Select.Root value={[value]} onValueChange={({ value: [next] }) => setFileLevel(file, next === 'inherit' ? undef..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-debug/src/components/Logger/Logger.tsx",
-          "line": 440,
-          "column": 5,
-          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
-          "line": 204,
-          "column": 9,
-          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
-          "snippet": "onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
-          "line": 189,
-          "column": 7,
-          "reason": "Popover.Content align → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
-          "snippet": "<Next.Popover.Content align='start' classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']} style={..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-editor/src/stories/Comments.stories.tsx",
-          "line": 199,
-          "column": 15,
-          "reason": "Listbox.ItemContent: props other than icon, title, description (in that order); compose the row parts by hand",
-          "snippet": "<Listbox.ItemContent classNames='grow' title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-editor/src/stories/Widgets.stories.tsx",
-          "line": 79,
-          "column": 7,
-          "reason": "Popover.Content onOpenAutoFocus has no Ark counterpart on Content: use Root autoFocus or initialFocusEl by hand",
-          "snippet": "onOpenAutoFocus={(event) => event.preventDefault()}"
-        },
-        {
-          "transform": "renames",
           "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/DateField/DateField.tsx",
           "line": 83,
           "column": 11,
@@ -1118,10 +1118,18 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-list/src/components/Combobox/Combobox.tsx",
-          "line": 136,
+          "line": 139,
           "column": 7,
           "reason": "Popover.Content collisionPadding → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
-          "snippet": "<Next.Popover.Content {...props} // Zero, not the Popover default of 8: the content is exactly trigger-width, so a tr..."
+          "snippet": "<Popover.Content {...props} // Zero, not the Popover default of 8: the content is exactly trigger-width, so a trigger..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-list/src/components/Tree/TreeItemToggle.tsx",
+          "line": 32,
+          "column": 11,
+          "reason": "button density with a computed value renamed to size; check it is xs–xl",
+          "snippet": "density={density}"
         },
         {
           "transform": "renames",
@@ -1134,15 +1142,15 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
-          "line": 80,
+          "line": 77,
           "column": 5,
           "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
-          "snippet": "<Next.Menu.Item onClick={handleClick} onSelect={handleSelect} classNames='gap-2' disabled={action.properties?.disable..."
+          "snippet": "<Menu.Item onClick={handleClick} onSelect={handleSelect} classNames='gap-2' disabled={action.properties?.disabled} {...."
         },
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
-          "line": 91,
+          "line": 88,
           "column": 11,
           "reason": "size {iconSize} is computed; map it to xs–xl by hand",
           "snippet": "size={iconSize}"
@@ -1150,16 +1158,24 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
-          "line": 97,
-          "column": 75,
+          "line": 94,
+          "column": 70,
           "reason": "size {iconSize} is computed; map it to xs–xl by hand",
           "snippet": "size={iconSize}"
         },
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
-          "line": 109,
-          "column": 41,
+          "line": 106,
+          "column": 36,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 108,
+          "column": 47,
           "reason": "size {iconSize} is computed; map it to xs–xl by hand",
           "snippet": "size={iconSize}"
         },
@@ -1167,17 +1183,73 @@
           "transform": "renames",
           "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
           "line": 111,
-          "column": 52,
+          "column": 9,
+          "reason": "Menu.SubContent → a nested Menu.Content inside Menu.Sub",
+          "snippet": "<Menu.SubContent>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 259,
+          "column": 21,
+          "reason": "VirtualTrigger is not a direct child of its Root: add positioning={virtualAnchor(ref)} by hand",
+          "snippet": "<Menu.VirtualTrigger virtualRef={virtualRef} />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 265,
+          "column": 7,
+          "reason": "Menu.Portal unwrapped; its props need a new home (container)",
+          "snippet": "<Menu.Portal container={container}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionToolbar.tsx",
+          "line": 86,
+          "column": 7,
           "reason": "size {iconSize} is computed; map it to xs–xl by hand",
           "snippet": "size={iconSize}"
         },
         {
           "transform": "renames",
-          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
-          "line": 258,
-          "column": 21,
-          "reason": "VirtualTrigger is not a direct child of its Root: add positioning={virtualAnchor(ref)} by hand",
-          "snippet": "<Next.Menu.VirtualTrigger virtualRef={virtualRef} />"
+          "file": "packages/ui/react-ui-menu/src/components/ActionToolbar.tsx",
+          "line": 88,
+          "column": 7,
+          "reason": "iconClassNames has no Next equivalent (Button has no icon slot)",
+          "snippet": "iconClassNames={mx(spin && 'animate-spin', iconClassNames)}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionToolbar.tsx",
+          "line": 166,
+          "column": 7,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionToolbar.tsx",
+          "line": 168,
+          "column": 7,
+          "reason": "iconClassNames has no Next equivalent (Button has no icon slot)",
+          "snippet": "iconClassNames={mx(spin && 'animate-spin', iconClassNames)}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionToolbar.tsx",
+          "line": 227,
+          "column": 7,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionToolbar.tsx",
+          "line": 229,
+          "column": 7,
+          "reason": "iconClassNames has no Next equivalent (Button has no icon slot)",
+          "snippet": "iconClassNames={mx(spin && 'animate-spin', iconClassNames)}"
         },
         {
           "transform": "renames",
@@ -1202,14 +1274,6 @@
           "column": 46,
           "reason": "size {iconSize} is computed; map it to xs–xl by hand",
           "snippet": "size={iconSize}"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-rdf/src/components/FactViewer/FactViewer.tsx",
-          "line": 226,
-          "column": 5,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root>"
         },
         {
           "transform": "renames",

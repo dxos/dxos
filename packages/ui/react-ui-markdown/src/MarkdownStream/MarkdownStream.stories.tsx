@@ -150,7 +150,7 @@ const DefaultStory = ({
           <Next.Toolbar.Separator />
           <Next.Field.Root>
             <Next.Field.Label classNames='pr-1'>Debug</Next.Field.Label>
-            <Next.Switch checked={debug} onCheckedChange={setDebug} />
+            <Next.Switch checked={debug} onCheckedChange={({ checked }) => setDebug(checked)} />
           </Next.Field.Root>
         </Next.Toolbar.Root>
       </Next.Panel.Header>

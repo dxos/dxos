@@ -41,7 +41,7 @@ export const RoutineSettings = () => {
         <Form.Content>
           <Form.FieldSet label={t('routine-verbose.label')} description={t('routine.description')}>
             <Form.Field label={t('runtime.label')} description={t('runtime.description')}>
-              <Next.Switch checked={enabled} onCheckedChange={handleToggle} />
+              <Next.Switch checked={enabled} onCheckedChange={({ checked }) => handleToggle(checked)} />
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

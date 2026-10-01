@@ -389,7 +389,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                     <Next.Field.Root>
                       <Next.Checkbox
                         checked={checked}
-                        onCheckedChange={(next) => {
+                        onCheckedChange={({ checked: next }) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
                           const nextDays = next
                             ? Days.map((d) => d.value).filter((d) => d === day || value.days.includes(d))

@@ -76,7 +76,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
       <Next.Panel.Header>
         <Next.Toolbar.Root>
           <Next.Field.Root>
-            <Next.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
+            <Next.Switch checked={running} onCheckedChange={({ checked }) => setRunning(checked)} />
           </Next.Field.Root>
           <div className='grow' />
           <div>{count}</div>

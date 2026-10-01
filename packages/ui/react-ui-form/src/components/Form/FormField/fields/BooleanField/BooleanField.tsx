@@ -35,7 +35,7 @@ export const BooleanField = ({
 
   return (
     <Next.Block>
-      <Next.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
+      <Next.Switch disabled={!!readonly} checked={value} onCheckedChange={({ checked }) => handleChange(checked)} />
     </Next.Block>
   );
 };

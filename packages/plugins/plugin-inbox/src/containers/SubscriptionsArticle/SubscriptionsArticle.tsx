@@ -167,7 +167,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
               <Next.Checkbox
                 checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                 disabled={results.length === 0}
-                onCheckedChange={toggleAll}
+                onCheckedChange={({ checked }) => toggleAll(checked === true)}
                 data-testid='subscriptions-select-all'
               />
             </Next.Field.Root>

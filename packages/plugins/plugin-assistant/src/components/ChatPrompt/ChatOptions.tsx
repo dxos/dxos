@@ -300,7 +300,7 @@ const OnlineSwitch = () => {
     <div className='px-1 flex items-center gap-2'>
       <Next.Switch
         checked={online}
-        onCheckedChange={handleChange}
+        onCheckedChange={({ checked }) => handleChange(checked)}
         data-testid='assistant.online'
         label={t('online-switch.label')}
       />
@@ -416,7 +416,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
       <Flex align='center' gap='sm'>
         <Next.Field.Root>
           <Next.Field.Label srOnly>{name}</Next.Field.Label>
-          <Next.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+          <Next.Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
         </Next.Field.Root>
         <Flex column grow classNames='min-w-0'>
           <span className='truncate text-sm'>{name}</span>

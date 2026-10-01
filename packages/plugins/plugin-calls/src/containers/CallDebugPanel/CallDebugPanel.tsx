@@ -84,11 +84,18 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       ))}
       <StatCard.Row
         label={t('show-webrtc-stats.title')}
-        action={<Next.Switch checked={showDetailedWebRTCStats} onCheckedChange={setShowDetailedWebRTCStats} />}
+        action={
+          <Next.Switch
+            checked={showDetailedWebRTCStats}
+            onCheckedChange={({ checked }) => setShowDetailedWebRTCStats(checked)}
+          />
+        }
       />
       <StatCard.Row
         label={t('show-calls-history.title')}
-        action={<Next.Switch checked={showServiceHistory} onCheckedChange={setShowServiceHistory} />}
+        action={
+          <Next.Switch checked={showServiceHistory} onCheckedChange={({ checked }) => setShowServiceHistory(checked)} />
+        }
       />
       {showDetailedWebRTCStats && (
         <StatCard.Content>

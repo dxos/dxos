@@ -88,7 +88,7 @@ const main = async () => {
               <Next.Switch
                 data-testid='airplane-mode'
                 classNames='mr-2'
-                onCheckedChange={(e) => {
+                onCheckedChange={({ checked: e }) => {
                   setOffline(!offline);
                   return handleToggleNetwork(e);
                 }}
@@ -103,7 +103,7 @@ const main = async () => {
               <Next.Switch
                 data-testid='batching'
                 classNames='mr-2'
-                onCheckedChange={(e) => {
+                onCheckedChange={({ checked: e }) => {
                   setBatching(!batching);
                   return handleToggleBatching(e);
                 }}

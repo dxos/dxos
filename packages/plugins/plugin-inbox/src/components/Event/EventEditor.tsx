@@ -218,7 +218,11 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 />
               )}
             </div>
-            <Next.Switch checked={allDay} onCheckedChange={handleAllDayChange} label={t('event-all-day.label')} />
+            <Next.Switch
+              checked={allDay}
+              onCheckedChange={({ checked }) => handleAllDayChange(checked)}
+              label={t('event-all-day.label')}
+            />
           </div>
         </Next.Card.Row>
       </Next.Field.Root>

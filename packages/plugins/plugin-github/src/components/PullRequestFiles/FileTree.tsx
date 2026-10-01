@@ -75,7 +75,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
           <Next.Checkbox
             size={4}
             checked={reviewed.has(item.path)}
-            onCheckedChange={(checked) => onReviewedChange(item.path, checked === true)}
+            onCheckedChange={({ checked }) => onReviewedChange(item.path, checked === true)}
             // Checking a file off is not a request to open it.
             onClick={(event) => event.stopPropagation()}
             aria-label={t('file-reviewed.label')}

@@ -28,7 +28,7 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
       onClick={(ev) => ev.stopPropagation()}
     >
       <Next.Field.Root>
-        <Next.Switch checked={value} onCheckedChange={(value) => setValue(value)} />
+        <Next.Switch checked={value} onCheckedChange={({ checked: value }) => setValue(value)} />
       </Next.Field.Root>
     </div>
   );

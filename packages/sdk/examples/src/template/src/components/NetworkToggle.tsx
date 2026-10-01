@@ -18,7 +18,7 @@ export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
     <div className='flex'>
       <Next.Checkbox
         classNames='mr-2'
-        onCheckedChange={toggleNetwork}
+        onCheckedChange={({ checked }) => toggleNetwork(checked === true)}
         label={
           <>
             Disable{' '}

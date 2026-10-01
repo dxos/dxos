@@ -36,7 +36,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
           <Next.Checkbox
             data-testid='recoveryCode.confirm'
             checked={confirmation}
-            onCheckedChange={handleConfirmation}
+            onCheckedChange={({ checked }) => handleConfirmation(checked === true)}
             label={t('recovery-code-confirmation.label')}
           />
         </Flex>

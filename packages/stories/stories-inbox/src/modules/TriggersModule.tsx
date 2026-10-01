@@ -103,7 +103,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                   <div className='text-description'>{formatTriggerSpec(trigger)}</div>
                   <Next.Switch
                     checked={trigger.remote === true}
-                    onCheckedChange={(checked) => {
+                    onCheckedChange={({ checked }) => {
                       Obj.update(trigger, (trigger) => {
                         trigger.remote = checked;
                       });

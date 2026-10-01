@@ -50,7 +50,7 @@ export const SpaceSettings = ({
               <Next.Switch
                 disabled={!onSettingsChange}
                 checked={settings?.showHidden}
-                onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
+                onCheckedChange={({ checked }) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
               />
             </Form.Field>
           </Form.FieldSet>

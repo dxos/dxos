@@ -222,7 +222,11 @@ const ProfileControls = () => {
         disabled={!persistent}
         onClick={() => void handleImport()}
       />
-      <Next.Checkbox checked={persistent} onCheckedChange={handlePersistentChange} label='Persistent' />
+      <Next.Checkbox
+        checked={persistent}
+        onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
+        label='Persistent'
+      />
       <Next.Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );

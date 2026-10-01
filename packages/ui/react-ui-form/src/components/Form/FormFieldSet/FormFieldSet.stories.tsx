@@ -50,7 +50,7 @@ const DefaultStory = ({ variant }: StoryArgs) => {
           </Form.FieldSet>
           <Form.FieldSet label='Options' description='Layout switches.' descriptionPlacement='tooltip'>
             <Form.Field label='Wireframe' description='Outline every surface.'>
-              <Next.Switch checked={wireframe} onCheckedChange={setWireframe} />
+              <Next.Switch checked={wireframe} onCheckedChange={({ checked }) => setWireframe(checked)} />
             </Form.Field>
             <Form.Field standalone label='Reset' description='Forget the layout.'>
               <Next.Button>Reset</Next.Button>

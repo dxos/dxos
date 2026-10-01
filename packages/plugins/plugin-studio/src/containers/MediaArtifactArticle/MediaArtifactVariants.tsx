@@ -155,7 +155,7 @@ export const MediaArtifactVariants = ({
             render: () => (
               <Next.Checkbox
                 checked={isCover}
-                onCheckedChange={(checked) => handleCoverChange(checked === true)}
+                onCheckedChange={({ checked }) => handleCoverChange(checked === true)}
                 label={t('cover.label')}
               />
             ),

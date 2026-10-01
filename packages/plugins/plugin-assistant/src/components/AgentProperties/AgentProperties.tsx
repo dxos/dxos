@@ -93,7 +93,7 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
         <Next.Checkbox
           key={object.id}
           checked={subscribedUris.has(Obj.getURI(object))}
-          onCheckedChange={(checked) => {
+          onCheckedChange={({ checked }) => {
             handleSubscriptionChange(object, checked === true);
           }}
           label={Obj.getLabel(object) ?? object.id}

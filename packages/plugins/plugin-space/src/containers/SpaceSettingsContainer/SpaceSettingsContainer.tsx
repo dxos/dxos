@@ -140,7 +140,11 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <Form.Field label={label} description={t('edge-replication.description')}>
-            <Next.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
+            <Next.Switch
+              checked={getValue()}
+              onCheckedChange={({ checked }) => handleChange(checked)}
+              classNames='justify-self-end'
+            />
           </Form.Field>
         );
       },

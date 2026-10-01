@@ -61,7 +61,11 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             </span>
           )}
           <Next.Field.Root>
-            <Next.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
+            <Next.Switch
+              checked={status.running}
+              disabled={disabled}
+              onCheckedChange={({ checked }) => handleToggle(checked)}
+            />
           </Next.Field.Root>
         </Flex>
       </Form.Field>

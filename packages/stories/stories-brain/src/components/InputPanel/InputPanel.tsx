@@ -140,7 +140,7 @@ export const InputPanel = ({
           {mode === 'document' && parse && (
             <Next.Field.Root>
               <div className='flex items-center gap-2 px-2'>
-                <Next.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
+                <Next.Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
                 <Next.Field.Label classNames='text-sm text-description'>POS</Next.Field.Label>
               </div>
             </Next.Field.Root>

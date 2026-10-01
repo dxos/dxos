@@ -163,11 +163,15 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               <Next.Switch
                 disabled={!onSettingsChange}
                 checked={settings.wireframe}
-                onCheckedChange={handleWireframeChange}
+                onCheckedChange={({ checked }) => handleWireframeChange(checked)}
               />
             </Form.Field>
             <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Next.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
+              <Next.Switch
+                disabled={!onSettingsChange}
+                checked={traceAll}
+                onCheckedChange={({ checked }) => handleTraceAllChange(checked)}
+              />
             </Form.Field>
             <Form.Field
               standalone

@@ -60,7 +60,7 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
         <Next.Toolbar.Root>
           <Next.Checkbox
             checked={recording}
-            onCheckedChange={(recording) => handleSetRecording(!!recording)}
+            onCheckedChange={({ checked: recording }) => handleSetRecording(!!recording)}
             label='Record metrics'
           />
           <div className='grow' />

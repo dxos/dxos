@@ -111,7 +111,9 @@ export const RegistrySettings = ({
                     disabled={!onPluginScopeLocalChange}
                     checked={pluginScopeLocal}
                     // Only rejoining asks: it replaces this device's choices with the account's.
-                    onCheckedChange={(local) => (local ? onPluginScopeLocalChange?.(true) : setRejoining(true))}
+                    onCheckedChange={({ checked: local }) =>
+                      local ? onPluginScopeLocalChange?.(true) : setRejoining(true)
+                    }
                   />
                 </Next.Field.Root>
               </Form.Field>

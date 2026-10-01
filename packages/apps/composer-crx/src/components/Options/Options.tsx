@@ -116,7 +116,10 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Next.Field.Root>
               <Next.Field.Label>{t('settings.dev-mode.label')}</Next.Field.Label>
               <div className='text-end'>
-                <Next.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
+                <Next.Switch
+                  checked={developerMode}
+                  onCheckedChange={({ checked }) => handleDeveloperModeChange(checked)}
+                />
               </div>
             </Next.Field.Root>
           </div>
@@ -125,7 +128,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Next.Field.Root>
               <Next.Field.Label>{t('settings.space-mode.label')}</Next.Field.Label>
               <div className='text-end'>
-                <Next.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
+                <Next.Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
               </div>
             </Next.Field.Root>
           </div>

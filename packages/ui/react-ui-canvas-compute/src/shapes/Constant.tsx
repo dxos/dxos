@@ -77,7 +77,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
           <Next.Field.Root>
             <Next.Switch
               checked={node.value}
-              onCheckedChange={(value) => {
+              onCheckedChange={({ checked: value }) => {
                 node.value = value;
               }}
             />

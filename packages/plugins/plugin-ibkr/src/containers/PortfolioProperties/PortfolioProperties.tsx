@@ -56,7 +56,11 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
     <Form.FieldSet>
       <Next.Field.Root>
         <Next.Field.Label>{t('daily-sync.label')}</Next.Field.Label>
-        <Next.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={handleToggleSync} />
+        <Next.Switch
+          checked={syncEnabled ?? false}
+          disabled={pending}
+          onCheckedChange={({ checked }) => handleToggleSync(checked)}
+        />
       </Next.Field.Root>
     </Form.FieldSet>
   );

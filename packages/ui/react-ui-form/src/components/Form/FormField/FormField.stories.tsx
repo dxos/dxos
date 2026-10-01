@@ -65,7 +65,7 @@ const DefaultStory = ({ variant, presentation, readonly }: StoryArgs) => {
           </Form.FieldSet>
           <Form.FieldSet label='Settings'>
             <Form.Field label='Notifications' description='Tell me when something changes.' labelPlacement='beside'>
-              <Next.Switch checked={notifications} onCheckedChange={setNotifications} />
+              <Next.Switch checked={notifications} onCheckedChange={({ checked }) => setNotifications(checked)} />
             </Form.Field>
             <Form.Field standalone label='Danger zone' description='There is no undo.'>
               <Next.Button>Delete everything</Next.Button>

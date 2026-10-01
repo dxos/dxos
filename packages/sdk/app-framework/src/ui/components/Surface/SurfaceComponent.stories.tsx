@@ -126,7 +126,7 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
           <Next.Toolbar.Separator />
           <Next.Field.Root>
             <Next.Field.Label classNames='pr-1'>Debug</Next.Field.Label>
-            <Next.Switch checked={debug} onCheckedChange={handleToggleDebug} />
+            <Next.Switch checked={debug} onCheckedChange={({ checked }) => handleToggleDebug(checked)} />
           </Next.Field.Root>
         </Next.Toolbar.Root>
       </Next.Panel.Header>
