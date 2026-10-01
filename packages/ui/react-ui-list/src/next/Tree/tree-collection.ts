@@ -114,12 +114,18 @@ export const createTreeWalkAtom = <T extends { id: string }>(
     return { root, rows, expanded, selected, byValue };
   });
 
+/** A row's label as typeahead matches it; a translated label needs the caller's `toString`. */
+const defaultNodeToString = (node: TreeNode) => (typeof node.props.label === 'string' ? node.props.label : node.id);
+
 /** zag's collection over a walk; never asked for the children of a closed branch. */
-export const createCollection = <T extends { id: string }>(root: TreeNode<T>) =>
+export const createCollection = <T extends { id: string }>(
+  root: TreeNode<T>,
+  nodeToString: (node: TreeNode<T>) => string = defaultNodeToString,
+) =>
   createTreeCollection<TreeNode<T>>({
     rootNode: root,
     nodeToValue: (node) => node.value,
-    nodeToString: (node) => (typeof node.props.label === 'string' ? node.props.label : node.id),
+    nodeToString,
     nodeToChildren: (node) => node.children ?? [],
     nodeToChildrenCount: (node) => node.childrenCount,
     isNodeDisabled: (node) => !!node.props.disabled,

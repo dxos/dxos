@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Spike (DESIGN.md Phase 4 decision 4): the next Tree on Ark's tree-view, fed by the existing `TreeModel`. zag owns
-// focus, the APG keymap, typeahead, expansion and selection state; this file owns the lazy walk (tree-collection.ts),
-// windowing, Next row layout and pragmatic-drag-and-drop.
+// The next Tree on Ark's tree-view, fed by `TreeModel` atoms (AUDIT §6 group D point 2). zag owns focus, the APG
+// keymap, typeahead, expansion and selection state; this file owns the lazy walk (tree-collection.ts), windowing, the
+// Next row layout and pragmatic-drag-and-drop.
 
 import { TreeView } from '@ark-ui/react/tree-view';
 import {
@@ -15,21 +15,20 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import {
+  type ElementDropTargetEventBasePayload,
   dropTargetForElements,
   draggable as makeDraggable,
   monitorForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type ComponentPropsWithoutRef,
   type CSSProperties,
   Fragment,
   type ReactNode,
-  type RefObject,
-  createContext,
   forwardRef,
   useCallback,
-  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -37,26 +36,26 @@ import React, {
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
-import { raise } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Next, type Size } from '@dxos/react-ui/next';
+import { hues } from '@dxos/ui-types';
 
 import { type TreeData, isTreeData, isTreeDataFor } from '../../components/Tree/tree-data.ts';
 import { type TreeModel } from '../../components/Tree/TreeContext.ts';
 import { type DropKind } from '../../components/Tree/TreeDropIndicator.tsx';
-import { type TreeNode, type TreeWalk, createCollection, createTreeWalkAtom } from './tree-collection.ts';
-
-/** `window` mounts only the rows in view; `css` mounts every row with `content-visibility: auto`. */
-/** Each indent guide's column, as a typed custom property rather than a cast of `style`. */
-const guideStyle = (level: number): CSSProperties & Record<'--nx-tree-guide-level', string> => ({
-  '--nx-tree-guide-level': String(level),
-});
-
-export type TreeVirtualize = 'none' | 'css' | 'window';
-
-/** A disclosure in flight: the rows under `path` fade in (`open`) or conceal before the close commits. */
-type TreeDisclosure = { value: string; path: string[]; open: boolean };
+import { type TreeNode, createCollection, createTreeWalkAtom } from './tree-collection.ts';
+import {
+  type TreeContextValue,
+  type TreeDisclosure,
+  TreeItemProvider,
+  TreeProvider,
+  type TreeVirtual,
+  useTreeContext,
+  useTreeItemContext,
+} from './TreeContext.ts';
 
 export type TreeDropEvent<T extends { id: string } = any> = {
   instruction: Instruction;
@@ -65,26 +64,8 @@ export type TreeDropEvent<T extends { id: string } = any> = {
   item: T;
 };
 
-type TreeContextValue = {
-  treeId: string;
-  walk: TreeWalk;
-  virtualize: TreeVirtualize;
-  draggable: boolean;
-  indentGuides: boolean;
-  canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
-  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
-  /** Every disclosure goes through here, so an animated close can hold its rows until they have concealed. */
-  setOpen: (node: TreeNode, open: boolean) => void;
-  disclosures: readonly TreeDisclosure[];
-  /** Set by Content when windowed; zag calls it before focusing a row it may not have mounted. */
-  scrollToIndexRef: RefObject<((index: number) => void) | null>;
-};
-
-// Behaviour only (drop policy, walk), never size or level (Next decision 3).
-const TreeContext = createContext<TreeContextValue | null>(null);
-
-const useTreeContext = (consumer: string) =>
-  useContext(TreeContext) ?? raise(new Error(`${consumer} outside Tree.Root`));
+/** The disclosure, icon, label and trailing tracks every row lays out on. */
+const DEFAULT_COLUMNS = 'var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) auto';
 
 //
 // Root
@@ -97,9 +78,17 @@ type TreeRootProps<T extends { id: string } = any> = {
   /** Prefix of every row's path, and the drag scope: trees sharing it accept each other's rows. */
   id: string;
   size?: Size;
+  /** Each row's grid template; the default is disclosure, icon, label and trailing tracks. */
+  columns?: string;
   selectionMode?: 'single' | 'multiple';
-  virtualize?: TreeVirtualize;
+  /** `fixed` windows the rows (each one block tall); `variable` skips painting rows out of view. */
+  virtual?: TreeVirtual;
   draggable?: boolean;
+  /**
+   * The native drag preview: by default a `Next.DragPreview` chip with the row's icon and label; a renderer fills the
+   * chip instead; `false` keeps the browser's snapshot of the row.
+   */
+  dragPreview?: boolean | ((item: T) => ReactNode);
   indentGuides?: boolean;
   /** Animate user-driven disclosure (never the initial or persisted open state); off under reduced motion. */
   animate?: boolean;
@@ -113,16 +102,19 @@ type TreeRootProps<T extends { id: string } = any> = {
 
 /**
  * Ark `TreeView.Root`, fully controlled from the model: `expandedValue`/`selectedValue` come from the walk, and the
- * machine's changes are reported through `onOpenChange`/`onSelect` for the model to apply.
+ * machine's changes are reported through `onOpenChange`/`onSelect` for the model to apply. Only the caret toggles a
+ * branch (`expandOnClick` is off), so a click on a row selects it.
  */
 const TreeRoot = <T extends { id: string }>({
   model,
   rootId,
   id,
   size,
+  columns = DEFAULT_COLUMNS,
   selectionMode = 'single',
-  virtualize = 'none',
+  virtual,
   draggable = false,
+  dragPreview = true,
   indentGuides = false,
   animate = true,
   canDrop,
@@ -132,9 +124,13 @@ const TreeRoot = <T extends { id: string }>({
   onDrop,
   children,
 }: TreeRootProps<T>) => {
+  const { t } = useTranslation();
   const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, [id]), [model, rootId, id]);
   const walk = useAtomValue(walkAtom);
-  const collection = useMemo(() => createCollection(walk.root), [walk.root]);
+  const collection = useMemo(
+    () => createCollection(walk.root, (node) => toLocalizedString(node.props.label, t)),
+    [walk.root, t],
+  );
   const scrollToIndexRef = useRef<((index: number) => void) | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -262,39 +258,48 @@ const TreeRoot = <T extends { id: string }>({
     });
   }, [draggable, id]);
 
-  const context = useMemo<TreeContextValue>(
-    () => ({
-      treeId: id,
-      walk,
-      virtualize,
-      draggable,
-      indentGuides,
-      canDrop,
-      getDropKind,
-      setOpen,
-      disclosures,
-      scrollToIndexRef,
-    }),
-    [id, walk, virtualize, draggable, indentGuides, canDrop, getDropKind, setOpen, disclosures],
+  const renderDragPreview = useMemo(
+    () =>
+      typeof dragPreview === 'function'
+        ? (node: TreeNode<T>) => (node.item ? dragPreview(node.item) : null)
+        : undefined,
+    [dragPreview],
   );
 
+  const style: CSSProperties & Record<'--nx-tree-columns', string> = { '--nx-tree-columns': columns };
+
   return (
-    <TreeContext.Provider value={context}>
+    <TreeProvider
+      treeId={id}
+      walk={walk}
+      virtual={virtual}
+      draggable={draggable}
+      dragPreview={dragPreview !== false}
+      renderDragPreview={renderDragPreview}
+      indentGuides={indentGuides}
+      canDrop={canDrop}
+      getDropKind={getDropKind}
+      setOpen={setOpen}
+      disclosures={disclosures}
+      scrollToIndexRef={scrollToIndexRef}
+    >
       <TreeView.Root
         collection={collection}
         expandedValue={walk.expanded}
         selectedValue={walk.selected}
         selectionMode={selectionMode}
+        expandOnClick={false}
         onExpandedChange={handleExpandedChange}
         onSelectionChange={handleSelectionChange}
-        scrollToIndexFn={virtualize === 'window' ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
+        scrollToIndexFn={virtual === 'fixed' ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
         data-size={size}
         className='nx-tree'
+        style={style}
         ref={rootRef}
       >
         {children}
       </TreeView.Root>
-    </TreeContext.Provider>
+    </TreeProvider>
   );
 };
 
@@ -357,22 +362,30 @@ const TreeContentElement = composable<HTMLDivElement, {}>(({ children, ...props 
 });
 
 type TreeContentProps = {
-  /** Renders one row; the default is `<Tree.Item node={node} />`. */
-  children?: (node: TreeNode) => ReactNode;
+  /**
+   * Renders one row (the default is `<Tree.Item node={node} />`); other children (e.g. `Tree.Empty`) render after the
+   * default rows inside the tree element.
+   */
+  children?: ReactNode | ((node: TreeNode) => ReactNode);
 };
+
+const renderDefaultRow = (node: TreeNode) => <TreeItem node={node} />;
 
 /**
  * The tree element as the viewport of a thin ScrollArea. Rows are rendered flat in visible (pre-order) order, never
  * nested in `BranchContent`: zag navigates the collection rather than the DOM, so the flat list serves both the whole
  * tree and a window of it, and `aria-level`/`aria-expanded` carry the hierarchy.
  */
-const TreeContent = ({ children: renderRow = (node) => <TreeItem node={node} /> }: TreeContentProps) => {
-  const { walk, virtualize, scrollToIndexRef } = useTreeContext('Tree.Content');
+const TreeContent = ({ children }: TreeContentProps) => {
+  const { walk, virtual, scrollToIndexRef } = useTreeContext('Tree.Content');
+  const renderRow = typeof children === 'function' ? children : renderDefaultRow;
+  const trailing = typeof children === 'function' ? null : children;
   const { rows } = walk;
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const blockRef = useRef(NOMINAL_BLOCK);
+  const warnedRef = useRef(false);
   const pendingFocusRef = useRef<string | null>(null);
-  const windowed = virtualize === 'window';
+  const windowed = virtual === 'fixed';
   const [range, setRange] = useState({ first: 0, last: windowed ? 2 * OVERSCAN : rows.length - 1 });
 
   const update = useCallback(() => {
@@ -392,10 +405,17 @@ const TreeContent = ({ children: renderRow = (node) => <TreeItem node={node} /> 
       return;
     }
     // An animating row is mid-way between zero and one block.
-    const row = viewportRef.current?.querySelector<HTMLElement>('[data-tree-row]:not([data-disclosure])');
-    const height = row?.getBoundingClientRect().height;
+    const settled = viewportRef.current?.querySelectorAll<HTMLElement>('[data-tree-row]:not([data-disclosure])');
+    const height = settled?.[0]?.getBoundingClientRect().height;
     if (height && height !== blockRef.current) {
       blockRef.current = height;
+    }
+    if (process.env.NODE_ENV !== 'production' && height && settled && !warnedRef.current) {
+      const uneven = [...settled].find((row) => Math.abs(row.getBoundingClientRect().height - height) > 0.5);
+      if (uneven) {
+        warnedRef.current = true;
+        log.warn("Tree virtual='fixed' needs rows of one height", { row: uneven.dataset.objectId });
+      }
     }
     update();
   }, [windowed, update]);
@@ -453,6 +473,7 @@ const TreeContent = ({ children: renderRow = (node) => <TreeItem node={node} /> 
           {windowed && last < rows.length - 1 && (
             <div role='none' style={{ height: (rows.length - 1 - last) * block }} />
           )}
+          {trailing}
         </TreeContentElement>
       </Next.ScrollArea.Viewport>
     </Next.ScrollArea.Root>
@@ -467,24 +488,53 @@ TreeContent.displayName = 'Tree.Content';
 
 type TreeItemProps = {
   node: TreeNode;
-  /** Replaces the default heading (icon and label) after the disclosure cell; compose from Next parts. */
+  /** Replaces the default row (`ItemIndicator`, `ItemIcon`, `ItemText`); compose from those parts and trailing controls. */
   children?: ReactNode;
 };
 
 type DragState = { instruction: Instruction | null; kind: DropKind; dragging: boolean };
 
+/** Where the drop line or ring goes (`data-drop-target`), and the level a line is drawn at. */
+const dropTarget = (instruction: Instruction | null): { target?: 'top' | 'bottom' | 'inside'; level?: number } => {
+  switch (instruction?.type) {
+    case 'reorder-above':
+      return { target: 'top', level: instruction.currentLevel };
+    case 'reorder-below':
+      return { target: 'bottom', level: instruction.currentLevel };
+    case 'reparent':
+      return { target: 'bottom', level: instruction.desiredLevel };
+    case 'make-child':
+      return { target: 'inside' };
+    default:
+      return {};
+  }
+};
+
 /**
  * A row: Ark's `BranchControl` (inside a `display: contents` `Branch`, which carries the `treeitem` role) or `Item`,
- * laid out as a Container row on its own fixed template (disclosure block, icon block, label, trailing), indented by
- * one block per level. Rows are drag sources and drop targets when the Root is `draggable`.
+ * laid out as a Container row on the Root's `columns`, indented by one block per level. Rows are drag sources and drop
+ * targets when the Root is `draggable`; the target state is `data-drop-target` (`top`, `bottom` or `inside`).
  */
 const TreeItem = ({ node, children }: TreeItemProps) => {
-  const { treeId, virtualize, draggable, indentGuides, canDrop, getDropKind, setOpen, disclosures } =
-    useTreeContext('Tree.Item');
+  const {
+    treeId,
+    virtual,
+    draggable,
+    dragPreview,
+    renderDragPreview,
+    indentGuides,
+    canDrop,
+    getDropKind,
+    setOpen,
+    disclosures,
+  } = useTreeContext('Tree.Item');
   const { t } = useTranslation();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState>({ instruction: null, kind: 'move', dragging: false });
   const { id, path, item, depth, branch, open, props } = node;
+  const canDrag = props.draggable !== false;
+  const canBeTarget = props.droppable !== false;
+  const label = toLocalizedString(props.label, t);
 
   useEffect(() => {
     const element = rowRef.current;
@@ -499,10 +549,62 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
       expandTimer = undefined;
       setDrag((state) => ({ ...state, instruction: null }));
     };
+    // pragmatic-dnd never sets `effectAllowed`, so over the source row the browser falls back to its copy cursor.
+    const handleNativeDragStart = (event: DragEvent) => {
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+      }
+    };
+    const updateTarget = ({ self, source }: ElementDropTargetEventBasePayload) => {
+      const desired = extractInstruction(self.data);
+      const kind =
+        desired && desired.type !== 'instruction-blocked' && isTreeData(source.data)
+          ? (getDropKind?.({ instruction: desired, source: source.data, target: data }) ?? 'move')
+          : 'move';
+      const instruction: Instruction | null =
+        kind === 'reject' && desired && desired.type !== 'instruction-blocked'
+          ? { type: 'instruction-blocked', desired }
+          : desired;
+      // Holding over a closed branch's centre opens it, as the current Tree does.
+      if (instruction?.type === 'make-child' && branch && !open && !expandTimer) {
+        expandTimer = setTimeout(() => setOpen(node, true), 500);
+      } else if (instruction?.type !== 'make-child') {
+        clearTimeout(expandTimer);
+        expandTimer = undefined;
+      }
+      setDrag((state) => ({ ...state, instruction, kind }));
+    };
+    element.addEventListener('dragstart', handleNativeDragStart);
     return combine(
+      () => element.removeEventListener('dragstart', handleNativeDragStart),
       makeDraggable({
         element,
+        canDrag: () => canDrag,
         getInitialData: () => data,
+        onGenerateDragPreview: dragPreview
+          ? ({ nativeSetDragImage, source }) =>
+              setCustomNativeDragPreview({
+                nativeSetDragImage,
+                getOffset: ({ container }) => ({ x: 20, y: container.getBoundingClientRect().height / 2 }),
+                render: ({ container }) => {
+                  // Filled synchronously: the browser snapshots the preview when `dragstart` returns.
+                  const root = createRoot(container);
+                  flushSync(() =>
+                    root.render(
+                      <Next.DragPreview source={source.element}>
+                        {renderDragPreview ? renderDragPreview(node) : <span className='truncate'>{label}</span>}
+                      </Next.DragPreview>,
+                    ),
+                  );
+                  // The preview's own root has no icon registry; the row's icon is already resolved, so it is copied.
+                  const icon = source.element.querySelector('.nx-tree-item-icon svg');
+                  if (!renderDragPreview && icon) {
+                    container.firstElementChild?.prepend(icon.cloneNode(true));
+                  }
+                  return () => root.unmount();
+                },
+              })
+          : undefined,
         onDragStart: () => setDrag((state) => ({ ...state, dragging: true })),
         onDrop: () => setDrag((state) => ({ ...state, dragging: false })),
       }),
@@ -518,44 +620,49 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
             block: branch ? [] : ['make-child'],
           }),
         canDrop: ({ source }) =>
+          canBeTarget &&
           source.element !== element &&
           isTreeDataFor(source.data, treeId) &&
           (canDrop?.({ source: source.data, target: data }) ?? true),
         getIsSticky: () => true,
-        onDrag: ({ self, source }) => {
-          const desired = extractInstruction(self.data);
-          const kind =
-            desired && desired.type !== 'instruction-blocked' && isTreeData(source.data)
-              ? (getDropKind?.({ instruction: desired, source: source.data, target: data }) ?? 'move')
-              : 'move';
-          const instruction: Instruction | null =
-            kind === 'reject' && desired && desired.type !== 'instruction-blocked'
-              ? { type: 'instruction-blocked', desired }
-              : desired;
-          // Holding over a closed branch's centre opens it, as the current Tree does.
-          if (instruction?.type === 'make-child' && branch && !open && !expandTimer) {
-            expandTimer = setTimeout(() => setOpen(node, true), 500);
-          } else if (instruction?.type !== 'make-child') {
-            clearTimeout(expandTimer);
-            expandTimer = undefined;
-          }
-          setDrag((state) => ({ ...state, instruction, kind }));
-        },
+        // Enter as well as drag: the first `onDrag` waits for a frame, so a quick pass would show no target.
+        onDragEnter: updateTarget,
+        onDrag: updateTarget,
         onDragLeave: clear,
         onDrop: clear,
       }),
       () => clearTimeout(expandTimer),
     );
-  }, [draggable, treeId, node, id, path, item, depth, branch, open, canDrop, getDropKind, setOpen]);
+  }, [
+    draggable,
+    dragPreview,
+    renderDragPreview,
+    treeId,
+    node,
+    id,
+    path,
+    item,
+    depth,
+    branch,
+    open,
+    label,
+    canDrag,
+    canBeTarget,
+    canDrop,
+    getDropKind,
+    setOpen,
+  ]);
 
   // A conceal outranks an enter: a row under a closing branch leaves with it.
   const under = disclosures.filter((disclosure) => isDescendant(path, disclosure.path));
   const phase = under.some(({ open }) => !open) ? 'conceal' : under.length > 0 ? 'enter' : undefined;
   const concealing = disclosures.some((disclosure) => !disclosure.open && disclosure.value === node.value);
+  const drop = dropTarget(drag.instruction);
 
   const style: CSSProperties & Record<`--${string}`, string> = {
-    '--nx-columns': 'var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) auto',
+    '--nx-columns': 'var(--nx-tree-columns)',
     '--nx-tree-depth': String(depth - 1),
+    ...(drop.level !== undefined ? { '--nx-tree-drop-level': String(drop.level - 1) } : {}),
   };
   const rowProps = {
     'data-tree-row': '',
@@ -563,9 +670,10 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
     'data-gutter': 'inherit',
     'data-layout': 'row',
     'data-columns': '',
-    'data-virtualize': virtualize === 'css' ? 'css' : undefined,
+    'data-virtual': virtual === 'variable' ? 'variable' : undefined,
     'data-dragging': drag.dragging ? '' : undefined,
-    'data-drop': drag.instruction?.type === 'make-child' ? 'inside' : undefined,
+    'data-drop-target': drop.target,
+    'data-drop-kind': drop.target ? drag.kind : undefined,
     'data-disclosure': phase,
     'data-concealing': concealing ? '' : undefined,
     'data-testid': props.testId,
@@ -573,74 +681,184 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
     'className': 'nx-grid nx-tree-item',
   };
 
-  const label = toLocalizedString(props.label, t);
   const content = (
     <>
-      <Next.Block>
-        {branch && (
-          <TreeView.BranchTrigger className='nx-tree-branch-trigger'>
-            <TreeView.BranchIndicator className='nx-tree-branch-indicator'>
-              <Next.Icon icon='ph--caret-right--regular' />
-            </TreeView.BranchIndicator>
-          </TreeView.BranchTrigger>
-        )}
-      </Next.Block>
       {children ?? (
         <>
-          <Next.Block>{props.icon && <Next.Icon icon={props.icon} />}</Next.Block>
-          <Next.Typography truncate>{label}</Next.Typography>
+          <TreeItemIndicator />
+          <TreeItemIcon />
+          <TreeItemText />
         </>
       )}
       {indentGuides &&
         Array.from({ length: depth - 1 }, (_, level) => (
           <span key={level} aria-hidden='true' className='nx-tree-indent-guide' style={guideStyle(level)} />
         ))}
-      <TreeDropLine instruction={drag.instruction} />
+      {(drop.target === 'top' || drop.target === 'bottom') && <Next.DropIndicator edge={drop.target} />}
     </>
   );
 
   return (
-    <TreeView.NodeProvider node={node} indexPath={node.indexPath}>
-      {branch ? (
-        <TreeView.Branch className='contents'>
-          <TreeView.BranchControl {...rowProps} ref={rowRef}>
+    <TreeItemProvider node={node}>
+      <TreeView.NodeProvider node={node} indexPath={node.indexPath}>
+        {branch ? (
+          <TreeView.Branch className='contents'>
+            <TreeView.BranchControl {...rowProps} ref={rowRef}>
+              {content}
+            </TreeView.BranchControl>
+          </TreeView.Branch>
+        ) : (
+          <TreeView.Item {...rowProps} ref={rowRef}>
             {content}
-          </TreeView.BranchControl>
-        </TreeView.Branch>
-      ) : (
-        <TreeView.Item {...rowProps} ref={rowRef}>
-          {content}
-        </TreeView.Item>
-      )}
-    </TreeView.NodeProvider>
+          </TreeView.Item>
+        )}
+      </TreeView.NodeProvider>
+    </TreeItemProvider>
   );
 };
 
 TreeItem.displayName = 'Tree.Item';
 
-/** Before/after lines use Next's DropIndicator; "inside" is drawn by the row itself (`data-drop='inside'`). */
-const TreeDropLine = ({ instruction }: { instruction: Instruction | null }) => {
-  switch (instruction?.type) {
-    case 'reorder-above':
-      return <Next.DropIndicator edge='top' />;
-    case 'reorder-below':
-    case 'reparent':
-      return <Next.DropIndicator edge='bottom' />;
-    default:
-      return null;
-  }
+/** Each indent guide's column, as a typed custom property rather than a cast of `style`. */
+const guideStyle = (level: number): CSSProperties & Record<'--nx-tree-guide-level', string> => ({
+  '--nx-tree-guide-level': String(level),
+});
+
+//
+// ItemIndicator
+//
+
+type TreeItemIndicatorProps = {
+  /** The caret glyph; it turns a quarter while the branch is open. */
+  icon?: string;
 };
+
+/**
+ * The disclosure cell: one block, holding the caret-only branch trigger on a branch and nothing on a leaf, so labels
+ * align at every level. Only the caret toggles; a click elsewhere on the row selects it.
+ */
+const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
+  const { node } = useTreeItemContext('Tree.ItemIndicator');
+  return (
+    <Next.Block>
+      {node.branch && (
+        <TreeView.BranchTrigger className='nx-tree-branch-trigger'>
+          <TreeView.BranchIndicator className='nx-tree-branch-indicator'>
+            <Next.Icon icon={icon} />
+          </TreeView.BranchIndicator>
+        </TreeView.BranchTrigger>
+      )}
+    </Next.Block>
+  );
+};
+
+TreeItemIndicator.displayName = 'Tree.ItemIndicator';
+
+//
+// ItemIcon
+//
+
+type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Next.Icon>>;
+
+const ICON_HUES: readonly string[] = ['neutral', 'success', 'info', 'warning', 'error', ...hues];
+
+/** Narrows the model's free-form `iconHue` to a hue the Icon can draw. */
+const isIconHue = (value: string | undefined): value is Next.IconHue => !!value && ICON_HUES.includes(value);
+
+/**
+ * The icon cell: one block holding the row's icon (`itemProps.icon`, hued by `itemProps.iconHue`). Forwards Icon's
+ * props, so `icon` and `hue` override the model's; the cell stays empty without an icon, keeping labels aligned.
+ */
+const TreeItemIcon = ({ icon, hue, ...props }: TreeItemIconProps) => {
+  const { node } = useTreeItemContext('Tree.ItemIcon');
+  const glyph = icon ?? node.props.icon;
+  const iconHue = node.props.iconHue;
+  return (
+    <Next.Block classNames='nx-tree-item-icon'>
+      {glyph && <Next.Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />}
+    </Next.Block>
+  );
+};
+
+TreeItemIcon.displayName = 'Tree.ItemIcon';
+
+//
+// ItemText
+//
+
+type TreeItemTextProps = {
+  /** Replaces the model's label. */
+  children?: ReactNode;
+};
+
+/** The row's label (`itemProps.label`, translated), truncated to one line. */
+const TreeItemText = ({ children }: TreeItemTextProps) => {
+  const { node } = useTreeItemContext('Tree.ItemText');
+  const { t } = useTranslation();
+  return (
+    <Next.Typography truncate classNames='nx-tree-item-text'>
+      {children ?? toLocalizedString(node.props.label, t)}
+    </Next.Typography>
+  );
+};
+
+TreeItemText.displayName = 'Tree.ItemText';
+
+//
+// Empty
+//
+
+type TreeEmptyProps = {
+  icon?: string;
+  children: ReactNode;
+};
+
+/**
+ * Shown in place of rows when the root has no children; renders nothing otherwise. Moves onto `Next.Empty` (AUDIT
+ * group A point 41) when that lands.
+ */
+const TreeEmpty = ({ icon, children }: TreeEmptyProps) => {
+  const { walk } = useTreeContext('Tree.Empty');
+  if (walk.rows.length > 0) {
+    return null;
+  }
+  return (
+    <div role='status' data-scope='tree-view' data-part='empty' className='nx-tree-empty'>
+      {icon && <Next.Icon icon={icon} />}
+      <Next.Typography>{children}</Next.Typography>
+    </div>
+  );
+};
+
+TreeEmpty.displayName = 'Tree.Empty';
 
 //
 // Namespace
 //
 
-/** Private spike namespace; not exported from `@dxos/react-ui-list/next`. */
+/**
+ * Hierarchical list on Ark's tree-view, driven by `TreeModel` atoms, with Ark's part names on the Next row vocabulary:
+ * `Root` (model, `virtual`, `animate`, drag and drop), `Label`, `Content` (the scrolling tree element; a row renderer as
+ * children), `Item` (one row), `ItemIndicator` (caret), `ItemIcon`, `ItemText` and `Empty`.
+ */
 export const Tree = {
   Root: TreeRoot,
   Label: TreeLabel,
   Content: TreeContent,
   Item: TreeItem,
+  ItemIndicator: TreeItemIndicator,
+  ItemIcon: TreeItemIcon,
+  ItemText: TreeItemText,
+  Empty: TreeEmpty,
 };
 
-export type { TreeContentProps, TreeItemProps, TreeLabelProps, TreeRootProps };
+export type {
+  TreeContentProps,
+  TreeEmptyProps,
+  TreeItemIconProps,
+  TreeItemIndicatorProps,
+  TreeItemProps,
+  TreeItemTextProps,
+  TreeLabelProps,
+  TreeRootProps,
+};
