@@ -8,6 +8,15 @@
   :root {
     --nx-focus-ring-color: var(--color-focus, oklch(70.5% 0.213 47.604));
     --nx-focus-ring-width: 2px;
+    /* One timing for every open/close: content arriving decelerates, content leaving accelerates away. */
+    --nx-disclosure-duration: var(--duration-tree-disclosure, 200ms);
+    --nx-disclosure-ease-open: ease-out;
+    --nx-disclosure-ease-close: ease-in;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --nx-disclosure-duration: 0ms;
+    }
   }
   .nx-focus-ring:focus {
     outline: none;

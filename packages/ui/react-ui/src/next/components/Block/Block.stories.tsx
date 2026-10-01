@@ -15,15 +15,23 @@ import { GEOMETRY, byTestId, centreY, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
-  <Next.Container gutter='rail' layout='row' data-testid={`row-${size}`}>
-    <Next.Block rail='start' data-testid={`start-${size}`}>
-      <Next.Icon icon='ph--circle--regular' />
-    </Next.Block>
-    <Next.Typography>Block</Next.Typography>
-    <Next.Block rail='end' data-testid={`end-${size}`}>
-      <Next.Icon icon='ph--dots-three--regular' />
-    </Next.Block>
-  </Next.Container>
+  <>
+    <Next.Container gutter='rail' layout='row' data-testid={`row-${size}`}>
+      <Next.Block rail='start' data-testid={`start-${size}`}>
+        <Next.Icon icon='ph--circle--regular' />
+      </Next.Block>
+      <Next.Typography>Block</Next.Typography>
+      <Next.Block rail='end' data-testid={`end-${size}`}>
+        <Next.Icon icon='ph--dots-three--regular' />
+      </Next.Block>
+    </Next.Container>
+    <Next.Container gutter='rail' layout='row'>
+      <Next.Block rail='start' compact data-testid={`compact-${size}`}>
+        <Next.Icon icon='ph--star--regular' />
+      </Next.Block>
+      <Next.Typography>Compact</Next.Typography>
+    </Next.Container>
+  </>
 );
 
 const meta = {
@@ -41,7 +49,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** A Block is a block-sized square that centres its icon; rail Blocks fill their row's gutters. */
+/** A Block is a block-sized square that centres its icon; rail Blocks fill their row's gutters; a compact one is only icon-tall. */
 export const Test: Story = {
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
@@ -58,6 +66,11 @@ export const Test: Story = {
       await expect(row.height, `row-${size} height`).toBeCloseTo(block, 0);
       await expect(rect.left, `start-${size} left`).toBeCloseTo(row.left, 0);
       await expect(byTestId(canvasElement, `end-${size}`).getBoundingClientRect().right).toBeCloseTo(row.right, 0);
+      const compact = byTestId(canvasElement, `compact-${size}`).getBoundingClientRect();
+      const compactIcon = byTestId(canvasElement, `compact-${size}`).querySelector('svg')?.getBoundingClientRect();
+      await expect(compact.width, `compact-${size} width`).toBeCloseTo(block, 0);
+      await expect(compact.height, `compact-${size} height`).toBeCloseTo(compactIcon?.height ?? 0, 0);
+      await expect(compact.height).toBeLessThan(block);
     }
     await expectScoped(canvasElement);
   },

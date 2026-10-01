@@ -388,18 +388,29 @@ type Story = StoryObj<typeof meta>;
 
 export const Listbox: Story = {};
 
-export const Tabs: Story = { render: TabsStory };
+export const Tabs: Story = {
+  render: TabsStory,
+};
 
 /** A draggable seam between list and detail. */
-export const Resizable: Story = { args: { resizable: true } };
+export const Resizable: Story = {
+  args: { resizable: true },
+};
 
 /** No seam: the list pane holds `size`. */
-export const Fixed: Story = { args: { resizable: false, size: 20 } };
+export const Fixed: Story = {
+  args: { resizable: false, size: 20 },
+};
 
 /** Narrow from the start: one pane at a time. */
-export const Narrow: Story = { args: { width: 24 } };
+export const Narrow: Story = {
+  args: { width: 24 },
+};
 
-export const Nested: Story = { render: NestedStory, args: { width: 60, size: 14, collapseBelow: '36rem' } };
+export const Nested: Story = {
+  render: NestedStory,
+  args: { width: 60, size: 14, collapseBelow: '36rem' },
+};
 
 const isShown = (element: HTMLElement) => element.getBoundingClientRect().width > 1;
 

@@ -40,6 +40,8 @@ export type ButtonVariantProps = {
   align?: 'center' | 'start';
   /** Spins the leading icon, as a busy indicator. */
   spin?: boolean;
+  /** Sizes just this button (`data-size` scopes `theme/size.css`'s metrics to it), whatever its enclosing scope. */
+  size?: Size;
   /** The icons at this size's scale instead of the button's. */
   iconSize?: Size;
 };
@@ -88,6 +90,7 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
       caretDown,
       align,
       spin,
+      size,
       iconSize,
       id,
       onFocus,
@@ -120,6 +123,7 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         data-scope='button'
         data-part='root'
         data-square={iconOnly ? '' : undefined}
+        data-size={size}
         data-variant={variant}
         data-valence={variant === 'valence' ? valence : undefined}
         data-hue={hue}

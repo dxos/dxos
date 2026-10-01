@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase A4 ports done (all but master-detail Tabs); next is `react-ui-form/next`. Uncommitted: none._
+_Resume: Phase A4 ports done; master-detail decided (composed); next is `react-ui-form/next`. Uncommitted: none._
 
 ## Phase 0: Design
 
@@ -123,7 +123,11 @@ parts are listed there for the codemods.
 - [x] **Single-file components** — AttentionGlyph, Breadcrumb, Deferred, Editable (`Next.useEditable`), FloatingPanel, HoverCard, Link, MenuButton, Skeleton, Slider, Steps, TextCrawl, Timestamp, Tour; Ark where Ark has one. — a `Test` story each; Deferred keeps its node test.
 - [ ] **Move shared helpers** — `media-kind.ts` and `parse-stack.ts` are imported from the current tree; move them into `next/` before the cut-over deletes it.
 - [ ] **Translate hard-coded strings** — ErrorFallback ("Runtime Error", "Stack", "Data") and Steps ("Step N").
-- [ ] **Master-detail Tabs** — `Tabs.Viewport`/`BackButton`/`activePart` (3 callers) not ported; decide whether it is a Tabs mode or a separate layout.
+- [x] **Master-detail** — not a component: Root context selection + `Next.Splitter` (`collapseBelow`, `mode`, static divider); `Splitter/MasterDetail.stories.tsx` approved (AUDIT.md §6 follow-ups).
+- [x] **Button `size`** — `data-size` on the button alone (Toggle, `ToggleGroup.Item` too); Button `Sizes` story.
+- [ ] **Cut-over removals** — delete react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton`; ChatOptions, Welcome and VideoArticle compose Tabs + Splitter.
+- [ ] **Ref array presentation** — `ArrayPresentation({ ordered, display: 'tag' | 'title' })` annotation; Tag refs default to `'tag'`; `ordered` adds drag reorder (milestone 8/9).
+- [ ] **`density` codemod** — scope-aware: drop where the enclosing scope yields it, hoist shared sizes, else Button `size`; report cross-file scopes.
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
 
@@ -173,4 +177,5 @@ the classNames research and the react-ui-menu/next binding asked for.
 - [x] **className props** — Container/Panel.Root `width='document'`; Typography `lines`, `mono`, `tone='subdued'`; Card.Title on Typography; Icon `tone`, `spin`, `size`; Button `align='start'`.
 - [x] **Menu/Toolbar gaps** — Button `spin` and `iconSize`; `Toolbar.Separator variant='gap'`; Switch in the toolbar's roving focus; `Menu.TriggerItem disabled`; `virtualAnchor`/`useVirtualAnchor`.
 - [x] **Menu item icon size** — `Menu.ItemIcon size` (Icon's); the binding maps `iconSize` onto it.
+- [x] **Codemod gaps** — `Card.Action system='close'|'delete'` renders that `SystemButton` preset (its icon and translated label, `label` optional), rather than a second label table; `Block compact` keeps the block width and drops the fixed height (`data-compact`, DESIGN.md follow-up 39).
 - [ ] **`dx-avatar` backdrop** — the shared sampler is ready; the avatar does not use it yet.
