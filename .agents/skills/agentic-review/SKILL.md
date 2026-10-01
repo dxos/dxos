@@ -230,7 +230,7 @@ Every PR is expected to carry a review of its own change. The author or agent ru
 only checks the committed store, so CI needs no API key and spends nothing.
 
 ```sh
-bun .agents/skills/agentic-review/scripts/fast.ts            # needs TYPESAFE_API_KEY (`op`, see 1password skill)
+bun .agents/skills/agentic-review/scripts/fast.ts            # needs TYPESAFE_API_KEY (see 1password skill)
 bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
 ```
 

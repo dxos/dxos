@@ -16,6 +16,7 @@ import {
   CollectionSynchronizer,
   diffCollectionState,
   diffCollectionStateForPeer,
+  isCollectionStateEqual,
   subsetRemoteToLocal,
   withoutEmptyHeads,
 } from './collection-synchronizer.ts';
@@ -250,6 +251,14 @@ describe('CollectionSynchronizer', () => {
     });
   });
 
+  test('states whose head lists repeat a head are not equal to states with a different head', ({ expect }) => {
+    const state = (heads: string[]): CollectionState => ({ documents: { a: heads } as Record<DocumentId, A.Heads> });
+    expect(isCollectionStateEqual(state(['h1', 'h2']), state(['h2', 'h1']))).toBe(true);
+    expect(isCollectionStateEqual(state(['h1', 'h2']), state(['h1', 'h1']))).toBe(false);
+    // Heads compare as sets, so repeating one is not a difference.
+    expect(isCollectionStateEqual(state(['h1']), state(['h1', 'h1']))).toBe(true);
+  });
+
   test('edge peer diff intersects remote with local key set', ({ expect }) => {
     // Edge ships every sedimentree it knows about (orphans + stale roots).
     // The client-side diff must hide those from `missingOnLocal` and only
@@ -370,6 +379,93 @@ describe('CollectionSynchronizer', () => {
       expect(diff.different).toEqual([]);
       expect(diff.missingOnLocal).toEqual([]);
       expect(diff.missingOnRemote).toEqual([]);
+    });
+
+    test('a superset that shares a head is different when another remote head is missing locally', ({ expect }) => {
+      const [staleTip] = localHeads;
+      const [newerCommit] = TEST_HEADS[1];
+      const local = { documents: { [documentId]: [staleTip] } as Record<DocumentId, A.Heads> };
+      const remote = { documents: { [documentId]: [staleTip, newerCommit] } as Record<DocumentId, A.Heads> };
+
+      const lacksNewer = (_documentId: DocumentId, head: string) => head !== newerCommit;
+      expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: lacksNewer }).different).toEqual([
+        documentId,
+      ]);
+
+      // An ancestor the local document holds is not missing.
+      const holdsAll = () => true;
+      expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: holdsAll }).different).toEqual([]);
+    });
+
+    test('an unchanged remote state is re-diffed while it advertises a missing change', async ({ expect }) => {
+      const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
+      const collectionId = 'collection-test';
+      const [staleTip] = localHeads;
+      const [newerCommit] = TEST_HEADS[1];
+
+      const peer = await new CollectionSynchronizer({
+        queryCollectionState: () => {},
+        sendCollectionState: () => {},
+        shouldSyncCollection: () => true,
+        hasLocalChange: (_documentId, head) => head !== newerCommit,
+      }).open();
+      onTestFinished(async () => {
+        await peer.close();
+      });
+
+      const updates: PeerId[] = [];
+      peer.peerCollectionStateUpdated.on(({ peerId }) => {
+        updates.push(peerId);
+      });
+      peer.onConnectionOpen(edgePeerId);
+      peer.setLocalCollectionState(collectionId, {
+        documents: { [documentId]: [staleTip] } as Record<DocumentId, A.Heads>,
+      });
+      await Promise.resolve();
+      updates.length = 0;
+
+      // Each repeat must reach `_handleCollectionSync`, or the replication retry never runs.
+      const remote = { documents: { [documentId]: [staleTip, newerCommit] } as Record<DocumentId, A.Heads> };
+      for (const _pass of range(3)) {
+        peer.onRemoteStateReceived(collectionId, edgePeerId, structuredClone(remote));
+      }
+      expect(updates).toEqual([edgePeerId, edgePeerId, edgePeerId]);
+    });
+
+    // An overlap-based dedupe would drop the new head and never record the new state.
+    test('a remote state that adds a head beside a shared one is not deduped', async ({ expect }) => {
+      const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
+      const collectionId = 'collection-test';
+      const [shared] = localHeads;
+      const [ancestor] = TEST_HEADS[2];
+      const [added] = TEST_HEADS[1];
+
+      const peer = await new CollectionSynchronizer({
+        queryCollectionState: () => {},
+        sendCollectionState: () => {},
+        shouldSyncCollection: () => true,
+        hasLocalChange: (_documentId, head) => head === ancestor,
+      }).open();
+      onTestFinished(async () => {
+        await peer.close();
+      });
+      peer.onConnectionOpen(edgePeerId);
+      peer.setLocalCollectionState(collectionId, {
+        documents: { [documentId]: [shared] } as Record<DocumentId, A.Heads>,
+      });
+      await Promise.resolve();
+
+      peer.onRemoteStateReceived(collectionId, edgePeerId, {
+        documents: { [documentId]: [shared, ancestor] } as Record<DocumentId, A.Heads>,
+      });
+      peer.onRemoteStateReceived(collectionId, edgePeerId, {
+        documents: { [documentId]: [shared, added] } as Record<DocumentId, A.Heads>,
+      });
+
+      expect(peer.getRemoteCollectionStates(collectionId).get(edgePeerId)?.documents[documentId]).toEqual([
+        shared,
+        added,
+      ]);
     });
 
     test('a disjoint head set is different, and stays different when re-diffed', ({ expect }) => {
