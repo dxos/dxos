@@ -31,7 +31,7 @@ export const MediaArtifactCard = ({ subject }: MediaArtifactCardProps) => {
         // A video cover shows its first frame; `Card.Poster` renders images only.
         <video src={src} muted playsInline preload='metadata' className='block w-full aspect-video object-cover' />
       ) : (
-        <Next.Card.Poster alt={label} image={src} icon={src ? undefined : 'ph--image--regular'} fit='cover' />
+        <Next.Card.Poster alt={label} src={src} icon={src ? undefined : 'ph--image--regular'} fit='cover' />
       )}
     </Next.Card.Body>
   );

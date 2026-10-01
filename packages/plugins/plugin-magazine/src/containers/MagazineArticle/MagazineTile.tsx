@@ -46,7 +46,7 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (
-          <Next.Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Next.Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Next.Card.Header>
           <Next.Block>

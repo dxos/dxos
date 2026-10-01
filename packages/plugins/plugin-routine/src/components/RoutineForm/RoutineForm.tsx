@@ -308,7 +308,7 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
   return (
     // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
     // other non-kind value so it can't fall through and overwrite the current action.
-    <Next.ToggleGroup
+    <Next.ToggleGroup.Root
       type='single'
       value={value}
       onValueChange={(next) => {
@@ -319,7 +319,7 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
     >
       <Next.ToggleGroup.Item value='instructions'>{t('action-kind.instructions.label')}</Next.ToggleGroup.Item>
       <Next.ToggleGroup.Item value='runnable'>{t('action-kind.operation.label')}</Next.ToggleGroup.Item>
-    </Next.ToggleGroup>
+    </Next.ToggleGroup.Root>
   );
 };
 

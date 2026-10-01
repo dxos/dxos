@@ -13,7 +13,7 @@ export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organiz
 
   return (
     <Next.Card.Body>
-      {image && <Next.Card.Poster alt={name ?? ''} image={image} />}
+      {image && <Next.Card.Poster alt={name ?? ''} src={image} />}
       {description && (
         <Next.Card.Row>
           <Next.Card.Text variant='description'>{description}</Next.Card.Text>

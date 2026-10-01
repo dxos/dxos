@@ -31,7 +31,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
   }
 
   return (
-    <Next.ToggleGroup
+    <Next.ToggleGroup.Root
       type='multiple'
       aria-label={t('type-filter.label')}
       // Gapped, so each type reads as its own control rather than one segmented bar; grouped
@@ -53,7 +53,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
           onClick={() => onToggle(typename)}
         />
       ))}
-    </Next.ToggleGroup>
+    </Next.ToggleGroup.Root>
   );
 };
 

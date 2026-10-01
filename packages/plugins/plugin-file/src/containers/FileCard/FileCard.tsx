@@ -37,7 +37,7 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
       {type.startsWith('image/') ? (
         <Next.Card.Poster
           alt={file.name ?? ''}
-          image={url}
+          src={url}
           fit={fit}
           onClick={() => setFit(fit === 'contain' ? 'cover' : 'contain')}
         />

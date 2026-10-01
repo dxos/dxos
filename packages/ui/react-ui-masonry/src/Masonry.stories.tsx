@@ -93,7 +93,7 @@ const StoryItem = ({ data: person }: { data: PersonData }) => {
       <Next.Card.Header>
         <Next.Card.Title>{fullName}</Next.Card.Title>
       </Next.Card.Header>
-      {image && <Next.Card.Poster alt={fullName ?? ''} image={image} />}
+      {image && <Next.Card.Poster alt={fullName ?? ''} src={image} />}
       {role && (
         <Next.Card.Row classNames='px-2'>
           <Next.Card.Text variant='description'>{role}</Next.Card.Text>

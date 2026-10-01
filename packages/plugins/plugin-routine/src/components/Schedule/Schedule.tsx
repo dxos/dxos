@@ -260,7 +260,7 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
   );
 
   return (
-    <Next.ToggleGroup
+    <Next.ToggleGroup.Root
       classNames='overflow-x-auto scrollbar-none'
       type='single'
       value={value.kind}
@@ -271,7 +271,7 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
           {t(KIND_LABEL_KEYS[kind])}
         </Next.ToggleGroup.Item>
       ))}
-    </Next.ToggleGroup>
+    </Next.ToggleGroup.Root>
   );
 });
 

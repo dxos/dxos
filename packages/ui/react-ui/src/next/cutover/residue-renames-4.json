@@ -1,85 +1,30 @@
 {
-  "generated": "2026-10-01T15:20:21.249Z",
+  "generated": "2026-10-01T15:24:28.237Z",
   "paths": ["packages"],
   "changed": [
-    "packages/apps/composer-app/src/components/ResetDialog/ResetDialog.tsx",
-    "packages/devtools/devtools/src/components/StatCard/StatCard.tsx",
-    "packages/devtools/devtools/src/containers/panels/client/StorageArticle/StorageArticle.tsx",
-    "packages/devtools/devtools/src/containers/panels/echo/SpaceListArticle/DialogRestoreSpace.tsx",
-    "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
-    "packages/plugins/plugin-assistant/src/containers/QuestionSurface/QuestionSurface.tsx",
-    "packages/plugins/plugin-assistant/src/containers/TriggerStatus/TriggerStatus.tsx",
-    "packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx",
-    "packages/plugins/plugin-chess-com/src/containers/ChessGameArticle/ChessGameArticle.tsx",
+    "packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.tsx",
     "packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx",
-    "packages/plugins/plugin-debug/src/containers/DebugPanelStatus/DebugPanelStatus.tsx",
-    "packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx",
-    "packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx",
-    "packages/plugins/plugin-github/src/components/PullRequestOverview/RelatedCards.tsx",
-    "packages/plugins/plugin-inbox/src/components/ConversationStack/ConversationStack.tsx",
-    "packages/plugins/plugin-inbox/src/components/Event/EventDetails.tsx",
-    "packages/plugins/plugin-iroh-beacon/src/components/BeaconStatusIndicator.tsx",
-    "packages/plugins/plugin-kanban/src/components/KanbanBoard/KanbanCard.tsx",
-    "packages/plugins/plugin-kanban/src/testing/KanbanCardTileSimple.tsx",
-    "packages/plugins/plugin-magazine/src/components/PostStack/PostStack.tsx",
+    "packages/plugins/plugin-file/src/containers/FileCard/FileCard.tsx",
+    "packages/plugins/plugin-library/src/containers/BookCard/BookCard.tsx",
     "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx",
-    "packages/plugins/plugin-mobile/src/components/Home/Home.tsx",
-    "packages/plugins/plugin-mobile/src/components/NavBranch/NavBranch.tsx",
-    "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
-    "packages/plugins/plugin-pipeline/src/components/PipelineComponent/PipelineColumn.tsx",
-    "packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.tsx",
-    "packages/plugins/plugin-registry/src/components/RegistrySettings/RegistrySettings.tsx",
-    "packages/plugins/plugin-search/src/components/SearchResultStack/SearchResultStack.tsx",
-    "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
-    "packages/plugins/plugin-space/src/components/ObjectCard/ObjectCard.tsx",
-    "packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx",
-    "packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.tsx",
-    "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
-    "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
-    "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
-    "packages/sdk/app-framework/src/ui/components/NamePopover/NamePopover.tsx",
-    "packages/sdk/app-toolkit/src/ui/components/AttentionSigil.tsx",
-    "packages/sdk/app-toolkit/src/ui/components/SettingsScope.tsx",
-    "packages/sdk/shell/src/composites/IdentityDialog/IdentityDialog.tsx",
-    "packages/sdk/shell/src/composites/JoinDialog/JoinDialog.tsx",
-    "packages/sdk/shell/src/composites/SpaceDialog/SpaceDialog.tsx",
-    "packages/ui/react-ui-board/src/components/Board/BoardCell.tsx",
-    "packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx",
-    "packages/ui/react-ui-canvas/src/components/Toolbar/Toolbar.tsx",
-    "packages/ui/react-ui-card/src/components/Row/Row.stories.tsx",
-    "packages/ui/react-ui-card/src/components/Row/Row.tsx",
-    "packages/ui/react-ui-chat/src/components/ChatDialog/ChatDialog.tsx",
-    "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
-    "packages/ui/react-ui-editor/src/components/EditorPreviewProvider/EditorPreviewProvider.tsx",
-    "packages/ui/react-ui-feed/src/components/Outline/Outline.tsx",
-    "packages/ui/react-ui-graph/src/components/Graph/Graph.stories.tsx",
-    "packages/ui/react-ui-grid/src/Grid/Grid.stories.tsx",
-    "packages/ui/react-ui-list/src/components/Combobox/Combobox.tsx",
-    "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
-    "packages/ui/react-ui-mosaic/src/components/Board/Item.tsx",
-    "packages/ui/react-ui-mosaic/src/testing/DefaultStackTile.tsx",
-    "packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx",
-    "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
-    "packages/ui/react-ui-table/src/components/Table/ColumnActionsMenu.tsx",
-    "packages/ui/react-ui-table/src/components/Table/RowActionsMenu.tsx",
-    "packages/ui/react-ui-table/src/components/TableCellEditor/FormCellEditor.tsx",
-    "packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx"
+    "packages/plugins/plugin-magazine/src/containers/PostCard/PostCard.tsx",
+    "packages/plugins/plugin-preview/src/cards/OrganizationCard.tsx",
+    "packages/plugins/plugin-preview/src/cards/ProjectCard.tsx",
+    "packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx",
+    "packages/plugins/plugin-routine/src/components/Schedule/Schedule.tsx",
+    "packages/plugins/plugin-space/src/components/RelatedTypeFilter/RelatedTypeFilter.tsx",
+    "packages/plugins/plugin-studio/src/components/MediaArtifactCard/MediaArtifactCard.tsx",
+    "packages/ui/react-ui-masonry/src/Masonry.stories.tsx"
   ],
   "transforms": [
     {
       "transform": "renames",
       "filesScanned": 12386,
-      "filesChanged": 62,
+      "filesChanged": 13,
       "rules": {
-        "Menu.Content placement → Menu.Root positioning": 6,
-        "Popover.Root onOpenChange(open) → ({ open })": 12,
-        "Block end → rail='end'": 21,
-        "Dialog.Root onOpenChange(open) → ({ open })": 5,
-        "Popover.Content placement → Popover.Root positioning": 9,
-        "AlertDialog.Root onOpenChange(open) → ({ open })": 4,
-        "FloatingPanel.Root onOpenChange(open) → ({ open })": 1,
-        "Collapsible.Root onOpenChange(open) → ({ open })": 1,
-        "Menu.Root onOpenChange(open) → ({ open })": 9
+        "Card.Poster image → src": 10,
+        "Card.Poster aspect → aspectRatio": 2,
+        "ToggleGroup → ToggleGroup.Root": 3
       },
       "residue": [
         {
@@ -453,7 +398,7 @@
         {
           "transform": "renames",
           "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
-          "line": 838,
+          "line": 832,
           "column": 15,
           "reason": "Menu.Item takes item data: its Icon carries props other than icon; compose ItemIcon by hand",
           "snippet": "<Next.Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>"
@@ -673,6 +618,14 @@
           "column": 13,
           "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
           "snippet": "<Next.Menu.Item onClick={() => onDelete(id)} data-testid='section.remove'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-studio/src/components/MediaArtifactCard/MediaArtifactCard.tsx",
+          "line": 34,
+          "column": 51,
+          "reason": "Card.Poster icon has no Next part: render an Image fallback or an Icon in a Block by hand",
+          "snippet": "icon={src ? undefined : 'ph--image--regular'}"
         },
         {
           "transform": "renames",
@@ -1069,7 +1022,7 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
-          "line": 184,
+          "line": 189,
           "column": 7,
           "reason": "Popover.Content align → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
           "snippet": "<Next.Popover.Content align='start' classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']} style={..."
@@ -1196,14 +1149,6 @@
         },
         {
           "transform": "renames",
-          "file": "packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx",
-          "line": 129,
-          "column": 9,
-          "reason": "Popover.Content side/sideOffset/collisionPadding → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
-          "snippet": "<Next.Popover.Content side='right' sideOffset={isMd ? 0 : -310} collisionPadding={8} onKeyDownCapture={(event) => { i..."
-        },
-        {
-          "transform": "renames",
           "file": "packages/ui/react-ui-pickers/src/components/IconPicker/IconPicker.tsx",
           "line": 40,
           "column": 52,
@@ -1213,7 +1158,7 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
-          "line": 58,
+          "line": 65,
           "column": 95,
           "reason": "size {iconSize} is computed; map it to xs–xl by hand",
           "snippet": "size={iconSize}"
@@ -1221,23 +1166,7 @@
         {
           "transform": "renames",
           "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
-          "line": 66,
-          "column": 13,
-          "reason": "Menu.CheckboxItem takes item data: its label is not one text or expression; compose the row by hand",
-          "snippet": "<Next.Menu.CheckboxItem key={_value} checked={_value === value} onCheckedChange={() => setValue(_value)} classNames={..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
-          "line": 77,
-          "column": 11,
-          "reason": "Menu.CheckboxItem takes item data: its label is not one text or expression; compose the row by hand",
-          "snippet": "<Next.Menu.CheckboxItem onCheckedChange={() => onReset()} classNames={'p-1 items-center justify-center aspect-square'} >"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
-          "line": 81,
+          "line": 89,
           "column": 46,
           "reason": "size {iconSize} is computed; map it to xs–xl by hand",
           "snippet": "size={iconSize}"

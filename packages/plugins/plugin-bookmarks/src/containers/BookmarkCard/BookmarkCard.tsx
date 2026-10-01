@@ -26,7 +26,7 @@ export const BookmarkCard = ({ subject }: BookmarkCardProps) => {
   return (
     <Next.Card.Body>
       {bookmark.image && imageLoads && (
-        <Next.Card.Poster alt={bookmark.title} image={bookmark.image} fit='cover' classNames='rounded-t-xs' />
+        <Next.Card.Poster alt={bookmark.title} src={bookmark.image} fit='cover' classNames='rounded-t-xs' />
       )}
       <Next.Card.Row>
         <Next.Card.Title lines={2}>{bookmark.title}</Next.Card.Title>

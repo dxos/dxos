@@ -14,7 +14,7 @@ export const ProjectCard = ({ subject }: AppSurface.ObjectCardProps<Pipeline.Pip
 
   return (
     <Next.Card.Body>
-      {image && <Next.Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
+      {image && <Next.Card.Poster src={image} alt={Obj.getLabel(subject) ?? ''} aspectRatio='auto' />}
       {/* <CardHeader label={name} subject={subject} db={db} /> */}
       {description && (
         <Next.Card.Row>

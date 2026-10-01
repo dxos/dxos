@@ -56,7 +56,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
         {imageUrl && (
           <Next.Card.Poster
             alt={result.title ?? t('product.label')}
-            image={imageUrl}
+            src={imageUrl}
             fit='cover'
             classNames='rounded-t-xs'
           />

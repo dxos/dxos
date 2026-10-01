@@ -44,7 +44,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
 
   return (
     <Next.Card.Body>
-      {imageUrl && <Next.Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
+      {imageUrl && <Next.Card.Poster alt={post.title ?? ''} src={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
         <Next.Card.Row>
           <Next.Card.Title lines={2}>{post.title}</Next.Card.Title>

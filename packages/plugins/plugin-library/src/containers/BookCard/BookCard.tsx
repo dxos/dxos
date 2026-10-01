@@ -22,7 +22,7 @@ export const BookCard = ({ subject }: AppSurface.ObjectCardProps<Book.Book>) => 
 
   return (
     <Next.Card.Body>
-      {cover && <Next.Card.Poster image={cover} alt={catalog?.title ?? ''} aspect='auto' fit='contain' />}
+      {cover && <Next.Card.Poster src={cover} alt={catalog?.title ?? ''} aspectRatio='auto' fit='contain' />}
       {authors.length > 0 && (
         <Next.Card.Row>
           <Next.Card.Text variant='description' truncate>
