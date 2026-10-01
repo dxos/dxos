@@ -733,7 +733,9 @@ Reviewed one question at a time; decisions supersede the recommendations above.
   declares `columns` once on its Root and rows inherit them as a subgrid.
 - **Point 19, keyboard grammar:** the ARIA grid pattern. → enters a row, Tab moves within it, Escape or ← returns;
   row controls stay out of the tab order until the row is entered; DragHandle keeps Alt+↑/↓.
-- **Point 16, DetailItem layout:** deferred.
+- **Point 16, DetailItem layout:** no `DetailItem`. `Item` takes `collapsible`, `open`, `defaultOpen` and
+  `onOpenChange`; with any of them its root is a Collapsible holding the one-line row (caret added to the trailing
+  column) and an `OrderedList.Detail` part below at full width. Plain rows run no Collapsible machine.
 - **Point 17, drop target:** `useReorder` sets `data-drop-target='top' | 'bottom'` on the row; the `:has()` rule stays
   as the fallback for custom hosts.
 - **Point 18, disclosure title:** the trigger draws only the caret, a square button in the trailing action column
@@ -772,7 +774,10 @@ Reviewed one question at a time; decisions supersede the recommendations above.
   utility (also used by `dx-avatar`) and falls back to the surface colour without CORS. The migration PR sets it
   wherever the current Image's letterbox fill shows.
 
-**Still open:** Q9 (parked), spike 46 (subgrid in a one-track cell), point 16 (DetailItem layout).
+- **Spike 46, subgrid in a one-track cell:** every cell of a `row` Container provides its own rails across its
+  track, so `gutter='inherit'` works anywhere; a group in a side-by-side cell aligns within its own column.
+
+No open questions remain.
 
 ### Milestone status
 
