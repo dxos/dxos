@@ -13,15 +13,14 @@ import { callTool } from '@dxos/ai';
 import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFromTool } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
 import type { ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
 import { makeEvalToolkit } from './eval-tool.ts';
-import { describeFields } from './fields.ts';
+import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -189,27 +188,9 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
  * invites the model to introspect a schema for the shape it needs, and that costs turns it should
  * be spending on the task.
  */
-const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.gen(function* () {
-  const { db } = yield* Database.Service;
-  return db.registry
-    .list()
-    .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
-    .flatMap((type) => {
-      const typename = Type.getTypename(type) ?? '';
-      return typename.length > 0
-        ? [
-            {
-              typename,
-              dxn: String(DXN.make(typename, Type.getVersion(type))),
-              kind: Type.isRelation(type) ? ('relation' as const) : ('object' as const),
-              // The same `fields` record the sandbox's bound type carries, which is what the model
-              // would otherwise go looking for.
-              fields: describeFields(('fields' in type && type.fields) || {}),
-            },
-          ]
-        : [];
-    });
-});
+const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
+  describeTypes(db),
+);
 
 /**
  * Projects the skills' tools into callable operations. Resolution goes through the ordinary toolkit

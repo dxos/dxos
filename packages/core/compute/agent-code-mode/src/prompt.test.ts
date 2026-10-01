@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 
 import { EffectDialect } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
-import { loadDocs } from './docs/index.ts';
+import { STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
 import { describeFields, describeInput } from './fields.ts';
 
@@ -94,14 +94,16 @@ describe('prompt', () => {
     expect(instructions).toContain('input: { task: Ref<com.example.type.task> }');
     expect(instructions).not.toContain('"type":"string"');
     expect(instructions).toContain("yield* Database.resolve('dxn:com.example.operation.close')");
-    expect(instructions).toContain("DOCS['README.md']");
+    expect(instructions).toContain('`catalog/operations.md`');
   });
 
-  test('the README indexes every doc', async ({ expect }) => {
+  test('the prompt and the README list every doc', async ({ expect }) => {
     const DOCS = await EffectEx.runPromise(loadDocs);
-    expect(Object.keys(DOCS)).toEqual(['README.md', 'database.md', 'queries.md', 'operations.md', 'errors.md']);
-    for (const name of Object.keys(DOCS).filter((name) => name !== 'README.md')) {
+    const instructions = EffectDialect.instructions({ types: [], operations: [] });
+    expect(Object.keys(DOCS)).toEqual(STATIC_DOCS.map(({ name }) => name));
+    for (const name of [...Object.keys(DOCS), 'catalog/types.md', 'catalog/operations.md']) {
       expect(DOCS['README.md']).toContain(`\`${name}\``);
+      expect(instructions).toContain(`- \`${name}\` — `);
     }
     expect(DOCS['queries.md']).toContain('Filter.id(id)');
     // Models guessed `result.value`; the field is `success`.

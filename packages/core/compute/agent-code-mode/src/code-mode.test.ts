@@ -266,8 +266,30 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           EffectDialect,
         );
         expect(output).toEqual(
-          'README.md,database.md,queries.md,operations.md,errors.md\n# Code mode (Effect dialect)',
+          'README.md,database.md,queries.md,operations.md,errors.md,catalog/types.md,catalog/operations.md\n' +
+            '# Code mode (Effect dialect)',
         );
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    "the README's recipe lists every type and operation key from the catalog",
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval(
+          `
+          const typeKeys = DOCS['catalog/types.md'].match(/dxn:[^\\s\`]+/g);
+          const operationKeys = DOCS['catalog/operations.md'].match(/dxn:[^\\s\`']+/g) ?? [];
+          yield* print(typeKeys.includes('${TASK_DXN}'), operationKeys.join(','));
+          const Score = yield* Database.resolve(operationKeys[0]);
+          yield* print('scored', yield* Operation.invoke(Score, { title: 'abc' }));
+        `,
+          EffectDialect,
+        );
+        expect(output).toEqual(`true ${SCORE_KEY}\nscored 3`);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
