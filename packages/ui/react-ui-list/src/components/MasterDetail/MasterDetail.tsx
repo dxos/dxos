@@ -82,7 +82,8 @@ export const MasterDetail = <T extends MasterDetailRecord>({
       onValueChange={(id) => onSelect?.(id)}
     >
       {({ items }) => (
-        <OrderedList.Content>
+        // Horizontal: the list is its own scroll region within the pane; vertical: the host surface scrolls.
+        <OrderedList.Content scroll={orientation === 'horizontal'}>
           {items.map((item) => (
             <MasterDetailRow
               key={item.id}
@@ -111,11 +112,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     return (
       <div className={mx('flex dx-grow gap-2 overflow-hidden', classNames)}>
         <Next.Panel.Root classNames='shrink-0 w-max max-w-xs'>
-          <Next.Panel.Body asChild>
-            <Next.ScrollArea.Root orientation='vertical'>
-              <Next.ScrollArea.Viewport>{list}</Next.ScrollArea.Viewport>
-            </Next.ScrollArea.Root>
-          </Next.Panel.Body>
+          <Next.Panel.Body>{list}</Next.Panel.Body>
         </Next.Panel.Root>
         <Next.Panel.Root classNames='flex-1 min-w-0'>
           <Next.Panel.Body classNames='flex flex-col dx-grow'>{detail}</Next.Panel.Body>

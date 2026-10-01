@@ -153,22 +153,18 @@ export const Basic: Story = {
       return found;
     });
 
-    // Arrows step row to row. Each row holds its own overflow menu, so without a groupper the first
-    // ArrowDown would land on that button instead of the next entry.
-    options[0].focus();
-    await expect(options[0]).toHaveFocus();
-    await userEvent.keyboard('{ArrowDown}');
-    await waitFor(async () => expect(options[1]).toHaveFocus());
+    // Focus stays on the listbox and the highlight moves (aria-activedescendant), so the row's own overflow
+    // button never takes an arrow; Enter selects the highlighted row.
+    const listbox = canvas.getByRole('listbox');
+    listbox.focus();
+    await userEvent.keyboard('{Home}{ArrowDown}');
+    await waitFor(async () => expect(options[1]).toHaveAttribute('data-highlighted'));
     await userEvent.keyboard('{ArrowUp}');
-    await waitFor(async () => expect(options[0]).toHaveFocus());
-
-    // ...and Enter selects the focused row, which an option does not do natively. Row 0 starts
-    // selected and this story's click toggles, so the assertion moves to a row that is not.
+    await waitFor(async () => expect(options[0]).toHaveAttribute('data-highlighted'));
     await userEvent.keyboard('{ArrowDown}');
-    await waitFor(async () => expect(options[1]).toHaveFocus());
-    await expect(options[1].getAttribute('aria-selected')).toEqual('false');
+    await expect(options[1]).toHaveAttribute('aria-selected', 'false');
     await userEvent.keyboard('{Enter}');
-    await waitFor(async () => expect(canvas.getAllByRole('option')[1].getAttribute('aria-selected')).toEqual('true'));
+    await waitFor(async () => expect(canvas.getAllByRole('option')[1]).toHaveAttribute('aria-selected', 'true'));
   },
 };
 
@@ -178,16 +174,10 @@ export const Horizontal: Story = {
   decorators: [withLayout({ layout: 'fullscreen' })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // The master list carries a selection, so its rows are options in a listbox; its nearest scroll
-    // viewport must overflow (scroll) rather than stretch to fit all 40 rows — proving vertical
-    // per-column scroll in horizontal orientation.
+    // The master listbox is itself the scroll viewport: it must overflow (scroll) rather than stretch to fit
+    // all 40 rows — proving vertical per-column scroll in horizontal orientation.
     await waitFor(() => expect(canvas.getAllByRole('option').length).toBeGreaterThan(0));
-    const viewport = canvasElement
-      .querySelector('[role="listbox"]')
-      ?.closest('[data-scope="scroll-area"][data-part="viewport"]');
-    if (!(viewport instanceof HTMLElement)) {
-      throw new Error('master scroll viewport not found');
-    }
+    const viewport = canvas.getByRole('listbox');
     await waitFor(() => expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight + 8));
   },
 };
