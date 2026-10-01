@@ -158,30 +158,28 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
       <FormFieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
-        isItem={Schema.is(Pipeline.Column)}
         getId={(column) => column.view.uri}
+        getLabel={(column) => column.name || t('untitled-column.title')}
         onMove={handleMove}
-        expandedId={expandedId}
-        onExpandedChange={setExpandedId}
       >
         {({ items }) => (
           <OrderedList.Content>
             {items.map((column) => (
-              <OrderedList.DetailItem<Pipeline.Column>
+              <OrderedList.Item
                 key={column.view.uri}
                 id={column.view.uri}
-                item={column}
-                title={column.name || t('untitled-column.title')}
-                trailing={
-                  <Next.SystemButton.Remove
-                    label={t('delete-column.label')}
-                    onClick={() => handleDelete(column)}
-                    data-testid='column.delete'
-                  />
-                }
+                open={expandedId === column.view.uri}
+                onOpenChange={(open) => setExpandedId(open ? column.view.uri : undefined)}
               >
+                <OrderedList.DragHandle />
+                <OrderedList.ItemText />
+                <Next.SystemButton.Remove
+                  label={t('delete-column.label')}
+                  onClick={() => handleDelete(column)}
+                  data-testid='column.delete'
+                />
                 {column.view.target && (
-                  <>
+                  <OrderedList.Detail>
                     <Form.Root
                       schema={ColumnFormSchema}
                       values={column}
@@ -203,9 +201,9 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
                       types={types}
                       onQueryChanged={handleQueryChanged}
                     />
-                  </>
+                  </OrderedList.Detail>
                 )}
-              </OrderedList.DetailItem>
+              </OrderedList.Item>
             ))}
           </OrderedList.Content>
         )}
