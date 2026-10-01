@@ -122,10 +122,11 @@ type MasonryContentProps = ThemedClassName<
 const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
   ({ children, scrollbars, padding = true, ...props }, forwardedRef) => {
     const { gap } = useMasonryContext('Masonry.Content');
+    const style: CSSProperties & Record<'--gutter', string> = { '--gutter': padding ? `${gap}rem` : '0px' };
     return (
       <Next.ScrollArea.Root
-        // Cast: CSSProperties has no index signature for CSS custom properties, so `--gutter` cannot be typed directly.
-        {...composableProps(props, { style: { '--gutter': padding ? `${gap}rem` : '0px' } as CSSProperties })}
+        // `size-full`: the grid is a pane of its own and fills its host, as a Panel does, whatever the host's display.
+        {...composableProps(props, { classNames: 'size-full', style })}
         scrollbars={scrollbars}
         ref={forwardedRef}
       >
