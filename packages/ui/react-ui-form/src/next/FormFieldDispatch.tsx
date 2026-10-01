@@ -40,6 +40,7 @@ import {
   GeoPointField,
   HueField,
   InlineRefField,
+  MarkdownField,
   NumberField,
   PasswordField,
   RefField,
@@ -72,6 +73,8 @@ const nextScalar = (component: FormFieldRenderer): FormFieldRenderer | undefined
       return PasswordField;
     case Current.TextAreaField:
       return TextAreaField;
+    case Current.MarkdownField:
+      return MarkdownField;
     default:
       return undefined;
   }
@@ -93,6 +96,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     readonly,
     hideEmpty = true,
     layout,
+    createTypename,
+    createInitialValuePath,
+    createFieldMap,
     db,
     useType,
     getOptions,
@@ -233,11 +239,15 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
       case 'hue':
         return <HueField {...fieldProps} />;
-      case 'ref':
+      case 'ref': {
+        // The form's create options (e.g. a tag's) apply only to refs of `createTypename`.
+        const isCreateTarget = !createTypename || resolution.refProps.typename === createTypename;
         return (
           <RefField
             {...fieldProps}
             {...resolution.refProps}
+            createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
+            createFieldMap={isCreateTarget ? createFieldMap : undefined}
             db={db}
             useType={useType}
             getOptions={getOptions}
@@ -245,6 +255,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
             resolveCreateEntry={resolveCreateEntry}
           />
         );
+      }
       default:
         return undefined;
     }

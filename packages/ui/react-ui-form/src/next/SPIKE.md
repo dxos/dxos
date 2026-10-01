@@ -371,14 +371,27 @@ The design branch (A1–A5) is merged in, so each now builds on its Next parts:
   rows, spans and a named layout.
 - **M9, ref fields: done.** `RefField` and `ObjectPicker` are on Combobox trigger mode with descriptions and inline
   create (section 5). The lookup `ComboboxField` stays in input mode, which suits free text.
-- **M10, higher-level components.**
+- **M10, higher-level components: done.**
   - **FieldEditor** is ported. Its play test changes a field's format and saves, and checks the projection's schema
     takes the new type while keeping the description. The format's extra JSON-schema attributes are merged without
     the casts the current one needs.
-  - **ObjectProperties and ObjectForm** need the meta-tags row (a multi-select of Tag refs) and the inline create from
-    M9.
-  - **ViewEditor** needs `Banner`, and **RefEditor** and **MarkdownField** need `ControlFrame`, both from Phase A
-    item 1.
+  - **ObjectForm and ObjectProperties** (`ObjectForm.tsx`) share one form model (`useObjectFormModel`): the object's
+    values plus its editable meta tags, writes through `Obj.update`, and a create handler honouring `FactoryAnnotation`.
+    The meta-tags row is the next ArrayField of RefFields, so a tag is picked or created inline (M9) with a hue Select;
+    `ObjectForm.stories.tsx` covers editing, picking a tag and creating one. A multi-select picker for the tags (one
+    Combobox `multiple` instead of a row per tag) is the open follow-up. The form's create options (`createTypename`,
+    `createInitialValuePath`, `createFieldMap`) now reach the next RefField, gated to `createTypename` as today.
+  - **ViewEditor** (`ViewEditor.tsx`) announces a read-only schema in a `Next.Banner` and lists the field projections
+    on the Listbox-based `OrderedList`: drag/Alt+Arrow reorder, a `Next.Toggle` to hide or show, delete, and add,
+    each row opening to the next FieldEditor. The `tag` mode's `QueryForm` is still the current component, in a
+    standalone row.
+  - **RefEditor** (`RefEditor.tsx`) is the current editor's behaviour (`useRefEditor`, factored out of the current
+    component unchanged) inside a `Next.ControlFrame` with `start`/`end` adornments. **MarkdownField** frames its
+    editor in a multi-line ControlFrame; `Editors.stories.tsx` covers both.
+  - **ControlFrame findings (fixed in react-ui next):** a frame had no multi-line form, so `rows` makes it at least that
+    many lines tall, growing with its content like an auto-resizing Textarea. Its focus ring never followed focus
+    nested below its content element (an editor's `.cm-content`): the rule nested `:has()` inside `:has()`, which CSS
+    forbids, so that branch was dropped; it is now a descendant selector.
 
 ## Verification
 

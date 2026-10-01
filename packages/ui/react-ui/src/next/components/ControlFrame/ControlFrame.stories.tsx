@@ -36,6 +36,21 @@ const DefaultStory = ({ size }: SizeArgs) => (
         Locked
       </div>
     </Next.ControlFrame>
+    {/* The editable is nested, as an editor's content element is under its own root. */}
+    <Next.ControlFrame rows={3} start={<Next.Icon icon='ph--text-aa--regular' />} data-testid={`rows-${size}`}>
+      <div>
+        <div
+          role='textbox'
+          aria-label='Notes'
+          aria-multiline
+          contentEditable
+          suppressContentEditableWarning
+          tabIndex={0}
+        >
+          One line
+        </div>
+      </div>
+    </Next.ControlFrame>
   </>
 );
 
@@ -92,5 +107,28 @@ export const Test: Story = {
     await expect(mono).not.toBe(getComputedStyle(frame).fontFamily);
     await expect(mono).toMatch(/mono/i);
     await expect(getComputedStyle(byTestId(canvasElement, 'disabled-md')).opacity).toBe('0.5');
+
+    // A `rows` frame is that many lines tall at least, its first line and adornment where a single-line frame's sit,
+    // and grows with its content.
+    const rows = byTestId(canvasElement, 'rows-md');
+    const notes = within(rows).getByRole('textbox', { name: 'Notes' });
+    const lineHeight = notes.getBoundingClientRect().height;
+    const minimum = 3 * lineHeight + controlSize('md') - lineHeight;
+    await expect(rows.getBoundingClientRect().height).toBeCloseTo(minimum, 0);
+    const editorTop = editor.getBoundingClientRect().top - frame.getBoundingClientRect().top;
+    await expect(notes.getBoundingClientRect().top - rows.getBoundingClientRect().top).toBeCloseTo(editorTop, 0);
+    const rowsIcon = rows.querySelector('svg')?.getBoundingClientRect();
+    const notesTop = notes.getBoundingClientRect().top;
+    await expect((rowsIcon?.top ?? 0) + (rowsIcon?.height ?? 0) / 2).toBeCloseTo(notesTop + lineHeight / 2, 0);
+    notes.textContent = '';
+    for (const line of ['1', '2', '3', '4', '5']) {
+      const block = canvasElement.ownerDocument.createElement('div');
+      block.textContent = line;
+      notes.appendChild(block);
+    }
+    await expect(rows.getBoundingClientRect().height).toBeCloseTo(minimum + 2 * lineHeight, 0);
+    // The ring follows focus nested below the frame's content element too.
+    await userEvent.click(notes);
+    await expect(getComputedStyle(rows).outlineStyle).toBe('solid');
   },
 };

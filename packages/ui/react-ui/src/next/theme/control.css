@@ -157,7 +157,19 @@
     flex: 1;
     min-width: 0;
   }
-  .nx-control-frame:has(> :not(.nx-input-adornment):is(:focus-visible, :has(:focus-visible))) {
+  /* A multi-line frame: `--nx-rows` lines tall at least, growing with its content; the first line and the adornments
+     sit where a single-line control's do, like a Textarea's. */
+  .nx-control-frame[data-rows] {
+    height: auto;
+    min-height: calc(var(--nx-rows) * var(--nx-line-height) + var(--nx-control-size) - var(--nx-line-height));
+    align-items: start;
+    padding-block: calc((var(--nx-control-size) - var(--nx-line-height)) / 2);
+  }
+  .nx-control-frame[data-rows] > .nx-input-adornment {
+    height: var(--nx-line-height);
+  }
+  /* `:has()` cannot nest, so focus deeper in the content (an editor's own element) is a descendant selector instead. */
+  .nx-control-frame:has(> :not(.nx-input-adornment):focus-visible, > :not(.nx-input-adornment) :focus-visible) {
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
     outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
