@@ -30,10 +30,10 @@ import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -98,7 +98,7 @@ const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
  * the container because `Editor.View` renders its own div and drops unknown props.
  */
 const TestArticle = ({ title, content }: { title: string; content: string }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),

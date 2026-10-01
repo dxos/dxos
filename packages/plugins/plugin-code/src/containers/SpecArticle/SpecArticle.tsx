@@ -10,8 +10,9 @@ import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel, useThemeContext } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -41,7 +42,7 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
   ({ role, subject: spec, content, attendableId, readOnly = spec == null }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;
 

@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import {
   type Extension,
   type ThemeExtensionsOptions,
@@ -48,7 +49,7 @@ export const MarkdownViewer = ({
   extensions: extensionsProp,
   classNames,
 }: MarkdownViewerProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
 
   const extensions = useMemo<Extension[]>(
     () =>

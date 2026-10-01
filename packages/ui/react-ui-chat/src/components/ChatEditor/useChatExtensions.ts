@@ -5,7 +5,8 @@
 import { type Extension } from '@codemirror/state';
 import { useMemo } from 'react';
 
-import { useDynamicRef, useThemeContext } from '@dxos/react-ui';
+import { useDynamicRef } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -30,7 +31,7 @@ export const useChatExtensions = ({
   placeholder,
   onSubmit,
 }: ChatEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const onSubmitRef = useDynamicRef(onSubmit);
   return useMemo<Extension[]>(
     () =>

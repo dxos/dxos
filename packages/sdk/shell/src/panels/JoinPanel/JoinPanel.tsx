@@ -8,7 +8,8 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useId, useThemeContext } from '@dxos/react-ui';
+import { useId } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { Viewport } from '../../components/index.ts';
 import { ConfirmReset } from '../../steps/index.ts';
@@ -192,7 +193,7 @@ export const JoinPanel = ({
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
-  const { hasIosKeyboard } = useThemeContext();
+  const hasIosKeyboard = Next.useIosKeyboard();
   const titleId = useId('joinPanel__heading', propsTitleId);
 
   const [joinState, joinSend, joinService] = useJoinMachine(client, {

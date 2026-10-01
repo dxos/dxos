@@ -14,8 +14,9 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Grid, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Grid, Panel, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -255,7 +256,7 @@ type FileEditorProps = {
 };
 
 const FileEditor = ({ file, role }: FileEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const identity = useIdentity();
   const space = getSpace(file);
 

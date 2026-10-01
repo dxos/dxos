@@ -36,9 +36,9 @@ import {
   useComposedRefs,
   useControlledState,
   useDynamicRef,
-  useThemeContext,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -262,7 +262,7 @@ type GlobeCanvasProps = {
  * https://github.com/topojson/world-atlas
  */
 const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
   const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
     useGlobeContext();

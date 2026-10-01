@@ -13,7 +13,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Panel, SystemButton, Toolbar, useThemeContext } from '@dxos/react-ui';
+import { Panel, SystemButton, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   PROMPT_ELEMENT,
@@ -71,7 +72,7 @@ const sampleText = buildSampleText();
 type StoryArgs = { text: string };
 
 const DefaultStory = ({ text }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const [collapsed, setCollapsed] = useState(false);
   const extensions = useMemo(() => chatExtensions(themeMode), [themeMode]);
   const { parentRef, view } = useTextEditor({ initialValue: text, extensions });

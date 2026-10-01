@@ -18,7 +18,6 @@ import {
   Select,
   Tag,
   ThemedClassName,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -138,7 +137,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.profile.key);
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const layout = useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.

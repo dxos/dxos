@@ -13,7 +13,8 @@ import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, us
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
-import { Block, Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import { Block, Card, Icon, Popover } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type ObjectLinkProps,
@@ -246,7 +247,7 @@ type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
 };
 
 const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const [widgets, setWidgets] = useState<WidgetState[]>([]);
   const extensions = useMemo(
     () => [

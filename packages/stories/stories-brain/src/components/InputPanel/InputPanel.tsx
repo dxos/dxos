@@ -15,7 +15,6 @@ import {
   Select,
   type ThemedClassName,
   Toolbar,
-  useThemeContext,
 } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
@@ -100,7 +99,7 @@ export const InputPanel = ({
   onLoadDataset,
   onInput,
 }: InputPanelProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const [text, setText] = useState(initialDocument);
   const [underline, setUnderline] = useState(false);
   const [datasetId, setDatasetId] = useState(datasets[0]?.id ?? '');

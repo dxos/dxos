@@ -7,7 +7,8 @@ import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 're
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { ScrollArea, SystemButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { ScrollArea, SystemButton, composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis } from '@dxos/ui-types';
 
@@ -126,7 +127,7 @@ const SyntaxHighlighterLeaf = composable<HTMLDivElement, Omit<SyntaxHighlighterP
     },
     forwardedRef,
   ) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const source = sourceOf(children, fallback);
     const language = source.length > MAX_HIGHLIGHTED_LENGTH ? 'text' : languageProp;
 

@@ -15,10 +15,11 @@ import { invariant } from '@dxos/invariant';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel, useThemeContext } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -142,7 +143,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
 
 /** Editable plain-markdown view of the same text, without the outliner extension. */
 const SourceView = ({ text }: { text: Text.Text }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const { parentRef } = useTextEditor(
     () => ({
       id: `${text.id}-source`,

@@ -12,11 +12,12 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, useThemeContext } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Listbox } from '@dxos/react-ui-list';
 import { createMenuAction } from '@dxos/react-ui-menu';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   Cursor,
@@ -47,7 +48,7 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const registry = useContext(RegistryContext);
   const editorRef = useRef<EditorController>(null);
   const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);

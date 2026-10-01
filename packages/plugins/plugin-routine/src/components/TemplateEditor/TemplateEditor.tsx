@@ -9,9 +9,10 @@ import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { composeRefs } from '@dxos/react-hooks';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -36,7 +37,7 @@ export type TemplateEditorProps = {
 export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
   ({ classNames, id, source, lineNumbers = true, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const [resolved] = useObject(source);
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;

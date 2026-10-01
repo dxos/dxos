@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { Button, Field, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
+import { Button, Field, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
 import {
@@ -33,7 +33,7 @@ export type DocumentEditorProps = ThemedClassName<{
  * always receive the latest edits; variants select the pipeline via the parent's `onRun`.
  */
 export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onRun }: DocumentEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const [text, setText] = useState(initialValue);
   const [underline, setUnderline] = useState(false);
   const extensions = useMemo(

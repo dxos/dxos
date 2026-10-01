@@ -16,9 +16,9 @@ import {
   Popover,
   type ThemedClassName,
   useMediaQuery,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 
 /**
@@ -48,7 +48,7 @@ export const EmojiPickerToolbarButton = ({
   onChangeEmoji,
 }: Omit<EmojiPickerProps, 'onClickClear'>) => {
   const { t } = useTranslation(osTranslations);
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
 
   const [_emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,

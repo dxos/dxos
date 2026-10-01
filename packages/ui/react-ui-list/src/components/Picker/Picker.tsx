@@ -33,8 +33,8 @@ import {
   type ThemedClassName,
   composableProps,
   slottable,
-  useThemeContext,
 } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme.ts';
@@ -198,7 +198,7 @@ type PickerInputProps = ThemedClassName<
 
 const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
   ({ value, onValueChange, onChange, onKeyDown, autoFocus, escapeBehavior = 'clear', ...props }, forwardedRef) => {
-    const { hasIosKeyboard } = useThemeContext();
+    const hasIosKeyboard = Next.useIosKeyboard();
     const { selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       usePickerInputContext('Picker.Input');
     const inputRef = useRef<HTMLInputElement>(null);

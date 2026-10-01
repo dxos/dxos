@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Button, Panel, Toolbar, composable, composableProps, useComposedRefs, useThemeContext } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, composable, composableProps, useComposedRefs } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { EditorView, createBasicExtensions, createMermaidExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -21,7 +22,7 @@ import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
  */
 const SourceEditor = composable<HTMLDivElement, { value: string; onChange: (value: string) => void }>(
   ({ value, onChange, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const extensions = useMemo(
       () => [
         createBasicExtensions({ lineNumbers: true, lineWrapping: false }),

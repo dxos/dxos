@@ -4,7 +4,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Button, useControlledState, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
 
@@ -30,7 +31,7 @@ export type WorldMapProps = {
  */
 export const WorldMap = ({ markers = [], selected, view: viewProp = 'map', onViewChange }: WorldMapProps) => {
   const { t } = useTranslation(translationKey);
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   // No graticule: the map is a backdrop for the markers, and the grid competes with them.
   const styles = useMemo(() => {
     const { graticule: _graticule, ...styles } = globeStyles(themeMode);

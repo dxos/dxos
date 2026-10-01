@@ -17,8 +17,9 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Avatar, Button, type ThemedClassName, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -199,7 +200,7 @@ const TextBlock = ({
   editing?: boolean;
   onSave?: (text: string) => void;
 }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const inMemoryContentRef = useRef(block.text);
 
   const handleDocumentChange = useCallback((next: string) => {

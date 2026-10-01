@@ -7,8 +7,9 @@ import React from 'react';
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, composeRefs, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, composeRefs } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -33,7 +34,7 @@ export type SummaryProps = {
  */
 export const Summary = composable<HTMLDivElement, SummaryProps>(
   ({ classNames, id, source, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s `.target`
     // loads asynchronously and isn't reactive on its own.
     const [resolved] = useObject(source);

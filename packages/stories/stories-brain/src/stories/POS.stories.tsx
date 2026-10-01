@@ -10,8 +10,8 @@ import React, { useMemo } from 'react';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Parser, parseText } from '@dxos/nlp';
 import { stubParse } from '@dxos/nlp/testing';
-import { useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -52,7 +52,7 @@ type StoryArgs = {
  * `LLM` tags via the edge AI service. No plugin manager / ECHO space — just the editor + extension.
  */
 const DefaultStory = ({ ai }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineWrapping: true }),

@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -45,7 +45,7 @@ const documentText = (canvasElement: HTMLElement): string => {
 type RenderProps = EditorViewProps & { branch: string };
 
 const Render = ({ branch, ...args }: RenderProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -71,7 +71,7 @@ const Render = ({ branch, ...args }: RenderProps) => {
  * foreign author would remove.
  */
 const ForeignAuthorRender = ({ branch, ...args }: RenderProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),

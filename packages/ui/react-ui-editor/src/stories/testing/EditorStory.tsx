@@ -9,9 +9,10 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
+import { useMergeRefs } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -114,7 +115,7 @@ const EditorComponent = forwardRef<EditorController, EditorStoryArgs>(
     forwardedRef,
   ) => {
     invariant(object);
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const attentionAttrs = useAttentionAttributes(id);
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({

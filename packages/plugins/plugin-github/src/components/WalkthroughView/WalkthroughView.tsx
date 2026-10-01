@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Button, Empty, Flex, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, Flex, useTranslation } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -22,7 +23,7 @@ export type WalkthroughViewProps = Omit<DiffDocumentOptions, 'themeMode'> & {
  * single fence. Either way the chunks are the walkthrough's own, so a file reads the same in both.
  */
 export const WalkthroughView = ({ value, sidebar, layout, onLineComment }: WalkthroughViewProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const extensions = useMemo(
     () => diffDocumentExtensions({ themeMode, sidebar, layout, onLineComment }),
     [themeMode, sidebar, layout, onLineComment],

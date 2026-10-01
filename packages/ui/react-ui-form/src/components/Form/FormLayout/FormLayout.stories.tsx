@@ -9,9 +9,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Annotation, DXN, Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Card, useThemeContext, DragHandle } from '@dxos/react-ui';
+import { Card, DragHandle } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -305,7 +306,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
     setValues(next as Partial<FlightValues>);
   }, []);
 
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const extensions = useMemo(
     () => [
       xml(),

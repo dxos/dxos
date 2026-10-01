@@ -13,13 +13,14 @@ import { EffectEx } from '@dxos/effect';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Block, Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import { Block, Card, Icon, Popover } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
   useEditorPreview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -77,7 +78,7 @@ type StoryArgs = {
  * surface renders the card.
  */
 const DefaultStory = ({ text }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {

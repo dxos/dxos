@@ -4,7 +4,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ControlProps,
@@ -21,6 +20,7 @@ import {
   useTour,
   useWheel,
 } from '@dxos/react-ui-geo';
+import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
 import { type GeoControlProps } from '../types.ts';
@@ -39,7 +39,7 @@ const distanceSq = (a: LatLngLiteral, b: LatLngLiteral): number => {
 
 export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
   ({ center, zoom, markers = [], lines = [], selected = [], onSelect, onToggle, onChange, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const styles = globeStyles(themeMode);
 
     // Track the live globe zoom so topology resolution refines as the user zooms in

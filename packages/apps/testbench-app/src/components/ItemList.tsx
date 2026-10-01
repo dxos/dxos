@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Button, Field, ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { Button, Field, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Next } from '@dxos/react-ui/next';
@@ -105,7 +105,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 };
 
 const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const { parentRef } = useTextEditor(() => {
     return {
       initialValue: object[prop],

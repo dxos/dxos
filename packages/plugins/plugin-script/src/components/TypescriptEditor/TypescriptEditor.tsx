@@ -15,9 +15,10 @@ import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } fr
 import React from 'react';
 
 import { composeRefs } from '@dxos/react-hooks';
-import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, type ThemeMode } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { Domino } from '@dxos/ui';
 import {
   type BasicExtensionsOptions,
@@ -57,7 +58,7 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
     },
     forwardedRef,
   ) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Next.useThemeMode();
     const { parentRef, focusAttributes } = useTextEditor(
       () => ({
         id,

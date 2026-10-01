@@ -17,7 +17,8 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Flex, Panel, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { Flex, Panel, composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { useStoreAdapter } from '#hooks';
 
@@ -54,7 +55,7 @@ export const ExcalidrawArticle = ({
 }: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
   // Last selection reported to the host, so its echo back through `selection` is a no-op.

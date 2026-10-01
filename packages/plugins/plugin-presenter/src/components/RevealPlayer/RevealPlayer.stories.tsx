@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Grid, useThemeContext } from '@dxos/react-ui';
+import { Grid } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
@@ -68,7 +69,7 @@ const typeAtLineEnd = async (canvasElement: HTMLElement, line: string, text: str
 };
 
 const EditorStory = ({ columnWidth, ...props }: RevealProps & { columnWidth?: string }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const [content, setContent] = useState(props.content);
   const extensions = useMemo(
     () => [createBasicExtensions(), createThemeExtensions({ themeMode }), createMarkdownExtensions()],

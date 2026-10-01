@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type EditorViewProps, Editor as TextEditor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import {
   type Extension,
   compactSlots,
@@ -45,7 +46,7 @@ export const Editor = ({
   compact,
   classNames,
 }: EditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Next.useThemeMode();
   const extensions = useMemo(
     () =>
       [
