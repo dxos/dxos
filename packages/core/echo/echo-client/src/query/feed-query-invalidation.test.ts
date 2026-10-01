@@ -15,7 +15,9 @@ import { EchoTestBuilder } from '../testing/index.ts';
 describe('feed query invalidation', () => {
   test('a write to the space does not re-run a live feed query of another type', async () => {
     const builder = await new EchoTestBuilder().open();
-    onTestFinished(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const { db, host } = await builder.createDatabase({ types: [TestSchema.Task, TestSchema.Person, Feed.Feed] });
     const feed = db.add(Feed.make({}));
     await db.appendToFeed(
