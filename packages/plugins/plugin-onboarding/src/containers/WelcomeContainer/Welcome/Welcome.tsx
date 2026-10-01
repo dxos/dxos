@@ -388,10 +388,8 @@ export const Welcome = ({
 
         {state === WelcomeState.INIT && signupEnabled && (
           <Next.Tabs.Root
-            asChild
             orientation='horizontal'
-            defaultActivePart='panel'
-            suppressRegionFocus
+            classNames='flex flex-col gap-6'
             value={tab}
             onValueChange={(value) => {
               const next = value as Tab;
@@ -402,7 +400,6 @@ export const Welcome = ({
               }
             }}
           >
-            <Next.Tabs.Viewport classNames='flex flex-col gap-6'>
               <Next.Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
                 <Next.Tabs.Trigger value='login' classNames={tabClassNames}>
                   {t('login-tab.label')}
@@ -532,7 +529,6 @@ export const Welcome = ({
                   </Flex>
                 )}
               </Next.Tabs.Content>
-            </Next.Tabs.Viewport>
           </Next.Tabs.Root>
         )}
 
@@ -815,7 +811,10 @@ const LoginTab = ({
         </Next.Field.Root>
       )}
       {moreOptions.length > 0 && (
-        <Next.Menu.Root positioning={{ placement: 'bottom', gutter: 8, overflowPadding: 16 }}>
+        <Next.Menu.Root
+          positioning={{ placement: 'bottom', gutter: 8, overflowPadding: 16 }}
+          onOpenChange={({ open }) => !open && handleMoreMenuCloseAutoFocus()}
+        >
           <Next.Menu.Trigger asChild>
             <button
               type='button'
@@ -825,14 +824,17 @@ const LoginTab = ({
               <Next.Icon icon='ph--caret-down--regular' size='md' />
             </button>
           </Next.Menu.Trigger>
-          {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
-                onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
-          <Next.Menu.Content classNames='!w-80 !z-50' onCloseAutoFocus={handleMoreMenuCloseAutoFocus}>
+          <Next.Menu.Content classNames='!w-80'>
             {moreOptions.map((opt) => (
-              <Next.Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
-                <Next.Icon icon={opt.icon} size='xl' classNames={mx(opt.classNames)} />
+              <Next.Menu.Item
+                key={opt.key}
+                item={{ value: opt.key, label: opt.label, icon: opt.icon }}
+                onSelect={opt.onClick}
+                classNames='gap-3 h-auto'
+              >
+                <Next.Menu.ItemIcon size='xl' classNames={mx(opt.classNames)} />
                 <Next.Container gap='sm' gutter='none'>
-                  <span>{opt.label}</span>
+                  <Next.Menu.ItemText />
                   <span className='text-xs text-description font-normal'>{opt.description}</span>
                 </Next.Container>
               </Next.Menu.Item>
@@ -860,7 +862,7 @@ const InlineForm = ({
   validation,
   onSubmit,
 }: {
-  inputProps: Omit<ComponentProps<typeof Next.Field.Input>, 'classNames'> & {
+  inputProps: Omit<ComponentProps<typeof Next.Input>, 'classNames' | 'ref'> & {
     classNames?: string;
     ref?: Ref<HTMLInputElement>;
   };
