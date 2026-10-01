@@ -238,6 +238,9 @@ const openPluginSettings = async ({ demo, page }, plugin, { label } = {}) => {
 /** Plugins → Dev Server's one button, which reads Enable or Disable. */
 const DEV_TOGGLE = '[data-testid="registrySettings.devPluginToggle"]';
 
+/** Plugins → Dev Server's Manifest URL field. */
+const DEV_URL = '[data-testid="registrySettings.devPluginUrl"]';
+
 /** The type the plugin stores its timezones in, as the guide defines it. */
 const CLOCK_TYPE = 'org.example.type.worldClock';
 
@@ -275,6 +278,10 @@ export const prepare = async ({ demo, page }, { codingDev }) => {
     if ((await page.locator(DEV_TOGGLE).textContent())?.trim() === 'Disable') {
       await demo.click({ selector: DEV_TOGGLE, hud: false });
       await page.locator(`${DEV_TOGGLE}:text-is("Enable")`).waitFor();
+    }
+    // The URL persists in the profile, so a take must not inherit one an earlier session changed.
+    if ((await page.locator(DEV_URL).inputValue()) !== DEV_MANIFEST) {
+      await demo.fill({ selector: DEV_URL, value: DEV_MANIFEST, hud: false });
     }
   }
 
