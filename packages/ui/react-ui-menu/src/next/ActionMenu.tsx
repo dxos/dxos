@@ -32,6 +32,7 @@ import {
   isSeparator,
 } from '../types.ts';
 import { executeMenuAction } from '../util.ts';
+import { iconSizeOf } from './icon-size.ts';
 
 //
 // Items (private): the graph's items as `Next.Menu` parts.
@@ -85,9 +86,13 @@ type ActionItemProps = {
   group?: MenuGroupContext;
 };
 
-const ItemIcon = ({ action }: { action: MenuAction | MenuItemGroup<MenuItemChrome> }) =>
+const ItemIcon = ({ menu, action }: { menu: MenuActions; action: MenuAction | MenuItemGroup<MenuItemChrome> }) =>
   action.properties?.icon ? (
-    <Next.Menu.ItemIcon spin={action.properties.spin} classNames={action.properties.iconClassNames} />
+    <Next.Menu.ItemIcon
+      spin={action.properties.spin}
+      size={iconSizeOf(menu.iconSize)}
+      classNames={action.properties.iconClassNames}
+    />
   ) : null;
 
 const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
@@ -101,7 +106,7 @@ const ActionMenuItem = ({ menu, action, group }: ActionItemProps) => {
       closeOnSelect={!isMultiSelect(group)}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      <ItemIcon action={action} />
+      <ItemIcon menu={menu} action={action} />
       <Next.Menu.ItemText />
       {item.shortcut && <Next.Menu.ItemShortcut />}
     </Next.Menu.Item>
@@ -145,7 +150,7 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
         disabled={group.properties.disabled}
         {...(group.properties.testId && { 'data-testid': group.properties.testId })}
       >
-        <ItemIcon action={group} />
+        <ItemIcon menu={menu} action={group} />
         <Next.Menu.ItemText />
         <Next.Icon icon='ph--caret-right--regular' />
       </Next.Menu.TriggerItem>

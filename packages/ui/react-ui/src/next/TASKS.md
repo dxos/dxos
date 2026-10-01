@@ -172,5 +172,5 @@ the classNames research and the react-ui-menu/next binding asked for.
 - [x] **Chrome strings** — `drag-handle.label`, `remove.label`, `empty.label` under the react-ui `translationKey`; `Next.DragHandle` label defaults; list DragHandle/DeleteButton and Dialog's delete off `osTranslations`.
 - [x] **className props** — Container/Panel.Root `width='document'`; Typography `lines`, `mono`, `tone='subdued'`; Card.Title on Typography; Icon `tone`, `spin`, `size`; Button `align='start'`.
 - [x] **Menu/Toolbar gaps** — Button `spin` and `iconSize`; `Toolbar.Separator variant='gap'`; Switch in the toolbar's roving focus; `Menu.TriggerItem disabled`; `virtualAnchor`/`useVirtualAnchor`.
-- [ ] **Menu item icon size** — Menu items have no per-instance icon size yet (the binding's `iconSize`).
+- [x] **Menu item icon size** — `Menu.ItemIcon size` (Icon's); the binding maps `iconSize` onto it.
 - [ ] **`dx-avatar` backdrop** — the shared sampler is ready; the avatar does not use it yet.

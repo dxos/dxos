@@ -76,7 +76,7 @@ export const StaticItems: Story = {
     return (
       <>
         <Contributor menu={menu} id='static-items' items={staticItems} />
-        <ActionMenu {...menu}>
+        <ActionMenu {...menu} iconSize={5}>
           <Next.Button icon='ph--list-checks--regular' label='Options' iconOnly />
         </ActionMenu>
       </>
@@ -88,6 +88,9 @@ export const StaticItems: Story = {
     const labels = items.map((el) => el.textContent);
     await expect(labels).toContain('Static Action 1');
     await expect(labels).toContain('Static Action 2');
+    // `iconSize` 5 (1.25rem) is Next's `lg` icon step.
+    const static1 = items.find((el) => el.textContent === 'Static Action 1');
+    await expect(static1?.querySelector('svg')).toHaveAttribute('data-icon-size', 'lg');
   },
 };
 

@@ -28,24 +28,13 @@ import {
 } from '../types.ts';
 import { executeMenuAction } from '../util.ts';
 import { ActionMenu } from './ActionMenu.tsx';
+import { iconSizeOf } from './icon-size.ts';
 
 //
 // Items (private): the graph's root items as `Next.Toolbar` parts.
 //
 
 type ItemProps<T> = { menu: MenuActions } & T;
-
-/** The binding's icon sizes are the current Icon's spacing steps; Next names the step of each size's icon scale. */
-const ICON_SIZES: Partial<Record<NonNullable<MenuActions['iconSize']>, Size>> = {
-  3: 'xs',
-  3.5: 'sm',
-  4: 'md',
-  5: 'lg',
-  6: 'xl',
-};
-
-const iconSizeOf = (size: MenuActions['iconSize']): Size | undefined =>
-  size === undefined ? undefined : ICON_SIZES[size];
 
 type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> & {
   action: MenuAction | MenuItemGroup<DropdownMenuItemGroupProperties>;
