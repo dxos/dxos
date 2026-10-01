@@ -17,6 +17,7 @@ import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
+import { type TaskMnemonicVariant } from './TaskRowCells.tsx';
 
 random.seed(1);
 
@@ -499,6 +500,74 @@ const seedTagged = (): Task.Task[] => {
   return tasks;
 };
 
+const BUSY_TITLES = [
+  'Identity through invokeOperation',
+  'Design the identity/hypergraph skill(s)',
+  'Silent under-returns: hydration drops an index hit and tells nobody',
+  'Query failures throw away the cause before it reaches the caller',
+  'tasks.update rejects a valid milestone ref, so tasks cannot be re-filed',
+  'Measure cold MCP handshake after the next deploy',
+  'Add a registry snapshot to the session start',
+  'Retry the blob upload when the presigned URL expires',
+  'Collapse duplicate presence events in the swarm',
+  'Paginate queryOperations past the first hundred rows',
+  'Surface the OAuth grant scope in whoami',
+  'Typed error for a missing space in invokeOperation',
+  'Backfill mnemonics for tasks created before the index',
+  'Index tags so the filter bar can query #tag',
+  'Gantt lane hue drifts after a rename',
+  'Drop the legacy feed replication path',
+  'Trace context lost across the DO boundary',
+  'Hibernation wakes the router with an empty peer map',
+  'Agent session title is not set on claim',
+  'Storybook wedges after a dist rewrite',
+];
+
+/**
+ * A long, chip-heavy list as a busy project shows it: most rows tagged, a share assigned or carrying
+ * a pull request, every status and priority represented — the density at which a mnemonic that
+ * looks like a tag is hardest to tell apart from the tags beside it.
+ */
+const seedBusy = (n = 48): Task.Task[] => {
+  const tags = [
+    Tag.make({ label: 'DXOS', hue: 'indigo' }),
+    Tag.make({ label: 'EDGE', hue: 'amber' }),
+    Tag.make({ label: 'Bug', hue: 'red' }),
+    Tag.make({ label: 'MCP', hue: 'teal' }),
+    Tag.make({ label: 'UX', hue: 'pink' }),
+  ];
+  const statuses: Task.Status[] = ['todo', 'todo', 'todo', 'started', 'review', 'blocked', 'done'];
+  const pullRequest = (number: number) =>
+    PullRequest.make({
+      owner: 'dxos',
+      repo: 'dxos',
+      number,
+      title: `Fix ${number}`,
+      url: `https://github.com/dxos/dxos/pull/${number}`,
+      state: 'open',
+      author: 'scout',
+      baseBranch: 'main',
+      headBranch: `fix-${number}`,
+    });
+  return Array.from({ length: n }, (_, index) => {
+    const task = Task.make({
+      title: BUSY_TITLES[index % BUSY_TITLES.length],
+      status: statuses[index % statuses.length],
+      priority: when(index % 4 !== 0, () => random.helpers.arrayElement([...Task.Priority.literals])),
+      assignee: when(index % 3 === 0, () =>
+        index % 2 === 0 ? { role: 'assistant' as const, name: 'Scout' } : { email: 'riley@example.com' },
+      ),
+      artifacts: when(index % 5 === 2, () => [Ref.make(pullRequest(13100 + index))]),
+    });
+    Obj.update(task, (task) => {
+      for (const tag of tags.filter((_, tagIndex) => (index + tagIndex) % 3 === 0 && tagIndex < 2 + (index % 3))) {
+        Obj.addTag(task, Ref.make(tag));
+      }
+    });
+    return task;
+  });
+};
+
 const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
   const tasks = useMemo(() => (props.seed ?? seedArtifacts)(), [props.seed]);
   const artifacts = useMemo(
@@ -525,6 +594,7 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescription = true,
+  mnemonicVariant,
   showEstimates,
   debug,
   framed = true,
@@ -547,6 +617,7 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
+  mnemonicVariant?: TaskMnemonicVariant;
   showEstimates?: boolean;
   /** Paint every row's drop bands, so the zones are visible without holding a drag. */
   debug?: boolean;
@@ -647,6 +718,7 @@ const DefaultStory = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      mnemonicVariant={mnemonicVariant}
       showEstimates={showEstimates}
       getTaskActions={readonly ? undefined : getTaskActions}
       onTaskCreate={readonly ? undefined : handleCreate}
@@ -2083,5 +2155,64 @@ export const TestStatusPickerBuildsOnFirstClick: Story = {
     await waitFor(async () => expect(options()).toHaveLength(0), { timeout: 5_000 });
     await userEvent.click(first.querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!);
     await waitFor(async () => expect(options()).toHaveLength(Task.PriorityOptions.length + 1), { timeout: 5_000 });
+  },
+};
+
+/** A busy project with descriptions hidden: one line per task, the rows carried by their chips. */
+export const Busy: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedBusy,
+    showDescription: false,
+  },
+};
+
+/** The mnemonic as subdued monospace with no chrome, so only the real tags read as chips. */
+export const BusyMnemonicText: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedBusy,
+    showDescription: false,
+    mnemonicVariant: 'text',
+  },
+};
+
+/** The mnemonic as monospace in its hashed hue — the Gantt link survives without the chip's fill. */
+export const BusyMnemonicHue: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedBusy,
+    showDescription: false,
+    mnemonicVariant: 'hue',
+  },
+};
+
+/** The mnemonic in a neutral hairline box: still a control, but colourless where the tags are filled. */
+export const BusyMnemonicOutline: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedBusy,
+    showDescription: false,
+    mnemonicVariant: 'outline',
+  },
+};
+
+/** A hashed-hue dot beside subdued monospace: the hue as a marker rather than a background. */
+export const BusyMnemonicDot: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedBusy,
+    showDescription: false,
+    mnemonicVariant: 'dot',
+  },
+};
+
+/** The mnemonic after the title, as an issue number trails its title, so every title starts on one edge. */
+export const BusyMnemonicTrailing: Story = {
+  render: ArtifactsStory,
+  args: {
+    seed: seedBusy,
+    showDescription: false,
+    mnemonicVariant: 'trailing',
   },
 };

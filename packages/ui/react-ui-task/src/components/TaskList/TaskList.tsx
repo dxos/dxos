@@ -39,7 +39,7 @@ import { STATUS_ORDER } from './status-icons.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
-import { TaskEstimateControl, TaskPriorityIcon } from './TaskRowCells.tsx';
+import { TaskEstimateControl, type TaskMnemonicVariant, TaskPriorityIcon } from './TaskRowCells.tsx';
 import { type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
 import {
   type TaskGroup,
@@ -130,6 +130,8 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
+  /** How each row draws its mnemonic; the hued chip by default. */
+  mnemonicVariant?: TaskMnemonicVariant;
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
 
@@ -195,6 +197,7 @@ const TaskListRoot = ({
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
+  mnemonicVariant = 'tag',
   descriptionComponents,
   showEstimates = false,
   hierarchical = false,
@@ -280,6 +283,7 @@ const TaskListRoot = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      mnemonicVariant={mnemonicVariant}
       descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
@@ -425,6 +429,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
     showGroupLabels,
     showOrdinals,
     showDescription,
+    mnemonicVariant,
     descriptionComponents,
     showGutter,
     gridTemplateColumns,
@@ -483,6 +488,7 @@ const TaskListContent = ({ classNames }: TaskListContentProps) => {
       selected={selected}
       checked={checked}
       showDescription={showDescription}
+      mnemonicVariant={mnemonicVariant}
       renderTrailing={TaskTreeTrailing}
       translationKey={translationKey}
       onCollapseToggle={onCollapseToggle}

@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Button, Field, Icon, IconBlock, IconButton, SystemIconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
-import { getHashHue, mx } from '@dxos/ui-theme';
+import { getHashHue, getHashStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -116,25 +116,73 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
 TaskStatusControl.displayName = 'TaskList.StatusControl';
 
 /**
- * The task's mnemonic, as a chip that copies a reference to it.
+ * How a row draws its mnemonic. `tag` is the hued chip; the others drop the chip's fill so the
+ * mnemonic stops reading as one more tag beside the task's real tags.
+ * - `text`: subdued monospace, no chrome.
+ * - `hue`: monospace in the task's hashed hue, no chrome.
+ * - `outline`: subdued monospace in a hairline box.
+ * - `dot`: a hashed-hue dot before subdued monospace.
+ * - `trailing`: `text`, placed after the title rather than before it.
+ */
+export type TaskMnemonicVariant = 'tag' | 'text' | 'hue' | 'outline' | 'dot' | 'trailing';
+
+export type TaskMnemonicProps = {
+  task: Obj.Unknown | Obj.Snapshot;
+  variant?: TaskMnemonicVariant;
+};
+
+// The copy glyph only appears under the pointer or focus: at rest it would put an icon on every row.
+const QUIET_MNEMONIC_CLASSNAMES =
+  'font-mono text-xs text-description px-1 min-h-0 h-5 [&_svg]:opacity-0 hover:[&_svg]:opacity-100 focus-visible:[&_svg]:opacity-100';
+
+/**
+ * The task's mnemonic, as a control that copies a reference to it.
  *
  * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it shows: a mnemonic is
  * only unique enough to read, while the URI resolves the task from anywhere it is pasted — a prompt,
  * an MCP call, another space.
  */
-export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
-  <SystemIconButton.Clipboard
-    classNames='font-mono'
-    density='sm'
-    variant='tag'
-    // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
-    hue={getHashHue(Obj.getMnemonic(task))}
-    label={Obj.getMnemonic(task)}
-    onCopy={() => Obj.getURI(task, { prefer: 'absolute' }).toString()}
-    data-testid='taskList.item.mnemonic'
-    onClick={(event) => event.stopPropagation()}
-  />
-);
+export const TaskMnemonic = ({ task, variant = 'tag' }: TaskMnemonicProps) => {
+  const mnemonic = Obj.getMnemonic(task);
+  // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
+  const hue = getHashHue(mnemonic);
+  const shared = {
+    'label': mnemonic,
+    'onCopy': () => Obj.getURI(task, { prefer: 'absolute' }).toString(),
+    'data-testid': 'taskList.item.mnemonic',
+    'onClick': (event: MouseEvent) => event.stopPropagation(),
+  };
+
+  if (variant === 'tag') {
+    return <SystemIconButton.Clipboard {...shared} classNames='font-mono' density='sm' variant='tag' hue={hue} />;
+  }
+
+  const button = (
+    <SystemIconButton.Clipboard
+      {...shared}
+      variant='ghost'
+      density='sm'
+      iconEnd
+      size={3}
+      classNames={mx(
+        QUIET_MNEMONIC_CLASSNAMES,
+        variant === 'hue' && getHashStyles(mnemonic).text,
+        variant === 'outline' && 'border border-separator rounded-sm',
+      )}
+    />
+  );
+
+  if (variant === 'dot') {
+    return (
+      <span className='inline-flex shrink-0 items-center gap-1'>
+        <span aria-hidden className={mx('size-2 rounded-full bg-current', getHashStyles(mnemonic).text)} />
+        {button}
+      </span>
+    );
+  }
+
+  return button;
+};
 
 TaskMnemonic.displayName = 'TaskList.Mnemonic';
 

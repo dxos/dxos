@@ -23,7 +23,13 @@ import {
   resolveTaskPlacement,
 } from './hierarchy.ts';
 import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
-import { TaskCheckbox, TaskMnemonic, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
+import {
+  TaskCheckbox,
+  TaskMnemonic,
+  type TaskMnemonicVariant,
+  TaskOrdinal,
+  TaskStatusControl,
+} from './TaskRowCells.tsx';
 import {
   TASK_TREE_ROOT_ID,
   type TaskGroup,
@@ -70,6 +76,8 @@ export type TaskTreeNodeProps = {
   translationKey: string;
   /** Render each task's description under its title; rows grow to fit. */
   showDescription?: boolean;
+  /** How each row draws its mnemonic. */
+  mnemonicVariant?: TaskMnemonicVariant;
   /** Renderers for the description beyond the row's own. */
   descriptionComponents?: TaskDescriptionProps['components'];
   onCollapseToggle: (id: string) => void;
@@ -100,6 +108,7 @@ export const TaskTreeNode = ({
   renderTrailing,
   translationKey,
   showDescription = false,
+  mnemonicVariant = 'tag',
   descriptionComponents,
   onCollapseToggle,
   onTaskCheck,
@@ -185,13 +194,24 @@ export const TaskTreeNode = ({
           checked,
           translationKey,
           showDescription,
+          mnemonicVariant,
           descriptionComponents,
           onTaskCheck,
           onTaskUpdate,
         }}
       />
     ),
-    [showGutter, ordinals, checked, translationKey, showDescription, descriptionComponents, onTaskCheck, onTaskUpdate],
+    [
+      showGutter,
+      ordinals,
+      checked,
+      translationKey,
+      showDescription,
+      mnemonicVariant,
+      descriptionComponents,
+      onTaskCheck,
+      onTaskUpdate,
+    ],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -352,6 +372,7 @@ type TaskTreeHeadingProps = {
   checked?: ReadonlySet<string>;
   translationKey: string;
   showDescription: boolean;
+  mnemonicVariant: TaskMnemonicVariant;
   descriptionComponents?: TaskDescriptionProps['components'];
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
@@ -377,6 +398,7 @@ const TaskRowHeading = ({
   checked,
   translationKey,
   showDescription,
+  mnemonicVariant,
   descriptionComponents,
   onTaskCheck,
   onTaskUpdate,
@@ -418,7 +440,7 @@ const TaskRowHeading = ({
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
       <div className='inline-flex min-w-0 items-center gap-2 col-[title] self-center'>
         {/* The live task, not the snapshot: only the live object knows its space, which the copied URI names. */}
-        <TaskMnemonic task={task} />
+        {mnemonicVariant !== 'trailing' && <TaskMnemonic task={task} variant={mnemonicVariant} />}
         {/* The placeholder is drawn by CSS so the element's text stays the title itself. */}
         <span
           data-testid='taskList.item.title'
@@ -427,6 +449,7 @@ const TaskRowHeading = ({
         >
           {current.title}
         </span>
+        {mnemonicVariant === 'trailing' && <TaskMnemonic task={task} variant={mnemonicVariant} />}
       </div>
       {/* Under the title and the chips line (row 2, which collapses when the task has no chips): it
           has to clear the ordinal and the status control, or it reads as belonging to the row above,
