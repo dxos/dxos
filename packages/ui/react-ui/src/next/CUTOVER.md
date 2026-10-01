@@ -4,25 +4,44 @@ The cut-over branch (draft PR against `claude/react-ui-next-design-4db6eb`): the
 fixed by hand batch by batch. The current components are not yet deleted and `@dxos/react-ui` still exports them by
 default. Plan: [AUDIT.md](AUDIT.md) §7.
 
-## Status (step 2: codemod fixes, batch 1)
+## Status (step 2: every batch on Next)
 
-Batch 1 (UI libraries) type-checks clean: `tsc -b` over every `packages/ui/*` project reports no errors. Across the
-repo, type errors went from 1,168 to 403 (codemod rules and batch 1 by hand).
+Every batch type-checks: `tsc -b` over the whole repo reports no error in a package the cut-over touched. The errors
+it still prints are outside it and were there before (`eslint-plugin-rules` and `hyperformula` fixtures writing over
+their inputs, `vscode-extension`, `discord-worker`, `tools/beast`, `tools/storybook-*` config typing). Step 3
+(deleting the current components) has not started.
 
-| Batch                                     | After step 1 | After step 2 | State                                       |
-| ----------------------------------------- | -----------: | -----------: | ------------------------------------------- |
-| 1 UI libraries                            |          374 |            0 | done; residue that compiles is listed below |
-| 2 Shell / SDK / devtools / common         |          177 |          112 | to do                                       |
-| 3 Plugins                                 |          415 |          203 | to do                                       |
-| 4 Plugins (inbox, space, assistant, deck) |          188 |           84 | to do                                       |
-| 5 Apps                                    |           14 |            4 | to do                                       |
+| Batch                                     | After step 1 | After batch 1 | Now | State |
+| ----------------------------------------- | -----------: | ------------: | --: | ----- |
+| 1 UI libraries                            |          374 |             0 |   0 | done  |
+| 2 Shell / SDK / devtools / common         |          177 |           112 |   0 | done  |
+| 3 Plugins                                 |          415 |           203 |   0 | done  |
+| 4 Plugins (inbox, space, assistant, deck) |          188 |            84 |   0 | done  |
+| 5 Apps                                    |           14 |             4 |   0 | done  |
 
 ### Verification
 
-- `tsc -b` over every `packages/ui/*` project: no errors. `oxlint` and `oxfmt` clean on every file the branch changed.
-- `tools/codemorph`: 66 tests pass.
-- Storybook vitest project, one package at a time, every `packages/ui/*` package with stories: 42 packages, 1,228
-  tests. One failure, `react-ui` Button `Test` (a `hover` timeout under load), passes when rerun alone: a flake.
+- `tsc -b tsconfig.all.json`: no error in a package the cut-over touched (the remaining ones are listed above).
+- `oxlint` and `oxfmt --check` clean on every file the branch changed against the design branch (999 files).
+- `tools/codemorph`: 68 tests pass.
+- Storybook vitest, one package at a time: every `packages/ui/*` package with stories (step 2, then react-ui 470,
+  react-ui-list 75, react-ui-form 130, react-ui-menu 23, react-ui-task 41, react-ui-components 36 again after this
+  step's additions); batch 2's shell (60), app-framework, app-graph, react-client, worker-framework, storybook-utils
+  and the stories packages; all 59 batch-3 plugins with stories; batch 4's inbox (50), assistant (81), deck (22) and
+  space. Failures were fixed and rerun alone until green. One flake remains: plugin-space `AddToCollectionDialog`
+  `Pick` passes alone and times out (30 s) in a full-package run under load.
+- Shell's `dist/lib` must be built (`moon run shell:build`) before stories that import `@dxos/shell/react` run; a
+  missing build shows as a `Failed to run dependency scan` and `no tests`, not as a test failure.
+
+### The current Tree's consumers are on Next Tree
+
+All seven: devtools `ObjectsTree`, react-ui-trace `ProcessTree`, react-ui-task `TaskList`, plugin-debug
+`DebugPanelSidebar`, plugin-github `FileTree`, plugin-navtree `L1Panel` (the workspace tree) and plugin-sandbox
+`RepositoryFileTree`. The current Tree's render props map onto row parts: `renderIcon` is `Tree.ItemIcon` children,
+`renderHeading` and `renderColumns` are the cells a row composes after `Tree.ItemText` on the Root's `columns`, and
+hover-revealed row controls are `Tree.ItemActions`. The navtree keeps its row paths (`Tree.Root path`, whose first id is
+the drag scope every workspace tab shares, so the container's drop monitor is unchanged) and its `treeItem.heading`
+test id; e2e expands rows through the branch trigger's `data-state`.
 
 ### Codemod changes (each rerun of `renames` is its own commit)
 
@@ -59,6 +78,23 @@ pilots are now redundant.
 - `Button iconClassNames` styles the leading icon (the current Button's `iconClassNames`; 20+ callers).
 - `Icon spin` spinners share one phase (the current Icon's `synchronized`).
 - `Dialog.Content placement='end'` and `scrim={false}`: a docked, non-modal dialog (ChatDialog).
+- `Dialog.Title`/`Description srOnly`; `Next.toAvatarHue` narrows a stored hue name; `Card.Root size`;
+  `Tooltip.Trigger content` takes any node.
+- `Dialog`: `placement='start'`, a Root `placement` for Content it does not render (the deck places a surface's
+  dialog from `blockAlign`), and `Dialog.Content closeOnInteractOutside={false}` (a surface's dialog holding unsaved
+  input; the Root belongs to the layout).
+- `Card.Row leading` (an avatar in the icon's Block), replacing the current row-button `Card.Action` with `Card.Row
+onClick` at its call sites.
+- `Toolbar.Root inactive` (dimmed, still operable) and a `role` it keeps (an app bar's `banner`).
+- `Tabs.Trigger asChild` (the navtree's avatar rail), `Combobox.Trigger asChild`, `ToggleGroup.Item classNames`,
+  `PasswordInput onBlur`.
+- react-ui-list: Tree `path` prefix, `Label srOnly`, `ItemIcon` children, `ItemText` test id, `ItemActions`,
+  `multiline` rows; OrderedList single selection (`value`/`onValueChange`) and `DragHandle asChild`.
+- react-ui-form: `Form.Content` and `Form.Viewport` forward their ref (Viewport is composable), `Form.Viewport
+width='document'`, `Form.Submit icon`/`busy`, `ObjectPicker trigger`, `RefEditor extensions`/`classNames`.
+- react-ui-menu: `ActionToolbar` recedes (`inactive`) rather than disabling while its attendable lacks attention, as
+  the current toolbar did. Disabling meant the first press on an unattended plank's toolbar did nothing, and stories
+  that press a toolbar control without attention failed.
 
 ### Superseded current implementations
 
@@ -67,126 +103,34 @@ pilots are now redundant.
 consumer now imports. The codemods had rewritten their internals onto Next parts; they are restored to their
 pre-cut-over source and stay on the current react-ui until step 3 deletes them, rather than being ported twice.
 
-### Blocked or open
+### Behaviour that moved (visual pass)
 
-- **The current Tree (7 consumers):** devtools ObjectsTree, plugin-debug, plugin-github, plugin-navtree,
-  plugin-sandbox, react-ui-task TaskList, react-ui-trace ProcessTree. Next Tree composes `Root`/`Content`/`Item`;
-  TaskList and ProcessTree are built on the current Tree's `renderColumns`/`renderHeading`/`gridTemplateColumns`.
-  They keep the current Tree (and TaskList the current headless Listbox) until each is recomposed.
-- **Residue that compiles (batch 1):** `Flex`/`Grid` in `ui-template`'s layout DSL (its gap/align vocabulary needs a
-  Next mapping) and two stories; `useThemeContext().tx` for the editor's custom slash menu and the HtmlViewer test
-  harness; `ElevationProvider`/`useElevationContext` (EditorToolbar, dnd ResizeHandle) → `level`;
-  `ThemeProvider`/`defaultTx` (providers, decided in step 3).
+- Deck dialogs: `overlayClasses`/`overlayStyle` on `LayoutOperation.UpdateDialog` are now inert (Next has no overlay
+  part); `blockAlign` maps to the dialog placement.
+- Deck popover: positioning, focus and dismissal moved to the Root; layers spawned from the card are zag's nested
+  layers, replacing the Radix portal workaround.
+- Navtree: row actions reveal on hover/focus/selection through `Tree.ItemActions`; `headingClassName` from the model
+  is not applied; the L0 rail tooltip uses the default open delay.
+- Shell: `InvitationListItem` avatar stack, `IdentityPanel` avatar (`fill`, `w-16`), contact and invitation rows.
+- devtools `ObjectsTree` (two icons in one block), `StatCard` size, `Select.Trigger` without a variant.
+- Form `FieldSet appearance='section'` and `descriptionPlacement='tooltip'` dropped (Next nests sections plainly and
+  shows descriptions below); plugin-debug's port log row no longer collapses the settings columns.
+- Large icons and avatars beyond the size scale use classes (`size-14`) or the nearest step (`PersonCard` avatar `xl`).
+- TaskList (from the migration's report): the editor pane is inset by `--nx-gap-size` to line up with rows; flat
+  status-group labels sit one block in; multiline rows fade on disclosure; dragging an open branch collapses it; the
+  focus ring shows on the selected row; rows use `content-visibility` rather than a window.
+- Sync-targets dialog: a multiple-selection listbox with check indicators in place of checkboxes.
+- Library download is a `Link`, not a button; Welcome's sign-in menu no longer forces `z-50`.
 
-### Remaining type errors (batches 2–5)
+### Open (for step 3 or a decision)
 
-Ordered by dependency depth within each batch.
-
-#### Remaining: batch 2 Shell / SDK / devtools / common
-
-| Package                   | Depth | Type errors | Files | Top error kinds                                                                                     |
-| ------------------------- | ----: | ----------: | ----: | --------------------------------------------------------------------------------------------------- |
-| `@dxos/storybook-utils`   |    12 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                       |
-| `@dxos/app-graph`         |    26 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                       |
-| `@dxos/shell`             |    29 |          67 |    24 | TS2322 prop/type mismatch (29), TS2339 missing property/part (25), TS2741 missing required prop (8) |
-| `@dxos/app-toolkit`       |    30 |           7 |     4 | TS2322 prop/type mismatch (5), TS2741 missing required prop (1), TS2339 missing property/part (1)   |
-| `@dxos/stories-lens`      |    33 |           3 |     2 | TS2322 prop/type mismatch (3)                                                                       |
-| `@dxos/devtools`          |    34 |          27 |    14 | TS2322 prop/type mismatch (19), TS2345 argument type (3), TS2741 missing required prop (2)          |
-| `@dxos/storybook-testing` |    40 |           2 |     2 | TS2322 prop/type mismatch (1), TS2741 missing required prop (1)                                     |
-| `@dxos/examples`          |    42 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                       |
-| `@dxos/stories-assistant` |    51 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                       |
-
-#### Remaining: batch 3 Plugins
-
-| Package                   | Depth | Type errors | Files | Top error kinds                                                                                |
-| ------------------------- | ----: | ----------: | ----: | ---------------------------------------------------------------------------------------------- |
-| `@dxos/plugin-theme`      |    31 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-attention`  |    32 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                  |
-| `@dxos/plugin-testing`    |    34 |           6 |     1 | TS2322 prop/type mismatch (4), TS2339 missing property/part (2)                                |
-| `@dxos/plugin-client`     |    36 |           9 |     5 | TS2322 prop/type mismatch (5), TS2741 missing required prop (4)                                |
-| `@dxos/plugin-calls`      |    37 |          14 |     2 | TS2741 missing required prop (7), TS2322 prop/type mismatch (5), TS2344 type constraint (2)    |
-| `@dxos/plugin-navtree`    |    37 |          13 |     7 | TS2322 prop/type mismatch (9), TS2339 missing property/part (2), TS2344 type constraint (1)    |
-| `@dxos/plugin-registry`   |    37 |          12 |     4 | TS2322 prop/type mismatch (8), TS2722 (2), TS18048 (2)                                         |
-| `@dxos/plugin-mobile`     |    37 |           7 |     3 | TS2339 missing property/part (6), TS2322 prop/type mismatch (1)                                |
-| `@dxos/plugin-preview`    |    37 |           3 |     3 | TS2322 prop/type mismatch (2), TS2739 missing required props (1)                               |
-| `@dxos/plugin-search`     |    37 |           2 |     1 | TS2741 missing required prop (1), TS2339 missing property/part (1)                             |
-| `@dxos/plugin-status-bar` |    37 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-progress`   |    38 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-support`    |    39 |          13 |     3 | TS2741 missing required prop (7), TS2322 prop/type mismatch (3), TS2345 argument type (2)      |
-| `@dxos/plugin-code`       |    39 |           2 |     1 | TS2322 prop/type mismatch (1), TS7006 implicit any param (1)                                   |
-| `@dxos/plugin-explorer`   |    39 |           2 |     2 | TS2322 prop/type mismatch (2)                                                                  |
-| `@dxos/plugin-zen`        |    39 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                  |
-| `@dxos/plugin-kanban`     |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-library`    |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-sequencer`  |    39 |           1 |     1 | TS2741 missing required prop (1)                                                               |
-| `@dxos/plugin-spacetime`  |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-table`      |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-terra`      |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-chess`      |    40 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-tldraw`     |    40 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-markdown`   |    41 |           5 |     4 | TS2322 prop/type mismatch (3), TS2739 missing required props (2)                               |
-| `@dxos/plugin-stack`      |    42 |           8 |     2 | TS2741 missing required prop (7), TS2344 type constraint (1)                                   |
-| `@dxos/plugin-board`      |    42 |           4 |     1 | TS2339 missing property/part (4)                                                               |
-| `@dxos/plugin-review`     |    42 |           3 |     3 | TS2322 prop/type mismatch (2), TS2339 missing property/part (1)                                |
-| `@dxos/plugin-video`      |    42 |           2 |     1 | TS2339 missing property/part (2)                                                               |
-| `@dxos/plugin-routine`    |    43 |          19 |     4 | TS2322 prop/type mismatch (7), TS2339 missing property/part (4), TS7006 implicit any param (4) |
-| `@dxos/plugin-sheet`      |    43 |           4 |     1 | TS2741 missing required prop (3), TS2322 prop/type mismatch (1)                                |
-| `@dxos/plugin-commerce`   |    43 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-connector`  |    44 |           3 |     2 | TS2741 missing required prop (2), TS2339 missing property/part (1)                             |
-| `@dxos/plugin-magazine`   |    44 |           2 |     2 | TS2322 prop/type mismatch (2)                                                                  |
-| `@dxos/plugin-github`     |    45 |           5 |     3 | TS2322 prop/type mismatch (4), TS2741 missing required prop (1)                                |
-| `@dxos/plugin-blogger`    |    45 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                  |
-| `@dxos/plugin-ibkr`       |    45 |           2 |     2 | TS2322 prop/type mismatch (1), TS2554 argument count (1)                                       |
-| `@dxos/plugin-pipeline`   |    46 |           3 |     1 | TS2339 missing property/part (2), TS2322 prop/type mismatch (1)                                |
-| `@dxos/plugin-trip`       |    46 |           3 |     2 | TS2322 prop/type mismatch (2), TS2339 missing property/part (1)                                |
-| `@dxos/plugin-meeting`    |    46 |           1 |     1 | TS2741 missing required prop (1)                                                               |
-| `@dxos/plugin-tasks`      |    46 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-onboarding` |    48 |          14 |     1 | TS7006 implicit any param (8), TS2339 missing property/part (3), TS2322 prop/type mismatch (2) |
-| `@dxos/plugin-projects`   |    48 |           3 |     3 | TS2322 prop/type mismatch (3)                                                                  |
-| `@dxos/plugin-script`     |    48 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
-| `@dxos/plugin-studio`     |    49 |           6 |     4 | TS2322 prop/type mismatch (6)                                                                  |
-| `@dxos/plugin-sandbox`    |    49 |           2 |     2 | TS2322 prop/type mismatch (2)                                                                  |
-| `@dxos/plugin-debug`      |    50 |           9 |     6 | TS2322 prop/type mismatch (7), TS2344 type constraint (1), TS2741 missing required prop (1)    |
-| `@dxos/plugin-heygen`     |    50 |           2 |     1 | TS2322 prop/type mismatch (1), TS7006 implicit any param (1)                                   |
-
-#### Remaining: batch 4 Plugins (isolated)
-
-| Package                  | Depth | Type errors | Files | Top error kinds                                                                                 |
-| ------------------------ | ----: | ----------: | ----: | ----------------------------------------------------------------------------------------------- |
-| `@dxos/plugin-deck`      |    36 |          22 |     8 | TS2322 prop/type mismatch (13), TS2339 missing property/part (7), TS7006 implicit any param (1) |
-| `@dxos/plugin-space`     |    38 |          19 |    11 | TS2322 prop/type mismatch (10), TS2339 missing property/part (5), TS18048 (2)                   |
-| `@dxos/plugin-inbox`     |    45 |          15 |     7 | TS2322 prop/type mismatch (6), TS2339 missing property/part (5), TS2532 (1)                     |
-| `@dxos/plugin-assistant` |    47 |          28 |     9 | TS2322 prop/type mismatch (16), TS2339 missing property/part (4), TS18048 (3)                   |
-
-#### Remaining: batch 5 Apps
-
-| Package               | Depth | Type errors | Files | Top error kinds                                                 |
-| --------------------- | ----: | ----------: | ----: | --------------------------------------------------------------- |
-| `@dxos/testbench-app` |    35 |           4 |     2 | TS2322 prop/type mismatch (3), TS2741 missing required prop (1) |
-
-#### Remaining type errors by kind
-
-| Code    | Kind                   | Count |
-| ------- | ---------------------- | ----: |
-| TS2322  | prop/type mismatch     |   214 |
-| TS2339  | missing property/part  |    78 |
-| TS2741  | missing required prop  |    53 |
-| TS7006  | implicit any param     |    19 |
-| TS18048 |                        |     7 |
-| TS2345  | argument type          |     6 |
-| TS2344  | type constraint        |     5 |
-| TS2722  |                        |     4 |
-| TS2739  | missing required props |     4 |
-| TS2353  | unknown object prop    |     2 |
-| TS7053  | implicit any index     |     2 |
-| TS2554  | argument count         |     2 |
-| TS2312  |                        |     1 |
-| TS2352  | unsafe conversion      |     1 |
-| TS2315  |                        |     1 |
-| TS2367  | no-overlap comparison  |     1 |
-| TS2558  | type argument count    |     1 |
-| TS7031  | implicit any binding   |     1 |
-| TS2532  |                        |     1 |
+- **Layout primitives still on the current react-ui:** `Flex` (75 uses), `Grid` (14), `Column` (12) across plugins,
+  devtools and `ui-template`. Deleting them in step 3 needs either a Next equivalent (`Next.Container` covers the
+  unambiguous cases the layout codemod already converted) or keeping them as theme-free layout utilities.
+- **Providers:** `ThemeProvider`/`defaultTx` (apps, shell, examples, plugin-theme/-file/-onboarding/-search/-terra),
+  `ElevationProvider`/`useElevationContext` (four toolbars, EditorToolbar, dnd ResizeHandle) → `level`.
+- **Utilities exported from react-ui** (not components): `useId`, `useAsyncEffect`, `useControlledState`,
+  `useFileDownload`, `composeRefs`, `ErrorBoundary`, `Show`/`Switch`, `ThrowError`, `DxAnchorActivate`. They stay.
 
 ## Step 1 record
 
