@@ -234,12 +234,11 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
             >
               <Next.Select.Root
                 disabled={!onSettingsChange}
-                value={[
-                  Object.entries(StorageAdapters).find(
-                    ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-                  )?.[0],
-                ]}
-                onValueChange={({ value: [value] }) => handleStorageAdapterChange(value)}
+                value={Object.entries(StorageAdapters)
+                  .filter(([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore)
+                  .map(([name]) => name)
+                  .slice(0, 1)}
+                onValueChange={({ value: [value] }) => value && handleStorageAdapterChange(value)}
                 items={Object.keys(StorageAdapters).map((key) => ({
                   value: key,
                   label: t(`settings.storage-adaptor.${key}.label`),

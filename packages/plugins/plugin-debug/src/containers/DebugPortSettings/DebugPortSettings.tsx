@@ -87,13 +87,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             </Flex>
           </Form.Field>
 
-          {/* The settings variant puts the control in a right-hand column; log rows need the full
-              width, so this row collapses to a single column. */}
-          <Form.Field
-            standalone
-            label={t('settings.debug-port.log.label')}
-            classNames='md:grid-cols-1 md:[grid-template-areas:"header""description""control""validation"]'
-          >
+          <Form.Field standalone label={t('settings.debug-port.log.label')}>
             {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter. */}
             <Logger.Root rowFilter={isDebugPortRow}>
               <Logger.Content classNames='max-h-[16lh]'>

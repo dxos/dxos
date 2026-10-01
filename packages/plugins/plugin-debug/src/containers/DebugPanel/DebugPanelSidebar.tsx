@@ -11,8 +11,8 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useGraphTreeModel } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
-import { Path, Tree } from '@dxos/react-ui-list';
-import { Next } from '@dxos/react-ui/next';
+import { Path } from '@dxos/react-ui-list';
+import { Tree, type TreeSelectEvent } from '@dxos/react-ui-list/next';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';
@@ -91,7 +91,7 @@ export const DebugPanelSidebar = () => {
   );
 
   const handleSelect = useCallback(
-    ({ item, path }: { item: AppGraphNode.Node; path: string[] }) => {
+    ({ item, path }: TreeSelectEvent<AppGraphNode.Node>) => {
       if (item.data === null) {
         // A branch has no page: selecting it toggles it.
         const key = Path.create(...path);
@@ -106,20 +106,18 @@ export const DebugPanelSidebar = () => {
   );
 
   return (
-    <Next.ScrollArea.Root orientation='vertical'>
-      <Next.ScrollArea.Viewport>
-        <Tree
-          id={contextId}
-          rootId={DebugNodes.DEBUG_ROOT_ID}
-          path={ROOT_PATH}
-          ariaLabel={t('debug-panel.tree.label')}
-          model={model}
-          size='sm'
-          onOpenChange={handleOpenChange}
-          onSelect={handleSelect}
-        />
-      </Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
+    <Tree.Root
+      id={contextId}
+      rootId={DebugNodes.DEBUG_ROOT_ID}
+      path={ROOT_PATH}
+      model={model}
+      size='sm'
+      onOpenChange={handleOpenChange}
+      onSelect={handleSelect}
+    >
+      <Tree.Label srOnly>{t('debug-panel.tree.label')}</Tree.Label>
+      <Tree.Content />
+    </Tree.Root>
   );
 };
 

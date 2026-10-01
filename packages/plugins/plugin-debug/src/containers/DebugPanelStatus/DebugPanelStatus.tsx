@@ -79,12 +79,12 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
     [update, invokePromise],
   );
   const handlePositionChangeEnd = useCallback(
-    (next: Next.FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
+    ({ position }: { position: Next.FloatingPanelPoint }) => update((prev) => ({ ...prev, position })),
     [update],
   );
 
   const handleSizeChangeEnd = useCallback(
-    (next: Next.FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
+    ({ size }: { size: Next.FloatingPanelSize }) => update((prev) => ({ ...prev, size })),
     [update],
   );
   // First opening: centred above the status bar, where the popover it replaces used to sit. A
@@ -148,7 +148,7 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
             </Next.FloatingPanel.DragTrigger>
             {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
             <Next.FloatingPanel.Control>
-              <DebugPanelHeader mode={mode} onModeChange={handleModeChange} density='sm' />
+              <DebugPanelHeader mode={mode} onModeChange={handleModeChange} size='sm' />
               <Next.FloatingPanel.StageTrigger stage='minimized' />
               <Next.FloatingPanel.StageTrigger stage='default' />
               <Next.FloatingPanel.CloseTrigger />
