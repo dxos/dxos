@@ -846,6 +846,18 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
+  /**
+   * Every document the space directory references besides itself: linked objects, and the branch registry's
+   * version and branch documents, the same set the host replicates.
+   */
+  #spaceDocumentIds(doc: DatabaseDirectory): DocumentId[] {
+    const urls = [
+      ...Object.values(doc.links ?? {}).map((link) => link.toString()),
+      ...DatabaseDirectory.getAllBranchDocUrls(doc),
+    ];
+    return [...new Set(urls.filter(isValidAutomergeUrl).map((url) => toDocumentId(url)))];
+  }
+
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
     const root = this.getSpaceRootDocHandle();
     const doc = root.doc();
@@ -856,7 +868,7 @@ export class EntityManager implements IDatabaseBinding {
     const headsStates = await runServiceCall(
       this._runtime,
       this._dataService['DataService.getDocumentHeads']({
-        documentIds: Object.values(doc.links ?? {}).map((link) => toDocumentId(link.toString() as AutomergeUrl)),
+        documentIds: this.#spaceDocumentIds(doc),
       }),
       { timeout: RPC_TIMEOUT },
     );
@@ -922,10 +934,7 @@ export class EntityManager implements IDatabaseBinding {
     await runServiceCall(
       this._runtime,
       this._dataService['DataService.reIndexHeads']({
-        documentIds: [
-          root.documentId,
-          ...Object.values(doc.links ?? {}).map((link) => toDocumentId(link as AutomergeUrl)),
-        ],
+        documentIds: [root.documentId, ...this.#spaceDocumentIds(doc)],
       }),
     );
   }

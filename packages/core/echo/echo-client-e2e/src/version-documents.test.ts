@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Filter, Obj, Type, VersionLens } from '@dxos/echo';
+import { createBranch, switchBranch } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
@@ -173,5 +174,41 @@ describe('version documents across peers', () => {
     });
     // `done` exists only in v3 and survives the old peer's edit.
     expect(created.done).toBe(true);
+  });
+
+  test('waiting for replicated heads covers version and branch documents', async () => {
+    const pair = await createPartitionedPair(builder, [TaskV1, TaskV2, TaskV3]);
+    network = pair.network;
+    const { peer1, peer2, syncAll } = pair;
+    const spaceKey = PublicKey.random();
+    const db1 = await peer1.createDatabase(spaceKey);
+    const task = db1.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db1.flush();
+    const db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await syncAll(db1, db2);
+
+    await db1.syncVersions(lenses);
+    (await versionDoc(db1, task.id, '0.3.0')).change((doc) => {
+      doc.objects![task.id].data.labels.push('waited');
+    });
+    const [current] = await db1.query(Filter.type(TaskV3)).run();
+    await createBranch(current, 'b1');
+    await switchBranch(current, 'b1');
+    Obj.update(current, (current) => {
+      current.name = 'On a branch';
+    });
+    await db1.flush();
+
+    // No polling: once the heads are replicated, every version and branch document is.
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    expect(labelsOf((await versionDoc(db2, task.id, '0.3.0')).doc(), task.id)).toEqual(['waited']);
+    const record = db2._getSpaceRootDocHandle().doc().branches?.[task.id]?.b1;
+    const branchUrl = record?.versions?.[task.id]?.['0.3.0']?.toString();
+    if (!branchUrl || !isDocumentUrl(branchUrl)) {
+      throw new Error('no v3 on the branch');
+    }
+    const branch = db2._repo.find<DatabaseDirectory>(branchUrl);
+    await branch.whenReady();
+    expect(String(branch.doc().objects?.[task.id]?.data?.name)).toBe('On a branch');
   });
 });

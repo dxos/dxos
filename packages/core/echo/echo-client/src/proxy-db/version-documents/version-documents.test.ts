@@ -13,6 +13,7 @@ import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
+import { toDocumentId } from '../../automerge/index.ts';
 import { createBranch, mergeBranch, switchBranch } from '../../echo-handler/index.ts';
 import { EchoTestBuilder } from '../../testing/index.ts';
 import { type EchoDatabase } from '../database.ts';
@@ -239,6 +240,26 @@ describe('version documents', () => {
     expect(task.name).toBe('Fresh');
     const [found] = await db.query(Filter.type(TaskV3)).run();
     expect(found.id).toBe(task.id);
+  });
+
+  test('document heads cover every version and branch document', async () => {
+    const { db } = await builder.createDatabase({ types });
+    const { id } = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await db.syncVersions(lenses);
+    const [task] = await db.query(Filter.type(TaskV3)).run();
+    await createBranch(task, 'b1');
+
+    const root = db._getSpaceRootDocHandle().doc();
+    const record = root.branches?.[id]?.b1;
+    const urls = [
+      ...Object.values(DatabaseDirectory.getVersionDocUrls(root, id)),
+      ...Object.values(record?.members ?? {}).map(String),
+      ...Object.values(record?.versions?.[id] ?? {}).map(String),
+    ];
+    expect(urls).toHaveLength(6);
+    const heads = Object.keys((await db.getDocumentHeads()).heads);
+    expect(heads).toEqual(expect.arrayContaining(urls.filter(isValidAutomergeUrl).map((url) => toDocumentId(url))));
   });
 
   test('a second pass writes nothing', async () => {
