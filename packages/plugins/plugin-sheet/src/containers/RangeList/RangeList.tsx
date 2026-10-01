@@ -15,9 +15,6 @@ import { Next } from '@dxos/react-ui/next';
 import { meta } from '#meta';
 import { type Sheet, SheetUtil } from '#types';
 
-/** Handle cell, title, remove. */
-const COLUMNS = 'var(--nx-block-size) minmax(0, 1fr) var(--nx-block-size)';
-
 /** A sheet toggles a `key`/`value` on a cell range at most once, so the triple identifies a range across reorders. */
 const getRangeId = ({ key, value, range }: Sheet.Range) => `${key}:${value}:${range}`;
 
@@ -40,6 +37,17 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
     [updateSheet],
   );
 
+  // The row's text, also its typeahead and drag-preview label.
+  const getLabel = useCallback(
+    (range: Sheet.Range) =>
+      t('range.title', {
+        position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
+        key: t(`range-key.${range.key}.label`),
+        value: t(`range-value.${range.value}.label`),
+      }),
+    [t, sheetProp],
+  );
+
   const handleRemove = useCallback(
     (id: string) =>
       updateSheet((sheet) => {
@@ -52,35 +60,26 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   );
 
   return (
-    <>
-      <Next.Typography>{t('range-list.heading')}</Next.Typography>
-      {sheet.ranges.length === 0 ? (
-        <Next.Typography tone='description'>{t('no-ranges.message')}</Next.Typography>
-      ) : (
-        <OrderedList.Root<Sheet.Range> items={sheet.ranges} getId={getRangeId} onMove={handleMove}>
-          {({ items: ranges }) => (
-            <OrderedList.Content aria-label={t('range-list.heading')} scroll={false}>
-              {ranges.map((range) => {
-                const id = getRangeId(range);
-                return (
-                  <OrderedList.Item key={id} id={id} columns={COLUMNS}>
-                    <OrderedList.DragHandle />
-                    <OrderedList.ItemText>
-                      {t('range.title', {
-                        position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
-                        key: t(`range-key.${range.key}.label`),
-                        value: t(`range-value.${range.value}.label`),
-                      })}
-                    </OrderedList.ItemText>
-                    <Next.SystemButton.Remove onClick={() => handleRemove(id)} />
-                  </OrderedList.Item>
-                );
-              })}
-            </OrderedList.Content>
-          )}
-        </OrderedList.Root>
+    <OrderedList.Root<Sheet.Range> items={sheet.ranges} getId={getRangeId} getLabel={getLabel} onMove={handleMove}>
+      {({ items: ranges }) => (
+        <>
+          <OrderedList.Label>{t('range-list.heading')}</OrderedList.Label>
+          <OrderedList.Content scroll={false}>
+            {ranges.map((range) => {
+              const id = getRangeId(range);
+              return (
+                <OrderedList.Item key={id} id={id}>
+                  <OrderedList.DragHandle />
+                  <OrderedList.ItemText />
+                  <Next.SystemButton.Remove onClick={() => handleRemove(id)} />
+                </OrderedList.Item>
+              );
+            })}
+          </OrderedList.Content>
+          <OrderedList.Empty>{t('no-ranges.message')}</OrderedList.Empty>
+        </>
       )}
-    </>
+    </OrderedList.Root>
   );
 };
 

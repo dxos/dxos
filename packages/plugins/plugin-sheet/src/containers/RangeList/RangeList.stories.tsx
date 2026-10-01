@@ -11,19 +11,13 @@ import { useObject } from '@dxos/echo-react';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { osTranslations } from '@dxos/ui-theme';
 
 import { translations as sheetTranslations } from '#translations';
 import { Sheet, SheetUtil } from '#types';
 
 import { RangeList } from './RangeList.tsx';
 
-// The app provides the os labels; stories provide their own.
-const translations = [
-  ...sheetTranslations,
-  ...uiTranslations,
-  { 'en-US': { [osTranslations]: { 'drag-handle.label': 'Drag to rearrange' } } },
-];
+const translations = [...sheetTranslations, ...uiTranslations];
 
 /** A detached sheet with three ranges; later ranges take precedence, which is what reordering changes. */
 const createSheet = () => {
@@ -84,29 +78,37 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Rows render in the model's order; the handle moves its row from the keyboard (Alt+ArrowDown), which reorders
- * `sheet.ranges`, and Remove deletes the row's range from the model.
+ * Rows render in the model's order in a listbox named by the heading; the row's handle (reached by entering the row
+ * with ArrowRight) moves it from the keyboard (Alt+ArrowDown), which reorders `sheet.ranges`; Remove, named by the
+ * row's text, deletes the row's range from the model; removing every range shows the empty message.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const list = await canvas.findByRole('list', { name: 'Ranges' });
+    const list = await canvas.findByRole('listbox', { name: 'Ranges' });
     const order = canvas.getByTestId('range-order');
-    await expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+    await expect(within(list).getAllByRole('option')).toHaveLength(3);
     await expect(order).toHaveTextContent('center highlight softwrap');
 
     // Keyboard move through the first row's handle.
     const handle = within(list).getAllByRole('button', { name: 'Drag to rearrange' })[0];
-    handle.focus();
+    list.focus();
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await waitFor(() => expect(handle).toHaveFocus());
     await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
     await waitFor(() => expect(order).toHaveTextContent('highlight center softwrap'));
-    await waitFor(() => expect(within(list).getAllByRole('listitem')[1]).toHaveTextContent('Align center'));
+    await waitFor(() => expect(within(list).getAllByRole('option')[1]).toHaveTextContent('Align center'));
 
     // Remove the (now first) highlight range.
-    const [first] = within(list).getAllByRole('listitem');
-    await userEvent.click(within(first).getByRole('button', { name: 'Remove' }));
+    const [first] = within(list).getAllByRole('option');
+    await userEvent.click(within(first).getByRole('button', { name: /^Remove .*Highlight/ }));
     await waitFor(() => expect(order).toHaveTextContent('center softwrap'));
-    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(2));
+    await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(2));
+
+    for (const row of within(list).getAllByRole('option')) {
+      await userEvent.click(within(row).getByRole('button', { name: /^Remove/ }));
+    }
+    await waitFor(() => expect(canvas.getByText('No ranges')).toBeVisible());
   },
 };
 
