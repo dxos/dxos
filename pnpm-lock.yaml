@@ -24475,6 +24475,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui
       '@dxos/storybook-addon-logger':
         specifier: workspace:*
         version: link:../../packages/common/storybook-addon-logger

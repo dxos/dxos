@@ -6,6 +6,8 @@ import '@dxos-theme';
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
+// Next components style through `.nx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/next/theme.css';
 import { ErrorBoundary, ErrorBoundaryProps, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
