@@ -1808,6 +1808,12 @@ export class EntityManager implements IDatabaseBinding {
 
   #rerouteChain: Promise<void> = Promise.resolve();
 
+  /** Moves the object's live core onto the document it routes to, and resolves once every pending move has run. */
+  async reroute(objectId: string): Promise<void> {
+    this.#rerouteObjects([objectId]);
+    await this.#rerouteChain;
+  }
+
   /** The document an object's live core reads: on the branch this device views, else on main. */
   #readUrl(objectId: string): AutomergeUrl | undefined {
     const branch = this._currentBranches.get(objectId);

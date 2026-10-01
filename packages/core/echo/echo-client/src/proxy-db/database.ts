@@ -933,8 +933,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   async _loadVersionBinding(objectId: string, url: AutomergeUrl): Promise<Entity.Unknown> {
     if (this._entityManager.routedDocumentUrl(objectId) === url) {
+      // The routed document can change before the live core moves onto it, which happens once the document loads.
+      await this._entityManager.reroute(objectId);
       const live = await this._loadObjectById(objectId);
-      if (live) {
+      if (live && getObjectCore(live).docHandle?.url === url) {
         return live;
       }
     }
