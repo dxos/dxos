@@ -120,11 +120,21 @@ DialogHeader.displayName = 'Next.Dialog.Header';
 // Title
 //
 
-type DialogTitleProps = ThemedClassName<DialogPrimitive.TitleProps>;
+type DialogTitleProps = ThemedClassName<DialogPrimitive.TitleProps> & {
+  /** Names the dialog for assistive tech without showing a heading. */
+  srOnly?: boolean;
+};
 
-const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(({ classNames, ...props }, forwardedRef) => (
-  <DialogPrimitive.Title {...props} className={mx(recipes.dialogTitle(), classNames)} ref={forwardedRef} />
-));
+const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
+  ({ classNames, srOnly, ...props }, forwardedRef) => (
+    <DialogPrimitive.Title
+      {...props}
+      data-sr-only={srOnly ? '' : undefined}
+      className={mx(recipes.dialogTitle(), classNames)}
+      ref={forwardedRef}
+    />
+  ),
+);
 
 DialogTitle.displayName = 'Next.Dialog.Title';
 
@@ -132,12 +142,16 @@ DialogTitle.displayName = 'Next.Dialog.Title';
 // Description
 //
 
-type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DescriptionProps>;
+type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DescriptionProps> & {
+  /** Describes the dialog for assistive tech without showing the text. */
+  srOnly?: boolean;
+};
 
 const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
-  ({ classNames, ...props }, forwardedRef) => (
+  ({ classNames, srOnly, ...props }, forwardedRef) => (
     <DialogPrimitive.Description
       {...props}
+      data-sr-only={srOnly ? '' : undefined}
       className={mx(recipes.dialogDescription(), classNames)}
       ref={forwardedRef}
     />

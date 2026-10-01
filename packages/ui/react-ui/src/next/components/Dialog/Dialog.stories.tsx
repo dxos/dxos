@@ -141,6 +141,27 @@ const open = async (canvasElement: HTMLElement, testId: string, name = 'Edit pro
 
 export const Default: Story = {};
 
+/** `srOnly` names and describes the dialog for assistive tech without showing a heading or text. */
+export const HiddenTitle: Story = {
+  render: () => (
+    <Next.Dialog.Root defaultOpen>
+      <Next.Dialog.Content data-testid='hidden-title'>
+        <Next.Dialog.Title srOnly>Settings</Next.Dialog.Title>
+        <Next.Dialog.Description srOnly>{DESCRIPTION}</Next.Dialog.Description>
+        <Next.Dialog.Body>
+          <ProfileForm />
+        </Next.Dialog.Body>
+      </Next.Dialog.Content>
+    </Next.Dialog.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const dialog = await body.findByRole('dialog', { name: 'Settings' });
+    const title = dialog.querySelector<HTMLElement>('[data-part="title"]');
+    await expect(title && title.getBoundingClientRect().width).toBeLessThanOrEqual(1);
+  },
+};
+
 /** A non-modal dialog docked at the block end with no scrim (e.g. a chat panel): the page behind stays usable. */
 export const Docked: Story = {
   render: () => (
