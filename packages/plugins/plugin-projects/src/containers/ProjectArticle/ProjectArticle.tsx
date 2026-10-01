@@ -281,7 +281,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     <Form.FieldSet
                       label={t('outline.label')}
                       description={t('outline.description')}
-                      descriptionPlacement='tooltip'
                     >
                       <Surface.Surface
                         type={AppSurface.Section}

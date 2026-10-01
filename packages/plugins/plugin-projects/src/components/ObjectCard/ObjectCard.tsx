@@ -69,7 +69,17 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
           </CardIconSlot>
         </Next.Block>
         <Next.Card.Title lines={2}>{label}</Next.Card.Title>
-        {menuItems.length > 0 && <Next.Card.Menu items={menuItems} />}
+        {menuItems.length > 0 && (
+          <Next.Card.Menu label={t('object-card.menu.label')}>
+            {menuItems.map((item) => (
+              <Next.Menu.Item
+                key={item.label}
+                item={{ value: item.label, label: item.label, icon: item.icon }}
+                onClick={item.onClick}
+              />
+            ))}
+          </Next.Card.Menu>
+        )}
       </Next.Card.Header>
       {archived && (
         <Next.Card.Row>

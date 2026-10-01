@@ -71,6 +71,7 @@ export const translations = [
         'object-card.untitled.label': 'Untitled',
         'object-card.delete.label': 'Delete',
         'object-card.archived.label': 'Archived',
+        'object-card.menu.label': 'Object actions',
       },
     },
   },

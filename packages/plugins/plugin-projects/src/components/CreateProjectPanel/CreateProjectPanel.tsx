@@ -116,7 +116,7 @@ const CreateProjectContent = ({ children }: PropsWithChildren) => {
   useSubmitOnEnter(contentRef, () => canSave && onSave());
 
   return (
-    <Form.Content classNames='pt-form-padding gap-form-gap' ref={contentRef}>
+    <Form.Content ref={contentRef}>
       {children}
     </Form.Content>
   );
