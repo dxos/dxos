@@ -235,6 +235,11 @@ in a sandbox on your computer, from fetching this guide to the load prompt; assi
 it. (In a browser, the template comes from the Coding (Dev) plugin and needs a Composer served locally by
 `vite preview`.)
 
+The **Composer Plugin (Sandbox)** template, contributed by the Sandbox plugin, runs the same example against any
+bundled Composer, deployed ones included: the agent builds in an EDGE sandbox with `@dxos/*` installed from
+[pkg.pr.new](https://pkg.pr.new) at the commit the app was built from, serves `dist/` from the container, and
+offers the manifest URL of the port it exposed.
+
 > Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
 > app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and
 > `effect` imports to the host's own copies; Composer's own Vite dev server has no import map, so those
