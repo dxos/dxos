@@ -1,6 +1,6 @@
 /*
- * Spike styles for the next Tree. They belong in `@dxos/react-ui/next/theme` (as `listbox.css` does) once the Tree
- * is adopted; kept beside the prototype so the spike touches no react-ui file.
+ * Tree (`@dxos/react-ui-list/next`): rows are flat, one block tall and indented one block per level. Row states (hover,
+ * selected, disabled, drop target) live here until the shared `nx-row` class carries them (AUDIT group B point 20).
  */
 
 @layer dx-components {
@@ -30,7 +30,7 @@
     grid-auto-rows: var(--nx-block-size);
     padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-block-size));
     border-radius: var(--radius-sm, 0.25rem);
-    cursor: pointer;
+    cursor: default;
     outline: none;
     user-select: none;
   }
@@ -55,17 +55,32 @@
     opacity: 0.5;
     cursor: default;
   }
-  .nx-tree-item[data-drop='inside'] {
-    box-shadow: inset 0 0 0 var(--nx-drop-indicator-width) var(--nx-drop-indicator-color);
+  /* Drop targets: `top`/`bottom` draw a `Next.DropIndicator` line at the landing level; `inside` rings the branch. */
+  .nx-tree-item[data-drop-target='inside'] {
+    outline: var(--nx-drop-indicator-width) solid var(--nx-drop-indicator-color);
+    outline-offset: calc(-1 * var(--nx-drop-indicator-width));
+  }
+  .nx-tree-item[data-drop-target='inside'][data-drop-kind='link'] {
+    outline-style: dashed;
+  }
+  .nx-tree-item > .nx-drop-indicator {
+    inset-inline-start: calc(var(--nx-tree-drop-level, 0) * var(--nx-block-size));
+  }
+  /* A link adds a reference and leaves the item where it is, so its line is dashed. */
+  .nx-tree-item[data-drop-kind='link'] > .nx-drop-indicator {
+    height: 0;
+    background: none;
+    border-block-start: var(--nx-drop-indicator-width) dashed var(--nx-drop-indicator-color);
   }
 
-  .nx-tree-item[data-virtualize='css'] {
+  .nx-tree-item[data-virtual='variable'] {
     content-visibility: auto;
     contain-intrinsic-block-size: auto var(--nx-block-size);
   }
 
   .nx-tree-branch-trigger {
     display: grid;
+    cursor: pointer;
     place-items: center;
     width: 100%;
     height: 100%;
@@ -89,10 +104,10 @@
    * and `forwards` holds it collapsed until the commit removes it. The clip exists only while the height moves, so a
    * row at rest still paints its focus ring and drop line.
    */
-  .nx-tree-item[data-disclosure='enter'] {
+  :is(.nx-tree-item, .nx-tree-group)[data-disclosure='enter'] {
     animation: nx-tree-row-enter var(--nx-tree-disclosure-duration) ease-out;
   }
-  .nx-tree-item[data-disclosure='conceal'] {
+  :is(.nx-tree-item, .nx-tree-group)[data-disclosure='conceal'] {
     animation: nx-tree-row-conceal var(--nx-tree-disclosure-duration) ease-in forwards;
   }
 
@@ -125,6 +140,50 @@
       block-size: 0;
       overflow-y: clip;
     }
+  }
+
+  .nx-tree-item[data-selectable] {
+    cursor: pointer;
+  }
+  .nx-tree-item[data-hide-drag-source] {
+    display: none;
+  }
+  .nx-tree-item-count {
+    justify-self: end;
+    min-inline-size: 1.5rem;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A section header: one block like every row (so a fixed window holds), its label cleared past the disclosure cell. */
+  .nx-tree-group {
+    display: flex;
+    align-items: flex-end;
+    block-size: var(--nx-block-size);
+    padding-inline-start: calc((var(--nx-tree-depth) + 1) * var(--nx-block-size));
+    padding-block-end: 0.125rem;
+    user-select: none;
+  }
+  .nx-tree-group-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-description);
+  }
+
+  /* The end strip (`dropAtEnd`): one block below the last row that takes "append at the end". */
+  .nx-tree-end {
+    position: relative;
+    min-block-size: var(--nx-block-size);
+  }
+
+  .nx-tree-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-gap-size);
+    min-height: calc(3 * var(--nx-block-size));
+    color: var(--color-description);
   }
 
   /* One segment per ancestor, centred under that ancestor's disclosure block; segments join across rows. */

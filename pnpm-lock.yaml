@@ -22796,6 +22796,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-focus':
         specifier: workspace:*
         version: link:../react-primitives/react-focus
@@ -22824,9 +22827,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

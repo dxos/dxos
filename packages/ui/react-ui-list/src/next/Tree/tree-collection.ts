@@ -8,7 +8,10 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type TreeItemDataProps, type TreeModel } from '../../components/Tree/TreeContext.ts';
 import { Path } from '../../util/index.ts';
 
-/** One node handed to zag's tree collection; only nodes on an open path are ever built. */
+/**
+ * One node handed to zag's tree collection; only nodes on an open path are ever built. A group header
+ * (`disposition: 'group'`) is a row but never a collection node: its children are spliced into its parent's.
+ */
 export type TreeNode<T extends { id: string } = any> = {
   id: string;
   /** Machine value: the joined path, so the same item at two paths keeps independent state. */
@@ -22,6 +25,10 @@ export type TreeNode<T extends { id: string } = any> = {
   branch: boolean;
   open: boolean;
   current: boolean;
+  /** A section header (`disposition: 'group'`): rendered as a row, skipped by the keyboard, never selected. */
+  group: boolean;
+  /** Last of its parent's children in the collection, which offers the drop hitbox's `reparent` zones. */
+  last: boolean;
   /** Read by zag's `getNodeState` from the node itself (it ignores `isNodeDisabled` there). */
   disabled: boolean;
   /** Built only while the branch is open; a closed branch is marked by `childrenCount` alone. */
@@ -33,8 +40,10 @@ export type TreeNode<T extends { id: string } = any> = {
 
 export type TreeWalk<T extends { id: string } = any> = {
   root: TreeNode<T>;
-  /** Pre-order rows under open branches: exactly zag's `visibleNodes`, and what the window slices. */
+  /** Pre-order rows under open branches: zag's `visibleNodes` plus group headers, and what the window slices. */
   rows: TreeNode<T>[];
+  /** Each row's index in `rows`. */
+  rowIndex: Map<string, number>;
   expanded: string[];
   selected: string[];
   byValue: Map<string, TreeNode<T>>;
@@ -56,8 +65,13 @@ export const createTreeWalkAtom = <T extends { id: string }>(
     const selected: string[] = [];
     const byValue = new Map<string, TreeNode<T>>();
 
-    const walk = (parentId: string | undefined, parentPath: string[], parentIndexPath: number[]): TreeNode<T>[] => {
-      const nodes: TreeNode<T>[] = [];
+    /** Appends `parentId`'s children to `siblings`; a group's children join the same list at the same depth. */
+    const walk = (
+      parentId: string | undefined,
+      parentPath: string[],
+      parentIndexPath: number[],
+      siblings: TreeNode<T>[],
+    ): void => {
       for (const id of get(model.childIds(parentId))) {
         // A cycle in the model would recurse forever; the path already names every ancestor.
         if (parentPath.includes(id)) {
@@ -69,35 +83,75 @@ export const createTreeWalkAtom = <T extends { id: string }>(
         }
         const path = [...parentPath, id];
         const props = get(model.itemProps(path));
+        const value = Path.create(...path);
+        const depth = parentIndexPath.length + 1;
+        if (props.disposition === 'group') {
+          const header: TreeNode<T> = {
+            id,
+            value,
+            path,
+            depth,
+            item,
+            props,
+            branch: false,
+            open: true,
+            current: false,
+            group: true,
+            last: false,
+            disabled: true,
+            indexPath: [],
+          };
+          const at = rows.length;
+          const before = siblings.length;
+          rows.push(header);
+          walk(id, path, parentIndexPath, siblings);
+          // An empty group renders nothing, so no header is left without rows.
+          if (siblings.length === before) {
+            rows.splice(at, 1);
+          }
+          continue;
+        }
+
         const branch = (props.parentOf?.length ?? 0) > 0;
         const open = branch && get(model.itemOpen(path));
         const node: TreeNode<T> = {
           id,
-          value: Path.create(...path),
+          value,
           path,
-          depth: parentIndexPath.length + 1,
+          depth,
           item,
           props,
           branch,
           open,
           current: get(model.itemCurrent(path)),
+          group: false,
+          last: false,
           disabled: !!props.disabled,
           childrenCount: branch ? props.parentOf?.length : undefined,
-          indexPath: [...parentIndexPath, nodes.length],
+          indexPath: [...parentIndexPath, siblings.length],
         };
-        nodes.push(node);
+        siblings.push(node);
         rows.push(node);
         byValue.set(node.value, node);
         node.current && selected.push(node.value);
         if (open) {
           expanded.push(node.value);
-          node.children = walk(id, path, node.indexPath);
+          node.children = walkChildren(id, path, node.indexPath);
         }
       }
-      return nodes;
     };
 
-    const children = walk(rootId, rootPath, []);
+    const walkChildren = (parentId: string | undefined, parentPath: string[], parentIndexPath: number[]) => {
+      const children: TreeNode<T>[] = [];
+      walk(parentId, parentPath, parentIndexPath, children);
+      const last = children.at(-1);
+      if (last) {
+        last.last = true;
+      }
+      return children;
+    };
+
+    const children = walkChildren(rootId, rootPath, []);
     const root: TreeNode<T> = {
       id: rootId ?? '',
       value: Path.create(...rootPath),
@@ -107,19 +161,28 @@ export const createTreeWalkAtom = <T extends { id: string }>(
       branch: true,
       open: true,
       current: false,
+      group: false,
+      last: true,
       disabled: false,
       children,
       indexPath: [],
     };
-    return { root, rows, expanded, selected, byValue };
+    const rowIndex = new Map(rows.map((row, index) => [row.value, index]));
+    return { root, rows, rowIndex, expanded, selected, byValue };
   });
 
+/** A row's label as typeahead matches it; a translated label needs the caller's `toString`. */
+const defaultNodeToString = (node: TreeNode) => (typeof node.props.label === 'string' ? node.props.label : node.id);
+
 /** zag's collection over a walk; never asked for the children of a closed branch. */
-export const createCollection = <T extends { id: string }>(root: TreeNode<T>) =>
+export const createCollection = <T extends { id: string }>(
+  root: TreeNode<T>,
+  nodeToString: (node: TreeNode<T>) => string = defaultNodeToString,
+) =>
   createTreeCollection<TreeNode<T>>({
     rootNode: root,
     nodeToValue: (node) => node.value,
-    nodeToString: (node) => (typeof node.props.label === 'string' ? node.props.label : node.id),
+    nodeToString,
     nodeToChildren: (node) => node.children ?? [],
     nodeToChildrenCount: (node) => node.childrenCount,
     isNodeDisabled: (node) => !!node.props.disabled,
