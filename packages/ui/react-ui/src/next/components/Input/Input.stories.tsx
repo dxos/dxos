@@ -14,7 +14,7 @@ import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
-/** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, and `subdued`. */
+/** Plain inputs, then inputs with a leading icon, a trailing unit, a trailing button, `subdued` and `mono`. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Next.Input placeholder='Search' aria-label='Search' noAutoFill data-testid={`input-${size}`} />
@@ -33,6 +33,14 @@ const DefaultStory = ({ size }: SizeArgs) => (
       data-testid={`button-end-${size}`}
     />
     <Next.Input variant='subdued' placeholder='Subdued' aria-label='Subdued' data-testid={`subdued-${size}`} />
+    <Next.Input variant='mono' defaultValue='sk-0001' aria-label='Key' data-testid={`mono-${size}`} />
+    <Next.Input
+      variant='mono'
+      end={<Next.Button icon='ph--copy--regular' label='Copy' iconOnly variant='ghost' />}
+      defaultValue='did:key:z6Mk'
+      aria-label='Identity'
+      data-testid={`mono-end-${size}`}
+    />
   </>
 );
 
@@ -55,7 +63,8 @@ export const Default: Story = {};
  * Inputs are control-tall and centred in their block at every size (decision 12); a text input is named by its
  * `aria-label` and takes typed text, unless disabled. `noAutoFill` asks password managers to stay away. With `start` or
  * `end` the control is a row holding the adornments and a bare input, still control-tall, whose ring follows the
- * input's focus; a trailing icon-only Button fits inside the row. `subdued` drops the well.
+ * input's focus; a trailing icon-only Button fits inside the row. `subdued` drops the well; `mono` sets the value in
+ * the monospace font, adorned or not.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -109,6 +118,12 @@ export const Test: Story = {
     await userEvent.type(find, 'abc');
     await expect(find).toHaveValue('abc');
     await expect(getComputedStyle(byTestId(canvasElement, 'subdued-md')).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    const plainFont = getComputedStyle(input).fontFamily;
+    for (const name of ['Key', 'Identity']) {
+      const font = getComputedStyle(canvas.getByRole('textbox', { name })).fontFamily;
+      await expect(font, name).not.toBe(plainFont);
+      await expect(font, name).toMatch(/mono/i);
+    }
 
     const disabled = canvas.getByRole('textbox', { name: 'Disabled' });
     await expect(disabled).toBeDisabled();

@@ -22,6 +22,9 @@ import {
   Container as NextContainer,
   type ContainerGap as NextContainerGap,
   type ContainerProps as NextContainerProps,
+  ControlFrame as NextControlFrame,
+  type ControlFrameProps as NextControlFrameProps,
+  type ControlFrameVariant as NextControlFrameVariant,
   DateInput as NextDateInput,
   type DateInputGranularity as NextDateInputGranularity,
   type DateInputProps as NextDateInputProps,
@@ -68,6 +71,7 @@ import {
   type SelectOption as NextSelectOption,
   Separator as NextSeparator,
   type SeparatorProps as NextSeparatorProps,
+  type Span as NextSpan,
   Switch as NextSwitch,
   type SwitchProps as NextSwitchProps,
   SystemButton as NextSystemButton,
@@ -96,6 +100,7 @@ export namespace Next {
   export type ContainerProps = NextContainerProps;
   export type Gutter = NextGutter;
   export type ContainerGap = NextContainerGap;
+  export type Span = NextSpan;
   export type Level = NextLevel;
   export const Block = NextBlock;
   export type BlockProps = NextBlockProps;
@@ -113,6 +118,9 @@ export namespace Next {
   export const Label = NextLabel;
   export type LabelProps = NextLabelProps;
   export const Input = NextInput;
+  export const ControlFrame = NextControlFrame;
+  export type ControlFrameProps = NextControlFrameProps;
+  export type ControlFrameVariant = NextControlFrameVariant;
   export type InputProps = NextInputProps;
   export const Button = NextButton;
   export type ButtonProps = NextButtonProps;

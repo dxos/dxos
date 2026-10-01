@@ -10,6 +10,7 @@ export * from './Checkbox/index.ts';
 export * from './Collapsible/index.ts';
 export * from './Combobox/index.ts';
 export * from './Container/index.ts';
+export * from './ControlFrame/index.ts';
 export * from './DateInput/index.ts';
 export * from './Dialog/index.ts';
 export * from './DragHandle/index.ts';

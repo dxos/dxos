@@ -91,6 +91,10 @@
   .nx-input[data-variant='subdued'] {
     background: transparent;
   }
+  /* Keys, ids and code; an adorned row's input inherits the font. */
+  .nx-input[data-variant='mono'] {
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
 
   /*
    * An adorned Input is a control row (like DateInput's): the adornments and a bare input, with the ring drawn on the
@@ -105,8 +109,17 @@
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
     outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
-  .nx-input-row:has(> .nx-input-field:disabled) {
+  .nx-input-row:is([data-disabled], :has(> .nx-input-field:disabled)) {
     opacity: 0.5;
+  }
+  /* A ControlFrame's own content (an editor, a custom control) fills the row and rings it from any focus inside. */
+  .nx-control-frame > :not(.nx-input-adornment) {
+    flex: 1;
+    min-width: 0;
+  }
+  .nx-control-frame:has(> :not(.nx-input-adornment):is(:focus-visible, :has(:focus-visible))) {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
   .nx-input-field {
     flex: 1;
