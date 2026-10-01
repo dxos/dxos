@@ -23,8 +23,7 @@ import {
   resizeToFit,
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
-import { type ObjectPickerContentProps } from '@dxos/react-ui-form';
-import { ObjectPicker } from '@dxos/react-ui-form/next';
+import { ObjectPicker, type ObjectPickerProps } from '@dxos/react-ui-form/next';
 import { Next } from '@dxos/react-ui/next';
 import { isNonNullable } from '@dxos/util';
 
@@ -72,8 +71,6 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   const items = useAtomValue(itemsAtom);
 
   const controller = useRef<BoardController>(null);
-  const addTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const [pickerState, setPickerState] = useState<{ position: Position } | null>(null);
   const [zoom, setZoom] = useState(1);
 
   const layout = useMemo<Layout>(() => ({ items: normalizeCells(board.layout.cells) }), [board.layout.cells]);
@@ -84,7 +81,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
 
   // TODO(burdon): Use search.
   const objects = useQuery(db, Filter.everything());
-  const options = useMemo<ObjectPickerContentProps['options']>(
+  const options = useMemo<ObjectPickerProps['options']>(
     () =>
       objects
         .filter((obj) => obj.id !== board.id)
@@ -139,9 +136,9 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   );
 
   // Toolbar "+" adds an existing object via the picker.
-  const handleSelect = useCallback<NonNullable<ObjectPickerContentProps['onSelect']>>(
-    (id) => {
-      const position = pickerState?.position ?? DEFAULT_POSITION;
+  const handleSelect = useCallback(
+    (id: string | undefined) => {
+      const position = DEFAULT_POSITION;
       const selected = objects.find((obj) => obj.id === id);
       if (!Obj.isObject(selected)) {
         return;
@@ -150,85 +147,79 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
         board.items.push(Ref.make(selected));
         board.layout.cells[selected.id.toString()] = position;
       });
-      setPickerState(null);
     },
-    [pickerState, objects, board],
+    [objects, board],
   );
 
   return (
-    <ObjectPicker.Root
-      open={!!pickerState}
-      onOpenChange={(next: boolean) => setPickerState(next ? { position: DEFAULT_POSITION } : null)}
+    <BoardComponent.Root
+      ref={controller}
+      layout={layout}
+      bounds={bounds}
+      mode='float'
+      resolver={resizeToFit}
+      zoom={zoom}
+      onChange={handleChange}
+      onAdd={handleAdd}
+      onDelete={handleDelete}
     >
-      <BoardComponent.Root
-        ref={controller}
-        layout={layout}
-        bounds={bounds}
-        mode='float'
-        resolver={resizeToFit}
-        zoom={zoom}
-        onChange={handleChange}
-        onAdd={handleAdd}
-        onDelete={handleDelete}
-      >
-        <Next.Panel.Root role={role}>
-          {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
-          <Next.Panel.Header>
-            <Next.Toolbar.Root>
-              <Next.Button
-                icon='ph--crosshair--regular'
-                iconOnly
-                label={t('move-to-center.button')}
-                disabled={!hasAttention}
-                onClick={() => controller.current?.center()}
-              />
-              <Next.Button
-                icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
-                iconOnly
-                label={t('toggle-zoom.button')}
-                disabled={!hasAttention}
-                onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
-              />
-              <Next.Button
-                icon='ph--plus--regular'
-                iconOnly
-                label={t('add-object.button')}
-                disabled={!hasAttention}
-                onClick={(event) => {
-                  addTriggerRef.current = event.currentTarget as HTMLButtonElement;
-                  setPickerState({ position: DEFAULT_POSITION });
-                }}
-              />
-            </Next.Toolbar.Root>
-          </Next.Panel.Header>
-          <Next.Panel.Body asChild>
-            <BoardComponent.Container classNames='dx-fullscreen'>
-              <BoardComponent.Viewport>
-                <BoardComponent.Backdrop />
-                <BoardComponent.Content>
-                  {items?.map((item) => {
-                    const itemLayout = layout.items[item.id];
-                    return itemLayout ? (
-                      <BoardComponent.Cell item={item} key={item.id} layout={itemLayout}>
-                        <Surface.Surface
-                          type={AppSurface.CardContent}
-                          data={{ subject: item, editable: true }}
-                          limit={1}
-                        />
-                      </BoardComponent.Cell>
-                    ) : null;
-                  })}
-                </BoardComponent.Content>
-              </BoardComponent.Viewport>
-              {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
-              <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
-            </BoardComponent.Container>
-          </Next.Panel.Body>
-        </Next.Panel.Root>
-      </BoardComponent.Root>
-      <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
-      <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
-    </ObjectPicker.Root>
+      <Next.Panel.Root role={role}>
+        {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
+        <Next.Panel.Header>
+          <Next.Toolbar.Root>
+            <Next.Button
+              icon='ph--crosshair--regular'
+              iconOnly
+              label={t('move-to-center.button')}
+              disabled={!hasAttention}
+              onClick={() => controller.current?.center()}
+            />
+            <Next.Button
+              icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+              iconOnly
+              label={t('toggle-zoom.button')}
+              disabled={!hasAttention}
+              onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
+            />
+            <ObjectPicker
+              options={options}
+              onSelect={handleSelect}
+              trigger={
+                <Next.Button
+                  icon='ph--plus--regular'
+                  iconOnly
+                  label={t('add-object.button')}
+                  disabled={!hasAttention}
+                />
+              }
+            />
+          </Next.Toolbar.Root>
+        </Next.Panel.Header>
+        <Next.Panel.Body asChild>
+          <BoardComponent.Container classNames='dx-fullscreen'>
+            <BoardComponent.Viewport>
+              <BoardComponent.Backdrop />
+              <BoardComponent.Content>
+                {items?.map((item) => {
+                  const itemLayout = layout.items[item.id];
+                  return itemLayout ? (
+                    <BoardComponent.Cell item={item} key={item.id} layout={itemLayout}>
+                      <Surface.Surface
+                        type={AppSurface.CardContent}
+                        data={{ subject: item, editable: true }}
+                        limit={1}
+                      />
+                    </BoardComponent.Cell>
+                  ) : null;
+                })}
+              </BoardComponent.Content>
+            </BoardComponent.Viewport>
+            {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
+            <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
+          </BoardComponent.Container>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
+    </BoardComponent.Root>
   );
 };
 
