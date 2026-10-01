@@ -701,6 +701,27 @@ children (rule 7); `Field.Label` shows the required indicator automatically (rul
 44. **Per-row Remove names.** `SystemButton.Remove` says "Remove"; a per-row name ("Remove A1:B2") needs a
     translation with the row's text. Decide with point 21.
 
+### Decision review 2026-10-01 (group A: foundations)
+
+Reviewed one question at a time; decisions supersede the recommendations above.
+
+- **Point 7, Container child span:** a `span` prop (a number or `'full'`) on Container and on Container-based parts
+  (`Field.Root`, Fieldset rows), rendered as `grid-column` from a data attribute.
+- **Point 10, control frame:** both. Input keeps `start`/`end` slots, built on an exported `ControlFrame` that editors
+  and custom controls use directly.
+- **Point 11, mixing guard:** no lint rule; the final migration lands as one separate PR, so mixed files never ship.
+- **Point 12, theme cut-over:** no special strategy; the cut-over happens in the migration PR, before production. Until
+  then the CI startup-budget gate still requires Next to load lazily in any pilot.
+- **Point 22, test helpers:** one entry. The geometry assertions move under `src/next/testing/` and export from
+  `@dxos/react-ui/next/testing` with the decorators.
+- **Point 40, list naming:** a `Label` part on lists (as `Listbox.Label`); Typography gains no `id` pass-through.
+- **Point 41, empty states:** a standalone `Next.Empty` (an `icon` prop, its text as children, a translated default).
+  Each composite declares its own `Empty` part with identical props, built on `Next.Empty`, rendered only when the
+  composite has no items. `Banner` is ported separately, without an empty part.
+- **Spike 45, grid Fieldset element:** Fieldset always renders `div role='group'` named by its legend; `disabled`
+  reaches its controls through context.
+- **Spike 46, subgrid in a one-track cell:** deferred for a separate discussion.
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
