@@ -20,12 +20,13 @@ import {
 /** Context a custom rule gets: the element, plus the file to edit and report on. */
 export type RuleContext = { file: CodeFile; element: Element };
 
-const ACTION_ICONS: Record<string, string> = { close: 'ph--x--regular', delete: 'ph--trash--regular' };
+/** The `action` values that name a SystemButton preset. */
+const ACTIONS = new Set(['close', 'delete']);
 
 const literalAction = (element: Element) => {
   const attr = getAttr(element, 'action');
   const value = attr ? attrValue(attr) : undefined;
-  return attr && value?.kind === 'string' && ACTION_ICONS[value.value] ? { attr, action: value.value } : undefined;
+  return attr && value?.kind === 'string' && ACTIONS.has(value.value) ? { attr, action: value.value } : undefined;
 };
 
 /** `Dialog.ActionIconButton action='close'` → `SystemButton.Close` (the same icon, label and icon-only ghost button). */
@@ -43,17 +44,14 @@ export const dialogActionButton = ({ file, element }: RuleContext) => {
   file.count(`Dialog.ActionIconButton → SystemButton.${found.action === 'close' ? 'Close' : 'Delete'}`);
 };
 
-/** `Card.ActionIconButton action label` → `Card.Action icon label`; Card.Action has no default label to fall back on. */
+/** `Card.ActionIconButton action` → `Card.Action system`, the SystemButton preset with its icon and translated label. */
 export const cardActionButton = ({ file, element }: RuleContext) => {
   const found = literalAction(element);
-  if (!found || !getAttr(element, 'label')) {
-    file.report(
-      element.opening,
-      'Card.ActionIconButton without a label: Card.Action requires one (Next addition: default close/delete labels)',
-    );
+  if (!found) {
+    file.report(element.opening, 'Card.ActionIconButton with a computed action → Card.Action system by hand');
     return;
   }
-  file.replace(found.attr, attrText('icon', ACTION_ICONS[found.action]));
+  file.replace(found.attr, attrText('system', found.action));
   renameElement(file, element, ['Card', 'Action']);
   file.count('Card.ActionIconButton → Card.Action');
 };

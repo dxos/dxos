@@ -71,14 +71,12 @@ describe('composites', () => {
           <Dialog.CloseTrigger asChild>
             <SystemButton.Close />
           </Dialog.CloseTrigger>
-          <Card.Action icon='ph--trash--regular' label='Delete row' onClick={onDelete} />
-          <Card.ActionIconButton action='close' />
+          <Card.Action system='delete' label='Delete row' onClick={onDelete} />
+          <Card.Action system='close' />
         </>
       );
     `);
-    expect(residue).toEqual([
-      'Card.ActionIconButton without a label: Card.Action requires one (Next addition: default close/delete labels)',
-    ]);
+    expect(residue).toEqual([]);
   });
 
   test('Listbox.ItemContent → row parts, keeping expressions in place', () => {
@@ -141,7 +139,7 @@ describe('composites', () => {
         </Toolbar.ToggleGroup>
       );
     `);
-    expect(residue).toEqual(['Next.Block has no compact variant']);
+    expect(residue).toEqual([]);
   });
 
   test('Field.Switch / Field.Checkbox → Next leaf controls with a label prop', () => {

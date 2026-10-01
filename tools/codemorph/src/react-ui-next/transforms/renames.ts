@@ -256,7 +256,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'ToggleGroupItem': { to: ['ToggleGroup', 'Item'] },
     'ToggleGroupIconItem': button(['ToggleGroup', 'Item']),
     'Toolbar.ToggleGroupIconItem': button(['ToggleGroup', 'Item']),
-    'IconBlock': { to: ['Block'], drop: ['square'], review: { compact: 'Next.Block has no compact variant' } },
+    'IconBlock': { to: ['Block'], drop: ['square'] },
     'Field.Block': { to: ['Block'] },
     'Card.DragHandle': { to: ['DragHandle'] },
     'Card.Block': { to: ['Block'] },
