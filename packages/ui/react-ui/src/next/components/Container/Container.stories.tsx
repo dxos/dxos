@@ -13,6 +13,10 @@ import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { type CSSVariables } from './Container.tsx';
+
+/** A narrow reading width, so the story's pane is wider than the document. */
+const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
@@ -95,6 +99,9 @@ const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
       <Next.Typography data-testid={`gap-second-${size}`}>between its children</Next.Typography>
     </Next.Container>
     <Spans size={size} />
+    <Next.Container gutter='rail' width='document' style={READING_WIDTH} data-testid={`reading-${size}`}>
+      <Next.Typography>At the document width</Next.Typography>
+    </Next.Container>
     <SideBySide size={size} />
     {narrow && (
       <div className='@container w-[20rem]'>
@@ -127,7 +134,8 @@ export const Default: Story = {};
  * tracks (finding 8); below the query threshold rails collapse to the inset and the label stacks above its input.
  * `gap` spaces rows only (0.75rem for `lg`), leaving the shared columns alone. `span` places a child across tracks
  * (a count, or `full` for the whole content area), and each cell of a `row` provides its own edge lines, so groups
- * inheriting inside side-by-side cells align within their own column.
+ * inheriting inside side-by-side cells align within their own column. `width='document'` caps a template root at the
+ * reading width and centres it.
  */
 export const Test: Story = {
   args: { allSizes: true, narrow: true },
@@ -172,6 +180,13 @@ export const Test: Story = {
     );
 
     await expect(rect(canvasElement, 'narrow-row-md-rail-start').width).toBe(0);
+    for (const size of SIZES) {
+      const reading = rect(canvasElement, `reading-${size}`);
+      const row = rect(canvasElement, `size-${size}`);
+      await expect(reading.width, size).toBeCloseTo(320, 0);
+      await expect(reading.left - row.left, size).toBeCloseTo(row.right - reading.right, 0);
+    }
+
     for (const size of SIZES) {
       const spans = rect(canvasElement, `spans-${size}`);
       const track = spans.width / 3;

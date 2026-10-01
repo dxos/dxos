@@ -151,7 +151,7 @@ export const Test: Story = {
     await expect(profile).toHaveAttribute('data-scope', 'fieldset');
     await expect(profile).toHaveAccessibleDescription('Shown on your public page.');
     await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeInTheDocument();
-    await expect(getComputedStyle(profile).borderTopStyle).toBe('none');
+    await expect(getComputedStyle(profile).borderTopWidth).toBe('0px');
 
     // The legend is an sm label row spanning the content track, like a Field's header.
     const legend = bounds(canvasElement, '[data-testid="profile"] [data-part="legend"]');

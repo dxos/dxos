@@ -54,6 +54,8 @@ export type ContainerProps = {
   gap?: ContainerGap;
   /** Tracks the container spans in a parent Container (e.g. a cell across two columns of a `row`). */
   span?: Span;
+  /** `document` caps a template root at the reading width and centres it (the current `dx-document`). */
+  width?: 'document';
 };
 
 /**
@@ -70,6 +72,7 @@ export const containerAttributes = ({
   level,
   gap,
   span,
+  width,
 }: ContainerProps) => {
   const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
   const style: CSSProperties & CSSVariables = columns ? { ...spanStyle, '--nx-columns': columns } : spanStyle;
@@ -81,6 +84,7 @@ export const containerAttributes = ({
     'data-place': place,
     'data-surface': level,
     'data-gap': gap,
+    'data-width': width,
     'data-columns': columns ? '' : undefined,
     style,
   };
@@ -89,7 +93,20 @@ export const containerAttributes = ({
 /** Grid part (decision 5): every prop is a `data-*` attribute resolved by `theme/container.css`. */
 export const Container = slottable<HTMLDivElement, ContainerProps>(
   (
-    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, gap, span, ...props },
+    {
+      children,
+      asChild,
+      size,
+      gutter = 'inherit',
+      columns,
+      layout = 'stack',
+      place,
+      level,
+      gap,
+      span,
+      width,
+      ...props
+    },
     forwardedRef,
   ) => {
     const localRef = useRef<HTMLDivElement>(null);
@@ -116,6 +133,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       level,
       gap,
       span,
+      width,
     });
     return (
       <ark.div

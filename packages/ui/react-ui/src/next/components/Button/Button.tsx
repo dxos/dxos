@@ -8,6 +8,7 @@ import { type ChromaticPalette, type MessageValence, type NeutralPalette } from 
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 import { useFieldsetDisabled } from '../Fieldset/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
@@ -35,6 +36,12 @@ export type ButtonVariantProps = {
   compact?: boolean;
   /** A trailing caret marking a button that opens a menu. */
   caretDown?: boolean;
+  /** `start` packs icon and label at the start (a full-width menu-like button) instead of centring them. */
+  align?: 'center' | 'start';
+  /** Spins the leading icon, as a busy indicator. */
+  spin?: boolean;
+  /** The icons at this size's scale instead of the button's. */
+  iconSize?: Size;
 };
 
 /** Content is a label (or children) with optional leading/trailing icons, or a lone icon named by its label. */
@@ -79,6 +86,9 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
       hue,
       compact,
       caretDown,
+      align,
+      spin,
+      iconSize,
       id,
       onFocus,
       icon,
@@ -115,12 +125,13 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         data-hue={hue}
         data-compact={compact ? '' : undefined}
         data-caret={caretDown ? '' : undefined}
+        data-align={align === 'start' ? align : undefined}
         className={className}
         ref={forwardedRef}
       >
-        {icon && <Icon icon={icon} />}
+        {icon && <Icon icon={icon} spin={spin} size={iconSize} />}
         {!iconOnly && (children ?? label)}
-        {iconEnd && <Icon icon={iconEnd} />}
+        {iconEnd && <Icon icon={iconEnd} size={iconSize} />}
         {caretDown && <Icon icon='ph--caret-down--bold' />}
       </button>
     );

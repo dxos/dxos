@@ -33,6 +33,11 @@
     container-type: normal;
   }
 
+  /* Padding, not a narrower frame, so the scrollbar stays at the panel's edge. */
+  .nx-panel[data-width='document'] > .nx-panel-body > .nx-scroll-viewport {
+    padding-inline: max(0px, calc((100% - var(--spacing-document-max-width, 50rem)) / 2));
+  }
+
   .nx-panel-footer {
     grid-row: 3;
     display: flex;

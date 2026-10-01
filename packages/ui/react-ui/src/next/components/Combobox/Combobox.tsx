@@ -356,11 +356,7 @@ const ComboboxButtonTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps
             <span id={valueId} data-scope='combobox' data-part='value-text'>
               {text || placeholder}
             </span>
-            {loading ? (
-              <Icon icon='ph--spinner-gap--regular' data-spin='' />
-            ) : (
-              <Icon icon='ph--caret-up-down--regular' />
-            )}
+            {loading ? <Icon icon='ph--spinner-gap--regular' spin /> : <Icon icon='ph--caret-up-down--regular' />}
           </>
         )}
       </ComboboxPrimitive.Trigger>
@@ -469,7 +465,7 @@ const ComboboxLoading = () => {
   const { t } = useTranslation(translationKey);
   return loading ? (
     <div role='presentation' data-scope='combobox' data-part='loading' className={recipes.comboboxEmpty()}>
-      <Icon icon='ph--spinner-gap--regular' data-spin='' />
+      <Icon icon='ph--spinner-gap--regular' spin />
       {t('combobox.loading.label')}
     </div>
   ) : null;

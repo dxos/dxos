@@ -37,6 +37,17 @@ const DefaultStory = ({ size }: SizeArgs) => (
       </Next.Typography>
     </Next.Container>
     <Next.Container>
+      <Next.Typography lines={2} data-testid={`lines-${size}`}>
+        {TEXT} {TEXT}
+      </Next.Typography>
+      <Next.Typography tone='subdued' data-testid={`subdued-${size}`}>
+        Subdued interface text
+      </Next.Typography>
+      <Next.Typography mono data-testid={`mono-${size}`}>
+        did:key:z6Mk
+      </Next.Typography>
+    </Next.Container>
+    <Next.Container>
       <Next.Typography asChild>
         <h2 className='font-medium' data-testid={`heading-${size}`}>
           Typography as a heading
@@ -63,7 +74,8 @@ export const Default: Story = {};
 
 /**
  * Wrapped text keeps its first line centred in a block, so the rail icon beside it lines up at every size. `truncate`
- * keeps one block-tall line ending in an ellipsis; `tone='description'` takes the secondary text colour.
+ * keeps one block-tall line ending in an ellipsis; `lines` clamps to that many lines; `tone='description'` and
+ * `tone='subdued'` take the secondary and interface text colours; `mono` the monospace font.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -90,6 +102,18 @@ export const Test: Story = {
         sizeRow(canvasElement, size).getBoundingClientRect().right - GEOMETRY[size].block + 0.5,
       );
     }
+
+    for (const size of SIZES) {
+      const clamped = byTestId(canvasElement, `lines-${size}`);
+      const style = getComputedStyle(clamped);
+      const contentHeight = clamped.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      await expect(contentHeight, size).toBeCloseTo(2 * parseFloat(style.lineHeight), 0);
+    }
+    const plain = getComputedStyle(byTestId(canvasElement, 'text-md'));
+    const subdued = getComputedStyle(byTestId(canvasElement, 'subdued-md'));
+    await expect(subdued.color).not.toBe(plain.color);
+    await expect(subdued.color).not.toBe(getComputedStyle(byTestId(canvasElement, 'description-md')).color);
+    await expect(getComputedStyle(byTestId(canvasElement, 'mono-md')).fontFamily).toMatch(/mono/i);
 
     // `asChild` moves the metrics onto the heading itself.
     const heading = byTestId(canvasElement, 'heading-md');

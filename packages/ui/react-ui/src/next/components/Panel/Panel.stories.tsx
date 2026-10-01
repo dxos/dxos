@@ -13,6 +13,10 @@ import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { type CSSVariables } from '../Container/index.ts';
+
+/** A narrow reading width, so the story's pane is wider than the document. */
+const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
 
 const ROWS = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 
@@ -46,7 +50,10 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   </div>
 );
 
-/** The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing. */
+/**
+ * The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing, and a
+ * panel at the document width.
+ */
 const TestStory = (args: SizeArgs) => (
   <>
     <DefaultStory {...args} />
@@ -55,6 +62,13 @@ const TestStory = (args: SizeArgs) => (
         <Next.Panel.Header data-testid={`empty-header-${args.size}`} />
         <Next.Panel.Body data-testid={`bare-body-${args.size}`}>
           <Next.Typography>Body</Next.Typography>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
+    </div>
+    <div data-place='full' className='h-16' style={READING_WIDTH}>
+      <Next.Panel.Root size={args.size} width='document' data-testid={`reading-${args.size}`}>
+        <Next.Panel.Body>
+          <Next.Typography data-testid={`reading-text-${args.size}`}>Reading width</Next.Typography>
         </Next.Panel.Body>
       </Next.Panel.Root>
     </div>
@@ -87,6 +101,12 @@ export const Test: Story = {
   render: TestStory,
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
+    // `width='document'` keeps the body's content at the reading width, centred in the panel.
+    const reading = byTestId(canvasElement, 'reading-md').getBoundingClientRect();
+    const readingText = byTestId(canvasElement, 'reading-text-md').getBoundingClientRect();
+    await expect(readingText.width).toBeCloseTo(320 - 2 * GEOMETRY.md.block, 0);
+    await expect(readingText.left - reading.left).toBeCloseTo(reading.right - readingText.right, 0);
+
     for (const size of SIZES) {
       const { block, inset } = GEOMETRY[size];
       const panel = byTestId(canvasElement, `panel-${size}`);
