@@ -19,6 +19,14 @@ export const ConsentCondition = Schema.Struct({
 });
 export type ConsentCondition = Schema.Schema.Type<typeof ConsentCondition>;
 
+/**
+ * The member who signs a grant issued by a space. Signed with the payload, so a relay cannot
+ * substitute it; the role is what the signer claimed and `check` re-reads the real one from its
+ * source rather than trusting it.
+ */
+export const Signer = Schema.Struct({ did: Schema.String, role: Schema.String });
+export type Signer = Schema.Schema.Type<typeof Signer>;
+
 /** The signed part of a grant: everything except `id` and the unsigned `meta`. */
 export const Payload = Schema.Struct({
   issuer: Principal.Principal,
@@ -29,6 +37,7 @@ export const Payload = Schema.Struct({
   expiresAt: Schema.optional(Schema.Number),
   delegable: Schema.optional(Schema.Boolean),
   consent: Schema.optional(ConsentCondition),
+  signer: Schema.optional(Signer),
 }).pipe(Schema.annotate({ title: 'GrantPayload' }));
 export type Payload = Schema.Schema.Type<typeof Payload>;
 
@@ -144,10 +153,7 @@ export const covers = (
   permission: Pick<Permission.Permission, 'subject' | 'command'>,
 ): boolean => covering(grant, permission).length > 0;
 
-/** The member who signs a child grant on behalf of a space, recorded in the child's `meta` for audit. */
-export type Signer = { did: string; role: string };
-
-export type AttenuateRequest = Omit<Payload, 'issuer' | 'proofs' | 'permissions'> & {
+export type AttenuateRequest = Omit<Payload, 'issuer' | 'proofs' | 'permissions' | 'signer'> & {
   permissions: readonly Permission.Permission[];
   meta?: Record<string, unknown>;
 };
@@ -162,7 +168,8 @@ export type AttenuateOptions = {
  * Mints a child grant covered by the parent grants: every requested permission must be covered by
  * a delegable parent inside its window, the parent's policy is conjoined onto the child's, the
  * child's window shrinks to fit, and the parents become the proofs. A space-held parent's caller
- * predicates bind the signing member, judged here once, and so are not carried onto the child.
+ * predicates bind the signing member, judged here and again by `check` against the member's real
+ * role, and so are not carried onto the child.
  */
 export const attenuate: (
   parents: readonly Grant[],
@@ -242,7 +249,8 @@ export const attenuate: (
     expiresAt,
     delegable: request.delegable,
     consent: request.consent,
-    meta: signer ? { ...request.meta, signer } : request.meta,
+    signer,
+    meta: request.meta,
   });
 });
 

@@ -351,9 +351,10 @@ is signed by a device; HALO already resolves such a proof through the device's c
 `AuthorizedDevice` credentials to an identity. `attenuate` and `check` then require, at the child's
 issuance time, that the identity was a `SpaceMember` of that space and that its role satisfied the
 parent grant's policy (an `/space` grant delegable to admins and owners cannot be re-granted by an
-editor). The signing identity and role are recorded in the child's `meta` for audit, but the
-authority is the space's, so revoking the member later revokes what they signed only through the
-normal revocation path, never silently.
+editor). The signing identity and its role are recorded in the child's signed payload (`signer`),
+so a relay cannot substitute them, and `check` re-reads the member's real role from its source
+rather than trusting the recorded one. The authority is the space's, so revoking the member later
+revokes what they signed only through the normal revocation path, never silently.
 
 ### Derived grants
 
@@ -495,8 +496,9 @@ const forChild =
 `attenuate` conjoins each parent's policy onto the child's permission, shrinks the child's window
 to the parent's, records the parents as `proofs`, and refuses a parent that is not `delegable` or
 not inside its window. When a parent is held by a space, the call takes `{ signer: { did, role } }`,
-judges the parent's caller predicates against that signer, records the signer in the child's `meta`,
-and leaves those predicates off the child: they bound the member who signed, not the holder.
+judges the parent's caller predicates against that signer, records the signer in the child's signed
+payload, and leaves those predicates off the child: they bound the member who signed, not the
+holder. `check` repeats the judgement with the role the source reports for the signer.
 
 ### Checking
 
@@ -534,7 +536,7 @@ interface GrantSource {
   get(id: string): Effect<Grant | undefined>;
   grantsFor(audience: Principal): Effect<readonly Grant[]>;
   isRevoked(id: string): Effect<boolean>;
-  isMember(principal: Principal, spaceId: string): Effect<boolean>;
+  roleOf(principal: Principal, spaceId: string): Effect<string | undefined>;
   ownsSubject(issuer: Principal, subject: Subject): Effect<boolean>;
   consentFor(grantId: string, by: Principal): Effect<Consent | undefined>;
 }

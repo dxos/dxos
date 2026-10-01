@@ -169,13 +169,31 @@ const deepEqual = (left: unknown, right: unknown): boolean => {
   );
 };
 
-const globToRegExp = (glob: string): RegExp =>
-  new RegExp(
-    `^${glob
-      .split('*')
-      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-      .join('.*')}$`,
-  );
+/** Matches `*` wildcards by a greedy two-pointer walk, linear in the input, so a policy cannot be a ReDoS vector. */
+const matchesGlob = (glob: string, text: string): boolean => {
+  let globIndex = 0;
+  let textIndex = 0;
+  let starIndex = -1;
+  let starMark = 0;
+  while (textIndex < text.length) {
+    if (globIndex < glob.length && glob[globIndex] === '*') {
+      starIndex = globIndex++;
+      starMark = textIndex;
+    } else if (globIndex < glob.length && glob[globIndex] === text[textIndex]) {
+      globIndex++;
+      textIndex++;
+    } else if (starIndex !== -1) {
+      globIndex = starIndex + 1;
+      textIndex = ++starMark;
+    } else {
+      return false;
+    }
+  }
+  while (globIndex < glob.length && glob[globIndex] === '*') {
+    globIndex++;
+  }
+  return globIndex === glob.length;
+};
 
 const compare = (op: Comparison, actual: unknown, expected: unknown): boolean => {
   switch (op) {
@@ -225,7 +243,7 @@ export const holds = (predicate: Predicate, input: unknown): boolean => {
       return predicate[2].some((candidate) => deepEqual(select(input, predicate[1]), candidate));
     case 'like': {
       const actual = select(input, predicate[1]);
-      return typeof actual === 'string' && globToRegExp(predicate[2]).test(actual);
+      return typeof actual === 'string' && matchesGlob(predicate[2], actual);
     }
     case 'all': {
       const items = values(select(input, predicate[1]));

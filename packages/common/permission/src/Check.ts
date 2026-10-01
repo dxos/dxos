@@ -33,8 +33,8 @@ export interface GrantSource {
   /** Every grant whose audience is the principal. */
   grantsFor(audience: Principal.Principal): Effect.Effect<readonly Grant.Grant[]>;
   isRevoked(id: string): Effect.Effect<boolean>;
-  /** Whether the principal is a member of the space, which is what makes a space-audience grant theirs. */
-  isMember(principal: Principal.Principal, spaceId: string): Effect.Effect<boolean>;
+  /** The principal's role in the space, or undefined for a non-member; membership is what makes a space-audience grant theirs. */
+  roleOf(principal: Principal.Principal, spaceId: string): Effect.Effect<string | undefined>;
   /** Whether the principal may issue a root grant for the subject: a space owns its subjects, so do its owners and admins. */
   ownsSubject(issuer: Principal.Principal, subject: Subject.Subject): Effect.Effect<boolean>;
   /** The active consent recorded by `by` for the grant, if any. */
@@ -61,8 +61,8 @@ export const fromGrants = ({
   get: (id) => Effect.succeed(grants.find((grant) => grant.id === id)),
   grantsFor: (audience) => Effect.succeed(grants.filter((grant) => grant.audience === audience)),
   isRevoked: (id) => Effect.succeed(revoked.includes(id)),
-  isMember: (principal, spaceId) =>
-    Effect.succeed(members.some((member) => member.principal === principal && member.spaceId === spaceId)),
+  roleOf: (principal, spaceId) =>
+    Effect.succeed(members.find((member) => member.principal === principal && member.spaceId === spaceId)?.role),
   ownsSubject: (issuer, subject) => {
     if (trusted.includes(issuer)) {
       return Effect.succeed(true);
@@ -109,8 +109,12 @@ export const merge = (...sources: readonly GrantSource[]): GrantSource => ({
   grantsFor: (audience) =>
     Effect.forEach(sources, (source) => source.grantsFor(audience)).pipe(Effect.map((lists) => lists.flat())),
   isRevoked: (id) => anyOf(sources, (source) => source.isRevoked(id), Boolean).pipe(Effect.map(Boolean)),
-  isMember: (principal, spaceId) =>
-    anyOf(sources, (source) => source.isMember(principal, spaceId), Boolean).pipe(Effect.map(Boolean)),
+  roleOf: (principal, spaceId) =>
+    anyOf(
+      sources,
+      (source) => source.roleOf(principal, spaceId),
+      (value) => value !== undefined,
+    ),
   ownsSubject: (issuer, subject) =>
     anyOf(sources, (source) => source.ownsSubject(issuer, subject), Boolean).pipe(Effect.map(Boolean)),
   consentFor: (grantId, by) =>
@@ -224,7 +228,11 @@ export const check: (options: CheckOptions) => Effect.Effect<Result> = Effect.fn
 
   const candidates = [...(yield* source.grantsFor(principal))];
   const spaceId = Subject.spaceIdOf(subject);
-  if (spaceId !== undefined && Principal.kind(principal) !== 'space' && (yield* source.isMember(principal, spaceId))) {
+  if (
+    spaceId !== undefined &&
+    Principal.kind(principal) !== 'space' &&
+    (yield* source.roleOf(principal, spaceId)) !== undefined
+  ) {
     candidates.push(...(yield* source.grantsFor(Principal.space(spaceId))));
   }
 
@@ -325,20 +333,29 @@ const walk: (
     }
     const viaSpace = Principal.kind(parent.audience) === 'space';
     if (viaSpace) {
-      const signer = signerOf(grant);
+      const signer = grant.signer;
       if (!signer) {
-        best = denied({ kind: 'chain', grantId: grant.id, detail: 'issued by a space without a recorded signer' });
+        best = denied({ kind: 'chain', grantId: grant.id, detail: 'issued by a space without a signer' });
+        continue;
+      }
+      const role = yield* source.roleOf(Principal.identity(signer.did), Principal.spaceIdOf(parent.audience) ?? '');
+      if (role === undefined) {
+        best = denied({
+          kind: 'chain',
+          grantId: grant.id,
+          detail: `signer ${signer.did} is not a member of ${parent.audience}`,
+        });
         continue;
       }
       const floor = Policy.callerOnly(
         Policy.conjoin(Grant.covering(parent, target).map((entry) => entry.policy ?? [])),
       );
-      const verdict = Policy.evaluate(floor, { args: undefined, caller: signer });
+      const verdict = Policy.evaluate(floor, { args: undefined, caller: { did: signer.did, role } });
       if (verdict._tag === 'Failure') {
         best = denied({
           kind: 'chain',
           grantId: grant.id,
-          detail: `signer ${signer.did} (${signer.role}) could not re-grant`,
+          detail: `signer ${signer.did} (${role}) could not re-grant`,
         });
         continue;
       }
@@ -352,17 +369,6 @@ const walk: (
   }
   return best ?? denied({ kind: 'chain', grantId: grant.id, detail: 'no valid proof' });
 });
-
-const signerOf = (grant: Grant.Grant): Grant.Signer | undefined => {
-  const signer = grant.meta?.signer;
-  if (signer !== null && typeof signer === 'object' && 'did' in signer && 'role' in signer) {
-    const { did, role } = signer;
-    if (typeof did === 'string' && typeof role === 'string') {
-      return { did, role };
-    }
-  }
-  return undefined;
-};
 
 const checkConsent = Effect.fnUntraced(function* (
   source: GrantSource,

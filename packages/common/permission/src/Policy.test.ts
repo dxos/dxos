@@ -23,6 +23,11 @@ describe('Policy', () => {
     expect(Policy.holds(Policy.within('.caller.role', ['admin', 'owner']), input)).toBe(false);
     expect(Policy.holds(Policy.like('.args.to', '*@dxos.org'), input)).toBe(true);
     expect(Policy.holds(Policy.like('.args.to', '*@example.com'), input)).toBe(false);
+    expect(Policy.holds(Policy.like('.args.to', 'rich@*.org'), input)).toBe(true);
+    expect(Policy.holds(Policy.like('.args.to', '*@*'), input)).toBe(true);
+    expect(Policy.holds(Policy.like('.args.to', 'rich@dxos.org'), input)).toBe(true);
+    expect(Policy.holds(Policy.like('.args.to', 'rich@dxos.or'), input)).toBe(false);
+    expect(Policy.holds(Policy.like('.args.to', '*a*a*a*a*a*a*a*a*a*b'), input)).toBe(false);
     expect(Policy.holds(Policy.all('.args.attachments', Policy.lte('.size', 5)), input)).toBe(true);
     expect(Policy.holds(Policy.any('.args.attachments', Policy.gt('.size', 4)), input)).toBe(true);
     expect(Policy.holds(Policy.not(Policy.eq('.caller.role', 'reader')), input)).toBe(true);

@@ -498,14 +498,54 @@ describe('Check', () => {
         Grant.attenuate([parent], request, { now: NOW, signer: { did: 'did:halo:ALICE', role: 'admin' } }),
       );
       expect(child.issuer).toBe(space);
-      expect(child.meta?.signer).toEqual({ did: 'did:halo:ALICE', role: 'admin' });
+      expect(child.signer).toEqual({ did: 'did:halo:ALICE', role: 'admin' });
       const result = await check({
         principal: agent,
         requirement: Requirement.make('/space/read', { subject: Subject.space(SPACE_ID) }),
         caller: { did: 'did:halo:AGENT' },
-        source: Check.fromGrants({ grants: [parent, child] }),
+        source: Check.fromGrants({
+          grants: [parent, child],
+          members: [{ spaceId: SPACE_ID, principal: alice, role: 'admin' }],
+        }),
       });
       expect(Check.isAllowed(result)).toBe(true);
+    });
+
+    test('a signer whose claimed role the source does not confirm fails at check', async ({ expect }) => {
+      const parent = await run(adminsDelegate());
+      const child = await run(
+        Grant.attenuate([parent], request, { now: NOW, signer: { did: 'did:halo:BOB', role: 'admin' } }),
+      );
+      const requirement = Requirement.make('/space/read', { subject: Subject.space(SPACE_ID) });
+      const demoted = await check({
+        principal: agent,
+        requirement,
+        source: Check.fromGrants({
+          grants: [parent, child],
+          members: [{ spaceId: SPACE_ID, principal: bob, role: 'editor' }],
+        }),
+      });
+      expect(demoted).toMatchObject({
+        _tag: 'Denied',
+        reason: { kind: 'chain', detail: expect.stringContaining('(editor)') },
+      });
+      const stranger = await check({
+        principal: agent,
+        requirement,
+        source: Check.fromGrants({ grants: [parent, child] }),
+      });
+      expect(stranger).toMatchObject({
+        _tag: 'Denied',
+        reason: { kind: 'chain', detail: expect.stringContaining('not a member') },
+      });
+    });
+
+    test('the signer is in the signed payload, so swapping it changes the id', async ({ expect }) => {
+      const parent = await run(adminsDelegate());
+      const signed = await run(
+        Grant.attenuate([parent], request, { now: NOW, signer: { did: 'did:halo:ALICE', role: 'admin' } }),
+      );
+      expect(await run(Grant.verifyId({ ...signed, signer: { did: 'did:halo:BOB', role: 'admin' } }))).toBe(false);
     });
 
     test('an editor cannot re-grant', async ({ expect }) => {
