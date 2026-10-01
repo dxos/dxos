@@ -35,7 +35,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
           </Next.Toolbar.Root>
         </Next.Panel.Header>
         <Next.Panel.Body asChild>
-          <Masonry.Content centered>
+          <Masonry.Content>
             <Masonry.Viewport items={items} />
           </Masonry.Content>
         </Next.Panel.Body>

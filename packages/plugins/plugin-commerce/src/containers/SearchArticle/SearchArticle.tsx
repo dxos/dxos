@@ -161,7 +161,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
             </Next.Empty>
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-              <Masonry.Content thin centered padding>
+              <Masonry.Content padding>
                 <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
               </Masonry.Content>
             </Masonry.Root>

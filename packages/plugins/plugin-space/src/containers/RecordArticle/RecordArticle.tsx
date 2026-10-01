@@ -101,7 +101,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                     `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
                     columns drift right of the record card above them, which shares this column. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
-                  <Masonry.Content padding={false} centered={false}>
+                  <Masonry.Content padding={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
                 </Masonry.Root>

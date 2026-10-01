@@ -134,7 +134,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
           </Flex>
         ) : (
           <Masonry.Root Tile={ArtifactTile}>
-            <Masonry.Content centered>
+            <Masonry.Content>
               <Masonry.Viewport
                 items={items}
                 getId={(data?: TileData) => data?.artifact.id ?? String(data?.index ?? '')}

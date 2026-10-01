@@ -66,7 +66,7 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
       </Next.Panel.Header>
       <Masonry.Root Tile={Tile}>
         <Next.Panel.Body asChild>
-          <Masonry.Content centered padding thin classNames='p-1'>
+          <Masonry.Content padding classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
         </Next.Panel.Body>

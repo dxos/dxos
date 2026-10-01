@@ -104,7 +104,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-            <Masonry.Content thin centered padding>
+            <Masonry.Content padding>
               {/* TODO(burdon): Move items into Root. */}
               <Masonry.Viewport classNames='py-2' items={tileItems} />
             </Masonry.Content>

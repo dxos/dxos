@@ -76,7 +76,7 @@ export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }
 
   return (
     <Masonry.Root Tile={Tile}>
-      <Masonry.Content centered>
+      <Masonry.Content>
         <Masonry.Viewport
           items={items}
           getId={(data?: TileData) => (data ? tileId(data.variant, data.index) : '')}
