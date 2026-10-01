@@ -365,7 +365,6 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
         ref={setDxGrid}
       />
       <Next.Menu.Root
-        modal={false}
         open={!!contextMenuOpen}
         onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}
         positioning={Next.virtualAnchor(contextMenuAnchorRef)}

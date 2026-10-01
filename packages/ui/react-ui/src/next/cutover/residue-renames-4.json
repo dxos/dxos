@@ -1,23 +1,19 @@
 {
-  "generated": "2026-10-01T15:47:53.235Z",
+  "generated": "2026-10-01T15:51:30.840Z",
   "paths": ["packages"],
   "changed": [
-    "packages/plugins/plugin-commerce/src/components/RangeField/RangeField.tsx",
-    "packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx",
-    "packages/plugins/plugin-routine/src/components/Schedule/Schedule.tsx",
-    "packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx",
-    "packages/stories/stories-brain/src/components/InputPanel/InputPanel.tsx",
-    "packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx"
+    "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
+    "packages/ui/react-ui-canvas-editor/src/components/Toolbar/Toolbar.tsx"
   ],
   "transforms": [
     {
       "transform": "renames",
       "filesScanned": 12235,
-      "filesChanged": 6,
+      "filesChanged": 2,
       "rules": {
         "Select.Option → Select.Item": 9,
-        "NumberInput with onChange → Input type=number": 7,
-        "density= → size=": 1
+        "Menu.Root modal dropped": 1,
+        "Button title + Icon child → icon label iconOnly": 11
       },
       "residue": [
         {
@@ -1014,30 +1010,6 @@
         },
         {
           "transform": "renames",
-          "file": "packages/ui/react-ui-assistant/src/widgets/ToolWidget.tsx",
-          "line": 311,
-          "column": 45,
-          "reason": "Accordion items/getId render prop is not ported",
-          "snippet": "items={entries}"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-introspect/src/components/ToolResults/ToolResults.tsx",
-          "line": 112,
-          "column": 5,
-          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/react-ui-mcp/src/ToolList.tsx",
-          "line": 49,
-          "column": 3,
-          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
-          "snippet": "<Listbox.Root value={selectedId ?? undefined} onValueChange={onSelect}>"
-        },
-        {
-          "transform": "renames",
           "file": "packages/ui/react-ui-pickers/src/components/IconPicker/IconPicker.tsx",
           "line": 40,
           "column": 52,
@@ -1067,22 +1039,6 @@
           "column": 11,
           "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
           "snippet": "<Next.Avatar.Root size={avatarSize} hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')} fallback={authorAvatarP..."
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/ui-template/src/react/renderer.tsx",
-          "line": 209,
-          "column": 9,
-          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Listbox.Root key={path} multiselectable>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/ui/ui-template/src/react/renderer.tsx",
-          "line": 235,
-          "column": 9,
-          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
-          "snippet": "<Listbox.Root key={path} value={asText(data.selection) || undefined} onValueChange={(next) => handlers.select?.(next)..."
         }
       ]
     }

@@ -23,24 +23,42 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
   // TODO(burdon): Translations.
   return (
     <Next.Toolbar.Root classNames={['p-1', classNames]}>
-      <Next.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
-        <Next.Icon icon='ph--bug--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'grid' })} title='Toggle snap.'>
-        <Next.Icon icon='ph--dots-nine--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'grid-snap' })} title='Toggle snap.'>
-        <Next.Icon icon='ph--arrows-in-line-horizontal--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
-        <Next.Icon icon='ph--crosshair-simple--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'zoom-in' })} title='Center canvas.'>
-        <Next.Icon icon='ph--magnifying-glass-plus--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
-        <Next.Icon icon='ph--magnifying-glass-minus--regular' />
-      </Next.Button>
+      <Next.Button
+        onClick={() => handleAction({ type: 'debug' })}
+        label='Toggle debug.'
+        icon='ph--bug--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'grid' })}
+        label='Toggle snap.'
+        icon='ph--dots-nine--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'grid-snap' })}
+        label='Toggle snap.'
+        icon='ph--arrows-in-line-horizontal--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'center' })}
+        label='Center canvas.'
+        icon='ph--crosshair-simple--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'zoom-in' })}
+        label='Center canvas.'
+        icon='ph--magnifying-glass-plus--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'zoom-out' })}
+        label='Center canvas.'
+        icon='ph--magnifying-glass-minus--regular'
+        iconOnly
+      />
       <Next.Select.Root
         value={[layout]}
         onValueChange={({ value: [value] }) => setLayout(value as LayoutKind)}
@@ -53,21 +71,36 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
           ))}
         </Next.Select.Content>
       </Next.Select.Root>
-      <Next.Button onClick={() => handleAction({ type: 'layout', layout })} title='Do layout.'>
-        <Next.Icon icon='ph--graph--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
-        <Next.Icon icon='ph--arrows-out--regular' />
-      </Next.Button>
-      <Next.Button onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })} title='Delete objects.'>
-        <Next.Icon icon='ph--trash--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
-        <Next.Icon icon='ph--plus--regular' />
-      </Next.Button>
-      <Next.Button onClick={() => handleAction({ type: 'trigger' })} title='Trigger event.'>
-        <Next.Icon icon='ph--play--regular' />
-      </Next.Button>
+      <Next.Button
+        onClick={() => handleAction({ type: 'layout', layout })}
+        label='Do layout.'
+        icon='ph--graph--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'zoom-to-fit' })}
+        label='Expand selected.'
+        icon='ph--arrows-out--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })}
+        label='Delete objects.'
+        icon='ph--trash--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'create' })}
+        label='Create objects.'
+        icon='ph--plus--regular'
+        iconOnly
+      />
+      <Next.Button
+        onClick={() => handleAction({ type: 'trigger' })}
+        label='Trigger event.'
+        icon='ph--play--regular'
+        iconOnly
+      />
     </Next.Toolbar.Root>
   );
 };
