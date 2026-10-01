@@ -37,6 +37,7 @@ const handlers = OperationHandlerSet.make(
       runs: PULL_REQUEST_13348_RUNS,
     }),
   ),
+  Operation.withHandler(GitHubOperation.SyncPullRequest, () => Effect.succeed({ updated: [] })),
   Operation.withHandler(GitHubOperation.GetPullRequestDiff, () => Effect.succeed({ diff: PULL_REQUEST_13363_PATCH })),
   Operation.withHandler(LayoutOperation.AddToast, () => Effect.void),
 );
