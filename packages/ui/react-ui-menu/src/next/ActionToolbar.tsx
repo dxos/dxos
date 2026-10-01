@@ -344,7 +344,7 @@ const ActionToolbarItems = ({ menu }: { menu: MenuActions }) => {
 
 export type ActionToolbarProps = Partial<MenuActions> &
   Omit<Next.ToolbarRootProps, 'disabled'> & {
-    /** The toolbar is enabled only while this attendable has attention, unless `alwaysActive`. */
+    /** The toolbar is dimmed (still operable) while this attendable lacks attention, unless `alwaysActive`. */
     attendableId?: string;
     alwaysActive?: boolean;
   };
@@ -376,7 +376,7 @@ export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
     return (
       <Next.Toolbar.Root
         {...composableProps(props, { classNames: attendableId })}
-        disabled={!alwaysActive && !hasAttention}
+        inactive={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
         <ActionToolbarItems menu={menu} />

@@ -315,7 +315,10 @@ export const Builder: Story = {
   },
 };
 
-/** Without `alwaysActive` a toolbar is enabled only while its attendable has attention; here nothing does. */
+/**
+ * Without `alwaysActive` a toolbar recedes while its attendable lacks attention (here nothing has it), as the current
+ * toolbar did: its controls stay operable, so the first press on an unattended plank both attends it and acts.
+ */
 export const Attention: Story = {
   render: () => {
     const menu = useMenuBuilder(
@@ -331,7 +334,9 @@ export const Attention: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('toolbar')).toHaveClass('document');
-    await expect(canvas.getByTestId('add')).toBeDisabled();
+    const toolbar = canvas.getByRole('toolbar');
+    await expect(toolbar).toHaveClass('document');
+    await expect(toolbar).toHaveAttribute('data-inactive');
+    await expect(canvas.getByTestId('add')).toBeEnabled();
   },
 };
