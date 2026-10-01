@@ -196,3 +196,47 @@ export const buttonAroundTrigger = ({ file, element }: RuleContext) => {
   file.release(element.identity.binding.local, element.closing ? 2 : 1);
   file.count('Button asChild around a Trigger unwrapped');
 };
+
+/**
+ * `<Button title='Zoom'><Icon icon='…' /></Button>` → `<Button icon='…' label='Zoom' iconOnly />`: Next.Button takes no
+ * `title` (an icon-only button names itself with `label` and shows it in a Tooltip).
+ */
+export const buttonTitleIcon = ({ file, element }: RuleContext) => {
+  const title = getAttr(element, 'title');
+  if (!title || getAttr(element, 'label') || getAttr(element, 'icon')) {
+    return;
+  }
+  const children = meaningfulChildren(element);
+  const [first] = children;
+  const child =
+    children.length === 1 &&
+    first &&
+    ts.isJsxSelfClosingElement(first) &&
+    file.resolve(first.tagName)?.path.join('.') === 'Icon'
+      ? first
+      : undefined;
+  const attrNamed = (name: string) =>
+    child?.attributes.properties.find((prop) => ts.isJsxAttribute(prop) && prop.name.getText(file.sourceFile) === name);
+  const icon = attrNamed('icon');
+  const others =
+    child?.attributes.properties.filter(
+      (prop) => !ts.isJsxAttribute(prop) || !['icon', 'size'].includes(prop.name.getText(file.sourceFile)),
+    ) ?? [];
+  if (
+    !child ||
+    !icon ||
+    !ts.isJsxAttribute(icon) ||
+    !icon.initializer ||
+    others.length > 0 ||
+    !ts.isJsxElement(element.node)
+  ) {
+    file.report(title, 'Next.Button takes no title: an icon-only button names itself with label');
+    return;
+  }
+  file.replace(title, `label=${title.initializer?.getText(file.sourceFile) ?? "''"}`);
+  addAttr(file, element, `icon=${icon.initializer.getText(file.sourceFile)} iconOnly`);
+  file.edit(element.node.openingElement.getEnd() - 1, element.node.getEnd(), ' />');
+  file.release(child.tagName.getText(file.sourceFile).split('.')[0]);
+  file.claim(element.node);
+  file.count('Button title + Icon child → icon label iconOnly');
+};

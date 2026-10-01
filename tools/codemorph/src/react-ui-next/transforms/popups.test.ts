@@ -267,4 +267,26 @@ describe('popups', () => {
     );
     expect(output).toContain(`<Tree id='x' density='sm' />`);
   });
+
+  test('Button title with an Icon child → icon-only Button', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Zoom = ({ zoom }: { zoom: () => void }) => (
+          <Next.Button onClick={zoom} title='Zoom in.'>
+            <Next.Icon icon='ph--magnifying-glass-plus--regular' />
+          </Next.Button>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Zoom = ({ zoom }: { zoom: () => void }) => (
+        <Next.Button onClick={zoom} label='Zoom in.' icon='ph--magnifying-glass-plus--regular' iconOnly />
+      );
+    `);
+  });
 });

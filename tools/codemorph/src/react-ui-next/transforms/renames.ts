@@ -30,7 +30,14 @@ import {
   virtualTrigger,
 } from './composites.ts';
 import { buttonDensity, isButton } from './density.ts';
-import { blockEnd, buttonAroundTrigger, checkedChange, contentPlacement, openChange } from './popups.ts';
+import {
+  blockEnd,
+  buttonAroundTrigger,
+  buttonTitleIcon,
+  checkedChange,
+  contentPlacement,
+  openChange,
+} from './popups.ts';
 import { type Transform } from './transform.ts';
 
 /** How one current part becomes its Next counterpart. */
@@ -279,7 +286,12 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
         buttonAroundTrigger(ctx);
       },
     },
-    'Button': { apply: buttonAroundTrigger },
+    'Button': {
+      apply: (ctx) => {
+        buttonAroundTrigger(ctx);
+        buttonTitleIcon(ctx);
+      },
+    },
     'Toolbar.ToggleGroupItem': { to: ['ToggleGroup', 'Item'] },
     'Toolbar.DragHandle': { to: ['DragHandle'], props: { testId: 'data-testid' } },
     'DragHandle': { props: { testId: 'data-testid' } },
