@@ -757,7 +757,7 @@ Reviewed one question at a time; decisions supersede the recommendations above.
 `VirtualSpacer` (`components/Listbox/virtual.tsx`, exported as `Next.useVirtualRows`) are the shared windowing for
 Tree to adopt; `theme/row.css` holds `nx-row` and the `data-drop-target` line; Root `columns` makes rows subgrids;
 `Next.Empty` and the `Empty` parts; `Collapsible.Trigger` without children is the caret-only square named by the row's
-`ItemText`; `SystemButton.Remove` is named "Remove <text>" (its own label, then the row's text); `DragHandle`'s label
+`ItemText`; `SystemButton.Remove` is named "Delete <text>" (its translated label, then the row's text); `DragHandle`'s label
 defaults to the react-ui `drag-handle.label`. In react-ui-list/next: OrderedList on Next.Listbox with `Label`, `Empty`,
 `ItemIcon`, `ItemText`, `ItemDescription`, collapsible `Item` + `Detail` (no `DetailItem`), optional `getId`,
 `getLabel` and the default preview chip; `useStableIds` (root entry) and `listboxSelection`, the `useListSelection`

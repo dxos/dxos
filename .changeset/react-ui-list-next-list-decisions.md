@@ -9,7 +9,7 @@ through the exported `Next.useVirtualRows`, `'variable'` uses `content-visibilit
 keyboard: ArrowRight enters a row, Tab moves between its controls, Escape or ArrowLeft returns, and row controls stay
 out of the tab order. Rows share one `nx-row` state class and draw the drop line from `data-drop-target`, which
 `useReorder` now sets. New: `Next.Empty` with an `Empty` part on each list, `ItemIcon` `hue`, a caret-only
-`Collapsible.Trigger`, and `SystemButton.Remove` named by its row's text.
+`Collapsible.Trigger`, and `SystemButton.Remove` named by its row's text ("Delete <text>").
 
 In `@dxos/react-ui-list/next`, OrderedList runs on Next.Listbox: `getId` is optional, `getLabel` labels typeahead and the
 new default drag preview chip, and a collapsible `Item` (`collapsible`, `open`, `defaultOpen`, `onOpenChange`) with a

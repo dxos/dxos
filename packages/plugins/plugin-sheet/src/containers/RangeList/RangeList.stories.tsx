@@ -101,12 +101,12 @@ export const Test: Story = {
 
     // Remove the (now first) highlight range.
     const [first] = within(list).getAllByRole('option');
-    await userEvent.click(within(first).getByRole('button', { name: /^Remove .*Highlight/ }));
+    await userEvent.click(within(first).getByRole('button', { name: /^Delete .*Highlight/ }));
     await waitFor(() => expect(order).toHaveTextContent('center softwrap'));
     await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(2));
 
     for (const row of within(list).getAllByRole('option')) {
-      await userEvent.click(within(row).getByRole('button', { name: /^Remove/ }));
+      await userEvent.click(within(row).getByRole('button', { name: /^Delete/ }));
     }
     await waitFor(() => expect(canvas.getByText('No ranges')).toBeVisible());
   },

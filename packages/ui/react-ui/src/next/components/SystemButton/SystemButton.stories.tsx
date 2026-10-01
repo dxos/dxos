@@ -109,7 +109,7 @@ const NAMES: Record<string, string> = {
   add: 'Add',
   edit: 'Edit',
   delete: 'Delete',
-  remove: 'Remove',
+  remove: 'Delete',
   close: 'Close',
   save: 'Save',
   cancel: 'Cancel',

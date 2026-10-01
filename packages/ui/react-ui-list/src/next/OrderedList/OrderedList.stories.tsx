@@ -363,7 +363,7 @@ export const Test: Story = {
     await expect(list).toHaveClass('nx-scroll-viewport');
 
     // 4. Remove, named by the row's text.
-    await userEvent.click(canvas.getByRole('button', { name: 'Remove Delta' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete Delta' }));
     await waitFor(() => expect(order).toHaveTextContent('b c e a'));
 
     // 5. The drop target draws its edge.
@@ -482,8 +482,8 @@ export const Empty: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.queryByText('Nothing to do')).toBeNull();
     await userEvent.click(canvas.getByRole('checkbox', { name: 'Done Alpha' }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Remove Alpha' }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Remove Bravo' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete Alpha' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete Bravo' }));
     await waitFor(() => expect(canvas.getByText('Nothing to do')).toBeVisible());
   },
 };

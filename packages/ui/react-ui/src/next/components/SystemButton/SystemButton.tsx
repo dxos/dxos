@@ -234,7 +234,7 @@ const Delete = createStaticPreset('Next.SystemButton.Delete', 'ph--trash--regula
 
 /**
  * Takes a row out of a list without destroying what it names; the glyph is Close's, the intent Delete's. In a list row
- * it is named by its label followed by the row's `ItemText` ("Remove Q3 budget"); a `label` replaces both.
+ * it is named by its label followed by the row's `ItemText` ("Delete Q3 budget"); a `label` replaces both.
  */
 const Remove = composable<HTMLButtonElement, SystemButtonProps>(
   ({ label, iconOnly, showTooltip, tooltipSide, id, ...props }, forwardedRef) => {

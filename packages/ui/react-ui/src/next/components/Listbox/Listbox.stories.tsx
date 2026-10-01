@@ -352,7 +352,7 @@ export const Test: Story = {
     const controls = [
       within(report).getByRole('checkbox', { name: 'Done Write report' }),
       within(report).getByRole('button', { name: 'Edit Write report' }),
-      within(report).getByRole('button', { name: 'Remove Write report' }),
+      within(report).getByRole('button', { name: 'Delete Write report' }),
     ];
     for (const control of controls) {
       await expect(control).toHaveAttribute('tabindex', '-1');
@@ -385,8 +385,8 @@ export const Test: Story = {
     await waitFor(() => expect(highlighted(tasks)).toContain('Write report'));
     // Removing every row shows the Empty part.
     await expect(md.queryByText('All done')).toBeNull();
-    await userEvent.click(within(tasks).getByRole('button', { name: 'Remove Write report' }));
-    await userEvent.click(within(tasks).getByRole('button', { name: 'Remove Review budget' }));
+    await userEvent.click(within(tasks).getByRole('button', { name: 'Delete Write report' }));
+    await userEvent.click(within(tasks).getByRole('button', { name: 'Delete Review budget' }));
     await waitFor(() => expect(md.getByText('All done')).toBeVisible());
 
     // `virtual='fixed'`: a 1,000-row list mounts only a window of rows between spacers, and the keyboard reaches the
