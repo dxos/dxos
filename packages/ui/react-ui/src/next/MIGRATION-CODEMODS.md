@@ -52,9 +52,9 @@ the per-item residue, rerun the command: `--report` lists the file, line, reason
 
 ## Gaps the dry run surfaced
 
-1. **Pending on the design branch:** `Next.useThemeMode`, `Next.usePlatform` and `Next.useIosKeyboard`, and the
-   plain-slot `Panel.Body`, were not on `claude/react-ui-next-design-4db6eb` when this ran. The theme transform already
-   emits the hook names, so a rerun after they land changes nothing.
+1. **Design-branch prerequisites are in:** `Next.useThemeMode`, `Next.usePlatform` and `Next.useIosKeyboard`
+   (`22a6f1a00a`) and the plain-slot `Panel.Body` (`a4835092e2`). A test checks that every hook the theme transform
+   emits is a Next export.
 2. **`Flex` rows and most `Grid`s have no unambiguous Next form.** `Group` pads the block axis and wraps, and a
    `Container` row centres its cells and needs `columns`. So 38 `Flex` rows stay, as do the elements whose
    `classNames` carry the layout.

@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { readReactUiNext, readSiblingNext } from './extract.ts';
 import { REACT_UI_FORM_NEXT, REACT_UI_LIST_NEXT, REACT_UI_NEXT } from './next-exports.ts';
 import { IMPORT_TARGETS, hasNextExport, nextParts } from './targets.ts';
+import { THEME_HOOKS } from './transforms/theme.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
 
@@ -28,6 +29,12 @@ describe('next exports', () => {
           ).toBe(true);
         }
       }
+    }
+  });
+
+  test('the theme hooks the theme transform emits exist', () => {
+    for (const hook of Object.values(THEME_HOOKS)) {
+      expect(hasNextExport('react-ui', hook), hook).toBe(true);
     }
   });
 

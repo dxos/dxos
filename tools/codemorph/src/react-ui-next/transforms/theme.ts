@@ -8,7 +8,7 @@ import { type CodeFile } from '../code-file.ts';
 import { type Transform } from './transform.ts';
 
 /** `useThemeContext()` fields with a Next hook of their own; `tx` has none, since it goes with the current components. */
-const THEME_HOOKS: Record<string, string> = {
+export const THEME_HOOKS: Record<string, string> = {
   themeMode: 'useThemeMode',
   platform: 'usePlatform',
   hasIosKeyboard: 'useIosKeyboard',
