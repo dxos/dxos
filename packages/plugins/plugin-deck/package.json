@@ -120,11 +120,6 @@
       "types": "./dist/types/src/types/DeckRole.d.ts",
       "import": "./dist/lib/DeckRole.mjs"
     },
-    "./DeckSeed": {
-      "source": "./src/seed/DeckSeed.ts",
-      "types": "./dist/types/src/seed/DeckSeed.d.ts",
-      "import": "./dist/lib/DeckSeed.mjs"
-    },
     "./DeckSchema": {
       "source": "./src/types/DeckSchema.ts",
       "types": "./dist/types/src/types/DeckSchema.d.ts",

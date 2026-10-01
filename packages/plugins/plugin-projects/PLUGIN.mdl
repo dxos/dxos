@@ -125,4 +125,40 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
     - name: Open the Clocks page and add two timezones
       do: Click Clocks under the WORLD CLOCK group, then add two timezones with the plus card.
       expect: the page shows the map above three ticking clock cards and the plus card
+
+test QA-3: Read a project's tasks as details
+  desc: |
+    A project's task list opens each task as the project plank's detail. With the deck flattened (the default)
+    the task shows in a companion tab beside the project. Clicking an attachment card in the task moves the task
+    into the main plank and shows the file beside it, and the breadcrumb goes back.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists, with a space open
+    - the deck is flattened (Settings → Deck), the default
+    - a "Roastery Ops" project whose Tasks tab holds "Write a maintenance checklist for both roasters", with an
+      image attached, and "Hire a part-time roastery assistant" (the flow's setup step creates them)
+  steps:
+    - name: Open the project's tasks
+      do: Open the "Roastery Ops" project and its Tasks tab.
+      expect: the project fills the main plank and nothing is open beside it
+    - name: Open a task
+      do: Click "Write a maintenance checklist for both roasters".
+      expect: the task opens in a "Task" tab beside the project, and the project stays in the main plank
+    - name: Open the task's attachment
+      do: Click the attachment's card in the task.
+      expect: |
+        the task moves into the main plank with "Roastery Ops" in its breadcrumb, and the image opens in a "File"
+        tab beside it
+    - name: Go back to the project
+      do: Click "Roastery Ops" in the breadcrumb.
+      expect: the project is in the main plank again and the task is back in the "Task" tab beside it
+    - name: Open another task
+      do: Click "Hire a part-time roastery assistant".
+      expect: it replaces the first task in the "Task" tab, and the first task and its attachment are closed
+    - name: Open a task in its own plank
+      do: Cmd-click "Write a maintenance checklist for both roasters".
+      expect: |
+        the task opens in the main plank with "Roastery Ops" in its breadcrumb, and its attachment is not open
+        beside it
 ```
