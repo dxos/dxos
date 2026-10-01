@@ -4,6 +4,7 @@
 
 import ts from '@typescript/typescript6';
 
+import { type Element } from '../code-file.ts';
 import {
   addAttr,
   attributes,
@@ -18,7 +19,7 @@ import {
   tagText,
   unwrap,
 } from '../jsx.ts';
-import { type PackageName } from '../targets.ts';
+import { IMPORT_TARGETS, type PackageName } from '../targets.ts';
 import { listboxRoot, menuItem, selectRoot } from './collections.ts';
 import {
   type RuleContext,
@@ -548,9 +549,13 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
 
 const DENSITIES = new Set(['sm', 'md', 'lg']);
 
+/** A current-entry part with no Next counterpart (e.g. the current Tree) keeps its current props. */
+const staysCurrent = ({ identity }: Element) =>
+  identity.form === 'current' && IMPORT_TARGETS[identity.pkg][identity.path[0]]?.kind === 'none';
+
 const density = ({ file, element }: RuleContext, key: string) => {
   const attr = getAttr(element, 'density');
-  if (!attr || isButton(key)) {
+  if (!attr || isButton(key) || staysCurrent(element)) {
     return;
   }
   const value = attrValue(attr);

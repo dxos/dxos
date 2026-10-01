@@ -255,4 +255,16 @@ describe('popups', () => {
       );
     `);
   });
+
+  test('a current part with no Next counterpart keeps density', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Tree } from '@dxos/react-ui-list';
+
+        export const Files = () => <Tree id='x' density='sm' />;
+      `,
+    );
+    expect(output).toContain(`<Tree id='x' density='sm' />`);
+  });
 });
