@@ -100,13 +100,15 @@ each derived actor, and applies them together, with byte-identical output (`vers
 fixture). Deriving 1000 edits takes 2s (from 76s), 2000 take 7s; the remaining cost is one historical read
 of the source per edit, which the public Automerge API makes proportional to history length.
 
+Lens chains start at the version current when lenses are introduced for a type (item 6, 2026-10-01), so
+released apps never migrate the version `links` names in place; a type with lenses gets no new in-place
+migrations.
+
 Not yet done:
 
 - Deferred (2026-10-01) pending evaluation: wiring `watchVersions` into plugin-client and lenses as data.
   Version lenses are meant to replace in-place migrations once steps 2–4 cover what migrations express
   (lists/maps/text, opaque one-way transforms, multi-object); until then the in-place runner stays.
-- A released app that still runs an in-place migration for a versioned type would rewrite the linked
-  document in place; types move to version documents only once no released app migrates them.
 - The host takes the versions from the query until #13284 lands, then from the client's registry.
 
 **Carried over from the in-place work:** per-edit translation and list/text rebasing (`fold-edit.ts`),
