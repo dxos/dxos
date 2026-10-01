@@ -166,7 +166,7 @@ export const Spec: Story = {
     // Scoped to the header's rows: the story also lists every seeded person in its reference grid,
     // so the name alone is ambiguous.
     const attendeeRow = () =>
-      [...canvasElement.querySelectorAll('.dx-card__row')].find((row) =>
+      [...canvasElement.querySelectorAll('[data-scope="card"][data-part="row"]')].find((row) =>
         row.textContent?.includes(KNOWN_ATTENDEE.name),
       );
     await waitFor(() => expect(attendeeRow()).toBeTruthy(), { timeout: 12_000 });
@@ -195,7 +195,7 @@ export const Spec: Story = {
     // The unknown attendee's row offers to create the Person instead — on hover, never before it.
     // Mounted for keyboard access, faded until hover/focus (see `ContactAvatar`).
     await expect(canvas.getAllByRole('button', { name: 'Create contact' }).length).toBeGreaterThan(0);
-    const unknownAvatar = [...canvasElement.querySelectorAll('.dx-card__row')]
+    const unknownAvatar = [...canvasElement.querySelectorAll('[data-scope="card"][data-part="row"]')]
       .find((row) => row.textContent?.includes(UNKNOWN_ATTENDEE.name))
       ?.querySelector('[data-testid="row.contact-avatar"]');
     if (!unknownAvatar) {

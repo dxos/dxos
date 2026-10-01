@@ -198,7 +198,7 @@ export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const avatarFor = (name: string) => {
-      const rows = [...canvasElement.querySelectorAll('.dx-card__row')].filter((row) =>
+      const rows = [...canvasElement.querySelectorAll('[data-scope="card"][data-part="row"]')].filter((row) =>
         row.textContent?.includes(name),
       );
       // The first row for the known actor is the inert variant; the interactive one carries the testid.

@@ -140,7 +140,7 @@ export const Spec: Story = {
     const avatarFor = (name: string) => {
       const avatar = canvas
         .getByText(name)
-        .closest('.dx-card__row')
+        .closest('[data-scope="card"][data-part="row"]')
         ?.querySelector('[data-testid="row.contact-avatar"]');
       if (!avatar) {
         throw new Error(`Contact avatar not found for ${name}.`);
