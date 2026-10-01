@@ -198,7 +198,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       return (
         <Form.Field standalone label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Next.Progress value={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+            <Next.Progress value={percent / 100} label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}

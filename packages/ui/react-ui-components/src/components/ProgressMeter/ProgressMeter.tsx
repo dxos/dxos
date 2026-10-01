@@ -232,7 +232,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             // bar red rather than emptying it. A run that simply ended has nothing left to sweep.
             indeterminate={indeterminate && (active || failed)}
             error={failed}
-            aria-label={label ?? name}
+            label={label ?? name}
           />
         )}
       </div>

@@ -126,7 +126,7 @@ const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Next.Progress indeterminate aria-label='Initializing' />
+        <Next.Progress indeterminate label='Initializing' />
       </div>
     </ThemeProvider>,
   );
