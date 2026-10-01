@@ -213,7 +213,10 @@ const RUN_SCRIPT_TOOL = {
   inputSchema: {
     type: 'object' as const,
     properties: {
-      code: { type: 'string', description: 'The async function body. Print anything you need to see.' },
+      code: {
+        type: 'string',
+        description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
+      },
       spaceId: { type: 'string', description: 'The space invoke uses when a call names none.' },
     },
     required: ['code'],
