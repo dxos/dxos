@@ -15,7 +15,6 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
-import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
@@ -52,14 +51,6 @@ import {
 //
 
 /** Creates collection-related extensions: collections section, collections, objects, and object actions. */
-
-/**
- * A collection is always a navigation target; what differs is what navigating to it shows. When a
- * plugin renders collections as their own article (stack) that article wins, otherwise the deck opens
- * the collection's contents. Returning `undefined` leaves the ordinary open in place.
- */
-const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): DeckSpec.DeckSpec | undefined =>
-  !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
 
 /**
  * Typenames available in this build — schemas registered by enabled plugins, plus those stored in the
@@ -193,7 +184,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 db: space.db,
                 object,
                 navigable: true,
-                deck: collectionDeck(object, ephemeralState.navigableCollections),
               }),
             )
             .filter(isNonNullable),
@@ -254,7 +244,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   object,
                   db,
                   navigable: true,
-                  deck: collectionDeck(object, ephemeralState.navigableCollections),
                 }),
             )
             .filter(isNonNullable),

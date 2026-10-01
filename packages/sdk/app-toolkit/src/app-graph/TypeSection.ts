@@ -20,7 +20,6 @@ import { Position, inferObjectOrder } from '@dxos/util';
 
 import { AppNodeMatcher } from '../app-graph/index.ts';
 import { AppNode } from '../app-graph/index.ts';
-import { type DeckSpec } from '../app-graph/index.ts';
 import { AppAnnotation } from '../echo/index.ts';
 import * as ContainerModel from '../types/ContainerModel.ts';
 
@@ -128,13 +127,6 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
      * only accepts objects of its own type, as reorders.
      */
     dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
-    /**
-     * How the deck behaves when one of this section's objects is its root — the same answer
-     * {@link AppAnnotation.DeckAnnotation} gives, for a type that cannot carry it: the annotation lives
-     * in `@dxos/app-toolkit`, which a type defined below it (`@dxos/types`, `@dxos/compute`) cannot
-     * import. A type that can annotate itself should, so the answer travels with the type.
-     */
-    deck?: DeckSpec.DeckSpec;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -192,7 +184,6 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
           get,
           db: space.db,
           object,
-          deck: options.deck,
           ...(dropInto ? { dropInto: dropInto(object), blockInstruction } : {}),
         }),
       )

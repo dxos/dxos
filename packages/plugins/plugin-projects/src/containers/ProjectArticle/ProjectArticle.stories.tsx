@@ -266,8 +266,6 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
-        // For the card stack under the task companion: the surface is plugin-space's, so without it
-        // the companion renders the article alone and the stack silently resolves to nothing.
         SpacePlugin.make({}),
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".

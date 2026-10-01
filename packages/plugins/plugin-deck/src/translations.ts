@@ -53,6 +53,7 @@ export const translations = [
         'close-navigation-sidebar.button': 'Close',
         'companion-plank-heading-fallback.label': 'Related',
         'no-companions.message': 'Nothing related to this item.',
+        'detail-companion.label': 'Detail',
         'popover-no-preview.message': 'No preview available.',
         'plugin-failure.title': 'A plugin failed to activate',
         'plugin-failure.description': 'See Plugin Registry for details.',
