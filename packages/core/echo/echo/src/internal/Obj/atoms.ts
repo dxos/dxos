@@ -19,6 +19,7 @@ import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.t
 import { subscribe } from '../common/proxy/reactive.ts';
 import { ParentId } from '../common/types/index.ts';
 import { getDatabase, isEntity } from '../Entity/index.ts';
+import { refArrayFamily } from '../Ref/atoms.ts';
 import { RefTypeId } from '../Ref/ref.ts';
 import { loadRefTarget } from '../Ref/utils.ts';
 import { isDeleted } from './deleted.ts';
@@ -226,11 +227,17 @@ export const makeProperty: {
 /**
  * Like `makeAtom` but returns the live reactive object instead of a snapshot.
  * Prefer `makeAtom` (snapshot) unless you need the live Obj for generic mutations.
+ * Given a ref array, yields the loaded targets in ref order, without deleted ones unless included.
  */
 export const makeWithReactive: {
   <T extends Obj.Unknown>(obj: T): Atom.Atom<T>;
   <T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined>;
-} = (objOrRef: Obj.Unknown | Ref.Ref<any>): Atom.Atom<any> => {
+  <T extends Obj.Unknown>(refs: readonly Ref.Ref<T>[], options?: Ref.LoadOptions): Atom.Atom<T[]>;
+} = (objOrRef: Obj.Unknown | Ref.Ref<any> | readonly Ref.Ref<any>[], options?: Ref.LoadOptions): Atom.Atom<any> => {
+  if (Array.isArray(objOrRef)) {
+    // Copied: a live ECHO array would mutate under the family key.
+    return refArrayFamily([[...objOrRef], options?.deleted === 'include']);
+  }
   if (isRef(objOrRef)) {
     return refWithReactiveFamily(objOrRef as Ref.Ref<any>);
   }
