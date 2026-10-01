@@ -6,6 +6,12 @@
   ],
   "references": [
     {
+      "path": "../effect"
+    },
+    {
+      "path": "../errors"
+    },
+    {
       "path": "../keys"
     }
   ]

@@ -3726,10 +3726,16 @@ importers:
 
   packages/common/permission:
     dependencies:
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../keys
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../effect
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117

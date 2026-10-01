@@ -26,9 +26,11 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

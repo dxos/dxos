@@ -442,33 +442,42 @@ const sendToDxos = Permission.make({
 const editorsWrite = Permission.make({
   subject: Subject.space(spaceId),
   command: '/space/write',
-  policy: [Policy.in('.caller.role', ['editor', 'admin', 'owner'])],
+  policy: [Policy.within('.caller.role', ['editor', 'admin', 'owner'])],
 });
 ```
 
-`Policy.*` builders return the JSON predicate arrays; `Policy.evaluate(policy, { args, caller })`
-returns `Right(true)` or `Left(FailedPredicate)`; `Policy.describe(policy)` renders 'to matches
-\*@dxos.org and at most 3 attachments' for the consent prompt.
+`Policy.*` builders return the JSON predicate arrays (`within` builds the `in` predicate, since
+`in` is a reserved word); `Policy.evaluate(policy, { args, caller })` returns
+`Result.succeed(true)` or `Result.fail(FailedPredicate)` naming the predicate, the path and the
+actual value; `Policy.describe(policy)` renders '.args.to matches \*@dxos.org and
+.args.attachments.length is at most 3' for the consent prompt. `Policy.conjoin` flattens the
+policies of a chain into one conjunction, and `Policy.callerOnly` keeps the predicates that read
+only `.caller`, which is what can be judged at issuance time without arguments.
 
 ### Granting
 
 ```ts
 import { Grant, Principal } from '@dxos/permission';
 
-const toAgent = Grant.make({
-  issuer: Principal.identity(me.did),
-  audience: Principal.identity(agent.did),
-  permissions: [sendToDxos],
-  expiresAt: Grant.inDays(7),
-  delegable: false,
-});
+const toAgent =
+  yield *
+  Grant.make({
+    issuer: Principal.identity(me.did),
+    audience: Principal.identity(agent.did),
+    permissions: [sendToDxos],
+    expiresAt: Grant.inDays(7),
+    delegable: false,
+  });
 
 // Outside the package: HALO signs the canonical bytes and stores the credential.
 const credential = yield * PermissionCredentials.issue(toAgent); // @dxos/credentials
 ```
 
-`Grant.make` fills `id` from the canonical form. `Grant.canonical(grant)` is the byte string HALO
-signs; `Grant.encode` and `Grant.decode` are the Effect Schema entry points.
+`Grant.make` is an Effect because it fills `id` from the sha256 of the canonical form (WebCrypto is
+async). `Grant.canonical(grant)` is the byte string HALO signs, `Grant.verifyId` catches a tampered
+payload before any signature check, and `Grant.encode` and `Grant.decode` are the Effect Schema
+entry points. `Grant.isActive(grant, now)` and `Grant.covers(grant, { subject, command })` are the
+two predicates `check` is built from.
 
 ### Attenuating
 
@@ -483,12 +492,18 @@ const forChild =
 // fails with AttenuationError when the parent grants do not cover the request
 ```
 
+`attenuate` conjoins each parent's policy onto the child's permission, shrinks the child's window
+to the parent's, records the parents as `proofs`, and refuses a parent that is not `delegable` or
+not inside its window. When a parent is held by a space, the call takes `{ signer: { did, role } }`,
+judges the parent's caller predicates against that signer, records the signer in the child's `meta`,
+and leaves those predicates off the child: they bound the member who signed, not the holder.
+
 ### Checking
 
 ```ts
-import { Check, GrantSource } from '@dxos/permission';
+import { Check } from '@dxos/permission';
 
-const source = GrantSource.merge(membershipSource, credentialSource, environment.grants);
+const source = Check.merge(membershipSource, credentialSource, Check.fromGrants({ grants: environment.grants }));
 
 const result =
   yield *
@@ -501,13 +516,42 @@ const result =
   });
 
 if (Check.isDenied(result)) {
-  return yield * new PermissionDeniedError({ requirement, reason: result.reason });
+  return yield * new PermissionDeniedError({ context: { requirement, reason: Check.describeReason(result.reason) } });
 }
 ```
 
-`GrantSource` is
-`{ grantsFor(audience: Principal): Effect<readonly Grant[]>; isRevoked(id: string): Effect<boolean> }`,
-so sources are cheap to fake in tests and compose with `merge`.
+`Allowed` carries the resolved subject, the chain (leaf first) and the conjoined policy that
+passed, for tracing and audit. `Denied` carries a `Reason`, the most specific one found across the
+candidates: `no-grant`, `subject` (the selector resolved to nothing), `not-yet-valid`, `expired`,
+`revoked`, `chain` (a hop broke the issuer/audience, delegable, signer or ownership rule, with the
+detail), `consent` (who still has to consent, and whether the requirement is `consentable`), or
+`policy` with the predicate that failed and the value it saw.
+
+`GrantSource` is the interface the evaluator reads through:
+
+```ts
+interface GrantSource {
+  get(id: string): Effect<Grant | undefined>;
+  grantsFor(audience: Principal): Effect<readonly Grant[]>;
+  isRevoked(id: string): Effect<boolean>;
+  isMember(principal: Principal, spaceId: string): Effect<boolean>;
+  ownsSubject(issuer: Principal, subject: Subject): Effect<boolean>;
+  consentFor(grantId: string, by: Principal): Effect<Consent | undefined>;
+}
+```
+
+`Check.fromGrants({ grants, revoked, members, consents, trusted })` is the in-memory source over
+explicit lists (a space owns its subjects, so do its `owner` and `admin` members, and a `trusted`
+principal such as the process runtime roots a grant for any subject); it is what the tests use.
+`Check.merge(...sources)` unions grants and answers a fact when any source does.
+
+The package's `Check.test.ts` is the executable form of the check rules above: one scenario per
+way a check passes or fails (policy glob, wrong command, foreign subject, wrong principal, expired,
+not yet valid, revoked at the leaf or at the root, issuer not an owner, requirement floor, space
+audience by role, member versus non-member, chain narrowing hop by hop, non-delegable hop, inverted
+issuer, missing proof, admin versus editor signing for a space, forged space child, consent
+missing, present, expired or by the wrong principal, runtime-rooted process environment, merged
+sources).
 
 ## Interfaces
 
