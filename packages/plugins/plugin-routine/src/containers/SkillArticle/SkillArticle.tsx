@@ -19,7 +19,7 @@ export const SkillArticle = ({ role, attendableId, subject }: SkillArticleProps)
   return (
     <Next.Panel.Root role={role} width='document'>
       <Next.Panel.Header>
-        <Next.Toolbar.Root disabled={!hasAttention} />
+        <Next.Toolbar.Root inactive={!hasAttention} />
       </Next.Panel.Header>
       <Next.Panel.Body asChild>
         <TemplateEditor id={subject.id} source={subject.instructions.source} />

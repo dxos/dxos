@@ -43,7 +43,7 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
     <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
       <Next.Panel.Root role={role}>
         <Next.Panel.Header>
-          <PipelineComponent.Toolbar disabled={!hasAttention} />
+          <PipelineComponent.Toolbar inactive={!hasAttention} />
         </Next.Panel.Header>
         <Next.Panel.Body asChild>
           <PipelineComponent.Content asChild model={model}>

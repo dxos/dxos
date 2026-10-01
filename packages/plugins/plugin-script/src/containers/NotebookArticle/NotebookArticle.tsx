@@ -177,7 +177,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   return (
     <Next.Panel.Root role={role} width='document'>
       <Next.Panel.Header>
-        <Next.Toolbar.Root disabled={!hasAttention}>
+        <Next.Toolbar.Root inactive={!hasAttention}>
           <Next.Menu.Root>
             <Next.Menu.Trigger asChild>
               <Next.Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
