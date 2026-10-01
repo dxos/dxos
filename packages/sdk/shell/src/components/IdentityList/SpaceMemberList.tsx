@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { toPublicKey } from '@dxos/protocols/buf';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
@@ -51,8 +51,12 @@ export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMember
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
   const { t } = useTranslation(translationKey);
   const visibleMembers = members.filter(isIdentified);
+  const items = visibleMembers.map((member) => {
+    const value = requirePublicKey(member.identity.identityKey).toHex();
+    return { value, label: member.identity.profile?.displayName ?? value };
+  });
   return visibleMembers.length > 0 ? (
-    <Listbox.Root>
+    <Listbox.Root items={items}>
       <Listbox.Content
         classNames='flex flex-col gap-2'
         aria-label={t('space-member-list.heading')}

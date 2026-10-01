@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Trans, useTranslation } from '@dxos/react-ui';
+import { Trans, useId, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
@@ -20,6 +20,7 @@ export const AgentConfig = ({
   onAgentRefresh,
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
   const { t } = useTranslation(translationKey);
+  const labelId = useId('agentConfig__label');
   return (
     <div className='p-1'>
       <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent.heading')}</h2>
@@ -38,25 +39,24 @@ export const AgentConfig = ({
             className='my-2 flex gap-2 items-center'
             aria-describedby='devices-panel.create-agent.description'
           >
-            <Next.Avatar.Root>
-              <Next.Avatar.Content
-                status={agentStatus === 'created' ? 'warning' : 'inactive'}
-                variant='square'
-                classNames={['place-self-center', agentStatus !== 'created' && 'opactiy-50']}
-                icon='ph--database--duotone'
-              />
-              <Next.Avatar.Label classNames='flex-1 text-sm truncate'>
-                {t(
-                  agentStatus === 'created'
-                    ? 'agent requested label'
-                    : agentStatus === 'creating'
-                      ? 'creating agent label'
-                      : agentStatus === 'destroying'
-                        ? 'destroying agent label'
-                        : 'getting agent label',
-                )}
-              </Next.Avatar.Label>
-            </Next.Avatar.Root>
+            <Next.Avatar.Root
+              aria-labelledby={labelId}
+              status={agentStatus === 'created' ? 'warning' : 'inactive'}
+              variant='square'
+              classNames={['place-self-center', agentStatus !== 'created' && 'opactiy-50']}
+              icon='ph--database--duotone'
+            />
+            <span id={labelId} className='flex-1 text-sm truncate'>
+              {t(
+                agentStatus === 'created'
+                  ? 'agent requested label'
+                  : agentStatus === 'creating'
+                    ? 'creating agent label'
+                    : agentStatus === 'destroying'
+                      ? 'destroying agent label'
+                      : 'getting agent label',
+              )}
+            </span>
             {agentStatus === 'created' && (
               <Next.Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
                 <Next.Button

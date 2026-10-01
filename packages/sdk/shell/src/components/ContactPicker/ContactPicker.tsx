@@ -32,36 +32,34 @@ export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, dis
       ),
     [contacts, excludeKeys, query],
   );
-  const selected = contacts.find((contact) => contactKeyHex(contact) === value);
+  const items = useMemo(
+    () => candidates.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) })),
+    [candidates],
+  );
 
   return (
     <Next.Combobox.Root
-      placeholder={t('contact-picker.placeholder')}
-      displayValue={selected && contactDisplayName(selected)}
-      value={value ?? ''}
-      onValueChange={(key) => onChange(key || undefined)}
+      items={items}
+      // Candidates are filtered by name and key here (`filterContacts`), not by label alone.
+      filter={null}
+      value={value ? [value] : []}
+      onValueChange={({ value: [key] }) => onChange(key || undefined)}
+      inputValue={query}
+      onInputValueChange={({ inputValue }) => setQuery(inputValue)}
     >
       {/* Fills the row so the picker takes the space its siblings (role, add) don't. */}
-      <Next.Combobox.Trigger classNames='grow min-w-0' disabled={disabled} data-testid='contact-picker.trigger' />
+      <Next.Combobox.Trigger
+        classNames='grow min-w-0'
+        placeholder={t('contact-picker.placeholder')}
+        disabled={disabled}
+        data-testid='contact-picker.trigger'
+      />
       <Next.Combobox.Content>
-        <Next.Combobox.Input
-          placeholder={t('contact-picker-search.placeholder')}
-          value={query}
-          onValueChange={setQuery}
-        />
+        <Next.Combobox.Input placeholder={t('contact-picker-search.placeholder')} />
         <Next.Combobox.List>
-          {candidates.map((contact) => {
-            const key = contactKeyHex(contact);
-            return (
-              <Next.Combobox.Item
-                key={key}
-                value={key}
-                label={contactDisplayName(contact)}
-                checked={key === value}
-                data-testid='contact-picker.item'
-              />
-            );
-          })}
+          {items.map((item) => (
+            <Next.Combobox.Item key={item.value} item={item} data-testid='contact-picker.item' />
+          ))}
         </Next.Combobox.List>
         {candidates.length === 0 && <Next.Combobox.Empty>{t('contact-picker-empty.message')}</Next.Combobox.Empty>}
       </Next.Combobox.Content>

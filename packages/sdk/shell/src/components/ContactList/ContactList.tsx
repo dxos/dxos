@@ -56,7 +56,9 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root
+      items={visible.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) }))}
+    >
       <Listbox.Content
         classNames={[classNames, 'flex flex-col gap-2']}
         aria-label={t('contacts.label')}
@@ -77,7 +79,7 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
 
 type ContactListItemProps = Pick<ContactListProps, 'spaces' | 'onSelectSpace'> & { contact: Contact };
 
-/** `Listbox.ItemContent` aligns the key and shared-space tags under the name, beside the avatar rail. */
+/** The key and shared-space tags sit under the name, beside the avatar rail. */
 const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProps) => {
   const { t } = useTranslation(translationKey);
   const labelId = useId('contactListItem__label');
@@ -90,50 +92,49 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
 
   return (
     <Listbox.Item classNames='p-2 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
-      <Listbox.ItemContent
-        icon={
-          <Next.Avatar.Root
-            aria-labelledby={labelId}
-            size={8}
-            hue={profileString(contact, 'hue') ?? fallback.hue}
-            fallback={profileString(contact, 'emoji') ?? fallback.emoji}
-          />
-        }
-        title={
-          <div className='flex items-center justify-between gap-1'>
-            <span id={labelId} className='truncate'>
-              {displayName}
-            </span>
-            <div className='flex items-center gap-1 text-sm text-description'>
-              <Next.Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
-                <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
-              </Next.Tooltip.Trigger>
-              <Next.SystemButton.Clipboard
-                iconOnly
+      <Listbox.ItemIcon>
+        <Next.Avatar.Root
+          aria-labelledby={labelId}
+          size='md'
+          hue={Next.toAvatarHue(profileString(contact, 'hue') ?? fallback.hue)}
+          fallback={profileString(contact, 'emoji') ?? fallback.emoji}
+        />
+      </Listbox.ItemIcon>
+      {/* The name row and the shared-space tags stack beside the avatar rail. */}
+      <div className='flex flex-col gap-1 min-w-0 grow'>
+        <div className='flex items-center justify-between gap-1'>
+          <span id={labelId} className='truncate'>
+            {displayName}
+          </span>
+          <div className='flex items-center gap-1 text-sm text-description'>
+            <Next.Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
+              <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
+            </Next.Tooltip.Trigger>
+            <Next.SystemButton.Clipboard
+              iconOnly
+              size='sm'
+              variant='ghost'
+              value={contact.did ?? identityKey.toHex()}
+              label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}
+            />
+          </div>
+        </div>
+        {common.length > 0 && (
+          <div className='flex flex-wrap gap-1'>
+            {common.map((space) => (
+              <Next.Button
+                key={space.id}
                 size='sm'
-                variant='ghost'
-                value={contact.did ?? identityKey.toHex()}
-                label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}
-              />
-            </div>
+                hue={getHashStyles(space.id).hue}
+                onClick={() => onSelectSpace?.(space)}
+                data-testid='contact-list.space'
+              >
+                {space.name ?? t('unnamed-space.label')}
+              </Next.Button>
+            ))}
           </div>
-        }
-        description={
-          <div className='flex flex-col gap-1'>
-            {common.length > 0 && (
-              <div className='flex flex-wrap gap-1'>
-                {common.map((space) => (
-                  <Next.Tag key={space.id} hue={getHashStyles(space.id).hue} asChild>
-                    <button type='button' onClick={() => onSelectSpace?.(space)} data-testid='contact-list.space'>
-                      {space.name ?? t('unnamed-space.label')}
-                    </button>
-                  </Next.Tag>
-                ))}
-              </div>
-            )}
-          </div>
-        }
-      />
+        )}
+      </div>
     </Listbox.Item>
   );
 };

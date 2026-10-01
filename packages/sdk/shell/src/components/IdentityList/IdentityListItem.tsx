@@ -22,8 +22,8 @@ type IdentityListItemProps = {
 };
 
 export const IdentityListItem = forwardRef<
-  HTMLLIElement,
-  ThemedClassName<ComponentPropsWithoutRef<'li'>> & IdentityListItemProps
+  HTMLDivElement,
+  ThemedClassName<ComponentPropsWithoutRef<'div'>> & IdentityListItemProps
 >(({ identity, presence, onClick, classNames, ...props }, forwardedRef) => {
   const identityKey = requirePublicKey(identity.identityKey);
   const fallbackValue = keyToFallback(identityKey);
@@ -41,7 +41,7 @@ export const IdentityListItem = forwardRef<
       <Next.Avatar.Root
         aria-labelledby={labelId}
         status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
-        hue={profileString(identity, 'hue') ?? fallbackValue.hue}
+        hue={Next.toAvatarHue(profileString(identity, 'hue') ?? fallbackValue.hue)}
         fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
         classNames='place-self-center'
       />

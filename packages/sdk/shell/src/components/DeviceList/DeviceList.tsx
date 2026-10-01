@@ -30,7 +30,12 @@ export const DeviceList = ({
     <div className='p-1'>
       <h2 className={mx('text-description', 'text-center mt-2')}>{t('devices.heading')}</h2>
       {devices.length > 0 && (
-        <Listbox.Root>
+        <Listbox.Root
+          items={devices.map((device) => {
+            const { key, label } = toShellDevice(device);
+            return { value: key, label: label ?? key };
+          })}
+        >
           <Listbox.Content aria-label={t('device-list.heading')}>
             {devices.map((device: Device) => {
               const shellDevice = toShellDevice(device);
