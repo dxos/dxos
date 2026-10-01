@@ -308,34 +308,31 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
   const label = (entry: ToolEntry) => entryLabel(entry, t);
 
   return (
-    <Next.Accordion.Root<ToolEntry> rounded items={entries} onValueChange={(value) => onOpen?.(value.length > 0)}>
-      {({ items }) =>
-        items.map((entry) => {
-          // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
-          // no payload is a disabled item — same frame and rhythm, no caret, no toggle.
-          const detail = hasDetail(entry);
-          return (
-            <Next.Accordion.Item key={entry.id} item={entry} disabled={!detail}>
-              <Next.Accordion.ItemTrigger
-                hover={detail}
-                icon={entry.icon}
-                data-testid={`assistant.tool-${entry.kind}`}
-                classNames={mx('text-sm', entry.error !== undefined && 'text-error-text')}
-              >
-                {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
-                <span className='flex items-center h-(--dx-control-sm) min-w-0'>
-                  <span className='truncate'>{label(entry)}</span>
-                </span>
-              </Next.Accordion.ItemTrigger>
-              {detail && (
-                <Next.Accordion.ItemContent classNames='px-2'>
-                  <ToolCallDetail entry={entry} />
-                </Next.Accordion.ItemContent>
-              )}
-            </Next.Accordion.Item>
-          );
-        })
-      }
+    <Next.Accordion.Root onValueChange={(value) => onOpen?.(value.length > 0)}>
+      {entries.map((entry) => {
+        // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
+        // no payload is a disabled item — same frame and rhythm, no caret, no toggle.
+        const detail = hasDetail(entry);
+        return (
+          <Next.Accordion.Item key={entry.id} value={entry.id} disabled={!detail}>
+            <Next.Accordion.ItemTrigger
+              icon={entry.icon}
+              data-testid={`assistant.tool-${entry.kind}`}
+              classNames={mx('text-sm', entry.error !== undefined && 'text-error-text')}
+            >
+              {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
+              <span className='flex items-center h-(--dx-control-sm) min-w-0'>
+                <span className='truncate'>{label(entry)}</span>
+              </span>
+            </Next.Accordion.ItemTrigger>
+            {detail && (
+              <Next.Accordion.ItemContent classNames='px-2'>
+                <ToolCallDetail entry={entry} />
+              </Next.Accordion.ItemContent>
+            )}
+          </Next.Accordion.Item>
+        );
+      })}
     </Next.Accordion.Root>
   );
 };

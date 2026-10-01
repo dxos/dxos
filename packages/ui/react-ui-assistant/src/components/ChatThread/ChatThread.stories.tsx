@@ -150,7 +150,7 @@ const DefaultStory = ({
           <Next.Panel.Body classNames='flex flex-col'>
             <div className='dx-expand relative'>
               <PromptOutline model={model} />
-              <ChatThread.Viewport classNames='dx-fullscreen' padding />
+              <ChatThread.Viewport classNames='dx-fullscreen' />
               {debug && <Probes model={model} />}
             </div>
             <PromptInput busy={busy} prompt={prompt} setPrompt={setPrompt} onSubmit={(prompt) => void answer(prompt)} />
