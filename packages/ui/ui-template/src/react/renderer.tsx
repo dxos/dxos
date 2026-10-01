@@ -61,6 +61,13 @@ const itemField = (node: Node, scope: Scope, item: unknown, name: string): unkno
   return binding ? resolve(binding, { ...scope, item }) : undefined;
 };
 
+/** A collection's items as list options, from its `item-id` / `item-label` bindings. */
+const toOptions = (node: Node, scope: Scope, items: readonly unknown[]) =>
+  items.map((item, index) => {
+    const value = asText(itemField(node, scope, item, 'id') ?? index);
+    return { value, label: asText(itemField(node, scope, item, 'label') ?? value) };
+  });
+
 /** The connect surface a multi-select collection drives — senders only; reads come from state. */
 type MultiSelectDriver = {
   select: (id: string, shift?: boolean) => void;
@@ -191,6 +198,7 @@ export const createReactRenderer = ({
    */
   collection: ({ path, node, props, data, handlers, scope, renderChildren }) => {
     const items = Array.isArray(data.items) ? data.items : [];
+    const options = toOptions(node, scope, items);
 
     // With a plural `data-selections` binding: a multi-select list driven by the module's
     // capability instance (`capability="alias.name"`). The rows only mark and send — selection
@@ -206,27 +214,21 @@ export const createReactRenderer = ({
       }
       const selections = Array.isArray(data.selections) ? data.selections.map(asText) : [];
       return (
-        <Listbox.Root key={path} multiselectable>
-          <Listbox.Content>
-            {items.map((item, index) => {
-              const id = asText(itemField(node, scope, item, 'id') ?? index);
-              return (
-                <Listbox.Item
-                  key={id}
-                  id={id}
-                  selected={selections.includes(id)}
-                  // A shift-click must not start a text selection before the row's click handler runs.
-                  onMouseDown={(event) => event.shiftKey && event.preventDefault()}
-                  onClick={(event) =>
-                    event.shiftKey && event.altKey ? api.extendTo(id) : api.select(id, event.shiftKey)
-                  }
-                >
-                  <Listbox.ItemText>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemText>
-                </Listbox.Item>
-              );
-            })}
-          </Listbox.Content>
-        </Listbox.Root>
+        <Next.Listbox.Root key={path} items={options} selectionMode='multiple' value={selections}>
+          <Next.Listbox.Content>
+            {options.map((option) => (
+              <Next.Listbox.Item
+                key={option.value}
+                item={option}
+                // A shift-click must not start a text selection before the row's click handler runs.
+                onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+                onClick={(event) =>
+                  event.shiftKey && event.altKey ? api.extendTo(option.value) : api.select(option.value, event.shiftKey)
+                }
+              />
+            ))}
+          </Next.Listbox.Content>
+        </Next.Listbox.Root>
       );
     }
 
@@ -234,6 +236,7 @@ export const createReactRenderer = ({
       return (
         <Listbox.Root
           key={path}
+          items={options}
           value={asText(data.selection) || undefined}
           onValueChange={(next) => handlers.select?.(next)}
           // Esc on a focused option: deselect is the same operation with no payload. The Listbox
@@ -241,15 +244,12 @@ export const createReactRenderer = ({
           onDeselect={() => handlers.select?.(undefined)}
         >
           <Listbox.Content>
-            {items.map((item, index) => {
-              const id = asText(itemField(node, scope, item, 'id') ?? index);
-              return (
-                <Listbox.Item key={id} id={id}>
-                  <Listbox.ItemText>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemText>
-                  <Listbox.ItemIndicator />
-                </Listbox.Item>
-              );
-            })}
+            {options.map((option) => (
+              <Listbox.Item key={option.value} id={option.value}>
+                <Listbox.ItemText>{option.label}</Listbox.ItemText>
+                <Listbox.ItemIndicator />
+              </Listbox.Item>
+            ))}
           </Listbox.Content>
         </Listbox.Root>
       );
@@ -317,26 +317,18 @@ export const createReactRenderer = ({
     return (
       <Next.Combobox.Root
         key={path}
-        placeholder={asText(props.placeholder) || undefined}
-        value={asText(data.value)}
-        onValueChange={(next) => handlers.select?.(next)}
+        items={toOptions(node, scope, items)}
+        // The caller derives the filtered items from the published `filter`.
+        filter={null}
+        value={asText(data.value) ? [asText(data.value)] : []}
+        onValueChange={({ value: [next] }) => handlers.select?.(next)}
+        inputValue={asText(data.filter)}
+        onInputValueChange={({ inputValue }) => handlers.input?.(inputValue)}
       >
-        <Next.Combobox.Trigger />
+        <Next.Combobox.Trigger placeholder={asText(props.placeholder) || undefined} />
         <Next.Combobox.Content>
-          <Next.Combobox.Input
-            placeholder={asText(props.placeholder) || undefined}
-            value={asText(data.filter)}
-            onValueChange={(next) => handlers.input?.(next)}
-          />
-          <Next.Combobox.List>
-            {items.map((item, index) => {
-              const id = asText(itemField(node, scope, item, 'id') ?? index);
-              return (
-                <Next.Combobox.Item key={id} value={id} label={asText(itemField(node, scope, item, 'label') ?? id)} />
-              );
-            })}
-            {items.length === 0 && <Next.Combobox.Empty />}
-          </Next.Combobox.List>
+          <Next.Combobox.Input placeholder={asText(props.placeholder) || undefined} />
+          <Next.Combobox.List />
         </Next.Combobox.Content>
       </Next.Combobox.Root>
     );
