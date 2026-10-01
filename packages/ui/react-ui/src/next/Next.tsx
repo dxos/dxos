@@ -204,8 +204,6 @@ export namespace Next {
   export const useVirtualRows = nextUseVirtualRows;
   export const VirtualSpacer = NextVirtualSpacer;
   export const RowContext = NextRowContext;
-  export const Empty = NextEmpty;
-  export type EmptyProps = NextEmptyProps;
   export const Panel = NextPanel;
   export type PanelRootProps = NextPanelRootProps;
   export const Separator = NextSeparator;
