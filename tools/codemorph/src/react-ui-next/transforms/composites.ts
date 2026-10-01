@@ -139,9 +139,11 @@ export const labelledControl =
       file.edit(tail, first.getStart(file.sourceFile), ' label=');
       file.edit(first.getEnd(), node.getEnd(), ' />');
     } else {
-      // Text at either end keeps only its words, so the fragment does not carry the old indentation.
-      const start =
-        first.getStart(file.sourceFile) + (ts.isJsxText(first) ? first.text.length - first.text.trimStart().length : 0);
+      // Text at either end keeps only its words (measured from JsxText `pos`, which getStart skips past), so the
+      // fragment does not carry the old indentation.
+      const start = ts.isJsxText(first)
+        ? first.pos + first.text.length - first.text.trimStart().length
+        : first.getStart(file.sourceFile);
       const end = last.getEnd() - (ts.isJsxText(last) ? last.text.length - last.text.trimEnd().length : 0);
       file.edit(tail, start, ' label={<>');
       file.edit(end, node.getEnd(), '</>} />');

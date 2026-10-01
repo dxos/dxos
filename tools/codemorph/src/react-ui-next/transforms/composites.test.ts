@@ -158,6 +158,10 @@ describe('composites', () => {
               <span>Rich</span> label
             </Field.Switch>
             <Field.Switch checked={on} />
+            <Field.Checkbox checked={on}>
+              Disable{' '}
+              <a href='#'>sync</a>
+            </Field.Checkbox>
           </>
         );
       `,
@@ -171,6 +175,8 @@ describe('composites', () => {
           <Next.Checkbox checked={on} label='Remember me' />
           <Next.Switch checked={on} label={<><span>Rich</span> label</>} />
           <Next.Switch checked={on} />
+          <Next.Checkbox checked={on} label={<>Disable{' '}
+            <a href='#'>sync</a></>} />
         </>
       );
     `);
