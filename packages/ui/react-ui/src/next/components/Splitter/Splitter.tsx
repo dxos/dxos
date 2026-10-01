@@ -376,13 +376,25 @@ const RESIZE_TRIGGER_NAME = 'Next.Splitter.ResizeTrigger';
 
 type SplitterResizeTriggerProps = SlottableProps;
 
-/** The seam: a 7px grab area straddling the panes around a 1px divider; rendered only when the root is `resizable`. */
+/**
+ * The seam: a 7px grab area straddling the panes around a 1px divider. Without `resizable` it is only the divider (a
+ * static `separator`, not focusable), and while one pane shows it renders nothing.
+ */
 const SplitterResizeTrigger = slottable<HTMLButtonElement>(({ asChild, children, ...props }, forwardedRef) => {
-  const { orientation, resizable } = useSplitterContext(RESIZE_TRIGGER_NAME);
+  const { orientation, resizable, visibleMode } = useSplitterContext(RESIZE_TRIGGER_NAME);
   const { className, ...rest } = composableProps(props);
 
   if (!resizable) {
-    return null;
+    return visibleMode === 'split' ? (
+      <div
+        role='separator'
+        aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
+        data-scope='splitter'
+        data-part='divider'
+        data-orientation={orientation}
+        className={mx(recipes.splitterDivider(), className)}
+      />
+    ) : null;
   }
 
   return (

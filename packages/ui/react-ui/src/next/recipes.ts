@@ -155,6 +155,7 @@ export const recipes = {
   splitter: () => 'nx-splitter',
   splitterPanel: () => 'nx-splitter-panel',
   splitterResizeTrigger: () => 'nx-splitter-resize-trigger',
+  splitterDivider: () => 'nx-splitter-divider',
   toaster: () => 'nx-toaster',
   toast: () => 'nx-popup nx-toast',
   toastHeader: () => 'nx-toast-header',

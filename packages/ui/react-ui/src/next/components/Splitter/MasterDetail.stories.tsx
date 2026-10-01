@@ -5,7 +5,7 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
@@ -86,60 +86,108 @@ const BackButton = ({ testId = 'back' }: { testId?: string }) => {
   ) : null;
 };
 
-/** The selected record, or `Empty` when nothing is selected. */
-const Detail = ({ item }: { item?: Next.ListboxOption }) => {
-  const project = projectOf(item?.value);
-  return (
-    <Next.Panel.Root data-testid='detail'>
+/** The list pane: a header bar naming the list (with its count) over a body whose rails the rows inherit. */
+const MasterPane = ({ title, count, children }: PropsWithChildren<{ title: string; count: number }>) => (
+  <Next.Panel.Root>
+    <Next.Panel.Header>
+      <Next.Toolbar.Root>
+        <Next.Toolbar.Text>{title}</Next.Toolbar.Text>
+        <Next.Toolbar.Text classNames='flex-none'>
+          <Next.Typography tone='description'>{count}</Next.Typography>
+        </Next.Toolbar.Text>
+      </Next.Toolbar.Root>
+    </Next.Panel.Header>
+    <Next.Panel.Body>{children}</Next.Panel.Body>
+  </Next.Panel.Root>
+);
+
+type DetailPaneProps = ComponentPropsWithoutRef<'div'> & { title: string; backTestId?: string };
+
+/** The detail pane: the same header bar (Back first while collapsed) over the caller's body; forwards for `asChild`. */
+const DetailPane = forwardRef<HTMLDivElement, DetailPaneProps>(
+  ({ title, backTestId, children, ...props }, forwardedRef) => (
+    <Next.Panel.Root data-testid='detail' {...props} ref={forwardedRef}>
       <Next.Panel.Header>
         <Next.Toolbar.Root>
-          <BackButton />
-          <Next.Toolbar.Text data-testid='detail-title'>{item?.label ?? 'Projects'}</Next.Toolbar.Text>
+          <BackButton testId={backTestId} />
+          <Next.Toolbar.Text data-testid={backTestId ? undefined : 'detail-title'}>{title}</Next.Toolbar.Text>
         </Next.Toolbar.Root>
       </Next.Panel.Header>
-      <Next.Panel.Body>
-        {project ? (
-          <>
-            <Next.Typography>{project.description}</Next.Typography>
-            <Next.Typography tone='description'>Owner</Next.Typography>
-            <Next.Typography>{project.owner}</Next.Typography>
-            <Next.Typography tone='description'>Status</Next.Typography>
-            <Next.Typography>{project.status}</Next.Typography>
-            <Next.Typography tone='description'>Updated</Next.Typography>
-            <Next.Typography>{project.updated}</Next.Typography>
-          </>
-        ) : (
-          <Next.Empty icon='ph--cursor-click--regular' data-testid='detail-empty'>
-            Select a project
-          </Next.Empty>
-        )}
-      </Next.Panel.Body>
+      {children}
     </Next.Panel.Root>
+  ),
+);
+
+/** Label and value pairs on two tracks of their own, between the panel's rails (one track once the pane is narrow). */
+const Fields = ({ fields }: { fields: [label: string, value: string][] }) => (
+  <Next.Panel.Body>
+    <Next.Container gutter='inherit' layout='row' columns='minmax(0, 6rem) minmax(0, 1fr)' gap='sm'>
+      {fields.flatMap(([label, value]) => [
+        <Next.Typography key={`${label}-label`} tone='description'>
+          {label}
+        </Next.Typography>,
+        <Next.Typography key={`${label}-value`} truncate>
+          {value}
+        </Next.Typography>,
+      ])}
+    </Next.Container>
+  </Next.Panel.Body>
+);
+
+const EmptyBody = ({ children, testId }: PropsWithChildren<{ testId?: string }>) => (
+  <Next.Panel.Body>
+    <Next.Empty icon='ph--cursor-click--regular' data-testid={testId}>
+      {children}
+    </Next.Empty>
+  </Next.Panel.Body>
+);
+
+const projectFields = (project: Project): [string, string][] => [
+  ['Owner', project.owner],
+  ['Status', project.status],
+  ['Updated', project.updated],
+  ['Summary', project.description ?? ''],
+];
+
+/** The selected project, or `Empty` when nothing is selected. */
+const ProjectDetail = ({ item }: { item?: Next.ListboxOption }) => {
+  const project = projectOf(item?.value);
+  return (
+    <DetailPane title={project?.label ?? 'No selection'}>
+      {project ? (
+        <Fields fields={projectFields(project)} />
+      ) : (
+        <EmptyBody testId='detail-empty'>Select a project</EmptyBody>
+      )}
+    </DetailPane>
   );
 };
 
 /** The detail reads the selection from the list's own Root context; no master-detail state of its own. */
 const ListboxDetail = () => {
   const { selectedItems } = Next.Listbox.useContext();
-  return <Detail item={selectedItems[0]} />;
+  return <ProjectDetail item={selectedItems[0]} />;
 };
 
 /**
- * The list pane: while collapsed, choosing a row (even the selected one, after Back) opens the detail; while both panes
+ * The list: while collapsed, choosing a row (even the selected one, after Back) opens the detail; while both panes
  * show, the detail is already beside it, so the mode stays on the list and a later collapse lands there.
  */
 const ListboxMaster = ({ items, label }: { items: Next.ListboxOption[]; label: string }) => {
   const { collapsed, setMode } = Next.Splitter.useContext();
   const open = () => collapsed && setMode('end');
   return (
-    <Next.Listbox.Content
-      aria-label={label}
-      onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && open()}
-    >
-      {items.map((item) => (
-        <Next.Listbox.Item key={item.value} item={item} onClick={open} data-testid={`item-${item.value}`} />
-      ))}
-    </Next.Listbox.Content>
+    <MasterPane title={label} count={items.length}>
+      <Next.Listbox.Content
+        scroll={false}
+        aria-label={label}
+        onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && open()}
+      >
+        {items.map((item) => (
+          <Next.Listbox.Item key={item.value} item={item} onClick={open} data-testid={`item-${item.value}`} />
+        ))}
+      </Next.Listbox.Content>
+    </MasterPane>
   );
 };
 
@@ -184,47 +232,41 @@ const ListboxStory = ({ width, size: defaultSize, collapseBelow, resizable }: St
 const TabsMaster = () => {
   const { collapsed, setMode } = Next.Splitter.useContext();
   return (
-    <Next.Tabs.List aria-label='Projects' data-testid='master-list'>
-      {PROJECTS.map((project) => (
-        <Next.Tabs.Trigger
-          key={project.value}
-          value={project.value}
-          icon={project.icon}
-          label={project.label}
-          onClick={() => collapsed && setMode('end')}
-          data-testid={`item-${project.value}`}
-        />
-      ))}
-    </Next.Tabs.List>
+    <MasterPane title='Projects' count={PROJECTS.length}>
+      <Next.Tabs.List aria-label='Projects' data-testid='master-list'>
+        {PROJECTS.map((project) => (
+          <Next.Tabs.Trigger
+            key={project.value}
+            value={project.value}
+            icon={project.icon}
+            label={project.label}
+            onClick={() => collapsed && setMode('end')}
+            data-testid={`item-${project.value}`}
+          />
+        ))}
+      </Next.Tabs.List>
+    </MasterPane>
   );
 };
 
+/** Each tab's panel is the detail pane itself (`asChild`); before a tab is chosen the pane shows `Empty`. */
 const TabsDetail = () => {
   const { value } = Next.Tabs.useContext();
-  const project = projectOf(value ?? undefined);
   return (
-    <Next.Panel.Root data-testid='detail'>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <BackButton />
-          <Next.Toolbar.Text data-testid='detail-title'>{project?.label ?? 'Projects'}</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
-        {project ? (
-          PROJECTS.map((project) => (
-            <Next.Tabs.Content key={project.value} value={project.value}>
-              <Next.Typography>{project.description}</Next.Typography>
-              <Next.Typography tone='description'>Updated {project.updated}</Next.Typography>
-            </Next.Tabs.Content>
-          ))
-        ) : (
-          <Next.Empty icon='ph--cursor-click--regular' data-testid='detail-empty'>
-            Select a project
-          </Next.Empty>
-        )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+    <>
+      {PROJECTS.map((project) => (
+        <Next.Tabs.Content key={project.value} value={project.value} asChild>
+          <DetailPane title={project.label}>
+            <Fields fields={projectFields(project)} />
+          </DetailPane>
+        </Next.Tabs.Content>
+      ))}
+      {!value && (
+        <DetailPane title='No selection'>
+          <EmptyBody testId='detail-empty'>Select a project</EmptyBody>
+        </DetailPane>
+      )}
+    </>
   );
 };
 
@@ -260,29 +302,24 @@ const NestedDetail = () => {
   const { selectedItems } = Next.Listbox.useContext();
   const project = projectOf(selectedItems[0]?.value);
   if (!project) {
-    return <Detail />;
+    return <ProjectDetail />;
   }
 
   const tasks = tasksOf(project);
   return (
-    <Next.Panel.Root data-testid='detail'>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <BackButton />
-          <Next.Toolbar.Text data-testid='detail-title'>{project.label}</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
+    <DetailPane title={project.label}>
       <Next.Listbox.Root key={project.value} items={tasks} classNames='dx-fill'>
         <Next.Splitter.Root orientation='horizontal' defaultMode='start' collapseBelow='24rem' size={12}>
           <Next.Splitter.Panel position='start'>
             <ListboxMaster items={tasks} label='Tasks' />
           </Next.Splitter.Panel>
+          <Next.Splitter.ResizeTrigger />
           <Next.Splitter.Panel position='end'>
             <TaskDetail />
           </Next.Splitter.Panel>
         </Next.Splitter.Root>
       </Next.Listbox.Root>
-    </Next.Panel.Root>
+    </DetailPane>
   );
 };
 
@@ -290,21 +327,18 @@ const TaskDetail = () => {
   const { selectedItems } = Next.Listbox.useContext();
   const task = selectedItems[0];
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Header>
-        <Next.Toolbar.Root>
-          <BackButton testId='task-back' />
-          <Next.Toolbar.Text>{task?.label ?? 'Tasks'}</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body>
-        {task ? (
-          <Next.Typography>Assigned to {task.description}</Next.Typography>
-        ) : (
-          <Next.Empty icon='ph--cursor-click--regular'>Select a task</Next.Empty>
-        )}
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+    <DetailPane title={task?.label ?? 'No selection'} backTestId='task-back' data-testid='task-detail'>
+      {task ? (
+        <Fields
+          fields={[
+            ['Task', task.label],
+            ['Assignee', task.description ?? ''],
+          ]}
+        />
+      ) : (
+        <EmptyBody>Select a task</EmptyBody>
+      )}
+    </DetailPane>
   );
 };
 
@@ -365,7 +399,7 @@ export const Fixed: Story = { args: { resizable: false, size: 20 } };
 /** Narrow from the start: one pane at a time. */
 export const Narrow: Story = { args: { width: 24 } };
 
-export const Nested: Story = { render: NestedStory, args: { width: 64, size: 14, collapseBelow: '36rem' } };
+export const Nested: Story = { render: NestedStory, args: { width: 60, size: 14, collapseBelow: '36rem' } };
 
 const isShown = (element: HTMLElement) => element.getBoundingClientRect().width > 1;
 

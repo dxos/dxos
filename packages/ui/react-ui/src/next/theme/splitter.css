@@ -2,7 +2,7 @@
  * Splitter: two panes filling the host along the split axis. A pane is one row of its own height (`minmax(0, 1fr)`,
  * never `auto`), so what it holds is capped by the pane. The resize trigger is a 7px grab area whose negative margin
  * cancels its extent, so it straddles the seam without taking a slice of the layout; a 1px divider brightens on hover,
- * focus and drag. The machine supplies the axis cursor.
+ * focus and drag. The machine supplies the axis cursor. A splitter that is not resizable draws only the divider.
  */
 
 @layer dx-components {
@@ -24,6 +24,18 @@
     display: grid;
     grid-template-rows: minmax(0, 1fr);
     overflow: hidden;
+  }
+
+  /* A fixed splitter's seam: the divider alone, taking its 1px of the layout. */
+  .nx-splitter-divider {
+    flex-shrink: 0;
+    background: var(--color-separator);
+  }
+  .nx-splitter-divider[data-orientation='horizontal'] {
+    width: 1px;
+  }
+  .nx-splitter-divider[data-orientation='vertical'] {
+    height: 1px;
   }
 
   .nx-splitter-resize-trigger {
