@@ -1234,7 +1234,7 @@ TreeItemIcon.displayName = 'Tree.ItemIcon';
 
 type TreeItemTextProps = {
   /** Replaces the model's label. */
-  children?: ReactNode;
+  'children'?: ReactNode;
   'data-testid'?: string;
 };
 

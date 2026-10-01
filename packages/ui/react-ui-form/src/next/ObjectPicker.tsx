@@ -3,7 +3,16 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { type DragEvent, type KeyboardEvent, type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type DragEvent,
+  type KeyboardEvent,
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Next } from '@dxos/react-ui/next';
 import { hues } from '@dxos/ui-types';

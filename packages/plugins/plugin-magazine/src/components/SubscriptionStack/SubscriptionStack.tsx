@@ -138,7 +138,11 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
               <Next.Card.Title>{feed.name ?? 'Untitled feed'}</Next.Card.Title>
               <Next.Card.Menu label={t('toolbar-menu.label')}>
                 {menuItems.map((item) => (
-                  <Next.Menu.Item key={item.label} item={{ value: item.label, label: item.label }} onClick={item.onClick} />
+                  <Next.Menu.Item
+                    key={item.label}
+                    item={{ value: item.label, label: item.label }}
+                    onClick={item.onClick}
+                  />
                 ))}
               </Next.Card.Menu>
             </Next.Card.Header>

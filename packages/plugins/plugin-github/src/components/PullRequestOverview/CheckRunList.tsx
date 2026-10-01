@@ -59,9 +59,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
   }
 
   return (
-    <Listbox.Root
-      items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}
-    >
+    <Listbox.Root items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}>
       <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
         {sorted.map((run) => {
           const { icon, classNames } = outcomeIcon[run.outcome];

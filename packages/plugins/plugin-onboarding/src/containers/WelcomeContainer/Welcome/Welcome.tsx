@@ -400,135 +400,133 @@ export const Welcome = ({
               }
             }}
           >
-              <Next.Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
-                <Next.Tabs.Trigger value='login' classNames={tabClassNames}>
-                  {t('login-tab.label')}
-                </Next.Tabs.Trigger>
-                <Next.Tabs.Trigger value='signup' classNames={tabClassNames}>
-                  {t('signup-tab.label')}
-                </Next.Tabs.Trigger>
-              </Next.Tabs.List>
+            <Next.Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
+              <Next.Tabs.Trigger value='login' classNames={tabClassNames}>
+                {t('login-tab.label')}
+              </Next.Tabs.Trigger>
+              <Next.Tabs.Trigger value='signup' classNames={tabClassNames}>
+                {t('signup-tab.label')}
+              </Next.Tabs.Trigger>
+            </Next.Tabs.List>
 
-              <Next.Tabs.Content value='login'>{loginTab}</Next.Tabs.Content>
+            <Next.Tabs.Content value='login'>{loginTab}</Next.Tabs.Content>
 
-              <Next.Tabs.Content value='signup'>
-                {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
-                  <Flex column gap='xl'>
-                    <Next.Container gap='md' gutter='none'>
-                      <h2 className='text-2xl'>{t('signup-code.title')}</h2>
-                      <p className='text-description'>{t('signup-code.description')}</p>
-                    </Next.Container>
-                    <InlineForm
-                      inputProps={{
-                        ref: codeRef,
-                        classNames: 'font-mono uppercase tracking-widest',
-                        placeholder: 'XXXX-XXXX',
-                        value: code,
-                        onChange: (ev) => setCode(ev.target.value.trim()),
-                        onKeyDown: handleCodeKeyDown,
-                      }}
-                      submitLabel={t('continue-button.label')}
-                      submitDisabled={!Account.isValidAccessCodeFormat(code) || formPending}
-                      onSubmit={handleValidateCode}
-                      validation={codeError}
-                    />
-                    {waitlistEnabled && (
-                      <SwapLink onClick={() => setSignupMode('waitlist')}>
-                        {t('no-invitation-code-link.label')}
-                      </SwapLink>
-                    )}
-                  </Flex>
-                )}
+            <Next.Tabs.Content value='signup'>
+              {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
+                <Flex column gap='xl'>
+                  <Next.Container gap='md' gutter='none'>
+                    <h2 className='text-2xl'>{t('signup-code.title')}</h2>
+                    <p className='text-description'>{t('signup-code.description')}</p>
+                  </Next.Container>
+                  <InlineForm
+                    inputProps={{
+                      ref: codeRef,
+                      classNames: 'font-mono uppercase tracking-widest',
+                      placeholder: 'XXXX-XXXX',
+                      value: code,
+                      onChange: (ev) => setCode(ev.target.value.trim()),
+                      onKeyDown: handleCodeKeyDown,
+                    }}
+                    submitLabel={t('continue-button.label')}
+                    submitDisabled={!Account.isValidAccessCodeFormat(code) || formPending}
+                    onSubmit={handleValidateCode}
+                    validation={codeError}
+                  />
+                  {waitlistEnabled && (
+                    <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
+                  )}
+                </Flex>
+              )}
 
-                {signupStep === 'collect' && signupMode === 'waitlist' && waitlistEnabled && (
-                  <Flex column gap='xl'>
-                    <Next.Container gap='md' gutter='none'>
-                      <h2 className='text-2xl'>{t('waitlist.title')}</h2>
-                      <p className='text-description'>{t('waitlist.description')}</p>
-                    </Next.Container>
-                    <InlineForm
-                      inputProps={{
-                        ref: waitlistEmailRef,
-                        placeholder: t('email-input.placeholder'),
-                        value: waitlistEmail,
-                        onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
-                        onKeyDown: handleWaitlistEmailKeyDown,
-                      }}
-                      submitLabel={t('waitlist-submit-button.label')}
-                      submitDisabled={!validEmail(waitlistEmail) || formPending}
-                      onSubmit={handleJoinWaitlist}
-                    />
-                    {codeSignupEnabled && (
-                      <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
-                    )}
-                  </Flex>
-                )}
+              {signupStep === 'collect' && signupMode === 'waitlist' && waitlistEnabled && (
+                <Flex column gap='xl'>
+                  <Next.Container gap='md' gutter='none'>
+                    <h2 className='text-2xl'>{t('waitlist.title')}</h2>
+                    <p className='text-description'>{t('waitlist.description')}</p>
+                  </Next.Container>
+                  <InlineForm
+                    inputProps={{
+                      ref: waitlistEmailRef,
+                      placeholder: t('email-input.placeholder'),
+                      value: waitlistEmail,
+                      onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
+                      onKeyDown: handleWaitlistEmailKeyDown,
+                    }}
+                    submitLabel={t('waitlist-submit-button.label')}
+                    submitDisabled={!validEmail(waitlistEmail) || formPending}
+                    onSubmit={handleJoinWaitlist}
+                  />
+                  {codeSignupEnabled && (
+                    <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
+                  )}
+                </Flex>
+              )}
 
-                {signupStep === 'auth' && (
-                  <Flex column gap='xl'>
-                    <Next.Container gap='md' gutter='none'>
-                      <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
-                      <p className='text-description'>{t('signup-auth.description')}</p>
-                    </Next.Container>
-                    {onCreateAccount && (
-                      <>
+              {signupStep === 'auth' && (
+                <Flex column gap='xl'>
+                  <Next.Container gap='md' gutter='none'>
+                    <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
+                    <p className='text-description'>{t('signup-auth.description')}</p>
+                  </Next.Container>
+                  {onCreateAccount && (
+                    <>
+                      <InlineForm
+                        inputProps={{
+                          ref: emailRef,
+                          placeholder: t('email-input.placeholder'),
+                          value: email,
+                          onChange: (ev) => setEmail(ev.target.value.trim()),
+                          onKeyDown: handleAuthEmailKeyDown,
+                        }}
+                        submitLabel={t('continue-button.label')}
+                        submitDisabled={!validEmail(email) || formPending}
+                        onSubmit={handleCreateAccount}
+                        validation={signupEmailError}
+                      />
+                      {error === 'account-exists' && (
+                        <SwapLink onClick={handleSwitchToEmailLogin}>{t('log-in-instead-link.label')}</SwapLink>
+                      )}
+                    </>
+                  )}
+                  {onCreateAccountWithOAuth && (
+                    <>
+                      {onCreateAccount && <OrDivider>{t('or-divider.label')}</OrDivider>}
+                      <Next.Container gap='md' gutter='none'>
+                        <p className='text-description'>{t('atmosphere-account-button.label')}</p>
                         <InlineForm
                           inputProps={{
-                            ref: emailRef,
-                            placeholder: t('email-input.placeholder'),
-                            value: email,
-                            onChange: (ev) => setEmail(ev.target.value.trim()),
-                            onKeyDown: handleAuthEmailKeyDown,
+                            placeholder: t('atmosphere-handle-input.placeholder'),
+                            value: atmosphereHandle,
+                            onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+                            onKeyDown: (ev) => {
+                              if (ev.key === 'Enter' && atmosphereHandle && !formPending) {
+                                void handleCreateAccountWithOAuth({
+                                  code,
+                                  provider: ATMOSPHERE_PROVIDER,
+                                  loginHint: atmosphereHandle,
+                                });
+                              }
+                            },
                           }}
-                          submitLabel={t('continue-button.label')}
-                          submitDisabled={!validEmail(email) || formPending}
-                          onSubmit={handleCreateAccount}
-                          validation={signupEmailError}
+                          submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
+                          submitDisabled={!atmosphereHandle || pending}
+                          pending={oauthPending}
+                          onSubmit={() =>
+                            handleCreateAccountWithOAuth({
+                              code,
+                              provider: ATMOSPHERE_PROVIDER,
+                              loginHint: atmosphereHandle,
+                            })
+                          }
+                          validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
                         />
-                        {error === 'account-exists' && (
-                          <SwapLink onClick={handleSwitchToEmailLogin}>{t('log-in-instead-link.label')}</SwapLink>
-                        )}
-                      </>
-                    )}
-                    {onCreateAccountWithOAuth && (
-                      <>
-                        {onCreateAccount && <OrDivider>{t('or-divider.label')}</OrDivider>}
-                        <Next.Container gap='md' gutter='none'>
-                          <p className='text-description'>{t('atmosphere-account-button.label')}</p>
-                          <InlineForm
-                            inputProps={{
-                              placeholder: t('atmosphere-handle-input.placeholder'),
-                              value: atmosphereHandle,
-                              onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
-                              onKeyDown: (ev) => {
-                                if (ev.key === 'Enter' && atmosphereHandle && !formPending) {
-                                  void handleCreateAccountWithOAuth({
-                                    code,
-                                    provider: ATMOSPHERE_PROVIDER,
-                                    loginHint: atmosphereHandle,
-                                  });
-                                }
-                              },
-                            }}
-                            submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
-                            submitDisabled={!atmosphereHandle || pending}
-                            pending={oauthPending}
-                            onSubmit={() =>
-                              handleCreateAccountWithOAuth({
-                                code,
-                                provider: ATMOSPHERE_PROVIDER,
-                                loginHint: atmosphereHandle,
-                              })
-                            }
-                            validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
-                          />
-                        </Next.Container>
-                      </>
-                    )}
-                    <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
-                  </Flex>
-                )}
-              </Next.Tabs.Content>
+                      </Next.Container>
+                    </>
+                  )}
+                  <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
+                </Flex>
+              )}
+            </Next.Tabs.Content>
           </Next.Tabs.Root>
         )}
 

@@ -115,11 +115,7 @@ const CreateProjectContent = ({ children }: PropsWithChildren) => {
   const contentRef = useRef<HTMLDivElement>(null);
   useSubmitOnEnter(contentRef, () => canSave && onSave());
 
-  return (
-    <Form.Content ref={contentRef}>
-      {children}
-    </Form.Content>
-  );
+  return <Form.Content ref={contentRef}>{children}</Form.Content>;
 };
 
 CreateProjectContent.displayName = 'CreateProjectPanel.Content';

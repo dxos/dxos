@@ -5,7 +5,6 @@
 import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-
 import { composable, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
@@ -169,10 +168,10 @@ export const FormSubmit = ({ label, disabled, icon, busy }: FormSubmitProps) => 
   }
 
   const buttonProps = {
-    type: 'submit',
-    label: label ?? t('save-button.label'),
-    disabled: disabled ?? !canSave,
-    onClick: () => onSave(),
+    'type': 'submit',
+    'label': label ?? t('save-button.label'),
+    'disabled': disabled ?? !canSave,
+    'onClick': () => onSave(),
     'data-testid': 'save-button',
   } as const;
 

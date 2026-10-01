@@ -30,7 +30,6 @@ import { StackContext, useStack, useStackContext } from './StackContext.ts';
 // Types
 //
 
-
 export type StackSectionItem = {
   id: string;
   object: Obj.Unknown;

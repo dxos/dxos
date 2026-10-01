@@ -278,10 +278,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.FieldSet
-                      label={t('outline.label')}
-                      description={t('outline.description')}
-                    >
+                    <Form.FieldSet label={t('outline.label')} description={t('outline.description')}>
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}

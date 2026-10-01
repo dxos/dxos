@@ -4,7 +4,15 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { type ComponentProps, type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  type ComponentProps,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

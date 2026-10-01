@@ -54,8 +54,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const [error, setError] = useState<string>();
 
   const targetItems = useMemo(
-    () =>
-      availableTargets.map((target) => ({ value: target.id, label: target.name, description: target.description })),
+    () => availableTargets.map((target) => ({ value: target.id, label: target.name, description: target.description })),
     [availableTargets],
   );
 
