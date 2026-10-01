@@ -94,9 +94,14 @@ only `members`, so a branch's other versions reach peers on hosts that know `ver
 Replication heads (item 3, 2026-10-01): `getDocumentHeads` and `reIndexHeads` cover every document the
 branch registry references, so waiting for replicated heads covers version and branch documents.
 
+Derivation cost (item 4, 2026-10-01): translation keeps its graphs and images current, walks ancestry only
+to the nearest translated ancestors, authors a chain of translations on one probe mirror re-encoded under
+each derived actor, and applies them together, with byte-identical output (`version-translation.bench.test.ts`
+fixture). Deriving 1000 edits takes 2s (from 76s), 2000 take 7s; the remaining cost is one historical read
+of the source per edit, which the public Automerge API makes proportional to history length.
+
 Not yet done:
 
-- Deriving a version for an object with a long history translates every edit since creation.
 - `watchVersions` is not yet wired into plugin-client, and lenses are code only.
 - A released app that still runs an in-place migration for a versioned type would rewrite the linked
   document in place; types move to version documents only once no released app migrates them.
