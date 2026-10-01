@@ -145,7 +145,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
         >
           <div className='flex items-start'>
             <Next.Tour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
-            <TourCompoTour.CloseTrigger asChild ref={closeRef}>
+            <Next.Tour.CloseTrigger asChild ref={closeRef}>
               <Next.Button
                 size='md'
                 icon='ph--x--bold'
@@ -155,7 +155,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 variant='primary'
                 data-testid='helpPlugin.tooltip.close'
               />
-            </TourCompoTour.CloseTrigger>
+            </Next.Tour.CloseTrigger>
           </div>
           <Next.Tour.Description classNames='grow px-4 my-2 text-accent-fg' />
           <Next.Tour.Control>
@@ -179,11 +179,11 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
               ))}
             </div>
             {last ? (
-              <TourCompoTour.CloseTrigger asChild>
+              <Next.Tour.CloseTrigger asChild>
                 <Next.Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
                   {t('tour-done.label')}
                 </Next.Button>
-              </TourCompoTour.CloseTrigger>
+              </Next.Tour.CloseTrigger>
             ) : (
               <Next.Button
                 icon='ph--caret-right--regular'
