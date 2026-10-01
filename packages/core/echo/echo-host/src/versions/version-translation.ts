@@ -9,6 +9,7 @@ import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 import { Lens } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { type URI } from '@dxos/keys';
 import { getDeep } from '@dxos/util';
 
 import { encodedValuesEqual, isRecord } from './encoded-value.ts';
@@ -68,6 +69,10 @@ export const hashOf = (seed: string): string => bytesToHex(sha256(utf8ToBytes(se
 const lensDigest = (path: Lens.VersionPath): string => hashOf(JSON.stringify(path.digests));
 
 const plain = (value: unknown): unknown => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
+
+/** The sections `project` reads from object `objectId` in `doc` as of `heads`. */
+export const projectAt = (doc: VersionDoc, heads: Heads, objectId: string, project: Projection): Section[] =>
+  project(objectAt(doc, heads, objectId), A.view(doc, heads));
 
 /** The object's entry in `doc` as of `heads`, as plain values. */
 const objectAt = (doc: VersionDoc, heads: Heads, objectId: string): Data | undefined => {
@@ -194,7 +199,7 @@ export const parentToLink = ({
   edge: Lens.VersionEdge;
   link: Lens.VersionLink;
   version: string;
-}): ((entry: Data | undefined) => Section[]) => {
+}): Projection => {
   const path = embeds(edge, version) ? Lens.versionPath(edges, edge.typename, version, edge.from) : undefined;
   return (entry) => {
     const struct = path?.apply(isRecord(entry?.data) ? entry.data : {})[link.from];
@@ -216,7 +221,7 @@ export const linkToParent = ({
   edge: Lens.VersionEdge;
   link: Lens.VersionLink;
   version: string;
-}): ((entry: Data | undefined) => Section[]) | undefined => {
+}): Projection | undefined => {
   const path = embeds(edge, version) ? Lens.versionPath(edges, edge.typename, edge.from, version) : undefined;
   return (
     path &&
@@ -227,40 +232,42 @@ export const linkToParent = ({
 };
 
 /** An object's data as another object of the same type holds it: an extracted object merged into another. */
-export const dataOf = (entry: Data | undefined): Section[] => [
-  { at: ['data'], value: isRecord(entry?.data) ? entry.data : {} },
-];
+export const dataOf: Projection = (entry) => [{ at: ['data'], value: isRecord(entry?.data) ? entry.data : {} }];
+
+/** The heads of `doc` its root stands for: the frontier of the changes that created the object in it. */
+export const rootHeadsOf = (doc: VersionDoc, objectId: string): Heads => {
+  const graph: ChangeGraph = new Map(A.getChangesMetaSince(doc, []).map((change) => [change.hash, change.deps]));
+  return frontierOf(graph, rootChangesOf(doc, objectId, graph));
+};
+
+/** The parent version and heads an extracted object's document was derived from, read from its first change. */
+export const linkRootOf = (doc: VersionDoc): { version: string; heads: Heads } | undefined => {
+  const [root] = A.getChangesMetaSince(doc, []);
+  const match = root?.message?.match(/^link-root (\S+) (\S*)$/);
+  return match ? { version: match[1], heads: match[2].split(',').filter(Boolean) } : undefined;
+};
 
 /**
- * The document of the object `link` extracts from `parent`, version `version` of the parent object
- * `objectId`: the struct as the parent held it at its root, as object `childId` under `convergenceKey`.
+ * The document of an object extracted from version `version` of a parent at `heads`: object `childId` of type
+ * `type`, under `convergenceKey`, holding `data`.
  */
 export const deriveLinkDoc = ({
   parent,
-  objectId,
+  heads,
   version,
-  edges,
-  edge,
-  link,
+  type,
   childId,
   convergenceKey,
+  data,
 }: {
   parent: VersionDoc;
-  objectId: string;
+  heads: Heads;
   version: string;
-  edges: readonly Lens.VersionEdge[];
-  edge: Lens.VersionEdge;
-  link: Lens.VersionLink;
+  type: URI.URI;
   childId: string;
   convergenceKey: string;
-}): VersionDoc | undefined => {
-  const graph: ChangeGraph = new Map(A.getChangesMetaSince(parent, []).map((change) => [change.hash, change.deps]));
-  const roots = rootChangesOf(parent, objectId, graph);
-  if (roots.size === 0) {
-    return undefined;
-  }
-  const heads = frontierOf(graph, roots);
-  const [data] = parentToLink({ edges, edge, link, version })(objectAt(parent, heads, objectId));
+  data: Data;
+}): VersionDoc => {
   const state = A.view(parent, heads);
   return A.change(A.init<DatabaseDirectory>(), { message: linkRootMessage(version, heads) }, (draft: Data) => {
     for (const [key, value] of Object.entries({ version: plain(state.version), access: plain(state.access) })) {
@@ -270,13 +277,77 @@ export const deriveLinkDoc = ({
     }
     draft.objects = {
       [childId]: {
-        system: { kind: 'object', type: EncodedReference.fromURI(link.child) },
+        system: { kind: 'object', type: EncodedReference.fromURI(type) },
         meta: { keys: [], convergenceKey },
-        data: data.value,
+        data,
       },
     };
   });
 };
+
+/** The element of the list at `path` in `doc` that is the map `elementId`, and where it is. */
+export const elementAt = (
+  doc: VersionDoc,
+  path: readonly string[],
+  elementId: string,
+): { index: number; value: Data } | undefined => {
+  const list = getDeep(doc, [...path]);
+  if (!Array.isArray(list)) {
+    return undefined;
+  }
+  const index = list.findIndex((item) => isRecord(item) && A.getObjectId(item) === elementId);
+  const value = index < 0 ? undefined : plain(list[index]);
+  return isRecord(value) ? { index, value } : undefined;
+};
+
+/**
+ * How the parent's older version reads in the object `link` extracts from its element `elementId`: the
+ * element through the link, and the deletion of the parent or of the element. Before the element exists and
+ * once it is gone the data is unknown, so it moves nothing.
+ */
+export const parentToElement = ({
+  link,
+  objectId,
+  elementId,
+}: {
+  link: Lens.VersionLink;
+  objectId: string;
+  elementId: string;
+}): Projection => {
+  return (entry, view) => {
+    const element = elementAt(view, ['objects', objectId, 'data', link.from], elementId);
+    const deletion = deletionOf(entry);
+    return [
+      { at: ['data'], value: element && link.forward(element.value) },
+      element ? deletion : { at: ['system'], value: { deleted: true } },
+    ];
+  };
+};
+
+/** How the object extracted from element `elementId` reads in the parent's older version: at that element, wherever it is. */
+export const elementToParent = ({
+  link,
+  objectId,
+  elementId,
+}: {
+  link: Lens.VersionLink;
+  objectId: string;
+  elementId: string;
+}): Projection => {
+  const list = ['objects', objectId, 'data', link.from];
+  return (entry) => [
+    {
+      at: (doc) => {
+        const element = elementAt(doc, list, elementId);
+        return element && ['data', link.from, element.index];
+      },
+      value: link.backward(isRecord(entry?.data) ? entry.data : {}),
+    },
+  ];
+};
+
+/** A parent's deletion alone, for a version that holds references rather than what an object was extracted from. */
+export const parentDeletion: Projection = (entry) => [deletionOf(entry)];
 
 /** A document version and the lens path mapping data from it into the target. */
 export type TranslationSource = {
@@ -297,15 +368,27 @@ export const deletionOf = (entry: Data | undefined): Section => {
   return { at: ['system'], value: system.deleted === undefined ? {} : { deleted: system.deleted } };
 };
 
-type Move = { at: string[]; key: string; previous: unknown; next: unknown };
+/** A path inside an object's entry. */
+export type EntryPath = readonly (string | number)[];
 
-/** Part of an object's entry, at `at`, as the target of a translation holds it. */
-export type Section = { at: string[]; value: Data };
+/**
+ * Part of an object's entry as the target of a translation holds it: at a fixed path, or at one found in the
+ * target's state (an element of a list, say). A value the source does not know is `undefined`, and moves nothing.
+ */
+export type Section = { at: EntryPath | ((doc: VersionDoc) => EntryPath | undefined); value: Data | undefined };
+
+/** Reads the source object's entry, and the source document it was read from, as sections of the target. */
+export type Projection = (entry: Data | undefined, view: VersionDoc) => Section[];
+
+type Move = { at: Section['at']; key: string; previous: unknown; next: unknown };
 
 /** What changes between two states, section by section. */
 const diffSections = (before: Section[], after: Section[]): Move[] =>
   before.flatMap(({ at, value: previous }, index) => {
     const next = after[index].value;
+    if (previous === undefined || next === undefined) {
+      return [];
+    }
     return [...new Set([...Object.keys(previous), ...Object.keys(next)])]
       .filter((key) => !encodedValuesEqual(previous[key], next[key]))
       .map((key) => ({ at, key, previous: previous[key], next: next[key] }));
@@ -346,7 +429,13 @@ export const translate = ({
  * One side of a translation: an object in a document, and the label the translations of its edits name
  * it by (a version for an object's version documents, an object id for an object extracted from one).
  */
-export type TranslationSide = { doc: VersionDoc; objectId: string; label: string };
+export type TranslationSide = {
+  doc: VersionDoc;
+  objectId: string;
+  label: string;
+  /** The changes the side's root stands for, when not those that created the object in it. */
+  roots?: ReadonlySet<string>;
+};
 
 /**
  * Translates every original edit made in `source` that `target` lacks into `target`, and returns the
@@ -366,13 +455,13 @@ export const translateBetween = ({
 }: {
   source: TranslationSide;
   target: TranslationSide;
-  project: (entry: Data | undefined) => Section[];
+  project: Projection;
   settled?: Set<string>;
 }): VersionDoc => {
   const sourceChanges = A.getChangesMetaSince(source.doc, []);
   const sourceByHash = new Map(sourceChanges.map((change) => [change.hash, change]));
   const sourceGraph: ChangeGraph = new Map(sourceChanges.map((change) => [change.hash, change.deps]));
-  const sourceRoots = rootChangesOf(source.doc, source.objectId, sourceGraph);
+  const sourceRoots = source.roots ?? rootChangesOf(source.doc, source.objectId, sourceGraph);
 
   const targetChanges = A.getChangesMetaSince(target.doc, []);
   const targetGraph: ChangeGraph = new Map(targetChanges.map((change) => [change.hash, change.deps]));
@@ -383,7 +472,7 @@ export const translateBetween = ({
       imageOf.set(translation.original, change.hash);
     }
   }
-  const rootFork = frontierOf(targetGraph, rootChangesOf(target.doc, target.objectId, targetGraph));
+  const rootFork = frontierOf(targetGraph, target.roots ?? rootChangesOf(target.doc, target.objectId, targetGraph));
 
   // Source states by heads: in a chain of edits, one edit's state after is the next one's state before.
   const states = new Map<string, Section[]>();
@@ -391,7 +480,9 @@ export const translateBetween = ({
     const key = [...heads].sort().join();
     let state = states.get(key);
     if (!state) {
-      state = project(objectAt(source.doc, [...heads], source.objectId));
+      const view = A.view(source.doc, [...heads]);
+      const entry: unknown = plain(view.objects?.[source.objectId]);
+      state = project(isRecord(entry) ? entry : undefined, view);
       states.set(key, state);
     }
     return state;
@@ -449,12 +540,17 @@ export const translateBetween = ({
     const at = mirror.probeHead ? [mirror.probeHead] : fork;
     // The mirror's state is the state at `at`, so it is read as is rather than through a view of history.
     const live = mirror.doc;
-    const current = moves.map(({ at, key }) => plain(getDeep(live, ['objects', target.objectId, ...at, key])));
+    // A section found in the target's state is placed where the target holds it; one it no longer holds is dropped.
+    const writes = moves.flatMap(({ at: section, key, previous, next }) => {
+      const base = typeof section === 'function' ? section(live) : section;
+      const path = base && ['objects', target.objectId, ...base, key];
+      return path ? [{ path, previous, next, current: plain(getDeep(live, path)) }] : [];
+    });
     const message = translationMessage(change.hash, source.label);
     const probe = A.changeAt(mirror.doc, at, { message, time: 0 }, (draft) => {
-      moves.forEach(({ at, key, previous, next }, index) => {
-        applyStructuralEdit(draft, ['objects', target.objectId, ...at, key], previous, next, current[index]);
-      });
+      for (const { path, previous, next, current } of writes) {
+        applyStructuralEdit(draft, path, previous, next, current);
+      }
     });
     const probeChange = probe.newHeads ? A.getLastLocalChange(probe.newDoc) : undefined;
     if (!probe.newHeads || !probeChange) {
@@ -502,7 +598,7 @@ const forkOf = ({
 }: {
   change: A.ChangeMetadata;
   sourceByHash: Map<string, A.ChangeMetadata>;
-  sourceRoots: Set<string>;
+  sourceRoots: ReadonlySet<string>;
   imageOf: Map<string, string>;
   targetGraph: ChangeGraph;
   targetLabel: string;

@@ -38,6 +38,22 @@ const lens = Lens.make(
   { defaults: { address: { street: '', city: '' } } },
 );
 
+const Item = Type.makeObject(DXN.make('org.dxos.test.item', '0.1.0'))(
+  Schema.Struct({ sku: Schema.String, quantity: Schema.Number }),
+);
+const OrderV1 = Type.makeObject(DXN.make('org.dxos.test.order', '0.1.0'))(
+  Schema.Struct({ items: Schema.mutable(Schema.Array(Schema.Struct({ sku: Schema.String, qty: Schema.Number }))) }),
+);
+const OrderV2 = Type.makeObject(DXN.make('org.dxos.test.order', '0.2.0'))(
+  Schema.Struct({ items: Schema.Array(Ref.Ref(Item)) }),
+);
+const eachLens = Lens.make(
+  OrderV1,
+  OrderV2,
+  { items: Lens.extractEach('items', Item, { quantity: 'qty' }) },
+  { defaults: { items: [] } },
+);
+
 /** Waits until a peer's host has synced the version documents of what its database wrote. */
 const settle = async (peer: { host: { versionsSettled(): Promise<void> } }, db: TestDatabase): Promise<void> => {
   await db._repo.flush();
@@ -132,6 +148,51 @@ describe('extracted objects across versions', () => {
       timeout: 10_000,
     });
     expect(await addresses(db)).toHaveLength(1);
+  }, 60_000);
+
+  test('the host extracts each element of a list, and an object deleted at the newer version takes its element', async () => {
+    const pair = await createPartitionedPair(builder, [OrderV1, OrderV2, Item]);
+    network = pair.network;
+    const { peer1 } = pair;
+    const db = await peer1.createDatabase(PublicKey.random());
+    const order = db.add(
+      Obj.make(OrderV1, {
+        items: [
+          { sku: 'a', qty: 1 },
+          { sku: 'b', qty: 2 },
+        ],
+      }),
+    );
+    await db.flush();
+    db.graph.registry.add([eachLens]);
+
+    const items = () => db.query(Filter.type(Item)).run();
+    await waitForCondition({
+      condition: async () => {
+        await settle(peer1, db);
+        return (await items()).length === 2;
+      },
+      interval: 100,
+      timeout: 20_000,
+    });
+    const [first, second] = [...(await items())].sort((one, two) =>
+      String(Obj.getValue(one, ['sku'])).localeCompare(String(Obj.getValue(two, ['sku']))),
+    );
+    Obj.update(second, (second) => {
+      second.quantity = 5;
+    });
+    db.remove(first);
+    const olderItems = async () =>
+      JSON.parse(JSON.stringify((await olderVersion(db, order.id)).doc().objects?.[order.id]?.data?.items ?? null));
+    await waitForCondition({
+      condition: async () => {
+        await settle(peer1, db);
+        return isDeepStrictEqual(await olderItems(), [{ sku: 'b', qty: 5 }]);
+      },
+      interval: 100,
+      timeout: 10_000,
+    });
+    expect(await items()).toHaveLength(1);
   }, 60_000);
 
   test('objects two partitioned peers extract merge into one holding both peers’ edits', async () => {

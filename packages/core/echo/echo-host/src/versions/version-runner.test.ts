@@ -417,3 +417,167 @@ describe('extracted objects', () => {
     expect(one.state()).toBe(two.state());
   });
 });
+
+describe('extracted list elements', () => {
+  const Item = Type.makeObject(DXN.make('org.dxos.test.item', '0.1.0'))(
+    Schema.Struct({ sku: Schema.String, quantity: Schema.Number }),
+  );
+  const OrderV1 = Type.makeObject(DXN.make('org.dxos.test.order', '0.1.0'))(
+    Schema.Struct({ items: Schema.Array(Schema.Struct({ sku: Schema.String, qty: Schema.Number })) }),
+  );
+  const OrderV2 = Type.makeObject(DXN.make('org.dxos.test.order', '0.2.0'))(
+    Schema.Struct({ items: Schema.Array(Ref.Ref(Item)) }),
+  );
+  const edges = [
+    Lens.versionEdge(
+      Lens.make(
+        OrderV1,
+        OrderV2,
+        { items: Lens.extractEach('items', Item, { quantity: 'qty' }) },
+        { defaults: { items: [] } },
+      ),
+    ),
+  ];
+  const order = {
+    items: [
+      { sku: 'a', qty: 1 },
+      { sku: 'b', qty: 2 },
+    ],
+  };
+
+  /** The ids of the objects the newer version lists, in order. */
+  const listed = (store: MemoryStore): EntityId[] => {
+    const refs: unknown = store.dataAt('0.2.0')?.items;
+    return (Array.isArray(refs) ? refs : []).flatMap((ref) => {
+      const uri = EID.tryParse(ref?.['/'] ?? '');
+      const id = uri && EID.getEntityId(uri);
+      return id ? [id] : [];
+    });
+  };
+  const dataOf = (store: MemoryStore) => listed(store).map((id) => store.object(id)?.data);
+
+  test('each element becomes an object the newer version lists in order, and a second pass writes nothing', async () => {
+    const store = MemoryStore.make(order, OrderV1);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(dataOf(store)).toEqual([
+      { sku: 'a', quantity: 1 },
+      { sku: 'b', quantity: 2 },
+    ]);
+    const before = store.state();
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.state()).toBe(before);
+  });
+
+  test('edits to an element and to its object reach each other', async () => {
+    const store = MemoryStore.make(order, OrderV1);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    const [first, second] = listed(store);
+    store.edit('0.1.0', (data) => {
+      data.items[1].qty = 5;
+      A.splice(data, ['items', 0, 'sku'], 1, 0, '-1');
+    });
+    store.editObject(first, (entity) => {
+      entity.data.quantity = 9;
+      A.splice(entity.data, ['sku'], 0, 0, 'x-');
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.1.0')?.items).toEqual([
+      { sku: 'x-a-1', qty: 9 },
+      { sku: 'b', qty: 5 },
+    ]);
+    expect(store.object(first)?.data).toEqual({ sku: 'x-a-1', quantity: 9 });
+    expect(store.object(second)?.data).toEqual({ sku: 'b', quantity: 5 });
+    const before = store.state();
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.state()).toBe(before);
+  });
+
+  test('an inserted element gets an object in its place, and a removed one takes its object with it', async () => {
+    const store = MemoryStore.make(order, OrderV1);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    const [first, second] = listed(store);
+    // An empty change starts at the same op as the insertion after it.
+    const v1 = DatabaseDirectory.getVersionDocUrls(store.root.doc(), OBJECT_ID)['0.1.0'];
+    invariant(v1, 'no v1');
+    (await store.load(v1)).update((doc) => A.emptyChange(doc));
+    store.edit('0.1.0', (data) => {
+      data.items.splice(1, 0, { sku: 'c', qty: 3 });
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    const [, inserted] = listed(store);
+    expect(listed(store)).toEqual([first, inserted, second]);
+    expect(store.object(inserted)?.data).toEqual({ sku: 'c', quantity: 3 });
+    // The inserted element's object translates from where its element was inserted.
+    store.editObject(inserted, (entity) => {
+      entity.data.quantity = 4;
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.1.0')?.items[1]).toEqual({ sku: 'c', qty: 4 });
+
+    store.edit('0.1.0', (data) => {
+      data.items.splice(0, 1);
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(listed(store)).toEqual([inserted, second]);
+    expect(store.object(first)?.system?.deleted).toBe(true);
+  });
+
+  test('an object the newer version deletes takes its element with it', async () => {
+    const store = MemoryStore.make(order, OrderV1);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    const [first, second] = listed(store);
+    store.editObject(first, (entity) => {
+      entity.system ??= {};
+      entity.system.deleted = true;
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.1.0')?.items).toEqual([{ sku: 'b', qty: 2 }]);
+    expect(listed(store)).toEqual([second]);
+    const before = store.state();
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.state()).toBe(before);
+  });
+
+  test('objects two devices extract for one element converge on the merge winner', async () => {
+    const one = MemoryStore.make(order, OrderV1);
+    const two = one.fork();
+    await syncVersionDocuments(one, edges, [OBJECT_ID]);
+    await syncVersionDocuments(two, edges, [OBJECT_ID]);
+    const [oneFirst] = listed(one);
+    const [twoFirst] = listed(two);
+    // Both devices derive each element's object from the change that inserted it.
+    expect(one.object(oneFirst)?.data).toEqual(two.object(twoFirst)?.data);
+    one.editObject(oneFirst, (entity) => {
+      A.splice(entity.data, ['sku'], 1, 0, '-one');
+    });
+    two.editObject(twoFirst, (entity) => {
+      entity.data.quantity = 7;
+    });
+    await syncVersionDocuments(one, edges, [OBJECT_ID]);
+    await syncVersionDocuments(two, edges, [OBJECT_ID]);
+    one.exchange(two);
+
+    // The convergence-key merge of the first element's pair.
+    const [winner, loser] = [oneFirst, twoFirst].sort();
+    one.editObject(loser, (entity) => {
+      entity.system ??= {};
+      entity.system.mergedInto = winner;
+      entity.system.deleted = true;
+    });
+    one.editObject(winner, (entity) => {
+      entity.system ??= {};
+      entity.system.mergedFrom = [loser];
+    });
+    for (let round = 0; round < 3; round++) {
+      await syncVersionDocuments(one, edges, [OBJECT_ID]);
+      await syncVersionDocuments(two, edges, [OBJECT_ID]);
+      one.exchange(two);
+    }
+    for (const store of [one, two]) {
+      expect(store.dataAt('0.1.0')?.items[0]).toEqual({ sku: 'a-one', qty: 7 });
+      expect(store.object(winner)?.data).toEqual({ sku: 'a-one', quantity: 7 });
+      expect(listed(store)[0]).toBe(winner);
+    }
+    expect(one.state()).toBe(two.state());
+  });
+});

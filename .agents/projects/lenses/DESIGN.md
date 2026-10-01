@@ -1455,6 +1455,39 @@ v1) has a root standing for both creations, which is the two-origin root `absorb
     as an edit.
   - `meta` is not translated.
 
+### 12.12 `Lens.extractEach`, as built (2026-10-01)
+
+- **Identity (refines decision 5).** Automerge 3.5 has cursors only for text, so an element is identified by
+  its map's object id (`counter@actor`), which is its insertion op. That id is stable under concurrent edits,
+  readable on a view of history, and replaced by a reorder (delete and insert). The convergence key appends
+  it: `lens:<hash>:<parent id>:<property>:<element id>`.
+- **Creation.** An element's object derives from the older version as the change that inserted it left it.
+  That change is the last change of the op's actor starting at or below the op's counter; an empty change
+  shares its successor's start, which is why it is the last. Every device therefore derives the same root, and
+  the element's object records those heads in its `link-root` change.
+- **Roots.** A translation side may name the changes its root stands for. For an element's object, the older
+  version's side stands for the ancestors of the insertion change, so an edit to the object forks at the
+  insertion, where the element exists.
+- **Located sections.** A section may give a locator instead of a fixed path. The object's data is written at
+  its element's current index in the target's state, and dropped if the element is gone there. A section whose
+  value the source does not know (before the element exists, or once it is gone) moves nothing.
+- **Membership.** The older version owns membership and order:
+  - an inserted element gets an object;
+  - a removed element marks its object deleted;
+  - the runner rewrites the newer version's list of references to follow the older version's order, keeping
+    references already in order.
+  - Deleting an object at the newer version removes its element from the older version (`lens-unlink`),
+    unless the whole parent is deleted.
+  - Other versions of the parent send only the parent's deletion.
+- **Limits.**
+  - A list is extracted only from the oldest version: element ids are local to one document, so a version
+    older still could not follow them (logged).
+  - Objects added to the newer version's list are not adopted into the older version; that is `absorb`'s
+    two-origin root (M3).
+  - Two devices rewriting the reference list concurrently can briefly duplicate a reference until a pass sees
+    both writes.
+  - Each element's object costs a scan of the older version's history per pass.
+
 ## 13. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·
