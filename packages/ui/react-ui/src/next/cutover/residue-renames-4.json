@@ -1,9 +1,9 @@
 {
-  "generated": "2026-10-01T15:51:30.840Z",
+  "generated": "2026-10-01T17:01:40.769Z",
   "paths": ["packages"],
   "changed": [
-    "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
-    "packages/ui/react-ui-canvas-editor/src/components/Toolbar/Toolbar.tsx"
+    "packages/sdk/shell/src/components/IdentityList/IdentityListItem.tsx",
+    "packages/sdk/shell/src/stories/SpaceListItem.tsx"
   ],
   "transforms": [
     {
@@ -12,8 +12,7 @@
       "filesChanged": 2,
       "rules": {
         "Select.Option → Select.Item": 9,
-        "Menu.Root modal dropped": 1,
-        "Button title + Icon child → icon label iconOnly": 11
+        "Avatar.Root + Content + Label → Avatar.Root aria-labelledby + span": 2
       },
       "residue": [
         {
@@ -547,7 +546,7 @@
         {
           "transform": "renames",
           "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
-          "line": 373,
+          "line": 372,
           "column": 9,
           "reason": "Menu.Content side/sideOffset/collisionPadding → Menu.Root positioning ({ placement, gutter, overflowPadding }) by hand",
           "snippet": "<Next.Menu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>"
@@ -555,7 +554,7 @@
         {
           "transform": "renames",
           "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
-          "line": 374,
+          "line": 373,
           "column": 11,
           "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
           "snippet": "<Next.Menu.Item onClick={() => handleAxisMenuAction('insert-before')} data-testid={`grid.${contextMenuAxis}.insert-be..."
@@ -563,7 +562,7 @@
         {
           "transform": "renames",
           "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
-          "line": 383,
+          "line": 382,
           "column": 11,
           "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
           "snippet": "<Next.Menu.Item onClick={() => handleAxisMenuAction('insert-after')} data-testid={`grid.${contextMenuAxis}.insert-aft..."
@@ -571,7 +570,7 @@
         {
           "transform": "renames",
           "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
-          "line": 392,
+          "line": 391,
           "column": 11,
           "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
           "snippet": "<Next.Menu.Item onClick={() => handleAxisMenuAction('drop')} data-testid={`grid.${contextMenuAxis}.drop`}>"
@@ -605,7 +604,7 @@
           "file": "packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx",
           "line": 192,
           "column": 7,
-          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "reason": "Avatar.Root with an Avatar.Label: render the name with an id and pass aria-labelledby by hand",
           "snippet": "<Next.Avatar.Root>"
         },
         {
@@ -797,7 +796,7 @@
           "file": "packages/sdk/shell/src/components/AgentConfig/AgentConfig.tsx",
           "line": 41,
           "column": 13,
-          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "reason": "Avatar.Root with an Avatar.Label: render the name with an id and pass aria-labelledby by hand",
           "snippet": "<Next.Avatar.Root>"
         },
         {
@@ -863,22 +862,6 @@
           "column": 11,
           "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
           "snippet": "<Next.Avatar.Label classNames='flex-1 text-sm truncate'>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/IdentityList/IdentityListItem.tsx",
-          "line": 41,
-          "column": 7,
-          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root labelId={labelId}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/components/IdentityList/IdentityListItem.tsx",
-          "line": 48,
-          "column": 9,
-          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
-          "snippet": "<Next.Avatar.Label classNames='text-sm truncate px-2'>"
         },
         {
           "transform": "renames",
@@ -957,7 +940,7 @@
           "file": "packages/sdk/shell/src/panels/JoinPanel/steps/IdentityAdded.tsx",
           "line": 50,
           "column": 9,
-          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "reason": "Avatar.Root with an Avatar.Label: render the name with an id and pass aria-labelledby by hand",
           "snippet": "<Next.Avatar.Root labelId={labelId}>"
         },
         {
@@ -983,22 +966,6 @@
           "column": 11,
           "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
           "snippet": "<Listbox.Root>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/stories/SpaceListItem.tsx",
-          "line": 26,
-          "column": 9,
-          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
-          "snippet": "<Next.Avatar.Root labelId={labelId}>"
-        },
-        {
-          "transform": "renames",
-          "file": "packages/sdk/shell/src/stories/SpaceListItem.tsx",
-          "line": 28,
-          "column": 11,
-          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
-          "snippet": "<Next.Avatar.Label classNames='text-sm truncate'>"
         },
         {
           "transform": "renames",

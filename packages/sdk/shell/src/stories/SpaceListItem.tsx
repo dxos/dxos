@@ -23,10 +23,10 @@ export const SpaceListItem = forwardRef(
         ref={ref}
         data-testid='space-list-item'
       >
-        <Next.Avatar.Root labelId={labelId}>
-          <Next.Avatar.Content fallback={fallbackValue} />
-          <Next.Avatar.Label classNames='text-sm truncate'>{displayName}</Next.Avatar.Label>
-        </Next.Avatar.Root>
+        <Next.Avatar.Root aria-labelledby={labelId} fallback={fallbackValue} />
+        <span id={labelId} className='text-sm truncate'>
+          {displayName}
+        </span>
       </li>
     );
   },

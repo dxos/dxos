@@ -38,15 +38,16 @@ export const IdentityListItem = forwardRef<
       data-testid='identity-list-item'
       ref={forwardedRef}
     >
-      <Next.Avatar.Root labelId={labelId}>
-        <Next.Avatar.Content
-          status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
-          hue={profileString(identity, 'hue') ?? fallbackValue.hue}
-          fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
-          classNames='place-self-center'
-        />
-        <Next.Avatar.Label classNames='text-sm truncate px-2'>{displayName}</Next.Avatar.Label>
-      </Next.Avatar.Root>
+      <Next.Avatar.Root
+        aria-labelledby={labelId}
+        status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
+        hue={profileString(identity, 'hue') ?? fallbackValue.hue}
+        fallback={profileString(identity, 'emoji') ?? fallbackValue.emoji}
+        classNames='place-self-center'
+      />
+      <span id={labelId} className='text-sm truncate px-2'>
+        {displayName}
+      </span>
     </Listbox.Item>
   );
 });
