@@ -15,5 +15,12 @@
    */
   .nx-arrow-tip {
     scale: 0.7071;
+    /*
+     * zag rotates the tip so its top and left edges face the anchor; widened by √2 to stay 1px after the scale. A popup
+     * with a coloured border sets `--nx-arrow-border` so the arrow's outer edges continue it.
+     */
+    border-style: solid;
+    border-color: var(--nx-arrow-border, transparent);
+    border-width: 1.4142px 0 0 1.4142px;
   }
 }
