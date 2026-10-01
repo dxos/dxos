@@ -129,6 +129,8 @@ const defineTask = ({
     timeout: TIMEOUT,
     gradeIncomplete: true,
     scored: true,
+    // Every engine, `tools` included, runs as an agent session, so the variants differ only in it.
+    agentSession: true,
     ...(seed ? { seed } : {}),
   });
 

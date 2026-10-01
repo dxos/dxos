@@ -183,7 +183,7 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
 };
 
 /**
- * Every object type the workspace has registered, with its fields.
+ * Every object and relation type the workspace has registered, with its fields.
  *
  * Stated in the prompt rather than left to be discovered: a dialect that binds the real modules
  * invites the model to introspect a schema for the shape it needs, and that costs turns it should
@@ -193,7 +193,7 @@ const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = E
   const { db } = yield* Database.Service;
   return db.registry
     .list()
-    .filter((entity) => Type.isType(entity) && Type.isObject(entity))
+    .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
     .flatMap((type) => {
       const typename = Type.getTypename(type) ?? '';
       return typename.length > 0
@@ -201,6 +201,7 @@ const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = E
             {
               typename,
               dxn: String(DXN.make(typename, Type.getVersion(type))),
+              kind: Type.isRelation(type) ? ('relation' as const) : ('object' as const),
               // The same `fields` record the sandbox's bound type carries, which is what the model
               // would otherwise go looking for.
               fields: describeFields(('fields' in type && type.fields) || {}),

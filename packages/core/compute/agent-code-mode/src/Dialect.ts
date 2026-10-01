@@ -41,6 +41,8 @@ export type SandboxType = {
   readonly typename: string;
   /** The versioned DXN `Database.resolve` resolves the type by. */
   readonly dxn: string;
+  /** A relation is an edge between two objects, made with `Relation.make` rather than `Obj.make`. */
+  readonly kind: 'object' | 'relation';
   /**
    * Fields with their types, so the model never has to introspect a schema to find out what it may
    * write — least of all that a field holds a reference, which a name alone does not say.
@@ -104,7 +106,7 @@ export const renderTypes = (
       do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
       the object or its id.
 
-      ${types.map((type) => `- \`${name(type)}\` — ${type.fields.map(renderField).join(', ')}`).join('\n')}
+      ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${type.fields.map(renderField).join(', ')}`).join('\n')}
     `;
 
 const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;

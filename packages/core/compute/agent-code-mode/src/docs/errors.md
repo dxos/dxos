@@ -23,4 +23,6 @@ field.
 - Writing the `Effect.gen` wrapper yourself: your code already is its body.
 - Assigning a property of a stored object outside `Obj.update`.
 - Passing an id or URI string where a `Ref<typename>` is expected.
+- Loading a ref as `yield* ref.load` or `yield* Database.get(ref)`: neither exists, and the failure
+  reads as `is not iterable`. Use `yield* Database.load(ref)`.
 - Resolving a DXN the system prompt does not list.

@@ -124,7 +124,7 @@ export const PlainDialect: Dialect = {
       an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
       Where an operation's input takes references, pass \`ref(obj)\` too.
 
-    ${renderTypes(types)}
+    ${renderTypes(types.filter(({ kind }) => kind === 'object'))}
 
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,

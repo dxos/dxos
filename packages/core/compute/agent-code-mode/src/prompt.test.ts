@@ -47,6 +47,7 @@ describe('prompt', () => {
       {
         typename: 'com.example.type.task',
         dxn: 'dxn:com.example.type.task:0.1.0',
+        kind: 'object',
         fields: describeFields(Task.fields),
       },
     ]);
@@ -98,11 +99,11 @@ describe('prompt', () => {
 
   test('the README indexes every doc', async ({ expect }) => {
     const DOCS = await EffectEx.runPromise(loadDocs);
-    expect(Object.keys(DOCS)).toEqual(['README.md', 'database.md', 'references.md', 'operations.md', 'errors.md']);
+    expect(Object.keys(DOCS)).toEqual(['README.md', 'database.md', 'queries.md', 'operations.md', 'errors.md']);
     for (const name of Object.keys(DOCS).filter((name) => name !== 'README.md')) {
       expect(DOCS['README.md']).toContain(`\`${name}\``);
     }
-    expect(DOCS['database.md']).toContain('Filter.id(id)');
+    expect(DOCS['queries.md']).toContain('Filter.id(id)');
     // Models guessed `result.value`; the field is `success`.
     expect(DOCS['errors.md']).toContain("{ _tag: 'Success', success }");
   });

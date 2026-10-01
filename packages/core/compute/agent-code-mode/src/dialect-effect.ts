@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Ref, Type, type URI } from '@dxos/echo';
+import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, type URI } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -48,7 +48,9 @@ export const EffectDialect: Dialect = {
     Database: { ...Database, resolve: resolveWith(operations) },
     Filter,
     Query,
+    Order,
     Obj,
+    Relation,
     Ref,
     Type,
     DXN,
@@ -76,8 +78,8 @@ export const EffectDialect: Dialect = {
 
     ### In scope
 
-    - \`Database\`, \`Filter\`, \`Query\`, \`Obj\`, \`Ref\`, \`Type\`, \`DXN\`, \`Operation\`, \`Effect\` —
-      the DXOS modules, as a source file would import them.
+    - \`Database\`, \`Filter\`, \`Query\`, \`Order\`, \`Obj\`, \`Relation\`, \`Ref\`, \`Type\`, \`DXN\`,
+      \`Operation\`, \`Effect\` — the DXOS modules, as a source file would import them.
     - \`print(...values)\` — an effect: \`yield* print('count', tasks.length)\`. Strings go through
       verbatim, everything else is printed as JSON.
     - \`DOCS\` — the full reference for this API: a plain object mapping file names to markdown

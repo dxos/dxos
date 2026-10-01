@@ -94,7 +94,7 @@ export const makeEvalToolkit = ({
           // Reported as output, not as a tool failure: the model's next move is to read the message
           // and write different code, which a failed turn would deny it.
           log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-          printer.fail(`Error: ${conciseError(result.failure.message)}`);
+          printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
         } else if (result.success !== undefined && printer.isEmpty()) {
           // A program that printed nothing but produced a value: show the value rather than nothing.
           printer.print(result.success);
@@ -140,6 +140,16 @@ const makePrinter = (maxOutput: number) => {
 const truncationWarning = (maxOutput: number): string =>
   `[output truncated: an eval result is capped at ${maxOutput} characters and the rest was dropped. ` +
   'Print less — counts, the specific fields you need, or a slice — and run again if you need more.]';
+
+/**
+ * A pointer past an error whose own message does not say what went wrong. `yield*` on something that
+ * is not an effect reads as `(intermediate value) is not iterable`, and is most often a ref loaded as
+ * `yield* ref.load` or through a helper that does not exist.
+ */
+const hintFor = (message: string): string =>
+  /is not iterable/.test(message)
+    ? '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.'
+    : '';
 
 /** Printed form of a value: strings verbatim, everything else as JSON the model can read back. */
 const format = (value: unknown): string => {

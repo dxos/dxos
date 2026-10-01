@@ -244,6 +244,20 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
+    'yielding something that is not an effect points at Database.load',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('yield* Promise.resolve(1);', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain('is not iterable');
+        expect(output).toContain('yield* Database.load(ref)');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'the effect dialect binds DOCS as a plain object of markdown',
     Effect.fnUntraced(
       function* (_) {
@@ -252,7 +266,7 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           EffectDialect,
         );
         expect(output).toEqual(
-          'README.md,database.md,references.md,operations.md,errors.md\n# Code mode (Effect dialect)',
+          'README.md,database.md,queries.md,operations.md,errors.md\n# Code mode (Effect dialect)',
         );
       },
       Effect.provide(TestLayer),

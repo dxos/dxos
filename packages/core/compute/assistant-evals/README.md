@@ -29,6 +29,11 @@ Claude Opus and DeepSeek V4 Pro. DeepSeek is served through EDGE with the run's 
 no key of its own. Every task is also graded by `tool-calls-succeeded`, the fraction of its tool
 calls that did not fail.
 
+The eval sets `agentSession: true`, so every variant runs as an `AgentService` session rather than
+through `RunInstructions`. That matters: `RunInstructions` always drives its own `AiSession`, so a
+contributed turn engine is never consulted there and every "engine" would silently be the tool
+path. The runner takes the session path whenever a variant sets `makeTurnProducer`.
+
 ```bash
 DX_EVAL_ENGINES=code-mode-effect DX_EVAL_MODELS=deepseek-v4-pro \
   moon run assistant-evals:evals -- src/evals/code-mode.eval.ts

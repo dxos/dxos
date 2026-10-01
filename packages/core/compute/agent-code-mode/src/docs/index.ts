@@ -10,17 +10,17 @@ import * as Effect from 'effect/Effect';
  * of its own, fetched by the first evaluation rather than by every bundle that imports the dialect.
  */
 export const loadDocs: Effect.Effect<Readonly<Record<string, string>>> = Effect.promise(async () => {
-  const [readme, database, references, operations, errors] = await Promise.all([
+  const [readme, database, queries, operations, errors] = await Promise.all([
     import('./README.md?raw'),
     import('./database.md?raw'),
-    import('./references.md?raw'),
+    import('./queries.md?raw'),
     import('./operations.md?raw'),
     import('./errors.md?raw'),
   ]);
   return {
     'README.md': readme.default,
     'database.md': database.default,
-    'references.md': references.default,
+    'queries.md': queries.default,
     'operations.md': operations.default,
     'errors.md': errors.default,
   };
