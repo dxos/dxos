@@ -4,9 +4,10 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { Subscription } from '#types';
 
@@ -110,6 +111,7 @@ type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'data' 
 const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { feed, onAction } = data;
+    const { t } = useTranslation(osTranslations);
     const { setCurrentId } = useMosaicContainer('SubscriptionTile');
     const { icon, className: iconClassName } = icons[feed.type ?? 'rss'] || icons.rss;
 
@@ -134,7 +136,11 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
                 <Next.Icon icon={icon} classNames={iconClassName} />
               </Next.Block>
               <Next.Card.Title>{feed.name ?? 'Untitled feed'}</Next.Card.Title>
-              <Next.Card.Menu items={menuItems} />
+              <Next.Card.Menu label={t('toolbar-menu.label')}>
+                {menuItems.map((item) => (
+                  <Next.Menu.Item key={item.label} item={{ value: item.label, label: item.label }} onClick={item.onClick} />
+                ))}
+              </Next.Card.Menu>
             </Next.Card.Header>
             <Next.Card.Body>
               {/* {feed.url && (

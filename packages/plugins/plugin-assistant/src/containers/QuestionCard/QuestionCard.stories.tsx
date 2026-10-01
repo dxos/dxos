@@ -73,7 +73,6 @@ const DefaultStory = () => {
                     <Next.Icon icon='ph--question--regular' />
                   </Next.Block>
                   <Next.Card.Title>{task.title}</Next.Card.Title>
-                  <Next.Card.Menu />
                 </Next.Card.Header>
                 <QuestionCard task={task} questionId={question.question.id} />
               </Next.Card.Root>

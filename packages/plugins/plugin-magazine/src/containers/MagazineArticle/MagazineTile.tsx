@@ -53,7 +53,6 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
             <Next.SystemButton.Star
               variant='ghost'
               iconOnly
-              square
               iconSize='md'
               pressed={starred}
               onClick={handleToggleStar}

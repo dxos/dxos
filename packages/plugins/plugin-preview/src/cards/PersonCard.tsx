@@ -47,7 +47,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
           <Next.Avatar.Root
             src={image}
             icon='ph--user--regular'
-            size={20}
+            size='xl'
             classNames={[!image && 'opacity-50']}
             hue='neutral'
             variant='square'

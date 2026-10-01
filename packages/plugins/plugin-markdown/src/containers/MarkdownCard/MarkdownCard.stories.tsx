@@ -37,7 +37,6 @@ const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
         <Next.Card.Header>
           <Next.DragHandle />
           <Next.Card.Title>{Obj.getLabel(subject)}</Next.Card.Title>
-          <Next.Card.Menu />
         </Next.Card.Header>
         <MarkdownCard subject={subject} {...args} />
       </Next.Card.Root>

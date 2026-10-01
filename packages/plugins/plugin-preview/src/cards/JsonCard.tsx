@@ -4,7 +4,6 @@
 
 import React, { useState } from 'react';
 
-import { ToggleIconButton } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 
@@ -18,14 +17,12 @@ export const JsonCard = ({ data }: { data: unknown }) => {
   return (
     <Next.Card.Row>
       <Next.Block classNames='self-start'>
-        <ToggleIconButton
+        <Next.SystemButton.Disclosure
           variant='ghost'
           size='sm'
-          icon='ph--caret-right--regular'
-          iconOnly
-          active={open}
-          onClick={() => setOpen(!open)}
           label='Toggle JSON'
+          expanded={open}
+          onExpandedChange={setOpen}
         />
       </Next.Block>
       {(open && <JsonHighlighter data={data} classNames='col-span-full max-h-[20lh] py-1.5 text-xs' />) || (

@@ -40,7 +40,6 @@ const EditableMarkdownCardStory = ({ ...args }: Omit<EditableMarkdownCardProps, 
         <Next.Card.Header>
           <Next.DragHandle />
           <Next.Card.Title>{Obj.getLabel(doc)}</Next.Card.Title>
-          <Next.Card.Menu />
         </Next.Card.Header>
         <EditableMarkdownCard subject={doc} {...args} />
       </Next.Card.Root>

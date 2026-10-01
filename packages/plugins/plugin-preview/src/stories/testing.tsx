@@ -41,7 +41,6 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
                 <Next.Card.Header>
                   <Next.DragHandle />
                   <Next.Card.Title>{Obj.getLabel(object)}</Next.Card.Title>
-                  <Next.Card.Menu />
                 </Next.Card.Header>
                 <Component
                   role={role ?? 'card--content'}
