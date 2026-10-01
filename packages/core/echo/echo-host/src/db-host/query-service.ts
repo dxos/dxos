@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as EffectStream from 'effect/Stream';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
+import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -161,8 +161,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   /** Set by {@link awaitQueryUpdates}: the next batch runs debounced queries too. */
   #flushDebounced = false;
 
-  /** Wakes the scheduler when the earliest debounce window closes. */
-  #wakeTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Owns the wake-up for the earliest debounce window; disposed to cancel it. */
+  #wakeCtx: Context | undefined;
   #wakeAt = Infinity;
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -425,21 +425,21 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
     this.#clearWake();
     this.#wakeAt = wakeAt;
-    this.#wakeTimer = setTimeout(
+    const wakeCtx = this._ctx.derive();
+    this.#wakeCtx = wakeCtx;
+    scheduleTask(
+      wakeCtx,
       () => {
-        this.#wakeTimer = undefined;
-        this.#wakeAt = Infinity;
-        if (!this._ctx.disposed) {
-          this._updateQueries.schedule();
-        }
+        this.#clearWake();
+        this._updateQueries.schedule();
       },
       Math.max(0, wakeAt - performance.now()),
     );
   }
 
   #clearWake(): void {
-    clearTimeout(this.#wakeTimer);
-    this.#wakeTimer = undefined;
+    void this.#wakeCtx?.dispose();
+    this.#wakeCtx = undefined;
     this.#wakeAt = Infinity;
   }
 }
