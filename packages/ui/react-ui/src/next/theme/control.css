@@ -319,7 +319,18 @@
     line-height: var(--text-base--line-height);
     color: var(--color-base-fg);
   }
+  /* A control (also one under a box-less Select or Combobox root) tops its line rather than centring on a taller description. */
+  .nx-field[data-layout='row'] > .nx-control,
+  .nx-field[data-layout='row'] > :is(.nx-select, .nx-combobox) > .nx-control {
+    align-self: start;
+  }
+  /* The space under the title is the header's own, so the description and control below it still share a top. */
+  .nx-field[data-layout='row'] > .nx-field-header {
+    margin-block-end: var(--spacing-trim-sm);
+  }
   .nx-field[data-layout='row'] > .nx-field-helper {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
     color: var(--color-description);
     margin-block-end: var(--nx-gap-size);
   }

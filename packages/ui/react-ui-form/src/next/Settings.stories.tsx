@@ -103,7 +103,8 @@ export const Test: Story = {
       await expect(row.label.left).toBeCloseTo(geometry[0].label.left, 0);
       // 4. The title spans both tracks on the first line.
       await expect(row.label.right).toBeGreaterThanOrEqual(row.control.right - 0.5);
-      await expect(row.label.bottom).toBeLessThanOrEqual(row.description!.top + 0.5);
+      // A trim-sized space (0.5rem) separates the title from the line below it.
+      await expect(row.description!.top - row.label.bottom).toBeGreaterThanOrEqual(7.5);
       // 5. The description is left of the control, both starting on the next line.
       await expect(row.description!.left).toBeCloseTo(row.label.left, 0);
       await expect(row.description!.right).toBeLessThanOrEqual(row.control.left + 0.5);
@@ -123,6 +124,8 @@ export const Test: Story = {
     const description = getComputedStyle(row.querySelector('[data-part="helper-text"]')!);
     await expect(title.color).not.toBe(description.color);
     await expect(parseFloat(title.fontSize)).toBeGreaterThan(parseFloat(description.fontSize));
+    // A row's description is text-sm (14px), larger than a stacked field's help text.
+    await expect(description.fontSize).toBe('14px');
   },
 };
 
@@ -131,7 +134,7 @@ export const TestNarrow: Story = {
   args: { paneWidth: '20rem' },
   play: async ({ canvasElement }) => {
     for (const row of rows(canvasElement)) {
-      await expect(row.description!.top).toBeGreaterThanOrEqual(row.label.bottom - 0.5);
+      await expect(row.description!.top - row.label.bottom).toBeGreaterThanOrEqual(7.5);
       await expect(row.controlTop).toBeGreaterThan(row.description!.bottom + 0.5);
       await expect(row.control.left).toBeCloseTo(row.label.left, 0);
     }

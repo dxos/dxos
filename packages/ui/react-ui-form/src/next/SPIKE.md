@@ -170,7 +170,7 @@ whole panel. The toolbar is also a scroll viewport, so `.nx-scroll-viewport` alo
 AUDIT §3.2 option 1 is implemented as specified. `Form.Content` sets `SETTINGS_COLUMNS`
 (`minmax(0, 1fr) [control] minmax(0, 1fr)`). Each row is `Field.Root layout='row' level='+1'`, drawn as a bordered card
 one rung up. As in the current Form's settings rows, its title (base text, base colour) spans the row, and the
-description (left of the `control` line, description colour) and the control (right of it) share the next line,
+description (left of the `control` line, `text-sm` in the description colour, 0.5rem under the title) and the control (right of it) share the next line,
 top-aligned. Sections are grid Fieldsets, so the two tracks run through every section. The Test asserts, across seven
 rows in two sections:
 
