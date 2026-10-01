@@ -182,7 +182,9 @@ export const Horizontal: Story = {
     // viewport must overflow (scroll) rather than stretch to fit all 40 rows — proving vertical
     // per-column scroll in horizontal orientation.
     await waitFor(() => expect(canvas.getAllByRole('option').length).toBeGreaterThan(0));
-    const viewport = canvasElement.querySelector('[role="listbox"]')?.closest('.overflow-y-scroll');
+    const viewport = canvasElement
+      .querySelector('[role="listbox"]')
+      ?.closest('[data-scope="scroll-area"][data-part="viewport"]');
     if (!(viewport instanceof HTMLElement)) {
       throw new Error('master scroll viewport not found');
     }
