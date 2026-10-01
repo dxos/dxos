@@ -367,31 +367,37 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
       <Next.Menu.Root
         open={!!contextMenuOpen}
         onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}
-        positioning={Next.virtualAnchor(contextMenuAnchorRef)}
+        positioning={{
+          ...Next.virtualAnchor(contextMenuAnchorRef),
+          placement: contextMenuAxis === 'col' ? 'bottom' : 'right',
+          gutter: 4,
+          overflowPadding: 8,
+        }}
       >
-        <Next.Menu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
+        <Next.Menu.Content>
           <Next.Menu.Item
+            item={{
+              value: 'insert-before',
+              label: t(`add-${contextMenuAxis}-before.label`),
+              icon: contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular',
+            }}
             onClick={() => handleAxisMenuAction('insert-before')}
             data-testid={`grid.${contextMenuAxis}.insert-before`}
-          >
-            <Next.Icon
-              icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
-            />
-            <span>{t(`add-${contextMenuAxis}-before.label`)}</span>
-          </Next.Menu.Item>
+          />
           <Next.Menu.Item
+            item={{
+              value: 'insert-after',
+              label: t(`add-${contextMenuAxis}-after.label`),
+              icon: contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular',
+            }}
             onClick={() => handleAxisMenuAction('insert-after')}
             data-testid={`grid.${contextMenuAxis}.insert-after`}
-          >
-            <Next.Icon
-              icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
-            />
-            <span>{t(`add-${contextMenuAxis}-after.label`)}</span>
-          </Next.Menu.Item>
-          <Next.Menu.Item onClick={() => handleAxisMenuAction('drop')} data-testid={`grid.${contextMenuAxis}.drop`}>
-            <Next.Icon icon='ph--backspace--regular' />
-            <span>{t(`delete-${contextMenuAxis}.label`)}</span>
-          </Next.Menu.Item>
+          />
+          <Next.Menu.Item
+            item={{ value: 'drop', label: t(`delete-${contextMenuAxis}.label`), icon: 'ph--backspace--regular' }}
+            onClick={() => handleAxisMenuAction('drop')}
+            data-testid={`grid.${contextMenuAxis}.drop`}
+          />
         </Next.Menu.Content>
       </Next.Menu.Root>
     </div>
