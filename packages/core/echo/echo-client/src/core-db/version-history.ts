@@ -34,6 +34,9 @@ export const ancestorsOf = (graph: ChangeGraph, hashes: Iterable<string>): Set<s
 /** The heads `hashes` span: each one no other of them depends on, sorted so equal sets compare equal. */
 export const frontierOf = (graph: ChangeGraph, hashes: Iterable<string>): Heads => {
   const unique = [...new Set(hashes)];
+  if (unique.length === 1) {
+    return unique;
+  }
   const covered = ancestorsOf(
     graph,
     unique.flatMap((hash) => graph.get(hash) ?? []),
