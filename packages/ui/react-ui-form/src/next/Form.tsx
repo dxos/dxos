@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, forwardRef, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { useTranslation } from '@dxos/react-ui';
+import { composable, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { translationKey } from '#translations';
@@ -39,21 +39,28 @@ export type FormViewportProps = PropsWithChildren<{
   gutter?: Next.Gutter;
 }>;
 
-/** The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. */
-export const FormViewport = ({ children, scroll, size, width, gutter = 'rail' }: FormViewportProps) =>
-  scroll ? (
-    <Next.Panel.Root size={size} width={width}>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter={gutter}>{children}</Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
-  ) : (
-    <Next.Container gutter={gutter}>{children}</Next.Container>
-  );
+/**
+ * The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. Composable, so a
+ * form component can be the `asChild` child of a host that merges its layout props and ref onto it.
+ */
+export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
+  ({ children, scroll, size, width, gutter = 'rail', ...props }, forwardedRef) =>
+    scroll ? (
+      <Next.Panel.Root {...props} size={size} width={width} ref={forwardedRef}>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root>
+            <Next.ScrollArea.Viewport asChild>
+              <Next.Container gutter={gutter}>{children}</Next.Container>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
+    ) : (
+      <Next.Container {...props} gutter={gutter} ref={forwardedRef}>
+        {children}
+      </Next.Container>
+    ),
+);
 
 FormViewport.displayName = 'Form.Viewport';
 
