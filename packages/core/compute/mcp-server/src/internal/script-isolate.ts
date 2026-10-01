@@ -22,10 +22,12 @@ export const EFFECT_MODULE = 'effect.js';
 export const module = ({
   code,
   spaceId,
+  skillTokens,
   maxOutput,
 }: {
   readonly code: string;
   readonly spaceId?: string;
+  readonly skillTokens: readonly string[];
   readonly maxOutput: number;
 }): string => `import { Cause, Data, Effect, Exit } from './${EFFECT_MODULE}';
 
@@ -85,6 +87,8 @@ ${code}
 export default {
   async fetch(_request, env) {
     const printer = __printer(${JSON.stringify(maxOutput)});
+    // The tokens the program holds: the caller's, plus each one its own loadSkill returns.
+    const tokens = new Set(${JSON.stringify(skillTokens)});
     const call = (binding, args) =>
       Effect.tryPromise({
         try: () => env.HOST.call(binding, args),
@@ -101,9 +105,25 @@ export default {
         __program({
           spaceId: ${JSON.stringify(spaceId ?? null)} ?? undefined,
           print: (...values) => Effect.sync(() => printer.print(...values)),
-          invoke: (...args) => call('invoke', args),
+          invoke: (key, input, options) =>
+            call('invoke', [
+              key,
+              input,
+              options !== null && typeof options === 'object' && !Array.isArray(options)
+                ? { ...options, skillTokens: [...tokens] }
+                : { skillTokens: [...tokens] },
+            ]),
           queryOperations: (...args) => call('queryOperations', args),
-          loadSkill: (...args) => call('loadSkill', args),
+          loadSkill: (...args) =>
+            call('loadSkill', args).pipe(
+              Effect.tap((listing) =>
+                Effect.sync(() => {
+                  if (listing && typeof listing.skillToken === 'string') {
+                    tokens.add(listing.skillToken);
+                  }
+                }),
+              ),
+            ),
         }),
       );
       if (Exit.isSuccess(exit)) {

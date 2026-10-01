@@ -115,7 +115,7 @@ export default Config2.make({
   },
   publish: {
     buildCommand: 'vite build', // how to build the bundle
-    outdir: 'dist', // where the build emits manifest.json
+    outputDirectory: 'dist', // where the build emits manifest.json
   },
 });
 ```
@@ -138,11 +138,11 @@ Field reference for `plugin`:
 
 Field reference for `publish`:
 
-| Field          | Required | Notes                                                                              |
-| -------------- | -------- | ---------------------------------------------------------------------------------- |
-| `buildCommand` | no       | Build command run by `dx registry publish` (skipped with `--no-build`).            |
-| `outdir`       | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`. |
-| `assetBaseUrl` | no       | Skip the upload and point the release at a bundle you host yourself.               |
+| Field             | Required | Notes                                                                              |
+| ----------------- | -------- | ---------------------------------------------------------------------------------- |
+| `buildCommand`    | no       | Build command run by `dx registry publish` (skipped with `--no-build`).            |
+| `outputDirectory` | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`. |
+| `assetBaseUrl`    | no       | Skip the upload and point the release at a bundle you host yourself.               |
 
 The release **version is taken from your `package.json` `version` field**, not from `dx.config.ts`. Bump it before publishing a new release.
 
@@ -184,6 +184,13 @@ Useful flags:
 | `--no-build`             | Skip the build and publish the existing `dist`.                                    |
 | `--asset-base-url <url>` | Skip the upload and point the release at a bundle you host yourself.               |
 | `--edge-url <url>`       | Override the edge used for upload (mainly for local testing against a dev worker). |
+| `--private`              | Publish privately instead; see below.                                              |
+
+### Publishing privately
+
+`dx registry publish --private` skips AT Protocol altogether: no PDS session, no verification, no records. The bundle is hosted the same way, but the registry records it against your DXOS identity, and it is listed in Composer's registry only to you. The first release of a key claims it, so no other identity can publish that key privately afterwards.
+
+It authenticates as the identity you logged in with (`dx account login`). A process that has no identity of its own, such as a CLI in a sandbox or a CI job, authenticates with an API token in `DX_API_TOKEN` instead: the token is bound to the account that minted it, so the plugin is listed to that account. In Composer, a sandbox gets one from its **Grant account access** action, which mints a token that expires with the sandbox.
 
 ## 7. Confirm it's published
 
@@ -227,6 +234,11 @@ desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk 
 in a sandbox on your computer, from fetching this guide to the load prompt; assign them to the agent to start
 it. (In a browser, the template comes from the Coding (Dev) plugin and needs a Composer served locally by
 `vite preview`.)
+
+The **Composer Plugin (Sandbox)** template, contributed by the Sandbox plugin, runs the same example against any
+bundled Composer, deployed ones included: the agent builds in an EDGE sandbox with `@dxos/*` installed from
+[pkg.pr.new](https://pkg.pr.new) at the commit the app was built from, serves `dist/` from the container, and
+offers the manifest URL of the port it exposed.
 
 > Loading by URL works against a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed
 > app). A bundled Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and
@@ -789,6 +801,7 @@ const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
 | `dx account login`              | Log in to your DXOS identity; registry writes then use its connected AT Protocol account.  |
 | `dx account logout`             | Log out of the current profile.                                                            |
 | `dx registry publish`           | Build from `dx.config.ts`, host the bundle, and write profile + release records.           |
+| `dx registry publish --private` | Build and host the bundle, and list it only to your identity; no AT Protocol records.      |
 | `dx registry publish-publisher` | Write your `publisher.profile` record.                                                     |
 | `dx registry publish-package`   | Low-level alternative to `publish`: write profile + release records from flags (no build). |
 | `dx registry unpublish`         | Remove a package (profile + all releases) from your repo.                                  |

@@ -17,6 +17,7 @@ const make = () =>
       operations: [
         SandboxOperation.CreateSandbox,
         SandboxOperation.Exec,
+        SandboxOperation.ExposePort,
         SandboxOperation.UploadFile,
         SandboxOperation.DownloadFile,
         SandboxOperation.PublishFiles,
@@ -35,8 +36,12 @@ const make = () =>
         You can create sandboxes, run shell commands inside them, upload files from ECHO into a sandbox,
         and download files from a sandbox back into ECHO.
         The sandbox service is lazily initialized: the container starts on first use.
-        A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds).
-        A command that is cut off has not finished.
+        A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds, at most
+        fifteen minutes). A command that is cut off has not finished.
+        To serve something (a static site, a dev server), call ExposePort with its port and the \`command\`
+        that serves it, for a public URL: the service starts the server, and starts it again whenever the
+        container has slept, so the URL keeps answering. \`background: true\` starts any other command that
+        must outlive its call and returns at once.
         In the desktop app, with the Local backend, you can also publish a directory of a sandbox: it is served
         read-only over HTTP on this machine, and the URL you get back is how this app loads what you built there.
 

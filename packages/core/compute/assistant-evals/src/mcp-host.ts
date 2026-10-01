@@ -62,6 +62,8 @@ export type StartMcpHostOptions = {
    * upload tool at all — which is what the deployed worker's own tool, not this one, is for.
    */
   readonly uploads?: LocalUpload.Stage;
+  /** Secret the skill tokens derive from; omitted, a random one for this host's lifetime. */
+  readonly skillSecret?: string;
   /** Serves `runScript` too, evaluated in process, as `dx mcp serve --code-mode` does. */
   readonly codeMode?: boolean;
 };
@@ -89,11 +91,13 @@ export const startMcpHost = ({
   context,
   registry,
   uploads,
+  skillSecret = crypto.randomUUID(),
   codeMode = false,
 }: StartMcpHostOptions): Effect.Effect<McpHost, never, Scope.Scope> =>
   Effect.gen(function* () {
-    // Host-wide rather than per `connect`, which runs per request: the eval's agent is one session.
-    const ledger = McpServer.memorySkillLedger();
+    // Host-wide rather than per `connect`, which runs per request: a token one request hands out must
+    // unlock the next.
+    const gate = McpServer.skillGate(skillSecret);
     const connect = async () => {
       const server = new Server({ name: McpServer.identity.name, version: VERSION }, { capabilities: { tools: {} } });
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -102,7 +106,7 @@ export const startMcpHost = ({
       server.setRequestHandler(CallToolRequestSchema, async (request) =>
         dispatch(
           registry(),
-          ledger,
+          gate,
           skills,
           spaceIds,
           context,
@@ -173,6 +177,10 @@ const TOOLS = [
         key: { type: 'string', description: 'Operation key, as given in a queryOperations row.' },
         input: { type: 'object', description: "Arguments matching the operation's input schema." },
         spaceId: { type: 'string', description: 'The space the call acts on.' },
+        skillToken: {
+          type: 'string',
+          description: 'The skillToken loadSkill returned for a skill this operation belongs to.',
+        },
       },
       required: ['key'],
     },
@@ -218,6 +226,11 @@ const RUN_SCRIPT_TOOL = {
         description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
       },
       spaceId: { type: 'string', description: 'The space invoke uses when a call names none.' },
+      skillTokens: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'skillTokens loadSkill returned earlier, for the skills whose operations the script invokes.',
+      },
     },
     required: ['code'],
   },
@@ -232,7 +245,7 @@ type ToolResponse = {
 /** Runs one tool call through the server's own dispatch, in the caller's runtime context. */
 const dispatch = async (
   registry: Registry.Registry,
-  ledger: McpServer.SkillLedger,
+  gate: McpServer.SkillGate,
   skills: readonly Skill.Definition[],
   spaceIds: readonly SpaceId[] | undefined,
   context: () => Context.Context<Operation.Service>,
@@ -264,17 +277,12 @@ const dispatch = async (
       case McpServer.QueryOperations.name:
         return yield* McpServer.queryOperations(registry, args);
       case McpServer.LoadSkill.name:
-        return yield* McpServer.loadSkill(registry, ledger, args.skill as string | undefined);
+        return yield* McpServer.loadSkill(registry, gate, args.skill as string | undefined);
       case McpServer.InvokeOperation.name: {
         // Built per call, because the invoker it closes over is the harness's — which exists only
         // once the eval's harness has booted.
         const host = yield* McpServer.host({ skills, spaceIds });
-        return yield* McpServer.invokeWithLedger(
-          registry,
-          host,
-          ledger,
-          args as Parameters<typeof McpServer.invoke>[2],
-        );
+        return yield* McpServer.invoke(registry, host, args as Parameters<typeof McpServer.invoke>[2], gate);
       }
       case RUN_SCRIPT_TOOL.name: {
         if (!codeMode || typeof args.code !== 'string') {
@@ -284,8 +292,14 @@ const dispatch = async (
         return yield* McpServer.runScript(
           registry,
           host,
-          ledger,
-          { code: args.code, spaceId: SpaceId.isValid(args.spaceId) ? args.spaceId : undefined },
+          gate,
+          {
+            code: args.code,
+            spaceId: SpaceId.isValid(args.spaceId) ? args.spaceId : undefined,
+            skillTokens: Array.isArray(args.skillTokens)
+              ? args.skillTokens.filter((token): token is string => typeof token === 'string')
+              : [],
+          },
           { sandbox: McpServer.inProcessScriptSandbox },
         );
       }

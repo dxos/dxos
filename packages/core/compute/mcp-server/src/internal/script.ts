@@ -31,6 +31,8 @@ export type ScriptRequest = {
   readonly code: string;
   /** The `runScript` call's space, which `spaceId` in the program names. */
   readonly spaceId?: string;
+  /** Skill tokens the caller already holds; the program's `invoke` presents them for it. */
+  readonly skillTokens: readonly string[];
   readonly timeout: Duration.Duration;
   readonly maxOutput: number;
 };
@@ -57,17 +59,20 @@ const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
  * timeout abandons the evaluation rather than stopping it, since nothing in-process can cancel it.
  */
 export const inProcess: Sandbox = {
-  run: ({ code, spaceId, timeout, maxOutput }, dispatch) =>
+  run: ({ code, spaceId, skillTokens, timeout, maxOutput }, dispatch) =>
     Effect.gen(function* () {
       const services = yield* Effect.context<never>();
       const printer = makePrinter(maxOutput);
+      const tokens = new Set(skillTokens);
       const bindings = {
         Effect,
         spaceId,
         print: (...values: unknown[]) => Effect.sync(() => printer.print(...values)),
-        invoke: (...args: unknown[]) => dispatch({ binding: 'invoke', args }),
+        invoke: (key: unknown, input?: unknown, options?: unknown) =>
+          dispatch({ binding: 'invoke', args: [key, input, withSkillTokens(options, tokens)] }),
         queryOperations: (...args: unknown[]) => dispatch({ binding: 'queryOperations', args }),
-        loadSkill: (...args: unknown[]) => dispatch({ binding: 'loadSkill', args }),
+        loadSkill: (...args: unknown[]) =>
+          dispatch({ binding: 'loadSkill', args }).pipe(Effect.tap((listing) => recordSkillToken(listing, tokens))),
         /** Supplied by the wrapper, not by the script: runs its program and reports how it failed. */
         runEffect: (program: unknown): Promise<unknown> =>
           isProgram(program)
@@ -113,11 +118,31 @@ export const isolate = ({
     readonly spaceId?: string;
   }) => Effect.Effect<ScriptResult, { readonly message: string }>;
 }): Sandbox => ({
-  run: ({ code, spaceId, timeout, maxOutput }) =>
-    evaluate({ mainModule: isolateInternal.module({ code, spaceId, maxOutput }), timeout, spaceId }).pipe(
+  run: ({ code, spaceId, skillTokens, timeout, maxOutput }) =>
+    evaluate({ mainModule: isolateInternal.module({ code, spaceId, skillTokens, maxOutput }), timeout, spaceId }).pipe(
       Effect.catch((error) => Effect.succeed({ output: '', error: `The script could not run: ${error.message}` })),
     ),
 });
+
+/**
+ * The script's `invoke` options with the tokens it holds attached. The isolate module does the same
+ * in its own source (`script-isolate.ts`), so a change here belongs there too.
+ */
+const withSkillTokens = (options: unknown, tokens: ReadonlySet<string>): unknown =>
+  options !== null && typeof options === 'object' && !Array.isArray(options)
+    ? { ...options, skillTokens: [...tokens] }
+    : { skillTokens: [...tokens] };
+
+/** Keeps the token a `loadSkill` result carries, so later `invoke`s in the script present it. */
+const recordSkillToken = (listing: unknown, tokens: Set<string>): Effect.Effect<void> =>
+  Effect.sync(() => {
+    if (listing !== null && typeof listing === 'object' && 'skillToken' in listing) {
+      const { skillToken } = listing;
+      if (typeof skillToken === 'string') {
+        tokens.add(skillToken);
+      }
+    }
+  });
 
 /**
  * Wraps a script body into the async function body the sandbox evaluates: the script is the body

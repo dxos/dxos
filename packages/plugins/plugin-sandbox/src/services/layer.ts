@@ -137,6 +137,7 @@ const selecting = ({
     readFileBytes: (...args) => Effect.flatMap(select, (backend) => backend.readFileBytes(...args)),
     writeFile: (...args) => Effect.flatMap(select, (backend) => backend.writeFile(...args)),
     listFiles: (...args) => Effect.flatMap(select, (backend) => backend.listFiles(...args)),
+    exposePort: (...args) => Effect.flatMap(select, (backend) => backend.exposePort(...args)),
     setRepositories: (...args) =>
       Effect.flatMap(select, (backend) =>
         backend.setRepositories
@@ -159,5 +160,13 @@ const envPreference = (): Settings.Backend | undefined => {
 
 const unavailable = (message: string): SandboxService.Backend => {
   const fail = () => Effect.fail(new SandboxService.SandboxError({ message }));
-  return { kind: 'local', create: fail, exec: fail, readFileBytes: fail, writeFile: fail, listFiles: fail };
+  return {
+    kind: 'local',
+    create: fail,
+    exec: fail,
+    readFileBytes: fail,
+    writeFile: fail,
+    listFiles: fail,
+    exposePort: fail,
+  };
 };

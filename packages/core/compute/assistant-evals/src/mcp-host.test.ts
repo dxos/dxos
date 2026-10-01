@@ -16,11 +16,14 @@ import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
 import { McpToolkit } from '@dxos/mcp-client';
+import { McpServer } from '@dxos/mcp-server';
 
 import { startMcpHost } from './mcp-host.ts';
 import * as McpLatency from './McpLatency.ts';
 
 const SPACE = SpaceId.random();
+
+const SKILL_SECRET = 'test-secret';
 
 const KEY = 'com.example.operation.tasks.createTask';
 
@@ -87,6 +90,7 @@ describe('startMcpHost', () => {
           spaceIds: [SPACE],
           context: () => context,
           registry: () => registry,
+          skillSecret: SKILL_SECRET,
         });
         const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
 
@@ -99,12 +103,13 @@ describe('startMcpHost', () => {
         // The handlers are what the MCP client built, so calling one drives a real request over
         // the transport — the same path a model's tool call takes.
         const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
-        // The skill first: the host refuses its operations to a session that has not loaded it.
+        // The skill first: the host refuses its operations without the token loadSkill hands out.
         yield* Stream.runDrain(
           yield* handlers.handle('loadSkill', { skill: 'tasks' }).pipe(Effect.provide(toolkit.layer)),
         );
+        const skillToken = yield* McpServer.skillGate(SKILL_SECRET).issue(definition.key);
         const results = yield* handlers
-          .handle('invokeOperation', { key: KEY, input: { title: 'Ship' }, spaceId: SPACE })
+          .handle('invokeOperation', { key: KEY, input: { title: 'Ship' }, spaceId: SPACE, skillToken })
           .pipe(Effect.provide(toolkit.layer));
         yield* Stream.runDrain(results);
 
@@ -166,7 +171,7 @@ describe('startMcpHost', () => {
             probes: [
               { tool: 'queryOperations', args: { query: 'task' } },
               { tool: 'loadSkill', args: { skill: 'tasks' } },
-              { tool: 'invokeOperation', args: { key: KEY, input: { title: 'Ship' }, spaceId: SPACE } },
+              { tool: 'invokeOperation', skill: 'tasks', args: { key: KEY, input: { title: 'Ship' }, spaceId: SPACE } },
             ],
             iterations: 2,
             warmup: 1,

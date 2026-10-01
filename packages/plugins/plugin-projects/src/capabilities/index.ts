@@ -8,6 +8,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
@@ -50,6 +52,17 @@ export const TaskAction = Capability.lazyModule(
   // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.
   { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
   () => import('./task-action.ts'),
+);
+// Its own module, after the client: which EDGE the browser variant builds on and publishes to comes from the client's config.
+export const ComposerPluginTemplate = Capability.lazyModule(
+  'ComposerPluginTemplate',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ProjectCapabilities.Template],
+    activatesOn: ClientEvents.Initialized,
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./composer-plugin-template.ts'),
 );
 export const Templates = Capability.lazyModule(
   'Templates',

@@ -13,6 +13,8 @@ import type {
   AttachedRepository,
   ExecRequest,
   ExecResult,
+  ExposedPort,
+  ExposePortOptions,
   FileEntry,
   SandboxRecord,
 } from '../services/SandboxClient.ts';
@@ -45,6 +47,13 @@ export interface Backend {
   ): Effect.Effect<{ bytes: Uint8Array; type: string }, SandboxError>;
   writeFile(spaceId: string, sandboxId: string, path: string, content: Uint8Array): Effect.Effect<void, SandboxError>;
   listFiles(spaceId: string, sandboxId: string, path: string): Effect.Effect<readonly FileEntry[], SandboxError>;
+  /** Publishes `port` at a URL anyone holding it can load, with no credentials; local sandboxes cannot. */
+  exposePort(
+    spaceId: string,
+    sandboxId: string,
+    port: number,
+    options?: ExposePortOptions,
+  ): Effect.Effect<ExposedPort, SandboxError>;
   /**
    * Replaces the repositories attached to the sandbox: each is a git remote, named as given, in every
    * later command. Only EDGE sandboxes can reach a repository; absent on every other backend.

@@ -30,6 +30,7 @@ import * as identityInternal from './internal/identity.ts';
 import * as inputInternal from './internal/input.ts';
 import * as scriptIsolateInternal from './internal/script-isolate.ts';
 import * as scriptInternal from './internal/script.ts';
+import * as skillTokenInternal from './internal/skill-token.ts';
 import * as snapshotInternal from './internal/snapshot.ts';
 import * as spaceInternal from './internal/space.ts';
 import * as viewInternal from './internal/view.ts';
@@ -64,32 +65,42 @@ export type InvokeRequest = {
 };
 
 /**
- * Where a session's loaded skills are recorded, which is what {@link invoke} checks an operation's
- * owners against. Host-supplied because a host whose requests land on different processes (EDGE's
- * isolates) needs storage they share; a failure to read or write is the host's to absorb.
+ * Decides whether an `invokeOperation` call shows it read a skill governing the operation. Stateless
+ * on purpose: MCP 2026-07-28 has no session, and a host whose requests land on different processes
+ * (EDGE's isolates) cannot keep a per-conversation record without shared storage that races.
  */
-export type SkillLedger = {
-  /** Prompt names of the skills loaded so far. */
-  readonly loaded: Effect.Effect<ReadonlySet<string>>;
-  readonly record: (name: string) => Effect.Effect<void>;
+export type SkillGate = {
+  /** The token `loadSkill` hands out for a skill, keyed by the skill's registry key. */
+  readonly issue: (skillKey: string) => Effect.Effect<string>;
+  /** Whether `token` is the one issued for any of `ownerSkillKeys`. */
+  readonly verify: (ownerSkillKeys: readonly string[], token: string | undefined) => Effect.Effect<boolean>;
 };
 
-/** A ledger in this process's memory — right for a host that serves one session per process (stdio). */
-export const memorySkillLedger = (): SkillLedger => {
-  const loaded = new Set<string>();
+/**
+ * A {@link SkillGate} whose token is one common word derived from `secret` and the skill key, so
+ * every process holding the same secret issues and accepts the same word.
+ */
+export const skillGate = (secret: string): SkillGate => {
+  const issue = (skillKey: string) => skillTokenInternal.derive(secret, skillKey);
   return {
-    loaded: Effect.sync(() => loaded),
-    record: (name) =>
-      Effect.sync(() => {
-        loaded.add(name);
-      }),
+    issue,
+    verify: (ownerSkillKeys, token) =>
+      token === undefined
+        ? Effect.succeed(false)
+        : Effect.forEach(ownerSkillKeys, issue).pipe(
+            Effect.map((issued) => issued.includes(skillTokenInternal.normalize(token))),
+          ),
   };
 };
 
 export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
-  /** Omitted, the surface keeps one {@link memorySkillLedger} for as long as it is built. */
-  readonly skillLedger?: SkillLedger;
+  /**
+   * Secret the skill tokens are derived from. A host serving one session per process (stdio) may
+   * omit it and get a random one per build; a host whose requests land on different processes must
+   * supply one they all share, or a token issued by one is refused by the next.
+   */
+  readonly skillSecret?: string;
   /**
    * Spaces this session may address. No member is a default: a call that names none is refused.
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
@@ -131,10 +142,11 @@ export const LoadSkill = Tool.make('loadSkill', {
     'Loads a skill: the instructions for a multi-tool workflow hosted on this server. Call this ' +
     'before first invoking any operation whose queryOperations row names a skill, and follow the ' +
     'returned instructions — they define required setup, argument conventions, and ordering that ' +
-    'operation descriptions alone do not carry; invokeOperation refuses such an operation until one ' +
-    'of its skills has been loaded in this session. Omit the skill argument to list every skill this ' +
-    'server offers. The same skills are exposed to users as prompts; loading one here brings the ' +
-    'identical text into context without user action. No side effects.',
+    'operation descriptions alone do not carry. The result carries a skillToken: pass it to ' +
+    "invokeOperation with every call to one of this skill's operations, which are refused without it. " +
+    'Omit the skill argument to list every skill this server offers. The same skills are exposed to ' +
+    'users as prompts; loading one here brings the identical text into context without user action. ' +
+    'No side effects.',
   parameters: Schema.Struct({
     skill: Schema.optional(
       Schema.String.annotate({
@@ -154,6 +166,13 @@ export const LoadSkill = Tool.make('loadSkill', {
     ).annotate({ description: 'Every skill when none was named, otherwise just the one that was loaded.' }),
     instructions: Schema.optional(
       Schema.String.annotate({ description: "The named skill's full workflow text. Follow it." }),
+    ),
+    skillToken: Schema.optional(
+      Schema.String.annotate({
+        description:
+          "Pass as invokeOperation's skillToken when calling this skill's operations. Returned only " +
+          'when a skill was named.',
+      }),
     ),
   }),
   failure: ToolFailure,
@@ -207,7 +226,8 @@ export const QueryOperations = Tool.make('queryOperations', {
         description: Schema.optional(Schema.String),
         skills: Schema.Array(Schema.String).annotate({
           description:
-            'Skills this operation belongs to; invokeOperation refuses it until one is loaded with loadSkill.',
+            'Skills this operation belongs to; invokeOperation refuses it without the skillToken ' +
+            'loadSkill returns for one of them.',
         }),
         requiresSpace: Schema.Boolean.annotate({
           description: 'Whether the operation acts on a space, making invokeOperation spaceId load-bearing.',
@@ -250,8 +270,8 @@ export const InvokeOperation = Tool.make('invokeOperation', {
   description:
     'Invokes an operation by key — how every read and write on this server is performed. Find the ' +
     'key with queryOperations and fetch its input schema (queryOperations with keys) before the ' +
-    'first call; input must match that schema. An operation whose row names skills is refused until ' +
-    "one of them has been loaded with loadSkill in this session. Check the operation's mutation class in its row " +
+    'first call; input must match that schema. An operation whose row names skills is refused unless ' +
+    "skillToken is the token loadSkill returned for one of them. Check the operation's mutation class in its row " +
     'before invoking: this tool is as destructive as whatever it is asked to run. References ' +
     'between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes — pass them back ' +
     'exactly as received.',
@@ -263,6 +283,12 @@ export const InvokeOperation = Tool.make('invokeOperation', {
       }),
     ),
     spaceId: spaceInternal.idParameter,
+    skillToken: Schema.optional(
+      Schema.String.annotate({
+        description:
+          'The skillToken loadSkill returned for a skill this operation belongs to (see its queryOperations row).',
+      }),
+    ),
   }),
   success: Schema.Record(Schema.String, Schema.Unknown),
   failure: ToolFailure,
@@ -283,6 +309,7 @@ export const TOOL_NAMES = [QueryOperations.name, InvokeOperation.name, LoadSkill
 export type SkillListing = {
   skills: readonly { name: string; key: string; description?: string }[];
   instructions?: string;
+  skillToken?: string;
 };
 
 /** A prompt-name collision throws as a defect; inside a request it is the call's failure instead. */
@@ -327,17 +354,19 @@ export const loadSkillByName = (
   );
 
 /**
- * Answers one `loadSkill` call, recording a loaded skill in the ledger so its operations unlock. A
- * listing records nothing, since it carries no instructions.
+ * Answers one `loadSkill` call, issuing the token that unlocks the named skill's operations. A
+ * listing issues nothing, since it carries no instructions.
  */
 export const loadSkill = (
   registry: Registry.Registry,
-  ledger: SkillLedger,
+  gate: SkillGate,
   skill: string | undefined,
 ): Effect.Effect<SkillListing, ToolFailure> =>
   loadSkillByName(registry, skill).pipe(
-    Effect.tap(({ skills, instructions }) =>
-      instructions === undefined || skills.length === 0 ? Effect.void : ledger.record(skills[0].name),
+    Effect.flatMap((listing) =>
+      listing.instructions === undefined || listing.skills.length === 0
+        ? Effect.succeed(listing)
+        : Effect.map(gate.issue(listing.skills[0].key), (skillToken) => ({ ...listing, skillToken })),
     ),
   );
 
@@ -457,9 +486,16 @@ const dispatch = (
       : { output: result };
   });
 
+export type InvokeArguments = {
+  key: string;
+  input?: Record<string, unknown>;
+  spaceId?: SpaceId;
+  skillToken?: string;
+};
+
 /**
- * Dispatches one `invokeOperation` call: check a skill governing it was loaded, validate the input,
- * resolve the space, invoke, qualify refs.
+ * Dispatches one `invokeOperation` call: check its token proves a governing skill was read, validate
+ * the input, resolve the space, invoke, qualify refs.
  *
  * The input arrives as raw JSON rather than through a per-operation tool schema, so validating it
  * here is what turns a malformed call into an error naming the offending field instead of a
@@ -470,8 +506,8 @@ const dispatch = (
 export const invoke = (
   registry: Registry.Registry,
   host: HostShape,
-  { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
-  loadedSkills: ReadonlySet<string>,
+  { key, input, spaceId, skillToken }: InvokeArguments,
+  gate: SkillGate,
 ): Effect.Effect<Record<string, unknown>, ToolFailure> =>
   catchCollision(
     Effect.gen(function* () {
@@ -494,13 +530,18 @@ export const invoke = (
       }
 
       // Refused before any input is examined: the skill is what says how the input should be built.
-      if (!owners.some((name) => loadedSkills.has(name))) {
+      const ownerKeys = owners.flatMap((name) => skills.find((candidate) => candidate.promptName === name)?.key ?? []);
+      if (!(yield* gate.verify(ownerKeys, skillToken))) {
         const options = owners.map((name) => `'${name}'`).join(' or ');
+        const problem =
+          skillToken === undefined
+            ? `${operationKey} belongs to the ${options} skill and was called without its skillToken.`
+            : `'${skillToken}' is not the skillToken of the ${options} skill, which ${operationKey} belongs to.`;
         return yield* Effect.fail(
           failure(
             'skill_not_loaded',
-            `${operationKey} belongs to the ${options} skill, which this session has not loaded. ` +
-              `Call loadSkill with skill: '${owners[0]}', follow the instructions it returns, then retry this call.`,
+            `${problem} Call loadSkill with skill: '${owners[0]}', follow the instructions it returns, then ` +
+              'retry this call passing the skillToken it returns.',
           ),
         );
       }
@@ -508,15 +549,6 @@ export const invoke = (
       return yield* dispatch(host, record, operationKey, { input, spaceId });
     }),
   );
-
-/** Answers one `invokeOperation` call against the skills the ledger has recorded. */
-export const invokeWithLedger = (
-  registry: Registry.Registry,
-  host: HostShape,
-  ledger: SkillLedger,
-  request: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
-): Effect.Effect<Record<string, unknown>, ToolFailure> =>
-  ledger.loaded.pipe(Effect.flatMap((loaded) => invoke(registry, host, request, loaded)));
 
 /**
  * Runs an operation on behalf of a host's own tool, without the skill check {@link invoke} applies.
@@ -591,8 +623,10 @@ export const RunScript = Tool.make('runScript', {
     'statements directly and do not write the wrapper. In scope: `Effect` (the effect module); ' +
     '`yield* invoke(key, input?, { spaceId }?)` runs an operation exactly as invokeOperation does ' +
     '(same keys, input schemas, skill gate and {"/": "echo://..."} ref envelopes) and returns its ' +
-    'output; `yield* queryOperations({ query?, skill?, keys? })` returns the rows queryOperations ' +
-    'does; `yield* loadSkill(name?)` returns what loadSkill does and unlocks its operations; ' +
+    "output — the skillTokens argument and any token the script's own loadSkill returns are passed " +
+    'for it, so invoke needs no skillToken; `yield* queryOperations({ query?, skill?, keys? })` ' +
+    'returns the rows queryOperations does; `yield* loadSkill(name?)` returns what loadSkill does ' +
+    'and unlocks its operations for the rest of the script; ' +
     '`yield* print(...values)` adds a line to the output (non-strings as JSON); `spaceId` is the ' +
     'spaceId argument, used by invoke when a call names none. A failed call fails the program with ' +
     'a ToolFailure ({ code, message }); recover with `yield* Effect.result(invoke(...))`, whose value ' +
@@ -605,6 +639,13 @@ export const RunScript = Tool.make('runScript', {
       description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
     }),
     spaceId: spaceInternal.idParameter,
+    skillTokens: Schema.optional(
+      Schema.Array(Schema.String).annotate({
+        description:
+          'skillTokens loadSkill returned earlier in this conversation, for the skills whose operations ' +
+          'the script invokes. A skill the script loads itself needs none.',
+      }),
+    ),
   }),
   success: Schema.Struct({
     output: Schema.String.annotate({ description: 'Everything the script printed, in order.' }),
@@ -624,22 +665,27 @@ export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation
 
 /**
  * Answers one call a script made, wherever it ran: the program's verbs dispatch through
- * {@link invokeWithLedger}, {@link queryOperations} and {@link loadSkill}, so a script can do
- * nothing a sequence of tool calls could not. `spaceId` is the `runScript` call's own, used by an
- * `invoke` that names none.
+ * {@link invoke}, {@link queryOperations} and {@link loadSkill}, so a script can do nothing a
+ * sequence of tool calls could not. `spaceId` is the `runScript` call's own, used by an `invoke`
+ * that names none.
+ *
+ * An `invoke` carries the skill tokens the script holds (`skillTokens`, attached by the sandbox) as
+ * well as any `skillToken` it named, and passes if one of them belongs to a skill governing the
+ * operation. Forwarding them is safe: a token is checked against the gate's secret, so script code
+ * can present only tokens it was issued.
  */
 export const scriptDispatch = (
   registry: Registry.Registry,
   host: HostShape,
-  ledger: SkillLedger,
+  gate: SkillGate,
   { binding, args }: scriptInternal.ScriptCall,
   { spaceId }: { spaceId?: SpaceId } = {},
 ): Effect.Effect<unknown, ToolFailure> => {
   switch (binding) {
     case 'invoke':
       return scriptRequest(args[0], args[1], args[2]).pipe(
-        Effect.flatMap((request) =>
-          invokeWithLedger(registry, host, ledger, { ...request, spaceId: request.spaceId ?? spaceId }),
+        Effect.flatMap(({ skillTokens, ...request }) =>
+          invokeWithTokens(registry, host, gate, { ...request, spaceId: request.spaceId ?? spaceId }, skillTokens),
         ),
       );
     case 'queryOperations':
@@ -651,10 +697,32 @@ export const scriptDispatch = (
     case 'loadSkill': {
       const [skill] = args;
       return skill == null || typeof skill === 'string'
-        ? loadSkill(registry, ledger, skill ?? undefined)
+        ? loadSkill(registry, gate, skill ?? undefined)
         : Effect.fail(failure('invalid_request', `loadSkill takes a skill name, not a ${typeof skill}.`));
     }
   }
+};
+
+/**
+ * {@link invoke} with each of the script's tokens in turn until one is accepted; only a refusal for
+ * the token moves on to the next, so any other failure is the call's own and is returned at once.
+ */
+const invokeWithTokens = (
+  registry: Registry.Registry,
+  host: HostShape,
+  gate: SkillGate,
+  request: InvokeArguments,
+  skillTokens: readonly string[],
+): Effect.Effect<Record<string, unknown>, ToolFailure> => {
+  const candidates = [...new Set([request.skillToken, ...skillTokens].filter((token) => token !== undefined))];
+  const attempt = (index: number): Effect.Effect<Record<string, unknown>, ToolFailure> =>
+    invoke(registry, host, { ...request, skillToken: candidates[index] }, gate).pipe(
+      Effect.catchIf(
+        (error) => error.code === 'skill_not_loaded' && index + 1 < candidates.length,
+        () => attempt(index + 1),
+      ),
+    );
+  return attempt(0);
 };
 
 /**
@@ -664,13 +732,13 @@ export const scriptDispatch = (
 export const scriptCallOutcome = (
   registry: Registry.Registry,
   host: HostShape,
-  ledger: SkillLedger,
+  gate: SkillGate,
   call: unknown,
   options: { spaceId?: SpaceId } = {},
 ): Effect.Effect<scriptInternal.ScriptOutcome> =>
   Schema.decodeUnknownEffect(scriptInternal.ScriptCall)(call).pipe(
     Effect.mapError((error) => failure('invalid_request', `Malformed script call: ${String(error)}`)),
-    Effect.flatMap((decoded) => scriptDispatch(registry, host, ledger, decoded, options)),
+    Effect.flatMap((decoded) => scriptDispatch(registry, host, gate, decoded, options)),
     Effect.match({
       onSuccess: (value): scriptInternal.ScriptOutcome => ({ _tag: 'Ok', value }),
       onFailure: ({ code, message }): scriptInternal.ScriptOutcome => ({ _tag: 'Failure', code, message }),
@@ -686,13 +754,13 @@ export const scriptCallOutcome = (
 export const runScript = (
   registry: Registry.Registry,
   host: HostShape,
-  ledger: SkillLedger,
-  { code, spaceId }: { code: string; spaceId?: SpaceId },
+  gate: SkillGate,
+  { code, spaceId, skillTokens = [] }: { code: string; spaceId?: SpaceId; skillTokens?: readonly string[] },
   { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
 ): Effect.Effect<ScriptResult> =>
   sandbox
-    .run({ code, spaceId, timeout: Duration.fromInputUnsafe(timeout), maxOutput }, (call) =>
-      scriptDispatch(registry, host, ledger, call, { spaceId }),
+    .run({ code, spaceId, skillTokens, timeout: Duration.fromInputUnsafe(timeout), maxOutput }, (call) =>
+      scriptDispatch(registry, host, gate, call, { spaceId }),
     )
     .pipe(
       Effect.tap(({ error }) =>
@@ -703,7 +771,13 @@ export const runScript = (
 const ScriptInvokeArguments = Schema.Struct({
   key: Schema.String,
   input: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-  options: Schema.optional(Schema.Struct({ spaceId: Schema.optional(SpaceId) })),
+  options: Schema.optional(
+    Schema.Struct({
+      spaceId: Schema.optional(SpaceId),
+      skillToken: Schema.optional(Schema.String),
+      skillTokens: Schema.optional(Schema.Array(Schema.String)),
+    }),
+  ),
 });
 
 /**
@@ -720,13 +794,19 @@ const scriptRequest = (
   key: unknown,
   input: unknown,
   options: unknown,
-): Effect.Effect<{ key: string; input?: Record<string, unknown>; spaceId?: SpaceId }, ToolFailure> =>
+): Effect.Effect<InvokeArguments & { skillTokens: readonly string[] }, ToolFailure> =>
   Schema.decodeUnknownEffect(ScriptInvokeArguments)({
     key,
     input: input === null ? undefined : withoutUndefined(input),
     options: options === null ? undefined : withoutUndefined(options),
   }).pipe(
-    Effect.map((decoded) => ({ key: decoded.key, input: decoded.input, spaceId: decoded.options?.spaceId })),
+    Effect.map((decoded) => ({
+      key: decoded.key,
+      input: decoded.input,
+      spaceId: decoded.options?.spaceId,
+      skillToken: decoded.options?.skillToken,
+      skillTokens: decoded.options?.skillTokens ?? [],
+    })),
     Effect.mapError((error) =>
       failure(
         'invalid_request',
@@ -879,19 +959,19 @@ export const toolsLayer = ({
     const handlers = Effect.gen(function* () {
       const source = yield* RegistrySource;
       const host = yield* Host;
-      // One ledger for every tool, so a skill loaded by `loadSkill` unlocks its operations in a script too.
-      const ledger = host.skillLedger ?? memorySkillLedger();
+      // One gate for every tool, so a token `loadSkill` issued is accepted inside a script as well.
+      const gate = skillGate(host.skillSecret ?? skillTokenInternal.randomSecret());
       return {
         source,
         host,
-        ledger,
+        gate,
         handlers: {
           queryOperations: (query: Parameters<typeof queryOperations>[1]) =>
             Effect.flatMap(source.registry, (registry) => queryOperations(registry, query)),
-          invokeOperation: (request: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId }) =>
-            Effect.flatMap(source.registry, (registry) => invokeWithLedger(registry, host, ledger, request)),
+          invokeOperation: (request: InvokeArguments) =>
+            Effect.flatMap(source.registry, (registry) => invoke(registry, host, request, gate)),
           loadSkill: ({ skill }: { skill?: string }) =>
-            Effect.flatMap(source.registry, (registry) => loadSkill(registry, ledger, skill)),
+            Effect.flatMap(source.registry, (registry) => loadSkill(registry, gate, skill)),
         },
       };
     });
@@ -903,11 +983,11 @@ export const toolsLayer = ({
     return McpServer$.toolkit(ScriptServerToolkit).pipe(
       Layer.provide(
         ScriptServerToolkit.toLayer(
-          Effect.map(handlers, ({ source, host, ledger, handlers }) =>
+          Effect.map(handlers, ({ source, host, gate, handlers }) =>
             ScriptServerToolkit.of({
               ...handlers,
               runScript: (request) =>
-                Effect.flatMap(source.registry, (registry) => runScript(registry, host, ledger, request, script)),
+                Effect.flatMap(source.registry, (registry) => runScript(registry, host, gate, request, script)),
             }),
           ),
         ),
