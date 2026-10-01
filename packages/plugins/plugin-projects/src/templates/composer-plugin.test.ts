@@ -13,7 +13,13 @@ import { EffectEx } from '@dxos/effect';
 import { Text } from '@dxos/schema';
 import { Task, TaskSet } from '@dxos/types';
 
-import { composerPlugin, desktopVariant, makeComposerPlugin } from './composer-plugin.ts';
+import {
+  type Variant,
+  composerPlugin,
+  desktopVariant,
+  makeComposerPlugin,
+  registryVariant,
+} from './composer-plugin.ts';
 
 const COMMIT = '0123456789abcdef0123456789abcdef01234567';
 
@@ -41,13 +47,13 @@ describe('Composer Plugin project template', () => {
     await builder.close();
   });
 
-  const scaffold = async () => {
+  const scaffold = async (variant: Variant = desktopVariant(TOOLCHAIN)) => {
     const { db } = await builder.createDatabase({
       types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
     });
     const project = db.add(
       await EffectEx.runPromise(
-        makeComposerPlugin(desktopVariant(TOOLCHAIN))
+        makeComposerPlugin(variant)
           .scaffold({})
           .pipe(Effect.provideService(Database.Service, Database.makeService(db))),
       ),
@@ -105,7 +111,41 @@ describe('Composer Plugin project template', () => {
     expect(subtasks[3].description).toContain('Publish Files');
   });
 
-  test('is not offered outside the desktop app', ({ expect }) => {
+  test('in a browser, builds on EDGE and publishes to the private registry as the reader', async ({ expect }) => {
+    const project = await scaffold(registryVariant(TOOLCHAIN, 'https://edge.example.com/'));
+    const text = (await (await project.instructions?.load())?.text?.load())?.content ?? '';
+    expect(text).toContain('a container on EDGE');
+
+    const taskSet = await project.taskSet?.load();
+    const parent = await taskSet?.tasks[0].load();
+    const subtasks = await Promise.all((parent?.subtasks ?? []).map((ref) => ref.load()));
+    expect(subtasks.map((task) => task.title)).toEqual([
+      'Read the plugin guide',
+      'Write the plugin in TypeScript',
+      'Install, typecheck and build',
+      'Publish it to your registry',
+    ]);
+    const publish = subtasks[3].description ?? '';
+    expect(publish).toContain(
+      `npx --yes --package=https://pkg.pr.new/@dxos/cli@${COMMIT} dx registry publish --private --no-build --edge-url https://edge.example.com/`,
+    );
+    expect(publish).toContain('"Grant account access"');
+    expect(publish).not.toContain('Publish Files');
+  });
+
+  test('publishes with the CLI the build names, when it names one', ({ expect }) => {
+    const variant = registryVariant(
+      { ...TOOLCHAIN, cli: 'https://cli.example.com/dx.tgz' },
+      'https://edge.example.com/',
+    );
+    expect(variant.steps.at(-1)?.description).toContain('--package=https://cli.example.com/dx.tgz dx');
+  });
+
+  test('is offered in a browser only with a toolchain and an EDGE', ({ expect }) => {
     expect(composerPlugin()).toBeUndefined();
+    expect(composerPlugin({}, TOOLCHAIN)).toBeUndefined();
+    expect(composerPlugin({ edgeUrl: 'https://edge.example.com/' }, TOOLCHAIN)?.id).toBe(
+      'org.dxos.project.composerPlugin',
+    );
   });
 });

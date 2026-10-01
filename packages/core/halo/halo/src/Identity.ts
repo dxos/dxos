@@ -13,6 +13,7 @@ import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { IdentityDid, SpaceId } from '@dxos/keys';
+import { type AccessToken } from '@dxos/link';
 import { type Presentation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type IdentityError } from './errors.ts';
@@ -126,6 +127,14 @@ export type ServiceAccessOptions = {
   readonly serverName: string;
   /** Capabilities to grant (e.g. `['composer:beta']`). */
   readonly capabilities: readonly string[];
+};
+
+/** Options for an API token that authenticates as this identity's account, for a process with no identity of its own. */
+export type ApiTokenOptions = {
+  /** Shown where the account's tokens are listed. */
+  readonly label: string;
+  /** Epoch milliseconds; the token never expires when omitted. */
+  readonly expiresAt?: number;
 };
 
 /**
@@ -262,6 +271,11 @@ export interface ServiceApi {
    * (self-issued). Replaces hand-constructing the protobuf credential at the call site.
    */
   readonly grantServiceAccess: (options: ServiceAccessOptions) => Effect.Effect<void, IdentityError>;
+  /**
+   * Mint an API token bound to this identity's account (Hub), for a CLI or service to act as it. Returns it as an
+   * unsaved `AccessToken`; the token secret is returned only once, so the caller stores it.
+   */
+  readonly createApiToken: (options: ApiTokenOptions) => Effect.Effect<AccessToken.AccessToken, IdentityError>;
   /** Initiate a device invitation (host side). */
   readonly share: (options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, IdentityError>;
   /** Redeem a device-invitation code on a new device (guest side). */
@@ -363,6 +377,12 @@ export const credentials: Stream.Stream<readonly Credential[], never, Service> =
 /** Grant the identity access to an EDGE/Hub service (requires {@link Service}). */
 export const grantServiceAccess = (options: ServiceAccessOptions): Effect.Effect<void, IdentityError, Service> =>
   Effect.flatMap(Service, (service) => service.grantServiceAccess(options));
+
+/** Mint an API token bound to this identity's account (requires {@link Service}). */
+export const createApiToken = (
+  options: ApiTokenOptions,
+): Effect.Effect<AccessToken.AccessToken, IdentityError, Service> =>
+  Effect.flatMap(Service, (service) => service.createApiToken(options));
 
 /** Initiate a device invitation (requires {@link Service}). */
 export const share = (options?: Invitation.ShareOptions): Effect.Effect<Invitation.Flow, IdentityError, Service> =>

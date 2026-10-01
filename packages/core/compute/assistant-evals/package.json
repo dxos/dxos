@@ -24,7 +24,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/keys": "workspace:*"
@@ -32,6 +31,7 @@
   "devDependencies": {
     "@bufbuild/protobuf": "catalog:",
     "@dxos/agent-code-mode": "workspace:*",
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",

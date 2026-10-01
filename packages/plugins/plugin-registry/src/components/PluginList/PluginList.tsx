@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Listbox } from '@dxos/react-ui-list/next';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { PluginItem, type PluginItemProps } from './PluginItem.tsx';
 
@@ -39,17 +39,12 @@ export const PluginList = ({
   deviceOnlyIds,
   ...props
 }: PluginListProps) => {
-  const items = useMemo(
-    () =>
-      plugins.map((plugin) => ({
-        value: plugin.meta.profile.key,
-        label: plugin.meta.profile.name ?? plugin.meta.profile.key,
-      })),
-    [plugins],
-  );
   return (
-    <Listbox.Root items={items}>
-      <Listbox.Content aria-label='plugins' scroll={false}>
+    <Listbox.Root>
+      <Listbox.Content
+        aria-label='plugins'
+        classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] auto-rows-[max-content] gap-4 p-4'
+      >
         {plugins.map((plugin) => (
           <PluginItem
             key={plugin.meta.profile.key}

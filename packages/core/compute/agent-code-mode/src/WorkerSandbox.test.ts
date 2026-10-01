@@ -25,6 +25,10 @@ import * as WorkerSandbox from './WorkerSandbox.ts';
 const TASK_TYPENAME = 'com.example.type.task';
 const PERSON_TYPENAME = 'com.example.type.person';
 
+/** The versioned DXNs the Effect dialect resolves the types by. */
+const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
+const PERSON_DXN = String(DXN.make(PERSON_TYPENAME, '0.1.0'));
+
 class Person extends Type.makeObject<Person>(DXN.make(PERSON_TYPENAME, '0.1.0'))(
   Schema.Struct({
     name: Schema.String,
@@ -60,7 +64,7 @@ const Score = Operation.make({
   output: Schema.Number,
 });
 
-/** How the Effect dialect keys `ops`: by the operation's own DXN. */
+/** The DXN the Effect dialect resolves the operation by. */
 const SCORE_KEY = String(Score.meta.key);
 
 /**
@@ -81,7 +85,7 @@ const ScoreOperation: SandboxOperation = {
   name: 'score',
   description: 'Scores a title',
   parameters: {},
-  // Its definition, so the Effect dialect has a key to bind; the worker gets a stand-in for it.
+  // Its definition, so the Effect dialect has a definition to resolve; the worker gets a stand-in for it.
   definition: Score,
   invoke: (input: unknown) =>
     Effect.sync(() => {
@@ -201,11 +205,11 @@ describe('worker sandbox', () => {
     const output = await runWith(
       EffectDialect,
       `
-      const tasks = yield* Database.query(Filter.type(types['${TASK_TYPENAME}'])).run;
-      yield* print('tasks', tasks.length, 'tagged', typeof types['com.example.type.tagged']);
+      const tasks = yield* Database.query(Filter.type((yield* Database.resolve('${TASK_DXN}')))).run;
+      yield* print('tasks', tasks.length, 'tagged', (yield* Effect.result(Database.resolve('dxn:com.example.type.tagged:0.1.0')))._tag);
     `,
     );
-    expect(output).toEqual('tasks 1 tagged undefined');
+    expect(output).toEqual('tasks 1 tagged Failure');
   }, 60_000);
 
   test('reports a throw in the worker as output rather than failing the turn', async () => {
@@ -248,8 +252,8 @@ describe('worker sandbox', () => {
       const output = await runWith(
         EffectDialect,
         `
-        const tasks = yield* Database.query(Filter.type(types['${TASK_TYPENAME}'], { status: 'open' })).run;
-        const owner = yield* Database.add(Obj.make(types['${PERSON_TYPENAME}'], { name: 'Ada' }));
+        const tasks = yield* Database.query(Filter.type((yield* Database.resolve('${TASK_DXN}')), { status: 'open' })).run;
+        const owner = yield* Database.add(Obj.make((yield* Database.resolve('${PERSON_DXN}')), { name: 'Ada' }));
         for (const task of tasks) {
           Obj.update(task, (task) => { task.priority = task.title.length; task.owner = Ref.make(owner); });
         }
@@ -270,7 +274,7 @@ describe('worker sandbox', () => {
 
       const output = await runWith(
         EffectDialect,
-        `yield* print('scored', yield* Operation.invoke(ops['${SCORE_KEY}'], { title: 'Review the PR' }));`,
+        `yield* print('scored', yield* Operation.invoke((yield* Database.resolve('${SCORE_KEY}')), { title: 'Review the PR' }));`,
       );
       expect(output).toEqual('scored 13');
       // The handler ran HERE: the worker only ever held a stand-in definition.
@@ -284,9 +288,9 @@ describe('worker sandbox', () => {
       const output = await runWith(
         EffectDialect,
         `
-        const task = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Write the docs', status: 'open' }));
+        const task = yield* Database.add(Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Write the docs', status: 'open' }));
         Obj.update(task, (task) => { task.status = 'ready'; });
-        const result = yield* Operation.invoke(ops['${FILE_KEY}'], { object: task });
+        const result = yield* Operation.invoke((yield* Database.resolve('${FILE_KEY}')), { object: task });
         Obj.update(result.object, (task) => { task.status = 'filed'; });
         yield* print(result.received, result.object.id === task.id, task.status);
       `,
@@ -306,8 +310,8 @@ describe('worker sandbox', () => {
       const output = await runWith(
         EffectDialect,
         `
-        const draft = Obj.make(types['${TASK_TYPENAME}'], { title: 'Review the PR', status: 'open' });
-        const result = yield* Operation.invoke(ops['${FILE_KEY}'], { object: draft });
+        const draft = Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Review the PR', status: 'open' });
+        const result = yield* Operation.invoke((yield* Database.resolve('${FILE_KEY}')), { object: draft });
         yield* print(result.received, result.object.title, Obj.isObject(result.object));
       `,
       );
@@ -323,9 +327,9 @@ describe('worker sandbox', () => {
       const output = await runWith(
         EffectDialect,
         `
-        const owner = yield* Database.add(Obj.make(types['${PERSON_TYPENAME}'], { name: 'Ada' }));
-        const task = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Write the docs', status: 'open' }));
-        const result = yield* Operation.invoke(ops['${FILE_KEY}'], { object: task, owner: Ref.make(owner) });
+        const owner = yield* Database.add(Obj.make((yield* Database.resolve('${PERSON_DXN}')), { name: 'Ada' }));
+        const task = yield* Database.add(Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Write the docs', status: 'open' }));
+        const result = yield* Operation.invoke((yield* Database.resolve('${FILE_KEY}')), { object: task, owner: Ref.make(owner) });
         yield* print(result.received);
       `,
       );

@@ -80,15 +80,20 @@ const UPLOAD_STAGE = GRADED;
 const readProbes = (spaceId: string): McpLatency.Probe[] => [
   { tool: 'queryOperations', args: { query: 'task' } },
   { tool: 'loadSkill' },
-  // The server refuses a skill's operations until the session has loaded it, so this precedes them.
+  // The server refuses a skill's operations without the token loadSkill returns, so this precedes them.
   { tool: 'loadSkill', label: 'loadSkill(project)', args: { skill: 'project' } },
   // Cheapest handler that still reaches the database: an unfiltered listing, ids and labels only.
-  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.space.queryObjects', input: { limit: 10 }, spaceId } },
+  {
+    tool: 'invokeOperation',
+    skill: 'project',
+    args: { key: 'org.dxos.operation.space.queryObjects', input: { limit: 10 }, spaceId },
+  },
   // The same verb with the objects loaded, which is what separates a query's cost from a handler's.
   // Labelled, because the operation key alone would fold it into the row above and average the two
   // shapes into a figure describing neither.
   {
     tool: 'invokeOperation',
+    skill: 'project',
     label: 'invokeOperation:org.dxos.operation.space.queryObjects(content)',
     args: {
       key: 'org.dxos.operation.space.queryObjects',
@@ -96,7 +101,11 @@ const readProbes = (spaceId: string): McpLatency.Probe[] => [
       spaceId,
     },
   },
-  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.listSessions', input: { limit: 10 }, spaceId } },
+  {
+    tool: 'invokeOperation',
+    skill: 'project',
+    args: { key: 'org.dxos.operation.tasks.listSessions', input: { limit: 10 }, spaceId },
+  },
 ];
 
 /**
@@ -108,8 +117,16 @@ const readProbes = (spaceId: string): McpLatency.Probe[] => [
 const refProbes = (spaceId: string, projectId: string): McpLatency.Probe[] => {
   const project = { '/': `echo://${spaceId}/${projectId}` };
   return [
-    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.projects.get', input: { project }, spaceId } },
-    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.list', input: { project }, spaceId } },
+    {
+      tool: 'invokeOperation',
+      skill: 'project',
+      args: { key: 'org.dxos.operation.projects.get', input: { project }, spaceId },
+    },
+    {
+      tool: 'invokeOperation',
+      skill: 'project',
+      args: { key: 'org.dxos.operation.tasks.list', input: { project }, spaceId },
+    },
   ];
 };
 
