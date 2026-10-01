@@ -4420,9 +4420,6 @@ importers:
 
   packages/core/compute/assistant-evals:
     dependencies:
-      '@dxos/agent-runtime':
-        specifier: workspace:*
-        version: link:../agent-runtime
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit
@@ -4439,6 +4436,9 @@ importers:
       '@dxos/agent-code-mode':
         specifier: workspace:*
         version: link:../agent-code-mode
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../agent-runtime
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
