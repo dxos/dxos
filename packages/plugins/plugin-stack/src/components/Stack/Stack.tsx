@@ -3,7 +3,6 @@
 //
 
 import React, {
-  type ComponentProps,
   type ComponentPropsWithoutRef,
   type ForwardedRef,
   type PropsWithChildren,
@@ -31,7 +30,6 @@ import { StackContext, useStack, useStackContext } from './StackContext.ts';
 // Types
 //
 
-type ScrollAreaRootProps = ComponentProps<typeof Next.ScrollArea.Root>;
 
 export type StackSectionItem = {
   id: string;
@@ -116,9 +114,7 @@ StackRoot.displayName = 'Stack.Root';
 // Content
 //
 
-type StackContentProps = ThemedClassName<
-  ComponentPropsWithoutRef<'div'> & Pick<ScrollAreaRootProps, 'centered' | 'thin' | 'padding'>
->;
+type StackContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const StackContent = forwardRef<HTMLDivElement, StackContentProps>(({ children, ...props }, forwardedRef) => {
   const { eventHandler, viewport } = useStackContext('Stack.Content');
@@ -212,34 +208,48 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
           </Next.Menu.Trigger>
           <Next.Menu.Content>
             {isCollapsed ? (
-              <Next.Menu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
-                <Next.Icon icon='ph--arrows-out-line-vertical--regular' />
-                <span className='ms-2 grow'>{t('expand.label')}</span>
-              </Next.Menu.Item>
+              <Next.Menu.Item
+                item={{
+                  value: 'section.expand',
+                  label: t('expand.label'),
+                  icon: 'ph--arrows-out-line-vertical--regular',
+                }}
+                onClick={() => onCollapse(id, false)}
+                data-testid='section.expand'
+              />
             ) : (
-              <Next.Menu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
-                <Next.Icon icon='ph--arrows-in-line-vertical--regular' />
-                <span className='ms-2 grow'>{t('collapse.label')}</span>
-              </Next.Menu.Item>
+              <Next.Menu.Item
+                item={{
+                  value: 'section.collapse',
+                  label: t('collapse.label'),
+                  icon: 'ph--arrows-in-line-vertical--regular',
+                }}
+                onClick={() => onCollapse(id, true)}
+                data-testid='section.collapse'
+              />
             )}
             <Next.Menu.Separator />
-            <Next.Menu.Item onClick={() => onAdd(id)} data-testid='section.add'>
-              <Next.Icon icon='ph--plus--regular' />
-              <span className='ms-2 grow'>{t('add-section.label')}</span>
-            </Next.Menu.Item>
-            <Next.Menu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
-              <Next.Icon icon='ph--arrow-line-up--regular' />
-              <span className='ms-2 grow'>{t('move-up.label')}</span>
-            </Next.Menu.Item>
-            <Next.Menu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
-              <Next.Icon icon='ph--arrow-line-down--regular' />
-              <span className='ms-2 grow'>{t('move-down.label')}</span>
-            </Next.Menu.Item>
+            <Next.Menu.Item
+              item={{ value: 'section.add', label: t('add-section.label'), icon: 'ph--plus--regular' }}
+              onClick={() => onAdd(id)}
+              data-testid='section.add'
+            />
+            <Next.Menu.Item
+              item={{ value: 'section.move-up', label: t('move-up.label'), icon: 'ph--arrow-line-up--regular' }}
+              onClick={() => onMoveUp(id)}
+              data-testid='section.move-up'
+            />
+            <Next.Menu.Item
+              item={{ value: 'section.move-down', label: t('move-down.label'), icon: 'ph--arrow-line-down--regular' }}
+              onClick={() => onMoveDown(id)}
+              data-testid='section.move-down'
+            />
             <Next.Menu.Separator />
-            <Next.Menu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
-              <Next.Icon icon='ph--trash--regular' />
-              <span className='ms-2 grow'>{t('remove-section.label')}</span>
-            </Next.Menu.Item>
+            <Next.Menu.Item
+              item={{ value: 'section.remove', label: t('remove-section.label'), icon: 'ph--trash--regular' }}
+              onClick={() => onDelete(id)}
+              data-testid='section.remove'
+            />
           </Next.Menu.Content>
         </Next.Menu.Root>
       </div>
