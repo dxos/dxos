@@ -32,13 +32,15 @@ export const FrameStack = <T extends FrameStackItem>({
 }: FrameStackProps<T>) => {
   const getId = useCallback((item: T) => item.id, []);
   return (
-    // The selected frame is the list's current row.
+    // The stack carries a selection, so a reader arrows between frames and Enter picks one.
     <OrderedList.Root<T>
       items={items}
       getId={getId}
       onMove={onMove}
       // A clone of the row: it carries the resolved thumbnail, which a fresh render would still be loading.
       dragPreview='clone'
+      value={selectedId}
+      onValueChange={(id) => onSelect?.(id)}
     >
       {({ items }) => (
         // `select-none`: a pointer drag across the previews would otherwise start a native text
@@ -49,9 +51,7 @@ export const FrameStack = <T extends FrameStackItem>({
               key={item.id}
               id={item.id}
               highlightOnHover
-              current={item.id === selectedId}
-              classNames='p-1 rounded-sm cursor-pointer aria-[current]:ring-2 aria-[current]:ring-accent-bg'
-              onClick={() => onSelect?.(item.id)}
+              classNames='p-1 rounded-sm cursor-pointer aria-selected:ring-2 aria-selected:ring-accent-bg'
             >
               {/* The preview itself is the handle: the thumbnail is what a reader expects to grab. */}
               <OrderedList.DragHandle asChild>
