@@ -214,6 +214,10 @@ const selectValue = ({ file, element }: RuleContext) => {
 
 /** Select.Root: `items` from its Items, and the string[] value model. */
 export const selectRoot = (ctx: RuleContext) => {
+  // A root that already takes `items` is written against Next, value model included.
+  if (getAttr(ctx.element, 'items')) {
+    return;
+  }
   rootItems(ctx, 'Select', selectOption(ctx.file), ['Select.Option']);
   selectValue(ctx);
 };
