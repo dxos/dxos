@@ -5,7 +5,7 @@
 import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
@@ -268,5 +268,27 @@ export const Banner: Story = {
     back.focus();
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(canvas.getByRole('button', { name: 'Menu' })).toHaveFocus());
+  },
+};
+
+/** `inactive` dims the controls of a toolbar whose host is not in play, and leaves them operable. */
+const InactiveStory = () => {
+  const [count, setCount] = useState(0);
+  return (
+    <Next.Toolbar.Root inactive>
+      <Next.Button label={`Pressed ${count}`} onClick={() => setCount((count) => count + 1)} />
+    </Next.Toolbar.Root>
+  );
+};
+
+export const Inactive: Story = {
+  render: () => <InactiveStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Pressed 0' });
+    await expect(button).toBeEnabled();
+    await expect(Number(getComputedStyle(button).opacity)).toBeLessThan(1);
+    await userEvent.click(button);
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Pressed 1' })).toBeInTheDocument());
   },
 };

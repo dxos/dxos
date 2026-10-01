@@ -26,6 +26,11 @@ type ToolbarRootProps = {
   loop?: boolean;
   /** Disables every control in the toolbar. */
   disabled?: boolean;
+  /**
+   * Dims the controls without disabling them, for a toolbar whose host is not in play (an unattended plank): they stay
+   * operable, so the first press both brings the host into play and acts.
+   */
+  inactive?: boolean;
 };
 
 /**
@@ -41,7 +46,10 @@ const ToolbarElement = composable<HTMLDivElement, HTMLAttributes<HTMLDivElement>
  * thin ScrollArea whose bar shows on hover, the toolbar itself being the viewport.
  */
 const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
-  ({ children, asChild, size, orientation = 'horizontal', loop = true, disabled, ...props }, forwardedRef) => {
+  (
+    { children, asChild, size, orientation = 'horizontal', loop = true, disabled, inactive, ...props },
+    forwardedRef,
+  ) => {
     const service = useMachine(toolbar.machine, { id: useId(), orientation, loop, disabled });
     const api = toolbar.connect(service);
     const { className, ...rest } = composableProps(props, { classNames: recipes.toolbar() });
@@ -63,6 +71,7 @@ const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
               // A toolbar that is also a landmark (an app bar's `banner`) keeps the role it is given.
               role={rest.role ?? rootProps.role}
               data-size={size}
+              data-inactive={inactive ? '' : undefined}
               classNames={className}
               ref={forwardedRef}
             >
