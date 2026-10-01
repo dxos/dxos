@@ -5,7 +5,7 @@
 import ts from '@typescript/typescript6';
 
 import { type Element } from '../code-file.ts';
-import { addAttr, attrValue, getAttr, removeAttr, renameAttr } from '../jsx.ts';
+import { addAttr, attrValue, calleeText, getAttr, removeAttr, renameAttr } from '../jsx.ts';
 import { type RuleContext } from './composites.ts';
 
 /**
@@ -40,7 +40,7 @@ export const openChange = ({ file, element }: RuleContext) => {
       file.replace(param, replacement);
     }
   } else {
-    file.replace(expression, `({ open }) => ${expression.getText(file.sourceFile)}(open)`);
+    file.replace(expression, `({ open }) => ${calleeText(file, expression)}(open)`);
   }
   file.count(`${part} onOpenChange(open) → ({ open })`);
 };

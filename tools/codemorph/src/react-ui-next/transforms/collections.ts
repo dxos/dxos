@@ -5,7 +5,7 @@
 import ts from '@typescript/typescript6';
 
 import { type CodeFile, type Element } from '../code-file.ts';
-import { addAttr, attrValue, getAttr, meaningfulChildren, removeAttr } from '../jsx.ts';
+import { addAttr, attrValue, calleeText, getAttr, meaningfulChildren, removeAttr } from '../jsx.ts';
 import { type RuleContext } from './composites.ts';
 import { openChange } from './popups.ts';
 
@@ -208,7 +208,7 @@ const selectValue = ({ file, element }: RuleContext) => {
     }
     file.count('Select.Root onValueChange(value) → ({ value: [value] })');
   } else {
-    file.replace(expression, `({ value: [value] }) => ${expression.getText(file.sourceFile)}(value)`);
+    file.replace(expression, `({ value: [value] }) => ${calleeText(file, expression)}(value)`);
     file.count('Select.Root onValueChange={fn} → ({ value: [value] }) => fn(value)');
   }
 };

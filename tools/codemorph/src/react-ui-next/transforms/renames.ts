@@ -353,7 +353,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Toast.Actions': { to: ['Toast', 'Footer'] },
     'Toast.Action': { to: ['Toast', 'ActionTrigger'], drop: ['altText'] },
     'Toast.Close': { to: ['Toast', 'CloseTrigger'] },
-    'Toast.Root': { drop: ['type'], apply: openChange },
+    'Toast.Root': { drop: ['type'] },
     'Toast.Title': review({
       icon: 'Toast.Title icon → Toast.Header icon',
       onClose: 'Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)',

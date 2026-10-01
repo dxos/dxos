@@ -152,3 +152,9 @@ export const unwrap = (file: CodeFile, element: Element) => {
   file.edit(opening.start, opening.end, '');
   file.edit(closing.start, closing.end, '');
 };
+
+/** Source text of an expression in callee position, parenthesised unless it is a plain or member reference. */
+export const calleeText = (file: CodeFile, expression: ts.Expression): string => {
+  const text = expression.getText(file.sourceFile);
+  return ts.isIdentifier(expression) || ts.isPropertyAccessExpression(expression) ? text : `(${text})`;
+};

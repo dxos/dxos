@@ -23,6 +23,7 @@ describe('popups', () => {
               <Next.Menu.Content side={side} />
             </Next.Menu.Root>
             <Next.Dialog.Root onOpenChange={(open: boolean) => setOpen(open)} />
+            <Next.Dialog.Root onOpenChange={side ? setOpen : undefined} />
           </>
         );
       `,
@@ -39,6 +40,7 @@ describe('popups', () => {
             <Next.Menu.Content side={side} />
           </Next.Menu.Root>
           <Next.Dialog.Root onOpenChange={({ open }) => setOpen(open)} />
+          <Next.Dialog.Root onOpenChange={({ open }) => (side ? setOpen : undefined)(open)} />
         </>
       );
     `);
