@@ -378,8 +378,14 @@ Each of these depends on Next work that is not on this branch's base yet:
 - **M9, ref and lookup fields.** `RefField` and the lookup Combobox use input mode. The RefField and ObjectPicker
   rebuild needs Combobox trigger mode with its create row and descriptions, which is in PR #13549 and not yet on
   `main`.
-- **M10, higher-level components** (ObjectProperties, ObjectForm, ViewEditor, FieldEditor). These need
-  `ControlFrame` (MarkdownField, RefEditor) and `Banner` (ViewEditor) from Phase A item 1, plus M8 and M9.
+- **M10, higher-level components.**
+  - **FieldEditor** is ported. Its play test changes a field's format and saves, and checks the projection's schema
+    takes the new type while keeping the description. The format's extra JSON-schema attributes are merged without
+    the casts the current one needs.
+  - **ObjectProperties and ObjectForm** need the meta-tags row (a multi-select of Tag refs) and the inline create from
+    M9.
+  - **ViewEditor** needs `Banner`, and **RefEditor** and **MarkdownField** need `ControlFrame`, both from Phase A
+    item 1.
 
 ## Verification
 
