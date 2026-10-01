@@ -14,8 +14,24 @@ import { type RuleContext } from './composites.ts';
  */
 
 /** `onOpenChange={(open) => …}` → `({ open }) => …`; a handler reference is called with `open`. */
-export const openChange = ({ file, element }: RuleContext) => {
-  const handler = getAttr(element, 'onOpenChange');
+export const openChange = (ctx: RuleContext) => detailsHandler(ctx, 'onOpenChange', 'open');
+
+/**
+ * `onCheckedChange={(checked) => …}` → `({ checked }) => …` on Next Checkbox and Switch (Ark reports details). A
+ * Checkbox handler reference gets `checked === true`, since Ark's checkbox state may be `'indeterminate'`.
+ */
+export const checkedChange = (ctx: RuleContext) => {
+  const part = ctx.element.identity.path.join('.');
+  // The current entry's `Switch` is the flow control, not the form switch.
+  if (part === 'Switch' && ctx.element.identity.form !== 'next') {
+    return;
+  }
+  detailsHandler(ctx, 'onCheckedChange', 'checked', part.endsWith('Checkbox') ? ' === true' : '');
+};
+
+/** Rewrites a callback prop whose argument became Ark change details carrying `field`. */
+const detailsHandler = ({ file, element }: RuleContext, prop: string, field: string, coerce = '') => {
+  const handler = getAttr(element, prop);
   const init = handler?.initializer;
   const expression = init && ts.isJsxExpression(init) ? init.expression : undefined;
   if (!handler || !expression) {
@@ -28,11 +44,11 @@ export const openChange = ({ file, element }: RuleContext) => {
       return;
     }
     if (!ts.isIdentifier(param.name)) {
-      file.report(handler, `${part} onOpenChange takes details ({ open }); map the parameter by hand`);
+      file.report(handler, `${part} ${prop} takes details ({ ${field} }); map the parameter by hand`);
       return;
     }
     const name = param.name.text;
-    const replacement = name === 'open' ? '({ open })' : `({ open: ${name} })`;
+    const replacement = name === field ? `({ ${field} })` : `({ ${field}: ${name} })`;
     const open = expression.parameters.pos - 1;
     if (file.text[open] === '(') {
       file.edit(open, file.text.indexOf(')', expression.parameters.end) + 1, replacement);
@@ -40,9 +56,9 @@ export const openChange = ({ file, element }: RuleContext) => {
       file.replace(param, replacement);
     }
   } else {
-    file.replace(expression, `({ open }) => ${calleeText(file, expression)}(open)`);
+    file.replace(expression, `({ ${field} }) => ${calleeText(file, expression)}(${field}${coerce})`);
   }
-  file.count(`${part} onOpenChange(open) → ({ open })`);
+  file.count(`${part} ${prop}(${field}) → ({ ${field} })`);
 };
 
 const PLACEMENT_PROPS = ['side', 'align', 'sideOffset', 'collisionPadding'];

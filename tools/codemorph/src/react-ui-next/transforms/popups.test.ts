@@ -120,4 +120,34 @@ describe('popups', () => {
       );
     `);
   });
+
+  test('Checkbox and Switch onCheckedChange take details', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Switch } from '@dxos/react-ui';
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Controls = ({ set }: { set: (on: boolean) => void }) => (
+          <>
+            <Next.Checkbox onCheckedChange={set} />
+            <Next.Switch onCheckedChange={(on) => set(on)} />
+            <Switch onCheckedChange={set} />
+          </>
+        );
+      `,
+    );
+    expect(output).toBe(code`
+      import { Switch } from '@dxos/react-ui';
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Controls = ({ set }: { set: (on: boolean) => void }) => (
+        <>
+          <Next.Checkbox onCheckedChange={({ checked }) => set(checked === true)} />
+          <Next.Switch onCheckedChange={({ checked: on }) => set(on)} />
+          <Switch onCheckedChange={set} />
+        </>
+      );
+    `);
+  });
 });

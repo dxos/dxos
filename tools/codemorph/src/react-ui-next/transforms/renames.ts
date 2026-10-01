@@ -29,7 +29,7 @@ import {
   virtualTrigger,
 } from './composites.ts';
 import { buttonDensity, isButton } from './density.ts';
-import { blockEnd, contentPlacement, openChange } from './popups.ts';
+import { blockEnd, checkedChange, contentPlacement, openChange } from './popups.ts';
 import { type Transform } from './transform.ts';
 
 /** How one current part becomes its Next counterpart. */
@@ -444,8 +444,20 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
         file.count(`Field.Input → ${target ?? 'Input'}`);
       },
     },
-    'Field.Switch': { apply: labelledControl('Switch') },
-    'Field.Checkbox': { apply: labelledControl('Checkbox') },
+    'Field.Switch': {
+      apply: (ctx) => {
+        labelledControl('Switch')(ctx);
+        checkedChange(ctx);
+      },
+    },
+    'Field.Checkbox': {
+      apply: (ctx) => {
+        labelledControl('Checkbox')(ctx);
+        checkedChange(ctx);
+      },
+    },
+    'Checkbox': { apply: checkedChange },
+    'Switch': { apply: checkedChange },
     'Field.TriggerIcon': { residue: 'Field.TriggerIcon → DateInput trigger or a Button in the end slot' },
   },
   'react-ui-list': {
