@@ -540,7 +540,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     <Next.Collapsible.Root
       asChild
       open={isExpanded}
-      onOpenChange={({ open }) => (onExpandedChange && ((open) => onExpandedChange(id, open)))(open)}
+      onOpenChange={({ open }) => onExpandedChange?.(id, open)}
       disabled={!onExpandedChange}
       lazyMount
       unmountOnExit
@@ -727,10 +727,9 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
     [onOpenAttachment, message],
   );
 
-  // `subgrid` so the card adopts the tile's columns: row icons land in the avatar column and row
-  // content aligns with the sender/subject/body, rather than the card defining its own gutters.
+  // `grid` so row icons sit in the card's start rail and row content aligns at its content edge.
   return (
-    <Next.Card.Root subgrid classNames='bg-transparent' border={false} data-testid='message-header'>
+    <Next.Card.Root grid classNames='bg-transparent' border={false} data-testid='message-header'>
       <Next.Card.Body>
         {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
         {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the

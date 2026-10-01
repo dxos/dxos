@@ -66,14 +66,21 @@ export const RelatedMessages = ({ messages, summaries, onMessageClick }: Related
   return (
     <Next.Card.Section title={t('related-messages.title')}>
       {conversations.map((message) => (
-        <Next.Card.Action
+        <Next.Card.Row
           key={message.id}
-          label={messageDigest(message, summaries) ?? ''}
-          annotation={message.created ? formatAge(new Date(message.created), now) : undefined}
           icon='ph--envelope-simple--regular'
-          actionIcon='ph--arrow-right--regular'
+          trailing={
+            <>
+              {message.created && (
+                <Next.Card.Text variant='description'>{formatAge(new Date(message.created), now)}</Next.Card.Text>
+              )}
+              <Next.Icon icon='ph--arrow-right--regular' />
+            </>
+          }
           onClick={() => onMessageClick?.(message)}
-        />
+        >
+          <Next.Card.Text>{messageDigest(message, summaries) ?? ''}</Next.Card.Text>
+        </Next.Card.Row>
       ))}
     </Next.Card.Section>
   );

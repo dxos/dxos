@@ -86,7 +86,7 @@ const RecipientEditor = ({
     getLabel={getPersonLabel}
     getValues={getPersonValues}
     activateOnTyping
-    classNames={['flex min-w-0 h-[2rem] items-center', classNames]}
+    classNames={classNames}
     placeholder={placeholder}
     value={value}
     onChange={onChange}

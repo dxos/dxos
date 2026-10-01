@@ -25,15 +25,16 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
   return (
     <Next.Card.Section title={t('related-contacts.title')}>
       {contacts.map((contact) => (
-        <Next.Card.Action
+        <Next.Card.Row
           key={contact.id}
-          label={contact.fullName || contact.emails?.[0]?.value || contact.id}
           // The avatar, not a generic glyph: a row standing for a person reads the same here as it does
           // in every message and attendee row. Non-interactive, since the row is itself a button.
           leading={<Avatar actor={{ name: contact.fullName, email: contact.emails?.[0]?.value }} size={5} />}
-          actionIcon='ph--arrow-right--regular'
+          trailing={<Next.Icon icon='ph--arrow-right--regular' />}
           onClick={() => onContactClick?.(contact)}
-        />
+        >
+          <Next.Card.Text>{contact.fullName || contact.emails?.[0]?.value || contact.id}</Next.Card.Text>
+        </Next.Card.Row>
       ))}
     </Next.Card.Section>
   );

@@ -26,13 +26,14 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
           {recent
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Next.Card.Action
+              <Next.Card.Row
                 key={event.id}
-                onClick={() => onEventClick?.(event)}
-                label={event.title ?? event.description!}
                 icon='ph--calendar-dot--regular'
-                actionIcon='ph--arrow-right--regular'
-              />
+                trailing={<Next.Icon icon='ph--arrow-right--regular' />}
+                onClick={() => onEventClick?.(event)}
+              >
+                <Next.Card.Text>{event.title ?? event.description ?? ''}</Next.Card.Text>
+              </Next.Card.Row>
             ))}
         </Next.Card.Section>
       ) : null}
@@ -41,13 +42,14 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
           {upcoming
             .filter((event) => event.title || event.description)
             .map((event) => (
-              <Next.Card.Action
+              <Next.Card.Row
                 key={event.id}
-                onClick={() => onEventClick?.(event)}
-                label={event.title ?? event.description!}
                 icon='ph--calendar-dot--regular'
-                actionIcon='ph--arrow-right--regular'
-              />
+                trailing={<Next.Icon icon='ph--arrow-right--regular' />}
+                onClick={() => onEventClick?.(event)}
+              >
+                <Next.Card.Text>{event.title ?? event.description ?? ''}</Next.Card.Text>
+              </Next.Card.Row>
             ))}
         </Next.Card.Section>
       ) : null}

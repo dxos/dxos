@@ -204,15 +204,16 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
         <Next.Card.Row>
           <Next.Block>
             <Next.Block>
-              <Next.Field.TriggerIcon icon='ph--calendar--regular' />
+              <Next.Icon icon='ph--calendar--regular' />
             </Next.Block>
           </Next.Block>
           <div className={fieldClasses}>
             <div className='grow'>
               {allDay ? (
-                <Next.Field.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
+                <Next.DateInput type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
               ) : (
-                <Next.Field.DateTime
+                <Next.DateInput
+                  type='datetime-local'
                   value={toDateTimeInput(data.startDate)}
                   onValueChange={handleStartDateTimeChange}
                 />
@@ -232,12 +233,16 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
           <Next.Card.Row>
             <Next.Block>
               <Next.Block>
-                <Next.Field.TriggerIcon icon='ph--calendar--regular' />
+                <Next.Icon icon='ph--calendar--regular' />
               </Next.Block>
             </Next.Block>
             <div className={fieldClasses}>
               <div className='grow'>
-                <Next.Field.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
+                <Next.DateInput
+                  type='datetime-local'
+                  value={toDateTimeInput(data.endDate)}
+                  onValueChange={handleEndDateTimeChange}
+                />
               </div>
               <div className={trailingClasses}>
                 <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
