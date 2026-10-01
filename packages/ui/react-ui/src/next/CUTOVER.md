@@ -1,10 +1,198 @@
 # Next cut-over: codemods applied (Phase C step 1)
 
-Generated 2026-10-01 on the cut-over branch (draft PR against `claude/react-ui-next-design-4db6eb`). This step applies
+Step 1 generated 2026-10-01 on the cut-over branch (draft PR against `claude/react-ui-next-design-4db6eb`). This step applies
 the Phase B codemods for real and measures what breaks; no residue is hand-fixed, the current components are not
 deleted and `@dxos/react-ui` still exports them by default. Plan: [AUDIT.md](AUDIT.md) §7.
 
-## What ran
+## Status (step 2: codemod fixes, batch 1)
+
+Batch 1 (UI libraries) type-checks clean: `tsc -b` over every `packages/ui/*` project reports no errors. Across the
+repo, type errors went from 1,168 to 403 (codemod rules and batch 1 by hand).
+
+| Batch                                     | After step 1 | After step 2 | State                                       |
+| ----------------------------------------- | -----------: | -----------: | ------------------------------------------- |
+| 1 UI libraries                            |          374 |            0 | done; residue that compiles is listed below |
+| 2 Shell / SDK / devtools / common         |          177 |          112 | to do                                       |
+| 3 Plugins                                 |          415 |          203 | to do                                       |
+| 4 Plugins (inbox, space, assistant, deck) |          188 |           84 | to do                                       |
+| 5 Apps                                    |           14 |            4 | to do                                       |
+
+### Verification
+
+- `tsc -b` over every `packages/ui/*` project: no errors. `oxlint` and `oxfmt` clean on every file the branch changed.
+- `tools/codemorph`: 66 tests pass.
+- Storybook vitest project, one package at a time, every `packages/ui/*` package with stories: 42 packages, 1,228
+  tests. One failure, `react-ui` Button `Test` (a `hover` timeout under load), passes when rerun alone: a flake.
+
+### Codemod changes (each rerun of `renames` is its own commit)
+
+- **Defects fixed:** a part promoted out of an aliased namespace keeps a binding; a `Field` control whose children open
+  with text; computed handlers are parenthesised before a call; the i18n `type Label` stays on the current entry; a
+  current part with no Next counterpart (the current `Tree`) keeps `density`; `Tree` stays on the current entry
+  (its render props have no Next counterpart).
+- **New rules:** Select and Listbox `items` from their Items (static or one `.map`); Select `value` → `[value]` and
+  `onValueChange` details; `Select.Item value` + `ItemText` → `item`; `Menu.Item` icon + label children → `item`;
+  `onOpenChange` details on Popover, Menu, Dialog, AlertDialog, HoverCard, Collapsible, Tour, FloatingPanel;
+  Checkbox and Switch `onCheckedChange` details; Content `side`/`align`/`sideOffset`/`collisionPadding` → Root
+  `positioning`; Popover `onOpenAutoFocus` preventDefault → Root `autoFocus={false}`; `Card.Root fullWidth`,
+  `ScrollArea.Root thin`/`centered` dropped (`padding` reported); `ScrollContainer.Content thin` → `width`;
+  `Card.Block end` → `Block rail='end'`; `Card.Poster image` → `src`; `ToggleGroup` → `ToggleGroup.Root`;
+  `DragHandle testId` → `data-testid`; SystemButton `active` → `pressed`/`expanded`; Button `asChild` around a popup
+  Trigger unwrapped; Button `title` + Icon child → icon-only Button; `Menu.Root modal` and `Select.Trigger variant`
+  dropped; a number input with an `onChange` stays a native `Input type='number'`.
+- **Reruns exclude** the files written against Next before the cut-over (their Select and popup handlers already take
+  details) and the superseded current implementations below.
+
+### Next theme CSS is global
+
+Next components style through `.nx-*` rules that ship separately (`@dxos/react-ui/next/theme.css`); only the pilots
+imported them. The shared storybook preview and Composer's entry points (app, devtools and reset pages, the crx root)
+now import them, so every converted surface renders styled. Without it, storybook play tests that measure layout
+failed: an unstyled ScrollArea viewport does not scroll, so virtualised lists (feed, timeline, mosaic) mounted every
+row, and the feed and chat thread hit React's update-depth limit tearing them down. The per-file imports in the
+pilots are now redundant.
+
+### Next additions (each with a story)
+
+- `@dxos/react-ui/next` exports the types consumers' declarations name (`ButtonProps`, `ButtonVariantProps`,
+  `TooltipSide`, `ComboboxOption`, …); this removed the TS2883 cascade that dropped `react-ui-mosaic`'s exports.
+- `Button iconClassNames` styles the leading icon (the current Button's `iconClassNames`; 20+ callers).
+- `Icon spin` spinners share one phase (the current Icon's `synchronized`).
+- `Dialog.Content placement='end'` and `scrim={false}`: a docked, non-modal dialog (ChatDialog).
+
+### Superseded current implementations
+
+`react-ui-list` (current Listbox, OrderedList, Tree, Combobox), `react-ui-menu` (current ActionMenu, ActionToolbar,
+`types.ts`) and `react-ui-form` (`src/components`) each have a Next counterpart in their `/next` entry that every
+consumer now imports. The codemods had rewritten their internals onto Next parts; they are restored to their
+pre-cut-over source and stay on the current react-ui until step 3 deletes them, rather than being ported twice.
+
+### Blocked or open
+
+- **The current Tree (7 consumers):** devtools ObjectsTree, plugin-debug, plugin-github, plugin-navtree,
+  plugin-sandbox, react-ui-task TaskList, react-ui-trace ProcessTree. Next Tree composes `Root`/`Content`/`Item`;
+  TaskList and ProcessTree are built on the current Tree's `renderColumns`/`renderHeading`/`gridTemplateColumns`.
+  They keep the current Tree (and TaskList the current headless Listbox) until each is recomposed.
+- **Residue that compiles (batch 1):** `Flex`/`Grid` in `ui-template`'s layout DSL (its gap/align vocabulary needs a
+  Next mapping) and two stories; `useThemeContext().tx` for the editor's custom slash menu and the HtmlViewer test
+  harness; `ElevationProvider`/`useElevationContext` (EditorToolbar, dnd ResizeHandle) → `level`;
+  `ThemeProvider`/`defaultTx` (providers, decided in step 3).
+
+### Remaining type errors (batches 2–5)
+
+Ordered by dependency depth within each batch.
+
+#### Remaining: batch 2 Shell / SDK / devtools / common
+
+| Package                   | Depth | Type errors | Files | Top error kinds                                                                                     |
+| ------------------------- | ----: | ----------: | ----: | --------------------------------------------------------------------------------------------------- |
+| `@dxos/storybook-utils`   |    12 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                       |
+| `@dxos/app-graph`         |    26 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                       |
+| `@dxos/shell`             |    29 |          67 |    24 | TS2322 prop/type mismatch (29), TS2339 missing property/part (25), TS2741 missing required prop (8) |
+| `@dxos/app-toolkit`       |    30 |           7 |     4 | TS2322 prop/type mismatch (5), TS2741 missing required prop (1), TS2339 missing property/part (1)   |
+| `@dxos/stories-lens`      |    33 |           3 |     2 | TS2322 prop/type mismatch (3)                                                                       |
+| `@dxos/devtools`          |    34 |          27 |    14 | TS2322 prop/type mismatch (19), TS2345 argument type (3), TS2741 missing required prop (2)          |
+| `@dxos/storybook-testing` |    40 |           2 |     2 | TS2322 prop/type mismatch (1), TS2741 missing required prop (1)                                     |
+| `@dxos/examples`          |    42 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                       |
+| `@dxos/stories-assistant` |    51 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                       |
+
+#### Remaining: batch 3 Plugins
+
+| Package                   | Depth | Type errors | Files | Top error kinds                                                                                |
+| ------------------------- | ----: | ----------: | ----: | ---------------------------------------------------------------------------------------------- |
+| `@dxos/plugin-theme`      |    31 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-attention`  |    32 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                  |
+| `@dxos/plugin-testing`    |    34 |           6 |     1 | TS2322 prop/type mismatch (4), TS2339 missing property/part (2)                                |
+| `@dxos/plugin-client`     |    36 |           9 |     5 | TS2322 prop/type mismatch (5), TS2741 missing required prop (4)                                |
+| `@dxos/plugin-calls`      |    37 |          14 |     2 | TS2741 missing required prop (7), TS2322 prop/type mismatch (5), TS2344 type constraint (2)    |
+| `@dxos/plugin-navtree`    |    37 |          13 |     7 | TS2322 prop/type mismatch (9), TS2339 missing property/part (2), TS2344 type constraint (1)    |
+| `@dxos/plugin-registry`   |    37 |          12 |     4 | TS2322 prop/type mismatch (8), TS2722 (2), TS18048 (2)                                         |
+| `@dxos/plugin-mobile`     |    37 |           7 |     3 | TS2339 missing property/part (6), TS2322 prop/type mismatch (1)                                |
+| `@dxos/plugin-preview`    |    37 |           3 |     3 | TS2322 prop/type mismatch (2), TS2739 missing required props (1)                               |
+| `@dxos/plugin-search`     |    37 |           2 |     1 | TS2741 missing required prop (1), TS2339 missing property/part (1)                             |
+| `@dxos/plugin-status-bar` |    37 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-progress`   |    38 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-support`    |    39 |          13 |     3 | TS2741 missing required prop (7), TS2322 prop/type mismatch (3), TS2345 argument type (2)      |
+| `@dxos/plugin-code`       |    39 |           2 |     1 | TS2322 prop/type mismatch (1), TS7006 implicit any param (1)                                   |
+| `@dxos/plugin-explorer`   |    39 |           2 |     2 | TS2322 prop/type mismatch (2)                                                                  |
+| `@dxos/plugin-zen`        |    39 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                  |
+| `@dxos/plugin-kanban`     |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-library`    |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-sequencer`  |    39 |           1 |     1 | TS2741 missing required prop (1)                                                               |
+| `@dxos/plugin-spacetime`  |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-table`      |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-terra`      |    39 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-chess`      |    40 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-tldraw`     |    40 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-markdown`   |    41 |           5 |     4 | TS2322 prop/type mismatch (3), TS2739 missing required props (2)                               |
+| `@dxos/plugin-stack`      |    42 |           8 |     2 | TS2741 missing required prop (7), TS2344 type constraint (1)                                   |
+| `@dxos/plugin-board`      |    42 |           4 |     1 | TS2339 missing property/part (4)                                                               |
+| `@dxos/plugin-review`     |    42 |           3 |     3 | TS2322 prop/type mismatch (2), TS2339 missing property/part (1)                                |
+| `@dxos/plugin-video`      |    42 |           2 |     1 | TS2339 missing property/part (2)                                                               |
+| `@dxos/plugin-routine`    |    43 |          19 |     4 | TS2322 prop/type mismatch (7), TS2339 missing property/part (4), TS7006 implicit any param (4) |
+| `@dxos/plugin-sheet`      |    43 |           4 |     1 | TS2741 missing required prop (3), TS2322 prop/type mismatch (1)                                |
+| `@dxos/plugin-commerce`   |    43 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-connector`  |    44 |           3 |     2 | TS2741 missing required prop (2), TS2339 missing property/part (1)                             |
+| `@dxos/plugin-magazine`   |    44 |           2 |     2 | TS2322 prop/type mismatch (2)                                                                  |
+| `@dxos/plugin-github`     |    45 |           5 |     3 | TS2322 prop/type mismatch (4), TS2741 missing required prop (1)                                |
+| `@dxos/plugin-blogger`    |    45 |           2 |     1 | TS2322 prop/type mismatch (2)                                                                  |
+| `@dxos/plugin-ibkr`       |    45 |           2 |     2 | TS2322 prop/type mismatch (1), TS2554 argument count (1)                                       |
+| `@dxos/plugin-pipeline`   |    46 |           3 |     1 | TS2339 missing property/part (2), TS2322 prop/type mismatch (1)                                |
+| `@dxos/plugin-trip`       |    46 |           3 |     2 | TS2322 prop/type mismatch (2), TS2339 missing property/part (1)                                |
+| `@dxos/plugin-meeting`    |    46 |           1 |     1 | TS2741 missing required prop (1)                                                               |
+| `@dxos/plugin-tasks`      |    46 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-onboarding` |    48 |          14 |     1 | TS7006 implicit any param (8), TS2339 missing property/part (3), TS2322 prop/type mismatch (2) |
+| `@dxos/plugin-projects`   |    48 |           3 |     3 | TS2322 prop/type mismatch (3)                                                                  |
+| `@dxos/plugin-script`     |    48 |           1 |     1 | TS2322 prop/type mismatch (1)                                                                  |
+| `@dxos/plugin-studio`     |    49 |           6 |     4 | TS2322 prop/type mismatch (6)                                                                  |
+| `@dxos/plugin-sandbox`    |    49 |           2 |     2 | TS2322 prop/type mismatch (2)                                                                  |
+| `@dxos/plugin-debug`      |    50 |           9 |     6 | TS2322 prop/type mismatch (7), TS2344 type constraint (1), TS2741 missing required prop (1)    |
+| `@dxos/plugin-heygen`     |    50 |           2 |     1 | TS2322 prop/type mismatch (1), TS7006 implicit any param (1)                                   |
+
+#### Remaining: batch 4 Plugins (isolated)
+
+| Package                  | Depth | Type errors | Files | Top error kinds                                                                                 |
+| ------------------------ | ----: | ----------: | ----: | ----------------------------------------------------------------------------------------------- |
+| `@dxos/plugin-deck`      |    36 |          22 |     8 | TS2322 prop/type mismatch (13), TS2339 missing property/part (7), TS7006 implicit any param (1) |
+| `@dxos/plugin-space`     |    38 |          19 |    11 | TS2322 prop/type mismatch (10), TS2339 missing property/part (5), TS18048 (2)                   |
+| `@dxos/plugin-inbox`     |    45 |          15 |     7 | TS2322 prop/type mismatch (6), TS2339 missing property/part (5), TS2532 (1)                     |
+| `@dxos/plugin-assistant` |    47 |          28 |     9 | TS2322 prop/type mismatch (16), TS2339 missing property/part (4), TS18048 (3)                   |
+
+#### Remaining: batch 5 Apps
+
+| Package               | Depth | Type errors | Files | Top error kinds                                                 |
+| --------------------- | ----: | ----------: | ----: | --------------------------------------------------------------- |
+| `@dxos/testbench-app` |    35 |           4 |     2 | TS2322 prop/type mismatch (3), TS2741 missing required prop (1) |
+
+#### Remaining type errors by kind
+
+| Code    | Kind                   | Count |
+| ------- | ---------------------- | ----: |
+| TS2322  | prop/type mismatch     |   214 |
+| TS2339  | missing property/part  |    78 |
+| TS2741  | missing required prop  |    53 |
+| TS7006  | implicit any param     |    19 |
+| TS18048 |                        |     7 |
+| TS2345  | argument type          |     6 |
+| TS2344  | type constraint        |     5 |
+| TS2722  |                        |     4 |
+| TS2739  | missing required props |     4 |
+| TS2353  | unknown object prop    |     2 |
+| TS7053  | implicit any index     |     2 |
+| TS2554  | argument count         |     2 |
+| TS2312  |                        |     1 |
+| TS2352  | unsafe conversion      |     1 |
+| TS2315  |                        |     1 |
+| TS2367  | no-overlap comparison  |     1 |
+| TS2558  | type argument count    |     1 |
+| TS7031  | implicit any binding   |     1 |
+| TS2532  |                        |     1 |
+
+## Step 1 record
+
+What follows is the step-1 measurement (codemods applied, nothing fixed by hand), kept for comparison.
+
+### What ran
 
 1. `plugins: restore the Next pilots for the cut-over` — plugin-registry `PluginItem`, `PluginList` (+ story),
    `BaseRegistryArticle`; plugin-sheet `RangeList` (+ story), taken from `2acfaabc26`, before the design branch
@@ -21,7 +209,7 @@ deleted and `@dxos/react-ui` still exports them by default. Plan: [AUDIT.md](AUD
    outside `packages/` and so out of scope. Each `cutover/residue-<name>.json` lists every changed file and every
    residue item (file, line, reason, snippet).
 
-## Conversions and residue
+### Conversions and residue
 
 | Transform    | Files changed | Conversions | Residue items | Residue files |
 | ------------ | ------------: | ----------: | ------------: | ------------: |
@@ -299,7 +487,7 @@ Distinct files changed: 997 in 142 packages. Residue: 751 items in 98 packages.
 | `imports`    | type ToolbarSeparatorProps is now a local alias of ComponentProps<typeof Toolbar.Separator>                       |     1 |
 | `imports`    | Toolbar.Button has no Next part (run renames first, or port by hand)                                              |     1 |
 
-## Codemod defects found by the real run
+### Codemod defects found by the real run
 
 1. **Fixed here** (`codemorph: fix the label fragment start …`): `Field.Checkbox` whose children open with text
    (`Disable{' '}<a>…</a>`) produced `label={<> '}` and oxfmt aborted the `renames` run. `JsxText.getStart()` already
@@ -317,7 +505,7 @@ Distinct files changed: 997 in 142 packages. Residue: 751 items in 98 packages.
    (`ButtonProps`, `ButtonVariantProps`, `TooltipSide`) from its public entry, or the composites need annotations;
    fixing the 14 `TS2883` sites first removes the cascade.
 
-## Type errors after the codemods
+### Type errors after the codemods
 
 ### Method
 
