@@ -52,7 +52,21 @@ export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typ
  * unmount rather than off the cancel button because escape, the overlay, and the close affordance
  * never reach a handler and each of them is a cancel.
  */
-export const ObjectFormDialog = ({
+/**
+ * The dialog's Content; its body (and the draft it creates) lives inside it, so closing the dialog unmounts the body and
+ * a dismissal settles the handle.
+ */
+export const ObjectFormDialog = (props: ObjectFormDialogProps) => (
+  // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
+  // the overlay would discard it with no undo. Escape and the close button remain.
+  <Next.Dialog.Content closeOnInteractOutside={false}>
+    <ObjectFormDialogBody {...props} />
+  </Next.Dialog.Content>
+);
+
+ObjectFormDialog.displayName = 'ObjectFormDialog';
+
+const ObjectFormDialogBody = ({
   target: initialTarget,
   typename: initialTypename,
   mode = 'draft',
@@ -337,9 +351,7 @@ export const ObjectFormDialog = ({
   );
 
   return (
-    // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
-    // the overlay would discard it with no undo. Escape and the close button remain.
-    <Next.Dialog.Content closeOnInteractOutside={false}>
+    <>
       <Next.Dialog.Header>
         <Next.Dialog.Title>
           {t('create-object-dialog.title', {
@@ -387,8 +399,6 @@ export const ObjectFormDialog = ({
           </Next.Dialog.Footer>
         )
       )}
-    </Next.Dialog.Content>
+    </>
   );
 };
-
-ObjectFormDialog.displayName = 'ObjectFormDialog';
