@@ -31,6 +31,17 @@
     color: var(--color-hover-fg);
   }
 
+  /* Caret only: a block square, the trailing disclosure of a list row, with a control's hover fill. */
+  .nx-collapsible-trigger[data-caret-only] {
+    justify-content: center;
+    width: var(--nx-block-size);
+    height: var(--nx-block-size);
+    color: inherit;
+  }
+  .nx-collapsible-trigger[data-caret-only]:hover {
+    background: var(--color-hover-surface);
+  }
+
   .nx-collapsible-indicator {
     display: grid;
     place-items: center;

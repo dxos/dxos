@@ -129,6 +129,12 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
               <Next.Menu.Item item={{ value: 'link', label: 'Copy link' }} />
             </Next.Menu.Content>
           </Next.Menu.Sub>
+          <Next.Menu.Sub>
+            <Next.Menu.TriggerItem item={{ label: 'Export', icon: 'ph--export--regular' }} disabled />
+            <Next.Menu.Content>
+              <Next.Menu.Item item={{ value: 'pdf', label: 'PDF' }} />
+            </Next.Menu.Content>
+          </Next.Menu.Sub>
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
@@ -171,7 +177,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         open={anchored}
         onOpenChange={({ open }) => setAnchored(open)}
         onSelect={({ value }) => setSelected(value)}
-        positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
+        positioning={Next.useVirtualAnchor(anchor)}
       >
         <Next.Menu.Content arrow data-testid={`anchored-${size}`}>
           <Next.Menu.Item item={{ value: 'pin', label: 'Pin' }} />
@@ -292,7 +298,7 @@ export const Test: Story = {
     await expect(popupFrame(menu)).toHaveAttribute('data-size', 'md');
     await expect(menu).toHaveAttribute('data-scope', 'menu');
     await expect(within(menu).getByRole('group', { name: 'Edit' })).toBeInTheDocument();
-    await expect(within(menu).getAllByRole('menuitem')).toHaveLength(6);
+    await expect(within(menu).getAllByRole('menuitem')).toHaveLength(7);
     await expect(within(menu).getAllByRole('separator')).toHaveLength(3);
     await expect(within(menu).getByRole('menuitemcheckbox', { name: /Show grid/ })).toHaveAttribute(
       'aria-checked',
@@ -307,6 +313,13 @@ export const Test: Story = {
     const shareTrigger = within(menu).getByRole('menuitem', { name: 'Share' });
     await expect(shareTrigger.querySelector('[data-part="item-text"]')).toHaveTextContent('Share');
     await expect(shareTrigger.querySelectorAll('.nx-icon')).toHaveLength(2);
+    // A disabled TriggerItem keeps its row but never opens its submenu.
+    const exportTrigger = within(menu).getByRole('menuitem', { name: 'Export' });
+    await expect(exportTrigger).toHaveAttribute('aria-disabled', 'true');
+    await expect(exportTrigger.querySelectorAll('.nx-icon')).toHaveLength(2);
+    await userEvent.click(exportTrigger);
+    await expect(within(canvasElement.ownerDocument.body).queryByRole('menuitem', { name: 'PDF' })).toBeNull();
+    await expect(menu).toBeVisible();
     // A composed row lays out like a default one: Delete's children put its own shortcut where Cut's data puts one.
     const deleteItem = within(menu).getByRole('menuitem', { name: /Delete/ });
     await expect(deleteItem.querySelector('[data-part="item-shortcut"]')).toHaveTextContent('⌫');

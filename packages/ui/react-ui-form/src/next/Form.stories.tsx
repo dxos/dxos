@@ -137,7 +137,7 @@ const TRAILING_ICONS = [
   '.nx-select-trigger [data-part="indicator"] svg',
   '.nx-input-adornment > .nx-button:last-child svg',
   '.nx-field-header > .nx-button svg',
-  '[role="listitem"] > .nx-button:last-child svg',
+  '[role="option"] > .nx-button:last-child svg',
   '[data-part="legend"] > .nx-button svg',
 ].join(', ');
 

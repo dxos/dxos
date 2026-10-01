@@ -1,0 +1,48 @@
+/*
+ * TextCrawl: a one-line window (the inherited `--nx-line-height`) over a column of lines, scrolled by translating the
+ * column `--nx-text-crawl-index` lines up. The component toggles `data-animate` so a jump (first paint, reset, the
+ * cyclic wrap) lands at once while an advance eases. The shown line is full strength and the rest dimmed, so a line
+ * brightens as it arrives.
+ */
+
+@layer dx-components {
+  .nx-text-crawl {
+    position: relative;
+    min-width: 0;
+    height: var(--nx-line-height);
+    overflow: hidden;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+
+  .nx-text-crawl-ribbon {
+    display: flex;
+    flex-direction: column;
+    transform: translateY(calc(var(--nx-text-crawl-index, 0) * -1 * var(--nx-line-height)));
+  }
+  .nx-text-crawl-ribbon[data-animate] {
+    transition: transform var(--nx-text-crawl-duration, 500ms) ease-in-out;
+  }
+
+  /* A block, not a flex line: on a flex line the text is an anonymous item and `text-overflow` never applies. */
+  .nx-text-crawl-line {
+    height: var(--nx-line-height);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.5;
+    /* A third of the scroll, so the arriving line is bright by the time it settles. */
+    transition: opacity calc(var(--nx-text-crawl-duration, 500ms) / 3);
+  }
+  .nx-text-crawl-line[data-active] {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-text-crawl-ribbon[data-animate],
+    .nx-text-crawl-line {
+      transition: none;
+    }
+  }
+}

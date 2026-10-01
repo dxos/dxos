@@ -85,14 +85,14 @@ export const Test: Story = {
     const canvas = within(canvasElement);
     const body = within(canvasElement.ownerDocument.body);
 
-    // 2. Each option is a list row whose disclosure shows its tag.
-    const list = canvas.getByRole('list', { name: 'Options' });
-    await expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+    // 2. Each option is a listbox row whose disclosure shows its tag.
+    const list = canvas.getByRole('listbox', { name: 'Options' });
+    await expect(within(list).getAllByRole('option')).toHaveLength(2);
     await expect(within(list).getByText('Alpha')).toBeVisible();
 
     // 3. Add appends an option opened for editing; typing names it.
     await userEvent.click(canvas.getByRole('button', { name: 'Add option' }));
-    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(3));
+    await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(3));
     const label = await canvas.findByRole('textbox', { name: 'Label' });
     await userEvent.type(label, 'Gamma');
     await waitFor(() => expect(readOptions(canvasElement)[2].title).toBe('Gamma'));

@@ -1,0 +1,97 @@
+/*
+ * Carousel: the root is a three-column grid (`min-content 1fr min-content`) whose first row holds PrevTrigger, the
+ * 16:9 ItemGroup and NextTrigger, so the triggers stay centred beside the slide; the IndicatorGroup and Caption sit in
+ * the middle column below, matching the slide's width. The first row stretches when the host gives the carousel a
+ * height and otherwise follows the slide. zag styles the track inline (snap, hidden scrollbar, slide width).
+ */
+
+@layer dx-components {
+  .nx-carousel {
+    display: grid;
+    grid-template-columns: min-content minmax(0, 1fr) min-content;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    min-width: 0;
+  }
+
+  .nx-carousel-item-group {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
+  .nx-carousel-item-group:focus {
+    outline: none;
+  }
+  /* An outline, not the inset ring: the slides fill the track and would paint over an inset shadow. */
+  .nx-carousel-item-group:focus-visible {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+
+  .nx-carousel-item {
+    position: relative;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--color-base-surface);
+  }
+
+  .nx-carousel-prev-trigger {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .nx-carousel-next-trigger {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .nx-carousel-indicator-group {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--nx-block-size);
+    overflow: hidden;
+  }
+
+  /* A dot centred in an icon-sized button: an outline ring, filled with the accent for the page in view. */
+  .nx-carousel-indicator {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--nx-icon-size);
+    height: var(--nx-icon-size);
+    padding: 0;
+    border-radius: 9999px;
+    color: var(--color-description);
+    cursor: pointer;
+  }
+  .nx-carousel-indicator::before {
+    content: '';
+    box-sizing: border-box;
+    width: 50%;
+    height: 50%;
+    border: 1.5px solid currentColor;
+    border-radius: 9999px;
+  }
+  .nx-carousel-indicator[data-current] {
+    color: var(--color-accent-bg);
+  }
+  .nx-carousel-indicator[data-current]::before {
+    background: currentColor;
+  }
+
+  .nx-carousel-caption {
+    grid-column: 2;
+    margin: 0;
+    text-align: center;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-description);
+  }
+}

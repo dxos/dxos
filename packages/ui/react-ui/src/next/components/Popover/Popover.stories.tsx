@@ -100,7 +100,7 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
       <Next.Popover.Root
         open={open}
         onOpenChange={({ open }) => setOpen(open)}
-        positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
+        positioning={Next.useVirtualAnchor(anchor)}
       >
         <Next.Popover.Content data-testid={`anchored-${size}`}>
           <Next.Popover.Description>Anchored to a span.</Next.Popover.Description>

@@ -80,59 +80,63 @@ export const SelectOptionField = ({
       <OrderedList.Root
         items={options ?? []}
         getId={(option) => option.id}
+        getLabel={(option) => option.title}
         onMove={handleMove}
         readonly={!!readonly}
-        expandedId={expandedId}
-        onExpandedChange={setExpandedId}
       >
         {({ items }) => (
           <OrderedList.Content scroll={false} gutter='inherit' aria-label={label}>
             {items.map((option) => (
-              <OrderedList.DetailItem
+              <OrderedList.Item
                 key={option.id}
                 id={option.id}
                 canDrag={!readonly}
+                open={expandedId === option.id}
+                onOpenChange={(open) => setExpandedId(open ? option.id : undefined)}
                 data-testid={`option-${option.id}`}
-                title={<Next.Tag hue={hues.find((hue) => hue === option.color)}>{option.title || '​'}</Next.Tag>}
-                trailing={
-                  !readonly && (
-                    <Next.Button
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--x--regular'
-                      label={t('select-option-delete.button')}
-                      onClick={() =>
-                        onValueChange(
-                          type,
-                          (options ?? []).filter((item) => item.id !== option.id),
-                        )
-                      }
-                    />
-                  )
-                }
               >
-                <Next.Container layout='row' gutter='none' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
-                  <Next.Field.Root>
-                    <Next.Field.Label>{t('select-option.label')}</Next.Field.Label>
-                    <Next.Input
-                      autoFocus={expandedId === option.id && option.title === ''}
-                      disabled={!!readonly}
-                      placeholder={t('select-option-label.placeholder')}
-                      value={option.title}
-                      onChange={(event) => update(option.id, { title: event.target.value })}
-                      onKeyDown={(event) => event.key === 'Enter' && setExpandedId(undefined)}
-                    />
-                  </Next.Field.Root>
-                  <Next.Field.Root>
-                    <Next.Field.Label>{t('select-option-color.label')}</Next.Field.Label>
-                    <HueSelect
-                      value={option.color}
-                      readonly={readonly}
-                      onValueChange={(color) => color && update(option.id, { color })}
-                    />
-                  </Next.Field.Root>
-                </Next.Container>
-              </OrderedList.DetailItem>
+                <OrderedList.DragHandle />
+                <OrderedList.ItemText>
+                  <Next.Tag hue={hues.find((hue) => hue === option.color)}>{option.title || '\u200b'}</Next.Tag>
+                </OrderedList.ItemText>
+                {!readonly && (
+                  <Next.Button
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--x--regular'
+                    label={t('select-option-delete.button')}
+                    onClick={() =>
+                      onValueChange(
+                        type,
+                        (options ?? []).filter((item) => item.id !== option.id),
+                      )
+                    }
+                  />
+                )}
+                <OrderedList.Detail>
+                  <Next.Container layout='row' gutter='none' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+                    <Next.Field.Root>
+                      <Next.Field.Label>{t('select-option.label')}</Next.Field.Label>
+                      <Next.Input
+                        autoFocus={expandedId === option.id && option.title === ''}
+                        disabled={!!readonly}
+                        placeholder={t('select-option-label.placeholder')}
+                        value={option.title}
+                        onChange={(event) => update(option.id, { title: event.target.value })}
+                        onKeyDown={(event) => event.key === 'Enter' && setExpandedId(undefined)}
+                      />
+                    </Next.Field.Root>
+                    <Next.Field.Root>
+                      <Next.Field.Label>{t('select-option-color.label')}</Next.Field.Label>
+                      <HueSelect
+                        value={option.color}
+                        readonly={readonly}
+                        onValueChange={(color) => color && update(option.id, { color })}
+                      />
+                    </Next.Field.Root>
+                  </Next.Container>
+                </OrderedList.Detail>
+              </OrderedList.Item>
             ))}
           </OrderedList.Content>
         )}

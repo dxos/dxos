@@ -38,6 +38,14 @@
       [content-end] calc(var(--nx-gutter) - var(--nx-scroll-reserve, 0px)) [full-end];
   }
 
+  /* A subgrid's tracks are its parent's, so only a template root can be narrowed. */
+  .nx-grid[data-width='document']:not([data-gutter='inherit']) {
+    width: 100%;
+    max-width: var(--spacing-document-max-width, 50rem);
+    margin-inline: auto;
+    justify-self: center;
+  }
+
   .nx-grid[data-gutter='inherit'] {
     grid-column: full;
     grid-template-columns: subgrid;
@@ -100,6 +108,31 @@
     grid-column-start: content-start;
   }
 
+  /*
+   * Span (`data-span`): a count extends the child from wherever it starts; `full` takes every content track. The row
+   * rules are repeated so they outrank the row's own `grid-column: auto`.
+   */
+  .nx-grid > [data-span] {
+    grid-column-end: span var(--nx-span, 1);
+  }
+  .nx-grid > [data-span='full'] {
+    grid-column: content;
+  }
+  .nx-grid[data-layout='row'] > [data-span]:not([data-rail]) {
+    grid-column-end: span var(--nx-span, 1);
+  }
+  .nx-grid[data-layout='row'] > [data-span='full']:not([data-rail]) {
+    grid-column: content;
+  }
+
+  /*
+   * A row cell sits in one track, so a subgrid there would carry none of the edge lines its children place against;
+   * the cell names its own instead, and anything inheriting inside it aligns within that column.
+   */
+  .nx-grid[data-layout='row'] > .nx-grid[data-gutter='inherit']:not([data-columns]) {
+    grid-template-columns: [full-start content-start] minmax(0, 1fr) [content-end full-end];
+  }
+
   /* In a stack a control has no row of its own, so the container pads it out to a block. */
   .nx-grid[data-layout='stack'] > .nx-control {
     margin-block: var(--nx-control-inset);
@@ -125,7 +158,8 @@
     .nx-grid > [data-rail] {
       display: none;
     }
-    .nx-grid[data-layout='row'] > :not([data-rail]) {
+    .nx-grid[data-layout='row'] > :not([data-rail]),
+    .nx-grid > [data-span][data-span]:not([data-rail]) {
       grid-column: content;
     }
   }

@@ -3,7 +3,7 @@
 //
 
 import { Collapsible as CollapsiblePrimitive } from '@ark-ui/react/collapsible';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useContext } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -11,6 +11,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { recipes } from '../../recipes.ts';
 import { containerAttributes } from '../Container/index.ts';
 import { Icon } from '../Icon/index.ts';
+import { RowContext } from '../Listbox/grid.ts';
 
 //
 // Root
@@ -32,20 +33,33 @@ type CollapsibleTriggerProps = ThemedClassName<CollapsiblePrimitive.TriggerProps
   icon?: string;
 };
 
-/** A block row: a caret that turns to point down when open, followed by the label. */
+/**
+ * A block row: a caret that turns to point down when open, followed by the label. Without children it is the caret
+ * alone, a block-sized square for a list row's trailing column, named by the row's `ItemText` unless given a label.
+ */
 const CollapsibleTrigger = forwardRef<HTMLButtonElement, CollapsibleTriggerProps>(
-  ({ classNames, icon = 'ph--caret-right--regular', children, ...props }, forwardedRef) => (
-    <CollapsiblePrimitive.Trigger
-      {...props}
-      className={mx(recipes.collapsibleTrigger(), classNames)}
-      ref={forwardedRef}
-    >
-      <CollapsiblePrimitive.Indicator className={recipes.collapsibleIndicator()}>
-        <Icon icon={icon} />
-      </CollapsiblePrimitive.Indicator>
-      {children}
-    </CollapsiblePrimitive.Trigger>
-  ),
+  ({ classNames, icon = 'ph--caret-right--regular', children, ...props }, forwardedRef) => {
+    const row = useContext(RowContext);
+    const caretOnly = children === undefined;
+    const labelledBy =
+      caretOnly && props['aria-label'] === undefined && props['aria-labelledby'] === undefined
+        ? row?.textId
+        : undefined;
+    return (
+      <CollapsiblePrimitive.Trigger
+        aria-labelledby={labelledBy}
+        {...props}
+        data-caret-only={caretOnly ? '' : undefined}
+        className={mx(recipes.collapsibleTrigger(), classNames)}
+        ref={forwardedRef}
+      >
+        <CollapsiblePrimitive.Indicator className={recipes.collapsibleIndicator()}>
+          <Icon icon={icon} />
+        </CollapsiblePrimitive.Indicator>
+        {children}
+      </CollapsiblePrimitive.Trigger>
+    );
+  },
 );
 
 CollapsibleTrigger.displayName = 'Next.Collapsible.Trigger';

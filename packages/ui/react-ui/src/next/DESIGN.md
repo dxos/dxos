@@ -74,6 +74,8 @@
    are fixed at build time, not swapped at runtime through context (unlike the current `tx()` theme functions).
    One theme therefore serves both bindings, provided they emit identical DOM (same elements, classes and `data-*`
    attributes); the shared recipes guarantee the classes, and a parity test should assert the rest.
+   The focus ring takes ui-theme's `--color-focus` (decided 2026-10-01): a slot of its own, orange today, rather than
+   `secondary` (an alias of green, which reads as success) or the brand primary it must stand out against.
 9. **ARIA.** Interactive roles and `aria-*` state come only from zag machines (`api.get*Props()`), so a role is
    claimed only by code that implements its keyboard contract. Layout parts (Container, Block, ScrollArea) carry no
    role by default; callers add landmark or `group` roles explicitly. Icons are `aria-hidden` unless given a label.
@@ -673,7 +675,7 @@ audit" (points 25–39, all accepted as recommended except where these rules say
    and compose it from parts (`ItemIcon`, `ItemText`, `ItemDescription`, `ItemIndicator`, any trailing control). No
    `icon`/`description`/`trailing` props, so each thing has one way to do it and `children` means the same in
    Listbox, Select, Combobox and Menu. `ItemDescription` exists only where the option type carries a description
-   (Listbox), since popup rows are one block tall; Menu adds `ItemShortcut`, which Ark lacks (rule 8), and its items
+   (Listbox, and Combobox, whose rows grow by a line for it; other popup rows are one block tall); Menu adds `ItemShortcut`, which Ark lacks (rule 8), and its items
    take `item` data (`MenuOption`) like the list composites'.
 8. **Ark names first.** A part Ark has takes Ark's name (`CloseTrigger`, `ItemIndicator`, `RadioItemGroup`,
    `TriggerItem`, `Fieldset`), so our `data-part`s and Ark's docs agree; DXOS names are only for parts Ark lacks
@@ -691,3 +693,17 @@ audit" (points 25–39, all accepted as recommended except where these rules say
     `Field.RequiredIndicator` is exported only for custom placement or a different mark.
 13. **Wrappers keep the base names.** A sibling package's wrapper (`@dxos/react-ui-list/next` `Listbox`) uses the
     wrapped composite's part names, so one vocabulary spans packages.
+
+## Text emphasis
+
+Decided 2026-10-01. Text colours rank content above interface: a field's value and secondary user data outrank the
+label that names the field.
+
+1. **Ranking now, on today's tokens.** Values and primary text use the base text colour; secondary content (subtitles,
+   URLs, counts, units) uses `--color-description`; interface text (field labels, help text, legends, placeholders)
+   uses `--color-subdued`, with help text one size below its label so the two stay distinct at the same colour.
+2. **Emphasis names, applied last.** When the current components are deleted, the text colours are renamed across the
+   whole codebase in one change to an emphasis scale: `--nx-text` (default), `--nx-text-muted` (today's description),
+   `--nx-text-subtle` (today's subdued). Names state emphasis, not use, so components pick a step and a new use needs
+   no new token; `primary`/`secondary` are avoided because `primary` already means the accent. Renaming earlier would
+   leave two schemes in use until the old components go.

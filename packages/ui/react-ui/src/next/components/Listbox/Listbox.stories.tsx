@@ -8,6 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { translations } from '#translations';
+
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
@@ -33,6 +35,23 @@ const LONG: Next.ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
   label: `Item ${index + 1}`,
 }));
 
+const TASKS: Next.ListboxOption[] = [
+  { value: 'report', label: 'Write report' },
+  { value: 'review', label: 'Review budget' },
+];
+
+const MANY: Next.ListboxOption[] = Array.from({ length: 1_000 }, (_, index) => ({
+  value: `row-${index + 1}`,
+  label: `Row ${index + 1}`,
+}));
+
+const FILES: Next.ListboxOption[] = [
+  { value: 'a', label: 'Annual plan', icon: 'ph--file--regular', description: '12 KB' },
+  { value: 'b', label: 'Budget', icon: 'ph--table--regular', description: '1.4 MB' },
+];
+
+const NONE: Next.ListboxOption[] = [];
+
 const RECENT: Next.ListboxOption[] = [
   { value: 'notes', label: 'Notes', icon: 'ph--file--regular' },
   { value: 'tasks', label: 'Tasks', icon: 'ph--file--regular' },
@@ -41,11 +60,13 @@ const RECENT: Next.ListboxOption[] = [
 /**
  * A single-selection list whose rows are composed from parts (icon, text, description, a trailing action and the
  * selection indicator), except Alice's default row; a grouped multiple-selection list; a long list that scrolls in a
- * fixed-height host; and a plain `role=list` with a current row.
+ * fixed-height host; a list with no selection and a current row; rows with controls (the grid keyboard); a windowed
+ * 1,000-row list; rows sharing Root `columns`; and an empty list.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [person, setPerson] = useState<string[]>(['alice']);
   const [tags, setTags] = useState<string[]>([]);
+  const [tasks, setTasks] = useState(TASKS);
   return (
     <>
       <Next.Listbox.Root items={PEOPLE} value={person} onValueChange={setPerson} data-testid={`people-${size}`}>
@@ -110,9 +131,61 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       <Next.Listbox.Root items={RECENT} selectionMode='none'>
         <Next.Listbox.Content aria-label='Recent' data-testid={`recent-${size}`}>
           {RECENT.map((item) => (
-            <Next.Listbox.Item key={item.value} item={item} current={item.value === 'tasks'} />
+            <Next.Listbox.Item key={item.value} item={item} current={item.value === 'tasks'}>
+              <Next.Listbox.ItemIcon hue='amber' />
+              <Next.Listbox.ItemText />
+            </Next.Listbox.Item>
           ))}
         </Next.Listbox.Content>
+      </Next.Listbox.Root>
+      <Next.Listbox.Root items={tasks} selectionMode='none'>
+        <Next.Listbox.Label>Tasks</Next.Listbox.Label>
+        <Next.Listbox.Content data-testid={`tasks-${size}`}>
+          {tasks.map((item) => (
+            <Next.Listbox.Item key={item.value} item={item} data-testid={`task-${item.value}-${size}`}>
+              <Next.Checkbox aria-label={`Done ${item.label}`} />
+              <Next.Listbox.ItemText />
+              <Next.Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
+              <Next.SystemButton.Remove
+                onClick={() => setTasks((tasks) => tasks.filter((task) => task.value !== item.value))}
+              />
+            </Next.Listbox.Item>
+          ))}
+        </Next.Listbox.Content>
+        <Next.Listbox.Empty icon='ph--check-circle--regular'>All done</Next.Listbox.Empty>
+      </Next.Listbox.Root>
+      <div className='h-40'>
+        <Next.Listbox.Root items={MANY} virtual='fixed'>
+          <Next.Listbox.Content aria-label='Many' data-testid={`many-${size}`}>
+            {MANY.map((item) => (
+              <Next.Listbox.Item key={item.value} item={item} />
+            ))}
+          </Next.Listbox.Content>
+        </Next.Listbox.Root>
+      </div>
+      <div className='h-40'>
+        <Next.Listbox.Root items={LONG} virtual='variable'>
+          <Next.Listbox.Content aria-label='Variable' data-testid={`variable-${size}`}>
+            {LONG.map((item) => (
+              <Next.Listbox.Item key={item.value} item={item} />
+            ))}
+          </Next.Listbox.Content>
+        </Next.Listbox.Root>
+      </div>
+      <Next.Listbox.Root items={FILES} columns='var(--nx-block-size) minmax(0, 1fr) 5rem'>
+        <Next.Listbox.Content aria-label='Files'>
+          {FILES.map((item) => (
+            <Next.Listbox.Item key={item.value} item={item} data-testid={`file-${item.value}-${size}`}>
+              <Next.Listbox.ItemIcon />
+              <Next.Listbox.ItemText />
+              <Next.Listbox.ItemDescription />
+            </Next.Listbox.Item>
+          ))}
+        </Next.Listbox.Content>
+      </Next.Listbox.Root>
+      <Next.Listbox.Root items={NONE}>
+        <Next.Listbox.Content aria-label='Nothing' />
+        <Next.Listbox.Empty data-testid={`empty-${size}`} />
       </Next.Listbox.Root>
     </>
   );
@@ -124,7 +197,7 @@ const meta = {
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'centered', translations },
 } satisfies Meta<SizeArgs>;
 
 export default meta;
@@ -133,7 +206,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-const highlighted = (listbox: HTMLElement) => listbox.querySelector('[data-highlighted]')?.textContent;
+// The active descendant, which zag marks `data-highlighted` only while focus is visible (a ref it does not re-render on).
+const highlighted = (listbox: HTMLElement) =>
+  listbox.ownerDocument.getElementById(listbox.getAttribute('aria-activedescendant') ?? '')?.textContent;
 
 /**
  * Rows are one block tall at every size (a description adds a line), with the icon in a block-sized cell so every
@@ -141,7 +216,8 @@ const highlighted = (listbox: HTMLElement) => listbox.querySelector('[data-highl
  * are `group`s named by their label. The listbox is named by its label, its rows are `option`s reporting `aria-selected`, and
  * a multiple list is `aria-multiselectable`. The keyboard moves the highlight (skipping the disabled row), Enter selects
  * and typeahead jumps to a match; clicks toggle in a multiple list. A long list scrolls in a thin ScrollArea keeping the
- * highlight in view. `selectionMode='none'` is a plain `list` of `listitem`s, with `aria-current` on the current row.
+ * highlight in view. `selectionMode='none'` keeps the machine and selects nothing; the grid keyboard enters rows; windowed,
+ * deferred and column-sharing lists; Empty.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -256,14 +332,95 @@ export const Test: Story = {
       await expect(item.getBoundingClientRect().bottom).toBeLessThanOrEqual(panel.getBoundingClientRect().bottom + 0.5);
     });
 
-    // A plain list: no listbox semantics, and a current row.
-    const recent = md.getByRole('list', { name: 'Recent' });
-    await expect(within(recent).getAllByRole('listitem')).toHaveLength(RECENT.length);
-    await expect(within(recent).queryByRole('option')).toBeNull();
-    const current = within(recent).getByRole('listitem', { current: true });
+    // No selection: the list still runs the listbox machine (navigation, typeahead), selects nothing, and shows the
+    // current row; an ItemIcon forwards its hue.
+    const recent = md.getByRole('listbox', { name: 'Recent' });
+    await expect(within(recent).getAllByRole('option')).toHaveLength(RECENT.length);
+    const current = within(recent).getByRole('option', { current: true });
     await expect(current).toHaveTextContent('Tasks');
     await expect(getComputedStyle(current).backgroundColor).not.toBe(
-      getComputedStyle(within(recent).getAllByRole('listitem')[0]).backgroundColor,
+      getComputedStyle(within(recent).getAllByRole('option')[0]).backgroundColor,
     );
+    await expect(current.querySelector('[data-part="item-icon"] svg')).toHaveAttribute('data-hue', 'amber');
+    await userEvent.click(within(recent).getByRole('option', { name: 'Notes' }));
+    await expect(within(recent).queryByRole('option', { selected: true })).toBeNull();
+
+    // The grid keyboard: row controls are out of the tab order; ArrowRight enters the highlighted row, Tab cycles its
+    // controls, ArrowLeft and Escape return to the list. Remove is named by the row's text.
+    const tasks = md.getByRole('listbox', { name: 'Tasks' });
+    const report = within(tasks).getByRole('option', { name: /Write report/ });
+    const controls = [
+      within(report).getByRole('checkbox', { name: 'Done Write report' }),
+      within(report).getByRole('button', { name: 'Edit Write report' }),
+      within(report).getByRole('button', { name: 'Delete Write report' }),
+    ];
+    for (const control of controls) {
+      await expect(control).toHaveAttribute('tabindex', '-1');
+    }
+    tasks.focus();
+    await userEvent.keyboard('{Home}');
+    await waitFor(() => expect(highlighted(tasks)).toContain('Write report'));
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(controls[0]).toHaveFocus());
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(controls[1]).toHaveFocus());
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(controls[2]).toHaveFocus());
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(controls[0]).toHaveFocus());
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    await waitFor(() => expect(controls[2]).toHaveFocus());
+    // Arrows inside a row belong to its control, not the list.
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(highlighted(tasks)).toContain('Write report');
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(tasks).toHaveFocus());
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+    await waitFor(() => expect(within(tasks).getByRole('checkbox', { name: 'Done Review budget' })).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(tasks).toHaveFocus());
+    // A click on a control acts on the control and makes its row current, without taking focus to the list.
+    await userEvent.click(controls[1]);
+    await waitFor(() => expect(controls[1]).toHaveFocus());
+    await waitFor(() => expect(highlighted(tasks)).toContain('Write report'));
+    // Removing every row shows the Empty part.
+    await expect(md.queryByText('All done')).toBeNull();
+    await userEvent.click(within(tasks).getByRole('button', { name: 'Delete Write report' }));
+    await userEvent.click(within(tasks).getByRole('button', { name: 'Delete Review budget' }));
+    await waitFor(() => expect(md.getByText('All done')).toBeVisible());
+
+    // `virtual='fixed'`: a 1,000-row list mounts only a window of rows between spacers, and the keyboard reaches the
+    // last row, which mounts in view.
+    const many = md.getByRole('listbox', { name: 'Many' });
+    await expect(within(many).getAllByRole('option').length).toBeLessThan(60);
+    await expect(many.scrollHeight).toBeGreaterThan(MANY.length * GEOMETRY.md.block * 0.9);
+    many.focus();
+    await userEvent.keyboard('{End}');
+    await waitFor(async () => {
+      const last = within(many).getByRole('option', { name: 'Row 1000' });
+      await expect(last).toHaveAttribute('data-highlighted');
+      await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(many.getBoundingClientRect().bottom + 0.5);
+    });
+    await expect(within(many).queryByRole('option', { name: 'Row 1' })).toBeNull();
+    await userEvent.keyboard('{Home}');
+    await waitFor(() =>
+      expect(within(many).getByRole('option', { name: 'Row 1' })).toHaveAttribute('data-highlighted'),
+    );
+
+    // `virtual='variable'`: every row mounts and defers its layout off screen.
+    const variable = md.getByRole('listbox', { name: 'Variable' });
+    await expect(within(variable).getAllByRole('option')).toHaveLength(LONG.length);
+    await expect(getComputedStyle(within(variable).getAllByRole('option')[0]).contentVisibility).toBe('auto');
+
+    // Root `columns`: rows are subgrids of the shared tracks, so every row's third cell starts at the same x.
+    const third = (value: string) =>
+      byTestId(canvasElement, `file-${value}-md`)
+        .querySelector('[data-part="item-description"]')
+        ?.getBoundingClientRect();
+    await expect(third('a')?.left).toBeCloseTo(third('b')?.left ?? 0, 0);
+    await expect(third('a')?.width).toBeCloseTo(80, 0);
+
+    // An empty list shows its Empty part with the default text.
+    await expect(byTestId(canvasElement, 'empty-md')).toHaveTextContent('No items');
   },
 };

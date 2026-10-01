@@ -9,7 +9,7 @@ import { createStaticTreeModel } from '../../components/Tree/static-tree-model.t
 import { type TreeModel } from '../../components/Tree/TreeContext.ts';
 import { createCollection, createTreeWalkAtom } from './tree-collection.ts';
 
-type Node = { id: string; items?: Node[] };
+type Node = { id: string; group?: boolean; items?: Node[] };
 
 /** `roots` branches of `leaves` leaves each. */
 const wide = (roots: number, leaves: number): Node => ({
@@ -75,5 +75,31 @@ describe('createTreeWalkAtom', () => {
     expect(collection.getIndexPath(walk.rows[4_999].value)).toEqual([49, 98]);
     // eslint-disable-next-line no-console
     console.log(`[tree-bench] walk+collection of 5000 rows: ${walked.toFixed(1)}ms`);
+  });
+
+  test('group headers are rows but not collection nodes; their items join the parent at its level', () => {
+    const registry = Registry.make();
+    const tree: Node = {
+      id: 'root',
+      items: [
+        { id: 'g1', group: true, items: [{ id: 'a' }, { id: 'b', items: [{ id: 'b0' }] }] },
+        { id: 'g2', group: true, items: [] },
+        { id: 'c' },
+      ],
+    };
+    const model = createStaticTreeModel(tree, {
+      getChildren: (item) => item.items,
+      getProps: (item) => (item.group ? { disposition: 'group' } : {}),
+    });
+    const walk = registry.get(createTreeWalkAtom(model, model.rootId, ['tree']));
+
+    expect(walk.rows.map((row) => row.id)).toEqual(['g1', 'a', 'b', 'c']);
+    expect(walk.rows[0].group).toBe(true);
+    expect(walk.root.children?.map((node) => node.id)).toEqual(['a', 'b', 'c']);
+    expect(walk.root.children?.map((node) => node.indexPath)).toEqual([[0], [1], [2]]);
+    expect(walk.rows[1].depth).toBe(1);
+    expect(walk.root.children?.map((node) => node.last)).toEqual([false, false, true]);
+    expect(walk.byValue.has(walk.rows[0].value)).toBe(false);
+    expect(walk.rowIndex.get(walk.rows[3].value)).toBe(3);
   });
 });

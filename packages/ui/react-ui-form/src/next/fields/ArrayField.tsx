@@ -109,11 +109,18 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
           />
         )}
       </Next.Field.Header>
-      <OrderedList.Root items={items} getId={(item) => item.id} onMove={handleMove} readonly={!editable}>
+      <OrderedList.Root
+        items={items}
+        getId={(item) => item.id}
+        getLabel={(item) => `${label} ${item.index + 1}`}
+        columns={columns}
+        onMove={handleMove}
+        readonly={!editable}
+      >
         {({ items }) => (
           <OrderedList.Content scroll={false} gutter='inherit' gap='sm' aria-label={label}>
             {items.map((item) => (
-              <OrderedList.Item key={item.id} id={item.id} columns={columns} canDrag={ordered && editable}>
+              <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
                 {ordered && editable && <OrderedList.DragHandle />}
                 {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
                 <Next.Container gutter='none'>

@@ -6,7 +6,7 @@
 @layer dx-components {
   /* Focus ring: its own themable variables rather than ui-theme's ring, so a theme can recolour it (decision 8). */
   :root {
-    --nx-focus-ring-color: var(--color-orange-500, oklch(70.5% 0.213 47.604));
+    --nx-focus-ring-color: var(--color-focus, oklch(70.5% 0.213 47.604));
     --nx-focus-ring-width: 2px;
   }
   .nx-focus-ring:focus {
@@ -40,14 +40,54 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .nx-typography[data-lines] {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--nx-lines);
+    min-width: 0;
+    overflow: hidden;
+  }
   .nx-typography[data-tone='description'] {
     color: var(--color-description);
+  }
+  .nx-typography[data-tone='subdued'] {
+    color: var(--color-subdued);
+  }
+  .nx-typography[data-mono] {
+    font-family: var(--font-mono, ui-monospace, monospace);
   }
 
   .nx-icon {
     flex-shrink: 0;
     width: var(--nx-icon-size);
     height: var(--nx-icon-size);
+  }
+  .nx-icon[data-tone='description'] {
+    color: var(--color-description);
+  }
+  .nx-icon[data-tone='subdued'] {
+    color: var(--color-subdued);
+  }
+  /* A per-instance size outranks the scope's (and a control's) icon size. */
+  .nx-icon.nx-icon[data-icon-size='xs'] {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .nx-icon.nx-icon[data-icon-size='sm'] {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  .nx-icon.nx-icon[data-icon-size='md'] {
+    width: 1rem;
+    height: 1rem;
+  }
+  .nx-icon.nx-icon[data-icon-size='lg'] {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .nx-icon.nx-icon[data-icon-size='xl'] {
+    width: 1.5rem;
+    height: 1.5rem;
   }
   /* A busy indicator (e.g. a loading Select's spinner); still under `prefers-reduced-motion`. */
   .nx-icon[data-spin] {
@@ -88,12 +128,12 @@
     min-width: 0;
     background: var(--color-input-surface);
   }
-  .nx-input[data-variant='mono'],
-  [data-variant='mono'] > .nx-input-field {
-    font-family: var(--font-mono);
-  }
   .nx-input[data-variant='subdued'] {
     background: transparent;
+  }
+  /* Keys, ids and code; an adorned row's input inherits the font. */
+  .nx-input[data-variant='mono'] {
+    font-family: var(--font-mono, ui-monospace, monospace);
   }
 
   /*
@@ -109,8 +149,17 @@
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
     outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
-  .nx-input-row:has(> .nx-input-field:disabled) {
+  .nx-input-row:is([data-disabled], :has(> .nx-input-field:disabled)) {
     opacity: 0.5;
+  }
+  /* A ControlFrame's own content (an editor, a custom control) fills the row and rings it from any focus inside. */
+  .nx-control-frame > :not(.nx-input-adornment) {
+    flex: 1;
+    min-width: 0;
+  }
+  .nx-control-frame:has(> :not(.nx-input-adornment):is(:focus-visible, :has(:focus-visible))) {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
   .nx-input-field {
     flex: 1;
@@ -241,6 +290,9 @@
   }
   :where(.dark) .nx-button[data-hue]:hover:not(:disabled) {
     filter: brightness(1.12);
+  }
+  .nx-button[data-align='start'] {
+    justify-content: flex-start;
   }
   /* Dense: one inset of inline padding; an icon-only button gives up its square for it. */
   .nx-button[data-compact] {
@@ -504,7 +556,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--nx-control-inset);
+    /* A full gap between a leading option icon and its label, as in Button. */
+    gap: var(--nx-gap-size);
     /* The caret centres on the block-wide end cell, the column of the row's trailing actions. */
     padding-inline-end: calc((var(--nx-block-size) - var(--nx-control-icon)) / 2);
     width: 100%;
@@ -543,7 +596,7 @@
   }
   .nx-select-trigger[data-fit='options'] > .nx-icon {
     grid-column: 1;
-    margin-inline-end: var(--nx-control-inset);
+    margin-inline-end: var(--nx-gap-size);
   }
   .nx-select-trigger[data-fit='options'] > [data-part='value-text'] {
     grid-column: 2;
@@ -563,7 +616,7 @@
   .nx-select-value-sizer > * {
     display: flex;
     align-items: center;
-    gap: var(--nx-control-inset);
+    gap: var(--nx-gap-size);
     white-space: nowrap;
   }
 
@@ -703,6 +756,10 @@
   }
   .nx-toolbar > .nx-select > .nx-select-trigger {
     width: fit-content;
+  }
+  .nx-toolbar-gap {
+    flex: 1;
+    min-width: 0;
   }
   /* Text takes the free space and truncates, padded like a control so it lines up with a neighbouring Button's label. */
   .nx-toolbar-text {

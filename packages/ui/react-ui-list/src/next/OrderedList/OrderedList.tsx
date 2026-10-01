@@ -3,21 +3,21 @@
 //
 
 import React, {
+  Children,
   type ComponentPropsWithoutRef,
   type ForwardRefExoticComponent,
-  type PropsWithChildren,
   type ReactNode,
   type RefAttributes,
+  forwardRef,
+  isValidElement,
   useCallback,
   useMemo,
   useRef,
 } from 'react';
 
-import { type ComposableProps, composable, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
-import { osTranslations } from '@dxos/ui-theme';
 
-import { useListDisclosure, useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
+import { useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import {
   OrderedListItemProvider,
   OrderedListProvider,
@@ -25,84 +25,118 @@ import {
   useOrderedListItemContext,
 } from './OrderedListContext.ts';
 
-type ScrollAreaRootProps = ComponentPropsWithoutRef<typeof Next.ScrollArea.Root>;
+type NextRootProps = ComponentPropsWithoutRef<typeof Next.Listbox.Root>;
+type NextContentProps = ComponentPropsWithoutRef<typeof Next.Listbox.Content>;
+type NextItemProps = ComponentPropsWithoutRef<typeof Next.Listbox.Item>;
+
+/** A row's value with the id the list knows it by. */
+type Entry<T> = { id: string; item: T };
+
+/** An item's own string `id`, else its position; a list of plain values without ids should use `useStableIds`. */
+const defaultId = (item: unknown, index: number) =>
+  typeof item === 'object' && item !== null && 'id' in item && typeof item.id === 'string' ? item.id : String(index);
+
+/** The row's `ItemText`, which labels the default drag preview when the Root has no `getLabel`. */
+const itemText = (row: HTMLElement) => row.querySelector('[data-part="item-text"]')?.textContent ?? '';
 
 //
 // Root
 //
 
-type OrderedListRootProps<T> = {
+type OrderedListRootProps<T> = Pick<NextRootProps, 'columns' | 'virtual' | 'size' | 'loopFocus'> & {
   items: readonly T[];
-  /** Stable id per item; a pragmatic-dnd round trip serialises the payload, so identity cannot be by reference. */
-  getId: (item: T) => string;
+  /**
+   * Stable id per item; a pragmatic-dnd round trip serialises the payload, so identity cannot be by reference. Defaults
+   * to the item's own string `id`, else its index.
+   */
+  getId?: (item: T) => string;
+  /** The row's text for typeahead and the default drag preview; the preview falls back to the row's `ItemText`. */
+  getLabel?: (item: T) => string;
   /** Called with `(fromIndex, toIndex)` after a pointer drop or a keyboard move. */
   onMove?: (fromIndex: number, toIndex: number) => void;
   /**
-   * The native drag preview: `'clone'` snapshots the row; a renderer's content is drawn in a `Next.DragPreview` chip at
-   * the row's size and level. Without either the browser snapshots the row in place.
+   * The native drag preview. By default a `Next.DragPreview` chip labelled by `getLabel` (or the row's `ItemText`); a
+   * renderer's content is drawn in the chip instead; `'clone'` snapshots the row.
    */
   dragPreview?: 'clone' | ((item: T) => ReactNode);
   readonly?: boolean;
-  /** Controlled expanded item id (single-expand). */
-  expandedId?: string;
-  defaultExpandedId?: string;
-  onExpandedChange?: (id: string | undefined) => void;
   children: (props: { items: readonly T[] }) => ReactNode;
 };
 
 const noop = () => {};
 
 /**
- * Reorderable, single-expandable list: pragmatic-dnd reorder (`useReorderList`), keyboard moves from each row's
- * DragHandle, and single-expand disclosure (`useListDisclosure`). Renders no DOM; `Content` is the list element.
+ * A reorderable list on `Next.Listbox` (`selectionMode='none'`, so zag owns focus, navigation and typeahead): pragmatic-dnd
+ * reorder (`useReorderList`) and keyboard moves from each row's DragHandle.
  */
-const OrderedListRoot = <T,>(props: OrderedListRootProps<T>) => {
-  const {
-    items,
-    getId,
-    onMove = noop,
-    dragPreview,
-    readonly,
-    expandedId,
-    defaultExpandedId,
-    onExpandedChange,
-    children,
-  } = props;
-  const preview = useMemo(
-    () =>
-      typeof dragPreview === 'function'
-        ? (item: T, source: HTMLElement) => <Next.DragPreview source={source}>{dragPreview(item)}</Next.DragPreview>
-        : dragPreview,
-    [dragPreview],
+const OrderedListRoot = <T,>({
+  items,
+  getId,
+  getLabel,
+  onMove = noop,
+  dragPreview,
+  readonly,
+  columns,
+  virtual,
+  size,
+  loopFocus,
+  children,
+}: OrderedListRootProps<T>) => {
+  const entries = useMemo(
+    () => items.map((item, index) => ({ id: getId ? getId(item) : defaultId(item, index), item })),
+    [items, getId],
   );
-  const { controller } = useReorderList<T>({ items, getId, onMove, dragPreview: preview, readonly });
-  const disclosure = useListDisclosure({
-    mode: 'single',
-    // The hook treats a present `value` key as controlled, so an uncontrolled list must omit it.
-    ...('expandedId' in props ? { value: expandedId } : {}),
-    defaultValue: defaultExpandedId,
-    onValueChange: (next) => onExpandedChange?.(next),
+  const options = useMemo(
+    () => entries.map(({ id, item }) => ({ value: id, label: getLabel?.(item) ?? '' })),
+    [entries, getLabel],
+  );
+  const optionsById = useMemo(() => new Map(options.map((option) => [option.value, option])), [options]);
+
+  const preview = useMemo(() => {
+    if (dragPreview === 'clone') {
+      return 'clone' as const;
+    }
+    return ({ item }: Entry<T>, source: HTMLElement) => (
+      <Next.DragPreview source={source}>
+        {dragPreview ? dragPreview(item) : (getLabel?.(item) ?? itemText(source))}
+      </Next.DragPreview>
+    );
+  }, [dragPreview, getLabel]);
+
+  const { controller } = useReorderList<Entry<T>>({
+    items: entries,
+    getId: (entry) => entry.id,
+    onMove,
+    dragPreview: preview,
+    readonly,
   });
 
   // Read through refs so `move` stays stable while items change under it.
-  const itemsRef = useRef(items);
-  itemsRef.current = items;
-  const getIdRef = useRef(getId);
-  getIdRef.current = getId;
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
   const onMoveRef = useRef(onMove);
   onMoveRef.current = onMove;
   const move = useCallback((id: string, direction: Next.DragMoveDirection) => {
-    const from = itemsRef.current.findIndex((item) => getIdRef.current(item) === id);
+    const from = entriesRef.current.findIndex((entry) => entry.id === id);
     const to = direction === 'up' ? from - 1 : from + 1;
-    if (from < 0 || to < 0 || to >= itemsRef.current.length) {
+    if (from < 0 || to < 0 || to >= entriesRef.current.length) {
       return;
     }
     onMoveRef.current(from, to);
   }, []);
 
   return (
-    <OrderedListProvider reorder={controller} disclosure={disclosure} readonly={readonly} move={move}>
-      {children({ items })}
+    <OrderedListProvider reorder={controller} options={optionsById} readonly={readonly} move={move}>
+      <Next.Listbox.Root
+        items={options}
+        selectionMode='none'
+        columns={columns}
+        virtual={virtual}
+        size={size}
+        loopFocus={loopFocus}
+      >
+        {children({ items })}
+      </Next.Listbox.Root>
     </OrderedListProvider>
   );
 };
@@ -111,188 +145,153 @@ const OrderedListRoot = <T,>(props: OrderedListRootProps<T>) => {
 // Content
 //
 
-type OrderedListContentProps = Next.ContainerProps &
-  Pick<ScrollAreaRootProps, 'mode' | 'width'> & {
-    /**
-     * `true` (the default) makes the list the viewport of a thin ScrollArea that a drag near its edges auto-scrolls;
-     * `false` leaves scrolling to a host that already scrolls, as `Listbox.Content` does.
-     */
-    scroll?: boolean;
-  };
+type OrderedListContentProps = NextContentProps;
 
-/** The `list`: a stack Container (`inset` gutter by default) whose children are the rows. */
-const OrderedListContent: ForwardRefExoticComponent<
-  ComposableProps<OrderedListContentProps> & RefAttributes<HTMLDivElement>
-> = composable<HTMLDivElement, OrderedListContentProps>(
-  ({ gutter = 'inset', scroll = true, mode, width, children, ...props }, forwardedRef) => {
+/**
+ * The listbox element, as `Next.Listbox.Content`: its own thin ScrollArea by default (a drag near its edges
+ * auto-scrolls it), or `scroll={false}` inside a host that scrolls.
+ */
+const OrderedListContent: ForwardRefExoticComponent<OrderedListContentProps & RefAttributes<HTMLDivElement>> =
+  forwardRef<HTMLDivElement, OrderedListContentProps>(({ scroll = true, ...props }, forwardedRef) => {
     const autoScrollRef = useReorderAutoScroll();
-    const list = (
-      <Next.Container role='list' {...props} gutter={gutter} ref={forwardedRef}>
-        {children}
-      </Next.Container>
+    const ref = useCallback(
+      (element: HTMLDivElement | null) => {
+        if (scroll) {
+          autoScrollRef(element);
+        }
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(element);
+        } else if (forwardedRef) {
+          forwardedRef.current = element;
+        }
+      },
+      [scroll, autoScrollRef, forwardedRef],
     );
-    return scroll ? (
-      <Next.ScrollArea.Root mode={mode} width={width}>
-        <Next.ScrollArea.Viewport asChild ref={autoScrollRef}>
-          {list}
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
-    ) : (
-      list
-    );
-  },
-);
+    return <Next.Listbox.Content {...props} scroll={scroll} ref={ref} />;
+  });
 
 OrderedListContent.displayName = 'OrderedList.Content';
+
+//
+// Detail
+//
+
+type OrderedListDetailProps = ComponentPropsWithoutRef<typeof Next.Collapsible.Content>;
+
+/** A collapsible row's detail, below the row at its full width; a direct child of a collapsible `Item`. */
+const OrderedListDetail = (props: OrderedListDetailProps) => <Next.Collapsible.Content {...props} />;
+
+OrderedListDetail.displayName = 'OrderedList.Detail';
+
+const isDetail = (node: ReactNode) => isValidElement(node) && node.type === OrderedListDetail;
 
 //
 // Item
 //
 
-const useItemBinding = (id: string, canDrag: boolean) => {
-  const { reorder, disclosure } = useOrderedListContext('OrderedList.Item');
-  const { rowRef, handleRef, closestEdge, isDragging } = useReorderItem(reorder, id);
-  const indicator =
-    closestEdge === 'top' || closestEdge === 'bottom' ? <Next.DropIndicator edge={closestEdge} /> : null;
-  return {
-    rowRef,
-    indicator,
-    dragging: isDragging ? '' : undefined,
-    disclosure: disclosure.bind(id),
-    item: { id, canDrag, handleRef },
-  };
-};
-
-type OrderedListItemProps = Omit<ComponentPropsWithoutRef<typeof Next.Container>, 'layout' | 'id'> & {
+type OrderedListItemProps = Omit<NextItemProps, 'item' | 'id'> & {
   id: string;
   /** Defaults to true; false disables the drag handle. */
   canDrag?: boolean;
+  /**
+   * Makes the row collapsible (as does any of `open`, `defaultOpen`, `onOpenChange`): its root becomes a Collapsible
+   * holding the one-line row, with a caret in the trailing column, over its `Detail` child at full width.
+   */
+  collapsible?: boolean;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**
- * A reorderable row: a `listitem` row Container whose `columns` place its children (e.g. a DragHandle cell, a title and
- * a trailing action). Shows the drop indicator on the edge a dragged row will land on.
+ * A reorderable row (`option`): its parts lay out by part (a leading DragHandle or icon, the `ItemText`, trailing
+ * controls) or across the Root's `columns`. Draws the drop indicator on the edge a dragged row will land on
+ * (`data-drop-target`). Plain rows run no Collapsible machine.
  */
-const OrderedListItem = ({ id, canDrag = true, children, ...props }: OrderedListItemProps) => {
-  const { rowRef, indicator, dragging, item } = useItemBinding(id, canDrag);
+const OrderedListItem = ({
+  id,
+  canDrag = true,
+  collapsible,
+  open,
+  defaultOpen,
+  onOpenChange,
+  children,
+  ...props
+}: OrderedListItemProps) => {
+  const { reorder, options } = useOrderedListContext('OrderedList.Item');
+  const { rowRef, handleRef, isDragging } = useReorderItem(reorder, id);
+  const option = options.get(id);
+  if (!option) {
+    return null;
+  }
+
+  const dragging = isDragging ? '' : undefined;
+  const isCollapsible = collapsible || open !== undefined || defaultOpen !== undefined || onOpenChange !== undefined;
+  if (!isCollapsible) {
+    return (
+      <OrderedListItemProvider id={id} canDrag={canDrag} handleRef={handleRef}>
+        <Next.Listbox.Item {...props} item={option} data-dragging={dragging} ref={rowRef}>
+          {children}
+        </Next.Listbox.Item>
+      </OrderedListItemProvider>
+    );
+  }
+
+  const parts = Children.toArray(children);
   return (
-    <OrderedListItemProvider {...item}>
-      <Next.Container role='listitem' {...props} layout='row' data-dragging={dragging} ref={rowRef}>
-        {children}
-        {indicator}
-      </Next.Container>
+    <OrderedListItemProvider id={id} canDrag={canDrag} handleRef={handleRef}>
+      <Next.Collapsible.Root
+        open={open}
+        defaultOpen={defaultOpen}
+        onOpenChange={onOpenChange && (({ open }) => onOpenChange(open))}
+        lazyMount
+        unmountOnExit
+        data-dragging={dragging}
+        ref={rowRef}
+      >
+        <Next.Listbox.Item {...props} item={option}>
+          {parts.filter((part) => !isDetail(part))}
+          <Next.Collapsible.Trigger />
+        </Next.Listbox.Item>
+        {parts.filter(isDetail)}
+      </Next.Collapsible.Root>
     </OrderedListItemProvider>
   );
 };
+
+OrderedListItem.displayName = 'OrderedList.Item';
 
 //
 // DragHandle
 //
 
 /**
- * The row's grip (`Next.DragHandle`): the pointer drag source and, from the keyboard, Alt+Arrow or grab-and-arrow
- * moves. Disabled when the list is readonly or the row opts out.
+ * The row's grip (`Next.DragHandle`): the pointer drag source and, from the keyboard (inside the entered row),
+ * Alt+Arrow or grab-and-arrow moves. Disabled when the list is readonly or the row opts out.
  */
 const OrderedListDragHandle = () => {
-  const { t } = useTranslation(osTranslations);
   const { readonly, move } = useOrderedListContext('OrderedList.DragHandle');
   const { id, canDrag, handleRef } = useOrderedListItemContext('OrderedList.DragHandle');
   return (
-    <Next.DragHandle
-      label={t('drag-handle.label')}
-      disabled={readonly || !canDrag}
-      onMove={(direction) => move(id, direction)}
-      ref={handleRef}
-    />
+    <Next.DragHandle disabled={readonly || !canDrag} onMove={(direction) => move(id, direction)} ref={handleRef} />
   );
 };
 
-//
-// ItemText
-//
-
-type OrderedListItemTextProps = ComponentPropsWithoutRef<typeof Next.Typography>;
-
-/** The row's text, truncated to one line. */
-const OrderedListItemText = (props: OrderedListItemTextProps) => <Next.Typography truncate {...props} />;
-
-//
-// DetailItem
-//
-
-type OrderedListDetailItemProps = PropsWithChildren<{
-  'id': string;
-  'canDrag'?: boolean;
-  /** The disclosure trigger's label. */
-  'title': ReactNode;
-  /** Inline actions after the title (e.g. a visibility toggle). */
-  'actions'?: ReactNode;
-  /** Action(s) at the row's end (e.g. a delete button). */
-  'trailing'?: ReactNode;
-  /** When false, the title is plain text and there is no detail. Defaults to true. */
-  'expandable'?: boolean;
-  'data-testid'?: string;
-}>;
+OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
 
 /**
- * Master-detail row: a `listitem` Collapsible holding a row (drag handle, the title as the disclosure trigger, actions,
- * trailing) over the detail, so the handle and trailing stay on the title's line when the detail opens.
- */
-const OrderedListDetailItem = ({
-  id,
-  canDrag = true,
-  title,
-  actions,
-  trailing,
-  expandable = true,
-  children,
-  'data-testid': testId,
-}: OrderedListDetailItemProps) => {
-  const { rowRef, indicator, dragging, disclosure, item } = useItemBinding(id, canDrag);
-  const columns = ['var(--nx-block-size)', 'minmax(0, 1fr)', actions && 'auto', trailing && 'auto']
-    .filter(Boolean)
-    .join(' ');
-  return (
-    <OrderedListItemProvider {...item}>
-      <Next.Collapsible.Root
-        role='listitem'
-        open={expandable && disclosure.expanded}
-        onOpenChange={({ open }) => open !== disclosure.expanded && disclosure.toggle()}
-        lazyMount
-        unmountOnExit
-        data-dragging={dragging}
-        data-testid={testId}
-        ref={rowRef}
-      >
-        <Next.Container layout='row' gutter='none' columns={columns}>
-          <OrderedListDragHandle />
-          {expandable ? (
-            <Next.Collapsible.Trigger>{title}</Next.Collapsible.Trigger>
-          ) : (
-            <OrderedListItemText>{title}</OrderedListItemText>
-          )}
-          {actions}
-          {trailing}
-        </Next.Container>
-        {expandable && <Next.Collapsible.Content>{children}</Next.Collapsible.Content>}
-        {indicator}
-      </Next.Collapsible.Root>
-    </OrderedListItemProvider>
-  );
-};
-
-/**
- * Reorderable, single-expandable list on Next parts. Rows are Container rows (`Item`, laid out by `columns`) or
- * Collapsible master-detail rows (`DetailItem`); `DragHandle` drags with the pointer and moves from the keyboard.
+ * Reorderable list on `Next.Listbox`, sharing its row vocabulary: rows are `Item`s composed from a `DragHandle`,
+ * `ItemIcon`, `ItemText` and trailing controls; a collapsible `Item` adds a caret and a `Detail`. The ARIA grid keyboard
+ * enters a row with ArrowRight, where the DragHandle moves it with Alt+ArrowUp/Down.
  *
  * @example
- *   <OrderedList.Root items={items} getId={(item) => item.id} onMove={move}>
+ *   <OrderedList.Root items={items} getLabel={(item) => item.label} onMove={move}>
  *     {({ items }) => (
  *       <OrderedList.Content>
  *         {items.map((item) => (
- *           <OrderedList.Item key={item.id} id={item.id} columns='var(--nx-block-size) minmax(0, 1fr)'>
+ *           <OrderedList.Item key={item.id} id={item.id}>
  *             <OrderedList.DragHandle />
- *             <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
+ *             <OrderedList.ItemText />
  *           </OrderedList.Item>
  *         ))}
  *       </OrderedList.Content>
@@ -301,24 +300,26 @@ const OrderedListDetailItem = ({
  */
 export const OrderedList: {
   Root: typeof OrderedListRoot;
+  Label: typeof Next.Listbox.Label;
   Content: typeof OrderedListContent;
+  Empty: typeof Next.Listbox.Empty;
   Item: typeof OrderedListItem;
-  DetailItem: typeof OrderedListDetailItem;
+  Detail: typeof OrderedListDetail;
   DragHandle: typeof OrderedListDragHandle;
-  ItemText: typeof OrderedListItemText;
+  ItemIcon: typeof Next.Listbox.ItemIcon;
+  ItemText: typeof Next.Listbox.ItemText;
+  ItemDescription: typeof Next.Listbox.ItemDescription;
 } = {
   Root: OrderedListRoot,
+  Label: Next.Listbox.Label,
   Content: OrderedListContent,
+  Empty: Next.Listbox.Empty,
   Item: OrderedListItem,
-  DetailItem: OrderedListDetailItem,
+  Detail: OrderedListDetail,
   DragHandle: OrderedListDragHandle,
-  ItemText: OrderedListItemText,
+  ItemIcon: Next.Listbox.ItemIcon,
+  ItemText: Next.Listbox.ItemText,
+  ItemDescription: Next.Listbox.ItemDescription,
 };
 
-export type {
-  OrderedListContentProps,
-  OrderedListDetailItemProps,
-  OrderedListItemProps,
-  OrderedListItemTextProps,
-  OrderedListRootProps,
-};
+export type { OrderedListContentProps, OrderedListDetailProps, OrderedListItemProps, OrderedListRootProps };

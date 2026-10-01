@@ -108,6 +108,23 @@ const DefaultStory = ({ size, variants }: StoryArgs) => (
         </Next.Button>
       ))}
     </Next.Toolbar.Root>
+    <Next.Group fill>
+      <Next.Button align='start' icon='ph--file--regular' data-testid={`align-start-${size}`}>
+        Packed at the start
+      </Next.Button>
+    </Next.Group>
+    <Next.Group>
+      <Next.Button icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`}>
+        Saving
+      </Next.Button>
+      <Next.Button
+        icon='ph--star--regular'
+        label='Large icon'
+        iconOnly
+        iconSize='lg'
+        data-testid={`icon-size-${size}`}
+      />
+    </Next.Group>
   </>
 );
 
@@ -136,7 +153,8 @@ export const Default: Story = {};
  * change background and text, ghost and outline drop the fill (outline keeps a border), each valence has its own
  * colour, and every variant has a hover state. `caretDown` adds a smaller trailing caret (an icon-only button then
  * widens to fit it), `compact` pads by one inset, `tooltipSide` moves the label Tooltip, and `hue` fills with a Tag's
- * hue, shifting brightness on hover. The story ends with a tooltip open.
+ * hue, shifting brightness on hover. `align='start'` packs a stretched button's content at its start, `spin` spins the
+ * leading icon, and `iconSize` takes another size's icon scale. The story ends with a tooltip open.
  */
 export const Test: Story = {
   args: { allSizes: true, variants: true },
@@ -358,8 +376,34 @@ export const Test: Story = {
     await userEvent.unhover(side);
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 
+    const aligned = byTestId(canvasElement, 'align-start-md');
+    const alignedIcon = aligned.querySelector('svg')?.getBoundingClientRect();
+    await expect(aligned.getBoundingClientRect().width).toBeGreaterThan(300);
+    await expect((alignedIcon?.left ?? 0) - aligned.getBoundingClientRect().left).toBeCloseTo(
+      parseFloat(getComputedStyle(aligned).paddingLeft),
+      0,
+    );
+    const spinner = byTestId(canvasElement, 'spin-md').querySelector('svg');
+    await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');
+    for (const size of SIZES) {
+      const glyph = byTestId(canvasElement, `icon-size-${size}`).querySelector('svg')?.getBoundingClientRect();
+      await expect(glyph?.width, size).toBeCloseTo(GEOMETRY.lg.icon, 0);
+    }
+
     // Rest on an open tooltip.
     await userEvent.hover(addLg);
     await expectTooltip(addLg, 'Add');
+
+    // The focus ring takes the theme's own focus slot, not a hard-coded hue.
+    const probe = (color: string) => {
+      const element = canvasElement.ownerDocument.createElement('span');
+      element.style.color = color;
+      canvasElement.append(element);
+      const resolved = getComputedStyle(element).color;
+      element.remove();
+      return resolved;
+    };
+    await expect(probe('var(--nx-focus-ring-color)')).toBe(probe('var(--color-focus)'));
+    await expect(probe('var(--color-focus)')).not.toBe(probe('var(--color-secondary-border)'));
   },
 };

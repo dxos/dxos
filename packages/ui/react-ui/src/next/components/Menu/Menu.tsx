@@ -11,6 +11,7 @@ import React, {
   createContext,
   forwardRef,
   useContext,
+  useId,
 } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -59,7 +60,7 @@ const MenuRootBase = ({
 
 /**
  * Ark menu; content mounts on open and unmounts on close unless the caller opts out. With no Trigger (a virtual
- * trigger), open it under control and anchor it with `positioning.getAnchorRect` (Ark has no virtual-trigger part).
+ * trigger), open it under control and anchor it with `positioning={useVirtualAnchor(ref)}`.
  */
 const MenuRoot = (props: MenuRootProps) => <MenuRootBase {...props} sub={false} />;
 
@@ -439,25 +440,54 @@ MenuSub.displayName = 'Next.Menu.Sub';
 
 type MenuTriggerItemProps = ThemedClassName<Omit<MenuPrimitive.TriggerItemProps, 'children'>> & {
   item: MenuItemData;
+  /** Neither highlights nor opens its submenu. */
+  disabled?: boolean;
   /** Replaces the whole row, composed from `ItemIcon`, `ItemText` and a trailing caret. */
   children?: ReactNode;
 };
 
 /** An item row that opens its `Menu.Sub` (hover, ArrowRight or Enter): without children, icon, label and a caret. */
 const MenuTriggerItem = forwardRef<HTMLDivElement, MenuTriggerItemProps>(
-  ({ classNames, item, children, ...props }, forwardedRef) => (
-    <ItemContext.Provider value={{ data: item, trigger: true }}>
-      <MenuPrimitive.TriggerItem {...props} className={mx(recipes.menuItem(), classNames)} ref={forwardedRef}>
-        {children ?? (
-          <>
-            {item.icon && <MenuItemIcon />}
-            <MenuItemText />
-            <Icon icon='ph--caret-right--regular' />
-          </>
-        )}
-      </MenuPrimitive.TriggerItem>
-    </ItemContext.Provider>
-  ),
+  ({ classNames, item, disabled, children, onSelect, ...props }, forwardedRef) => {
+    const value = useId();
+    const row = children ?? (
+      <>
+        {item.icon && <MenuItemIcon />}
+        <MenuItemText />
+        <Icon icon='ph--caret-right--regular' />
+      </>
+    );
+
+    // Ark's trigger item takes no `disabled`, so a disabled one is an inert item row and its submenu never opens.
+    if (disabled) {
+      return (
+        <ItemContext.Provider value={{ data: item, trigger: false }}>
+          <MenuPrimitive.Item
+            {...props}
+            value={value}
+            disabled
+            className={mx(recipes.menuItem(), classNames)}
+            ref={forwardedRef}
+          >
+            {row}
+          </MenuPrimitive.Item>
+        </ItemContext.Provider>
+      );
+    }
+
+    return (
+      <ItemContext.Provider value={{ data: item, trigger: true }}>
+        <MenuPrimitive.TriggerItem
+          {...props}
+          onSelect={onSelect}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {row}
+        </MenuPrimitive.TriggerItem>
+      </ItemContext.Provider>
+    );
+  },
 );
 
 MenuTriggerItem.displayName = 'Next.Menu.TriggerItem';

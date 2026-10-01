@@ -65,16 +65,16 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // 2. Each array is a named list; only the ordered one has drag handles.
-    const tags = canvas.getByRole('list', { name: 'Tags' });
-    const steps = canvas.getByRole('list', { name: 'Steps' });
-    await expect(within(tags).getAllByRole('listitem')).toHaveLength(2);
+    // 2. Each array is a named listbox; only the ordered one has drag handles.
+    const tags = canvas.getByRole('listbox', { name: 'Tags' });
+    const steps = canvas.getByRole('listbox', { name: 'Steps' });
+    await expect(within(tags).getAllByRole('option')).toHaveLength(2);
     await expect(within(tags).queryAllByRole('button', { name: 'Drag to rearrange' })).toHaveLength(0);
     await expect(within(steps).getAllByRole('button', { name: 'Drag to rearrange' })).toHaveLength(3);
 
     // 3. Add appends an empty item whose input takes the typed text.
     await userEvent.click(canvas.getByTestId('tags.add'));
-    await waitFor(() => expect(within(tags).getAllByRole('listitem')).toHaveLength(3));
+    await waitFor(() => expect(within(tags).getAllByRole('option')).toHaveLength(3));
     const inputs = within(tags).getAllByRole('textbox');
     await userEvent.type(inputs[2], 'blue');
     await waitFor(() => expect(readValues(canvasElement).tags).toEqual(['red', 'green', 'blue']));

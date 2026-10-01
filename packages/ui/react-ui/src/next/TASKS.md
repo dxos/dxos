@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase 3 fixes, Next export and new components done; next is `react-ui-form/next`. Uncommitted: none._
+_Resume: Phase A4 ports done (all but master-detail Tabs); next is `react-ui-form/next`. Uncommitted: none._
 
 ## Phase 0: Design
 
@@ -85,7 +85,7 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 
 ## Parity
 
-Close the "Missing in Next" gaps of [AUDIT.md](./AUDIT.md) §1 for the existing components (Combobox's major gaps stay
+Close the "Missing in Next" gaps of [AUDIT.md](./AUDIT.md) §1 for the existing components (Combobox's major gaps closed
 with Phase 4 milestone 5).
 
 ### Tasks
@@ -100,11 +100,30 @@ with Phase 4 milestone 5).
 - [x] **Popover, Tooltip, Dialog** — portal `container` on every popup; Popover `Body`, `modal`, lazy-mount naming fix; Tooltip `content`/`side` shorthand, `TextTooltip`; `AlertDialog`, `DIALOG_AUTOFOCUS_ATTRIBUTE`; virtual triggers via `positioning.getAnchorRect` (DESIGN.md follow-up 45).
 - [x] **Card** — `Section`, `Row`, `Text`, `Action`, `Link`, `Menu`, `DragHandle`; root `border`, `selected`, clickable `onClick`; `fullWidth` deliberate, `Html` deferred (DESIGN.md follow-up 46).
 - [x] **Image** — `onClick` as a button (Enter/Space) (DESIGN.md follow-up 47).
-- [ ] **Image dominant colour** — decide whether to move the current `Image`'s sampler to a shared utility and adopt it, given decision 11 (DESIGN.md follow-up 47).
+- [x] **Image dominant colour** — `Next.Image backdrop='dominant'` (opt-in); the sampler is `sampleDominantColor` in `@dxos/lit-ui` (AUDIT.md §6 point 13).
 - [x] **Tooltip after a press** — a click then Space left a Toggle's Tooltip suppressed; the press now ends at the next focus, key or hover (DESIGN.md follow-up 48); Toggle `Test` covers it.
 - [x] **SystemButton** — `Next.SystemButton.*` ports every `SystemIconButton` preset on Button/Toggle with translated default labels (DESIGN.md follow-up 51).
 - [x] **Field and date/time** — every current `Field.*` part: segmented `DateInput` (zag `date-input`) with an Ark `DatePicker` calendar replacing the native input, `PinInput`, `NumberInput`, `PasswordInput`, Textarea `variant`; `Field.Block`/`TriggerIcon` mapped; Field story shows every field type (DESIGN.md follow-up 54).
 - [ ] **Toolbar action binding** — `useMenuActions` (`ActionIconButton`, `Toolbar.Menu`) on Next Menu; Phase 4 with react-ui-menu.
+
+## Phase A4: ports with no counterpart
+
+Current components with no Next counterpart (AUDIT.md §7 Phase A item 4), in importer order; renames and dropped
+parts are listed there for the codemods.
+
+### Tasks
+
+- [x] **Avatar** — Ark avatar; one `Avatar.Root` element (`src`/`fallback`/`icon`, hue, status ring), `Image`/`Fallback` parts; block-sized per size, `fill` for portraits. — Test asserts size, initials, ring, image load.
+- [x] **Tabs** — Ark tabs; `Root`/`List`/`Trigger` (a Button)/`Content`/`Indicator`; `keepMounted`, `selectedVariant`. — Test (sizes, manual activation, unmount) and Vertical.
+- [x] **Main** — app shell on `.nx-main-*` rules and `data-surface` zones; same parts as current. — Test (sidebar toggles) and Drawer (padding, resize).
+- [x] **Progress** — Ark progress; single component: `value`/`max`, indeterminate, error, countdown. — Test.
+- [x] **Splitter** — Ark splitter; `ResizeTrigger` replaces `Handle`. — Test (rem round-trip) and Collapsed.
+- [x] **Toast** — Ark toast; `Toaster` host, `Header`/`Title`/`Description`/`Footer`/`ActionTrigger`/`CloseTrigger`. — Test and Timeout.
+- [x] **ErrorFallback, Focus, ScrollContainer, Accordion, Carousel, MediaPlayer, QrCode** — Ark accordion, carousel and qr-code; `Next.useFocus`. — a `Test` story each.
+- [x] **Single-file components** — AttentionGlyph, Breadcrumb, Deferred, Editable (`Next.useEditable`), FloatingPanel, HoverCard, Link, MenuButton, Skeleton, Slider, Steps, TextCrawl, Timestamp, Tour; Ark where Ark has one. — a `Test` story each; Deferred keeps its node test.
+- [ ] **Move shared helpers** — `media-kind.ts` and `parse-stack.ts` are imported from the current tree; move them into `next/` before the cut-over deletes it.
+- [ ] **Translate hard-coded strings** — ErrorFallback ("Runtime Error", "Stack", "Data") and Steps ("Step N").
+- [ ] **Master-detail Tabs** — `Tabs.Viewport`/`BackButton`/`activePart` (3 callers) not ported; decide whether it is a Tabs mode or a separate layout.
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
 
@@ -114,17 +133,44 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 ### Tasks
 
 - [ ] **1. Foundations** — pane host, popup size decision, Container child span, Group stretch, required marker, depth-5 benchmark, `+1` fallback.
-  - Done: `Next.Panel`, popup size inheritance, Group `fill`. Open: child span, benchmark (AUDIT.md §6 point 7); the required marker is `Field.RequiredIndicator` (point 38).
+  - Done: `Next.Panel`, popup size inheritance, Group `fill`, Container `span` (point 7). Open: benchmark; the required marker is `Field.RequiredIndicator` (point 38).
 - [x] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
 - [x] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
 - [x] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
-  - Done: DragHandle (keyboard moves), DropIndicator, DragPreview, OrderedList. Open: plugin-sheet `RangeList` pilot; AUDIT.md §6 points 16–20, 24.
-- [ ] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
+  - Done: DragHandle (keyboard moves), DropIndicator, DragPreview, OrderedList, plugin-sheet `RangeList` pilot; AUDIT.md §6 points 16–20, 24 (Phase A2 below).
+- [x] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
+  - Done on `Next.Combobox` (AUDIT §4.1 maps the list Combobox/Picker APIs). Open: the ObjectPicker story on it, with milestone 9.
 - [ ] **6. `react-ui-form/next` core** — parts, scalar renderers, `fieldMap`/`fieldProvider`/`createSelectField`; pilot plugin-thread `ChannelCreatePanel`.
 - [ ] **7. Settings layout** — needs a decision (AUDIT.md §3.2); pilot plugin-pwa, plugin-excalidraw, plugin-settings.
 - [ ] **8. Arrays and layout templates** — ArrayField, SelectOptionField, `Form.Layout`; pilot plugin-pipeline `PipelineProperties`.
 - [ ] **9. Ref and lookup fields** — RefField, InlineRefField, ComboboxField, ObjectPicker; pilot plugin-space.
 - [ ] **10. Higher-level form components** — ObjectProperties, ObjectForm, ViewEditor, FieldEditor, editor control frame; pilot plugin-map `MapViewEditor`.
 - [ ] **11. Tree next** — Ark tree-view spike, virtualization, DnD, MasterDetail; pilot plugin-navtree.
-  - [ ] `animate` flag on `Tree.Root`: port the current Tree's disclosure animation (rows fade in on open; height conceal before a close commits; user-driven only, not persisted open state; theme duration, 0 when reduced motion), working with `virtualize='window'`.
+- [ ] **Migration: text emphasis rename** — rename `--color-description`/`--color-subdued` (and `text-description`/`text-subdued`) to `--nx-text-muted`/`--nx-text-subtle` across the codebase in one change, with the old components' deletion (DESIGN.md "Text emphasis").
+  - [x] `animate` flag on `Tree.Root` (default on): port the current Tree's disclosure animation (rows fade in on open; height conceal before a close commits; user-driven only, not persisted open state; theme duration, 0 when reduced motion), working with `virtualize='window'`.
 - [x] **Part naming** — DESIGN.md "Part naming" rules 1–13 applied (AUDIT.md §6 points 25–39): `Panel.Header`/`Body`/`Footer` (content-sized rows); Items render their default row from `item` or compose `ItemIcon`/`ItemText`/`ItemDescription`/`ItemIndicator`, with `ItemGroup`/`ItemGroupLabel` in Listbox and Combobox; Combobox `Control`/`Input`/`Trigger`/`ClearTrigger`; Menu `RadioItemGroup`/`TriggerItem`/`ItemShortcut`; `Field.RequiredIndicator` rendered by `Field.Label`; `Fieldset`; `SystemButton.Remove`; OrderedList `Content scroll`/`ItemText`; foreign re-exports dropped.
+
+- [x] **A2. Next lists (AUDIT.md §6 group B)** — `virtual` (`fixed` windows via the shared `useVirtualRows`, `variable` is `content-visibility`); Ark owns selection in every list (`selectionMode='none'`), `listboxSelection` adapts `useListSelection` values; part-based rows and Root `columns` subgrids; the ARIA grid keyboard; `data-drop-target` from `useReorder`; `nx-row` states; default DragPreview chip; optional `getId` + `useStableIds`; `SystemButton.Remove` named by `ItemText`; collapsible `OrderedList.Item` + `Detail` with a caret-only trigger (DetailItem removed); `Label`/`Empty` parts; `ItemIcon` `hue`. Pilots: plugin-registry (icon hue), plugin-sheet `RangeList` (Label, Empty, part layout).
+  - [ ] Reconcile `Next.Empty` with the A1 workstream's (this branch added a minimal one: `icon`, children, translated default).
+  - [x] Tree adopts `useVirtualRows` (`virtual='fixed'`) in place of its own window — the helper gained `pinned` (the focused row stays mounted) and `measure` (skip animating rows); Tree rows take `nx-row` and draw the shared drop line; `Tree.Empty` is `Next.Empty`.
+
+## Phase A1: Next foundations
+
+The decided-but-unbuilt foundations of AUDIT.md §7 Phase A item 1 (decision review 2026-10-01, group A), plus the props
+the classNames research and the react-ui-menu/next binding asked for.
+
+### Tasks
+
+- [x] **Container `span`** — a count or `'full'` on Container, `Field.Root` and `Fieldset.Root`, rendered from `data-span`; Container `Test`.
+- [x] **Row cells name their own lines** — an inheriting Container in a `row` cell defines `content-*`/`full-*` across its track (spike 46); Container `Test` (side-by-side groups).
+- [x] **`ControlFrame`** — exported; Input's `start`/`end` row is built on it; ring follows focus in its content.
+- [x] **`Next.Empty`** — `icon`, text as children, translated "No items"; composite `Empty` parts are the lists workstream's.
+- [x] **`Next.Banner`** — Root/Title/Body on a rail-gutter Container; no empty part.
+- [x] **Fieldset group** — always `div role='group'` named by its Legend; `disabled` reaches Button, Switch, Checkbox, Input and Textarea through `useFieldsetDisabled`.
+- [x] **`Input variant='mono'`**.
+- [x] **`Image backdrop='dominant'`** — sampler shared from `@dxos/lit-ui`; host surface without CORS.
+- [x] **Chrome strings** — `drag-handle.label`, `remove.label`, `empty.label` under the react-ui `translationKey`; `Next.DragHandle` label defaults; list DragHandle/DeleteButton and Dialog's delete off `osTranslations`.
+- [x] **className props** — Container/Panel.Root `width='document'`; Typography `lines`, `mono`, `tone='subdued'`; Card.Title on Typography; Icon `tone`, `spin`, `size`; Button `align='start'`.
+- [x] **Menu/Toolbar gaps** — Button `spin` and `iconSize`; `Toolbar.Separator variant='gap'`; Switch in the toolbar's roving focus; `Menu.TriggerItem disabled`; `virtualAnchor`/`useVirtualAnchor`.
+- [x] **Menu item icon size** — `Menu.ItemIcon size` (Icon's); the binding maps `iconSize` onto it.
+- [ ] **`dx-avatar` backdrop** — the shared sampler is ready; the avatar does not use it yet.

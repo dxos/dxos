@@ -17,7 +17,7 @@ import { Group } from '../Group/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Image, type ImageProps } from '../Image/index.ts';
 import { Menu } from '../Menu/index.ts';
-import { Typography } from '../Typography/index.ts';
+import { Typography, type TypographyProps } from '../Typography/index.ts';
 
 /** A click inside a clickable card or row (a trailing action, a menu) must not also activate it. */
 const stopPropagation = (event: MouseEvent) => event.stopPropagation();
@@ -113,17 +113,17 @@ CardHeader.displayName = 'Next.Card.Header';
 // Title
 //
 
-type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'h3'>>;
+type CardTitleProps = ThemedClassName<ComponentPropsWithoutRef<'h3'>> &
+  Pick<TypographyProps, 'truncate' | 'lines' | 'tone'>;
 
-const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(({ classNames, ...props }, forwardedRef) => (
-  <h3
-    {...props}
-    data-scope='card'
-    data-part='title'
-    className={mx(recipes.cardTitle(), classNames)}
-    ref={forwardedRef}
-  />
-));
+/** An `h3` on Typography, so it clamps (`lines`), truncates and takes a tone like any text. */
+const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
+  ({ classNames, truncate, lines, tone, ...props }, forwardedRef) => (
+    <Typography asChild truncate={truncate} lines={lines} tone={tone} classNames={mx(recipes.cardTitle(), classNames)}>
+      <h3 {...props} data-scope='card' data-part='title' ref={forwardedRef} />
+    </Typography>
+  ),
+);
 
 CardTitle.displayName = 'Next.Card.Title';
 

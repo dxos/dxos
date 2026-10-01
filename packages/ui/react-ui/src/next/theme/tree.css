@@ -1,0 +1,172 @@
+/*
+ * Tree (`@dxos/react-ui-list/next`): rows are flat, one block tall and indented one block per level. Row states (hover,
+ * selected, focus, disabled, drag, the drop line) are the shared `nx-row` rules (row.css); this file keeps the tree's
+ * layout, the `inside` ring and the line's indent.
+ */
+
+@layer dx-components {
+  .nx-tree {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    max-height: 100%;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    /* Read by Tree.Root to time the commit of a close, so the CSS and the timer share one value. */
+    --nx-tree-disclosure-duration: var(--duration-tree-disclosure, 200ms);
+  }
+
+  .nx-tree > .nx-scroll-root {
+    flex: 1 1 auto;
+  }
+
+  .nx-tree-content:focus {
+    outline: none;
+  }
+
+  /* One block tall at every size: the row's auto rows are `minmax(block, auto)` and nothing in it exceeds a block. */
+  .nx-tree-item {
+    position: relative;
+    grid-auto-rows: var(--nx-block-size);
+    padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-block-size));
+    outline: none;
+    user-select: none;
+  }
+  /*
+   * A tree lives in narrow sidebars, where Container's `width < 24rem` query would stack a row's cells; the row keeps
+   * its fixed tracks at every width (the specificity beats the query's `.nx-grid[data-layout='row'] > *` rule).
+   */
+  .nx-tree-item.nx-grid[data-layout='row'] > :not([data-rail]) {
+    grid-column: auto;
+  }
+
+  /* Drop targets: `top`/`bottom` draw the shared row line at the landing level; `inside` rings the branch. */
+  .nx-tree-item[data-drop-target='inside'] {
+    outline: var(--nx-drop-indicator-width) solid var(--nx-drop-indicator-color);
+    outline-offset: calc(-1 * var(--nx-drop-indicator-width));
+  }
+  .nx-tree-item[data-drop-target='inside'][data-drop-kind='link'] {
+    outline-style: dashed;
+  }
+  .nx-tree-item[data-drop-target]::after {
+    inset-inline-start: calc(var(--nx-tree-drop-level, 0) * var(--nx-block-size));
+  }
+  /* A link adds a reference and leaves the item where it is, so its line is dashed. */
+  .nx-tree-item[data-drop-kind='link']::after {
+    height: 0;
+    background: none;
+    border-block-start: var(--nx-drop-indicator-width) dashed var(--nx-drop-indicator-color);
+  }
+
+  .nx-tree-item[data-virtual='variable'] {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--nx-block-size);
+  }
+
+  .nx-tree-branch-trigger {
+    display: grid;
+    cursor: pointer;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+  .nx-tree-branch-indicator {
+    display: grid;
+    place-items: center;
+    transition: transform var(--nx-tree-disclosure-duration) ease-out;
+  }
+  .nx-tree-branch-indicator[data-state='open'] {
+    transform: rotate(90deg);
+  }
+  /* The machine still reports a concealing branch as open (the close has not committed); the caret turns with its rows. */
+  .nx-tree-item[data-concealing] .nx-tree-branch-indicator {
+    transform: none;
+  }
+
+  /*
+   * Disclosure (Tree.Root `animate`). Rows are flat, so each row under the branch animates itself: an entering row
+   * grows and fades in from the commit that mounts it; a concealing row shrinks and fades out while the close waits,
+   * and `forwards` holds it collapsed until the commit removes it. The clip exists only while the height moves, so a
+   * row at rest still paints its focus ring and drop line.
+   */
+  :is(.nx-tree-item, .nx-tree-group)[data-disclosure='enter'] {
+    animation: nx-tree-row-enter var(--nx-tree-disclosure-duration) ease-out;
+  }
+  :is(.nx-tree-item, .nx-tree-group)[data-disclosure='conceal'] {
+    animation: nx-tree-row-conceal var(--nx-tree-disclosure-duration) ease-in forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-tree {
+      --nx-tree-disclosure-duration: 0ms;
+    }
+  }
+
+  @keyframes nx-tree-row-enter {
+    from {
+      opacity: 0;
+      block-size: 0;
+      overflow-y: clip;
+    }
+    to {
+      opacity: 1;
+      block-size: var(--nx-block-size);
+      overflow-y: clip;
+    }
+  }
+  @keyframes nx-tree-row-conceal {
+    from {
+      opacity: 1;
+      block-size: var(--nx-block-size);
+      overflow-y: clip;
+    }
+    to {
+      opacity: 0;
+      block-size: 0;
+      overflow-y: clip;
+    }
+  }
+
+  .nx-tree-item[data-hide-drag-source] {
+    display: none;
+  }
+  .nx-tree-item-count {
+    justify-self: end;
+    min-inline-size: 1.5rem;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A section header: one block like every row (so a fixed window holds), its label cleared past the disclosure cell. */
+  .nx-tree-group {
+    display: flex;
+    align-items: flex-end;
+    block-size: var(--nx-block-size);
+    padding-inline-start: calc((var(--nx-tree-depth) + 1) * var(--nx-block-size));
+    padding-block-end: 0.125rem;
+    user-select: none;
+  }
+  .nx-tree-group-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-description);
+  }
+
+  /* The end strip (`dropAtEnd`): one block below the last row that takes "append at the end". */
+  .nx-tree-end {
+    position: relative;
+    min-block-size: var(--nx-block-size);
+  }
+
+  /* One segment per ancestor, centred under that ancestor's disclosure block; segments join across rows. */
+  .nx-tree-indent-guide {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc((var(--nx-tree-guide-level) + 0.5) * var(--nx-block-size));
+    width: 0;
+    border-inline-start: 1px solid var(--color-subdued-separator);
+    pointer-events: none;
+  }
+}

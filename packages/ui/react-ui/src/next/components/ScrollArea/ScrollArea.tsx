@@ -8,11 +8,11 @@ import React, { useCallback, useState } from 'react';
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis } from '@dxos/ui-types';
 
-import { ScrollAreaThumbs } from '../../../components/ScrollArea/ScrollAreaThumbs.tsx';
-import { scrollbar } from '../../../components/ScrollArea/scrollbar.ts';
 import { composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { ScrollAreaThumbs } from './ScrollAreaThumbs.tsx';
+import { scrollbar } from './scrollbar.ts';
 
 type ScrollAreaContextValue = {
   native: boolean;

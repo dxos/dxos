@@ -22,10 +22,24 @@ const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
   </svg>`,
 )}`;
 
+/** A wide red strip with a centred blue mark, so a square `contain` frame letterboxes it in its red corners. */
+const STRIP = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='40' viewBox='0 0 160 40'>
+    <rect width='160' height='40' fill='#ff0000'/><circle cx='80' cy='20' r='12' fill='#0000ff'/>
+  </svg>`,
+)}`;
+
+/** Transparent at its edges (a cut-out), so no dominant colour is sampled. */
+const CUTOUT = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='40' viewBox='0 0 160 40'>
+    <circle cx='80' cy='20' r='12' fill='#0000ff'/>
+  </svg>`,
+)}`;
+
 /** A malformed data URI fails to decode without any network request. */
 const BROKEN = 'data:image/png;base64,AAAA';
 
-/** Cover, contain, broken and square frames, and a clickable image. */
+/** Cover, contain, broken and square frames, a clickable image, and `backdrop='dominant'` letterboxes. */
 const DefaultStory = ({ size }: SizeArgs) => {
   const [clicks, setClicks] = useState(0);
   return (
@@ -47,6 +61,22 @@ const DefaultStory = ({ size }: SizeArgs) => {
         data-testid={`clickable-${size}`}
       />
       <Next.Typography data-testid={`clicks-${size}`}>Opened {clicks}</Next.Typography>
+      <Next.Image
+        src={STRIP}
+        alt='Red strip'
+        aspectRatio='1'
+        fit='contain'
+        backdrop='dominant'
+        data-testid={`backdrop-${size}`}
+      />
+      <Next.Image
+        src={CUTOUT}
+        alt='Cut-out'
+        aspectRatio='1'
+        fit='contain'
+        backdrop='dominant'
+        data-testid={`cutout-${size}`}
+      />
     </div>
   );
 };
@@ -68,7 +98,9 @@ export const Default: Story = {};
 
 /**
  * Frames keep their ratio, loaded images fill them, and a broken source shows the fallback icon. With `onClick` the
- * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring.
+ * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring. `backdrop='dominant'`
+ * fills the letterbox with the image's corner colour, slightly darkened; an image transparent at its edges leaves the
+ * host surface.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -112,5 +144,13 @@ export const Test: Story = {
     await expect(clickable).toHaveFocus();
     await expect(getComputedStyle(clickable).outlineStyle).toBe('solid');
     await expect(canvas.getByTestId('cover-md')).not.toHaveAttribute('role');
+
+    const backdrop = canvas.getByTestId('backdrop-md');
+    await waitFor(() => expect(backdrop).toHaveAttribute('data-status', 'loaded'));
+    await waitFor(() => expect(getComputedStyle(backdrop).backgroundColor).toBe('rgb(242, 0, 0)'));
+    const cutout = canvas.getByTestId('cutout-md');
+    await waitFor(() => expect(cutout).toHaveAttribute('data-status', 'loaded'));
+    await expect(cutout.style.getPropertyValue('--nx-image-backdrop')).toBe('');
+    await expect(getComputedStyle(cutout).backgroundColor).toBe('rgba(0, 0, 0, 0)');
   },
 };

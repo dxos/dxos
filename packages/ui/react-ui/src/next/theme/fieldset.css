@@ -1,15 +1,11 @@
 /*
- * Fieldset: a borderless `<fieldset>` that stacks its Fields with the container gap, headed by a label row like
+ * Fieldset: a borderless `group` that stacks its Fields with the container gap, headed by a label row like
  * `Field.Header`.
  */
 
 @layer dx-components {
   .nx-fieldset {
-    /* The UA's fieldset box (border, padding, margin, min-content width) would break the content track. */
     min-inline-size: 0;
-    margin: 0;
-    padding: 0;
-    border: none;
   }
   .nx-fieldset:not(.nx-grid) {
     display: flex;
@@ -42,7 +38,6 @@
     margin-block: var(--nx-control-inset);
   }
 
-  /* The rendered legend sits outside the flex flow, so it takes the full width itself to reach the control's edge. */
   .nx-fieldset-legend {
     box-sizing: border-box;
     display: flex;

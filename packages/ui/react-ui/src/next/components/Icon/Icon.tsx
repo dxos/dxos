@@ -7,12 +7,16 @@ import React, { type SVGProps, forwardRef } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ChromaticPalette, type MessageValence, type NeutralPalette, type ThemedClassName } from '@dxos/ui-types';
 
-import { useIconHref } from '../../../hooks/index.ts';
+import { useIconHref } from '../../../hooks/useIconHref.ts';
 import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 
 export type IconHue = NeutralPalette | ChromaticPalette | MessageValence;
 
 export type IconValence = MessageValence;
+
+/** Text emphasis below the default, as Typography's `tone`. */
+export type IconTone = 'description' | 'subdued';
 
 export type IconProps = ThemedClassName<Omit<SVGProps<SVGSVGElement>, 'ref'>> & {
   icon: string;
@@ -22,10 +26,16 @@ export type IconProps = ThemedClassName<Omit<SVGProps<SVGSVGElement>, 'ref'>> & 
   hue?: IconHue;
   /** Colours the glyph with a valence's semantic text colour (`--color-<valence>-text`); takes precedence over `hue`. */
   valence?: IconValence;
+  /** A lower-emphasis colour (`--color-description` or `--color-subdued`); `hue` and `valence` take precedence. */
+  tone?: IconTone;
+  /** Rotates continuously, as a busy indicator; still under `prefers-reduced-motion`. */
+  spin?: boolean;
+  /** The icon at this size's scale instead of its scope's (one icon in a denser or roomier control). */
+  size?: Size;
 };
 
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon, label, hue, valence, classNames, ...props }, forwardedRef) => {
+  ({ icon, label, hue, valence, tone, spin, size, classNames, ...props }, forwardedRef) => {
     const href = useIconHref(icon);
     return (
       <svg
@@ -35,6 +45,9 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
         data-part='root'
         data-hue={hue}
         data-valence={valence}
+        data-tone={tone}
+        data-spin={spin ? '' : undefined}
+        data-icon-size={size}
         className={mx(recipes.icon(), classNames)}
         ref={forwardedRef}
       >

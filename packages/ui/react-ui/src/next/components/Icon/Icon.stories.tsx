@@ -58,6 +58,21 @@ const DefaultStory = ({ size }: SizeArgs) => (
         <Next.Icon icon='ph--warning--regular' valence='error' data-testid={`error-${size}`} />
       </Next.Block>
     </Next.Toolbar.Root>
+    <Next.Toolbar.Root aria-label='Tone, spin and size'>
+      <Next.Toolbar.Text>Tone, spin, size</Next.Toolbar.Text>
+      <Next.Block>
+        <Next.Icon icon='ph--note--regular' tone='description' data-testid={`tone-description-${size}`} />
+      </Next.Block>
+      <Next.Block>
+        <Next.Icon icon='ph--note--regular' tone='subdued' data-testid={`tone-subdued-${size}`} />
+      </Next.Block>
+      <Next.Block>
+        <Next.Icon icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`} />
+      </Next.Block>
+      <Next.Block>
+        <Next.Icon icon='ph--star--regular' size='xs' data-testid={`small-${size}`} />
+      </Next.Block>
+    </Next.Toolbar.Root>
   </>
 );
 
@@ -78,7 +93,8 @@ export const Default: Story = {};
 
 /**
  * One icon scale per size (decision 2): the same size in a rail Block as in a control. A labelled icon is an `img`;
- * an unlabelled one is hidden from assistive tech (decision 9).
+ * an unlabelled one is hidden from assistive tech (decision 9). `tone` lowers emphasis, `spin` animates, and `size`
+ * takes another size's icon scale.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -103,6 +119,17 @@ export const Test: Story = {
       }
     }
     await expect(color('both-md')).toBe(color('error-md'));
+
+    await expect(color('tone-description-md')).not.toBe(plain);
+    await expect(color('tone-subdued-md')).not.toBe(plain);
+    await expect(color('tone-subdued-md')).not.toBe(color('tone-description-md'));
+    await expect(getComputedStyle(byTestId(canvasElement, 'spin-md')).animationName).toBe('nx-spin');
+    for (const size of SIZES) {
+      await expect(byTestId(canvasElement, `small-${size}`).getBoundingClientRect().width, size).toBeCloseTo(
+        GEOMETRY.xs.icon,
+        0,
+      );
+    }
 
     const canvas = within(canvasElement);
     await expect(within(sizeRow(canvasElement, 'md')).getByRole('img', { name: 'Clear' })).toBeInTheDocument();

@@ -9,6 +9,7 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
+import { ACCENT_HUES } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
@@ -76,6 +77,8 @@ export const PluginItem = ({
   const { t } = useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
   const icon = rawIcon?.key ?? 'ph--circle--regular';
+  // The manifest's hue is a free string; only a palette hue reaches the icon.
+  const hue = ACCENT_HUES.find((candidate) => candidate === rawIcon?.hue);
   const displayTags = useMemo(() => {
     if (!extraTags || extraTags.length === 0) {
       return tags ?? [];
@@ -112,7 +115,7 @@ export const PluginItem = ({
 
   return (
     <Listbox.Item id={id} data-testid={`pluginList.${id}`}>
-      <Listbox.ItemIcon icon={icon} />
+      <Listbox.ItemIcon icon={icon} hue={hue} />
       <Listbox.ItemText />
       {description && <Listbox.ItemDescription>{description}</Listbox.ItemDescription>}
       {failure && <PluginFailureBadge failure={failure} />}

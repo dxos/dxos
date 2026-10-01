@@ -8,7 +8,9 @@ import React, {
   type KeyboardEvent,
   type PointerEvent,
   useCallback,
+  useContext,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react';
@@ -22,6 +24,7 @@ import { translationKey } from '#translations';
 
 import { composable } from '../../../util/index.ts';
 import { Button, type ButtonContentProps, type ButtonVariantProps } from '../Button/index.ts';
+import { RowContext } from '../Listbox/grid.ts';
 import { Toggle } from '../Toggle/index.ts';
 import { type TooltipSide } from '../Tooltip/index.ts';
 
@@ -229,8 +232,37 @@ const Cancel = createStaticPreset('Next.SystemButton.Cancel', 'ph--x--regular', 
 
 const Delete = createStaticPreset('Next.SystemButton.Delete', 'ph--trash--regular', 'system-button.delete.label');
 
-/** Takes a row out of a list without destroying what it names; the glyph is Close's, the intent Delete's. */
-const Remove = createStaticPreset('Next.SystemButton.Remove', 'ph--x--regular', 'system-button.remove.label');
+/**
+ * Takes a row out of a list without destroying what it names; the glyph is Close's, the intent Delete's. In a list row
+ * it is named by its label followed by the row's `ItemText` ("Delete Q3 budget"); a `label` replaces both.
+ */
+const Remove = composable<HTMLButtonElement, SystemButtonProps>(
+  ({ label, iconOnly, showTooltip, tooltipSide, id, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const row = useContext(RowContext);
+    const generatedId = useId();
+    const ownId = id ?? generatedId;
+    const labelledBy =
+      label === undefined && row && props['aria-labelledby'] === undefined ? `${ownId} ${row.textId}` : undefined;
+    return (
+      <Button
+        aria-labelledby={labelledBy}
+        {...props}
+        id={ownId}
+        {...presetContent({
+          icon: 'ph--x--regular',
+          label: label ?? t('system-button.remove.label'),
+          iconOnly,
+          showTooltip,
+          tooltipSide,
+        })}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+Remove.displayName = 'Next.SystemButton.Remove';
 
 const Edit = createStaticPreset('Next.SystemButton.Edit', 'ph--pen--regular', 'system-button.edit.label');
 

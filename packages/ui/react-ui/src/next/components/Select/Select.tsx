@@ -155,7 +155,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           </span>
         )}
         <SelectPrimitive.Indicator>
-          {loading ? <Icon icon='ph--spinner-gap--regular' data-spin='' /> : <Icon icon='ph--caret-up-down--regular' />}
+          {loading ? <Icon icon='ph--spinner-gap--regular' spin /> : <Icon icon='ph--caret-up-down--regular' />}
         </SelectPrimitive.Indicator>
       </SelectPrimitive.Trigger>
     );

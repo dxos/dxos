@@ -18,6 +18,8 @@ import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { elevationAttrs, elevationSurface, osTranslations } from '@dxos/ui-theme';
 import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 import { useThemeContext } from '../../hooks/index.ts';
 import { ElevationProvider } from '../../providers/index.ts';
 import { type DialogSize } from '../../theme/index.ts';
@@ -302,19 +304,20 @@ const DIALOG_ACTION_ICONS: Record<DialogActionIconButtonAction, string> = {
   delete: 'ph--trash--regular',
 };
 
-const DIALOG_ACTION_LABEL_KEYS: Record<DialogActionIconButtonAction, string> = {
+const DIALOG_ACTION_LABELS: Record<DialogActionIconButtonAction, { key: string; ns: string }> = {
   // Preserves the legacy `close-dialog.label` translation key for backward compat.
-  close: 'close-dialog.label',
-  delete: 'toolbar-delete.label',
+  close: { key: 'close-dialog.label', ns: osTranslations },
+  delete: { key: 'toolbar-delete.label', ns: translationKey },
 };
 
 const DialogActionIconButton = forwardRef<HTMLButtonElement, DialogActionIconButtonProps>(
   ({ action, label, ...props }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
+    const { t } = useTranslation();
+    const { key, ns } = DIALOG_ACTION_LABELS[action];
     return (
       <IconButton
         {...props}
-        label={label ?? t(DIALOG_ACTION_LABEL_KEYS[action])}
+        label={label ?? t(key, { ns })}
         icon={DIALOG_ACTION_ICONS[action]}
         iconOnly
         size={4}

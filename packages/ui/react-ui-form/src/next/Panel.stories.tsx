@@ -93,7 +93,14 @@ export const Test: Story = {
 
     // 4. A popup opened from the form takes the panel's size, not the md default.
     await userEvent.click(canvas.getByRole('combobox', { name: 'Status' }));
-    const listbox = await body.findByRole('listbox');
+    // The form's arrays are listboxes too, so the popup is the one portalled outside the canvas.
+    const listbox = await waitFor(() => {
+      const popup = body.getAllByRole('listbox').find((element) => !canvasElement.contains(element));
+      if (!popup) {
+        throw new Error('Select popup not open.');
+      }
+      return popup;
+    });
     await expect(listbox.closest('[data-size]')).toHaveAttribute('data-size', 'sm');
     await userEvent.keyboard('{Escape}');
   },
