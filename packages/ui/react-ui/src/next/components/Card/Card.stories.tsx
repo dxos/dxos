@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, centreX, expectTooltip, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, centreX, controlSize, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import { type CardRootProps } from './Card.tsx';
 
@@ -193,6 +193,27 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** `size` scopes a card's own metrics: its blocks and controls take that size whatever the host's. */
+export const Sized: Story = {
+  render: () => (
+    <Next.Card.Root size='sm' data-testid='sized-card'>
+      <Next.Card.Header>
+        <Next.Block data-testid='sized-block'>
+          <Next.Icon icon='ph--cube--regular' />
+        </Next.Block>
+        <Next.Card.Title>Small card</Next.Card.Title>
+      </Next.Card.Header>
+    </Next.Card.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    // A header Block is one control at the card's size.
+    await expect(byTestId(canvasElement, 'sized-block').getBoundingClientRect().height).toBeCloseTo(
+      controlSize('sm'),
+      0,
+    );
+  },
+};
 
 /**
  * The card lifts one level above its host, and title, body and footer share the content edge; the poster spans the

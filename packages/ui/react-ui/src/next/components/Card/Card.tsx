@@ -38,6 +38,8 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
    * Off by default: the card is a padded column, and rows lay their icon, text and trailing cells out inline.
    */
   grid?: boolean;
+  /** Sizes the card's rows, blocks and controls (its `data-size` scope), whatever its host's size. */
+  size?: Size;
 };
 
 /**
@@ -47,11 +49,12 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * menus stop their clicks reaching it.
  */
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ classNames, border = true, selected, grid = false, onClick, onKeyDown, ...props }, forwardedRef) => {
+  ({ classNames, border = true, selected, grid = false, size, onClick, onKeyDown, ...props }, forwardedRef) => {
     const card = (
       <div
         data-surface={grid ? undefined : '+1'}
         {...props}
+        data-size={size}
         {...clickableProps(onClick, onKeyDown)}
         aria-current={selected ? 'true' : undefined}
         data-scope='card'

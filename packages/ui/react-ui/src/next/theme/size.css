@@ -35,7 +35,8 @@
     .nx-dialog,
     .nx-fieldset-legend,
     .nx-avatar,
-    .nx-button
+    .nx-button,
+    .nx-card
   )[data-size='xs'] {
     --nx-block-size: 1.25rem;
     --nx-line-height: var(--text-xs--line-height);
@@ -64,7 +65,8 @@
     .nx-dialog,
     .nx-fieldset-legend,
     .nx-avatar,
-    .nx-button
+    .nx-button,
+    .nx-card
   )[data-size='sm'] {
     --nx-block-size: 1.5rem;
     --nx-line-height: var(--text-sm--line-height);
@@ -93,7 +95,8 @@
     .nx-dialog,
     .nx-fieldset-legend,
     .nx-avatar,
-    .nx-button
+    .nx-button,
+    .nx-card
   )[data-size='md'] {
     --nx-block-size: 2rem;
     --nx-line-height: var(--text-base--line-height);
@@ -122,7 +125,8 @@
     .nx-dialog,
     .nx-fieldset-legend,
     .nx-avatar,
-    .nx-button
+    .nx-button,
+    .nx-card
   )[data-size='lg'] {
     --nx-block-size: 2.5rem;
     --nx-line-height: var(--text-lg--line-height);
@@ -151,7 +155,8 @@
     .nx-dialog,
     .nx-fieldset-legend,
     .nx-avatar,
-    .nx-button
+    .nx-button,
+    .nx-card
   )[data-size='xl'] {
     --nx-block-size: 3rem;
     --nx-line-height: var(--text-xl--line-height);
