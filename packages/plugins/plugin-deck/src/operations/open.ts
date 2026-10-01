@@ -128,9 +128,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         } else if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
-          // A named open reuses the plank already holding that name, the way a browser tab is reused.
+          // A named open reuses the plank already holding that name, the way a browser tab is reused; shift
+          // asks for a new plank, so it does not.
           const holder = input.name ? deck.plankNames[input.name] : undefined;
-          const replaceId = holder && deck.active.includes(holder) ? holder : undefined;
+          const replaceId = !shift && holder && deck.active.includes(holder) ? holder : undefined;
           next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
         } else {
           next = navigateSolo(deck.active);

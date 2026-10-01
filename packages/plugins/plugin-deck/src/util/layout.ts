@@ -122,6 +122,12 @@ export const prunePlankNames = (
   return kept;
 };
 
+/** `names` with `id` no longer anyone's detail, so closing its owner leaves it open. */
+export const detachDetail = (names: Readonly<Record<string, string>>, id: string): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(names).filter(([name, holder]) => !(name.startsWith(DETAIL_NAME_PREFIX) && holder === id)),
+  );
+
 /** `names` with `detail` as `owner`'s detail; the chain hanging off its previous detail is dropped. */
 export const setDetail = (
   names: Readonly<Record<string, string>>,

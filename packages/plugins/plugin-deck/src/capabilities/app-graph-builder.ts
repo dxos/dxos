@@ -20,7 +20,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
-import { detailName } from '../util/index.ts';
+import { detachDetail, detailName, updateActiveDeck } from '../util/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -87,6 +87,12 @@ export default Capability.makeModule(
                 const deck = yield* DeckCapabilities.getDeck();
                 const attended = attention.getCurrent().at(-1);
                 const ids = deck.active.filter((id: string) => id !== attended) ?? [];
+                if (attended) {
+                  // Closing a plank closes its details, so the kept plank stops being one first.
+                  yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+                    updateActiveDeck(state, { plankNames: detachDetail(deck.plankNames, attended) }),
+                  );
+                }
                 yield* Operation.invoke(LayoutOperation.Close, { subject: ids });
               }),
               properties: {

@@ -6,6 +6,7 @@ import { describe, test } from 'vitest';
 
 import {
   addSubjectsToActiveDeck,
+  detachDetail,
   detailChain,
   detailName,
   matchOpenEntities,
@@ -92,6 +93,13 @@ describe('details', () => {
 
   test('setDetail with the current detail keeps its chain', ({ expect }) => {
     expect(setDetail(chain, 'inbox', 'msg-1')).toEqual(chain);
+  });
+
+  test('detachDetail leaves the plank open when its owner closes', ({ expect }) => {
+    const names = detachDetail({ ...chain, preview: 'msg-1' }, 'msg-1');
+    expect(detailChain(names, 'inbox')).toEqual([]);
+    expect(detailChain(names, 'msg-1')).toEqual(['att-1']);
+    expect(names.preview).toBe('msg-1');
   });
 
   test('setDetail leaves other names alone', ({ expect }) => {
