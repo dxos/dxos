@@ -4,9 +4,10 @@
 
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Next } from '@dxos/react-ui/next';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { Row } from '../Row/index.ts';
 
@@ -80,15 +81,28 @@ type CardTileHeaderProps = {
  * Tile header row: leading `Row.Star` · title · optional `Card.Menu`. Shared by message/conversation
  * tiles (with menu) and event tiles (star + title only).
  */
-const CardTileHeader = ({ title, starred, menu = false, menuItems, onToggleStar }: CardTileHeaderProps) => (
-  <Next.Card.Header>
-    <Next.Block>
-      <Row.Star starred={starred} onToggle={onToggleStar} />
-    </Next.Block>
-    <Next.Card.Title classNames='flex items-center gap-3'>{title}</Next.Card.Title>
-    {menu && <Next.Card.Menu items={menuItems} />}
-  </Next.Card.Header>
-);
+const CardTileHeader = ({ title, starred, menu = false, menuItems, onToggleStar }: CardTileHeaderProps) => {
+  const { t } = useTranslation(osTranslations);
+  return (
+    <Next.Card.Header>
+      <Next.Block>
+        <Row.Star starred={starred} onToggle={onToggleStar} />
+      </Next.Block>
+      <Next.Card.Title classNames='flex items-center gap-3'>{title}</Next.Card.Title>
+      {menu && (
+        <Next.Card.Menu label={t('toolbar-menu.label')}>
+          {menuItems?.map((item) => (
+            <Next.Menu.Item
+              key={item.label}
+              item={{ value: item.label, label: item.label, icon: item.icon }}
+              onClick={item.onClick}
+            />
+          ))}
+        </Next.Card.Menu>
+      )}
+    </Next.Card.Header>
+  );
+};
 
 CardTileHeader.displayName = 'CardTile.Header';
 

@@ -103,7 +103,6 @@ type AnchorIconButtonProps = {
   fallbackLabel?: string;
   title?: string;
   value?: URI.URI;
-  size?: 4 | 5 | 6;
   /** Also open the card on hover (never the `onClick` fallback — hovering must not create anything). */
   hover?: boolean;
   onClick?: () => void;
@@ -121,7 +120,6 @@ const AnchorIconButton = ({
   fallbackLabel,
   title,
   value,
-  size = 4,
   hover,
   onClick,
 }: AnchorIconButtonProps) => {
@@ -151,7 +149,6 @@ const AnchorIconButton = ({
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
       iconOnly
-      size={size}
       label={value ? label : (fallbackLabel ?? label)}
       onClick={handleClick}
       ref={buttonRef}
@@ -348,7 +345,7 @@ export const ContactAvatar = ({
           icon='ph--user-circle-plus--regular'
           // One step below the avatar it replaces, so the button reads as an affordance rather than
           // as a heavier stand-in for the face.
-          size={Number(size) >= 8 ? 5 : 4}
+          iconSize={Number(size) >= 8 ? 'lg' : 'md'}
           label={t('create-contact.label')}
           classNames='dx-fullscreen opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
@@ -487,7 +484,7 @@ const RowStar = ({ starred, onToggle }: RowStarProps) => {
     return null;
   }
 
-  return <Next.SystemButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+  return <Next.SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={handleClick} />;
 };
 
 RowStar.displayName = 'Row.Star';
