@@ -37,11 +37,11 @@ import * as wireInternal from './internal/wire.ts';
 //
 // The surface reads operations and skills off an echo registry with the standard query API, but
 // when that registry loads is the host's call: the tools resolve it per call through
-// `RegistrySource`, and prompts are built from whatever registry the host hands `promptsLayer`. The
-// rest is how a chosen operation actually runs and which spaces the session may address — the
-// `Host` service. The CLI supplies its live registry and in-process invoke (`layer`); EDGE supplies
-// its service binding and the grant's spaces, hydrating registries from its RPC records
-// (see {@link hydrateRegistry}) only as far as each request needs.
+// `RegistrySource`, and prompts come from whatever registry the host hands `registerPrompts`, at
+// layer build or on a running server. The rest is how a chosen operation actually runs and which
+// spaces the session may address — the `Host` service. The CLI supplies its live registry and
+// in-process invoke (`layer`); EDGE supplies its service binding and the grant's spaces, hydrating
+// registries from its RPC records (see {@link hydrateRegistry}) only as far as each request needs.
 //
 
 /** Failure of the host's invoke seam — an outage or handler fault, not an authorship error. */
@@ -698,31 +698,41 @@ export const toolsLayer = ({ reservedToolNames = [] }: Pick<LayerOptions, 'reser
   }).pipe(Layer.unwrap);
 
 /**
- * The opted-in skills of `registry` as MCP prompts. Needs skills only, never operations. Prompts
- * are captured at layer build — effect's `McpServer` has no tool/prompt removal, so the prompt list
- * cannot follow the registry live the way the tool handlers do. A prompt-name collision dies here,
- * at layer build, as the authorship error it is.
+ * Registers the opted-in skills of `registry` as prompts on an already-running server. Needs skills
+ * only, never operations. Effect's `McpServer` can add prompts at runtime (and tells subscribers the
+ * list changed) but cannot remove them, so a skill dropped from the registry stays until the server
+ * is rebuilt. A prompt-name collision dies here, as the authorship error it is.
  */
-export const promptsLayer = (
+export const registerPrompts = (
   registry: Registry.Registry,
   { reservedPromptNames = [] }: Pick<LayerOptions, 'reservedPromptNames'> = {},
-): Layer.Layer<never> =>
+): Effect.Effect<void, never, McpServer$.McpServer> =>
   viewInternal.mcpSkills(registry, reservedPromptNames).pipe(
-    Effect.map((skills) =>
-      Layer.mergeAll(
-        Layer.empty,
-        ...skills.map((candidate) =>
-          McpServer$.prompt({
+    Effect.flatMap((skills) =>
+      Effect.forEach(
+        skills,
+        (candidate) =>
+          McpServer$.registerPrompt({
             name: candidate.promptName,
             description: candidate.description,
             parameters: {},
             content: () => Effect.succeed(candidate.instructions),
           }),
-        ),
+        { discard: true },
       ),
     ),
-    Layer.unwrap,
   );
+
+/**
+ * {@link registerPrompts} at layer build, for a host that has its skills before it serves anything.
+ * A host that fetches skills should keep them off the handshake and call {@link registerPrompts}
+ * when a prompt request first arrives instead.
+ */
+export const promptsLayer = (
+  registry: Registry.Registry,
+  options: Pick<LayerOptions, 'reservedPromptNames'> = {},
+): Layer.Layer<never> =>
+  Layer.effectDiscard(registerPrompts(registry, options)).pipe(Layer.provide(McpServer$.McpServer.layer));
 
 /**
  * The whole projected surface built eagerly over a live {@link Registry.Service} — {@link toolsLayer}

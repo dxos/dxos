@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Result from 'effect/Result';
@@ -894,6 +895,37 @@ describe('McpServer.toolsLayer', () => {
       const called = await send(handler, 'tools/call', { name: 'queryOperations', arguments: {} });
       expect(called.result.isError).to.equal(true);
       expect(JSON.stringify(called.result.content)).to.include('registry is unavailable');
+    } finally {
+      await dispose();
+    }
+  });
+
+  test('skill prompts registered on a running server appear in prompts/list', async ({ expect }) => {
+    let serverContext: Context.Context<McpServer$.McpServer> | undefined;
+    const captureServer = Layer.effectDiscard(
+      Effect.map(Effect.context<McpServer$.McpServer>(), (context) => {
+        serverContext = context;
+      }),
+    );
+    const { handler, dispose } = HttpRouter.toWebHandler(
+      Layer.mergeAll(McpServer.toolsLayer(), captureServer).pipe(
+        Layer.provide(Layer.succeed(McpServer.RegistrySource, McpServer.RegistrySource.of({ registry: Effect.never }))),
+        Layer.provide(Layer.succeed(McpServer.Host, testHost().host)),
+        Layer.provide(
+          McpServer$.layerHttp({ name: 'test', version: '0.0.0', path: '/mcp', protocols: [McpProtocol.v2026_07_28] }),
+        ),
+      ),
+    );
+    try {
+      const before = await send(handler, 'prompts/list');
+      expect(before.result?.prompts ?? []).to.have.length(0);
+
+      expect(serverContext).toBeDefined();
+      if (serverContext) {
+        await EffectEx.runPromise(McpServer.registerPrompts(testRegistry()).pipe(Effect.provide(serverContext)));
+      }
+      const after = await send(handler, 'prompts/list');
+      expect(after.result.prompts.map((prompt: { name: string }) => prompt.name)).to.deep.equal(['codeProject']);
     } finally {
       await dispose();
     }
