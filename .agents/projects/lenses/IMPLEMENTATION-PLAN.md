@@ -91,10 +91,11 @@ an upgrade gains them with main's roots; translation runs within each branch; sw
 branch's newest known version; merge and sync pair each version with main's. Released hosts replicate
 only `members`, so a branch's other versions reach peers on hosts that know `versions`.
 
+Replication heads (item 3, 2026-10-01): `getDocumentHeads` and `reIndexHeads` cover every document the
+branch registry references, so waiting for replicated heads covers version and branch documents.
+
 Not yet done:
 
-- `getDocumentHeads` and `waitUntilHeadsReplicated` cover linked documents only, not version documents
-  (branch documents have the same gap).
 - Deriving a version for an object with a long history translates every edit since creation.
 - `watchVersions` is not yet wired into plugin-client, and lenses are code only.
 - A released app that still runs an in-place migration for a versioned type would rewrite the linked
