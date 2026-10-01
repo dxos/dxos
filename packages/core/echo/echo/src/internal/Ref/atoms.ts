@@ -48,19 +48,3 @@ export const refArrayFamily = Atom.family(
   <T>([refs, includeDeleted]: readonly [readonly Ref<T>[], boolean]): Atom.Atom<T[]> =>
     Atom.make<T[]>((get) => refs.map((ref) => get(refFamily([ref, includeDeleted]))).filter(isNonNullable)),
 );
-
-/**
- * Reactive target of a ref, or targets of a ref array (see {@link refFamily}, {@link refArrayFamily}).
- */
-export function makeAtom<T>(ref: Ref<T>, options?: LoadOptions): Atom.Atom<T | undefined>;
-export function makeAtom<T>(refs: readonly Ref<T>[], options?: LoadOptions): Atom.Atom<T[]>;
-export function makeAtom<T>(
-  refs: Ref<T> | readonly Ref<T>[],
-  options?: LoadOptions,
-): Atom.Atom<T | undefined> | Atom.Atom<T[]> {
-  const includeDeleted = options?.deleted === 'include';
-  // Copied: a live ECHO array would mutate under the family key.
-  return isRefArray(refs) ? refArrayFamily([[...refs], includeDeleted]) : refFamily([refs, includeDeleted]);
-}
-
-const isRefArray = <T>(refs: Ref<T> | readonly Ref<T>[]): refs is readonly Ref<T>[] => Array.isArray(refs);

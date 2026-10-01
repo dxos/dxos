@@ -863,10 +863,10 @@ describe('Database', () => {
       ]);
     });
 
-    test('Ref.atom over a ref array reads loaded targets in order and drops one once removed', async ({ expect }) => {
+    test('Obj.atomReactive over a ref array reads loaded targets in order and drops one once removed', async ({ expect }) => {
       const { db, person, tasks } = await setup();
       const registry = AtomRegistry.make();
-      const titles = () => registry.get(Ref.atom(person.tasks!)).map((task) => task.title);
+      const titles = () => registry.get(Obj.atomReactive(person.tasks!)).map((task) => task.title);
 
       expect(titles()).toEqual(['one', 'two', 'three']);
       Obj.update(person, (person) => {
@@ -874,8 +874,8 @@ describe('Database', () => {
       });
       expect(titles()).toEqual(['three', 'one', 'two']);
 
-      const atom = Ref.atom(person.tasks!);
-      const included = Ref.atom(person.tasks!, { deleted: 'include' });
+      const atom = Obj.atomReactive(person.tasks!);
+      const included = Obj.atomReactive(person.tasks!, { deleted: 'include' });
       registry.subscribe(atom, () => {});
       registry.subscribe(included, () => {});
       expect(registry.get(included)).toHaveLength(3);

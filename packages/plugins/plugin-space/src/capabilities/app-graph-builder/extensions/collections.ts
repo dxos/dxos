@@ -84,7 +84,7 @@ const isTypeAvailable = (typenames: ReadonlySet<string>, object: Obj.Unknown): b
 
 /** A collection's members in its order, omitting deleted and archived objects. */
 const getMembers = (get: Atom.AtomContext, refs: readonly Ref.Ref<Obj.Unknown>[]): Obj.Unknown[] =>
-  get(Ref.atom(refs)).filter(
+  get(Obj.atomReactive(refs)).filter(
     (object) => !Option.getOrElse(get(Annotation.atom(object, ArchivedAnnotation)), () => false),
   );
 
