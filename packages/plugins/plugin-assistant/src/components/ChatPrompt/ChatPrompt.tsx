@@ -31,7 +31,7 @@ import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
-import { type AiChatProcessor } from '../../processor/index.ts';
+import { type AiChatProcessor, getProcessorState } from '../../processor/index.ts';
 import { type ChatEvent } from '../Chat/index.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 import { ChatMcpErrors } from './ChatMcpErrors.tsx';
@@ -46,7 +46,8 @@ export type ChatPromptProps = Merge<
     expandable?: boolean;
     db?: Database.Database;
     chat?: Chat.Chat;
-    processor: AiChatProcessor;
+    /** Undefined while the processor is still opening: the prompt takes text but holds it until then. */
+    processor?: AiChatProcessor;
     event: Event<ChatEvent>;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;
@@ -61,6 +62,7 @@ export type ChatPromptProps = Merge<
      */
     nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
+    autoFocus?: boolean;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
@@ -79,6 +81,7 @@ export const ChatPrompt = ({
   customActions,
   nodeId,
   placeholder,
+  autoFocus = true,
   onPresetChange,
   settings = true,
   presets,
@@ -86,9 +89,10 @@ export const ChatPrompt = ({
   companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
-  const streaming = useAtomValue(processor.streaming);
-  const active = useAtomValue(processor.active);
+  const processorState = getProcessorState(processor);
+  const error = useAtomValue(processorState.error).pipe(Option.getOrUndefined);
+  const streaming = useAtomValue(processorState.streaming);
+  const active = useAtomValue(processorState.active);
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -141,10 +145,7 @@ export const ChatPrompt = ({
     [],
   );
 
-  // There is something to send, whether or not a turn is running: a prompt submitted mid-turn is
-  // queued behind it rather than dropped, so text is the only precondition. `ChatActions` reads this
-  // to decide which affordance the primary control offers (Send with text, Stop without).
-  const canSend = hasText;
+  const canSend = hasText && processor != null;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
@@ -155,10 +156,13 @@ export const ChatPrompt = ({
   // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
+      if (!processor) {
+        return false;
+      }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event],
+    [event, processor],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
@@ -191,13 +195,13 @@ export const ChatPrompt = ({
         classNames,
       )}
     >
-      <ChatMcpErrors processor={processor} />
+      {processor && <ChatMcpErrors processor={processor} />}
 
       <div className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
-          autoFocus
+          autoFocus={autoFocus}
           markdown
           lineWrapping
           classNames='col-span-2 pt-0.5'
@@ -212,15 +216,15 @@ export const ChatPrompt = ({
           <ChatOptions
             db={db}
             chat={chat}
-            registry={processor.registry}
-            context={processor.context}
+            registry={processor?.registry}
+            context={processor?.context}
             preset={preset}
             presets={presets}
             onPresetChange={onPresetChange}
           />
 
           <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
-            <ChatReferences db={db} context={processor.context} />
+            {processor && <ChatReferences db={db} context={processor.context} />}
           </div>
 
           <ChatActions

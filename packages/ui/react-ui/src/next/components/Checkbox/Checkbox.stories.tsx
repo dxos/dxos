@@ -8,25 +8,27 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Checkbox label={`Subscribe ${size}`} defaultChecked data-testid={`checkbox-${size}`} />
-    <Next.Checkbox label={`Some selected ${size}`} checked='indeterminate' />
-    <Next.Checkbox aria-label={`Unlabelled ${size}`} />
-    <Next.Checkbox label={`Disabled ${size}`} disabled />
+    <Next.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
+    <Next.Checkbox label='Some selected' checked='indeterminate' />
+    <Next.Checkbox aria-label='Unlabelled' />
+    <Next.Checkbox label='Disabled' disabled />
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/checkbox',
+  title: 'ui/react-ui-core/next/components/Checkbox',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -41,6 +43,7 @@ export const Default: Story = {};
  * the label toggles the hidden native checkbox, which carries the accessible name.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const { block, icon } = GEOMETRY[size];
@@ -61,7 +64,7 @@ export const Test: Story = {
     }
 
     const canvas = within(sizeRow(canvasElement, 'md'));
-    const checkbox = canvas.getByRole('checkbox', { name: 'Subscribe md' });
+    const checkbox = canvas.getByRole('checkbox', { name: 'Subscribe' });
     const control = byTestId(canvasElement, 'checkbox-md').querySelector('[data-part="control"]');
     await expect(checkbox).toBeChecked();
     await expect(control).toHaveAttribute('data-state', 'checked');
@@ -69,11 +72,11 @@ export const Test: Story = {
     await waitFor(() => expect(checkbox).not.toBeChecked());
     await expect(control).toHaveAttribute('data-state', 'unchecked');
 
-    await expect(canvas.getByRole('checkbox', { name: 'Unlabelled md' })).not.toBeChecked();
-    await expect(canvas.getByRole('checkbox', { name: 'Disabled md' })).toBeDisabled();
+    await expect(canvas.getByRole('checkbox', { name: 'Unlabelled' })).not.toBeChecked();
+    await expect(canvas.getByRole('checkbox', { name: 'Disabled' })).toBeDisabled();
     await expect(
       canvas
-        .getByText('Some selected md')
+        .getByText('Some selected')
         .closest('[data-scope="checkbox"][data-part="root"]')
         ?.querySelector('[data-part="control"]'),
     ).toHaveAttribute('data-state', 'indeterminate');

@@ -9,7 +9,13 @@ import type * as Effect from 'effect/Effect';
 
 import { BaseError } from '@dxos/errors';
 
-import type { ExecRequest, ExecResult, FileEntry, SandboxRecord } from '../services/SandboxClient.ts';
+import type {
+  AttachedRepository,
+  ExecRequest,
+  ExecResult,
+  FileEntry,
+  SandboxRecord,
+} from '../services/SandboxClient.ts';
 
 /**
  * A sandbox request that could not be carried out — the backend failed, not the command: a command
@@ -17,7 +23,12 @@ import type { ExecRequest, ExecResult, FileEntry, SandboxRecord } from '../servi
  */
 export class SandboxError extends BaseError.extend('SandboxError', 'Sandbox request failed.') {}
 
-export type CreateOptions = { name?: string; baseImage?: string; expiresIn?: number };
+export type CreateOptions = {
+  name?: string;
+  baseImage?: string;
+  expiresIn?: number;
+  repositories?: readonly AttachedRepository[];
+};
 
 /**
  * Runs sandboxes: EDGE's container service, or processes on this machine confined by the OS
@@ -34,6 +45,15 @@ export interface Backend {
   ): Effect.Effect<{ bytes: Uint8Array; type: string }, SandboxError>;
   writeFile(spaceId: string, sandboxId: string, path: string, content: Uint8Array): Effect.Effect<void, SandboxError>;
   listFiles(spaceId: string, sandboxId: string, path: string): Effect.Effect<readonly FileEntry[], SandboxError>;
+  /**
+   * Replaces the repositories attached to the sandbox: each is a git remote, named as given, in every
+   * later command. Only EDGE sandboxes can reach a repository; absent on every other backend.
+   */
+  setRepositories?(
+    spaceId: string,
+    sandboxId: string,
+    repositories: readonly AttachedRepository[],
+  ): Effect.Effect<SandboxRecord, SandboxError>;
   /**
    * Serves a directory of the sandbox read-only over HTTP on this machine and answers its base URL,
    * ending in `/`. Only the desktop app's helper can; absent on every other backend.

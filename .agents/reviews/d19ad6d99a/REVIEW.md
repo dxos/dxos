@@ -12,6 +12,18 @@ reviewId: d19ad6d99a
 
 _0 error(s), 5 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- d19ad6d99a-1 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components.stories.tsx:86
+- d19ad6d99a-2 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Card/Card.stories.tsx:31
+- d19ad6d99a-3 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Image/Image.stories.tsx:29
+- d19ad6d99a-4 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/ScrollArea/ScrollArea.stories.tsx:40
+- d19ad6d99a-5 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/ScrollArea/ScrollArea.stories.tsx:40
+
+## Issues
+
 # WARN d19ad6d99a-1 no-styling-wrapper-divs `packages/ui/react-ui/src/next/components.stories.tsx:86`
 
 System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.89. The likeliest place is lines 86-93 (`const DefaultStory = () => (`, location confidence 0.92). This is a single-shot classifier: confirm against the rule before acting.
@@ -31,3 +43,19 @@ System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes co
 # WARN d19ad6d99a-5 design-tokens-not-raw-spacing-sizing `packages/ui/react-ui/src/next/components/ScrollArea/ScrollArea.stories.tsx:40`
 
 System One judges this a likely violation of `design-tokens-not-raw-spacing-sizing` (Spacing and sizing come from the design system's tokens, not raw Tailwind or arbitrary values), p=0.80. The likeliest place is lines 40-51 (`const Pane = ({ prefix, mode, width, native }: PaneProps) => (`, location confidence 0.81). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `79aca988d8fdf80ba37534478975ff5a874f8833`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 5 violations written to fragments, 144 uncertain, 1485 clean, 0 unanswered
+
+```text
+requests: 656 (73 verdicts re-asked with context the model requested)
+estimated input tokens: 3799709
+billed input tokens: 3583410 (cost $0.1505)
+measured chars per token: 3.18
+```

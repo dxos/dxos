@@ -257,6 +257,27 @@ export const AddPullRequestReviewComment = Operation.make({
   types: [PullRequest.PullRequest],
 });
 
+/**
+ * Re-read a stored pull request from GitHub and write back whatever has changed — its title, state,
+ * description, branches and size — so the object in the space does not go stale between syncs.
+ */
+export const SyncPullRequest = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.syncPullRequest'),
+    name: 'Sync Pull Request',
+    description: 'Refresh a stored pull request from GitHub.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  input: Schema.Struct({
+    pullRequest: Ref.Ref(PullRequest.PullRequest),
+  }),
+  output: Schema.Struct({
+    /** Names of the fields that changed; empty where the stored pull request was already current. */
+    updated: Schema.Array(Schema.String),
+  }),
+  types: [PullRequest.PullRequest],
+}).pipe(Operation.mutation('write'));
+
 /** Aggregate outcome of a commit's check runs; `none` when the commit has no checks at all. */
 export const CiState = Schema.Literals(['success', 'failure', 'pending', 'none']);
 export type CiState = Schema.Schema.Type<typeof CiState>;

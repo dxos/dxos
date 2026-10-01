@@ -196,10 +196,15 @@ writes wedge the other, which is how a debugging session ends up chasing its own
   you are editing, restart it against yours (`moon run storybook-react:serve` from your
   worktree) rather than adding a second server. Say so in your reply — you are moving a
   window the user may be looking at.
-- **Unresponsive is usually not dead.** The server stalls for a minute or two whenever a
-  file under `packages/` is written (a chokidar fsevents pathology — see
-  `tools/storybook-react/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
-  concluding anything. If it is still down, run `diagnose.sh` to capture the cause BEFORE
+- **Restart with `moon run storybook-react:serve-nodeps`** when the worktree is already
+  built. `serve` first runs every `:build` it depends on, and if another moon run (e.g.
+  `composer-app:bundle`) is building the same packages, both rewrite the same `dist/types`
+  and the builds fail with TS7016. Use `serve` only on a fresh worktree.
+- **A stale module is not a hung server.** If `/@fs/<file>` still serves old code but
+  `index.json` answers fast, the file watch was lost, not the server; the `dxos:rearm-watch`
+  plugin in `.storybook/main.ts` exists for exactly this, so suspect a regression there.
+- **Unresponsive is usually not dead.** Wait ~3 minutes before concluding anything. If it
+  is still down, run `tools/storybook-react/diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.
 - **Never `pkill -f storybook`.** Kill by the PID you own, established via
   `lsof -ti :9009 -sTCP:LISTEN`, and only after the wait above.
@@ -303,10 +308,11 @@ Deeper conventions:
 
 ## Handing an agent a credential
 
-**Prefer the 1Password CLI whenever it is available.** If `op whoami` succeeds (the cloud sandbox
-authenticates it through `OP_SERVICE_ACCOUNT_TOKEN`), read the credential with `op run` / `op read`
-before asking the user for anything, since the value then never passes through the conversation →
-`1password` skill. The `.secrets/` flow below is the fallback when `op` cannot reach the item.
+**In the cloud sandbox, prefer the 1Password CLI.** When `OP_SERVICE_ACCOUNT_TOKEN` is set, read the
+credential with `op run` / `op read` before asking the user for anything, since the value then never
+passes through the conversation → `1password` skill. **In a local session (no token) never run
+`op`** — not even `op whoami` — because each call pops a desktop-app authorization prompt; use the
+`.secrets/` flow below instead.
 
 Otherwise, put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
 prompt writes it to the transcript permanently; a file can be deleted.
@@ -358,7 +364,7 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).
-- **Credentials (API keys, tokens, passwords)** — the `op` CLI first, `.secrets/` as the fallback →
+- **Credentials (API keys, tokens, passwords)** — the `op` CLI in remote sessions only, `.secrets/` otherwise →
   `1password` skill (`.agents/skills/1password/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill

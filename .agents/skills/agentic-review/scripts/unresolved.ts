@@ -4,7 +4,7 @@
 //
 
 // Re-print unresolved review issues across every finalized run under
-// `.agents/reviews/`. Agents flip statuses in each run's RESOLUTION.md.
+// `.agents/reviews/`. Agents flip statuses in each run's REVIEW.md `## Index`.
 //
 // Usage:
 //   bun unresolved.ts [--path=<substr|glob>] [--rule=<rule-id>]
@@ -13,13 +13,13 @@
 // — when the value includes `*`/`?` — if it matches as a glob against the file
 // path. `--rule` is an exact rule id match.
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { parseDiagnostics, renderDiagnostic } from '../lib/diagnostics.ts';
 import { repoRoot } from '../lib/git.ts';
-import { parseResolution, RESOLUTION_FILE } from '../lib/resolution.ts';
+import { readIndexEntries, splitReviewBody } from '../lib/review-doc.ts';
 import { REVIEWS_DIR, readReview } from '../lib/store.ts';
 
 const { values } = parseArgs({
@@ -83,25 +83,22 @@ for (const entry of readdirSync(reviewsPath, { withFileTypes: true }).sort((a, b
     continue;
   }
 
-  const resolutionPath = join(dir, RESOLUTION_FILE);
-  if (!existsSync(resolutionPath)) {
-    // Legacy finalized runs predate issue ids / RESOLUTION.md — skip rather than
-    // invent statuses the agent cannot update.
-    continue;
-  }
-
   let statuses;
   try {
-    statuses = parseResolution(readFileSync(resolutionPath, 'utf8'));
+    statuses = new Map(readIndexEntries(dir, review.body).map(({ id, status }) => [id, status]));
   } catch (error) {
-    console.error(`${entry.name}/${RESOLUTION_FILE}: ${messageOf(error)}`);
+    console.error(`${entry.name}/REVIEW.md index: ${messageOf(error)}`);
     process.exitCode = 1;
+    continue;
+  }
+  if (statuses.size === 0) {
+    // No ledger (a clean run, or one that predates issue ids) — nothing to report or update.
     continue;
   }
 
   let diagnostics;
   try {
-    diagnostics = parseDiagnostics(review.body, `${entry.name}/REVIEW.md`);
+    diagnostics = parseDiagnostics(splitReviewBody(review.body).issues, `${entry.name}/REVIEW.md`);
   } catch (error) {
     console.error(`${entry.name}/REVIEW.md: ${messageOf(error)}`);
     process.exitCode = 1;

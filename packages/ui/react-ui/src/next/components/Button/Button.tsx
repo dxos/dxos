@@ -26,7 +26,11 @@ export type ButtonVariantProps = {
   valence?: ButtonValence;
   /** Fills the button with a Tag's hue (`--color-<hue>-surface`/`-fg`), in place of the variant's fill. */
   hue?: ButtonHue;
-  /** Dense inline padding (one control inset), e.g. for a run of pager buttons; an icon-only button loses its square. */
+  /**
+   * Dense inline padding (one control inset), e.g. for a run of pager buttons. An icon-only button loses its square,
+   * narrowing to its icon plus an inset either side, and compact icon-only buttons in an Input adornment abut (a
+   * stepper's − and +).
+   */
   compact?: boolean;
   /** A trailing caret marking a button that opens a menu. */
   caretDown?: boolean;

@@ -5,10 +5,11 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Type } from '@dxos/echo';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
-import { Sandbox, SandboxCapabilities } from '#types';
+import { translations } from '#translations';
+import { SandboxCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
@@ -30,20 +31,12 @@ export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [SandboxCapabilities.Settings],
 });
-// Names the type where the navtree lists it; without it the Database section shows the raw typename.
-export const Translations = AppCapability.translations([
-  {
-    'en-US': {
-      [Type.getTypename(Sandbox.Sandbox)]: {
-        'typename.label': 'Sandbox',
-        'typename.label_zero': 'Sandboxes',
-        'typename.label_one': 'Sandbox',
-        'typename.label_other': 'Sandboxes',
-      },
-    },
-  },
-]);
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});
+export const Translations = AppCapability.translations(translations);

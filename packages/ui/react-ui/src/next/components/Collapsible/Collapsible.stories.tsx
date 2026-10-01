@@ -8,10 +8,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
-import { sizeRow } from '../../testing.ts';
+import { realHover, realUnhover, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const DefaultStory = () => (
   <Next.Collapsible.Root>
@@ -30,9 +30,11 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/collapsible',
+  title: 'ui/react-ui-core/next/components/Collapsible',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -44,11 +46,20 @@ export const Default: Story = {};
 
 /** The trigger toggles the section by pointer and keyboard; the story ends open. */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     const trigger = canvas.getByRole('button', { name: 'Advanced settings' });
     const content = canvas.getByTestId('content');
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    // Hover recolours the text and leaves the row unfilled.
+    const rest = getComputedStyle(trigger);
+    const [restColor, restBackground] = [rest.color, rest.backgroundColor];
+    await realHover(trigger);
+    await waitFor(() => expect(getComputedStyle(trigger).color).not.toBe(restColor));
+    await expect(getComputedStyle(trigger).backgroundColor).toBe(restBackground);
+    await realUnhover(trigger);
     await expect(content).not.toBeVisible();
 
     // The trigger is a block row.

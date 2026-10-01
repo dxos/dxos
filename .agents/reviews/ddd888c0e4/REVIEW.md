@@ -12,6 +12,23 @@ reviewId: ddd888c0e4
 
 _2 error(s), 8 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- ddd888c0e4-1 - ignored - structured-logging-not-console - packages/devtools/devtools/src/components/ObjectsTree.tsx:129
+- ddd888c0e4-2 - ignored - extract-non-rendering-logic-from-component - packages/plugins/plugin-debug/src/containers/DebugPanel/DebugPanelSidebar.tsx:63
+- ddd888c0e4-3 - ignored - no-styling-wrapper-divs - packages/plugins/plugin-navtree/src/components/Sidebar/L1Panel.tsx:98
+- ddd888c0e4-4 - ignored - design-tokens-not-raw-spacing-sizing - packages/plugins/plugin-navtree/src/components/Sidebar/L1Panel.tsx:153
+- ddd888c0e4-5 - ignored - no-casts - packages/ui/react-ui-list/src/components/Tree/Tree.stories.tsx:269
+- ddd888c0e4-6 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-list/src/components/Tree/Tree.stories.tsx:293
+- ddd888c0e4-7 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-list/src/components/Tree/Tree.tsx:73
+- ddd888c0e4-8 - ignored - no-casts - packages/ui/react-ui-list/src/components/Tree/Tree.tsx:340
+- ddd888c0e4-9 - ignored - extract-non-rendering-logic-from-component - packages/ui/react-ui-list/src/components/Tree/Tree.tsx:502
+- ddd888c0e4-10 - ignored - no-styling-wrapper-divs - packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx:180
+
+## Issues
+
 # WARN ddd888c0e4-1 structured-logging-not-console `packages/devtools/devtools/src/components/ObjectsTree.tsx:129`
 
 System One judges this a likely violation of `structured-logging-not-console` (Use the project logger, at the right level, without spam), p=0.94. The likeliest place is lines 129-140 (`const handleCopyDXN = useCallback(() => {`, location confidence 0.86). This is a single-shot classifier: confirm against the rule before acting.
@@ -51,3 +68,19 @@ System One judges this a likely violation of `extract-non-rendering-logic-from-c
 # WARN ddd888c0e4-10 no-styling-wrapper-divs `packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx:180`
 
 System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.92. The likeliest place is lines 180-191 (`const makeColumnRenderer =`, location confidence 0.91). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `b8e3dd8b32db4f2dec7ee38f364e79cd7e6efb43`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 10 violations written to fragments, 158 uncertain, 158 clean, 0 unanswered
+
+```text
+requests: 235 (87 verdicts re-asked with context the model requested)
+estimated input tokens: 2161631
+billed input tokens: 2159282 (cost $0.0907)
+measured chars per token: 3.00
+```
