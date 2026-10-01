@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/next/theme.css';
 import * as PluginNS from '@dxos/app-framework/Plugin';
@@ -87,5 +88,26 @@ export const FullScreen: Story = {
   decorators: [withTheme(), withLayout({ scroll: true })],
   parameters: {
     layout: 'fullscreen',
+  },
+};
+
+/**
+ * Each row's icon takes the plugin's hue; the row's controls leave the tab order to the list, and its switch still
+ * toggles from a click.
+ */
+export const Test: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'dx-deck-surface' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const list = await canvas.findByRole('listbox', { name: 'plugins' });
+    const [row] = within(list).getAllByRole('option');
+    await expect(row.querySelector('[data-part="item-icon"] svg')?.getAttribute('data-hue')).toBeTruthy();
+    const toggle = within(row).getByRole('switch');
+    await expect(toggle).toHaveAttribute('tabindex', '-1');
+    await userEvent.click(toggle);
+    await waitFor(() => expect(toggle).toBeChecked());
   },
 };

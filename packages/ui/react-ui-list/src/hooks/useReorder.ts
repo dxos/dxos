@@ -40,6 +40,18 @@ export type ReorderItemState =
 
 const IDLE: ReorderItemState = { type: 'idle' };
 
+/**
+ * Marks the edge a dragged row will land on as `data-drop-target` on the target row, so the row can draw the indicator
+ * itself (Next lists do, in `row.css`); written directly so hovering never re-renders the row.
+ */
+const setDropTarget = (row: HTMLElement, edge: Edge | null) => {
+  if (edge) {
+    row.setAttribute('data-drop-target', edge);
+  } else {
+    row.removeAttribute('data-drop-target');
+  }
+};
+
 export type UseReorderListOptions<T> = {
   /** Authoritative item list. Read on each drop to compute the new index. */
   items: readonly T[];
@@ -209,7 +221,10 @@ export const useReorderList = <T>({
         };
         refs.row.addEventListener('dragstart', handleNativeDragStart);
         return combine(
-          () => refs.row.removeEventListener('dragstart', handleNativeDragStart),
+          () => {
+            refs.row.removeEventListener('dragstart', handleNativeDragStart);
+            setDropTarget(refs.row, null);
+          },
           draggable({
             element: refs.row,
             dragHandle: refs.handle,
@@ -283,20 +298,28 @@ export const useReorderList = <T>({
             getIsSticky: () => true,
             onDragEnter: ({ self, source }) => {
               if (source.element !== refs.row) {
-                onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+                const closestEdge = extractClosestEdge(self.data);
+                setDropTarget(refs.row, closestEdge);
+                onItemState({ type: 'dragging-over', closestEdge });
               }
             },
             onDrag: ({ self, source }) => {
               if (source.element !== refs.row) {
-                onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
+                const closestEdge = extractClosestEdge(self.data);
+                setDropTarget(refs.row, closestEdge);
+                onItemState({ type: 'dragging-over', closestEdge });
               }
             },
             onDragLeave: ({ source }) => {
               if (source.element !== refs.row) {
+                setDropTarget(refs.row, null);
                 onItemState(IDLE);
               }
             },
-            onDrop: () => onItemState(IDLE),
+            onDrop: () => {
+              setDropTarget(refs.row, null);
+              onItemState(IDLE);
+            },
           }),
         );
       },

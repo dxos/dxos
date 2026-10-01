@@ -1,0 +1,69 @@
+/*
+ * Row states shared by every Next list row (AUDIT §6 point 20): `.nx-row` carries hover, highlight, selection,
+ * current, disabled, drag and drop states, keyed on the attributes Ark's listbox and the reorder hook set; each row type
+ * keeps its own class for layout. States take ui-theme's tokens as the current react-ui-list rows do.
+ */
+
+@layer dx-components {
+  .nx-row {
+    position: relative;
+    border-radius: var(--radius-sm, 0.25rem);
+    cursor: default;
+  }
+  .nx-row[data-selectable] {
+    cursor: pointer;
+  }
+  .nx-row[data-selectable]:hover,
+  .nx-row[data-highlighted] {
+    background: var(--color-hover-surface);
+  }
+  .nx-row[aria-selected='true'] {
+    background: var(--color-selected-surface);
+  }
+  .nx-row[aria-selected='true']:hover {
+    background: var(--color-selected-surface-hover);
+  }
+  .nx-row[aria-current='true'] {
+    background: var(--color-current-surface);
+  }
+  .nx-row[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* The keyboard's row: ringed while its list has visible focus (directly, or around a collapsible row). */
+  [role='listbox']:focus-visible > .nx-row[data-highlighted],
+  [role='listbox']:focus-visible > * > .nx-row[data-highlighted] {
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+
+  /* The source row stays in place, dimmed, while its preview is dragged. */
+  [data-dragging] {
+    opacity: 0.5;
+  }
+
+  /* The edge a dragged row will land on, drawn by the target row itself from `data-drop-target` (useReorder). */
+  [data-drop-target] {
+    position: relative;
+  }
+  [data-drop-target]::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: var(--nx-drop-indicator-width);
+    background: var(--nx-drop-indicator-color);
+    pointer-events: none;
+  }
+  [data-drop-target='top']::after {
+    top: calc(var(--nx-drop-indicator-width) / -2);
+  }
+  [data-drop-target='bottom']::after {
+    bottom: calc(var(--nx-drop-indicator-width) / -2);
+  }
+
+  /* `virtual='variable'`: every row mounts, and the browser skips the layout of rows out of view. */
+  [data-virtual='variable'] > :not([data-virtual-spacer]) {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--nx-block-size);
+  }
+}

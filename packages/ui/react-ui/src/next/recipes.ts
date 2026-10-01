@@ -139,4 +139,6 @@ export const recipes = {
   listboxItemIndicator: () => 'nx-listbox-item-indicator',
   dropIndicator: () => 'nx-drop-indicator',
   dragPreview: () => 'nx-drag-preview',
+  emptyText: () => 'nx-empty-text',
+  row: () => 'nx-row',
 } as const;

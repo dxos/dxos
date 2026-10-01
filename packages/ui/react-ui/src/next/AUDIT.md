@@ -36,8 +36,8 @@ layout) is deferred to M7.
 
 ### Decisions still needed
 
-- **Lists:** virtualization (point 3), selection ownership (4), OrderedList keyboard grammar (19), shared row states
-  (20), `Empty` parts (41), row identity for plain arrays (43).
+- **Lists:** none; group B (virtualization, selection, keyboard grammar, row states, `Empty`, row identity) is
+  decided and built (§6, Phase A2).
 - **Form:** settings layout (1, deferred to M7), Next sections inside current hosts (42).
 - **Labels and text:** list chrome translations (21), Typography `id` (40), per-row Remove names (44).
 - **Tooling:** mixing lint rule (11).
@@ -751,6 +751,18 @@ Reviewed one question at a time; decisions supersede the recommendations above.
 - **Point 21, chrome labels:** the strings move to react-ui translations under its own `translationKey`.
 - **Point 23, plugin list:** list items forward `hue` to their icon (`ItemIcon` forwards Icon's props); no cards.
 
+**Built (Phase A2, 2026-10-01):** every group B decision above. `Next.Listbox` always runs Ark's machine
+(`selectionMode='none'` included) and renders its Content and Items from zag's props, so the grid keyboard
+(`components/Listbox/grid.ts`) runs before zag and row controls never select their row; `useVirtualRows` and
+`VirtualSpacer` (`components/Listbox/virtual.tsx`, exported as `Next.useVirtualRows`) are the shared windowing for
+Tree to adopt; `theme/row.css` holds `nx-row` and the `data-drop-target` line; Root `columns` makes rows subgrids;
+`Next.Empty` and the `Empty` parts; `Collapsible.Trigger` without children is the caret-only square named by the row's
+`ItemText`; `SystemButton.Remove` is named "Delete <text>" (its translated label, then the row's text); `DragHandle`'s label
+defaults to the react-ui `drag-handle.label`. In react-ui-list/next: OrderedList on Next.Listbox with `Label`, `Empty`,
+`ItemIcon`, `ItemText`, `ItemDescription`, collapsible `Item` + `Detail` (no `DetailItem`), optional `getId`,
+`getLabel` and the default preview chip; `useStableIds` (root entry) and `listboxSelection`, the `useListSelection`
+value adapter. The current (non-next) OrderedList keeps `DetailItem` until the cut-over.
+
 ### Decision review 2026-10-01 (group C: forms)
 
 - **Point 1, settings layout:** option 1 as built in the spike, matching the current Form: equal tracks, each row its
@@ -786,7 +798,7 @@ No open questions remain.
 | 1   | Foundations                   | pane host, popup size, Group stretch, child span (point 7) done; required marker (point 8), depth-5 benchmark open |
 | 2   | Next.Listbox                  | done                                                                                                               |
 | 3   | `react-ui-list/next` scaffold | done: `./next` entry, Listbox, plugin-registry pilot (open: points 14, 15, 23)                                     |
-| 4   | OrderedList next              | done: OrderedList; plugin-sheet `RangeList` migrated (open: points 16–20, 24, 40–44)                               |
+| 4   | OrderedList next              | done: OrderedList; plugin-sheet `RangeList` migrated; group B decisions built (Phase A2)                           |
 | 5   | Combobox trigger mode         | done: trigger mode, description, create row, async, virtual anchor (open: ObjectPicker story)                      |
 | 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                                                     |
 | 7   | Settings layout               | blocked on point 1                                                                                                 |
@@ -809,11 +821,10 @@ The cut-over is one PR, landed before production, after which the current compon
 
 Nothing in the cut-over PR may be a new component; every Next counterpart lands first, with stories and tests.
 
-1. Decided but unbuilt: Container `span`, `ControlFrame`, `Next.Empty` and composite `Empty` parts, `Banner`,
-   collapsible `OrderedList.Item`, `Input variant='mono'`, `Image backdrop`, the group B list decisions, Tree
-   exported from `react-ui-list/next`. **Done (Phase A1):** Container `span` (and Field/Fieldset), row cells with
-   their own lines, `ControlFrame`, `Next.Empty`, `Banner`, the `div` group Fieldset, `Input variant='mono'`,
-   `Image backdrop='dominant'`; composite `Empty` parts, the collapsible Item, the group B decisions and Tree remain.
+1. **Done.** Phase A1: Container `span` (and Field/Fieldset), row cells with their own lines, `ControlFrame`,
+   `Next.Empty`, `Banner`, the `div` group Fieldset, `Input variant='mono'`, `Image backdrop='dominant'`. Phase A2:
+   the list `Empty` parts, collapsible `OrderedList.Item`, the group B list decisions. Phase A3: Tree exported from
+   `react-ui-list/next`.
 2. `react-ui-form/next` from the spike (draft PR #13550) through milestones 6–10.
 3. A Next action binding for `react-ui-menu` (`useMenuActions` → Next Menu and Toolbar).
 4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
