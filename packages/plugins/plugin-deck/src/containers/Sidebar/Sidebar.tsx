@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type Label } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 
 import { useBreakpoints, useDeckState } from '#hooks';
@@ -13,7 +14,7 @@ import { meta } from '#meta';
 
 import { layoutAppliesTopbar } from '../../util/index.ts';
 
-const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Next.Label;
+const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
 export const Sidebar = () => {
   const { state } = useDeckState();

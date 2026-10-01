@@ -7,7 +7,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { type FC, type MutableRefObject, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
-import type { Next } from '@dxos/react-ui/next';
+import { type Label } from '@dxos/react-ui';
 import { type Density } from '@dxos/ui-types';
 
 import { type TreeData } from './tree-data.ts';
@@ -18,7 +18,7 @@ import { type DropKind } from './TreeDropIndicator.tsx';
 
 export type TreeItemDataProps = {
   id: string;
-  label: Next.Label;
+  label: Label;
   parentOf?: string[];
   /** Pass-through of the node's disposition; the tree uses this to branch render mode (e.g. `'group'` → section header). */
   disposition?: string;

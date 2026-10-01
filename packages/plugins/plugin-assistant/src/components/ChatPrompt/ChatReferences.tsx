@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
-import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -27,8 +27,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
       {objects.map((obj) => {
         const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);
-        const label: Next.Label =
-          Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
+        const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
         const { icon, hue } = Obj.getIcon(obj) ?? { icon: DEFAULT_OBJECT_ICON, hue: undefined };
         const styles = hue ? getStyles(hue) : undefined;
         return (

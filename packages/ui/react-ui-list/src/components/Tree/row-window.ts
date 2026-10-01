@@ -4,7 +4,7 @@
 
 import { type RefObject, useEffect, useLayoutEffect, useState } from 'react';
 
-import type { Next } from '@dxos/react-ui/next';
+import { type Label } from '@dxos/react-ui';
 
 import { type TreeNodeEntry } from './TreeContext.ts';
 
@@ -19,7 +19,7 @@ const NOMINAL_ROW_EXTENT = 40;
 
 /** What the tree hands the virtualizer: one entry per element the window mounts, in DOM order. */
 export type RowUnit =
-  | { kind: 'header'; key: string; label: Next.Label }
+  | { kind: 'header'; key: string; label: Label }
   | { kind: 'row'; key: string; node: TreeNodeEntry }
   | { kind: 'end'; key: string };
 

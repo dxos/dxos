@@ -38,7 +38,7 @@ import React, {
   useState,
 } from 'react';
 
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import { Next } from '@dxos/react-ui/next';
 import {
@@ -979,7 +979,7 @@ const TreeWindow = ({
 };
 
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
-const TreeSectionHeader = ({ label }: { label: Next.Label }) => {
+const TreeSectionHeader = ({ label }: { label: Label }) => {
   const { t } = useTranslation();
   const { toggle } = useTreeRender();
   return (
