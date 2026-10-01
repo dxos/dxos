@@ -1,0 +1,11 @@
+/*
+ * Timestamp: inline text that never wraps, with tabular numerals so a column of counters does not reflow (and read as
+ * movement) as digits change.
+ */
+
+@layer dx-components {
+  .nx-timestamp {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+}

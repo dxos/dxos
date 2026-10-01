@@ -1,0 +1,93 @@
+/*
+ * Toast: a popup-level panel (`.nx-popup`) laid out as three tracks, icon / text / close, so the description and
+ * actions align under the title. The machine writes each toast's place as custom properties (`--x`, `--y`, `--scale`,
+ * `--opacity`, `--height`, `--z-index`) and the region's offsets inline; this transitions what it drives, so a toast
+ * slides and fades instead of jumping.
+ */
+
+@layer dx-components {
+  :root {
+    --nx-toast-offset-end: 1rem;
+  }
+  @media (width >= 48rem) {
+    :root {
+      --nx-toast-offset-end: 4rem;
+    }
+  }
+
+  .nx-toast {
+    display: grid;
+    grid-template-columns: var(--nx-block-size) minmax(0, 1fr) var(--nx-block-size);
+    align-content: start;
+    row-gap: var(--nx-control-inset);
+    box-sizing: border-box;
+    width: min(24rem, 100dvw - 2rem);
+    padding: var(--nx-control-inset);
+    translate: var(--x) var(--y);
+    scale: var(--scale, 1);
+    z-index: var(--z-index);
+    height: var(--height);
+    opacity: var(--opacity);
+    will-change: translate, opacity, scale;
+    transition:
+      translate 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      scale 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      height 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .nx-toast[data-state='closed'] {
+    transition:
+      translate 150ms ease-in,
+      scale 150ms ease-in,
+      opacity 100ms ease-in;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nx-toast {
+      transition: none;
+    }
+  }
+
+  .nx-toast-header {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-items: center;
+    min-height: var(--nx-block-size);
+  }
+  .nx-toast-icon {
+    grid-column: 1;
+    justify-self: center;
+  }
+  .nx-toast-title {
+    grid-column: 2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .nx-toast-close-trigger {
+    grid-column: 3;
+    justify-self: center;
+  }
+
+  .nx-toast-description {
+    grid-column: 2;
+    overflow: hidden;
+    color: var(--color-description);
+  }
+
+  .nx-toast-footer {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    padding-block: var(--nx-control-inset);
+  }
+
+  .nx-toast-countdown {
+    grid-column: 1 / -1;
+    margin-inline: var(--nx-control-inset);
+  }
+}

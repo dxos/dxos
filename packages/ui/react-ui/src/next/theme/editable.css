@@ -1,0 +1,64 @@
+/*
+ * Editable: Preview and Input share one grid cell and the control metrics (`.nx-control`: height, inline padding, type
+ * scale), so the text does not move when it becomes editable. The machine hides the part out of play with `hidden`
+ * rather than unmounting it, which the parts' own `display` would otherwise override.
+ */
+
+@layer dx-components {
+  .nx-editable {
+    display: grid;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--nx-block-size);
+  }
+  .nx-editable > * {
+    grid-area: 1 / 1;
+  }
+  .nx-editable > [hidden] {
+    display: none;
+  }
+
+  .nx-editable-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-gap-size);
+    width: 100%;
+    min-width: 0;
+    cursor: text;
+  }
+  .nx-editable-preview:hover:not([data-disabled]) {
+    background: var(--color-hover-surface);
+  }
+  .nx-editable-preview[data-placeholder-shown] {
+    color: var(--color-subdued);
+  }
+  .nx-editable-preview[data-disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .nx-editable-preview-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The affordance shows only on hover or keyboard focus, so a resting row is just its text. */
+  .nx-editable-preview-icon {
+    color: var(--color-subdued);
+    visibility: hidden;
+  }
+  .nx-editable-preview:is(:hover, :focus-visible):not([data-disabled]) .nx-editable-preview-icon {
+    visibility: visible;
+  }
+
+  .nx-editable-input {
+    color: var(--color-base-fg);
+  }
+  .nx-editable-input::placeholder {
+    color: var(--color-subdued);
+  }
+}

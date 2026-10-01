@@ -9,7 +9,7 @@ _Updated 2026-09-30. The detail behind every line is below: milestones in [§5](
 
 | Area                        | Status          | Notes                                                                                    |
 | --------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
-| Next components (react-ui)  | **Partial**     | 37 components, tested per size; Ark part naming adopted; used by two pilots              |
+| Next components (react-ui)  | **Partial**     | 64 components (Phase A4 ports done but master-detail Tabs); Ark part naming; two pilots  |
 | Foundations (M1)            | **Mostly done** | Panel, popup sizing, required mark done; Container child span and depth-5 benchmark open |
 | Listbox, OrderedList (M2–4) | **Done**        | `@dxos/react-ui-list/next`; pilots: plugin-registry list, plugin-sheet RangeList         |
 | Combobox trigger mode (M5)  | **Done**        | Button trigger, input in popup, descriptions, create row, async, virtual anchor          |
@@ -835,7 +835,41 @@ Nothing in the cut-over PR may be a new component; every Next counterpart lands 
 variant='gap'`, Switch in the toolbar's roving focus, `Menu.TriggerItem disabled`, and `useVirtualAnchor` for
    `virtualRef`. Still open: Button has no icon slot, so `iconClassNames` is dropped on toolbar buttons.
 4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
-   Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components.
+   Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components. **Done** (2026-10-01)
+   except master-detail Tabs (`Viewport`, `BackButton`, `activePart`; 3 callers), which needs a decision. All 27 have
+   a Next component, `.nx-*` rules and a `Test` story. The renames and drops below are the Phase B codemod input:
+   - **Avatar:** `Root` (ids only) + `Content` → one `Avatar.Root` element (`imgSrc` → `src`); numeric `size` → `size`
+     xs–xl (a block across) or `fill` (host width); `Label`/`Description` → `label` or `aria-labelledby`; `Image` and
+     `Fallback` parts; no lit-ui.
+   - **Tabs:** `Tablist` → `List`; `Button`/`IconButton` → `Trigger` (a Button); `Panel` → `Content`; new `Indicator`;
+     default orientation horizontal (was vertical); `TabGroupHeading`, `TabPrimitive` not ported.
+   - **Main:** parts unchanged; `useSidebars` → `useMainSidebars`, `DRAWER_*` → `MAIN_DRAWER_*`; `data-side` is
+     `start`/`end`; surfaces via `data-surface`.
+   - **Progress:** `progress` → `value` (`max` defaults to 1); `label` names the bar.
+   - **Splitter:** `Handle` → `ResizeTrigger`.
+   - **Toast:** `Viewport` → `Toaster`; `Title icon onClose` → `Header icon` (its CloseTrigger dismisses through the
+     machine, reported by `onOpenChange`); `Actions` → `Footer`; `Action` → `ActionTrigger` (a Button that dismisses
+     after its click; `altText` dropped); `Close` → `CloseTrigger`; `type` dropped.
+   - **Accordion:** `ItemHeader` → `ItemTrigger`, `ItemBody` → `ItemContent`; `items`/`getId` render prop, `leading`,
+     `trailing`, `hover` dropped; `rounded` folded into `border`; `multiple` is a prop (default true).
+   - **Carousel:** `Viewport` → `ItemGroup`, `Slide` → `Item`, `Previous`/`Next` → `PrevTrigger`/`NextTrigger`,
+     `Indicators` → `IndicatorGroup`; `Content` dropped (Root is the grid; PluginDetail's `Content classNames='contents'`
+     needs a subgrid).
+   - **Breadcrumb:** `ListItem` → `Item` (no `asChild`; Plank's `ListItem asChild > button` → `Item > Link asChild`);
+     `Current` is a span with `aria-current='page'`; Separator is an `<li aria-hidden>`.
+   - **HoverCard, Tour, FloatingPanel:** `Portal`, `Arrow`, `Backdrop`, `Spotlight`, `Positioner`, `Resizers` fold into
+     `Content` (`container`, `size`, `arrow`); placement moves to Root `positioning`; `Close` → `CloseTrigger`;
+     callbacks take Ark's detail objects (`{ open }`, `{ size }`, …); `elevation` dropped.
+   - **MenuButton:** built on `Next.Button`/`Next.Menu`; options form a `RadioItemGroup`; new `menuSize`.
+   - **ScrollContainer:** `Content thin` → `width`; `padding`, `centered` dropped. **Focus:** `Next.useFocus` reads a
+     Next-only context. **Editable:** `Next.useEditable` (MarkdownEditable moves to it); fixed test ids dropped.
+   - **Slider:** `thumbSize`/`thumbAlignment` dropped (thumbs are centred and icon-sized); new `label`.
+     **Steps:** `options` → CSS metrics plus `duration`. **TextCrawl:** `size`, `textClassNames` dropped (size from
+     `data-size`). **Timestamp, AttentionGlyph:** fixed test ids and the ancestor-attention glyph dropped.
+   - **Skeleton** sizes from the size metrics; **Link** `variant='neutral'` now applies; **QrCode** root is `role=img`
+     with `label`; **ErrorFallback** (`ThrowError` not ported), **MediaPlayer**, **Deferred** unchanged in API.
+   - Still imported from the current tree, to move before it is deleted: `components/MediaPlayer/media-kind.ts`,
+     `components/ErrorFallback/parse-stack.ts` (and ScrollArea's thumbs, as before).
 5. Translation keys: four `osTranslations` lookups use undefined keys (`drag-handle.label`, `toolbar-delete.label`,
    `drawer.resize.label`); fixed by moving them to react-ui translations (group B). **Done:** the list DragHandle and
    DeleteButton and Dialog's delete action read react-ui keys; `drawer.resize.label` already did.

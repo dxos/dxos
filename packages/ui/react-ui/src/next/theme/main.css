@@ -1,0 +1,240 @@
+/*
+ * Main: the app shell. Two fixed sidebars (navigation at the start, complementary at the end), the content between
+ * them and a bottom drawer. From `lg` (64rem) the sidebars are landmarks the content pads around; below it they slide
+ * in over a scrim. The sidebar widths are the app's spacing tokens (ui-theme `spacing.css`). Each fixed region is a
+ * named view-transition group, so it is not lost under the content's snapshot during a transition.
+ */
+
+@layer dx-components {
+  :root {
+    --nx-main-duration: 150ms;
+    --nx-main-easing: cubic-bezier(0.4, 0, 0.6, 1);
+    --nx-main-start-size: var(--dx-nav-sidebar-size, 350px);
+    --nx-main-start-rail: var(--dx-l0-size, 72px);
+    --nx-main-end-size: var(--dx-complementary-sidebar-size, 25rem);
+    --nx-main-end-rail: var(--dx-r0-size, 3rem);
+    --nx-main-line: var(--border-width-landmark-line, 1px);
+  }
+
+  /* Content */
+
+  .nx-main-content {
+    view-transition-name: nx-main-content;
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+    /* The drawer sits above the bottom safe area, so the reserved space includes it. */
+    padding-block-end: calc(var(--nx-main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    scroll-padding-block-end: calc(var(--nx-main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    transition-property: padding-inline-start, padding-inline-end, padding-block-end;
+    transition-duration: var(--nx-main-duration);
+    transition-timing-function: var(--nx-main-easing);
+  }
+  .nx-main-content[data-bounce] {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: auto;
+    overscroll-behavior: auto;
+  }
+  .nx-main-content[data-handles-focus]:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+
+  @media (width >= 64rem) {
+    .nx-main-content[data-sidebar-left-state='collapsed'] {
+      padding-inline-start: var(--nx-main-start-rail);
+      scroll-padding-inline-start: var(--nx-main-start-rail);
+    }
+    .nx-main-content[data-sidebar-left-state='expanded'] {
+      padding-inline-start: var(--nx-main-start-size);
+      scroll-padding-inline-start: var(--nx-main-start-size);
+    }
+    .nx-main-content[data-sidebar-right-state='collapsed'] {
+      padding-inline-end: var(--nx-main-end-rail);
+      scroll-padding-inline-end: var(--nx-main-end-rail);
+    }
+    .nx-main-content[data-sidebar-right-state='expanded'] {
+      padding-inline-end: var(--nx-main-end-size);
+      scroll-padding-inline-end: var(--nx-main-end-size);
+    }
+  }
+
+  /* Sidebars */
+
+  .nx-main-sidebar {
+    position: fixed;
+    inset-block: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-bottom));
+    z-index: 7;
+    box-sizing: border-box;
+    width: calc(100dvw - 3rem);
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-md, 0.375rem);
+    border-color: var(--color-separator);
+    color: var(--color-sidebar-fg, inherit);
+    backdrop-filter: blur(12px);
+    transition-property: inset-inline-start, inset-inline-end, width;
+    transition-timing-function: var(--nx-main-easing);
+  }
+  .nx-main-sidebar[data-resizing='false'] {
+    transition-duration: var(--nx-main-duration);
+  }
+  .nx-main-sidebar:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+  .nx-main-sidebar :is([aria-current]:not([aria-current='false']), [aria-selected='true']) {
+    color: var(--color-sidebar-current-fg, inherit);
+  }
+
+  /* The sidebars wear the shell's L1/R1 tones; collapsed, they are the rail's width and wear its tone. */
+  .nx-main-sidebar[data-side='start'] {
+    --surface-bg: var(--color-l1-surface);
+    view-transition-name: nx-main-navigation-sidebar;
+    z-index: 8;
+    inset-inline-start: -100vw;
+    border-inline-end: var(--nx-main-line) solid var(--color-l1-separator, var(--color-separator));
+  }
+  .nx-main-sidebar[data-side='start'][data-state='collapsed'] {
+    --surface-bg: var(--color-l0-surface);
+  }
+  .nx-main-sidebar[data-side='start'][data-state='expanded'] {
+    inset-inline-start: max(0.5rem, env(safe-area-inset-left));
+  }
+  .nx-main-sidebar[data-side='end'] {
+    --surface-bg: var(--color-r1-surface);
+    view-transition-name: nx-main-complementary-sidebar;
+    inset-inline-end: -100vw;
+    border-inline-start: var(--nx-main-line) solid var(--color-r1-separator, var(--color-separator));
+  }
+  .nx-main-sidebar[data-side='end'][data-state='collapsed'] {
+    --surface-bg: var(--color-r0-surface);
+  }
+  .nx-main-sidebar[data-side='end'][data-state='expanded'] {
+    inset-inline-end: max(0.5rem, env(safe-area-inset-right));
+  }
+  .nx-main-sidebar {
+    background-color: var(--surface-bg);
+  }
+
+  @media (width >= 40rem) {
+    .nx-main-sidebar[data-side='start'] {
+      width: var(--nx-main-start-size);
+    }
+    .nx-main-sidebar[data-side='end'] {
+      width: var(--nx-main-end-size);
+    }
+  }
+
+  @media (width >= 64rem) {
+    .nx-main-sidebar {
+      inset-block: 0;
+      border-radius: 0;
+    }
+    .nx-main-sidebar[data-side='start'] {
+      border-inline-end-width: 0;
+    }
+    .nx-main-sidebar[data-side='end'] {
+      border-inline-start-width: 0;
+    }
+    .nx-main-sidebar[data-side='start']:is([data-state='collapsed'], [data-state='expanded']) {
+      inset-inline-start: 0;
+    }
+    .nx-main-sidebar[data-side='start'][data-state='collapsed'] {
+      width: var(--nx-main-start-rail);
+    }
+    .nx-main-sidebar[data-side='end']:is([data-state='collapsed'], [data-state='expanded']) {
+      inset-inline-end: 0;
+    }
+    .nx-main-sidebar[data-side='end'][data-state='collapsed'] {
+      width: var(--nx-main-end-rail);
+    }
+  }
+
+  /* The edge strip a swipe opens a sidebar from: touch only, since under a mouse it would take clicks at the edge. */
+  .nx-main-swipe-area {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .nx-main-swipe-area {
+      display: block;
+    }
+  }
+
+  /* Overlay: the scrim behind an open sidebar below `lg`. */
+
+  .nx-main-overlay {
+    view-transition-name: nx-main-overlay;
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    display: none;
+    opacity: 0;
+    background: var(--color-scrim-surface);
+    transition: opacity var(--nx-main-duration) var(--nx-main-easing);
+  }
+  .nx-main-overlay[data-state='open'] {
+    display: block;
+    opacity: 1;
+  }
+  @media (width >= 64rem) {
+    .nx-main-overlay[data-state='open'] {
+      display: none;
+    }
+  }
+
+  /* Drawer: fixed to the block-end edge between the sidebars (above the content, below them). */
+
+  .nx-main-drawer {
+    view-transition-name: nx-main-drawer;
+    position: fixed;
+    inset-block-end: env(safe-area-inset-bottom);
+    inset-inline: 0;
+    z-index: 6;
+    display: grid;
+    grid-template-rows: min-content minmax(0, 1fr);
+    overflow: hidden;
+    border-block-start: 1px solid var(--color-separator);
+    background-color: var(--surface-bg);
+    transition-property: inset-inline-start, inset-inline-end;
+    transition-duration: var(--nx-main-duration);
+    transition-timing-function: var(--nx-main-easing);
+  }
+  .nx-main-drawer:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+  }
+  @media (width >= 64rem) {
+    .nx-main-drawer[data-sidebar-left-state='collapsed'] {
+      inset-inline-start: var(--nx-main-start-rail);
+    }
+    .nx-main-drawer[data-sidebar-left-state='expanded'] {
+      inset-inline-start: var(--nx-main-start-size);
+    }
+    .nx-main-drawer[data-sidebar-right-state='collapsed'] {
+      inset-inline-end: var(--nx-main-end-rail);
+    }
+    .nx-main-drawer[data-sidebar-right-state='expanded'] {
+      inset-inline-end: var(--nx-main-end-size);
+    }
+  }
+
+  .nx-main-drawer-handle {
+    height: 0.25rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: row-resize;
+    touch-action: none;
+  }
+  .nx-main-drawer-handle:is(:hover, :focus-visible) {
+    outline: none;
+    background: var(--color-focus);
+  }
+
+  /* A running slide would jump the rest of the way when a view transition ends, so the transition stands in for it. */
+  :root:active-view-transition :is(.nx-main-sidebar, .nx-main-content, .nx-main-drawer, .nx-main-overlay) {
+    transition: none;
+  }
+}

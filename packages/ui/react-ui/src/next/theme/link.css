@@ -1,0 +1,25 @@
+/*
+ * Link: inline text that keeps the surrounding font and line, so it sits in a sentence (or a `Trans` string) without
+ * changing its rhythm. `accent` colours it and deepens on hover; `neutral` keeps the text colour and underlines.
+ */
+
+@layer dx-components {
+  .nx-link {
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm, 0.25rem);
+  }
+  .nx-link[data-variant='accent'] {
+    color: var(--color-accent-text);
+  }
+  .nx-link[data-variant='accent']:hover {
+    color: var(--color-accent-text-hover, var(--color-accent-text));
+  }
+  .nx-link[data-variant='neutral'] {
+    color: inherit;
+  }
+  .nx-link[data-variant='neutral']:hover {
+    text-decoration: underline;
+  }
+}
