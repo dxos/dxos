@@ -139,9 +139,16 @@ FormActions.displayName = 'Form.Actions';
 // Submit
 //
 
-export type FormSubmitProps = { label?: string; disabled?: boolean };
+export type FormSubmitProps = {
+  label?: string;
+  disabled?: boolean;
+  /** Replaces Save's check, for a submit that is not a save (e.g. send). */
+  icon?: string;
+  /** Spins the icon while the submission is in flight. */
+  busy?: boolean;
+};
 
-export const FormSubmit = ({ label, disabled }: FormSubmitProps) => {
+export const FormSubmit = ({ label, disabled, icon, busy }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { canSave, onSave },
@@ -152,16 +159,21 @@ export const FormSubmit = ({ label, disabled }: FormSubmitProps) => {
     return null;
   }
 
+  const buttonProps = {
+    type: 'submit',
+    label: label ?? t('save-button.label'),
+    disabled: disabled ?? !canSave,
+    onClick: () => onSave(),
+    'data-testid': 'save-button',
+  } as const;
+
   return (
     <Next.Group fill>
-      <Next.SystemButton.Save
-        iconOnly={false}
-        type='submit'
-        label={label ?? t('save-button.label')}
-        disabled={disabled ?? !canSave}
-        onClick={() => onSave()}
-        data-testid='save-button'
-      />
+      {icon || busy ? (
+        <Next.Button {...buttonProps} variant='primary' icon={icon ?? 'ph--check--regular'} spin={busy} />
+      ) : (
+        <Next.SystemButton.Save {...buttonProps} iconOnly={false} />
+      )}
     </Next.Group>
   );
 };

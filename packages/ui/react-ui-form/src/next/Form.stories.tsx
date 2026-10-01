@@ -69,6 +69,21 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** `Form.Submit` with its own icon, spinning while busy (a send rather than a save). */
+export const Submit: Story = {
+  render: () => (
+    <Form.Root schema={ScalarSchema} values={SCALAR_VALUES} onSave={() => {}}>
+      <Form.Content>
+        <Form.Submit label='Send' icon='ph--paper-plane-tilt--regular' busy />
+      </Form.Content>
+    </Form.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const button = await within(canvasElement).findByRole('button', { name: 'Send' });
+    await expect(button.querySelector('svg[data-spin]')).not.toBeNull();
+  },
+};
+
 const readValues = (canvasElement: HTMLElement): Record<string, unknown> =>
   JSON.parse(within(canvasElement).getByTestId('values').textContent ?? '{}');
 
