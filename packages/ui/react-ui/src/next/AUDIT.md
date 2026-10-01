@@ -817,6 +817,9 @@ No open questions remain.
   composed host). Every Next caller now composes the ScrollArea and the rail Container it relied on (react-ui Panel,
   Listbox and MasterDetail stories, react-ui-form/next stories and `Form.Viewport scroll`, plugin-registry); no preset
   prop was added (TASKS.md records the candidate).
+- **Theme context split.** `useThemeContext`'s `tx` is not carried into Next (Next styles through `.nx-*` CSS). The
+  values Next components still read come from `Next.useThemeMode()` (`themeMode`), `Next.usePlatform()` (`platform`)
+  and `Next.useIosKeyboard()` (`hasIosKeyboard`), which read the existing ThemeProvider (no new provider).
 
 ### Milestone status
 

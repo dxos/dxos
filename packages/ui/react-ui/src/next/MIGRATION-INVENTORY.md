@@ -277,14 +277,14 @@ that import the namespace from the current package.
 
 ### Cross-cutting props
 
-| Prop                      | Count                                                                                                                                         | Next                                                  | Class |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | :---: |
-| `density=` on elements    | 66 in 48 files (`sm` 51, `md` 6, `lg` 3, expr 6); IconButton 26, SystemIconButton.Clipboard 9, Button 6, Toolbar.Root 6, Toolbar.IconButton 4 | `size` on the nearest Container/Panel/Toolbar (xs–xl) |   S   |
-| `DensityProvider`         | 3 files (10 occ.)                                                                                                                             | `Container size`                                      |   M   |
-| `useDensityContext`       | 1 file outside react-ui (3 occ.)                                                                                                              | none (CSS)                                            |   H   |
-| `elevation=`              | 6 in 6 files; `ElevationProvider` 5 files; `useElevationContext` 2 files                                                                      | `level`                                               |   S   |
-| `useThemeContext` (`tx`)  | 76 files / 43 pkgs                                                                                                                            | none                                                  |   H   |
-| `classNames=` on elements | 1,139 in 490 files                                                                                                                            | props/parts; escape hatch kept                        |   H   |
+| Prop                      | Count                                                                                                                                         | Next                                                      | Class |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | :---: |
+| `density=` on elements    | 66 in 48 files (`sm` 51, `md` 6, `lg` 3, expr 6); IconButton 26, SystemIconButton.Clipboard 9, Button 6, Toolbar.Root 6, Toolbar.IconButton 4 | `size` on the nearest Container/Panel/Toolbar (xs–xl)     |   S   |
+| `DensityProvider`         | 3 files (10 occ.)                                                                                                                             | `Container size`                                          |   M   |
+| `useDensityContext`       | 1 file outside react-ui (3 occ.)                                                                                                              | none (CSS)                                                |   H   |
+| `elevation=`              | 6 in 6 files; `ElevationProvider` 5 files; `useElevationContext` 2 files                                                                      | `level`                                                   |   S   |
+| `useThemeContext` (`tx`)  | 76 files / 43 pkgs                                                                                                                            | `tx`: none; mode/platform/iOS keyboard: `Next.use*` hooks |   H   |
+| `classNames=` on elements | 1,139 in 490 files                                                                                                                            | props/parts; escape hatch kept                            |   H   |
 
 ## 3. `classNames` on react-ui components
 
@@ -618,7 +618,7 @@ Current API in use with no Next counterpart on this branch.
 | `OrderedList` collapsible `Item` + `Detail`                                                                      |                                            2 | decided (group B), not built (`DetailItem` still exported)                          |
 | Container `span`, `ControlFrame`, `Field.Label` required mark via `RequiredIndicator`                            |                                          n/a | point 7 / 10 decided; `span`, `ControlFrame` not built (`RequiredIndicator` exists) |
 | `Image backdrop='dominant'`                                                                                      |                                    (Image 3) | decided, not built                                                                  |
-| `useThemeContext` / `tx` consumers                                                                               |                                           76 | no Next equivalent (CSS recipes)                                                    |
+| `useThemeContext` / `tx` consumers                                                                               |                                           76 | `tx`: none (CSS recipes); `Next.useThemeMode`/`usePlatform`/`useIosKeyboard`        |
 | Icon spin, Typography `line-clamp-n`                                                                             | `animate-spin` 13 classes, `line-clamp-2` 12 | no prop                                                                             |
 
 Non-blocking (keep or trivially replaced): `ThemeProvider`, `useTranslation`/`Trans`/`Resource`, `composable`/

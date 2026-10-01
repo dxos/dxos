@@ -78,6 +78,10 @@
    attributes); the shared recipes guarantee the classes, and a parity test should assert the rest.
    The focus ring takes ui-theme's `--color-focus` (decided 2026-10-01): a slot of its own, orange today, rather than
    `secondary` (an alias of green, which reads as success) or the brand primary it must stand out against.
+   The theme context splits (decided 2026-10-01): `useThemeContext`'s `tx` is not carried into Next, and the runtime
+   values components still need come from small hooks on the existing ThemeProvider (no new provider):
+   `Next.useThemeMode()` (`themeMode`), `Next.usePlatform()` (`platform`) and `Next.useIosKeyboard()`
+   (`hasIosKeyboard`), defined in `hooks.ts`.
 9. **ARIA.** Interactive roles and `aria-*` state come only from zag machines (`api.get*Props()`), so a role is
    claimed only by code that implements its keyboard contract. Layout parts (Container, Block, ScrollArea) carry no
    role by default; callers add landmark or `group` roles explicitly. Icons are `aria-hidden` unless given a label.
