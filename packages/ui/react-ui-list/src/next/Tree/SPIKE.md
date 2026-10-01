@@ -20,7 +20,11 @@ spike shows work: a lazy walk, flat rows, and a fixed-block window. Option 3 wou
 | `Tree.stories.tsx`        | `Default` (static model, draggable), `Large` (5,000 rows, windowed), `Test`, `OpenTest`, `StaticTest`, `WindowedTest`, `Benchmark` (tagged `!test`)                           |
 | `tree-collection.test.ts` | the walk reads only open branches; opening re-walks; 5,000-row walk timing                                                                                                    |
 
-Not exported from `src/next/index.ts`.
+**Status (Phase A3):** productised and exported from `@dxos/react-ui-list/next` as `Tree` (`Root`, `Label`,
+`Content`, `Item`, `ItemIndicator`, `ItemIcon`, `ItemText`, `Empty`). `virtualize='window'|'css'` became
+`virtual='fixed'|'variable'` (AUDIT group B); `tree.css` moved to `@dxos/react-ui/next/theme/tree.css`; only the caret
+toggles a branch (`expandOnClick` off); rows carry `data-drop-target='top'|'bottom'|'inside'` and drag a
+`Next.DragPreview` chip. The sections below record the spike as run.
 
 ## 1. Can a `TreeModel` feed zag's collection lazily?
 
