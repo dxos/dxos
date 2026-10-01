@@ -84,6 +84,9 @@
 @source '../../../**/*.{ts,tsx,html}';
 @source '../../../../tools/**/*.{ts,tsx,html}';
 
+/* Plain stylesheets outside this build (Next's theme, plugin overrides): scanning them keeps the theme variables they read (`var(--color-*)`) from being tree-shaken once no utility class names them. */
+@source '../../../**/src/**/*.css';
+
 /**
  * Exclude generated/static data files that have no Tailwind classes but are
  * large enough to dominate scan time. The oxide scanner tokenizes every byte;
