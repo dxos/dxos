@@ -7,7 +7,6 @@ import React from 'react';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list/next';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Next } from '@dxos/react-ui/next';
 
@@ -23,11 +22,11 @@ const STATUS_ICONS: Record<RunStatus, string> = {
   pending: 'ph--clock--regular',
 };
 
-const STATUS_CLASSES: Record<RunStatus, string> = {
-  success: 'text-success-text',
-  failure: 'text-error-text',
-  incomplete: 'text-warning-text',
-  pending: 'text-description',
+const STATUS_ICON_PROPS: Record<RunStatus, Pick<Next.IconProps, 'valence' | 'tone'>> = {
+  success: { valence: 'success' },
+  failure: { valence: 'error' },
+  incomplete: { valence: 'warning' },
+  pending: { tone: 'description' },
 };
 
 export type RoutineTraceCompanionProps = {
@@ -52,33 +51,23 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
             {runs.length === 0 ? (
               <Next.Empty>{t('history.empty.message')}</Next.Empty>
             ) : (
-              <Next.Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
-                {({ items }) => (
-                  <Next.Container gutter='none'>
-                    {items.map((run) => (
-                      <Next.Accordion.Item key={run.pid} item={run}>
-                        <Next.Accordion.ItemTrigger hover>
-                          <Listbox.ItemIcon
-                            icon={STATUS_ICONS[run.status]}
-                            size='lg'
-                            classNames={STATUS_CLASSES[run.status]}
-                          />
-                          <Listbox.ItemText>
-                            {<span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>}
-                          </Listbox.ItemText>
-                          <Listbox.ItemDescription>{`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}</Listbox.ItemDescription>
-                        </Next.Accordion.ItemTrigger>
-                        {/* Match `ItemContent`'s rail/content grid so the JSON aligns under the title column. */}
-                        <Next.Accordion.ItemContent classNames='grid grid-cols-[var(--dx-rail-item)_1fr] gap-x-2'>
-                          <JsonHighlighter
-                            data={toJsonData(run)}
-                            classNames='col-start-2 [&_pre]:!text-xs [&_code]:!text-xs'
-                          />
-                        </Next.Accordion.ItemContent>
-                      </Next.Accordion.Item>
-                    ))}
-                  </Next.Container>
-                )}
+              <Next.Accordion.Root>
+                {runs.map((run) => (
+                  <Next.Accordion.Item key={getRunId(run)} value={getRunId(run)}>
+                    <Next.Accordion.ItemTrigger>
+                      <span className='flex items-center gap-2 min-w-0'>
+                        <Next.Icon icon={STATUS_ICONS[run.status]} {...STATUS_ICON_PROPS[run.status]} />
+                        <span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>
+                        <span className='truncate text-description'>
+                          {`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
+                        </span>
+                      </span>
+                    </Next.Accordion.ItemTrigger>
+                    <Next.Accordion.ItemContent>
+                      <JsonHighlighter data={toJsonData(run)} classNames='[&_pre]:!text-xs [&_code]:!text-xs' />
+                    </Next.Accordion.ItemContent>
+                  </Next.Accordion.Item>
+                ))}
               </Next.Accordion.Root>
             )}
           </Next.ScrollArea.Viewport>

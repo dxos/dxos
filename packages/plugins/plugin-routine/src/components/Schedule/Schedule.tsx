@@ -359,10 +359,11 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.at.label')}>
           <Next.Field.Root>
-            <Next.Field.Time
+            <Next.DateInput
+              type='time'
               hourCycle={12}
               value={value.time}
-              onValueChange={(time) => onChange({ kind: 'daily', time })}
+              onValueChange={(time: string) => onChange({ kind: 'daily', time })}
             />
           </Next.Field.Root>
         </LabelledRow>
@@ -373,10 +374,11 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <LabelledRow label={t('schedule.at.label')}>
             <Next.Field.Root>
-              <Next.Field.Time
+              <Next.DateInput
+                type='time'
                 hourCycle={12}
                 value={value.time}
-                onValueChange={(time) => onChange({ ...value, time })}
+                onValueChange={(time: string) => onChange({ ...value, time })}
               />
             </Next.Field.Root>
           </LabelledRow>
@@ -436,10 +438,11 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
           </LabelledRow>
           <LabelledRow label={t('schedule.at.label')}>
             <Next.Field.Root>
-              <Next.Field.Time
+              <Next.DateInput
+                type='time'
                 hourCycle={12}
                 value={value.time}
-                onValueChange={(time) => onChange({ ...value, time })}
+                onValueChange={(time: string) => onChange({ ...value, time })}
               />
             </Next.Field.Root>
           </LabelledRow>

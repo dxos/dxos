@@ -48,17 +48,18 @@ export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
       onValueChange={handleValueChange}
       items={OPTIONS.map(({ kind, icon, disabled }) => ({
         value: kind,
-        label: <span className='font-medium'>{t(`trigger-kind.${kind}.label`)}</span>,
+        label: t(`trigger-kind.${kind}.label`),
+        description: t(`trigger-kind.${kind}.description`),
+        icon,
+        disabled,
       }))}
     >
       <Listbox.Content classNames='gap-1' aria-label={t('trigger-kind.placeholder')}>
-        {OPTIONS.map(({ kind, icon, disabled }) => (
-          <Listbox.Item key={kind} id={kind} disabled={disabled} classNames='dx-input-surface rounded-sm'>
-            <Listbox.ItemIcon icon={icon} size='lg' classNames='text-description' />
-            <Listbox.ItemText>
-              {<span className='font-medium'>{t(`trigger-kind.${kind}.label`)}</span>}
-            </Listbox.ItemText>
-            <Listbox.ItemDescription>{t(`trigger-kind.${kind}.description`)}</Listbox.ItemDescription>
+        {OPTIONS.map(({ kind }) => (
+          <Listbox.Item key={kind} id={kind} classNames='dx-input-surface rounded-sm'>
+            <Listbox.ItemIcon classNames='text-description' />
+            <Listbox.ItemText classNames='font-medium' />
+            <Listbox.ItemDescription />
           </Listbox.Item>
         ))}
       </Listbox.Content>
