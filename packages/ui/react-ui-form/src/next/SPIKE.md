@@ -321,11 +321,13 @@ Applied from the 2026-10-01 decision review (AUDIT §6 group C):
   control gained an `onBlur`.
 - **Mono input:** `Input variant='mono'` is added to react-ui, a monospace face for the input or its row's field
   (covered by Input `Test`). `Format.Key` text fields use it.
-- **Test address:** the test schema's address is `Geo.PostalAddress`, titled in the test schema (City, State /
-  Region, Address line 2, Postal code, PO box). An optional field's own `annotate` does not reach its value's AST, so
-  each is re-wrapped. The titles are not added to `@dxos/types` itself, because its JSON schema appears in recorded
-  LLM fixtures (`ai` TestData, plugin-assistant traces) that a changed schema would invalidate. The ZIP pattern demo
-  is its own `zip` field.
+- **Test address:** the test schema's address is `Geo.PostalAddress`, whose own fields now carry titles: City,
+  State / Region, Address line 2, Postal code, PO box. No recorded LLM conversation (`.store/conversations`) embeds
+  that schema, and the two TestData files that mention it are static replay inputs, so no fixture changes. The ZIP
+  pattern demo is its own `zip` field.
+- **Optional-field annotations:** `Schema.optional(S).annotate(...)` annotates the `S | undefined` union, which
+  `SchemaEx.getProperties` stripped together with its annotations. They now carry over to the property's type, with
+  key annotations still winning (covered in `@dxos/effect` `ast.test.ts`).
 
 New renderers, each covered by the `Annotated` or `SelectOptionField` story's play test:
 
