@@ -107,6 +107,11 @@ type TreeRootProps<T extends { id: string } = any> = {
   rootId?: string;
   /** Prefix of every row's path, and the drag scope: trees sharing it accept each other's rows. */
   id: string;
+  /**
+   * Ancestors the rows' paths start from, ahead of `id` (e.g. a navtree workspace's own path); its first id is then
+   * the drag scope, so trees mounted under one root (a tree per workspace tab) accept each other's rows.
+   */
+  path?: string[];
   size?: Size;
   /** Each row's grid template; the default is disclosure, icon, label and trailing tracks. */
   columns?: string;
@@ -163,6 +168,7 @@ const TreeRoot = <T extends { id: string }>({
   model,
   rootId,
   id,
+  path,
   size,
   columns = DEFAULT_COLUMNS,
   selectionMode = 'single',
@@ -187,7 +193,9 @@ const TreeRoot = <T extends { id: string }>({
   children,
 }: TreeRootProps<T>) => {
   const { t } = useTranslation();
-  const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, [id]), [model, rootId, id]);
+  const rootPath = useMemo(() => (path ? [...path, id] : [id]), [path, id]);
+  const treeId = rootPath[0];
+  const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, rootPath), [model, rootId, rootPath]);
   const walk = useAtomValue(walkAtom);
   const walkRef = useRef<TreeWalk<T>>(walk);
   walkRef.current = walk;
@@ -495,7 +503,7 @@ const TreeRoot = <T extends { id: string }>({
     }
     let drag: { node: TreeNode<T>; reopen: boolean } | undefined;
     return monitorForElements({
-      canMonitor: ({ source }) => isTreeDataFor(source.data, id),
+      canMonitor: ({ source }) => isTreeDataFor(source.data, treeId),
       onDragStart: ({ source }) => {
         const node =
           isTreeData(source.data) && rootRef.current?.contains(source.element)
@@ -513,15 +521,17 @@ const TreeRoot = <T extends { id: string }>({
           onOpenChangeRef.current?.({ item: dragged.node.item, path: dragged.node.path, open: true });
         }
 
+        // Trees sharing a scope each hear the drop; the one holding the target reports it.
         const target = location.current.dropTargets[0];
-        const event = target && isTreeData(source.data) ? dropEvent(walkRef.current, source.data, target.data) : null;
+        const owned = target && rootRef.current?.contains(target.element);
+        const event = owned && isTreeData(source.data) ? dropEvent(walkRef.current, source.data, target.data) : null;
         event && onDropRef.current?.(event);
         // Return the roving tabstop to the row that moved: a drag leaves focus on the body, which restarts navigation
         // at the top. As controlled state it is simply the focused value once the reorder renders.
         dragged && focusNode(dragged.node.id, dragged.node.value);
       },
     });
-  }, [draggable, id, focusNode]);
+  }, [draggable, treeId, focusNode]);
 
   const renderDragPreview = useMemo(
     () =>
@@ -540,7 +550,7 @@ const TreeRoot = <T extends { id: string }>({
 
   return (
     <TreeProvider
-      treeId={id}
+      treeId={treeId}
       walk={walk}
       virtual={virtual}
       draggable={draggable}
@@ -1271,6 +1281,26 @@ const TreeItemCount = () => {
 TreeItemCount.displayName = 'Tree.ItemCount';
 
 //
+// ItemActions
+//
+
+type TreeItemActionsProps = {
+  children?: ReactNode;
+};
+
+/**
+ * Trailing row controls (e.g. an actions menu), each in its own track. Where the pointer can hover they show only on
+ * the row in play: hovered, focused within, selected, or holding an open menu.
+ */
+const TreeItemActions = ({ children }: TreeItemActionsProps) => (
+  <div role='none' data-scope='tree-view' data-part='item-actions' className='nx-tree-item-actions'>
+    {children}
+  </div>
+);
+
+TreeItemActions.displayName = 'Tree.ItemActions';
+
+//
 // Empty
 //
 
@@ -1297,7 +1327,8 @@ TreeEmpty.displayName = 'Tree.Empty';
  * Hierarchical list on Ark's tree-view, driven by `TreeModel` atoms, with Ark's part names on the Next row vocabulary:
  * `Root` (model, `virtual`, `animate`, activation policy, drag and drop), `Label`, `Content` (the scrolling tree
  * element; a row renderer as children), `Item` (one row), `ItemIndicator` (caret), `ItemIcon`, `ItemText`,
- * `ItemCount`, `ItemGroup`/`ItemGroupLabel` (section headers) and `Empty`.
+ * `ItemCount`, `ItemActions` (trailing controls shown on the row in play), `ItemGroup`/`ItemGroupLabel` (section
+ * headers) and `Empty`.
  */
 export const Tree = {
   Root: TreeRoot,
@@ -1308,6 +1339,7 @@ export const Tree = {
   ItemIcon: TreeItemIcon,
   ItemText: TreeItemText,
   ItemCount: TreeItemCount,
+  ItemActions: TreeItemActions,
   ItemGroup: TreeItemGroup,
   ItemGroupLabel: TreeItemGroupLabel,
   Empty: TreeEmpty,
@@ -1316,6 +1348,7 @@ export const Tree = {
 export type {
   TreeContentProps,
   TreeEmptyProps,
+  TreeItemActionsProps,
   TreeItemGroupLabelProps,
   TreeItemGroupProps,
   TreeItemIconProps,

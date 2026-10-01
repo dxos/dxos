@@ -113,6 +113,8 @@ type StoryArgs = SizeArgs & {
   onSelect?: Mock<(event: TreeSelectEvent<TestItem>) => void>;
   height?: string;
   testId?: string;
+  /** Ancestors the rows' paths start from, ahead of the tree's id. */
+  path?: string[];
 };
 
 /** A static model wired the way a consumer wires one: open/current state written back through the registry. */
@@ -191,7 +193,9 @@ const renderColumnsRow = (node: TreeNode<TestItem>) => (
     <span className='text-description tabular-nums' data-testid='tree-figure'>
       {node.depth}
     </span>
-    <Next.Button icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
+    <Tree.ItemActions>
+      <Next.Button icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
+    </Tree.ItemActions>
   </Tree.Item>
 );
 
@@ -212,6 +216,7 @@ const DefaultStory = ({
   onSelect: onSelectSpy,
   height = '24rem',
   testId,
+  path,
 }: StoryArgs) => {
   const { model, onOpenChange, onSelect, onDrop } = useStaticTree(tree, open);
   const canSelect = useCallback(({ item }: { item: TestItem }) => !unselectable?.includes(item.id), [unselectable]);
@@ -228,6 +233,7 @@ const DefaultStory = ({
         model={model}
         rootId={model.rootId}
         id={`tree-${size}`}
+        path={path}
         size={size}
         virtual={virtual}
         draggable={draggable}
@@ -292,6 +298,22 @@ export const Columns: Story = {
     const lefts = new Set(figures.map((figure) => Math.round(figure.getBoundingClientRect().left)));
     await expect(lefts.size).toBe(1);
     await expect(within(canvasElement).getAllByRole('img', { name: 'Running' }).length).toBe(figures.length);
+    // `ItemActions` lays its controls into the row's own tracks.
+    const remove = within(canvasElement).getAllByRole('button', { name: 'Remove' })[0];
+    await expect(remove.parentElement?.getAttribute('data-part')).toBe('item-actions');
+    await expect(getComputedStyle(remove.parentElement ?? remove).display).toBe('contents');
+  },
+};
+
+/** `path` prefixes every row's path (and so its value) ahead of the tree's id. */
+export const Prefixed: Story = {
+  args: { tree: createFixedTree, path: ['workspace'] },
+  play: async ({ canvasElement }) => {
+    const [row] = await within(canvasElement).findAllByRole('treeitem');
+    const value =
+      row.closest('[data-value]')?.getAttribute('data-value') ??
+      row.querySelector('[data-value]')?.getAttribute('data-value');
+    await expect(value?.startsWith('workspace')).toBe(true);
   },
 };
 

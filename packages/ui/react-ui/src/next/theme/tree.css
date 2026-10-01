@@ -138,6 +138,17 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Row controls take the row's tracks; where the pointer can hover they show only on the row in play (hovered,
+     focused within, selected, or holding an open menu), so a list of rows does not read as a wall of buttons. */
+  .nx-tree-item-actions {
+    display: contents;
+  }
+  @media (hover: hover) {
+    .nx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) > .nx-tree-item-actions > * {
+      opacity: 0;
+    }
+  }
+
   /* A section header: one block like every row (so a fixed window holds), its label cleared past the disclosure cell. */
   .nx-tree-group {
     display: flex;
