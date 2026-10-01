@@ -760,6 +760,7 @@ export const VANITY_CODE_MAX_LENGTH = VANITY_PREFIX_MAX_LENGTH + 1 + VANITY_SUFF
 /** 4-20 characters, at least 4 of them letters or digits, with single dashes between them. */
 export const VANITY_PREFIX_PATTERN = new RegExp(
   `^(?=.{${VANITY_PREFIX_MIN_LENGTH},${VANITY_PREFIX_MAX_LENGTH}}$)(?=(?:-?[A-Za-z0-9]){${VANITY_PREFIX_MIN_LENGTH}})[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`,
+  'u',
 );
 
 export const MAX_CODES_PER_REQUEST = 1000;
@@ -770,7 +771,9 @@ export const MAX_REDEMPTIONS_PER_CODE = 100;
  * normalizes before lookup. Every issued code has at least {@link INVITATION_CODE_LENGTH} characters.
  */
 export const InvitationCodeSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(new RegExp(`^[A-Za-z0-9-]{${INVITATION_CODE_LENGTH},${2 * VANITY_CODE_MAX_LENGTH}}$`))),
+  Schema.check(
+    Schema.isPattern(new RegExp(`^[A-Za-z0-9-]{${INVITATION_CODE_LENGTH},${2 * VANITY_CODE_MAX_LENGTH}}$`, 'u')),
+  ),
 );
 
 export const CheckEmailExistsRequestSchema = Schema.Struct({

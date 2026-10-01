@@ -18,7 +18,15 @@ const MNEMONIC_PATTERN = new RegExp(`^[0-9A-HJKMNP-TV-Z]{${MNEMONIC_LENGTH}}$`, 
 // TODO(dmaretskyi): Make brand.
 // export const EntityIdBrand: unique symbol = Symbol('@dxos/echo/EntityId');
 // export const EntityIdSchema = Schema.ULID.pipe(S.brand(EntityIdBrand));
-const EntityIdSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i))).annotate({
+// JSON Schema patterns take no flags, so the canonical uppercase form is exported in place of the
+// case-insensitive check, which effect would otherwise drop.
+const EntityIdSchema = Schema.String.pipe(
+  Schema.check(
+    Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i, {
+      toJsonSchema: () => ({ pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$' }),
+    }),
+  ),
+).annotate({
   description: 'A Universally Unique Lexicographically Sortable Identifier',
   pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
 });

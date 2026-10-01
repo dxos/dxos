@@ -55,7 +55,7 @@ const BUILT_ENTRY = new URL('../dist/lib/WorkerSandboxEntry.mjs', import.meta.ur
  * worker's JSON-schema round trip cannot rebuild. Composer registers types like it.
  */
 class Tagged extends Type.makeObject<Tagged>(DXN.make('com.example.type.tagged', '0.1.0'))(
-  Schema.Struct({ tags: Schema.Record(Schema.String.check(Schema.isPattern(/^[a-z]+$/)), Schema.String) }),
+  Schema.Struct({ tags: Schema.Record(Schema.String.check(Schema.isPattern(/^[a-z]+$/u)), Schema.String) }),
 ) {}
 
 const Score = Operation.make({

@@ -40,6 +40,7 @@ tasks:
     command: pnpm run --silent typedoc
     deps:
       - ^:typedoc
+      - app-framework:typedoc
     inputs:
       - scripts/collect-typedoc.sh
     outputs:
