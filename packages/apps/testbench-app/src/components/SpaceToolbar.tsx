@@ -52,13 +52,19 @@ export const SpaceToolbar = ({
     <Next.Toolbar.Root>
       <Next.Button icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
-        <Next.Select.Root value={[selected?.toHex()]} onValueChange={({ value: [value] }) => handleChange(value)}>
+        <Next.Select.Root
+          items={spaces.map((space) => ({ value: space.key.toHex(), label: space.key.truncate() }))}
+          value={selected ? [selected.toHex()] : []}
+          onValueChange={({ value: [value] }) => value && handleChange(value)}
+        >
           <Next.Select.Trigger classNames='w-full' />
           <Next.Select.Content>
             {spaces.map((space) => (
-              <Next.Select.Item key={space.key.toHex()} value={space.key.toHex()}>
-                <span className='font-mono'>{space.key.truncate()}</span>
-              </Next.Select.Item>
+              <Next.Select.Item
+                key={space.key.toHex()}
+                classNames='font-mono'
+                item={{ value: space.key.toHex(), label: space.key.truncate() }}
+              />
             ))}
           </Next.Select.Content>
         </Next.Select.Root>

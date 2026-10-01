@@ -37,13 +37,15 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
         />
       </Next.Field.Root>
       {!!types?.length && (
-        <Next.Select.Root value={[type]} onValueChange={({ value: [type] }) => setType(type)}>
+        <Next.Select.Root
+          items={types.map((type) => ({ value: type, label: type }))}
+          value={type ? [type] : []}
+          onValueChange={({ value: [type] }) => type && setType(type)}
+        >
           <Next.Select.Trigger />
           <Next.Select.Content>
             {types.map((type) => (
-              <Next.Select.Item key={type} value={type}>
-                <span className='font-mono'>{type}</span>
-              </Next.Select.Item>
+              <Next.Select.Item key={type} classNames='font-mono' item={{ value: type, label: type }} />
             ))}
           </Next.Select.Content>
         </Next.Select.Root>
