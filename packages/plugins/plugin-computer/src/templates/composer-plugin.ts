@@ -27,7 +27,7 @@ export const MANIFEST_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest
 const ENTRY_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/src/plugin.tsx`;
 
 /** Run by the reader from the Composer app directory: the Computer shell kills scripts that outlive its timeout. */
-const DEV_SERVER_COMMAND = `node_modules/.bin/vite temp/plugins/${FOLDER} --strictPort`;
+const DEV_SERVER_COMMAND = `node_modules/.bin/vite temp/plugins/${FOLDER}`;
 
 // Loading the plugin is the reader's click, not a task, so a chat can run the plan end to end on its own.
 const COMPUTER: Variant = {
