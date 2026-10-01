@@ -242,7 +242,7 @@ const DefaultStory = ({
         onSelect={handleSelect}
         onDrop={onDrop}
       >
-        <Tree.Label className='sr-only'>Tree</Tree.Label>
+        <Tree.Label srOnly>Tree</Tree.Label>
         <Tree.Content>{columns ? renderColumnsRow : composed ? renderComposedRow : undefined}</Tree.Content>
         <Tree.Empty icon='ph--tree-structure--regular' />
       </Tree.Root>
@@ -306,6 +306,10 @@ export const Empty: Story = {
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).queryAllByRole('treeitem')).toHaveLength(0);
     await expect(within(canvasElement).getByRole('status')).toHaveTextContent('No items');
+    // `Tree.Label srOnly` names the tree without taking space.
+    await expect(within(canvasElement).getByRole('tree', { name: 'Tree' })).toBeInTheDocument();
+    const label = canvasElement.querySelector('.nx-tree-label');
+    await expect(label?.getBoundingClientRect().height).toBeLessThanOrEqual(1);
   },
 };
 

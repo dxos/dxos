@@ -643,11 +643,14 @@ const useDisclosurePhase = (node: TreeNode): 'enter' | 'conceal' | undefined => 
 // Label
 //
 
-type TreeLabelProps = ComponentPropsWithoutRef<typeof TreeView.Label>;
+type TreeLabelProps = ComponentPropsWithoutRef<typeof TreeView.Label> & {
+  /** Names the tree for assistive tech only, for a tree whose surroundings already title it. */
+  srOnly?: boolean;
+};
 
 /** The machine's own label part, which it already points `aria-labelledby` at. */
-const TreeLabel = forwardRef<HTMLHeadingElement, TreeLabelProps>((props, forwardedRef) => (
-  <TreeView.Label {...props} className='nx-tree-label' ref={forwardedRef} />
+const TreeLabel = forwardRef<HTMLHeadingElement, TreeLabelProps>(({ srOnly, ...props }, forwardedRef) => (
+  <TreeView.Label {...props} data-sr-only={srOnly ? '' : undefined} className='nx-tree-label' ref={forwardedRef} />
 ));
 
 TreeLabel.displayName = 'Tree.Label';

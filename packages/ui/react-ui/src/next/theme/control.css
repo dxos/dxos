@@ -348,9 +348,11 @@
     font-size: var(--nx-label-font-size);
     line-height: var(--nx-label-line-height);
   }
-  /* Visually hidden, still in the accessibility tree (Tailwind's `sr-only`): a Label, or a dialog's Title or Description. */
+  /* Visually hidden, still in the accessibility tree (Tailwind's `sr-only`): a Label, a dialog's Title or Description, or a
+     tree's Label. */
   .nx-label[data-sr-only],
-  [data-scope='dialog'][data-sr-only] {
+  [data-scope='dialog'][data-sr-only],
+  .nx-tree-label[data-sr-only] {
     position: absolute;
     width: 1px;
     height: 1px;
