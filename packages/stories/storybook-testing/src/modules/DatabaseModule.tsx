@@ -159,9 +159,7 @@ const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
         <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
         <Next.Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
           {VIEW_OPTIONS.map(({ value, icon, label }) => (
-            <Next.ToggleGroup.Item key={value} value={value} aria-label={label} title={label}>
-              <Next.Icon icon={icon} size='md' />
-            </Next.ToggleGroup.Item>
+            <Next.ToggleGroup.Item key={value} value={value} icon={icon} label={label} iconOnly />
           ))}
         </Next.Toolbar.ToggleGroup>
         {/* <Toolbar.IconButton

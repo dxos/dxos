@@ -408,6 +408,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Menu.CheckboxItem': { apply: menuItem },
     // Card, ScrollArea.
     'Card.Root': { drop: ['fullWidth'] },
+    'Card.Row': { drop: ['fullWidth'] },
     'Card.Poster': {
       props: { image: 'src' },
       review: {

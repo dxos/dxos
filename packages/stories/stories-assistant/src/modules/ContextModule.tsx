@@ -127,7 +127,7 @@ const DebugTile = ({ data }: { data: ContextItem }) => {
   return (
     <Next.Card.Root>
       <Next.Card.Body>
-        <Next.Card.Row fullWidth classNames='max-h-50'>
+        <Next.Card.Row classNames='max-h-50'>
           <JsonHighlighter data={data} classNames='text-xs' />
         </Next.Card.Row>
       </Next.Card.Body>

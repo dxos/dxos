@@ -270,14 +270,14 @@ export const BlockList = ({ text }: { text: Text.Text }) => {
   return (
     <Next.Card.Root border={false}>
       <Next.Card.Section title='stored markdown'>
-        <Next.Card.Row fullWidth>
+        <Next.Card.Row>
           <Next.Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='raw-content'>
             {snapshot?.content ?? ''}
           </Next.Card.Text>
         </Next.Card.Row>
       </Next.Card.Section>
       <Next.Card.Section title='blocks'>
-        <Next.Card.Row fullWidth>
+        <Next.Card.Row>
           <Next.Card.Text classNames='whitespace-pre-wrap font-mono text-xs' data-testid='block-list'>
             {(view?.blocks ?? [])
               .map(
