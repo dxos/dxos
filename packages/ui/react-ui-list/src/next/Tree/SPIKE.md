@@ -21,10 +21,15 @@ spike shows work: a lazy walk, flat rows, and a fixed-block window. Option 3 wou
 | `tree-collection.test.ts` | the walk reads only open branches; opening re-walks; 5,000-row walk timing                                                                                                    |
 
 **Status (Phase A3):** productised and exported from `@dxos/react-ui-list/next` as `Tree` (`Root`, `Label`,
-`Content`, `Item`, `ItemIndicator`, `ItemIcon`, `ItemText`, `Empty`). `virtualize='window'|'css'` became
-`virtual='fixed'|'variable'` (AUDIT group B); `tree.css` moved to `@dxos/react-ui/next/theme/tree.css`; only the caret
-toggles a branch (`expandOnClick` off); rows carry `data-drop-target='top'|'bottom'|'inside'` and drag a
-`Next.DragPreview` chip. The sections below record the spike as run.
+`Content`, `Item`, `ItemIndicator`, `ItemIcon`, `ItemText`, `ItemCount`, `ItemGroup`, `ItemGroupLabel`, `Empty`).
+`virtualize='window'|'css'` became `virtual='fixed'|'variable'` (AUDIT group B); `tree.css` moved to
+`@dxos/react-ui/next/theme/tree.css`; rows carry `data-drop-target='top'|'bottom'|'inside'` and drag a
+`Next.DragPreview` chip. The parity items from question 2 and section 6 are ported: the current Tree's activation
+policy (a click selects without toggling; an unselectable branch and an option-click toggle; a click or Enter on the
+current row re-reports it; Space toggles; pointer modifiers; `canSelect`; `selectionFollowsFocus`), focus restore
+after a drop or a consumer's key, group headers, `dropAtEnd`, `dropBelowExpanded`, `leavesAcceptChildren`,
+`hideDragSource`, drag-collapse of an open branch, `onItemHover`, and a windowed tree keeps the focused row mounted.
+The sections below record the spike as run.
 
 ## 1. Can a `TreeModel` feed zag's collection lazily?
 
