@@ -264,20 +264,25 @@ export const Test: Story = {
     await expect(asChild).toHaveClass('nx-field');
     await expect(within(asChild).getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
 
-    // Row fields share the Container's tracks: header and helper before the `control` line, the control after it.
+    // Row fields share the Container's tracks: the header spans the row; the helper (before the `control` line) and the
+    // control (after it) share the next line, top-aligned to the control's cell.
     const rows = ['theme', 'language'].map((name) => {
       const row = byTestId(canvasElement, `row-${name}-md`);
+      const inputElement = row.querySelector<HTMLElement>('.nx-input')!;
       return {
         row,
-        label: row.querySelector('label')!.getBoundingClientRect(),
+        header: row.querySelector('[data-part="header"]')!.getBoundingClientRect(),
         helper: row.querySelector('[data-part="helper-text"]')!.getBoundingClientRect(),
-        input: row.querySelector('.nx-input')!.getBoundingClientRect(),
+        input: inputElement.getBoundingClientRect(),
+        inputTop: inputElement.getBoundingClientRect().top - parseFloat(getComputedStyle(inputElement).marginTop),
       };
     });
-    for (const { row, label, helper, input } of rows) {
+    for (const { row, header, helper, input, inputTop } of rows) {
       await expect(input.left).toBeCloseTo(rows[0].input.left, 0);
-      await expect(label.right).toBeLessThanOrEqual(input.left);
-      await expect(helper.top).toBeGreaterThanOrEqual(label.bottom - 0.5);
+      await expect(header.right).toBeGreaterThanOrEqual(input.right - 0.5);
+      await expect(helper.top).toBeGreaterThanOrEqual(header.bottom - 0.5);
+      await expect(helper.right).toBeLessThanOrEqual(input.left + 0.5);
+      await expect(helper.top).toBeCloseTo(inputTop, 0);
       await expect(row).toHaveAttribute('data-surface', '+1');
       await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
     }

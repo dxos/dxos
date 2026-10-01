@@ -60,7 +60,13 @@ export const Default: Story = {};
 
 export const Narrow: Story = { args: { paneWidth: '20rem' } };
 
-type RowGeometry = { label: DOMRect; description?: DOMRect; control: DOMRect };
+type RowGeometry = {
+  label: DOMRect;
+  description?: DOMRect;
+  control: DOMRect;
+  /** The control's cell top: its box less the block inset a field gives a control. */
+  controlTop: number;
+};
 
 /** The label, description and control boxes of every settings row; a control with no box of its own (a Select root) reports its first boxed child. */
 const rows = (canvasElement: HTMLElement): RowGeometry[] =>
@@ -70,15 +76,20 @@ const rows = (canvasElement: HTMLElement): RowGeometry[] =>
       const helper = row.querySelector<HTMLElement>(':scope > [data-part="helper-text"]');
       const control = [...row.children].find((child) => child !== header && child !== helper) as HTMLElement;
       const boxed = control.getBoundingClientRect().width > 0 ? control : (control.firstElementChild as HTMLElement);
+      const controlBox = boxed.getBoundingClientRect();
       return {
         label: header!.getBoundingClientRect(),
         description: helper?.getBoundingClientRect(),
-        control: boxed.getBoundingClientRect(),
+        control: controlBox,
+        controlTop: controlBox.top - parseFloat(getComputedStyle(boxed).marginTop),
       };
     },
   );
 
-/** 1. Test: two tracks shared across rows and sections; labels and descriptions left of the controls; bordered rows. */
+/**
+ * 1. Test: two tracks shared across rows and sections; the title spans the row; description (left) and control (right)
+ * share the next line, top-aligned; bordered rows.
+ */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -86,32 +97,42 @@ export const Test: Story = {
     // 2. Seven rows across the two sections.
     await expect(geometry).toHaveLength(7);
 
-    // 3. Every control starts on the same line, in both sections; every label too.
+    // 3. Every control starts on the same line, in both sections; every title too.
     for (const row of geometry) {
       await expect(row.control.left).toBeCloseTo(geometry[0].control.left, 0);
       await expect(row.label.left).toBeCloseTo(geometry[0].label.left, 0);
-      // 4. Label and description sit in the first track, left of the control.
-      await expect(row.label.right).toBeLessThanOrEqual(row.control.left);
-      await expect(row.description?.left).toBeCloseTo(row.label.left, 0);
-      await expect(row.description!.top).toBeGreaterThanOrEqual(row.label.bottom - 0.5);
+      // 4. The title spans both tracks on the first line.
+      await expect(row.label.right).toBeGreaterThanOrEqual(row.control.right - 0.5);
+      await expect(row.label.bottom).toBeLessThanOrEqual(row.description!.top + 0.5);
+      // 5. The description is left of the control, both starting on the next line.
+      await expect(row.description!.left).toBeCloseTo(row.label.left, 0);
+      await expect(row.description!.right).toBeLessThanOrEqual(row.control.left + 0.5);
+      await expect(row.description!.top).toBeCloseTo(row.controlTop, 0);
     }
     await expect(geometry[0].control.left - geometry[0].label.left).toBeGreaterThan(100);
 
-    // 5. Rows are bordered cards one level above the pane; the switch is labelled by its row.
+    // 6. Rows are bordered cards one level above the pane; the switch is labelled by its row.
     const row = canvasElement.querySelector<HTMLElement>('[data-layout="row"]')!;
     await expect(row).toHaveAttribute('data-surface', '+1');
     await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
     await expect(canvas.getByRole('switch', { name: 'Show toolbar' })).toBeChecked();
     await expect(canvas.getByRole('combobox', { name: 'Default view mode' })).toBeInTheDocument();
+
+    // 7. A row's title reads as content and its description as secondary content.
+    const title = getComputedStyle(row.querySelector('label')!);
+    const description = getComputedStyle(row.querySelector('[data-part="helper-text"]')!);
+    await expect(title.color).not.toBe(description.color);
+    await expect(parseFloat(title.fontSize)).toBeGreaterThan(parseFloat(description.fontSize));
   },
 };
 
-/** 1. TestNarrow: below the collapse width each row stacks: label, description, then the control under them. */
+/** 1. TestNarrow: below the collapse width each row stacks: title, description, a gap, then the control. */
 export const TestNarrow: Story = {
   args: { paneWidth: '20rem' },
   play: async ({ canvasElement }) => {
     for (const row of rows(canvasElement)) {
-      await expect(row.control.top).toBeGreaterThanOrEqual(row.description!.bottom - 0.5);
+      await expect(row.description!.top).toBeGreaterThanOrEqual(row.label.bottom - 0.5);
+      await expect(row.controlTop).toBeGreaterThan(row.description!.bottom + 0.5);
       await expect(row.control.left).toBeCloseTo(row.label.left, 0);
     }
   },

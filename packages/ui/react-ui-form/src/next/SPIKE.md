@@ -168,11 +168,19 @@ whole panel. The toolbar is also a scroll viewport, so `.nx-scroll-viewport` alo
 ### 8. Settings layout (`Settings.stories.tsx`): option 1 works
 
 AUDIT §3.2 option 1 is implemented as specified. `Form.Content` sets `SETTINGS_COLUMNS`
-(`minmax(0, 1fr) [control] minmax(0, 1fr)`). Each row is `Field.Root layout='row' level='+1'`: header and description
-before the `control` line, the control after it, centred against both, drawn as a bordered card one rung up. Sections
-are grid Fieldsets, so the two tracks run through every section. The Test asserts, across seven rows in two sections,
-equal control and label x, label and description left of the control, description under the label, a 1px border and
-`data-surface='+1'`. TestNarrow (20rem) asserts every row stacks with the control under the description.
+(`minmax(0, 1fr) [control] minmax(0, 1fr)`). Each row is `Field.Root layout='row' level='+1'`, drawn as a bordered card
+one rung up. As in the current Form's settings rows, its title (base text, base colour) spans the row, and the
+description (left of the `control` line, description colour) and the control (right of it) share the next line,
+top-aligned. Sections are grid Fieldsets, so the two tracks run through every section. The Test asserts, across seven
+rows in two sections:
+
+- equal control x and equal title x;
+- the title spanning both tracks above the description;
+- the description left of the control with an equal top;
+- the title reading stronger than the description;
+- a 1px border and `data-surface='+1'`.
+
+TestNarrow (20rem) asserts every row stacks title, description, a gap, then the control.
 
 **Verdict:** adopt option 1. It needed `Field.Root layout`/`level` (Phase 4 decision 3's "react-ui piece") and no
 settings-specific CSS in the form. The bordered row is `Field.Root` itself rather than a wrapping `level='+1'`
