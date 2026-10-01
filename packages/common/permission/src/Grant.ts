@@ -99,12 +99,14 @@ export type MakeOptions = Omit<Payload, 'permissions'> & {
 };
 
 /** Builds a grant, deriving `id` from the canonical payload. */
-export const make = ({ meta, ...payload }: MakeOptions): Effect.Effect<Grant> =>
-  Effect.gen(function* () {
-    const decoded = Schema.decodeUnknownSync(Payload)(sortKeys(payload));
-    const id = yield* idOf(decoded);
-    return Schema.decodeUnknownSync(Grant)({ id, ...decoded, ...(meta ? { meta } : {}) });
-  });
+export const make: (options: MakeOptions) => Effect.Effect<Grant> = Effect.fnUntraced(function* ({
+  meta,
+  ...payload
+}: MakeOptions) {
+  const decoded = Schema.decodeUnknownSync(Payload)(sortKeys(payload));
+  const id = yield* idOf(decoded);
+  return Schema.decodeUnknownSync(Grant)({ id, ...decoded, ...(meta ? { meta } : {}) });
+});
 
 /** Whether the grant's id matches its payload, so a tampered grant is caught before any signature check. */
 export const verifyId = (grant: Grant): Effect.Effect<boolean> => idOf(grant).pipe(Effect.map((id) => id === grant.id));
@@ -162,84 +164,87 @@ export type AttenuateOptions = {
  * child's window shrinks to fit, and the parents become the proofs. A space-held parent's caller
  * predicates bind the signing member, judged here once, and so are not carried onto the child.
  */
-export const attenuate = (
+export const attenuate: (
+  parents: readonly Grant[],
+  request: AttenuateRequest,
+  options?: AttenuateOptions,
+) => Effect.Effect<Grant, AttenuationError> = Effect.fn('Grant.attenuate')(function* (
   parents: readonly Grant[],
   request: AttenuateRequest,
   { now = Date.now(), signer }: AttenuateOptions = {},
-): Effect.Effect<Grant, AttenuationError> =>
-  Effect.gen(function* () {
-    const issuers = new Set(parents.map((parent) => parent.audience));
-    if (issuers.size !== 1) {
+) {
+  const issuers = new Set(parents.map((parent) => parent.audience));
+  if (issuers.size !== 1) {
+    return yield* Effect.fail(
+      new AttenuationError({
+        message: 'Parent grants must share one audience',
+        context: { audiences: [...issuers] },
+      }),
+    );
+  }
+  const [issuer] = issuers;
+
+  const permissions: Permission.Permission[] = [];
+  const proofs = new Set<string>();
+  let notBefore = request.notBefore;
+  let expiresAt = request.expiresAt;
+  for (const requested of request.permissions) {
+    const parent = parents.find(
+      (candidate) => candidate.delegable === true && isActive(candidate, now) && covers(candidate, requested),
+    );
+    if (!parent) {
       return yield* Effect.fail(
         new AttenuationError({
-          message: 'Parent grants must share one audience',
-          context: { audiences: [...issuers] },
+          context: { subject: requested.subject, command: requested.command, issuer },
         }),
       );
     }
-    const [issuer] = issuers;
-
-    const permissions: Permission.Permission[] = [];
-    const proofs = new Set<string>();
-    let notBefore = request.notBefore;
-    let expiresAt = request.expiresAt;
-    for (const requested of request.permissions) {
-      const parent = parents.find(
-        (candidate) => candidate.delegable === true && isActive(candidate, now) && covers(candidate, requested),
-      );
-      if (!parent) {
+    if (Principal.kind(parent.audience) === 'space') {
+      if (!signer) {
+        return yield* Effect.fail(
+          new AttenuationError({ message: 'A member must sign on behalf of the space', context: { space: issuer } }),
+        );
+      }
+      const floor = Policy.callerOnly(Policy.conjoin(covering(parent, requested).map((entry) => entry.policy ?? [])));
+      const verdict = Policy.evaluate(floor, { args: undefined, caller: signer });
+      if (verdict._tag === 'Failure') {
         return yield* Effect.fail(
           new AttenuationError({
-            context: { subject: requested.subject, command: requested.command, issuer },
+            message: "Signer's role does not satisfy the parent grant",
+            context: { space: issuer, signer, predicate: verdict.failure.predicate },
           }),
         );
       }
-      if (Principal.kind(parent.audience) === 'space') {
-        if (!signer) {
-          return yield* Effect.fail(
-            new AttenuationError({ message: 'A member must sign on behalf of the space', context: { space: issuer } }),
-          );
-        }
-        const floor = Policy.callerOnly(Policy.conjoin(covering(parent, requested).map((entry) => entry.policy ?? [])));
-        const verdict = Policy.evaluate(floor, { args: undefined, caller: signer });
-        if (verdict._tag === 'Failure') {
-          return yield* Effect.fail(
-            new AttenuationError({
-              message: "Signer's role does not satisfy the parent grant",
-              context: { space: issuer, signer, predicate: verdict.failure.predicate },
-            }),
-          );
-        }
-      }
-      const parentPolicy = Policy.conjoin(covering(parent, requested).map((entry) => entry.policy ?? []));
-      const carried =
-        Principal.kind(parent.audience) === 'space'
-          ? parentPolicy.filter((predicate) => !Policy.callerOnly([predicate]).length)
-          : parentPolicy;
-      permissions.push(
-        Permission.make({
-          subject: requested.subject,
-          command: requested.command,
-          policy: Policy.conjoin([carried, requested.policy ?? []]),
-        }),
-      );
-      proofs.add(parent.id);
-      notBefore = maxDefined(notBefore, parent.notBefore);
-      expiresAt = minDefined(expiresAt, parent.expiresAt);
     }
+    const parentPolicy = Policy.conjoin(covering(parent, requested).map((entry) => entry.policy ?? []));
+    const carried =
+      Principal.kind(parent.audience) === 'space'
+        ? parentPolicy.filter((predicate) => !Policy.callerOnly([predicate]).length)
+        : parentPolicy;
+    permissions.push(
+      Permission.make({
+        subject: requested.subject,
+        command: requested.command,
+        policy: Policy.conjoin([carried, requested.policy ?? []]),
+      }),
+    );
+    proofs.add(parent.id);
+    notBefore = maxDefined(notBefore, parent.notBefore);
+    expiresAt = minDefined(expiresAt, parent.expiresAt);
+  }
 
-    return yield* make({
-      issuer,
-      audience: request.audience,
-      permissions,
-      proofs: [...proofs],
-      notBefore,
-      expiresAt,
-      delegable: request.delegable,
-      consent: request.consent,
-      meta: signer ? { ...request.meta, signer } : request.meta,
-    });
+  return yield* make({
+    issuer,
+    audience: request.audience,
+    permissions,
+    proofs: [...proofs],
+    notBefore,
+    expiresAt,
+    delegable: request.delegable,
+    consent: request.consent,
+    meta: signer ? { ...request.meta, signer } : request.meta,
   });
+});
 
 const maxDefined = (left: number | undefined, right: number | undefined): number | undefined =>
   left === undefined ? right : right === undefined ? left : Math.max(left, right);

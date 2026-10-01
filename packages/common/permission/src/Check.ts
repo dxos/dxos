@@ -84,20 +84,19 @@ export const fromGrants = ({
     Effect.succeed(consents.find((consent) => consent.grantId === grantId && consent.by === by)),
 });
 
-const anyOf = <A>(
+const anyOf = Effect.fnUntraced(function* <A>(
   sources: readonly GrantSource[],
   read: (source: GrantSource) => Effect.Effect<A>,
   hit: (value: A) => boolean,
-) =>
-  Effect.gen(function* () {
-    for (const source of sources) {
-      const value = yield* read(source);
-      if (hit(value)) {
-        return value;
-      }
+) {
+  for (const source of sources) {
+    const value = yield* read(source);
+    if (hit(value)) {
+      return value;
     }
-    return undefined;
-  });
+  }
+  return undefined;
+});
 
 /** Composes sources: grants and revocations are unioned, and a fact holds when any source holds it. */
 export const merge = (...sources: readonly GrantSource[]): GrantSource => ({
@@ -203,74 +202,77 @@ export const describeReason = (reason: Reason): string => {
  * chain to a root, conjoin the policies along the way with the requirement's own, evaluate over
  * `{ args, caller }`, and answer with the first chain that passes or the most specific failure.
  */
-export const check = ({
+export const check: (options: CheckOptions) => Effect.Effect<Result> = Effect.fn('Check.check')(function* ({
   principal,
   requirement,
   args,
   caller = {},
   source,
   now = Date.now(),
-}: CheckOptions): Effect.Effect<Result> =>
-  Effect.gen(function* () {
-    let subject: Subject.Subject;
-    try {
-      subject = Requirement.resolveSubject(requirement, args);
-    } catch (error) {
-      if (error instanceof SubjectResolutionError) {
-        return { _tag: 'Denied', reason: { kind: 'subject', error } } satisfies Denied;
-      }
-      throw error;
+}: CheckOptions) {
+  let subject: Subject.Subject;
+  try {
+    subject = Requirement.resolveSubject(requirement, args);
+  } catch (error) {
+    if (error instanceof SubjectResolutionError) {
+      return { _tag: 'Denied', reason: { kind: 'subject', error } } satisfies Denied;
     }
-    const target = { subject, command: requirement.command };
-    const input: Policy.Input = { args, caller };
+    throw error;
+  }
+  const target = { subject, command: requirement.command };
+  const input: Policy.Input = { args, caller };
 
-    const candidates = [...(yield* source.grantsFor(principal))];
-    const spaceId = Subject.spaceIdOf(subject);
-    if (
-      spaceId !== undefined &&
-      Principal.kind(principal) !== 'space' &&
-      (yield* source.isMember(principal, spaceId))
-    ) {
-      candidates.push(...(yield* source.grantsFor(Principal.space(spaceId))));
+  const candidates = [...(yield* source.grantsFor(principal))];
+  const spaceId = Subject.spaceIdOf(subject);
+  if (spaceId !== undefined && Principal.kind(principal) !== 'space' && (yield* source.isMember(principal, spaceId))) {
+    candidates.push(...(yield* source.grantsFor(Principal.space(spaceId))));
+  }
+
+  let best: Denied = { _tag: 'Denied', subject, reason: { kind: 'no-grant' } };
+  const consider = (denied: Denied) => {
+    if (SPECIFICITY[denied.reason.kind] >= SPECIFICITY[best.reason.kind]) {
+      best = denied;
     }
+  };
 
-    let best: Denied = { _tag: 'Denied', subject, reason: { kind: 'no-grant' } };
-    const consider = (denied: Denied) => {
-      if (SPECIFICITY[denied.reason.kind] >= SPECIFICITY[best.reason.kind]) {
-        best = denied;
-      }
-    };
-
-    for (const candidate of candidates) {
-      if (!Grant.covers(candidate, target)) {
-        continue;
-      }
-      const walked = yield* walk(source, candidate, target, subject, now, new Set());
-      if (walked._tag === 'Denied') {
-        consider(walked);
-        continue;
-      }
-      const consentFailure = yield* checkConsent(source, walked.chain, requirement, now);
-      if (consentFailure) {
-        consider(consentFailure);
-        continue;
-      }
-      const policy = Policy.conjoin([requirement.policy ?? [], walked.policy]);
-      const verdict = Policy.evaluate(policy, input);
-      if (verdict._tag === 'Failure') {
-        consider({
-          _tag: 'Denied',
-          subject,
-          reason: { kind: 'policy', grantId: candidate.id, failed: verdict.failure },
-        });
-        continue;
-      }
-      return { _tag: 'Allowed', subject, chain: walked.chain, policy } satisfies Allowed;
+  for (const candidate of candidates) {
+    if (!Grant.covers(candidate, target)) {
+      continue;
     }
-    return best;
-  });
+    const walked = yield* walk(source, candidate, target, subject, now, new Set());
+    if (walked._tag === 'Denied') {
+      consider(walked);
+      continue;
+    }
+    const consentFailure = yield* checkConsent(source, walked.chain, requirement, now);
+    if (consentFailure) {
+      consider(consentFailure);
+      continue;
+    }
+    const policy = Policy.conjoin([requirement.policy ?? [], walked.policy]);
+    const verdict = Policy.evaluate(policy, input);
+    if (verdict._tag === 'Failure') {
+      consider({
+        _tag: 'Denied',
+        subject,
+        reason: { kind: 'policy', grantId: candidate.id, failed: verdict.failure },
+      });
+      continue;
+    }
+    return { _tag: 'Allowed', subject, chain: walked.chain, policy } satisfies Allowed;
+  }
+  return best;
+});
 
-const walk = (
+const walk: (
+  source: GrantSource,
+  grant: Grant.Grant,
+  target: Pick<Permission.Permission, 'subject' | 'command'>,
+  subject: Subject.Subject,
+  now: number,
+  visited: Set<string>,
+  viaSigner?: boolean,
+) => Effect.Effect<Walk> = Effect.fnUntraced(function* (
   source: GrantSource,
   grant: Grant.Grant,
   target: Pick<Permission.Permission, 'subject' | 'command'>,
@@ -278,79 +280,78 @@ const walk = (
   now: number,
   visited: Set<string>,
   viaSigner = false,
-): Effect.Effect<Walk> =>
-  Effect.gen(function* () {
-    const denied = (reason: Reason): Denied => ({ _tag: 'Denied', subject, reason });
-    if (visited.has(grant.id)) {
-      return denied({ kind: 'chain', grantId: grant.id, detail: 'proof cycle' });
-    }
-    visited.add(grant.id);
-    const inactive = Grant.inactiveReason(grant, now);
-    if (inactive) {
-      return denied({ kind: inactive, grantId: grant.id });
-    }
-    if (yield* source.isRevoked(grant.id)) {
-      return denied({ kind: 'revoked', grantId: grant.id });
-    }
-    const permissions = Grant.covering(grant, target);
-    if (permissions.length === 0) {
-      return denied({ kind: 'chain', grantId: grant.id, detail: 'does not cover the subject and command' });
-    }
-    const ownPolicy = Policy.conjoin(permissions.map((permission) => permission.policy ?? [])).filter(
-      (predicate) => !viaSigner || Policy.callerOnly([predicate]).length === 0,
-    );
+) {
+  const denied = (reason: Reason): Denied => ({ _tag: 'Denied', subject, reason });
+  if (visited.has(grant.id)) {
+    return denied({ kind: 'chain', grantId: grant.id, detail: 'proof cycle' });
+  }
+  visited.add(grant.id);
+  const inactive = Grant.inactiveReason(grant, now);
+  if (inactive) {
+    return denied({ kind: inactive, grantId: grant.id });
+  }
+  if (yield* source.isRevoked(grant.id)) {
+    return denied({ kind: 'revoked', grantId: grant.id });
+  }
+  const permissions = Grant.covering(grant, target);
+  if (permissions.length === 0) {
+    return denied({ kind: 'chain', grantId: grant.id, detail: 'does not cover the subject and command' });
+  }
+  const ownPolicy = Policy.conjoin(permissions.map((permission) => permission.policy ?? [])).filter(
+    (predicate) => !viaSigner || Policy.callerOnly([predicate]).length === 0,
+  );
 
-    if (!grant.proofs || grant.proofs.length === 0) {
-      if (!(yield* source.ownsSubject(grant.issuer, subject))) {
-        return denied({ kind: 'chain', grantId: grant.id, detail: `issuer ${grant.issuer} does not own ${subject}` });
-      }
-      return { _tag: 'ok', chain: [grant], policy: ownPolicy };
+  if (!grant.proofs || grant.proofs.length === 0) {
+    if (!(yield* source.ownsSubject(grant.issuer, subject))) {
+      return denied({ kind: 'chain', grantId: grant.id, detail: `issuer ${grant.issuer} does not own ${subject}` });
     }
+    return { _tag: 'ok', chain: [grant], policy: ownPolicy };
+  }
 
-    let best: Denied | undefined;
-    for (const proofId of grant.proofs) {
-      const parent = yield* source.get(proofId);
-      if (!parent) {
-        best ??= denied({ kind: 'chain', grantId: grant.id, detail: `proof ${proofId} not found` });
-        continue;
-      }
-      if (parent.audience !== grant.issuer) {
-        best = denied({ kind: 'chain', grantId: grant.id, detail: `issuer is not the audience of proof ${proofId}` });
-        continue;
-      }
-      if (parent.delegable !== true) {
-        best = denied({ kind: 'chain', grantId: grant.id, detail: `proof ${proofId} is not delegable` });
-        continue;
-      }
-      const viaSpace = Principal.kind(parent.audience) === 'space';
-      if (viaSpace) {
-        const signer = signerOf(grant);
-        if (!signer) {
-          best = denied({ kind: 'chain', grantId: grant.id, detail: 'issued by a space without a recorded signer' });
-          continue;
-        }
-        const floor = Policy.callerOnly(
-          Policy.conjoin(Grant.covering(parent, target).map((entry) => entry.policy ?? [])),
-        );
-        const verdict = Policy.evaluate(floor, { args: undefined, caller: signer });
-        if (verdict._tag === 'Failure') {
-          best = denied({
-            kind: 'chain',
-            grantId: grant.id,
-            detail: `signer ${signer.did} (${signer.role}) could not re-grant`,
-          });
-          continue;
-        }
-      }
-      const walked = yield* walk(source, parent, target, subject, now, new Set(visited), viaSpace);
-      if (walked._tag === 'Denied') {
-        best = walked;
-        continue;
-      }
-      return { _tag: 'ok', chain: [grant, ...walked.chain], policy: Policy.conjoin([ownPolicy, walked.policy]) };
+  let best: Denied | undefined;
+  for (const proofId of grant.proofs) {
+    const parent = yield* source.get(proofId);
+    if (!parent) {
+      best ??= denied({ kind: 'chain', grantId: grant.id, detail: `proof ${proofId} not found` });
+      continue;
     }
-    return best ?? denied({ kind: 'chain', grantId: grant.id, detail: 'no valid proof' });
-  });
+    if (parent.audience !== grant.issuer) {
+      best = denied({ kind: 'chain', grantId: grant.id, detail: `issuer is not the audience of proof ${proofId}` });
+      continue;
+    }
+    if (parent.delegable !== true) {
+      best = denied({ kind: 'chain', grantId: grant.id, detail: `proof ${proofId} is not delegable` });
+      continue;
+    }
+    const viaSpace = Principal.kind(parent.audience) === 'space';
+    if (viaSpace) {
+      const signer = signerOf(grant);
+      if (!signer) {
+        best = denied({ kind: 'chain', grantId: grant.id, detail: 'issued by a space without a recorded signer' });
+        continue;
+      }
+      const floor = Policy.callerOnly(
+        Policy.conjoin(Grant.covering(parent, target).map((entry) => entry.policy ?? [])),
+      );
+      const verdict = Policy.evaluate(floor, { args: undefined, caller: signer });
+      if (verdict._tag === 'Failure') {
+        best = denied({
+          kind: 'chain',
+          grantId: grant.id,
+          detail: `signer ${signer.did} (${signer.role}) could not re-grant`,
+        });
+        continue;
+      }
+    }
+    const walked = yield* walk(source, parent, target, subject, now, new Set(visited), viaSpace);
+    if (walked._tag === 'Denied') {
+      best = walked;
+      continue;
+    }
+    return { _tag: 'ok', chain: [grant, ...walked.chain], policy: Policy.conjoin([ownPolicy, walked.policy]) };
+  }
+  return best ?? denied({ kind: 'chain', grantId: grant.id, detail: 'no valid proof' });
+});
 
 const signerOf = (grant: Grant.Grant): Grant.Signer | undefined => {
   const signer = grant.meta?.signer;
@@ -363,29 +364,28 @@ const signerOf = (grant: Grant.Grant): Grant.Signer | undefined => {
   return undefined;
 };
 
-const checkConsent = (
+const checkConsent = Effect.fnUntraced(function* (
   source: GrantSource,
   chain: readonly Grant.Grant[],
   requirement: Requirement.Requirement,
   now: number,
-): Effect.Effect<Denied | undefined> =>
-  Effect.gen(function* () {
-    for (const grant of chain) {
-      if (!grant.consent) {
-        continue;
-      }
-      const consent = yield* source.consentFor(grant.id, grant.consent.by);
-      if (!consent || !Consent.isActive(consent, now)) {
-        return {
-          _tag: 'Denied',
-          reason: {
-            kind: 'consent',
-            grantId: grant.id,
-            by: grant.consent.by,
-            consentable: requirement.consentable === true,
-          },
-        } satisfies Denied;
-      }
+) {
+  for (const grant of chain) {
+    if (!grant.consent) {
+      continue;
     }
-    return undefined;
-  });
+    const consent = yield* source.consentFor(grant.id, grant.consent.by);
+    if (!consent || !Consent.isActive(consent, now)) {
+      return {
+        _tag: 'Denied',
+        reason: {
+          kind: 'consent',
+          grantId: grant.id,
+          by: grant.consent.by,
+          consentable: requirement.consentable === true,
+        },
+      } satisfies Denied;
+    }
+  }
+  return undefined;
+});
