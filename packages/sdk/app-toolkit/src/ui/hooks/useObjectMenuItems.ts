@@ -31,12 +31,12 @@ type Invoke = ReturnType<typeof useOperationInvoker>['invoke'];
  * entity id, which would resolve against the *active* space and so mis-resolve a card showing an object
  * from elsewhere.
  */
-export const openObject = (
-  subject: Obj.Unknown,
-  invoke: Invoke,
-  options: { pivotId?: string; disposition?: 'add' | 'detail'; modifiers?: { shift?: boolean } },
-): Effect.Effect<void> =>
-  Effect.gen(function* () {
+export const openObject = Effect.fnUntraced(
+  function* (
+    subject: Obj.Unknown,
+    invoke: Invoke,
+    options: { pivotId?: string; disposition?: 'add' | 'detail'; modifiers?: { shift?: boolean } },
+  ) {
     // `canNavigateToSubject` guarantees a database; without one there is nothing to address.
     const db = Obj.getDatabase(subject);
     if (!db) {
@@ -55,11 +55,14 @@ export const openObject = (
     // profile without plugin-space — where opening the database path still beats doing nothing.
     const path = targets[0]?.path ?? GraphPath.getObjectPathFromObject(subject);
     yield* invoke(LayoutOperation.Open, { subject: [path], disposition: 'add', ...options });
-  }).pipe(
-    // A click must never throw, but a swallowed Open failure reads as "nothing happened" — leave a trace.
-    Effect.tapCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
-    Effect.ignore,
-  );
+  },
+  // A click must never throw, but a swallowed Open failure reads as "nothing happened" — leave a trace.
+  (effect, subject) =>
+    effect.pipe(
+      Effect.tapCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
+      Effect.ignore,
+    ),
+);
 
 /**
  * Helper for card content that opens objects (e.g. a related-object link): attach `ref` to the card's
