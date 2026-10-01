@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Fieldset as FieldsetPrimitive } from '@ark-ui/react/fieldset';
+import { Fieldset as FieldsetPrimitive, useFieldsetContext } from '@ark-ui/react/fieldset';
 import React, { forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -10,17 +10,40 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { type Span, spanAttributes } from '../Container/index.ts';
 
 //
 // Root
 //
 
-type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps>;
+type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
+  /** Tracks the set spans in its parent Container. */
+  span?: Span;
+};
 
-/** A `<fieldset>` stacking its Fields with the container gap; `disabled` and `invalid` reach every child Field. */
-const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(({ classNames, ...props }, forwardedRef) => (
-  <FieldsetPrimitive.Root {...props} className={mx(recipes.fieldsetRoot(), classNames)} ref={forwardedRef} />
-));
+/**
+ * A `group` stacking its Fields with the container gap, named by its Legend; `disabled` and `invalid` reach every
+ * child control through context. Not a `<fieldset>`, whose anonymous content box cannot take part in a parent's grid.
+ */
+const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
+  ({ classNames, span, style, disabled, children, ...props }, forwardedRef) => {
+    const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
+    return (
+      <FieldsetPrimitive.Root
+        {...props}
+        {...spanAttrs}
+        disabled={disabled}
+        asChild
+        style={{ ...spanStyle, ...style }}
+        className={mx(recipes.fieldsetRoot(), classNames)}
+      >
+        <div role='group' aria-disabled={disabled ? true : undefined} ref={forwardedRef}>
+          {children}
+        </div>
+      </FieldsetPrimitive.Root>
+    );
+  },
+);
 
 FieldsetRoot.displayName = 'Next.Fieldset.Root';
 
@@ -34,14 +57,11 @@ type FieldsetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
 };
 
 /** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or icon-only Buttons. */
-const FieldsetLegend = forwardRef<HTMLLegendElement, FieldsetLegendProps>(
-  ({ classNames, size = 'sm', ...props }, forwardedRef) => (
-    <FieldsetPrimitive.Legend
-      {...props}
-      data-size={size}
-      className={mx(recipes.fieldsetLegend(), classNames)}
-      ref={forwardedRef}
-    />
+const FieldsetLegend = forwardRef<HTMLDivElement, FieldsetLegendProps>(
+  ({ classNames, size = 'sm', children, ...props }, forwardedRef) => (
+    <FieldsetPrimitive.Legend {...props} asChild data-size={size} className={mx(recipes.fieldsetLegend(), classNames)}>
+      <div ref={forwardedRef}>{children}</div>
+    </FieldsetPrimitive.Legend>
   ),
 );
 
@@ -75,6 +95,15 @@ const FieldsetErrorText = forwardRef<HTMLSpanElement, FieldsetErrorTextProps>(
 );
 
 FieldsetErrorText.displayName = 'Next.Fieldset.ErrorText';
+
+/**
+ * A control's `disabled`, or else its enclosing Fieldset's: the set is a `div`, so the browser no longer disables its
+ * controls.
+ */
+export const useFieldsetDisabled = (disabled?: boolean): boolean | undefined => {
+  const fieldset = useFieldsetContext();
+  return disabled ?? (fieldset?.disabled || undefined);
+};
 
 export const Fieldset = {
   Root: FieldsetRoot,

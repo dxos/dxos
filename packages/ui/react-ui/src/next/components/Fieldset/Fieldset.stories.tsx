@@ -13,7 +13,10 @@ import { Next } from '../../Next.tsx';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
-/** Valid and enabled sets, then an invalid and a disabled one; test ids are scoped by the size row. */
+/**
+ * Valid and enabled sets, then an invalid and a disabled one, and a set whose fields span a two-column row; test ids are
+ * scoped by the size row.
+ */
 const DefaultStory = () => (
   <>
     <Next.Fieldset.Root data-testid='profile'>
@@ -69,6 +72,36 @@ const DefaultStory = () => (
       <Next.Switch label='Show online status' />
       <Next.Switch label='Read receipts' />
       <Next.Checkbox label='Share usage data' />
+      <Next.Input aria-label='Alias' />
+      <Next.Button>Reset</Next.Button>
+    </Next.Fieldset.Root>
+
+    <Next.Fieldset.Root data-testid='address'>
+      <Next.Fieldset.Legend>Address</Next.Fieldset.Legend>
+      <Next.Container layout='row' columns='repeat(2, minmax(0, 1fr))' gap='md' data-testid='address-grid'>
+        <Next.Field.Root span='full' data-testid='street'>
+          <Next.Field.Header>
+            <Next.Field.Label>Street</Next.Field.Label>
+          </Next.Field.Header>
+          <Next.Input />
+        </Next.Field.Root>
+        <Next.Field.Root data-testid='city'>
+          <Next.Field.Header>
+            <Next.Field.Label>City</Next.Field.Label>
+          </Next.Field.Header>
+          <Next.Input />
+        </Next.Field.Root>
+        <Next.Field.Root data-testid='zip'>
+          <Next.Field.Header>
+            <Next.Field.Label>ZIP</Next.Field.Label>
+          </Next.Field.Header>
+          <Next.Input />
+        </Next.Field.Root>
+        <Next.Fieldset.Root span={2} data-testid='delivery'>
+          <Next.Fieldset.Legend>Delivery</Next.Fieldset.Legend>
+          <Next.Checkbox label='Leave at the door' />
+        </Next.Fieldset.Root>
+      </Next.Container>
     </Next.Fieldset.Root>
 
     <Next.Group justify='end'>
@@ -104,8 +137,9 @@ const bounds = (root: HTMLElement, selector: string) => {
 export const Default: Story = {};
 
 /**
- * Sets are named groups whose legend row lines up with the fields' labels and controls; a disabled set disables every
- * control inside it, and an invalid set shows its error and marks its fields invalid.
+ * Sets are `div` groups named by their legend row, which lines up with the fields' labels and controls; a disabled set
+ * disables every control inside it through context, and an invalid set shows its error and marks its fields invalid.
+ * Fields and sets take `span` in a multi-column row.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -113,14 +147,14 @@ export const Test: Story = {
     const canvasElement = sizeRow(canvasRoot, 'md');
     const canvas = within(canvasElement);
     const profile = canvas.getByRole('group', { name: 'Profile' });
-    await expect(profile.tagName).toBe('FIELDSET');
+    await expect(profile.tagName).toBe('DIV');
     await expect(profile).toHaveAttribute('data-scope', 'fieldset');
     await expect(profile).toHaveAccessibleDescription('Shown on your public page.');
     await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeInTheDocument();
     await expect(getComputedStyle(profile).borderTopStyle).toBe('none');
 
     // The legend is an sm label row spanning the content track, like a Field's header.
-    const legend = bounds(canvasElement, '[data-testid="profile"] legend');
+    const legend = bounds(canvasElement, '[data-testid="profile"] [data-part="legend"]');
     const label = bounds(canvasElement, '[data-testid="name"] label');
     const input = bounds(canvasElement, '[data-testid="name"] .nx-input');
     await expect(legend.height).toBeCloseTo(24, 0);
@@ -133,7 +167,7 @@ export const Test: Story = {
     const name = bounds(canvasElement, '[data-testid="name"]');
     await expect(email.top - name.bottom).toBeCloseTo(8, 0);
     // Switches and the checkbox each take an icon-only Button's block-sized cell on the legend's edge, so labels align.
-    const notifications = bounds(canvasElement, '[data-testid="notifications"] legend');
+    const notifications = bounds(canvasElement, '[data-testid="notifications"] [data-part="legend"]');
     const controls = canvasElement.querySelectorAll<HTMLElement>(
       '[data-testid="notifications"] :is([data-scope="switch"], [data-scope="checkbox"])[data-part="control"]',
     );
@@ -154,13 +188,15 @@ export const Test: Story = {
     }
     await expect(canvas.queryByText('Complete your profile.')).toBeNull();
     await expect(canvas.getByRole('group', { name: 'Profile' })).not.toHaveAttribute('data-invalid');
-    await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeEnabled();
+    await expect(canvas.getByRole('group', { name: 'Notifications' })).not.toHaveAttribute('aria-disabled');
 
-    await expect(canvas.getByRole('group', { name: 'Privacy' })).toBeDisabled();
+    await expect(canvas.getByRole('group', { name: 'Privacy' })).toHaveAttribute('aria-disabled', 'true');
     for (const name of ['Show online status', 'Read receipts']) {
       await expect(canvas.getByRole('switch', { name })).toBeDisabled();
     }
     await expect(canvas.getByRole('checkbox', { name: 'Share usage data' })).toBeDisabled();
+    await expect(canvas.getByRole('textbox', { name: 'Alias' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Reset' })).toBeDisabled();
     await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeEnabled();
 
     await expect(canvas.getByText('Complete your account.')).toBeVisible();
@@ -168,5 +204,19 @@ export const Test: Story = {
     for (const name of ['Handle', 'Recovery email']) {
       await expect(canvas.getByRole('textbox', { name })).toHaveAttribute('aria-invalid', 'true');
     }
+
+    const grid = bounds(canvasElement, '[data-testid="address-grid"]');
+    const street = bounds(canvasElement, '[data-testid="street"]');
+    const city = bounds(canvasElement, '[data-testid="city"]');
+    const zip = bounds(canvasElement, '[data-testid="zip"]');
+    const delivery = bounds(canvasElement, '[data-testid="delivery"]');
+    await expect(street.left).toBeCloseTo(grid.left, 0);
+    await expect(street.width).toBeCloseTo(grid.width, 0);
+    await expect(city.top).toBeGreaterThanOrEqual(street.bottom);
+    await expect(zip.top).toBeCloseTo(city.top, 0);
+    await expect(zip.left - city.right).toBeCloseTo(8, 0);
+    await expect(zip.right).toBeCloseTo(grid.right, 0);
+    await expect(delivery.width).toBeCloseTo(grid.width, 0);
+    await expect(canvas.getByRole('group', { name: 'Delivery' })).toBeInTheDocument();
   },
 };

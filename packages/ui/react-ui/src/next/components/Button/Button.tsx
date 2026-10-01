@@ -8,6 +8,7 @@ import { type ChromaticPalette, type MessageValence, type NeutralPalette } from 
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
+import { useFieldsetDisabled } from '../Fieldset/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
@@ -91,11 +92,13 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
     },
     forwardedRef,
   ) => {
-    const toolbarItem = useToolbarItem(buttonProps.disabled);
+    const disabled = useFieldsetDisabled(buttonProps.disabled);
+    const toolbarItem = useToolbarItem(disabled);
     const { className, ...attributes } = composableProps(buttonProps, { classNames: recipes.button() });
     const button = (
       <button
         {...attributes}
+        disabled={disabled}
         {...toolbarItem}
         id={id}
         onFocus={(event) => {
