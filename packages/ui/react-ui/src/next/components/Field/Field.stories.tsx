@@ -312,11 +312,16 @@ export const Test: Story = {
       return color;
     };
 
-    // A field label reads in the subdued text colour, distinct from the value.
+    // Label and help text are interface text in the subdued colour, distinct from the value; help text is a size smaller.
     const field = within(byTestId(canvasElement, 'field-md'));
-    const emailLabel = field.getByText('Email');
-    await expect(getComputedStyle(emailLabel).color).toBe(resolve('--color-subdued'));
-    await expect(getComputedStyle(emailLabel).color).not.toBe(getComputedStyle(field.getByRole('textbox')).color);
+    const emailLabel = getComputedStyle(field.getByText('Email'));
+    const helper = getComputedStyle(field.getByText('We never share it.'));
+    const value = getComputedStyle(field.getByRole('textbox'));
+    await expect(emailLabel.color).toBe(resolve('--color-subdued'));
+    await expect(helper.color).toBe(resolve('--color-subdued'));
+    await expect(parseFloat(helper.fontSize)).toBeLessThan(parseFloat(emailLabel.fontSize));
+    await expect(emailLabel.color).not.toBe(value.color);
+    await expect(helper.color).not.toBe(value.color);
 
     // The required mark is warning-coloured, a small gap after the label's text.
     const requiredLabel = byTestId(canvasElement, 'required-label-md');

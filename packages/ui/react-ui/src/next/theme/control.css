@@ -371,13 +371,15 @@
     margin-inline-start: max(0.125em, var(--nx-control-inset));
     color: var(--color-warning-text, currentColor);
   }
-  .nx-field-helper,
   .nx-field-error {
     font-size: var(--text-sm);
     line-height: var(--text-sm--line-height);
   }
+  /* Help text is interface text like the label: the same subdued colour, one size step smaller so the two stay distinct. */
   .nx-field-helper {
-    color: var(--color-description);
+    font-size: var(--nx-helper-font-size);
+    line-height: var(--nx-helper-line-height);
+    color: var(--color-subdued);
   }
   .nx-field-error {
     color: var(--color-error-text);

@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Type } from '@dxos/echo';
 import { Next } from '@dxos/react-ui/next';
+import { SIZE_ARG_TYPES, type SizeArgs } from '@dxos/react-ui/next/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type FormVariant } from '../components/Form/Form.theme.ts';
@@ -28,15 +29,16 @@ const SCHEMAS: Record<'person' | 'scalars' | 'arrays' | 'settings', Entry> = {
   settings: { schema: SettingsSchema, values: { viewMode: 'preview', toolbar: true } },
 };
 
-type StoryArgs = PaneArgs & { schema: keyof typeof SCHEMAS; variant?: FormVariant };
+type StoryArgs = PaneArgs & SizeArgs & { schema: keyof typeof SCHEMAS; variant?: FormVariant };
 
 /** The current Form (left) and the spike (right) on one schema and one set of values, for a human to compare. */
-const DefaultStory = ({ schema: key, variant = 'default' }: StoryArgs) => {
+const DefaultStory = ({ schema: key, variant = 'default', size = 'md' }: StoryArgs) => {
   const { schema, values: initial } = SCHEMAS[key];
   const [values, setValues] = useState<Record<string, any>>(initial);
   const handleChange = (next: Record<string, any>) => setValues((previous) => ({ ...previous, ...next }));
   return (
-    <Next.Panel.Root>
+    // The Next form takes the size from its host; the current Form keeps its own density.
+    <Next.Panel.Root size={size}>
       <Next.Panel.Body layout='row' align='start' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='md'>
         <CurrentForm.Root
           variant={variant}
@@ -67,8 +69,8 @@ const DefaultStory = ({ schema: key, variant = 'default' }: StoryArgs) => {
 const meta = {
   title: 'ui/react-ui-form/next/SideBySide',
   render: DefaultStory,
-  args: { schema: 'scalars' },
-  argTypes: { schema: { control: 'select', options: Object.keys(SCHEMAS) } },
+  args: { schema: 'scalars', size: 'md' },
+  argTypes: { ...SIZE_ARG_TYPES, schema: { control: 'select', options: Object.keys(SCHEMAS) } },
   decorators: [withTheme(), withNextPane({ width: '64rem', height: '48rem' })],
   parameters: { layout: 'fullscreen', translations: nextTranslations },
 } satisfies Meta<StoryArgs>;

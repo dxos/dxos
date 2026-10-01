@@ -594,9 +594,11 @@ From the react-ui-form Form spike (`react-ui-form/src/next/SPIKE.md`) and its us
     container's free space, so a row taller than a scrolling Panel Body overflowed it centred, half above its top.
     A scrolling row viewport uses `auto` rows. `Container align='start'` tops a row's cells of differing heights,
     such as two forms side by side, instead of centring them.
-64. **Label colours.** Field labels, header Typography and Fieldset legends use ui-theme's `--color-subdued`. A
-    Checkbox or Switch label is the control's own text and keeps the base colour. The required mark is the current
-    Form's: `--color-warning-text`, `max(0.125em, --nx-control-inset)` after the label text.
+64. **Label colours: content outranks interface text.** Field labels, header Typography, Fieldset legends and help
+    text (`Field.HelperText`) all use ui-theme's `--color-subdued`; help text is one size step smaller than its label
+    (`--nx-helper-font-size`, the next-smaller size's label step; xs and sm have no smaller step). Error text is
+    unchanged. A Checkbox or Switch label is the control's own text and keeps the base colour. The required mark is the
+    current Form's: `--color-warning-text`, `max(0.125em, --nx-control-inset)` after the label text.
 
 ## Phase 3: react-ui-form port
 

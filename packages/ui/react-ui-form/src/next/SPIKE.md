@@ -185,7 +185,8 @@ their own border.
 The current Form (left) and the spike (right) on the Person, scalar, array and settings schemas, sharing values; the
 Test edits the spike and reads the current form. TestPerson covers a form taller than the pane. The Body starts at
 the top with `scrollTop` 0, both columns start at the Body's top, and the Body scrolls to the last field. The row uses
-`align='start'`. Remaining visible differences: dates are segmented with a calendar trigger inside the control;
+`align='start'`. A `size` arg (xs–xl, default md) sizes the Next form through its Panel; the current Form keeps
+its own density. Remaining visible differences: dates are segmented with a calendar trigger inside the control;
 controls sit a control inset shorter (decision 12); labels are subdued.
 
 ## Next primitive changes
@@ -222,7 +223,7 @@ Added in review (DESIGN follow-ups 60–64):
    `TestLg` and `TestXl` collect all nine trailing icons of a form and assert one icon size and one centre line at
    every size. The nine include the Address disclosure, a `SystemButton.Disclosure` in the legend's end cell and the
    same size as the rest. A nested group's end cell sits one indent in from the form's column: its border and padding
-   indent both sides (point 54).
+   indent both sides (point 54, decided per level).
 
 7. **Scrolling row viewports size rows to content** (`scroll-area.css`), and **`Container align='start'`** (also on
    `Panel.Body`) for rows of differing heights.
@@ -244,11 +245,11 @@ Added in review (DESIGN follow-ups 60–64):
   `Test` and `TestGapXs` to `TestGapXl` assert the group gap is positive and smaller than the top-level gap at every size.
 - **ZIP code** in the shared `Person` schema is a string (`^\d{5}(-\d{4})?$`) with a description, so both Forms render
   a text input. No fixture or test used a numeric zip.
-- **Label colours** (dark theme, ui-theme `roles.css`): labels are `--color-subdued` (neutral-600) and descriptions
-  `--color-description` (neutral-400). In light: neutral-500 and neutral-600. ui-theme orders the text roles base →
-  description → subdued (weakest), so subdued labels now read **dimmer than descriptions** in both themes. They are
-  distinguishable, but inverted from the requested "description even lighter". To get that order, labels would take
-  `--color-description` and descriptions `--color-subdued`; that is a one-line swap in `control.css` if wanted.
+- **Label colours, decided: content outranks interface text.** Labels, legends, header text and help text all use
+  `--color-subdued` (neutral-600 dark, neutral-500 light); help text is one size step smaller than its label (12px
+  against 14px at md), so the two stay distinct at the same colour. Input values keep the base text colour; error text
+  is unchanged. At xs and sm there is no smaller step, so help text matches the label's size there. The rename to an
+  emphasis scale is deferred to the codebase-wide migration.
 
 ## Decision points (AUDIT §6)
 
@@ -280,9 +281,8 @@ Proposed new points:
     prop.
 53. **Hierarchy without indentation.** Settled in review: enclosed and indented (DESIGN follow-up 60). Nested fields
     give up the top-level rails, not the columns.
-54. **One trailing column across nesting.** An inset group's end cell is indented with it, so a nested disclosure
-    lines up with its own level's trailing icons, not the top level's. This follows from decision 60; say if the
-    column should instead stay fixed across depths.
+54. **One trailing column across nesting.** Decided: per level. A nested group's disclosure and trailing icons centre on
+    that group's own end cell, one indent in from the form's column.
 
 ## Revised estimate, milestones 6–10 (AUDIT §5)
 
