@@ -15,6 +15,15 @@
   .nx-image[data-status='loaded'] {
     background: transparent;
   }
+  .nx-image[data-backdrop='dominant'][data-status='loaded'] {
+    background: var(--nx-image-backdrop, transparent);
+    transition: background-color 0.5s ease-in-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nx-image[data-backdrop='dominant'] {
+      transition: none;
+    }
+  }
   .nx-image > img {
     display: block;
     width: 100%;
