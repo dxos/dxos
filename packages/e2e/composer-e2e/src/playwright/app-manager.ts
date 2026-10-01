@@ -731,14 +731,8 @@ export class AppManager {
     await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible();
   }
 
-  /** The plugin's switch input, for asserting whether the plugin is enabled. */
   getPluginToggle(plugin: string): Locator {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
-  }
-
-  /** Flips the plugin's switch; clicked on the switch itself because its label covers the hidden input. */
-  async togglePlugin(plugin: string): Promise<void> {
-    await this.page.getByTestId(`pluginList.${plugin}`).getByTestId('pluginList.toggle').click();
   }
 
   /** Clicks the switch's root label, since the visually hidden input underneath it never receives pointer events. */
