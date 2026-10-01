@@ -342,7 +342,15 @@ export const make = (params?: GraphBuilderProps): GraphBuilder => new GraphBuild
  * Call from the handler of a user action, before its writes: graph updates those writes cause flush
  * before the next paint instead of waiting out the frame budget.
  */
-export const flushBeforePaint = (builder: GraphBuilder): void => builder._frameBudget()?.flushBeforePaint();
+export const flushBeforePaint = (builder: GraphBuilder): void => {
+  const budget = builder._frameBudget();
+  if (!budget) {
+    return;
+  }
+  budget.flushBeforePaint();
+  // A connector an exhausted budget left dirty is not reported dirty again, so flush it under the grant too.
+  builder._scheduleDirtyFlush(true);
+};
 
 /**
  * Creates a GraphBuilder from a serialized pickle string.
