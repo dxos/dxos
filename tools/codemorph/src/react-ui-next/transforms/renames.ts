@@ -29,6 +29,7 @@ import {
   virtualTrigger,
 } from './composites.ts';
 import { buttonDensity, isButton } from './density.ts';
+import { blockEnd, contentPlacement, openChange } from './popups.ts';
 import { type Transform } from './transform.ts';
 
 /** How one current part becomes its Next counterpart. */
@@ -260,7 +261,8 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'IconBlock': { to: ['Block'], drop: ['square'] },
     'Field.Block': { to: ['Block'] },
     'Card.DragHandle': { to: ['DragHandle'] },
-    'Card.Block': { to: ['Block'] },
+    'Card.Block': { to: ['Block'], apply: blockEnd },
+    'Block': { apply: blockEnd },
     'Card.ActionIconButton': { apply: cardActionButton },
     // Dialogs.
     'Dialog.Close': { to: ['Dialog', 'CloseTrigger'] },
@@ -309,6 +311,16 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
         }
       },
     },
+    // Popups: Ark open details and Root positioning.
+    ...Object.fromEntries(
+      ['Popover', 'Menu', 'Dialog', 'AlertDialog', 'HoverCard', 'Collapsible', 'Tour', 'FloatingPanel'].map((name) => [
+        `${name}.Root`,
+        { apply: openChange },
+      ]),
+    ),
+    ...Object.fromEntries(
+      ['Popover', 'Menu', 'HoverCard', 'Select'].map((name) => [`${name}.Content`, { apply: contentPlacement }]),
+    ),
     // System buttons.
     ...Object.fromEntries(
       [
@@ -341,7 +353,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Toast.Actions': { to: ['Toast', 'Footer'] },
     'Toast.Action': { to: ['Toast', 'ActionTrigger'], drop: ['altText'] },
     'Toast.Close': { to: ['Toast', 'CloseTrigger'] },
-    'Toast.Root': { drop: ['type'] },
+    'Toast.Root': { drop: ['type'], apply: openChange },
     'Toast.Title': review({
       icon: 'Toast.Title icon → Toast.Header icon',
       onClose: 'Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)',

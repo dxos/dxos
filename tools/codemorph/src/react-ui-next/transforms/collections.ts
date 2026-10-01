@@ -7,6 +7,7 @@ import ts from '@typescript/typescript6';
 import { type CodeFile, type Element } from '../code-file.ts';
 import { addAttr, attrValue, getAttr, meaningfulChildren, removeAttr } from '../jsx.ts';
 import { type RuleContext } from './composites.ts';
+import { openChange } from './popups.ts';
 
 /**
  * Rules for Next's data-driven collections: Select and Listbox roots take their options as `items`, Menu items take
@@ -218,6 +219,7 @@ export const selectRoot = (ctx: RuleContext) => {
   if (getAttr(ctx.element, 'items')) {
     return;
   }
+  openChange(ctx);
   rootItems(ctx, 'Select', selectOption(ctx.file), ['Select.Option']);
   selectValue(ctx);
 };
