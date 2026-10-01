@@ -115,7 +115,11 @@ export const EmojiPickerBlock = ({
 
   return (
     <Next.Group classNames={classNames}>
-      <Next.Popover.Root open={emojiPickerOpen} onOpenChange={({ open }) => setEmojiPickerOpen(open)}>
+      <Next.Popover.Root
+        open={emojiPickerOpen}
+        onOpenChange={({ open }) => setEmojiPickerOpen(open)}
+        positioning={{ placement: 'right', gutter: isMd ? 0 : -310, overflowPadding: 8 }}
+      >
         <Next.Popover.Trigger asChild>
           <Next.Button variant={triggerVariant} classNames='grow gap-2 text-2xl' disabled={disabled}>
             <span className='sr-only'>{t('select-emoji.label')}</span>
@@ -127,9 +131,6 @@ export const EmojiPickerBlock = ({
             picker never had this problem): rendered in place, a 300px panel is clipped by the first
             scrolling ancestor — in the profile page, the settings panel's own overflow. */}
         <Next.Popover.Content
-          side='right'
-          sideOffset={isMd ? 0 : -310}
-          collisionPadding={8}
           onKeyDownCapture={(event) => {
             if (event.key === 'Escape') {
               event.stopPropagation();
