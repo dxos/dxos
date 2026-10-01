@@ -764,6 +764,16 @@ Reviewed one question at a time; decisions supersede the recommendations above.
 - **Test address:** the Form test schema uses `Geo.PostalAddress`, which gains titles where its key reads poorly
   (`locality` → City, `region` → State / Region, `extendedAddress`); the ZIP pattern demo moves to its own field.
 
+### Decision review 2026-10-01 (groups D, E)
+
+- **Point 2, Tree:** Ark tree-view driven by `TreeModel` atoms (controlled machine, no zag `loadChildren`), with the
+  spike's lazy walk, flat rows and `virtual='fixed'` windowing; the lazy walk lands in Next only.
+- **Point 13, image dominant colour:** an opt-in `Next.Image backdrop='dominant'`; the sampler moves to a shared
+  utility (also used by `dx-avatar`) and falls back to the surface colour without CORS. The migration PR sets it
+  wherever the current Image's letterbox fill shows.
+
+**Still open:** Q9 (parked), spike 46 (subgrid in a one-track cell), point 16 (DetailItem layout).
+
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
