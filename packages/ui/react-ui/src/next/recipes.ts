@@ -134,4 +134,7 @@ export const recipes = {
   listboxItemIndicator: () => 'nx-listbox-item-indicator',
   dropIndicator: () => 'nx-drop-indicator',
   dragPreview: () => 'nx-drag-preview',
+  avatar: () => 'nx-avatar',
+  avatarImage: () => 'nx-avatar-image',
+  avatarFallback: () => 'nx-avatar-fallback',
 } as const;

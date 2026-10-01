@@ -5,6 +5,13 @@
 import {
   DIALOG_AUTOFOCUS_ATTRIBUTE as NEXT_DIALOG_AUTOFOCUS_ATTRIBUTE,
   AlertDialog as NextAlertDialog,
+  Avatar as NextAvatar,
+  type AvatarAnimation as NextAvatarAnimation,
+  type AvatarHue as NextAvatarHue,
+  type AvatarHueVariant as NextAvatarHueVariant,
+  type AvatarRootProps as NextAvatarRootProps,
+  type AvatarStatus as NextAvatarStatus,
+  type AvatarVariant as NextAvatarVariant,
   Block as NextBlock,
   type BlockProps as NextBlockProps,
   Button as NextButton,
@@ -177,4 +184,11 @@ export namespace Next {
   export type PanelRootProps = NextPanelRootProps;
   export const Separator = NextSeparator;
   export type SeparatorProps = NextSeparatorProps;
+  export const Avatar = NextAvatar;
+  export type AvatarRootProps = NextAvatarRootProps;
+  export type AvatarVariant = NextAvatarVariant;
+  export type AvatarStatus = NextAvatarStatus;
+  export type AvatarAnimation = NextAvatarAnimation;
+  export type AvatarHue = NextAvatarHue;
+  export type AvatarHueVariant = NextAvatarHueVariant;
 }
