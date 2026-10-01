@@ -32,6 +32,7 @@ export * from './Progress/index.ts';
 export * from './ScrollArea/index.ts';
 export * from './Select/index.ts';
 export * from './Separator/index.ts';
+export * from './Splitter/index.ts';
 export * from './Switch/index.ts';
 export * from './SystemButton/index.ts';
 export * from './Tabs/index.ts';

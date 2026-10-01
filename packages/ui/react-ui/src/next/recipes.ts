@@ -145,4 +145,7 @@ export const recipes = {
   progress: () => 'nx-progress',
   progressTrack: () => 'nx-progress-track',
   progressRange: () => 'nx-progress-range',
+  splitter: () => 'nx-splitter',
+  splitterPanel: () => 'nx-splitter-panel',
+  splitterResizeTrigger: () => 'nx-splitter-resize-trigger',
 } as const;

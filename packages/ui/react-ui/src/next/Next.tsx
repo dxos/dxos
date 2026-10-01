@@ -77,6 +77,10 @@ import {
   type SelectOption as NextSelectOption,
   Separator as NextSeparator,
   type SeparatorProps as NextSeparatorProps,
+  Splitter as NextSplitter,
+  type SplitterMode as NextSplitterMode,
+  type SplitterOrientation as NextSplitterOrientation,
+  type SplitterRootProps as NextSplitterRootProps,
   Switch as NextSwitch,
   type SwitchProps as NextSwitchProps,
   SystemButton as NextSystemButton,
@@ -205,4 +209,8 @@ export namespace Next {
   export type TabsSelectedVariant = NextTabsSelectedVariant;
   export const Progress = NextProgress;
   export type ProgressProps = NextProgressProps;
+  export const Splitter = NextSplitter;
+  export type SplitterRootProps = NextSplitterRootProps;
+  export type SplitterMode = NextSplitterMode;
+  export type SplitterOrientation = NextSplitterOrientation;
 }
