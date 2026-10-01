@@ -153,6 +153,7 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 - [x] **A2. Next lists (AUDIT.md §6 group B)** — `virtual` (`fixed` windows via the shared `useVirtualRows`, `variable` is `content-visibility`); Ark owns selection in every list (`selectionMode='none'`), `listboxSelection` adapts `useListSelection` values; part-based rows and Root `columns` subgrids; the ARIA grid keyboard; `data-drop-target` from `useReorder`; `nx-row` states; default DragPreview chip; optional `getId` + `useStableIds`; `SystemButton.Remove` named by `ItemText`; collapsible `OrderedList.Item` + `Detail` with a caret-only trigger (DetailItem removed); `Label`/`Empty` parts; `ItemIcon` `hue`. Pilots: plugin-registry (icon hue), plugin-sheet `RangeList` (Label, Empty, part layout).
   - [ ] Reconcile `Next.Empty` with the A1 workstream's (this branch added a minimal one: `icon`, children, translated default).
   - [x] Tree adopts `useVirtualRows` (`virtual='fixed'`) in place of its own window — the helper gained `pinned` (the focused row stays mounted) and `measure` (skip animating rows); Tree rows take `nx-row` and draw the shared drop line; `Tree.Empty` is `Next.Empty`.
+
 ## Phase A1: Next foundations
 
 The decided-but-unbuilt foundations of AUDIT.md §7 Phase A item 1 (decision review 2026-10-01, group A), plus the props
