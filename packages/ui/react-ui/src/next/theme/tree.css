@@ -14,7 +14,7 @@
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
     /* Read by Tree.Root to time the commit of a close, so the CSS and the timer share one value. */
-    --nx-tree-disclosure-duration: var(--duration-tree-disclosure, 200ms);
+    --nx-tree-disclosure-duration: var(--nx-disclosure-duration);
   }
 
   .nx-tree > .nx-scroll-root {
@@ -74,7 +74,7 @@
   .nx-tree-branch-indicator {
     display: grid;
     place-items: center;
-    transition: transform var(--nx-tree-disclosure-duration) ease-out;
+    transition: transform var(--nx-tree-disclosure-duration) var(--nx-disclosure-ease-open);
   }
   .nx-tree-branch-indicator[data-state='open'] {
     transform: rotate(90deg);
@@ -91,10 +91,10 @@
    * row at rest still paints its focus ring and drop line.
    */
   :is(.nx-tree-item, .nx-tree-group)[data-disclosure='enter'] {
-    animation: nx-tree-row-enter var(--nx-tree-disclosure-duration) ease-out;
+    animation: nx-tree-row-enter var(--nx-tree-disclosure-duration) var(--nx-disclosure-ease-open);
   }
   :is(.nx-tree-item, .nx-tree-group)[data-disclosure='conceal'] {
-    animation: nx-tree-row-conceal var(--nx-tree-disclosure-duration) ease-in forwards;
+    animation: nx-tree-row-conceal var(--nx-tree-disclosure-duration) var(--nx-disclosure-ease-close) forwards;
   }
 
   @media (prefers-reduced-motion: reduce) {

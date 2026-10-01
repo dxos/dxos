@@ -148,6 +148,7 @@ type SplitterRootElementProps = {
   size?: number;
   defaultSize?: number;
   onSizeChange?: (size: number) => void;
+  /** Collapse animation in ms; defaults to the theme's `--nx-disclosure-duration` (0 under reduced motion). */
   transition?: number;
   /** A draggable seam; when false (the default) the ResizeTrigger renders nothing and the sizes are fixed. */
   resizable?: boolean;
@@ -156,6 +157,13 @@ type SplitterRootElementProps = {
 };
 
 type SplitterRootProps = SlottableProps<SplitterRootElementProps>;
+
+/** A duration custom property as the element resolves it, in milliseconds. */
+const cssDuration = (element: HTMLElement, property: string): number => {
+  const value = getComputedStyle(element).getPropertyValue(property).trim();
+  const duration = Number.parseFloat(value);
+  return Number.isNaN(duration) ? 0 : value.endsWith('ms') ? duration : duration * 1000;
+};
 
 const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
   (
@@ -171,7 +179,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
       size: sizeProp,
       defaultSize,
       onSizeChange,
-      transition = 250,
+      transition: transitionProp,
       resizable = false,
       minSize = 0,
       ...props
@@ -179,6 +187,13 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     forwardedRef,
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
+    const [themeTransition, setThemeTransition] = useState(0);
+    useLayoutEffect(() => {
+      if (rootRef.current) {
+        setThemeTransition(cssDuration(rootRef.current, '--nx-disclosure-duration'));
+      }
+    }, []);
+    const transition = transitionProp ?? themeTransition;
     const [requestedMode = 'split', setRequestedMode] = useControllableState<SplitterMode>({
       prop: modeProp,
       defaultProp: defaultMode,
@@ -352,7 +367,9 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
         ref={forwardedRef}
         className={mx(recipes.splitterPanel(), className)}
         style={{
-          transition: animate ? `flex-grow ${transition}ms ease-out, flex-basis ${transition}ms ease-out` : undefined,
+          transition: animate
+            ? `flex-grow ${transition}ms var(--nx-disclosure-ease-open), flex-basis ${transition}ms var(--nx-disclosure-ease-open)`
+            : undefined,
           // A pane growing from nothing must be allowed to be small on the way: its lower bound
           // returns at once with the mode, and would hold it at `minSize` until the basis caught up.
           ...(animate && { minWidth: 0, minHeight: 0 }),

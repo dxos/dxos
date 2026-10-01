@@ -7,7 +7,7 @@
 
 @layer dx-components {
   :root {
-    --nx-main-duration: 150ms;
+    --nx-main-duration: var(--nx-disclosure-duration);
     --nx-main-easing: cubic-bezier(0.4, 0, 0.6, 1);
     --nx-main-start-size: var(--dx-nav-sidebar-size, 350px);
     --nx-main-start-rail: var(--dx-l0-size, 72px);

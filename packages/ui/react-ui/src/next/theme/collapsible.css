@@ -45,7 +45,7 @@
   .nx-collapsible-indicator {
     display: grid;
     place-items: center;
-    transition: transform 150ms ease-out;
+    transition: transform var(--nx-disclosure-duration) var(--nx-disclosure-ease-open);
   }
   .nx-collapsible-indicator[data-state='open'] {
     transform: rotate(90deg);
@@ -55,10 +55,10 @@
     overflow: hidden;
   }
   .nx-collapsible-content[data-state='open'] {
-    animation: nx-collapsible-open 150ms ease-out;
+    animation: nx-collapsible-open var(--nx-disclosure-duration) var(--nx-disclosure-ease-open);
   }
   .nx-collapsible-content[data-state='closed'] {
-    animation: nx-collapsible-close 150ms ease-out;
+    animation: nx-collapsible-close var(--nx-disclosure-duration) var(--nx-disclosure-ease-close);
   }
 
   @media (prefers-reduced-motion: reduce) {

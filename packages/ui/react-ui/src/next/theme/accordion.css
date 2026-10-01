@@ -75,7 +75,7 @@
   }
 
   .nx-accordion-item-indicator {
-    transition: transform 150ms ease-out;
+    transition: transform var(--nx-disclosure-duration) var(--nx-disclosure-ease-open);
   }
   .nx-accordion-item-indicator[data-state='open'] {
     transform: rotate(90deg);
@@ -85,10 +85,10 @@
     overflow: hidden;
   }
   .nx-accordion-item-content[data-state='open'] {
-    animation: nx-accordion-open 150ms ease-out;
+    animation: nx-accordion-open var(--nx-disclosure-duration) var(--nx-disclosure-ease-open);
   }
   .nx-accordion-item-content[data-state='closed'] {
-    animation: nx-accordion-close 150ms ease-out;
+    animation: nx-accordion-close var(--nx-disclosure-duration) var(--nx-disclosure-ease-close);
   }
 
   @media (prefers-reduced-motion: reduce) {
