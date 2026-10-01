@@ -33,7 +33,11 @@ export class Sandbox extends Type.makeObject<Sandbox>(DXN.make('org.dxos.type.sa
     ),
     /** Repositories every command in the sandbox has as git remotes; the sandbox's work outlives it there. */
     repositories: Schema.optional(Schema.Array(Ref.Ref(Repository.Repository))),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' }),
+    // Listed in the navtree like any object the reader owns, which is where its "Grant account access" action lives.
+    Annotation.UserType.set(),
+  ),
 ) {}
 
 /**
