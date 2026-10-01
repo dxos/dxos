@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { createContext, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';

@@ -3,7 +3,7 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import { type FC, type MutableRefObject, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';

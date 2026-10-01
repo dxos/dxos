@@ -8,9 +8,9 @@ import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn } from '@dxos/async';
 import { AtomEx } from '@dxos/effect';

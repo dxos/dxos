@@ -8,7 +8,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 
 export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';

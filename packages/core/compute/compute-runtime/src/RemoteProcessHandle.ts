@@ -9,13 +9,13 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
+import type * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Scope from 'effect/Scope';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 

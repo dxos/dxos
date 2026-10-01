@@ -3,9 +3,9 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as AiError from 'effect/ai/AiError';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as AiError from 'effect/unstable/ai/AiError';
 import { test } from 'vitest';
 
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';

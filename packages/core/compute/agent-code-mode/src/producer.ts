@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
-import * as Tool from 'effect/unstable/ai/Tool';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { callTool } from '@dxos/ai';

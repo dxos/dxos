@@ -3,13 +3,13 @@
 //
 
 import { it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';

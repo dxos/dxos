@@ -13,14 +13,14 @@ import * as Fiber from 'effect/Fiber';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
 import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { NoHandlerError, RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';

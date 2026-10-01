@@ -3,10 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
-import type * as Statement from 'effect/unstable/sql/Statement';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
+import type * as Statement from 'effect/sql/Statement';
 
 import type { SpaceId } from '@dxos/keys';
 

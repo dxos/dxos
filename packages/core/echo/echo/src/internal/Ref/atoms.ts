@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { subscribe } from '../common/proxy/reactive.ts';
 import { ObjectDeletedId } from '../common/types/model-symbols.ts';

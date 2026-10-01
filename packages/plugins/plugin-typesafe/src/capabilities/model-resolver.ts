@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Redacted from 'effect/Redacted';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import * as Capabilities from '@dxos/app-framework/Capabilities';

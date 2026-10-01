@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
+import type * as Rpc from 'effect/rpc/Rpc';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
 import { describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';

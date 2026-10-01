@@ -12,7 +12,7 @@ import {
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
 import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';

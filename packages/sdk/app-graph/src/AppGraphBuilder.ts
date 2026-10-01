@@ -6,8 +6,8 @@ import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Entity, type Type } from '@dxos/echo';
 import * as Builder from '@dxos/graph/GraphBuilder';

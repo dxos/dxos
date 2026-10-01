@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';

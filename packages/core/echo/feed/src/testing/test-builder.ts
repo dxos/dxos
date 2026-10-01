@@ -6,8 +6,8 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import * as Statement from 'effect/unstable/sql/Statement';
+import * as SqlClient from 'effect/sql/SqlClient';
+import * as Statement from 'effect/sql/Statement';
 
 import { Context, Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';

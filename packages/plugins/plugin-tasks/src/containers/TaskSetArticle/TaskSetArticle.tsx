@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
