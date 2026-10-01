@@ -324,6 +324,7 @@ export const MessageArticle = ({
     <ConversationStack.Root
       attendableId={attendableId}
       nodeId={nodeId}
+      companion={nodeId !== attendableId}
       items={orderedMessages}
       summaries={summaries}
       conversationSummary={conversationSummary}
