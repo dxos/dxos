@@ -13,17 +13,21 @@ import { EchoTestBuilder } from '../testing/index.ts';
 /** Charged to every run of the slow query; with the default factor of 4 it debounces for 2 s. */
 const SLOW_COST = 500;
 
+/** Typenames as they appear in a query AST, which identify the two queries to the cost hook. */
+const FAST_TYPENAME = 'com.example.type.person';
+const SLOW_TYPENAME = 'com.example.type.organization';
+
 describe('cost-proportional live query debounce', () => {
   test('a slow query coalesces invalidations while a fast one keeps re-running', async ({ expect }) => {
     // Runs counted on the host, since the client merges local writes into results before any re-run.
     const runs = { fast: 0, slow: 0 };
     const cost = (query: QueryAST.Query): number => {
       const json = JSON.stringify(query);
-      if (json.includes(TestSchema.Organization.typename)) {
+      if (json.includes(SLOW_TYPENAME)) {
         runs.slow++;
         return SLOW_COST;
       }
-      if (json.includes(TestSchema.Person.typename)) {
+      if (json.includes(FAST_TYPENAME)) {
         runs.fast++;
       }
       // Measured time would make the fast query's debounce depend on the machine.
