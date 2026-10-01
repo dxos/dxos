@@ -132,7 +132,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
               </Next.Block>
               <Next.Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block end>
+              <Next.Block rail='end'>
                 <ActionMenu>
                   <Next.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>

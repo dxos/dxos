@@ -67,7 +67,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
               <Next.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
               <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block end>
+              <Next.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
                   <Next.Button
                     iconOnly

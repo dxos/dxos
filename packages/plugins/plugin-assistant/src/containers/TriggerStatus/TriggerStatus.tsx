@@ -70,7 +70,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   }, [isEnabled, state?.invocations]);
 
   return (
-    <Next.Popover.Root>
+    <Next.Popover.Root positioning={{ placement: 'left' }}>
       <Next.Popover.Trigger asChild>
         <StatusBar.Item>
           <Next.Button
@@ -82,7 +82,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
           />
         </StatusBar.Item>
       </Next.Popover.Trigger>
-      <Next.Popover.Content side='left'>
+      <Next.Popover.Content>
         <TriggerStatusPopover
           state={triggerState}
           currentFunctionName={

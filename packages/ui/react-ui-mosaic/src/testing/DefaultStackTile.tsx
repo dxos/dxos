@@ -38,7 +38,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
             <Next.Card.Header>
               <Next.DragHandle ref={dragHandleRef} />
               <Next.Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Next.Card.Title>
-              <Next.Block end>
+              <Next.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
                   <Next.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
                 </ActionMenu>

@@ -48,7 +48,12 @@ export const PickerButton = ({
   const TriggerRoot = rootVariant === 'toolbar-button' ? Next.Toolbar.Button : Next.Button;
 
   return (
-    <Next.Menu.Root modal={false} open={open} onOpenChange={setOpen}>
+    <Next.Menu.Root
+      modal={false}
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={{ placement: 'bottom' }}
+    >
       {/* The menu trigger is outermost: both machines find the button by its id, and the tooltip adopts
           the id it is handed while the menu would lose its own to one set above it. */}
       <Next.Menu.Trigger asChild>
@@ -60,7 +65,7 @@ export const PickerButton = ({
           </TriggerRoot>
         </Next.Tooltip.Trigger>
       </Next.Menu.Trigger>
-      <Next.Menu.Content side='bottom' classNames='!w-min'>
+      <Next.Menu.Content classNames='!w-min'>
         {values.map((_value) => {
           return (
             <Next.Menu.CheckboxItem

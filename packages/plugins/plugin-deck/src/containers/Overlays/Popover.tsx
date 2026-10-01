@@ -189,7 +189,7 @@ export const PopoverContent = () => {
               </Next.Block>
               <Next.Card.Title>{title}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block end>
+              <Next.Block rail='end'>
                 {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
                 <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
                   <Next.Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />

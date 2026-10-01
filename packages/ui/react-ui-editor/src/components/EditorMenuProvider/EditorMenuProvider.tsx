@@ -179,7 +179,12 @@ export const EditorMenuProvider = ({
   );
 
   return (
-    <Next.Popover.Root modal={false} open={open} onOpenChange={setOpen} positioning={Next.virtualAnchor(triggerRef)}>
+    <Next.Popover.Root
+      modal={false}
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={Next.virtualAnchor(triggerRef)}
+    >
       {/* Menu. */}
       <Next.Popover.Content
         align='start'

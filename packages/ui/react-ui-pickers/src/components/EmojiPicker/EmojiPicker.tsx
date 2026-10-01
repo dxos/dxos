@@ -51,9 +51,10 @@ export const EmojiPickerToolbarButton = ({
   return (
     <Next.Popover.Root
       open={emojiPickerOpen}
-      onOpenChange={(nextOpen) => {
+      onOpenChange={({ open: nextOpen }) => {
         setEmojiPickerOpen(nextOpen);
       }}
+      positioning={{ placement: 'bottom' }}
     >
       <Next.Popover.Trigger asChild>
         <Next.Button
@@ -66,7 +67,6 @@ export const EmojiPickerToolbarButton = ({
         />
       </Next.Popover.Trigger>
       <Next.Popover.Content
-        side='bottom'
         onKeyDownCapture={(event) => {
           if (event.key === 'Escape') {
             event.stopPropagation();
@@ -115,7 +115,7 @@ export const EmojiPickerBlock = ({
 
   return (
     <Next.Group classNames={classNames}>
-      <Next.Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+      <Next.Popover.Root open={emojiPickerOpen} onOpenChange={({ open }) => setEmojiPickerOpen(open)}>
         <Next.Popover.Trigger asChild>
           <Next.Button variant={triggerVariant} classNames='grow gap-2 text-2xl' disabled={disabled}>
             <span className='sr-only'>{t('select-emoji.label')}</span>

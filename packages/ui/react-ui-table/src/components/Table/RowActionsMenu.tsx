@@ -25,7 +25,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
     <Next.Menu.Root
       modal={false}
       open={true}
-      onOpenChange={modals.close}
+      onOpenChange={({ open }) => modals.close(open)}
       positioning={Next.virtualAnchor(modals.trigger)}
     >
       <Next.Menu.Content>

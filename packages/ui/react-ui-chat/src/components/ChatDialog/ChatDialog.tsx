@@ -68,7 +68,7 @@ const ChatDialogRoot = ({
       size={size}
       setSize={setSize}
     >
-      <Next.Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
+      <Next.Dialog.Root modal={false} open={open} onOpenChange={({ open }) => setOpen(open)}>
         <div className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
           <Next.Dialog.Content
             size='md'

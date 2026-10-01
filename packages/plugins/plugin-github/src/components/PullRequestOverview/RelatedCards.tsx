@@ -121,7 +121,7 @@ const CardHeading = ({
       </Next.Block>
       <Next.Card.Title>{title}</Next.Card.Title>
       {href && (
-        <Next.Block end>
+        <Next.Block rail='end'>
           <Next.Button
             iconOnly
             variant='ghost'

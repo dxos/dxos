@@ -219,7 +219,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
         </Next.Panel.Body>
       </Next.Panel.Root>
 
-      <Next.AlertDialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+      <Next.AlertDialog.Root open={confirmDeleteOpen} onOpenChange={({ open }) => setConfirmDeleteOpen(open)}>
         <Next.AlertDialog.Content>
           <Next.AlertDialog.Body>
             <Next.AlertDialog.Title>{t('delete-publication-dialog.title')}</Next.AlertDialog.Title>

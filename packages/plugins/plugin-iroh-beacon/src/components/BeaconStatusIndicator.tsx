@@ -26,7 +26,7 @@ export const BeaconStatusIndicator = () => {
   const iconClass = onlineCount > 0 ? 'text-green-500' : state?.status === 'connecting' ? 'animate-pulse' : undefined;
 
   return (
-    <Next.Popover.Root>
+    <Next.Popover.Root positioning={{ placement: 'left' }}>
       <Next.Popover.Trigger asChild>
         <StatusBar.Item>
           <Next.Button
@@ -38,7 +38,7 @@ export const BeaconStatusIndicator = () => {
           />
         </StatusBar.Item>
       </Next.Popover.Trigger>
-      <Next.Popover.Content side='left' classNames=''>
+      <Next.Popover.Content classNames=''>
         <BeaconPopover />
       </Next.Popover.Content>
     </Next.Popover.Root>

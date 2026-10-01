@@ -51,7 +51,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu }: ObjectCardPr
           </CardIconSlot>
         </Next.Block>
         <Next.Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Next.Card.Title>
-        <Next.Block end>
+        <Next.Block rail='end'>
           <CardMenuSlot subject={subject} menu={menu} />
           {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
           <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>

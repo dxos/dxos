@@ -74,7 +74,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
   return (
     <Next.Popover.Root
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={({ open }) => setOpen(open)}
       positioning={Next.virtualAnchor(triggerRef as RefObject<HTMLButtonElement>)}
     >
       {children}

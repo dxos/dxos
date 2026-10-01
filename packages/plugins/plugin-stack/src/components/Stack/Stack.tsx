@@ -204,7 +204,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>
       <div className='p-1 dx-toolbar-surface'>
-        <Next.Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
+        <Next.Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
           <Next.Menu.Trigger asChild>
             <AttentionSigilButton size='md' attendableId={attendableId}>
               <Next.Icon icon={icon} classNames='transition-opacity' />

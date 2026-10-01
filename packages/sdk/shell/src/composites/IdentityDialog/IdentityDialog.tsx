@@ -19,7 +19,7 @@ export interface IdentityDialogProps
 export const IdentityDialog = (props: IdentityDialogProps) => {
   const titleId = useId('identityDialog__title', props.title);
   return (
-    <Next.Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
+    <Next.Dialog.Root defaultOpen onOpenChange={({ open }) => open || props.onDone?.()}>
       <Next.Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
         <Next.Dialog.Body>
           <IdentityPanel

@@ -779,7 +779,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
       <Next.Menu.Root
         modal={false}
         open={menu !== undefined}
-        onOpenChange={(open) => !open && closeMenu()}
+        onOpenChange={({ open }) => !open && closeMenu()}
         positioning={Next.virtualAnchor(menuAnchorRef)}
       >
         <Next.Menu.Content side='right' sideOffset={4} collisionPadding={8}>

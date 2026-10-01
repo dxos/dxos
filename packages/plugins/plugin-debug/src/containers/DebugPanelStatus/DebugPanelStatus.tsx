@@ -107,7 +107,7 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
   return (
     <Next.FloatingPanel.Root
       open={mode === 'floating' && floatingOpen}
-      onOpenChange={setFloatingOpen}
+      onOpenChange={({ open }) => setFloatingOpen(open)}
       defaultSize={size}
       minSize={MIN_SIZE}
       getAnchorPosition={getAnchorPosition}

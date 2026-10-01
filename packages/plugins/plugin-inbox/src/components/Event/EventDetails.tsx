@@ -86,7 +86,7 @@ export const EventDetails = ({
           </Next.Block>
           <Next.Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Next.Card.Text>
           {meeting && (
-            <Next.Block end>
+            <Next.Block rail='end'>
               <Next.Button
                 iconOnly
                 variant='ghost'

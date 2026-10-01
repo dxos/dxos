@@ -195,7 +195,7 @@ export const ResetDialog = ({
             data-testid='resetDialog.recovery'
           />
           {onReset && (
-            <Next.Menu.Root>
+            <Next.Menu.Root positioning={{ placement: 'top' }}>
               <Next.Menu.Trigger asChild>
                 <Next.Button
                   icon='ph--trash--regular'
@@ -205,7 +205,7 @@ export const ResetDialog = ({
                   variant='destructive'
                 />
               </Next.Menu.Trigger>
-              <Next.Menu.Content side='top'>
+              <Next.Menu.Content>
                 <Next.Menu.Item
                   data-testid='resetDialog.confirmReset'
                   onClick={onReset}
@@ -221,7 +221,7 @@ export const ResetDialog = ({
             (feedbackSent ? (
               <Next.Button icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
             ) : (
-              <Next.Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+              <Next.Popover.Root open={feedbackOpen} onOpenChange={({ open }) => setFeedbackOpen(open)}>
                 <Next.Popover.Trigger asChild>
                   <Next.Button icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
                 </Next.Popover.Trigger>

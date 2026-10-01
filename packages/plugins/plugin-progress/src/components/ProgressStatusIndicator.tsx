@@ -26,7 +26,7 @@ export const ProgressStatusIndicator = () => {
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');
 
   return (
-    <Next.Popover.Root>
+    <Next.Popover.Root positioning={{ placement: 'left' }}>
       <Next.Popover.Trigger asChild>
         <StatusBar.Item>
           <Next.Button
@@ -39,7 +39,7 @@ export const ProgressStatusIndicator = () => {
         </StatusBar.Item>
       </Next.Popover.Trigger>
       {active.length > 0 && (
-        <Next.Popover.Content side='left' border>
+        <Next.Popover.Content border>
           <div className='flex flex-col gap-1 w-[18rem] p-1 overflow-hidden'>
             {active.map((monitor) => (
               <ProgressMeter

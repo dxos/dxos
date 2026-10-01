@@ -266,7 +266,7 @@ export const Outline = ({
   const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
   return (
-    <Next.Popover.Root open={hoveredMarker != null}>
+    <Next.Popover.Root open={hoveredMarker != null} positioning={{ placement: 'right' }}>
       <div
         role='navigation'
         className={mx('relative flex flex-col justify-center overflow-hidden', classNames)}
@@ -362,8 +362,6 @@ export const Outline = ({
           // pointer walked the rail, drifting further from the tick with every step. Remounting per
           // tick is what makes it re-measure.
           key={hoveredMarker.id}
-          side='right'
-          align='center'
           // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
           avoidCollisions={false}
           onOpenAutoFocus={(event) => event.preventDefault()}

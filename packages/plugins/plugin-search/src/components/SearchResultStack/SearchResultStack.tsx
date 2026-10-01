@@ -94,7 +94,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
               <Next.Card.Title>
                 <Highlighted text={label} query={query} />
               </Next.Card.Title>
-              <Next.Block end>
+              <Next.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
                   <Next.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>

@@ -279,7 +279,7 @@ export const BoardCell = ({
           <Next.DragHandle ref={dragHandleRef} />
           {title}
           {onDelete && (
-            <Next.Block end>
+            <Next.Block rail='end'>
               <Next.Button
                 variant='ghost'
                 icon='ph--x--regular'

@@ -63,7 +63,7 @@ const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeader
       <Next.Card.Title>{title}</Next.Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
     </Flex>
-    {action && <Next.Block end>{action}</Next.Block>}
+    {action && <Next.Block rail='end'>{action}</Next.Block>}
     {menu && <Next.Card.Menu items={menu} />}
   </Next.Card.Header>
 );
@@ -171,7 +171,7 @@ const StatCardRow = ({
       </Flex>
       {trailing && (
         // A unit reads on from its value, so it sits at the gutter's start; a control stays centred.
-        <Next.Block end compact classNames={!action && 'justify-items-start'}>
+        <Next.Block rail='end' compact classNames={!action && 'justify-items-start'}>
           {trailing}
         </Next.Block>
       )}

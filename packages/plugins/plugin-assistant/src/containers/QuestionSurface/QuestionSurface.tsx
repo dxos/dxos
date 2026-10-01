@@ -64,7 +64,7 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
             question is a sentence the reader has to read in full — so the body carries it. */}
         <Next.Card.Title>{object.title}</Next.Card.Title>
         {/* The task's actions, as a task card anywhere else offers them. */}
-        <Next.Block end>
+        <Next.Block rail='end'>
           <ActionMenu disabled={!menuItems.length} actions={menuItems}>
             <Next.Button
               variant='ghost'

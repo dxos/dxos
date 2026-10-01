@@ -69,7 +69,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
             <Next.Card.Title lines={2}>{result.title}</Next.Card.Title>
             {price && <span className='text-sm text-description'>{price}</span>}
           </Flex>
-          <Next.Block end />
+          <Next.Block rail='end' />
         </Next.Card.Header>
       </Next.Card.Root>
     );

@@ -192,7 +192,7 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
           <Next.Avatar.Label asChild>
             <Next.Card.Title>{name}</Next.Card.Title>
           </Next.Avatar.Label>
-          <Next.Block end>
+          <Next.Block rail='end'>
             <Next.Icon icon='ph--caret-right--regular' />
           </Next.Block>
         </Next.Avatar.Root>

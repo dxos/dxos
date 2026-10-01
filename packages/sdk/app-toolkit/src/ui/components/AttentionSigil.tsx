@@ -120,7 +120,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
     }
 
     return (
-      <Next.Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
+      <Next.Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
         <Next.Menu.Trigger asChild ref={forwardedRef}>
           {button}
         </Next.Menu.Trigger>

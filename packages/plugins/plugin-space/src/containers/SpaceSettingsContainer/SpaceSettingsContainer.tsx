@@ -246,7 +246,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               label={t('delete-space.title')}
               description={isDefaultSpace ? t('delete-default-space.description') : t('delete-space.description')}
             >
-              <Next.Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+              <Next.Dialog.Root open={deleteConfirmOpen} onOpenChange={({ open }) => setDeleteConfirmOpen(open)}>
                 <Next.Dialog.Trigger asChild>
                   <Next.Button variant='destructive' disabled={isDefaultSpace} data-testid='spaceSettings.deleteSpace'>
                     {t('delete-space.label')}

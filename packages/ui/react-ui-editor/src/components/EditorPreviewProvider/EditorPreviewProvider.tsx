@@ -90,7 +90,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
       <Next.Popover.Root
         open={open}
-        onOpenChange={handleOpenChange}
+        onOpenChange={({ open }) => handleOpenChange(open)}
         positioning={Next.virtualAnchor(triggerRef as unknown as RefObject<HTMLButtonElement>)}
       >
         <div className='contents' ref={setRoot}>

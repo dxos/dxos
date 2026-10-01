@@ -162,7 +162,11 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   }
 
   return (
-    <Next.Popover.Root open={editing} onOpenChange={handleOpenChange} positioning={Next.virtualAnchor(anchorRef)}>
+    <Next.Popover.Root
+      open={editing}
+      onOpenChange={({ open }) => handleOpenChange(open)}
+      positioning={Next.virtualAnchor(anchorRef)}
+    >
       <Next.Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
         <Next.Popover.Body>
           <Form.Root

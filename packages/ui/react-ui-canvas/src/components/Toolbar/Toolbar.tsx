@@ -196,7 +196,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         onClick={actions.delete}
       />
       <Next.Toolbar.Separator variant='line' />
-      <Next.Menu.Root>
+      <Next.Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
         <Next.Menu.Trigger asChild>
           <NaturalButton
             variant='ghost'
@@ -208,7 +208,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
           />
         </Next.Menu.Trigger>
         {/* Portalled: inside the bar's flex flow the items would sit under the readout and the canvas. */}
-        <Next.Menu.Content side='bottom' align='end' sideOffset={4}>
+        <Next.Menu.Content>
           {Object.values(nodes).map((def) => (
             <Next.Menu.Item
               key={def.type}

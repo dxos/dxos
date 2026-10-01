@@ -97,7 +97,7 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
           <Next.Icon icon={icon} />
         </Next.Block>
         <Next.Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Next.Card.Title>
-        <Next.Block end>
+        <Next.Block rail='end'>
           <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
             <Next.Button
               iconOnly

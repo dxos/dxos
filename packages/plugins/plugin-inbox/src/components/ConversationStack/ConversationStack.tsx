@@ -540,7 +540,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     <Next.Collapsible.Root
       asChild
       open={isExpanded}
-      onOpenChange={onExpandedChange && ((open) => onExpandedChange(id, open))}
+      onOpenChange={({ open }) => (onExpandedChange && ((open) => onExpandedChange(id, open)))(open)}
       disabled={!onExpandedChange}
       lazyMount
       unmountOnExit

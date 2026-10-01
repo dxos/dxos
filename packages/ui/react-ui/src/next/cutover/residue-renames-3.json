@@ -1,0 +1,1320 @@
+{
+  "generated": "2026-10-01T15:20:21.249Z",
+  "paths": ["packages"],
+  "changed": [
+    "packages/apps/composer-app/src/components/ResetDialog/ResetDialog.tsx",
+    "packages/devtools/devtools/src/components/StatCard/StatCard.tsx",
+    "packages/devtools/devtools/src/containers/panels/client/StorageArticle/StorageArticle.tsx",
+    "packages/devtools/devtools/src/containers/panels/echo/SpaceListArticle/DialogRestoreSpace.tsx",
+    "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+    "packages/plugins/plugin-assistant/src/containers/QuestionSurface/QuestionSurface.tsx",
+    "packages/plugins/plugin-assistant/src/containers/TriggerStatus/TriggerStatus.tsx",
+    "packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx",
+    "packages/plugins/plugin-chess-com/src/containers/ChessGameArticle/ChessGameArticle.tsx",
+    "packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx",
+    "packages/plugins/plugin-debug/src/containers/DebugPanelStatus/DebugPanelStatus.tsx",
+    "packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx",
+    "packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx",
+    "packages/plugins/plugin-github/src/components/PullRequestOverview/RelatedCards.tsx",
+    "packages/plugins/plugin-inbox/src/components/ConversationStack/ConversationStack.tsx",
+    "packages/plugins/plugin-inbox/src/components/Event/EventDetails.tsx",
+    "packages/plugins/plugin-iroh-beacon/src/components/BeaconStatusIndicator.tsx",
+    "packages/plugins/plugin-kanban/src/components/KanbanBoard/KanbanCard.tsx",
+    "packages/plugins/plugin-kanban/src/testing/KanbanCardTileSimple.tsx",
+    "packages/plugins/plugin-magazine/src/components/PostStack/PostStack.tsx",
+    "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx",
+    "packages/plugins/plugin-mobile/src/components/Home/Home.tsx",
+    "packages/plugins/plugin-mobile/src/components/NavBranch/NavBranch.tsx",
+    "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+    "packages/plugins/plugin-pipeline/src/components/PipelineComponent/PipelineColumn.tsx",
+    "packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.tsx",
+    "packages/plugins/plugin-registry/src/components/RegistrySettings/RegistrySettings.tsx",
+    "packages/plugins/plugin-search/src/components/SearchResultStack/SearchResultStack.tsx",
+    "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
+    "packages/plugins/plugin-space/src/components/ObjectCard/ObjectCard.tsx",
+    "packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx",
+    "packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.tsx",
+    "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+    "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
+    "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+    "packages/sdk/app-framework/src/ui/components/NamePopover/NamePopover.tsx",
+    "packages/sdk/app-toolkit/src/ui/components/AttentionSigil.tsx",
+    "packages/sdk/app-toolkit/src/ui/components/SettingsScope.tsx",
+    "packages/sdk/shell/src/composites/IdentityDialog/IdentityDialog.tsx",
+    "packages/sdk/shell/src/composites/JoinDialog/JoinDialog.tsx",
+    "packages/sdk/shell/src/composites/SpaceDialog/SpaceDialog.tsx",
+    "packages/ui/react-ui-board/src/components/Board/BoardCell.tsx",
+    "packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx",
+    "packages/ui/react-ui-canvas/src/components/Toolbar/Toolbar.tsx",
+    "packages/ui/react-ui-card/src/components/Row/Row.stories.tsx",
+    "packages/ui/react-ui-card/src/components/Row/Row.tsx",
+    "packages/ui/react-ui-chat/src/components/ChatDialog/ChatDialog.tsx",
+    "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
+    "packages/ui/react-ui-editor/src/components/EditorPreviewProvider/EditorPreviewProvider.tsx",
+    "packages/ui/react-ui-feed/src/components/Outline/Outline.tsx",
+    "packages/ui/react-ui-graph/src/components/Graph/Graph.stories.tsx",
+    "packages/ui/react-ui-grid/src/Grid/Grid.stories.tsx",
+    "packages/ui/react-ui-list/src/components/Combobox/Combobox.tsx",
+    "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+    "packages/ui/react-ui-mosaic/src/components/Board/Item.tsx",
+    "packages/ui/react-ui-mosaic/src/testing/DefaultStackTile.tsx",
+    "packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx",
+    "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
+    "packages/ui/react-ui-table/src/components/Table/ColumnActionsMenu.tsx",
+    "packages/ui/react-ui-table/src/components/Table/RowActionsMenu.tsx",
+    "packages/ui/react-ui-table/src/components/TableCellEditor/FormCellEditor.tsx",
+    "packages/ui/react-ui-task/src/components/TaskList/TaskList.stories.tsx"
+  ],
+  "transforms": [
+    {
+      "transform": "renames",
+      "filesScanned": 12386,
+      "filesChanged": 62,
+      "rules": {
+        "Menu.Content placement → Menu.Root positioning": 6,
+        "Popover.Root onOpenChange(open) → ({ open })": 12,
+        "Block end → rail='end'": 21,
+        "Dialog.Root onOpenChange(open) → ({ open })": 5,
+        "Popover.Content placement → Popover.Root positioning": 9,
+        "AlertDialog.Root onOpenChange(open) → ({ open })": 4,
+        "FloatingPanel.Root onOpenChange(open) → ({ open })": 1,
+        "Collapsible.Root onOpenChange(open) → ({ open })": 1,
+        "Menu.Root onOpenChange(open) → ({ open })": 9
+      },
+      "residue": [
+        {
+          "transform": "renames",
+          "file": "packages/apps/testbench-app/src/components/DataToolbar.tsx",
+          "line": 40,
+          "column": 9,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[type]} onValueChange={({ value: [type] }) => setType(type)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/apps/testbench-app/src/components/SpaceToolbar.tsx",
+          "line": 55,
+          "column": 9,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[selected?.toHex()]} onValueChange={({ value: [value] }) => handleChange(value)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/devtools/devtools/src/components/ControlledSelector.tsx",
+          "line": 18,
+          "column": 5,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[props.value]} onValueChange={({ value: [value] }) => props.setValue(value)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/devtools/devtools/src/components/PublicKeySelector.tsx",
+          "line": 27,
+          "column": 5,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[value?.toHex()]} onValueChange={({ value: [id] }) => { id && onChange?.(PublicKey.fromHex(i..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/devtools/devtools/src/components/Select.tsx",
+          "line": 17,
+          "column": 5,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root {...props}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/devtools/devtools/src/containers/DataSpaceSelector.tsx",
+          "line": 51,
+          "column": 5,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[space?.id]} onValueChange={({ value: [id] }) => { id && handleSelect?.(id as SpaceId); }} >"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/devtools/devtools/src/containers/panels/edge/WorkflowArticle/WorkflowDebugPanel.tsx",
+          "line": 230,
+          "column": 27,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root size={6} variant='circle' icon='ph--drone--regular' />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx",
+          "line": 611,
+          "column": 27,
+          "reason": "Toast.Title icon → Toast.Header icon",
+          "snippet": "icon='ph--warning--regular'"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx",
+          "line": 611,
+          "column": 55,
+          "reason": "Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)",
+          "snippet": "onClose={() => setToastError(undefined)}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/Chat/Error.stories.tsx",
+          "line": 43,
+          "column": 27,
+          "reason": "Toast.Title icon → Toast.Header icon",
+          "snippet": "icon='ph--warning--regular'"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/Chat/Error.stories.tsx",
+          "line": 43,
+          "column": 55,
+          "reason": "Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)",
+          "snippet": "onClose={() => setOpen(false)}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+          "line": 87,
+          "column": 15,
+          "reason": "master-detail Tabs are removed: compose Tabs + Splitter (collapseBelow)",
+          "snippet": "<Next.Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+          "line": 361,
+          "column": 7,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatOptions.tsx",
+          "line": 628,
+          "column": 9,
+          "reason": "Select.Root items: Items are rendered by several expressions; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[selectedUri === ANY ? undefined : selectedUri]} onValueChange={({ value: [val] }) => setSel..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/components/ChatQueue/ChatQueue.tsx",
+          "line": 32,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.stories.tsx",
+          "line": 58,
+          "column": 35,
+          "reason": "ScrollContainer.Content thin → width",
+          "snippet": "thin"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.stories.tsx",
+          "line": 305,
+          "column": 43,
+          "reason": "ScrollContainer.Content thin → width",
+          "snippet": "thin"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-calls/src/components/ResponsiveGrid/ResponsiveGridItem.tsx",
+          "line": 108,
+          "column": 68,
+          "reason": "size {pinned ? 5 : 4} is computed; map it to xs–xl by hand",
+          "snippet": "size={pinned ? 5 : 4}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-client/src/containers/DevicesContainer/DevicesContainer.tsx",
+          "line": 57,
+          "column": 15,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-client/src/containers/InvitationsContainer/InvitationsContainer.tsx",
+          "line": 91,
+          "column": 15,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-client/src/containers/InvitationsContainer/InvitationsContainer.tsx",
+          "line": 103,
+          "column": 15,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-client/src/containers/RecoveryCredentialsContainer/RecoveryCredentialsContainer.tsx",
+          "line": 96,
+          "column": 15,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-connector/src/containers/ConnectionSettingsArticle/ConnectionSettingsArticle.tsx",
+          "line": 87,
+          "column": 23,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-connector/src/containers/SyncTargetsDialog/SyncTargetsDialog.tsx",
+          "line": 133,
+          "column": 15,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-connector/src/containers/SyncTargetsDialog/SyncTargetsDialog.tsx",
+          "line": 141,
+          "column": 27,
+          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
+          "snippet": "<Listbox.ItemContent icon={ <Next.Checkbox id={checkboxId} checked={selected.has(target.id)} onCheckedChange={() => h..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-debug/src/containers/DebugSettings/DebugSettings.tsx",
+          "line": 220,
+          "column": 30,
+          "reason": "Toast.Title icon → Toast.Header icon",
+          "snippet": "icon='ph--gift--duotone'"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx",
+          "line": 75,
+          "column": 33,
+          "reason": "VirtualTrigger is not a direct child of its Root: add positioning={virtualAnchor(ref)} by hand",
+          "snippet": "<Next.Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx",
+          "line": 152,
+          "column": 5,
+          "reason": "Popover.Content side → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Popover.Content side={side} border hideWhenDetached onOpenAutoFocus={isRename ? undefined : (event) => event.pr..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/containers/Overlays/Toast.tsx",
+          "line": 36,
+          "column": 25,
+          "reason": "Toast.Title icon → Toast.Header icon",
+          "snippet": "icon={icon}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/containers/Overlays/Toast.tsx",
+          "line": 36,
+          "column": 37,
+          "reason": "Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)",
+          "snippet": "onClose={() => handleOpenChange(false)}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/testing/story-plugin.tsx",
+          "line": 317,
+          "column": 15,
+          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
+          "snippet": "<Listbox.ItemContent icon={node.properties.icon} title={typeof node.properties.label === 'string' ? node.properties.l..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/testing/story-plugin.tsx",
+          "line": 340,
+          "column": 5,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-deck/src/testing/story-plugin.tsx",
+          "line": 347,
+          "column": 15,
+          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
+          "snippet": "<Listbox.ItemContent icon={node.properties.icon} title={typeof node.properties.label === 'string' ? node.properties.l..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-github/src/components/CommentComposer/CommentComposer.tsx",
+          "line": 98,
+          "column": 5,
+          "reason": "Popover.Content side/align → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Popover.Content side='bottom' align='start' classNames='w-[28rem] max-w-[90cqi]'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-github/src/components/PullRequestOverview/CheckRunList.tsx",
+          "line": 62,
+          "column": 5,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-inbox/src/components/Event/EventEditor.tsx",
+          "line": 207,
+          "column": 15,
+          "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
+          "snippet": "<Next.Field.TriggerIcon icon='ph--calendar--regular' />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-inbox/src/components/Event/EventEditor.tsx",
+          "line": 231,
+          "column": 17,
+          "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
+          "snippet": "<Next.Field.TriggerIcon icon='ph--calendar--regular' />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx",
+          "line": 85,
+          "column": 7,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-mobile/src/components/Home/Home.tsx",
+          "line": 105,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-mobile/src/components/Home/Home.tsx",
+          "line": 118,
+          "column": 11,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label asChild>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-mobile/src/components/NavBranch/NavBranch.tsx",
+          "line": 179,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-mobile/src/components/NavBranch/NavBranch.tsx",
+          "line": 192,
+          "column": 11,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label asChild>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-navtree/src/components/Sidebar/L0Menu.tsx",
+          "line": 125,
+          "column": 11,
+          "reason": "Tabs.TabPrimitive is not ported",
+          "snippet": "<Next.Tabs.TabPrimitive className={mx( 'group/l0item flex w-full justify-center items-center relative', 'dx-app-no-dr..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-navtree/src/components/UserAccountAvatar/UserAccountAvatar.tsx",
+          "line": 36,
+          "column": 11,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root variant='circle' size={size ?? 12} {...(resolved && { status: status ?? 'active' })} hue={hue || fa..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-navtree/src/experimental/Tree.tsx",
+          "line": 26,
+          "column": 62,
+          "reason": "size {size} is computed; map it to xs–xl by hand",
+          "snippet": "size={size}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 405,
+          "column": 13,
+          "reason": "master-detail Tabs are removed: compose Tabs + Splitter (collapseBelow)",
+          "snippet": "<Next.Tabs.Viewport classNames='flex flex-col gap-6'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+          "line": 838,
+          "column": 15,
+          "reason": "Menu.Item takes item data: its Icon carries props other than icon; compose ItemIcon by hand",
+          "snippet": "<Next.Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx",
+          "line": 170,
+          "column": 15,
+          "reason": "OrderedList.DetailItem → Item collapsible + OrderedList.Detail",
+          "snippet": "<OrderedList.DetailItem<Pipeline.Column> key={column.view.uri} id={column.view.uri} item={column} title={column.name ..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-preview/src/cards/PersonCard.tsx",
+          "line": 47,
+          "column": 11,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root src={image} icon='ph--user--regular' size={20} classNames={[!image && 'opacity-50']} hue='neutral' ..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+          "line": 163,
+          "column": 15,
+          "reason": "size {isMobile ? 8 : 14} is computed; map it to xs–xl by hand",
+          "snippet": "size={isMobile ? 8 : 14}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+          "line": 286,
+          "column": 21,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[selectedVersionTag]} onValueChange={({ value: [value] }) => onVersionChange(value)} >"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-review/src/components/Suggestions/SuggestionAuthors.tsx",
+          "line": 44,
+          "column": 32,
+          "reason": "Next.Tag has no asChild",
+          "snippet": "asChild"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-routine/src/containers/RoutineTraceCompanion/RoutineTraceCompanion.tsx",
+          "line": 55,
+          "column": 48,
+          "reason": "Accordion items/getId render prop is not ported",
+          "snippet": "items={runs}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-routine/src/containers/RoutineTraceCompanion/RoutineTraceCompanion.tsx",
+          "line": 55,
+          "column": 61,
+          "reason": "Accordion getId is not ported",
+          "snippet": "getId={getRunId}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-sandbox/src/components/RepositoryViewer/RepositoryToolbar.tsx",
+          "line": 38,
+          "column": 7,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[currentRef]} onValueChange={({ value: [value] }) => onRefChange(value)} disabled={branches...."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-script/src/components/TestPanel/TestPanel.tsx",
+          "line": 191,
+          "column": 27,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root size={6} variant='circle' icon='ph--drone--regular' />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-search/src/components/SearchResultList/SearchResultList.tsx",
+          "line": 31,
+          "column": 5,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-search/src/components/SearchResultList/SearchResultList.tsx",
+          "line": 45,
+          "column": 15,
+          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
+          "snippet": "<Listbox.ItemContent icon={result.icon} title={<Highlighted text={result.label ?? ''} query={query} />} description={..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-sequencer/src/components/TrackList/TrackList.tsx",
+          "line": 45,
+          "column": 5,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
+          "line": 373,
+          "column": 9,
+          "reason": "Menu.Content side/sideOffset/collisionPadding → Menu.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Menu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
+          "line": 374,
+          "column": 11,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => handleAxisMenuAction('insert-before')} data-testid={`grid.${contextMenuAxis}.insert-be..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
+          "line": 383,
+          "column": 11,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => handleAxisMenuAction('insert-after')} data-testid={`grid.${contextMenuAxis}.insert-aft..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx",
+          "line": 392,
+          "column": 11,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => handleAxisMenuAction('drop')} data-testid={`grid.${contextMenuAxis}.drop`}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-space/src/components/ForeignKeys/ForeignKeys.tsx",
+          "line": 22,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-space/src/containers/CreateSpaceDialog/CreateSpaceDialog.tsx",
+          "line": 139,
+          "column": 29,
+          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
+          "snippet": "<Listbox.ItemContent icon={glyph} title={label} description={description} />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx",
+          "line": 141,
+          "column": 13,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx",
+          "line": 192,
+          "column": 7,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx",
+          "line": 204,
+          "column": 9,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
+          "line": 215,
+          "column": 15,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
+          "line": 220,
+          "column": 15,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
+          "line": 226,
+          "column": 13,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => onAdd(id)} data-testid='section.add'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
+          "line": 230,
+          "column": 13,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
+          "line": 234,
+          "column": 13,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-stack/src/components/Stack/Stack.tsx",
+          "line": 239,
+          "column": 13,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={() => onDelete(id)} data-testid='section.remove'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/components/FeedbackForm/AreaSelectField.tsx",
+          "line": 64,
+          "column": 9,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[value ?? '']} onValueChange={({ value: [value] }) => handleValueChange(value)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+          "line": 60,
+          "column": 9,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item asChild>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+          "line": 66,
+          "column": 9,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+          "line": 71,
+          "column": 9,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item asChild>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+          "line": 77,
+          "column": 9,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item asChild>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+          "line": 84,
+          "column": 11,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item asChild>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-support/src/containers/HelpMenu/HelpMenu.tsx",
+          "line": 92,
+          "column": 9,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={openDialog(ABOUT_DIALOG)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-testing/src/components/Layout/Layout.tsx",
+          "line": 35,
+          "column": 25,
+          "reason": "Toast.Title icon → Toast.Header icon",
+          "snippet": "icon={toast.icon}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-testing/src/components/Layout/Layout.tsx",
+          "line": 35,
+          "column": 43,
+          "reason": "Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)",
+          "snippet": "onClose={toast.closeLabel ? () => onDismiss(toast.id) : undefined}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-testing/src/components/Layout/Layout.tsx",
+          "line": 165,
+          "column": 13,
+          "reason": "Popover.Content side → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Popover.Content side={layout.popoverSide} onOpenAutoFocus={(event) => event.preventDefault()} onInteractOutside..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-theme/src/react-context.browser.test.tsx",
+          "line": 40,
+          "column": 27,
+          "reason": "Toast.Title onClose → Toast.Header (CloseTrigger reports through onOpenChange)",
+          "snippet": "onClose={() => {}}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/plugins/plugin-video/src/containers/VideoArticle/VideoArticle.tsx",
+          "line": 218,
+          "column": 11,
+          "reason": "master-detail Tabs are removed: compose Tabs + Splitter (collapseBelow)",
+          "snippet": "<Next.Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/app-toolkit/src/playground/generator/Main.tsx",
+          "line": 57,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/AgentConfig/AgentConfig.tsx",
+          "line": 41,
+          "column": 13,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/AgentConfig/AgentConfig.tsx",
+          "line": 48,
+          "column": 15,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames='flex-1 text-sm truncate'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
+          "line": 59,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
+          "line": 93,
+          "column": 7,
+          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
+          "snippet": "<Listbox.ItemContent icon={ <Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(contact, 'hue') ?..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
+          "line": 95,
+          "column": 11,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(contact, 'hue') ?? fallback.hue} fallback={pr..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/ContactList/ContactList.tsx",
+          "line": 126,
+          "column": 78,
+          "reason": "Next.Tag has no asChild",
+          "snippet": "asChild"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/DeviceList/DeviceList.tsx",
+          "line": 33,
+          "column": 9,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/DeviceList/DeviceListItem.tsx",
+          "line": 65,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root labelId={labelId}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/DeviceList/DeviceListItem.tsx",
+          "line": 79,
+          "column": 11,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames='flex-1 text-sm truncate'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/IdentityList/IdentityListItem.tsx",
+          "line": 41,
+          "column": 7,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root labelId={labelId}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/IdentityList/IdentityListItem.tsx",
+          "line": 48,
+          "column": 9,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames='text-sm truncate px-2'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/IdentityList/SpaceMemberList.tsx",
+          "line": 55,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/InvitationList/InvitationList.tsx",
+          "line": 25,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/InvitationList/InvitationListItem.tsx",
+          "line": 148,
+          "column": 7,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/Panel/Action.tsx",
+          "line": 108,
+          "column": 15,
+          "reason": "Menu.CheckboxItem takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.CheckboxItem key={id} aria-labelledby={`${id}__label`} aria-describedby={`${id}__description`} checked={ac..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/SpaceInvitationList/SpaceInvitationList.tsx",
+          "line": 70,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/SpaceInvitationList/SpaceInvitationList.tsx",
+          "line": 103,
+          "column": 7,
+          "reason": "Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand",
+          "snippet": "<Listbox.ItemContent icon={ <Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(invitation.sender..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/components/SpaceInvitationList/SpaceInvitationList.tsx",
+          "line": 105,
+          "column": 11,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root aria-labelledby={labelId} size={8} hue={profileString(invitation.sender, 'hue') ?? fallback.hue} fa..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/panels/IdentityPanel/IdentityPanel.tsx",
+          "line": 102,
+          "column": 7,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/panels/IdentityPanel/IdentityPanel.tsx",
+          "line": 114,
+          "column": 9,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/panels/JoinPanel/steps/IdentityAdded.tsx",
+          "line": 50,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root labelId={labelId}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/panels/JoinPanel/steps/IdentityAdded.tsx",
+          "line": 56,
+          "column": 11,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/stories/Invitations.stories.tsx",
+          "line": 104,
+          "column": 13,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/stories/Invitations.stories.tsx",
+          "line": 206,
+          "column": 11,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/stories/SpaceListItem.tsx",
+          "line": 26,
+          "column": 9,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root labelId={labelId}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/sdk/shell/src/stories/SpaceListItem.tsx",
+          "line": 28,
+          "column": 11,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames='text-sm truncate'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/stories/storybook-testing/src/modules/ObjectsModule.tsx",
+          "line": 62,
+          "column": 11,
+          "reason": "Select.Root items: Items are rendered by several expressions; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[type]} onValueChange={({ value: [value] }) => setType(value)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-assistant/src/widgets/ToolWidget.tsx",
+          "line": 311,
+          "column": 45,
+          "reason": "Accordion items/getId render prop is not ported",
+          "snippet": "items={entries}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-canvas-compute/src/compute.stories.tsx",
+          "line": 146,
+          "column": 13,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[sidebar]} onValueChange={({ value: [value] }) => setSidebar(value as RenderProps['sidebar']..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-canvas-compute/src/scene/compute.stories.tsx",
+          "line": 126,
+          "column": 13,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[sidebar]} onValueChange={({ value: [value] }) => setSidebar(value as Sidebar)}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx",
+          "line": 785,
+          "column": 9,
+          "reason": "Menu.Content side/sideOffset/collisionPadding → Menu.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Menu.Content side='right' sideOffset={4} collisionPadding={8}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-components/src/components/ProgressMeter/ProgressMeter.tsx",
+          "line": 188,
+          "column": 15,
+          "reason": "TextCrawl textClassNames dropped",
+          "snippet": "textClassNames='text-xs text-description'"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-components/src/components/QueryForm/Picker.tsx",
+          "line": 32,
+          "column": 5,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[value ?? NULL]} onValueChange={({ value: [value] }) => onChange?.(value === NULL ? null : v..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-debug/src/components/Logger/Logger.tsx",
+          "line": 324,
+          "column": 21,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-debug/src/components/Logger/Logger.tsx",
+          "line": 341,
+          "column": 31,
+          "reason": "Select.Root items: Items are rendered by several expressions; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[value]} onValueChange={({ value: [next] }) => setFileLevel(file, next === 'inherit' ? undef..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-debug/src/components/Logger/Logger.tsx",
+          "line": 440,
+          "column": 5,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx",
+          "line": 184,
+          "column": 7,
+          "reason": "Popover.Content align → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Popover.Content align='start' classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']} style={..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-editor/src/stories/Comments.stories.tsx",
+          "line": 199,
+          "column": 15,
+          "reason": "Listbox.ItemContent: props other than icon, title, description (in that order); compose the row parts by hand",
+          "snippet": "<Listbox.ItemContent classNames='grow' title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/DateField/DateField.tsx",
+          "line": 83,
+          "column": 11,
+          "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
+          "snippet": "<Next.Field.TriggerIcon />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/DateField/DateField.tsx",
+          "line": 105,
+          "column": 11,
+          "reason": "Field.TriggerIcon → DateInput trigger or a Button in the end slot",
+          "snippet": "<Next.Field.TriggerIcon />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/SelectField/SelectField.tsx",
+          "line": 49,
+          "column": 5,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root value={[value]} onValueChange={({ value: [value] }) => handleValueChange(value)} disabled={!!readon..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-form/src/components/Form/FormField/fields/SelectField/create-select-field.tsx",
+          "line": 62,
+          "column": 7,
+          "reason": "Select.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Next.Select.Root disabled={!!readonly} value={[value ?? sentinel]} // A choice is a commit: the select never blurs, ..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-form/src/components/ViewEditor/ViewEditor.tsx",
+          "line": 372,
+          "column": 17,
+          "reason": "OrderedList.DetailItem → Item collapsible + OrderedList.Detail",
+          "snippet": "<OrderedList.DetailItem<View.FieldType> key={field.id} id={field.id} item={field} canDrag={!readonly && !schemaReadon..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-introspect/src/components/ToolResults/ToolResults.tsx",
+          "line": 112,
+          "column": 5,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-list/src/components/Combobox/Combobox.tsx",
+          "line": 136,
+          "column": 7,
+          "reason": "Popover.Content collisionPadding → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Popover.Content {...props} // Zero, not the Popover default of 8: the content is exactly trigger-width, so a tr..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-mcp/src/ToolList.tsx",
+          "line": 49,
+          "column": 3,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root value={selectedId ?? undefined} onValueChange={onSelect}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 80,
+          "column": 5,
+          "reason": "Menu.Item takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.Item onClick={handleClick} onSelect={handleSelect} classNames='gap-2' disabled={action.properties?.disable..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 91,
+          "column": 11,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 97,
+          "column": 75,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 109,
+          "column": 41,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 111,
+          "column": 52,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 258,
+          "column": 21,
+          "reason": "VirtualTrigger is not a direct child of its Root: add positioning={virtualAnchor(ref)} by hand",
+          "snippet": "<Next.Menu.VirtualTrigger virtualRef={virtualRef} />"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-pickers/src/components/EmojiPicker/EmojiPicker.tsx",
+          "line": 129,
+          "column": 9,
+          "reason": "Popover.Content side/sideOffset/collisionPadding → Popover.Root positioning ({ placement, gutter, overflowPadding }) by hand",
+          "snippet": "<Next.Popover.Content side='right' sideOffset={isMd ? 0 : -310} collisionPadding={8} onKeyDownCapture={(event) => { i..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-pickers/src/components/IconPicker/IconPicker.tsx",
+          "line": 40,
+          "column": 52,
+          "reason": "size {size} is computed; map it to xs–xl by hand",
+          "snippet": "size={size}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
+          "line": 58,
+          "column": 95,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
+          "line": 66,
+          "column": 13,
+          "reason": "Menu.CheckboxItem takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.CheckboxItem key={_value} checked={_value === value} onCheckedChange={() => setValue(_value)} classNames={..."
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
+          "line": 77,
+          "column": 11,
+          "reason": "Menu.CheckboxItem takes item data: its label is not one text or expression; compose the row by hand",
+          "snippet": "<Next.Menu.CheckboxItem onCheckedChange={() => onReset()} classNames={'p-1 items-center justify-center aspect-square'} >"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-pickers/src/components/PickerButton/PickerButton.tsx",
+          "line": 81,
+          "column": 46,
+          "reason": "size {iconSize} is computed; map it to xs–xl by hand",
+          "snippet": "size={iconSize}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-rdf/src/components/FactViewer/FactViewer.tsx",
+          "line": 226,
+          "column": 5,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskList.tsx",
+          "line": 286,
+          "column": 7,
+          "reason": "Listbox.Root items: no Item inside; pass the options as items by hand",
+          "snippet": "<Listbox.Root {...(selectable ? { value: selected, onValueChange: handleValueChange } : {})}>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-thread/src/Message/Message.tsx",
+          "line": 67,
+          "column": 7,
+          "reason": "Avatar.Root holds more than a lone Avatar.Content: merge by hand (Label/Description → label or aria-labelledby)",
+          "snippet": "<Next.Avatar.Root>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-thread/src/Message/Message.tsx",
+          "line": 119,
+          "column": 5,
+          "reason": "Avatar.Label → Avatar.Root label or aria-labelledby",
+          "snippet": "<Next.Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-trace/src/components/Timeline/Timeline.stories.tsx",
+          "line": 395,
+          "column": 43,
+          "reason": "ScrollContainer.Content thin → width",
+          "snippet": "thin"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-trace/src/components/TracePanel/TracePanel.tsx",
+          "line": 108,
+          "column": 13,
+          "reason": "Accordion items/getId render prop is not ported",
+          "snippet": "items={SECTIONS}"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/react-ui-trace/src/components/TracePanel/TracePanel.tsx",
+          "line": 158,
+          "column": 59,
+          "reason": "ScrollContainer.Content thin → width",
+          "snippet": "thin"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 209,
+          "column": 9,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root key={path} multiselectable>"
+        },
+        {
+          "transform": "renames",
+          "file": "packages/ui/ui-template/src/react/renderer.tsx",
+          "line": 235,
+          "column": 9,
+          "reason": "Listbox.Root items: an Item is conditional, computed or has no derivable value and label; pass the options by hand",
+          "snippet": "<Listbox.Root key={path} value={asText(data.selection) || undefined} onValueChange={(next) => handlers.select?.(next)..."
+        }
+      ]
+    }
+  ]
+}

@@ -387,7 +387,7 @@ const PersonContactRow = ({
       </Next.Block>
       <Next.Card.Text>{avatarName(actor) || actor.email}</Next.Card.Text>
       {onRemove && (
-        <Next.Block end>
+        <Next.Block rail='end'>
           <Next.Button
             variant='ghost'
             iconOnly

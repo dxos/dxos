@@ -55,7 +55,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
 
   return (
     <div className='flex'>
-      <Next.Popover.Root>
+      <Next.Popover.Root positioning={{ placement: 'top' }}>
         <Next.Popover.Trigger asChild>
           <Next.Button
             variant='ghost'
@@ -65,12 +65,12 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             disabled={!context}
           />
         </Next.Popover.Trigger>
-        <Next.Popover.Content side='top' classNames={styles.panel}>
+        <Next.Popover.Content classNames={styles.panel}>
           <Next.Popover.Body>{context && <ObjectsPanel db={db} context={context} />}</Next.Popover.Body>
         </Next.Popover.Content>
       </Next.Popover.Root>
 
-      <Next.Popover.Root>
+      <Next.Popover.Root positioning={{ placement: 'top' }}>
         <Next.Popover.Trigger asChild>
           <Next.Button
             variant='ghost'
@@ -81,7 +81,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             disabled={!context}
           />
         </Next.Popover.Trigger>
-        <Next.Popover.Content side='top' classNames={styles.panel}>
+        <Next.Popover.Content classNames={styles.panel}>
           <Next.Popover.Body>
             <Next.Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
               <Next.Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>

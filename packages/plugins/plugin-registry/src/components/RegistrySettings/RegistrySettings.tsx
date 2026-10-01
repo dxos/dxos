@@ -153,7 +153,7 @@ export const RegistrySettings = ({
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
-      <Next.AlertDialog.Root open={rejoining} onOpenChange={setRejoining}>
+      <Next.AlertDialog.Root open={rejoining} onOpenChange={({ open }) => setRejoining(open)}>
         <Next.AlertDialog.Content>
           <Next.AlertDialog.Body>
             <Next.AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</Next.AlertDialog.Title>

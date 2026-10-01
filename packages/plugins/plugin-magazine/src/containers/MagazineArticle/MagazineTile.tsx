@@ -60,7 +60,7 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
             />
           </Next.Block>
           {snapshot.title ? <Next.Card.Title lines={2}>{snapshot.title}</Next.Card.Title> : <div />}
-          <Next.Block end />
+          <Next.Block rail='end' />
         </Next.Card.Header>
         <Next.Card.Body>
           {snippet && (

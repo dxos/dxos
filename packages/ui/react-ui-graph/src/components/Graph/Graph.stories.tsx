@@ -212,7 +212,7 @@ const DefaultStory = ({
   return (
     <Next.Popover.Root
       open={!!popover}
-      onOpenChange={(state) => !state && setPopover(undefined)}
+      onOpenChange={({ open: state }) => !state && setPopover(undefined)}
       positioning={Next.virtualAnchor(popoverAnchorRef)}
     >
       <div className={mx('dx-fill grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>

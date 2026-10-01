@@ -55,14 +55,14 @@ export const SyncStatusIndicator = ({
   const icon = getIcon(status);
 
   return (
-    <Next.Popover.Root>
+    <Next.Popover.Root positioning={{ placement: 'left' }}>
       <Next.Popover.Trigger asChild>
         <StatusBar.Item>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
           <Next.Button variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>
       </Next.Popover.Trigger>
-      <Next.Popover.Content side='left'>
+      <Next.Popover.Content>
         <EdgeConnectionPopover status={edgeStatus} />
       </Next.Popover.Content>
     </Next.Popover.Root>

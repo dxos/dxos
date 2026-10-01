@@ -815,7 +815,7 @@ const LoginTab = ({
         </Next.Field.Root>
       )}
       {moreOptions.length > 0 && (
-        <Next.Menu.Root>
+        <Next.Menu.Root positioning={{ placement: 'bottom', gutter: 8, overflowPadding: 16 }}>
           <Next.Menu.Trigger asChild>
             <button
               type='button'
@@ -827,13 +827,7 @@ const LoginTab = ({
           </Next.Menu.Trigger>
           {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
                 onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
-          <Next.Menu.Content
-            side='bottom'
-            sideOffset={8}
-            collisionPadding={16}
-            classNames='!w-80 !z-50'
-            onCloseAutoFocus={handleMoreMenuCloseAutoFocus}
-          >
+          <Next.Menu.Content classNames='!w-80 !z-50' onCloseAutoFocus={handleMoreMenuCloseAutoFocus}>
             {moreOptions.map((opt) => (
               <Next.Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
                 <Next.Icon icon={opt.icon} size='xl' classNames={mx(opt.classNames)} />

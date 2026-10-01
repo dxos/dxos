@@ -452,7 +452,11 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
   }, [handleActivate]);
 
   return (
-    <Next.Popover.Root open={open} onOpenChange={setOpen} positioning={Next.virtualAnchor(triggerRef)}>
+    <Next.Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={Next.virtualAnchor(triggerRef)}
+    >
       {children}
       <output className='sr-only' data-testid='artifact-opened'>
         {opened}

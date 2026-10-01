@@ -367,7 +367,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
       <Next.Menu.Root
         modal={false}
         open={!!contextMenuOpen}
-        onOpenChange={(nextOpen) => setContextMenuOpen(nextOpen ? inertPosition : null)}
+        onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}
         positioning={Next.virtualAnchor(contextMenuAnchorRef)}
       >
         <Next.Menu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>

@@ -118,7 +118,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
           <Next.Avatar.Label asChild>
             <Next.Card.Title classNames='cursor-pointer'>{name}</Next.Card.Title>
           </Next.Avatar.Label>
-          <Next.Block end>{!pending && <Next.Icon icon='ph--caret-right--regular' />}</Next.Block>
+          <Next.Block rail='end'>{!pending && <Next.Icon icon='ph--caret-right--regular' />}</Next.Block>
         </Next.Avatar.Root>
       </Next.Card.Header>
     </Next.Card.Root>

@@ -176,11 +176,11 @@ export const StorageArticle = ({ role }: ArticleProps) => {
             Refresh
           </Next.Button>
           <div className='grow' />
-          <Next.Menu.Root>
+          <Next.Menu.Root positioning={{ placement: 'top' }}>
             <Next.Menu.Trigger asChild>
               <Next.Button>Reset Storage</Next.Button>
             </Next.Menu.Trigger>
-            <Next.Menu.Content side='top'>
+            <Next.Menu.Content>
               <Next.Menu.Item
                 onClick={async () => {
                   await services?.SystemService?.reset();

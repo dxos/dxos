@@ -67,7 +67,7 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
           iconOnly
         />
       </Next.ToggleGroup>
-      <Next.AlertDialog.Root open={conflicts.length > 0} onOpenChange={(open) => !open && setConflicts([])}>
+      <Next.AlertDialog.Root open={conflicts.length > 0} onOpenChange={({ open }) => !open && setConflicts([])}>
         <Next.AlertDialog.Content>
           <Next.AlertDialog.Body>
             <Next.AlertDialog.Title>{t('settings-scope.conflict-dialog.title')}</Next.AlertDialog.Title>

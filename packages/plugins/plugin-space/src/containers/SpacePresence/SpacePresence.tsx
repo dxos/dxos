@@ -136,7 +136,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
       ))}
 
       {members.length > 3 && (
-        <Next.Popover.Root>
+        <Next.Popover.Root positioning={{ placement: 'bottom' }}>
           <Next.Popover.Trigger className='grid focus:outline-hidden'>
             <Next.Avatar.Root>
               {/* TODO(wittjosiah): Make text fit. */}
@@ -148,7 +148,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
               />
             </Next.Avatar.Root>
           </Next.Popover.Trigger>
-          <Next.Popover.Content side='bottom'>
+          <Next.Popover.Content>
             <Next.Popover.Body classNames='max-h-56'>
               <Listbox.Root
                 items={members.map((member) => ({ value: member.identityKey ?? '', label: member.identityKey ?? '' }))}

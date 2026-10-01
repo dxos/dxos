@@ -78,7 +78,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               <Next.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
               <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Next.Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block end>
+              <Next.Block rail='end'>
                 <ActionMenu disabled={!items?.length} actions={items}>
                   <Next.Button
                     iconOnly

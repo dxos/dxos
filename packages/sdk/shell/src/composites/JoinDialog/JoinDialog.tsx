@@ -23,7 +23,9 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   return (
     <Next.AlertDialog.Root
       defaultOpen
-      onOpenChange={(open) => open || (joinPanelProps.onExit ? joinPanelProps.onExit() : joinPanelProps.onDone?.(null))}
+      onOpenChange={({ open }) =>
+        open || (joinPanelProps.onExit ? joinPanelProps.onExit() : joinPanelProps.onDone?.(null))
+      }
     >
       <Next.AlertDialog.Content aria-labelledby={titleId}>
         <Next.AlertDialog.Body>

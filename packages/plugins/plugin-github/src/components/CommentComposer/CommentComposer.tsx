@@ -88,7 +88,7 @@ export type LineCommentPopoverProps = CommentComposerProps & {
 export const LineCommentPopover = ({ open, anchorRef, ...props }: LineCommentPopoverProps) => (
   <Next.Popover.Root
     open={open}
-    onOpenChange={(next) => {
+    onOpenChange={({ open: next }) => {
       if (!next) {
         props.onCancel();
       }

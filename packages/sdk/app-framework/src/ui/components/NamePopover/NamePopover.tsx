@@ -33,7 +33,7 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
   };
 
   return (
-    <Next.Popover.Root open={open} onOpenChange={(next) => !next && cancel()}>
+    <Next.Popover.Root open={open} onOpenChange={({ open: next }) => !next && cancel()}>
       <Next.Popover.Trigger asChild>{children}</Next.Popover.Trigger>
       <Next.Popover.Content>
         <div className='flex items-center gap-1 p-2'>

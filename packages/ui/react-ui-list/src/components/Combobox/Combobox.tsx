@@ -103,7 +103,7 @@ const ComboboxRoot = ({
   });
 
   return (
-    <Next.Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
+    <Next.Popover.Root open={open} onOpenChange={({ open }) => onOpenChange(open)} modal={modal}>
       <ComboboxProvider
         isCombobox
         placeholder={placeholder}

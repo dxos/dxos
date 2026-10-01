@@ -25,7 +25,7 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
   const isImportIntoExisting = !!spaceName;
 
   return (
-    <Next.Dialog.Root open={isOpen} onOpenChange={(nextOpen) => setIsOpen(nextOpen)}>
+    <Next.Dialog.Root open={isOpen} onOpenChange={({ open: nextOpen }) => setIsOpen(nextOpen)}>
       <Next.Toolbar.Root>
         {!isControlled && (
           <Next.Dialog.Trigger asChild>

@@ -253,7 +253,7 @@ export const ActionMenu = ({
     <Next.Menu.Root
       open={deferred ? deferredOpen : open}
       defaultOpen={defaultOpen}
-      onOpenChange={deferred ? handleDeferredOpenChange : onOpenChange}
+      onOpenChange={({ open }) => (deferred ? handleDeferredOpenChange : onOpenChange)(open)}
     >
       {virtualRef ? <Next.Menu.VirtualTrigger virtualRef={virtualRef} /> : null}
       {children && (

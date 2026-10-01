@@ -17,7 +17,7 @@ export interface SpaceDialogProps
 export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
   const titleId = useId('spaceDialog__title');
   return (
-    <Next.Dialog.Root defaultOpen onOpenChange={(open) => open || spacePanelProps.onDone?.()}>
+    <Next.Dialog.Root defaultOpen onOpenChange={({ open }) => open || spacePanelProps.onDone?.()}>
       <Next.Dialog.Content aria-labelledby={titleId}>
         <Next.Dialog.Body>
           <SpacePanel

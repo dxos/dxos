@@ -50,13 +50,13 @@ export const HelpMenu = () => {
   const downloadHref = downloadUrl(getEnvString(config, 'DX_ENVIRONMENT'));
 
   return (
-    <Next.Menu.Root>
+    <Next.Menu.Root positioning={{ placement: 'left-end' }}>
       <Next.Menu.Trigger asChild>
         <StatusBar.Item>
           <Next.Button variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
       </Next.Menu.Trigger>
-      <Next.Menu.Content side='left' align='end'>
+      <Next.Menu.Content>
         <Next.Menu.Item asChild>
           <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
             <Next.Icon icon='ph--book-open--regular' size='md' />
