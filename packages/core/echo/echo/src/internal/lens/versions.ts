@@ -8,7 +8,7 @@ import * as Type from '../../Type.ts';
 import { storedPlan } from './entity.ts';
 import { mapShape, serializePlan } from './mapping.ts';
 import { evaluate } from './one-way.ts';
-import { type AnyLens, type ExtractShape, type Plan, type SerializedPlan, type Shape } from './types.ts';
+import { type AnyLens, type LinkShape, type Plan, type SerializedPlan, type Shape } from './types.ts';
 
 //
 // A lens between two versions of one type also translates version documents (DESIGN.md §12.7): the same
@@ -73,14 +73,17 @@ export type VersionEdge = {
 };
 
 /**
- * A struct of the older version that the newer version keeps in an object of its own: `property` of the
- * newer version references a `child` object whose data `forward` derives from the struct `from`, or, for
- * shape `each`, lists one reference per element of the list of structs `from`.
+ * A property of one version that another object holds in the other:
+ * - `struct`: the newer version's `property` references a `child` object whose data `forward` derives from the
+ *   older version's struct `from`;
+ * - `each`: the same, with one reference per element of the list of structs `from`;
+ * - `absorb`: the older version's `from` references a `child` object whose data `forward` maps into the newer
+ *   version's struct `property`.
  */
 export type VersionLink = {
   readonly property: string;
   readonly from: string;
-  readonly shape: ExtractShape;
+  readonly shape: LinkShape;
   /** URI of the child object's type. */
   readonly child: URI.URI;
   readonly forward: (struct: Data) => Data;
@@ -125,6 +128,21 @@ const stepOf = (plan: SerializedPlan): Step | undefined => {
         });
         break;
       }
+      case 'absorb': {
+        const inner = stepOf(entry.inner);
+        if (!inner) {
+          return undefined;
+        }
+        links.push({
+          property: entry.property,
+          from: entry.from,
+          shape: 'absorb',
+          child: URI.make(entry.child),
+          forward: inner.forward,
+          backward: inner.backward,
+        });
+        break;
+      }
       case 'rename':
         pairs.push({ to: entry.property, from: entry.from });
         break;
@@ -151,7 +169,7 @@ const stepOf = (plan: SerializedPlan): Step | undefined => {
     }
   }
   const paired = new Set(pairs.map(({ from }) => from));
-  // Read only one way: a one-way transform's inputs and an extracted struct, which the child carries.
+  // Read only one way: a one-way transform's inputs, and a struct or reference another object carries.
   const oneWayInputs = [...new Set([...oneWay.flatMap(({ from }) => from), ...links.map(({ from }) => from)])].filter(
     (name) => !paired.has(name),
   );
@@ -239,10 +257,9 @@ const problemsOf = (plan: Plan, path: string): string[] => {
   const readOneWay = new Set<string>();
   for (const entry of plan.entries) {
     const at = `"${path}${entry.property}"`;
-    if (entry.extract) {
-      problems.push(
-        ...problemsOf(entry.extract.plan, `${path}${entry.property}${entry.extract.shape === 'each' ? '[]' : ''}->`),
-      );
+    if (entry.link) {
+      const arrow = { struct: '->', each: '[]->', absorb: '<-' }[entry.link.shape];
+      problems.push(...problemsOf(entry.link.plan, `${path}${entry.property}${arrow}`));
       entry.from.forEach((name) => readOneWay.add(name));
     } else if (entry.nested) {
       problems.push(

@@ -13,6 +13,7 @@
 
 import { get as project } from './internal/lens/codec.ts';
 import {
+  type Absorb,
   type AnyLens,
   type Codec,
   type Extract,
@@ -55,11 +56,13 @@ export { type LawCheckResult, type LawViolation, checkLaws, readsOf, sourceFor }
 export { OverlayAnnotation, getOverlay, getOverlays } from './internal/lens/overlay.ts';
 export { Stored, fromStored, isStored, storedPlan, toStored } from './internal/lens/entity.ts';
 export {
+  type Absorb,
   type Codec,
   type Coverage,
   type Derived,
   type Extract,
   type ExtractShape,
+  type LinkShape,
   type MakeOptions,
   type Mapping,
   type Nested,
@@ -163,6 +166,18 @@ export const extractEach = <P extends string>(
   mapping: Mapping,
   defaults?: Readonly<Record<string, unknown>>,
 ): Extract<Record<P, unknown>> => ({ kind: 'extract', property, shape: 'each', child, mapping, defaults });
+
+/**
+ * `Lens.absorb(property, Child, mapping)` — the reverse of an extract: the reference `property` to a `Child`
+ * object becomes a struct of the newer version, derived from the object's data. Version documents keep the
+ * struct and the object in sync; the struct follows the object the older version referenced at its root.
+ */
+export const absorb = <P extends string>(
+  property: P,
+  child: Type.AnyObj,
+  mapping: Mapping,
+  defaults?: Readonly<Record<string, unknown>>,
+): Absorb<Record<P, unknown>> => ({ kind: 'absorb', property, child, mapping, defaults });
 
 /** `Lens.constant(value)` — the same value for every object. */
 export const constant = (value: unknown): OneWay => ({ kind: 'oneWay', spec: { fn: 'constant', from: [], value } });

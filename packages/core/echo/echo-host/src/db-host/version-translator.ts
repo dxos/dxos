@@ -14,7 +14,7 @@ import {
 import { type Context } from '@dxos/context';
 import { Lens, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { type SpaceId, type URI } from '@dxos/keys';
+import { EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type DocumentLease } from '../automerge/index.ts';
@@ -38,6 +38,8 @@ export type VersionTranslatorDeps = {
   loadDoc: (ctx: Context, documentId: DocumentId) => Promise<DocumentLease<DatabaseDirectory> | null>;
   /** Stores `doc`, history included, as a new document. */
   createDoc: (doc: Doc<DatabaseDirectory>) => Promise<DocumentLease<DatabaseDirectory>>;
+  /** The indexed objects referencing `objectId`, so copies of one absorbed object exchange edits. */
+  queryReferrers?: (spaceId: SpaceId, objectId: EntityId) => Promise<readonly { objectId: string }[]>;
 };
 
 const LENS_TYPE = Type.getURI(Lens.Stored);
@@ -163,6 +165,12 @@ export class VersionTranslator {
           const created = await this.#deps.createDoc(doc);
           leases.push(created);
           return created;
+        },
+        referrers: async (objectId) => {
+          const queryReferrers = this.#deps.queryReferrers;
+          return queryReferrers && EntityId.isValid(objectId)
+            ? (await queryReferrers(spaceId, objectId)).map((referrer) => referrer.objectId)
+            : [];
         },
       };
       const synced = this.#synced.get(spaceId) ?? new Map<string, string>();

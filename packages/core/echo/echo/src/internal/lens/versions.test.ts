@@ -340,6 +340,37 @@ describe('lenses between versions', () => {
       ).toThrow(/"address" is not a list of structs to extract/);
     });
 
+    test('an absorbed reference becomes a struct of the newer version, derived from the object', () => {
+      const RefV1 = Type.makeObject(DXN.make('org.dxos.test.contact', '0.1.0'))(
+        Schema.Struct({ name: Schema.String, address: Schema.optional(Ref.Ref(Address)) }),
+      );
+      const StructV2 = Type.makeObject(DXN.make('org.dxos.test.contact', '0.2.0'))(
+        Schema.Struct({ name: Schema.String, address: Schema.Struct({ street: Schema.String, city: Schema.String }) }),
+      );
+      const absorb = Lens.make(RefV1, StructV2, { address: Lens.absorb('address', Address, { street: 'line1' }) });
+      const edge = Lens.versionEdge(absorb);
+      expect(edge.forward({ name: 'Ada', address: { '/': 'echo:@:01J00000000000000000000000' } })).toEqual({
+        name: 'Ada',
+      });
+      expect(edge.backward({ name: 'Ada', address: { street: '1 Main', city: 'London' } })).toEqual({ name: 'Ada' });
+      const [link] = edge.links;
+      expect(link).toMatchObject({
+        property: 'address',
+        from: 'address',
+        shape: 'absorb',
+        child: Type.getURI(Address),
+      });
+      expect(link.forward({ line1: '1 Main', city: 'London' })).toEqual({ street: '1 Main', city: 'London' });
+      expect(link.backward({ street: '1 Main', city: 'London' })).toEqual({ line1: '1 Main', city: 'London' });
+      const stored = Lens.toStored(absorb);
+      expect(Lens.storedVersionEdge(stored)?.links[0]?.shape).toBe('absorb');
+      const resolve = (uri: string) => (uri === Type.getURI(Address) ? Address : undefined);
+      expect(Lens.fromStored(stored, RefV1, StructV2, resolve).digest).toBe(absorb.digest);
+      expect(() => Lens.make(StructV2, RefV1, { address: Lens.absorb('address', Address, {}) })).toThrow(
+        /"address" is not a reference to org.dxos.test.address to absorb/,
+      );
+    });
+
     test('the property must reference the extracted type', () => {
       expect(() => Lens.make(PersonV1, PersonV2, { address: Lens.extract('address', TaskV1, {}) })).toThrow(
         /is not a reference to org.dxos.test.task/,

@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 
 import { Lens } from '@dxos/echo';
-import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { DatabaseDirectory, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
@@ -14,8 +14,13 @@ import { isRecord } from './encoded-value.ts';
 import { ancestorsOf, changeGraphOf } from './version-history.ts';
 import { type VersionDocHandle, type VersionStore } from './version-runner.ts';
 import {
+  type Absorbed,
   type Projection,
   type VersionDoc,
+  absorbedCopy,
+  absorbedOriginsOf,
+  absorbedToParent,
+  creationOf,
   dataOf,
   deriveLinkDoc,
   elementToParent,
@@ -23,11 +28,13 @@ import {
   linkRootOf,
   linkToParent,
   parentDeletion,
+  parentToAbsorbed,
   parentToElement,
   parentToLink,
   projectAt,
   rootHeadsOf,
   translateBetween,
+  typeOfDoc,
 } from './version-translation.ts';
 
 //
@@ -169,10 +176,16 @@ export const syncLinks = async (options: SyncLinksOptions): Promise<void> => {
     }
     for (const link of edge.links) {
       const context = { ...options, edge, link, older, newer };
-      if (link.shape === 'each') {
-        await syncEach(context);
-      } else {
-        await syncStruct(context);
+      switch (link.shape) {
+        case 'struct':
+          await syncStruct(context);
+          break;
+        case 'each':
+          await syncEach(context);
+          break;
+        case 'absorb':
+          await syncAbsorb(context);
+          break;
       }
     }
   }
@@ -386,6 +399,108 @@ const syncEach = async ({
     }
     for (const linked of [child, ...child.merged]) {
       onHandle?.(objectId, linked.handle);
+    }
+  }
+  translatePairs(pairs, settled);
+};
+
+/**
+ * The objects the origin version of `objectId` referenced when it was created, which newer versions absorb, or
+ * `undefined` while one of them is not available: a root derived without it would differ from every other
+ * device's.
+ */
+export const absorbedOf = async (
+  store: VersionStore,
+  edges: readonly Lens.VersionEdge[],
+  typename: string,
+  objectId: string,
+  origin: LinkParent,
+): Promise<Absorbed[] | undefined> => {
+  const created = creationOf(origin.handle.doc(), objectId);
+  const absorbed: Absorbed[] = [];
+  for (const edge of edges) {
+    const path = Lens.versionPath(edges, typename, origin.version, edge.from);
+    for (const link of edge.typename === typename && path ? edge.links : []) {
+      const absorbedId = link.shape === 'absorb' && created ? idOf(path?.apply(created.data)[link.from]) : undefined;
+      if (!absorbedId) {
+        continue;
+      }
+      const handle = await loadObject(store, absorbedId);
+      const child = handle && creationOf(handle.doc(), absorbedId);
+      if (!child) {
+        return undefined;
+      }
+      absorbed.push({ edge, link, objectId: absorbedId, ...child });
+    }
+  }
+  return absorbed;
+};
+
+/**
+ * A struct a newer version absorbs from the object the older version referenced at its root, which every
+ * version embedding the struct also stands for. A reference repointed later is logged, not followed: the copy
+ * keeps following the object it started from. Copies other parents absorbed from the same object receive this
+ * parent's edits directly, through the object's mapping.
+ */
+const syncAbsorb = async ({
+  store,
+  edges,
+  objectId,
+  typename,
+  parents,
+  settled,
+  onHandle,
+  edge,
+  link,
+  older,
+  newer,
+}: LinkContext): Promise<void> => {
+  const origin = absorbedOriginsOf(newer.handle.doc()).find(({ property }) => property === link.property);
+  const handle = origin && (await loadObject(store, origin.objectId));
+  if (!origin || !handle) {
+    return;
+  }
+  if (idOf(older.handle.doc().objects?.[objectId]?.data?.[link.from]) !== origin.objectId) {
+    log('version documents: an absorbed reference was repointed; the struct keeps following its object', {
+      objectId,
+      property: link.property,
+    });
+  }
+  const absorbed: Side = { objectId: origin.objectId, handle, label: origin.objectId };
+  const embedding = [...parents.values()]
+    .filter(({ version }) => Lens.compareVersions(version, edge.to) >= 0)
+    .map(({ version, handle }) => ({ version, side: { objectId, handle, label: `${objectId}:${version}` } }));
+  const pairs: Pair[] = embedding.flatMap(({ version, side }) => [
+    { source: absorbed, target: side, project: absorbedToParent({ edges, edge, link, version }) },
+    { source: side, target: absorbed, project: parentToAbsorbed({ edges, edge, link, version }) },
+  ]);
+  onHandle?.(objectId, handle);
+
+  for (const sibling of (await store.referrers?.(origin.objectId)) ?? []) {
+    if (sibling === objectId) {
+      continue;
+    }
+    for (const [version, url] of Object.entries(DatabaseDirectory.getVersionDocUrls(store.root.doc(), sibling))) {
+      if (Lens.compareVersions(version, edge.to) < 0) {
+        continue;
+      }
+      const copy = await store.load(url.toString());
+      const shared = absorbedOriginsOf(copy.doc()).some(
+        (candidate) => candidate.property === link.property && candidate.objectId === origin.objectId,
+      );
+      if (!shared || typeOfDoc(copy.doc(), sibling, edges)?.typename !== typename) {
+        continue;
+      }
+      const target: Side = { objectId: sibling, handle: copy, label: `${sibling}:${version}` };
+      const into = absorbedToParent({ edges, edge, link, version });
+      pairs.push(
+        ...embedding.map(({ version: from, side }) => ({
+          source: side,
+          target,
+          project: absorbedCopy(into, parentToAbsorbed({ edges, edge, link, version: from })),
+        })),
+      );
+      onHandle?.(objectId, copy);
     }
   }
   translatePairs(pairs, settled);

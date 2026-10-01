@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 import { Lens, Ref, Type } from '@dxos/echo';
 import { DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, type EntityId } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 
 import { type VersionDocHandle, type VersionStore, syncVersionDocuments } from './version-runner.ts';
 import { type VersionDoc } from './version-translation.ts';
@@ -135,6 +135,53 @@ class MemoryStore implements VersionStore {
       invariant(entity, 'no object');
       callback(entity);
     });
+  }
+
+  /** Stores a new object in a document of its own, linked from the space root. */
+  addObject(objectId: string, type: Type.AnyObj, data: Record<string, unknown>): void {
+    const url = generateAutomergeUrl();
+    this.docs.set(
+      url,
+      A.change(A.init<DatabaseDirectory>(), (draft) => {
+        draft.version = SpaceDocVersion.CURRENT;
+        draft.objects = {
+          [objectId]: {
+            system: { kind: 'object', type: EncodedReference.fromURI(Type.getURI(type)) },
+            meta: { keys: [] },
+            data,
+          },
+        };
+      }),
+    );
+    this.root.change((root) => {
+      root.links ??= {};
+      root.links[objectId] = new A.RawString(url);
+    });
+  }
+
+  /** The objects whose linked documents reference `objectId`, as the index reports them. */
+  async referrers(objectId: string): Promise<readonly string[]> {
+    return Object.keys(this.root.doc().links ?? {}).filter((id) =>
+      JSON.stringify(this.object(id)?.data ?? {}).includes(`${objectId}"`),
+    );
+  }
+
+  /** Changes object `objectId`'s data in the document recorded for `version`. */
+  editVersion(objectId: string, version: string, callback: (data: EntityStructure['data']) => void): void {
+    const url = DatabaseDirectory.getVersionDocUrls(this.root.doc(), objectId)[version];
+    invariant(url, `no ${version}`);
+    this.#handle(url).change((doc) => {
+      const data = doc.objects?.[objectId]?.data;
+      invariant(data, 'no object');
+      callback(data);
+    });
+  }
+
+  /** Object `objectId`'s data in the document recorded for `version`. */
+  dataOf(objectId: string, version: string): EntityStructure['data'] | undefined {
+    const url = DatabaseDirectory.getVersionDocUrls(this.root.doc(), objectId)[version];
+    const doc = url && this.docs.get(url);
+    return doc ? JSON.parse(JSON.stringify(doc.objects?.[objectId]?.data)) : undefined;
   }
 
   /** The entry of an object linked from the space root, as plain values. */
@@ -579,5 +626,108 @@ describe('extracted list elements', () => {
       expect(listed(store)[0]).toBe(winner);
     }
     expect(one.state()).toBe(two.state());
+  });
+});
+
+describe('absorbed objects', () => {
+  const ADDRESS_ID = '01J00000000000000000000010';
+  const OTHER_ID = '01J00000000000000000000020';
+  const SECOND_ID = '01J00000000000000000000030';
+  const Address = Type.makeObject(DXN.make('org.dxos.test.address', '0.1.0'))(
+    Schema.Struct({ line1: Schema.String, city: Schema.String }),
+  );
+  const PersonV1 = Type.makeObject(DXN.make('org.dxos.test.person', '0.1.0'))(
+    Schema.Struct({ name: Schema.String, address: Schema.optional(Ref.Ref(Address)) }),
+  );
+  const PersonV2 = Type.makeObject(DXN.make('org.dxos.test.person', '0.2.0'))(
+    Schema.Struct({ name: Schema.String, address: Schema.Struct({ street: Schema.String, city: Schema.String }) }),
+  );
+  const edges = [
+    Lens.versionEdge(Lens.make(PersonV1, PersonV2, { address: Lens.absorb('address', Address, { street: 'line1' }) })),
+  ];
+  const refTo = (objectId: string) => EncodedReference.fromURI(EID.make({ entityId: EntityId.make(objectId) }));
+
+  const setup = (): MemoryStore => {
+    const store = MemoryStore.make({ name: 'Ada', address: refTo(ADDRESS_ID) }, PersonV1);
+    store.addObject(ADDRESS_ID, Address, { line1: '1 Main', city: 'London' });
+    return store;
+  };
+
+  test('the newer version embeds the referenced object, and a second pass writes nothing', async () => {
+    const store = setup();
+    // An edit to the object after its creation reaches the struct as a translation of its own.
+    store.editObject(ADDRESS_ID, (entity) => {
+      entity.data.city = 'Paris';
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.2.0')).toEqual({ name: 'Ada', address: { street: '1 Main', city: 'Paris' } });
+    const before = store.state();
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.state()).toBe(before);
+  });
+
+  test('edits reach the object from the struct and the struct from the object', async () => {
+    const store = setup();
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    store.edit('0.2.0', (data) => {
+      A.splice(data, ['address', 'street'], 6, 0, ' Street');
+    });
+    store.editObject(ADDRESS_ID, (entity) => {
+      A.splice(entity.data, ['line1'], 0, 0, 'No. ');
+      entity.data.city = 'Paris';
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.2.0')?.address).toEqual({ street: 'No. 1 Main Street', city: 'Paris' });
+    expect(store.object(ADDRESS_ID)?.data).toEqual({ line1: 'No. 1 Main Street', city: 'Paris' });
+    // The older version keeps its reference.
+    expect(store.dataAt('0.1.0')?.address).toEqual(refTo(ADDRESS_ID));
+    const before = store.state();
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.state()).toBe(before);
+  });
+
+  test("an edit to one parent's copy reaches another parent's copy of the same object", async () => {
+    const store = setup();
+    store.addObject(SECOND_ID, PersonV1, { name: 'Grace', address: refTo(ADDRESS_ID) });
+    await syncVersionDocuments(store, edges, [OBJECT_ID, SECOND_ID]);
+    store.editVersion(OBJECT_ID, '0.2.0', (data) => {
+      data.address.city = 'Paris';
+    });
+    store.editVersion(SECOND_ID, '0.2.0', (data) => {
+      A.splice(data, ['address', 'street'], 0, 0, 'No. ');
+    });
+    for (let round = 0; round < 2; round++) {
+      await syncVersionDocuments(store, edges, [OBJECT_ID, SECOND_ID]);
+    }
+    const expected = { street: 'No. 1 Main', city: 'Paris' };
+    expect(store.dataOf(OBJECT_ID, '0.2.0')?.address).toEqual(expected);
+    expect(store.dataOf(SECOND_ID, '0.2.0')?.address).toEqual(expected);
+    expect(store.object(ADDRESS_ID)?.data).toEqual({ line1: 'No. 1 Main', city: 'Paris' });
+    const before = store.state();
+    await syncVersionDocuments(store, edges, [OBJECT_ID, SECOND_ID]);
+    expect(store.state()).toBe(before);
+  });
+
+  test('a repointed reference leaves the struct following the object it was absorbed from', async () => {
+    const store = setup();
+    store.addObject(OTHER_ID, Address, { line1: '9 Elm', city: 'Oslo' });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    store.edit('0.1.0', (data) => {
+      data.address = refTo(OTHER_ID);
+    });
+    store.editObject(ADDRESS_ID, (entity) => {
+      entity.data.city = 'Paris';
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.2.0')?.address).toEqual({ street: '1 Main', city: 'Paris' });
+  });
+
+  test('no version embeds the struct while the object it absorbs is unavailable', async () => {
+    const store = MemoryStore.make({ name: 'Ada', address: refTo(ADDRESS_ID) }, PersonV1);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.2.0')).toBeUndefined();
+    store.addObject(ADDRESS_ID, Address, { line1: '1 Main', city: 'London' });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    expect(store.dataAt('0.2.0')?.address).toEqual({ street: '1 Main', city: 'London' });
   });
 });

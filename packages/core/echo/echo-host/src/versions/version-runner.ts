@@ -9,7 +9,7 @@ import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 
 import { isRecord } from './encoded-value.ts';
-import { syncLinks } from './version-links.ts';
+import { absorbedOf, syncLinks } from './version-links.ts';
 import {
   type VersionDoc,
   derivedWith,
@@ -48,6 +48,8 @@ export type VersionStore = {
   load(url: string): Promise<VersionDocHandle>;
   /** Stores `doc` as a new document. */
   create(doc: VersionDoc): Promise<VersionDocHandle>;
+  /** The objects whose documents reference `objectId`; without it, copies of a shared absorbed object do not exchange edits. */
+  referrers?(objectId: string): Promise<readonly string[]>;
 };
 
 /** Per-object memory of edits already handled, so each is examined once per target. */
@@ -296,7 +298,10 @@ const designatedEdges = (
   return choices.find((choice) => held.every(({ handle }) => derivedWith(handle.doc(), choice, typename)));
 };
 
-/** Stores the document for `version` derived from `origin`. */
+/**
+ * Stores the document for `version` derived from `origin`, or nothing while an object a struct of it absorbs is
+ * not available.
+ */
 const derive = async (
   store: VersionStore,
   origin: Held,
@@ -305,6 +310,11 @@ const derive = async (
   typename: string,
   edges: readonly Lens.VersionEdge[],
 ): Promise<VersionDocHandle | undefined> => {
+  const absorbed = await absorbedOf(store, edges, typename, objectId, origin);
+  if (!absorbed) {
+    log('version documents: an absorbed object is not available yet', { objectId, version });
+    return undefined;
+  }
   const derived = deriveVersionDoc({
     origin: origin.handle.doc(),
     originVersion: origin.version,
@@ -312,6 +322,7 @@ const derive = async (
     objectId,
     typename,
     edges,
+    absorbed,
   });
   return derived && store.create(derived);
 };

@@ -68,6 +68,14 @@ const PlanEntrySchema = Schema.Union([
     child: Schema.String,
     inner: Schema.suspend((): Schema.Codec<SerializedPlan> => PlanSchema),
   }),
+  Schema.Struct({
+    property: Schema.String,
+    kind: Schema.Literal('absorb'),
+    from: Schema.String,
+    /** URI of the absorbed object's type. */
+    child: Schema.String,
+    inner: Schema.suspend((): Schema.Codec<SerializedPlan> => PlanSchema),
+  }),
 ]);
 
 const PlanSchema: Schema.Codec<SerializedPlan> = Schema.Struct({
@@ -203,6 +211,20 @@ const mappingOf = (plan: SerializedPlan, resolve: (uri: string) => Type.AnyObj |
           kind: 'extract',
           property: entry.from,
           shape: entry.shape,
+          child,
+          mapping: mappingOf(entry.inner, resolve),
+          defaults: entry.inner.defaults,
+        };
+        break;
+      }
+      case 'absorb': {
+        const child = resolve(entry.child);
+        if (!child) {
+          throw new TypeError(`Lens: no type ${entry.child} to absorb "${entry.property}" from.`);
+        }
+        mapping[entry.property] = {
+          kind: 'absorb',
+          property: entry.from,
           child,
           mapping: mappingOf(entry.inner, resolve),
           defaults: entry.inner.defaults,

@@ -283,6 +283,10 @@ export class EchoHost extends Resource {
         this.indexEngine.queryType({ spaceId, typeDXN }).pipe(RuntimeProvider.runPromise(this._runtime)),
       loadDoc: (ctx, documentId) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId),
       createDoc: (doc) => this._automergeHost.createDoc<DatabaseDirectory>(doc, { preserveHistory: true }),
+      queryReferrers: (spaceId, objectId) =>
+        this.indexEngine
+          .queryReferrers(spaceId, EID.make({ entityId: objectId }))
+          .pipe(RuntimeProvider.runPromise(this._runtime)),
     });
 
     this._queryService = new QueryServiceImpl({

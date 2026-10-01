@@ -44,16 +44,35 @@ type Data = Record<string, unknown>;
 
 const ROOT_MESSAGE = 'version-root';
 
-type Root = { creation: string; origin: string; version: string; lenses: string };
+/** An object whose creation a version root also stands for: the object a struct of that version was absorbed from. */
+export type AbsorbedOrigin = { property: string; objectId: string; creation: string };
 
-/** Root message: the origin's creation change and version, this version, and a digest of the lenses between them. */
-const rootMessage = ({ creation, origin, version, lenses }: Root): string =>
-  `${ROOT_MESSAGE} ${creation} ${origin} ${version} ${lenses}`;
+type Root = { creation: string; origin: string; version: string; lenses: string; absorbed: AbsorbedOrigin[] };
+
+/**
+ * Root message: the origin's creation change and version, this version, a digest of the lenses between them, and
+ * the creations of the objects its structs were absorbed from.
+ */
+const rootMessage = ({ creation, origin, version, lenses, absorbed }: Root): string =>
+  [
+    `${ROOT_MESSAGE} ${creation} ${origin} ${version} ${lenses}`,
+    ...absorbed.map(({ property, objectId, creation }) => `${property}/${objectId}/${creation}`),
+  ].join(' ');
 
 const parseRoot = (message: string | null): Root | undefined => {
-  const match = message?.match(/^version-root (\S+) (\S+) (\S+) (\S+)$/);
-  return match ? { creation: match[1], origin: match[2], version: match[3], lenses: match[4] } : undefined;
+  const match = message?.match(/^version-root (\S+) (\S+) (\S+) (\S+)((?: \S+)*)$/);
+  const absorbed = (match?.[5] ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .flatMap((token) => {
+      const [property, objectId, creation] = token.split('/');
+      return property && objectId && creation ? [{ property, objectId, creation }] : [];
+    });
+  return match ? { creation: match[1], origin: match[2], version: match[3], lenses: match[4], absorbed } : undefined;
 };
+
+/** The objects whose creations the root of a derived version document stands for, besides its own. */
+export const absorbedOriginsOf = (doc: VersionDoc): AbsorbedOrigin[] => rootOf(doc)?.absorbed ?? [];
 
 const rootOf = (doc: VersionDoc): Root | undefined => {
   const [root] = A.getChangesMetaSince(doc, []);
@@ -106,6 +125,13 @@ export const versionOfDoc = (
   edges: readonly Lens.VersionEdge[],
 ): string | undefined => typeOfDoc(doc, objectId, edges)?.version;
 
+/** The change that created object `objectId` in `doc`, and its data then. */
+export const creationOf = (doc: VersionDoc, objectId: string): { creation: string; data: Data } | undefined => {
+  const creation = creationChange(doc, objectId);
+  const entry = creation && objectAt(doc, [creation.hash], objectId);
+  return creation && { creation: creation.hash, data: isRecord(entry?.data) ? entry.data : {} };
+};
+
 /** Whether `doc` was derived from another version document rather than created by an app. */
 export const isDerived = (doc: VersionDoc): boolean => rootOf(doc) !== undefined;
 
@@ -121,6 +147,7 @@ export const deriveVersionDoc = ({
   objectId,
   typename,
   edges,
+  absorbed = [],
 }: {
   origin: VersionDoc;
   originVersion: string;
@@ -128,6 +155,8 @@ export const deriveVersionDoc = ({
   objectId: string;
   typename: string;
   edges: readonly Lens.VersionEdge[];
+  /** Objects the origin referenced when it was created, whose data structs of newer versions absorb. */
+  absorbed?: readonly Absorbed[];
 }): VersionDoc | undefined => {
   const path = Lens.versionPath(edges, typename, originVersion, version);
   const type = Lens.typeOfVersion(edges, typename, version);
@@ -139,10 +168,18 @@ export const deriveVersionDoc = ({
   const state = A.view(origin, [creation.hash]);
   const data = isRecord(entry?.data) ? entry.data : {};
   const system = isRecord(entry?.system) ? entry.system : {};
+  // A root stands for the creations of all its origins: the object's, and those of the objects it absorbs.
+  const embedded = absorbed.filter(({ edge }) => Lens.compareVersions(version, edge.to) >= 0);
   const object = {
     ...entry,
     system: { ...system, type: EncodedReference.fromURI(type) },
-    data: path.apply(data),
+    data: embedded.reduce(
+      (next, { edge, link, data }) => ({
+        ...next,
+        ...absorbedToParent({ edges, edge, link, version })({ data }, origin)[0].value,
+      }),
+      path.apply(data),
+    ),
   };
   const root = {
     version: plain(state.version),
@@ -153,7 +190,13 @@ export const deriveVersionDoc = ({
   const created = A.change(
     A.init<DatabaseDirectory>({ actor }),
     {
-      message: rootMessage({ creation: creation.hash, origin: originVersion, version, lenses: lensDigest(path) }),
+      message: rootMessage({
+        creation: creation.hash,
+        origin: originVersion,
+        version,
+        lenses: lensDigest(path),
+        absorbed: embedded.map(({ link, objectId, creation }) => ({ property: link.property, objectId, creation })),
+      }),
       time: 0,
     },
     (draft: Data) => {
@@ -348,6 +391,85 @@ export const elementToParent = ({
 
 /** A parent's deletion alone, for a version that holds references rather than what an object was extracted from. */
 export const parentDeletion: Projection = (entry) => [deletionOf(entry)];
+
+//
+// A struct a newer version absorbs from an object the older version references (`Lens.absorb`) is the reverse:
+// the embedding versions' roots stand for the absorbed object's creation as well as the parent's, and edits are
+// translated between the object and every version embedding the struct, and between copies of one object
+// absorbed by several parents.
+//
+
+/** An object absorbed into newer versions: the link, and its data when it was created. */
+export type Absorbed = {
+  edge: Lens.VersionEdge;
+  link: Lens.VersionLink;
+  objectId: string;
+  creation: string;
+  data: Data;
+};
+
+/** Whether version `version` of the parent embeds the struct `edge` absorbs: it is no older than the edge's newer end. */
+const absorbs = (edge: Lens.VersionEdge, version: string): boolean => Lens.compareVersions(version, edge.to) >= 0;
+
+/**
+ * Only what `struct` adds to version `version` through `path`: applying a path also writes defaults for the
+ * properties it introduces, which must not overwrite what the version holds.
+ */
+const embedAt = (path: Lens.VersionPath, property: string, struct: Data): Data => {
+  const without = path.apply({});
+  const withStruct = path.apply({ [property]: struct });
+  return Object.fromEntries(
+    Object.entries(withStruct).filter(([key, value]) => !encodedValuesEqual(without[key], value)),
+  );
+};
+
+/** How an absorbed object reads in version `version` of a parent embedding its struct. */
+export const absorbedToParent = ({
+  edges,
+  edge,
+  link,
+  version,
+}: {
+  edges: readonly Lens.VersionEdge[];
+  edge: Lens.VersionEdge;
+  link: Lens.VersionLink;
+  version: string;
+}): Projection => {
+  const path = absorbs(edge, version) ? Lens.versionPath(edges, edge.typename, edge.to, version) : undefined;
+  return (entry) => [
+    {
+      at: ['data'],
+      value: path && embedAt(path, link.property, link.forward(isRecord(entry?.data) ? entry.data : {})),
+    },
+  ];
+};
+
+/** How version `version` of a parent embedding an absorbed struct reads in the object it was absorbed from. */
+export const parentToAbsorbed = ({
+  edges,
+  edge,
+  link,
+  version,
+}: {
+  edges: readonly Lens.VersionEdge[];
+  edge: Lens.VersionEdge;
+  link: Lens.VersionLink;
+  version: string;
+}): Projection => {
+  const path = absorbs(edge, version) ? Lens.versionPath(edges, edge.typename, version, edge.to) : undefined;
+  return (entry) => {
+    const struct = path?.apply(isRecord(entry?.data) ? entry.data : {})[link.property];
+    return [{ at: ['data'], value: isRecord(struct) ? link.backward(struct) : undefined }];
+  };
+};
+
+/** How one parent's embedded copy reads in another's, through the object both absorbed. */
+export const absorbedCopy =
+  (into: Projection, from: Projection): Projection =>
+  (entry, view) => {
+    const [object] = from(entry, view);
+    return object.value === undefined ? [{ at: ['data'], value: undefined }] : into({ data: object.value }, view);
+  };
 
 /** A document version and the lens path mapping data from it into the target. */
 export type TranslationSource = {

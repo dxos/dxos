@@ -54,6 +54,14 @@ const eachLens = Lens.make(
   { defaults: { items: [] } },
 );
 
+const ContactV1 = Type.makeObject(DXN.make('org.dxos.test.contact', '0.1.0'))(
+  Schema.Struct({ name: Schema.String, address: Schema.optional(Ref.Ref(Address)) }),
+);
+const ContactV2 = Type.makeObject(DXN.make('org.dxos.test.contact', '0.2.0'))(
+  Schema.Struct({ name: Schema.String, address: Schema.Struct({ street: Schema.String, city: Schema.String }) }),
+);
+const absorbLens = Lens.make(ContactV1, ContactV2, { address: Lens.absorb('address', Address, { street: 'line1' }) });
+
 /** Waits until a peer's host has synced the version documents of what its database wrote. */
 const settle = async (peer: { host: { versionsSettled(): Promise<void> } }, db: TestDatabase): Promise<void> => {
   await db._repo.flush();
@@ -193,6 +201,64 @@ describe('extracted objects across versions', () => {
       timeout: 10_000,
     });
     expect(await items()).toHaveLength(1);
+  }, 60_000);
+
+  test('the host absorbs a referenced object into each parent, and copies of a shared one exchange edits', async () => {
+    const pair = await createPartitionedPair(builder, [ContactV1, ContactV2, Address]);
+    network = pair.network;
+    const { peer1 } = pair;
+    const db = await peer1.createDatabase(PublicKey.random());
+    const address = db.add(Obj.make(Address, { line1: '1 Main', city: 'London' }));
+    const ada = db.add(Obj.make(ContactV1, { name: 'Ada', address: Ref.make(address) }));
+    const grace = db.add(Obj.make(ContactV1, { name: 'Grace', address: Ref.make(address) }));
+    await db.flush({ indexes: true });
+    db.graph.registry.add([absorbLens]);
+
+    const embedded = async (contactId: string): Promise<unknown> => {
+      const url = DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), contactId)['0.2.0'];
+      if (!url || !isDocumentUrl(url)) {
+        return undefined;
+      }
+      const handle = db._repo.find<DatabaseDirectory>(url);
+      await handle.whenReady();
+      return JSON.parse(JSON.stringify(handle.doc().objects?.[contactId]?.data?.address ?? null));
+    };
+    const both = async (expected: unknown): Promise<boolean> =>
+      isDeepStrictEqual(await embedded(ada.id), expected) && isDeepStrictEqual(await embedded(grace.id), expected);
+
+    await waitForCondition({
+      condition: async () => {
+        await settle(peer1, db);
+        return both({ street: '1 Main', city: 'London' });
+      },
+      interval: 100,
+      timeout: 20_000,
+    });
+
+    Obj.update(address, (address) => {
+      address.city = 'Paris';
+    });
+    const url = DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), ada.id)['0.2.0'];
+    invariant(url && isDocumentUrl(url), 'no newer version');
+    const adaV2 = db._repo.find<DatabaseDirectory>(url);
+    await adaV2.whenReady();
+    adaV2.change((doc) => {
+      const data = doc.objects?.[ada.id]?.data;
+      invariant(data, 'no contact');
+      data.address.street = '2 Side';
+    });
+    await waitForCondition({
+      condition: async () => {
+        await settle(peer1, db);
+        return (
+          (await both({ street: '2 Side', city: 'Paris' })) &&
+          Obj.getValue(address, ['line1']) === '2 Side' &&
+          Obj.getValue(address, ['city']) === 'Paris'
+        );
+      },
+      interval: 100,
+      timeout: 10_000,
+    });
   }, 60_000);
 
   test('objects two partitioned peers extract merge into one holding both peers’ edits', async () => {

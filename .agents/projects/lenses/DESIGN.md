@@ -1488,6 +1488,32 @@ v1) has a root standing for both creations, which is the two-origin root `absorb
     both writes.
   - Each element's object costs a scan of the older version's history per pass.
 
+### 12.13 `Lens.absorb`, as built (2026-10-01)
+
+- **Lens side.** `Lens.absorb(property, Child, mapping, defaults?)` maps the older version's reference to a
+  `Child` into a struct of the newer version, through an inner plan from the child's properties to the struct.
+  The edge's link has shape `absorb`. The reference counts as a one-way input, so it must be optional (or have
+  a default): an object created at the newer version has nothing to reference.
+- **Two-origin roots.** A version embedding the struct derives its root from the parent's creation and from the
+  creation of the object the parent referenced when it was created. The root message lists each absorbed
+  object as `<property>/<object id>/<creation>`. While that object's document is unavailable, no version is
+  derived, since a root built without it would differ from every other device's.
+- **Translation.** The absorbed object exchanges edits with every held version at or after the edge's newer
+  end, at the struct's place through the lenses. Only the parts the struct adds are embedded, so a path's
+  defaults never overwrite what a version holds.
+- **Labels across objects.** A parent version's label is `<object id>:<version>` in these pairs. Copies of one
+  object in different parents are then different sources; within one object, versions keep plain labels.
+- **Shared objects (decision 3).** Through `VersionStore.referrers` (the index's referrers on the host), each
+  parent's embedding versions translate into the copies other parents absorbed from the same object, through
+  the object's mapping.
+- **Repoints (decision 3).** A reference changed after the root is logged; the copy keeps following the object
+  recorded in its root.
+- **Limits.**
+  - An object created at the newer version has no reference in the older version: the struct is not
+    extracted back into an object.
+  - An absorbed object merged into another by its convergence key keeps translating from its own document.
+  - Without `referrers`, copies of a shared object do not exchange edits directly.
+
 ## 13. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·

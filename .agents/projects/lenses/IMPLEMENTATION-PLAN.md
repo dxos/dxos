@@ -122,8 +122,9 @@ One lens (decided 2026-10-01, DESIGN.md §12.7), built on this branch in order:
   versions from the registry.
 
 Status (2026-10-01): A–D built on this branch; see DESIGN.md §12.8. Steps 2 (nested entries) and 3
-(declarative one-way built-ins) built; see §12.9. Step 4 (multi-object) is a draft design in §12.10, awaiting
-review.
+(declarative one-way built-ins) built; see §12.9. Step 4 (multi-object, decided in §12.10) built:
+`Lens.extract` (§12.11), `Lens.extractEach` (§12.12) and `Lens.absorb` (§12.13), awaiting review. Relations
+come later.
 
 Not yet done:
 

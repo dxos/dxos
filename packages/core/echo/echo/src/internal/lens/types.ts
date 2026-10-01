@@ -62,6 +62,9 @@ export type ReadOnly<S = any> = {
 /** What an extract moves into objects of their own: the struct a property holds, or each element of a list of structs. */
 export type ExtractShape = 'struct' | 'each';
 
+/** How a property of one version relates to an object of its own: extracted into it, or absorbed from it. */
+export type LinkShape = ExtractShape | 'absorb';
+
 /** Where a nested mapping applies inside a property's value: the value itself, each list element, or each record value. */
 export type Shape = 'struct' | 'each' | 'values';
 
@@ -110,6 +113,19 @@ export type Extract<S = any> = {
   readonly defaults?: Readonly<Record<string, unknown>>;
 };
 
+/**
+ * `Lens.absorb(property, Child, mapping)` — the reverse of an extract: the source property's reference to a
+ * `Child` object becomes a struct of the target, which the inner mapping derives from the object's data. The
+ * struct exists only in version documents, so a view reads the property as unset.
+ */
+export type Absorb<S = any> = {
+  readonly kind: 'absorb';
+  readonly property: keyof S & string;
+  readonly child: Type.AnyObj;
+  readonly mapping: Mapping;
+  readonly defaults?: Readonly<Record<string, unknown>>;
+};
+
 /** One target property's mapping. A bare string is the rename shorthand. */
 export type MappingEntry<S = any, V = any> =
   | (keyof S & string)
@@ -118,7 +134,8 @@ export type MappingEntry<S = any, V = any> =
   | Derived<S, V, any>
   | Nested<S>
   | OneWay
-  | Extract<S>;
+  | Extract<S>
+  | Absorb<S>;
 
 /**
  * A partial mapping from target properties to the source. Every target property resolves as:
@@ -177,7 +194,8 @@ export type SerializedEntry =
       readonly shape: ExtractShape;
       readonly child: string;
       readonly inner: SerializedPlan;
-    };
+    }
+  | { readonly kind: 'absorb'; readonly from: string; readonly child: string; readonly inner: SerializedPlan };
 
 /** A plan as data: every resolved entry (same-name matches as renames) and what each side alone declares. */
 export type SerializedPlan = {
@@ -203,8 +221,11 @@ export type ResolvedEntry = {
   readonly nested?: { readonly shape: Shape; readonly plan: Plan };
   /** For a one-way entry: the transform. */
   readonly oneWay?: OneWaySpec;
-  /** For an extract entry: the child type, and the plan from the source struct to the child's data. */
-  readonly extract?: { readonly shape: ExtractShape; readonly child: Type.AnyObj; readonly plan: Plan };
+  /**
+   * For an extract or absorb entry: the other object's type, and the plan between it and the struct (from the
+   * source struct to the object's data for an extract, from the object's data to the target struct for an absorb).
+   */
+  readonly link?: { readonly shape: LinkShape; readonly child: Type.AnyObj; readonly plan: Plan };
 };
 
 /** The compiled mapping: what to read, what to write, and what fell through to an overlay. */

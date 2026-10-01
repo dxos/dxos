@@ -11,6 +11,7 @@ import { getReferenceAst } from '../Ref/ref.ts';
 import { getCodec } from './codecs.ts';
 import { evaluate } from './one-way.ts';
 import {
+  type Absorb,
   type Codec,
   type Converted,
   type Derived,
@@ -132,6 +133,7 @@ const isDerived = (entry: object): entry is Derived => 'from' in entry && 'get' 
 const isNested = (entry: object): entry is Nested => 'kind' in entry && (entry as Nested).kind === 'nested';
 const isOneWay = (entry: object): entry is OneWay => 'kind' in entry && (entry as OneWay).kind === 'oneWay';
 const isExtract = (entry: object): entry is Extract => 'kind' in entry && entry.kind === 'extract';
+const isAbsorb = (entry: object): entry is Absorb => 'kind' in entry && entry.kind === 'absorb';
 const isConverted = (entry: object): entry is Converted => 'kind' in entry && (entry as Converted).kind === 'converted';
 const isReadOnly = (entry: object): entry is { kind: 'readOnly'; property: string } =>
   'kind' in entry && (entry as { kind: string }).kind === 'readOnly';
@@ -302,7 +304,38 @@ const entryFor = (
         child: Type.getURI(entry.child),
         inner: serialized,
       },
-      extract: { shape: entry.shape, child: entry.child, plan: inner },
+      link: { shape: entry.shape, child: entry.child, plan: inner },
+    };
+  }
+
+  if (typeof entry === 'object' && isAbsorb(entry)) {
+    const from = entry.property;
+    const source = sourceProperties.get(from);
+    const target = targetProperties.get(property);
+    const reference = source && getReferenceAst(source.declared);
+    const targetInner = target && innerAst(target.type, 'struct');
+    if (!reference || reference.typename !== Type.getTypename(entry.child)) {
+      throw new TypeError(`Lens: "${from}" is not a reference to ${Type.getTypename(entry.child)} to absorb.`);
+    }
+    if (!targetInner || !SchemaAST.isObjects(targetInner)) {
+      throw new TypeError(`Lens: "${property}" is not a struct to absorb into.`);
+    }
+    const inner = planOf(
+      properties(entry.child),
+      propertiesOf(targetInner),
+      entry.mapping,
+      entry.defaults ?? {},
+      RESERVED,
+    );
+    const serialized = serializePlan(inner);
+    return {
+      property,
+      from: [from],
+      // The struct exists only in version documents, which read it from the referenced object.
+      get: () => undefined,
+      origin: 'explicit',
+      serialized: serialized && { kind: 'absorb', from, child: Type.getURI(entry.child), inner: serialized },
+      link: { shape: 'absorb', child: entry.child, plan: inner },
     };
   }
 
@@ -380,6 +413,7 @@ type MappingEntryLike =
   | Nested
   | OneWay
   | Extract
+  | Absorb
   | { kind: 'readOnly'; property: string };
 
 /**
@@ -478,7 +512,7 @@ const planOf = (
   // Read only by a one-way entry, so going back nothing restores them.
   const twoWay = new Set(
     entries
-      .filter((entry) => !entry.oneWay && !entry.extract && entry.serialized?.kind !== 'readOnly')
+      .filter((entry) => !entry.oneWay && !entry.link && entry.serialized?.kind !== 'readOnly')
       .flatMap((entry) => entry.from),
   );
   const oneWayOnly = [...read].filter((name) => !twoWay.has(name));
