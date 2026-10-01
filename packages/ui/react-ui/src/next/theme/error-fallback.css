@@ -41,6 +41,10 @@
   .nx-error-fallback-section > :not(.nx-button) {
     align-self: stretch;
   }
+  /* Overrides the generic `.nx-control` centring, so the button heads its section at the start edge. */
+  .nx-error-fallback-section > .nx-button {
+    align-self: flex-start;
+  }
 
   .nx-error-fallback-data {
     margin: 0;
