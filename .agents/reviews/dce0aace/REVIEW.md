@@ -12,6 +12,16 @@ reviewId: dce0aace
 
 _1 error(s), 2 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- dce0aace-1 - resolved - story-for-new-ui-component - packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx:31
+- dce0aace-2 - ignored - no-sleep-in-test - packages/plugins/plugin-computer/src/vite-plugin/shell-middleware.test.ts:75
+- dce0aace-3 - ignored - no-casts - packages/sdk/app-framework/src/testing/harness.ts:250
+
+## Issues
+
 # WARN dce0aace-1 story-for-new-ui-component `packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx:31`
 
 System One judges this a likely violation of `story-for-new-ui-component` (A new container or component ships with a Storybook story at the right level), p=0.89. The likeliest place is lines 31-42 (`export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {`, location confidence 0.46). This is a single-shot classifier: confirm against the rule before acting.
@@ -23,3 +33,19 @@ System One judges this a likely violation of `no-sleep-in-test` (No sleep or pol
 # ERROR dce0aace-3 no-casts `packages/sdk/app-framework/src/testing/harness.ts:250`
 
 System One judges this a likely violation of `no-casts` (No casts to silence the type-checker), p=0.96. The likeliest place is lines 250-261 (`}`, location confidence 0.53). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `e04f7eec2b8239c4ff8c719d5b4543a4141f53cf`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 3 violations written to fragments, 195 uncertain, 413 clean, 0 unanswered
+
+```text
+requests: 338 (123 verdicts re-asked with context the model requested)
+estimated input tokens: 1872334
+billed input tokens: 1724591 (cost $0.0724)
+measured chars per token: 3.26
+```

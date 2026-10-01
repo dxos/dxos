@@ -56,7 +56,7 @@ import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
-import { QueryServiceImpl } from './query-service.ts';
+import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
@@ -116,6 +116,9 @@ const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMo
 export type EchoHostProps = {
   /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
   queryExecutor?: QueryExecutorMode;
+
+  /** Overrides how live queries are debounced in proportion to their cost; see {@link QueryDebounceOptions}. */
+  queryDebounce?: Partial<QueryDebounceOptions>;
 
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -228,6 +231,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     queryExecutor,
+    queryDebounce,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
@@ -281,6 +285,7 @@ export class EchoHost extends Resource {
       // decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: resolveQueryExecutorMode(queryExecutor),
+      debounce: queryDebounce,
       sql: () => {
         invariant(this._sql, 'EchoHost is not open.');
         return this._sql;
@@ -1520,7 +1525,12 @@ export type CreatedSpace = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction' | 'queryExecutor'
+  | 'peerIdProvider'
+  | 'getSpaceKeyByRootDocumentId'
+  | 'assignQueuePositions'
+  | 'useSubduction'
+  | 'queryExecutor'
+  | 'queryDebounce'
 >;
 
 /**

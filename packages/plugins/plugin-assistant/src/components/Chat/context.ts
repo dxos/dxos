@@ -37,7 +37,8 @@ export type ChatContextValue = {
   alarms: Alarm.Alarm[];
   /** Removes a queued message or a pending alarm from the feed. */
   onCancel: (item: Message.Message | Alarm.Alarm) => void;
-  processor: AiChatProcessor;
+  /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
+  processor?: AiChatProcessor;
   requestTiming: ChatRequestTiming | null;
   /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */
   controller: ChatThreadController | null;

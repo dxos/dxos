@@ -18,9 +18,9 @@
 // --rounds=2, --model=jev-latest, --concurrency=16, --dry-run (plan and price, no API calls),
 // --json (probe mode: print raw verdicts).
 //
-// Needs TYPESAFE_API_KEY. In store mode it appends diagnostics to groups/NN.md, then writes
-// SYSTEM-ONE.md (what still needs an agentic reviewer) and system-one.json (every verdict), so
-// `finalize.ts` runs unchanged afterwards.
+// Needs TYPESAFE_API_KEY. In store mode it appends diagnostics to groups/NN.md, records the run in
+// the REVIEW.md appendix, writes system-one.json (every verdict), and prints what still needs an
+// agentic reviewer, so `finalize.ts` runs unchanged afterwards.
 
 import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -29,6 +29,7 @@ import { parseArgs } from 'node:util';
 import { discoverRules, listRepoFiles, matchRuleFiles } from '../lib/discover.ts';
 import { mainMergeBase, repoRoot } from '../lib/git.ts';
 import { type Rule } from '../lib/mdl.ts';
+import { REVIEW_FILE, writeAppendix } from '../lib/review-doc.ts';
 import {
   assertSafeSlug,
   FULL_BASE,
@@ -269,22 +270,7 @@ if (values.file?.length) {
     entry.groups.push(nn);
     skippedByRule.set(ruleId, entry);
   }
-  const report = [
-    `# System One pass — ${relative(root, store)}`,
-    '',
-    `- model: ${values.model}${client ? '' : ' (dry run: nothing was sent)'}`,
-    `- base for context: \`${base ?? 'none'}\``,
-    `- thresholds: violation ≥ ${settings.threshold}; uncertain ≥ ${settings.uncertain} and ≥ the rule's median across this run + ${settings.lift} (rules with ${settings.minSample}+ verdicts); context fetched when asked with ≥ ${settings.need}`,
-    `- verdicts: ${counts.violation} violations written to fragments, ${counts.uncertain} uncertain, ${counts.clean} clean, ${counts.unanswered} unanswered`,
-    '',
-    '```text',
-    summarizeStats(result.stats),
-    '```',
-    '',
-    '## Still needs an agentic reviewer',
-    '',
-    `Spawn one subagent per line below (${followUps.length + skipped.length} in all); every other group is already judged. A follow-up reviews only its listed files against its one rule and appends diagnostics to the named fragment.`,
-    '',
+  const followUpLines = [
     ...[...skippedByRule].map(
       ([ruleId, { reason, groups }]) =>
         `- \`${ruleId}\` (${reason}): review groups ${groups.join(', ')} as staged in STAGING.md`,
@@ -293,8 +279,29 @@ if (values.file?.length) {
     ...result.oversized.map(
       ({ ruleId, file }) => `- \`${ruleId}\` on \`${file}\`: question too large beside its state`,
     ),
-    '',
   ];
-  writeFileSync(join(store, 'SYSTEM-ONE.md'), report.join('\n'));
-  console.log(report.join('\n'));
+  const report = [
+    '### System One pass',
+    '',
+    `- model: ${values.model}${client ? '' : ' (dry run: nothing was sent)'}`,
+    `- base for context: \`${base ?? 'none'}\``,
+    `- thresholds: violation ≥ ${settings.threshold}; uncertain ≥ ${settings.uncertain} and ≥ the rule's median across this run + ${settings.lift} (rules with ${settings.minSample}+ verdicts); context fetched when asked with ≥ ${settings.need}`,
+    `- verdicts: ${counts.violation} violations written to fragments, ${counts.uncertain} uncertain, ${counts.clean} clean, ${counts.unanswered} unanswered`,
+    `- left for an agentic reviewer: ${followUpLines.length} batch(es)`,
+    '',
+    '```text',
+    summarizeStats(result.stats),
+    '```',
+  ];
+  writeAppendix(join(store, REVIEW_FILE), report.join('\n'));
+  // The follow-up list only steers this run's subagents, so it is printed rather than committed.
+  console.log(
+    [
+      ...report,
+      '',
+      `Still needs an agentic reviewer — spawn one subagent per line (${followUpLines.length} in all); every other group is already judged. A follow-up reviews only its listed files against its one rule and appends diagnostics to the named fragment.`,
+      '',
+      ...followUpLines,
+    ].join('\n'),
+  );
 }

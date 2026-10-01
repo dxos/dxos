@@ -115,7 +115,7 @@ export default Config2.make({
   },
   publish: {
     buildCommand: 'vite build', // how to build the bundle
-    outdir: 'dist', // where the build emits manifest.json
+    outputDirectory: 'dist', // where the build emits manifest.json
   },
 });
 ```
@@ -138,11 +138,11 @@ Field reference for `plugin`:
 
 Field reference for `publish`:
 
-| Field          | Required | Notes                                                                              |
-| -------------- | -------- | ---------------------------------------------------------------------------------- |
-| `buildCommand` | no       | Build command run by `dx registry publish` (skipped with `--no-build`).            |
-| `outdir`       | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`. |
-| `assetBaseUrl` | no       | Skip the upload and point the release at a bundle you host yourself.               |
+| Field             | Required | Notes                                                                              |
+| ----------------- | -------- | ---------------------------------------------------------------------------------- |
+| `buildCommand`    | no       | Build command run by `dx registry publish` (skipped with `--no-build`).            |
+| `outputDirectory` | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`. |
+| `assetBaseUrl`    | no       | Skip the upload and point the release at a bundle you host yourself.               |
 
 The release **version is taken from your `package.json` `version` field**, not from `dx.config.ts`. Bump it before publishing a new release.
 
@@ -184,6 +184,13 @@ Useful flags:
 | `--no-build`             | Skip the build and publish the existing `dist`.                                    |
 | `--asset-base-url <url>` | Skip the upload and point the release at a bundle you host yourself.               |
 | `--edge-url <url>`       | Override the edge used for upload (mainly for local testing against a dev worker). |
+| `--private`              | Publish privately instead; see below.                                              |
+
+### Publishing privately
+
+`dx registry publish --private` skips AT Protocol altogether: no PDS session, no verification, no records. The bundle is hosted the same way, but the registry records it against your DXOS identity, and it is listed in Composer's registry only to you. The first release of a key claims it, so no other identity can publish that key privately afterwards.
+
+It authenticates as the identity you logged in with (`dx account login`). A process that has no identity of its own, such as a CLI in a sandbox or a CI job, authenticates with an API token in `DX_API_TOKEN` instead: the token is bound to the account that minted it, so the plugin is listed to that account. In Composer, a sandbox gets one from its **Grant account access** action, which mints a token that expires with the sandbox.
 
 ## 7. Confirm it's published
 
@@ -251,17 +258,25 @@ the entry it names.
 
 ### With an assistant
 
-To have the assistant build one for you, create a project from the **Composer Plugin** template (contributed
-by the Coding (Dev) plugin) in a Composer served locally by `vite preview`. Its parent task and four subtasks
-walk a chat through the example below, from writing the files to checking them against the plugin's dev
-server; assign them to the agent to start it. The assistant cannot keep a dev server running, so start it
-yourself once the chat asks, from the Composer app directory:
+To have the assistant build one for you, create a project from the **Composer Plugin** template in the Composer
+desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk a chat through the example below
+in a sandbox on your computer, from fetching this guide to the load prompt; assign them to the agent to start
+it.
+
+In a browser, the template comes from the Coding (Dev) plugin and needs a Composer served locally by
+`vite preview`. There the chat writes the files and checks them against the plugin's dev server. The assistant
+cannot keep a dev server running, so start it yourself once the chat asks, from the Composer app directory:
 
 ```bash
 node_modules/.bin/vite temp/plugins/world-clock --strictPort
 ```
 
 When the chat says the plugin is ready, turn on **Dev Server** as above.
+
+The **Composer Plugin (Sandbox)** template, contributed by the Sandbox plugin, runs the same example against any
+bundled Composer, deployed ones included: the agent builds in an EDGE sandbox with `@dxos/*` installed from
+[pkg.pr.new](https://pkg.pr.new) at the commit the app was built from, serves `dist/` from the container, and
+offers the manifest URL of the port it exposed.
 
 > Both ways need a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed app). A bundled
 > Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and `effect` imports to
@@ -420,12 +435,46 @@ export default Plugin.define(meta).pipe(
 );
 ```
 
-Typecheck, then build, from the plugin's directory:
+A `package.json` beside them names what the build needs. Pin every `@dxos/*` package to the build of the
+Composer you load the plugin into: a release's npm version, or for a build of an unreleased commit of `main`,
+its pkg.pr.new build (`https://pkg.pr.new/@dxos/<package>@<commit>`). `react`, `react-dom` and `effect` are
+the host's own copies at runtime, so match its versions too:
+
+```json
+{
+  "name": "hello",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@dxos/app-framework": "<version>",
+    "@dxos/app-graph": "<version>",
+    "@dxos/app-toolkit": "<version>",
+    "effect": "<the host's version>",
+    "react": "<the host's version>",
+    "react-dom": "<the host's version>"
+  },
+  "devDependencies": {
+    "@types/react": "<the host's version>",
+    "@vitejs/plugin-react": "^6.0.0",
+    "typescript": "^7.0.0",
+    "vite": "^8.0.0"
+  }
+}
+```
+
+Install, typecheck, then build, from the plugin's directory:
 
 ```bash
+npm install
 tsc -p tsconfig.json   # vite does not typecheck
 vite build             # writes dist/manifest.json and dist/index.mjs
 ```
+
+Bun alone does too, with no node on the machine: `bunx @pnpm/exe@10 install` (with `node-version=24.11.1` in
+an `.npmrc`, or pnpm skips the bundler's native binary), then `bun run --bun tsc -p tsconfig.json` and
+`bun run --bun vite build`. That is how the desktop app's Composer Plugin project template builds, in a
+sandbox that holds nothing else.
 
 Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads,
 each space's navtree shows a HELLO group with a Hello page under it; selecting the page opens it. The version
@@ -789,6 +838,7 @@ const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
 | `dx account login`              | Log in to your DXOS identity; registry writes then use its connected AT Protocol account.  |
 | `dx account logout`             | Log out of the current profile.                                                            |
 | `dx registry publish`           | Build from `dx.config.ts`, host the bundle, and write profile + release records.           |
+| `dx registry publish --private` | Build and host the bundle, and list it only to your identity; no AT Protocol records.      |
 | `dx registry publish-publisher` | Write your `publisher.profile` record.                                                     |
 | `dx registry publish-package`   | Low-level alternative to `publish`: write profile + release records from flags (no build). |
 | `dx registry unpublish`         | Remove a package (profile + all releases) from your repo.                                  |

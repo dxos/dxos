@@ -19,7 +19,7 @@ const DEFAULT_EXEC_TIMEOUT = 5 * 60 * 1_000;
 
 export default SandboxOperation.Exec.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ sandbox, command, cwd, env, timeout = DEFAULT_EXEC_TIMEOUT }) {
+    Effect.fn(function* ({ sandbox, command, cwd, env, timeout = DEFAULT_EXEC_TIMEOUT, background }) {
       const { db } = yield* Database.Service;
 
       const loaded = yield* Database.load(sandbox);
@@ -36,7 +36,7 @@ export default SandboxOperation.Exec.pipe(
       // error channel, so a typed failure escaping here is not part of the operation's contract and
       // reaches the tool runtime as a result missing every declared key ("Missing key at [stdout]").
       // A non-zero exit carrying the reason is also what the model can actually act on.
-      return yield* sandboxService.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }).pipe(
+      return yield* sandboxService.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout, background }).pipe(
         Effect.catch((error) =>
           Effect.succeed({
             stdout: '',

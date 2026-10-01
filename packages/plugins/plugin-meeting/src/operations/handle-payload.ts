@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
           : undefined;
         if (feed && Obj.instanceOf(Feed.Feed, feed)) {
-          transcriptionManager.setFeed(space, feed);
+          transcriptionManager.setFeed(space.db, feed);
         }
       }
 

@@ -42,6 +42,11 @@
     grid-column: full;
     grid-template-columns: subgrid;
   }
+  /* Own columns start a fresh template inside the parent's content track (decision 5); no gutters of its own. */
+  .nx-grid[data-gutter='inherit'][data-columns] {
+    grid-column: content;
+    grid-template-columns: [full-start content-start] var(--nx-columns) [content-end full-end];
+  }
 
   .nx-grid > * {
     grid-column: content;

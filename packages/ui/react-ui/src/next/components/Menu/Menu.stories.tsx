@@ -8,14 +8,81 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
-import { byTestId, expectAnchoredBelow, expectArrow } from '../../testing.ts';
+import { SIZES } from '../../sizes.ts';
+import {
+  byTestId,
+  expectAnchoredBelow,
+  expectArrow,
+  expectNonScrollingPopup,
+  expectPopupSize,
+  expectScrollingPopup,
+  expectThumbReserve,
+  popupFrame,
+} from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+
+/** A menu tree three levels deep, rendered recursively as nested `Menu.Sub`s. */
+type MenuNode = { value: string; label: string; icon?: string; children?: MenuNode[] };
+
+const HIERARCHY: MenuNode[] = [
+  {
+    value: 'new',
+    label: 'New',
+    icon: 'ph--plus--regular',
+    children: [
+      { value: 'new-document', label: 'Document', icon: 'ph--file-text--regular' },
+      { value: 'new-sheet', label: 'Sheet', icon: 'ph--table--regular' },
+      {
+        value: 'new-diagram',
+        label: 'Diagram',
+        icon: 'ph--flow-arrow--regular',
+        children: [
+          { value: 'new-flowchart', label: 'Flowchart' },
+          { value: 'new-sequence', label: 'Sequence' },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'export',
+    label: 'Export',
+    icon: 'ph--export--regular',
+    children: [
+      { value: 'export-pdf', label: 'PDF' },
+      { value: 'export-png', label: 'PNG' },
+      { value: 'export-markdown', label: 'Markdown' },
+    ],
+  },
+  { value: 'close', label: 'Close', icon: 'ph--x--regular' },
+];
+
+const MenuNodes = ({ nodes }: { nodes: MenuNode[] }) => (
+  <>
+    {nodes.map(({ children, ...item }) =>
+      children ? (
+        <Next.Menu.Sub key={item.value}>
+          <Next.Menu.TriggerItem item={item} data-testid={`sub-${item.value}`} />
+          <Next.Menu.Content>
+            <MenuNodes nodes={children} />
+          </Next.Menu.Content>
+        </Next.Menu.Sub>
+      ) : (
+        <Next.Menu.Item key={item.value} item={item} />
+      ),
+    )}
+  </>
+);
+
+/** Enough items to overflow the popup's 20rem cap at every size. */
+const LONG = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 
 /**
- * A menu of items, groups, a checkbox item, a radio group and a nested menu; a region with a context menu; and a menu
- * with no trigger, opened under control and anchored to a text span (a virtual trigger) with an arrow.
+ * A menu of items, groups, a checkbox item, a radio group and a nested menu; a three-level File hierarchy; a long menu
+ * that scrolls; a region with a
+ * context menu; and a menu with no trigger, opened under control and anchored to a text span (a virtual trigger) with
+ * an arrow.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [selected, setSelected] = useState<string>();
@@ -29,51 +96,65 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Next.Menu.Trigger asChild>
           <Next.Button data-testid={`trigger-${size}`}>Actions</Next.Button>
         </Next.Menu.Trigger>
-        <Next.Menu.Content size={size}>
+        <Next.Menu.Content>
           <Next.Menu.ItemGroup>
             <Next.Menu.ItemGroupLabel>Edit</Next.Menu.ItemGroupLabel>
-            <Next.Menu.Item value='cut' icon='ph--scissors--regular' shortcut='⌘X'>
-              Cut
-            </Next.Menu.Item>
-            <Next.Menu.Item value='copy' icon='ph--copy--regular' shortcut='⌘C'>
-              Copy
-            </Next.Menu.Item>
-            <Next.Menu.Item value='paste' icon='ph--clipboard--regular' shortcut='⌘V'>
-              Paste
-            </Next.Menu.Item>
+            <Next.Menu.Item item={{ value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '⌘X' }} />
+            <Next.Menu.Item item={{ value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '⌘C' }} />
+            <Next.Menu.Item item={{ value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '⌘V' }} />
           </Next.Menu.ItemGroup>
           <Next.Menu.Separator />
-          <Next.Menu.Item value='archive' disabled>
-            Archive
-          </Next.Menu.Item>
-          <Next.Menu.Item value='delete' icon='ph--trash--regular'>
-            Delete
+          <Next.Menu.Item item={{ value: 'archive', label: 'Archive', disabled: true }} />
+          <Next.Menu.Item item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }} data-testid='delete'>
+            <Next.Menu.ItemIcon />
+            <Next.Menu.ItemText />
+            <Next.Menu.ItemShortcut>⌫</Next.Menu.ItemShortcut>
           </Next.Menu.Item>
           <Next.Menu.Separator />
-          <Next.Menu.CheckboxItem value='grid' checked={grid} onCheckedChange={setGrid} shortcut='⌘G'>
-            Show grid
-          </Next.Menu.CheckboxItem>
-          <Next.Menu.RadioGroup value={sort} onValueChange={({ value }) => setSort(value)}>
+          <Next.Menu.CheckboxItem
+            item={{ value: 'grid', label: 'Show grid', shortcut: '⌘G' }}
+            checked={grid}
+            onCheckedChange={setGrid}
+          />
+          <Next.Menu.RadioItemGroup value={sort} onValueChange={({ value }) => setSort(value)}>
             <Next.Menu.ItemGroupLabel>Sort</Next.Menu.ItemGroupLabel>
-            <Next.Menu.RadioItem value='name'>Name</Next.Menu.RadioItem>
-            <Next.Menu.RadioItem value='date'>Date</Next.Menu.RadioItem>
-          </Next.Menu.RadioGroup>
+            <Next.Menu.RadioItem item={{ value: 'name', label: 'Name' }} />
+            <Next.Menu.RadioItem item={{ value: 'date', label: 'Date' }} />
+          </Next.Menu.RadioItemGroup>
           <Next.Menu.Separator />
           <Next.Menu.Sub>
-            <Next.Menu.SubTrigger icon='ph--share--regular'>Share</Next.Menu.SubTrigger>
-            <Next.Menu.Content size={size}>
-              <Next.Menu.Item value='email'>Email</Next.Menu.Item>
-              <Next.Menu.Item value='link'>Copy link</Next.Menu.Item>
+            <Next.Menu.TriggerItem item={{ label: 'Share', icon: 'ph--share--regular' }} />
+            <Next.Menu.Content>
+              <Next.Menu.Item item={{ value: 'email', label: 'Email' }} />
+              <Next.Menu.Item item={{ value: 'link', label: 'Copy link' }} />
             </Next.Menu.Content>
           </Next.Menu.Sub>
+        </Next.Menu.Content>
+      </Next.Menu.Root>
+      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Next.Menu.Trigger asChild>
+          <Next.Button data-testid={`file-${size}`}>File</Next.Button>
+        </Next.Menu.Trigger>
+        <Next.Menu.Content>
+          <MenuNodes nodes={HIERARCHY} />
+        </Next.Menu.Content>
+      </Next.Menu.Root>
+      <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
+        <Next.Menu.Trigger asChild>
+          <Next.Button data-testid={`long-${size}`}>Long</Next.Button>
+        </Next.Menu.Trigger>
+        <Next.Menu.Content size='lg'>
+          {LONG.map((label) => (
+            <Next.Menu.Item key={label} item={{ value: label, label }} />
+          ))}
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Next.Menu.ContextTrigger asChild>
           <Next.Typography data-testid={`context-${size}`}>Right-click here</Next.Typography>
         </Next.Menu.ContextTrigger>
-        <Next.Menu.Content size={size}>
-          <Next.Menu.Item value='rename'>Rename</Next.Menu.Item>
+        <Next.Menu.Content>
+          <Next.Menu.Item item={{ value: 'rename', label: 'Rename' }} />
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Group>
@@ -92,8 +173,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         onSelect={({ value }) => setSelected(value)}
         positioning={{ getAnchorRect: () => anchor.current?.getBoundingClientRect() ?? null }}
       >
-        <Next.Menu.Content size={size} arrow data-testid={`anchored-${size}`}>
-          <Next.Menu.Item value='pin'>Pin</Next.Menu.Item>
+        <Next.Menu.Content arrow data-testid={`anchored-${size}`}>
+          <Next.Menu.Item item={{ value: 'pin', label: 'Pin' }} />
         </Next.Menu.Content>
       </Next.Menu.Root>
       <Next.Typography data-testid={`selected-${size}`}>
@@ -107,9 +188,11 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/menu',
+  title: 'ui/react-ui-core/next/components/Menu',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -132,12 +215,67 @@ export const Default: Story = {};
 /**
  * Escape closes the menu and returns focus to the trigger. Arrow keys move the highlight, skipping disabled items, and
  * Enter selects. Checkbox and radio items report `aria-checked` and update the caller's state, their labels aligned
- * by a leading indicator cell; a SubTrigger opens its nested menu beside it on ArrowRight. A ContextTrigger opens its
- * menu at the pointer; a menu without a trigger anchors to `positioning.getAnchorRect`. The story ends with the menu
- * open.
+ * by a leading indicator cell, the radios in a `RadioItemGroup` named by its label; a TriggerItem opens its nested
+ * menu beside it on ArrowRight. Items render their default row from `item`, or the parts given as children. A ContextTrigger opens its
+ * menu at the pointer; a menu without a trigger anchors to `positioning.getAnchorRect`. A long menu scrolls in a
+ * thin ScrollArea with no native bar, keeping the highlight in view. Every menu level takes the trigger row's size
+ * unless given its own; a menu without a trigger falls back to `md`. The story ends with the menu open.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
+    // At every size the hierarchy opens level by level from the keyboard, each submenu beside its trigger row with its
+    // first item level with that row, and a third-level leaf reports to the root's `onSelect`.
+    const page = within(canvasElement.ownerDocument.body);
+    const beside = async (triggerName: string, itemName: string) => {
+      const triggerItem = page.getByRole('menuitem', { name: triggerName });
+      await waitFor(() => expect(page.getByRole('menuitem', { name: itemName })).toBeVisible());
+      const first = page.getByRole('menuitem', { name: itemName });
+      const submenu = first.closest<HTMLElement>('[role="menu"]');
+      await expect(triggerItem).toHaveAttribute('aria-expanded', 'true');
+      await waitFor(() => {
+        const triggerRect = triggerItem.getBoundingClientRect();
+        const subRect = popupFrame(submenu ?? first).getBoundingClientRect();
+        const firstRect = first.getBoundingClientRect();
+        const where = `submenu ${JSON.stringify(subRect)}, first ${JSON.stringify(firstRect)}, trigger ${JSON.stringify(triggerRect)}`;
+        return expect(
+          subRect.left >= triggerRect.right - 1 && Math.abs(firstRect.top - triggerRect.top) <= 0.5,
+          where,
+        ).toBe(true);
+      });
+      return submenu;
+    };
+    for (const size of SIZES) {
+      byTestId(canvasElement, `file-${size}`).focus();
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(page.getByRole('menuitem', { name: 'New' })).toBeVisible());
+      const fileMenu = page.getByRole('menuitem', { name: 'New' }).closest<HTMLElement>('[role="menu"]');
+      await waitFor(() => expect(fileMenu).toHaveFocus());
+      await userEvent.keyboard('{Home}');
+      await waitFor(() => expect(fileMenu && highlighted(fileMenu)).toBe('New'));
+      await userEvent.keyboard('{ArrowRight}');
+      const newMenu = await beside('New', 'Document');
+      await waitFor(() => expect(newMenu).toHaveFocus());
+      await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Document'));
+      await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+      await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Diagram'));
+      await userEvent.keyboard('{ArrowRight}');
+      const diagramMenu = await beside('Diagram', 'Flowchart');
+      // Every level takes the File trigger's row size: a Sub's trigger is its item in the parent popup.
+      for (const level of [fileMenu, newMenu, diagramMenu]) {
+        if (!level) {
+          throw new Error('missing menu level');
+        }
+        await expectPopupSize(level, size);
+      }
+      await waitFor(() => expect(diagramMenu && highlighted(diagramMenu)).toBe('Flowchart'));
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() =>
+        expect(byTestId(canvasElement, `selected-${size}`)).toHaveTextContent('Selected: new-flowchart'),
+      );
+      await waitFor(() => expect(page.queryByRole('menu')).toBeNull());
+    }
+
     await open(canvasElement);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
@@ -146,9 +284,13 @@ export const Test: Story = {
     const trigger = byTestId(canvasElement, 'trigger-md');
     await expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
     let menu = await open(canvasElement);
+    // The full menu overflows at this size, so it reserves the thumb's strip clear of the shortcut column.
+    await expectThumbReserve(menu);
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    await expect(menu).toHaveAttribute('data-surface', 'popup');
-    await expect(menu).toHaveAttribute('data-size', 'md');
+    // The ScrollArea frame is the surface; the menu itself is its viewport.
+    await expect(popupFrame(menu)).toHaveAttribute('data-surface', 'popup');
+    await expect(popupFrame(menu)).toHaveAttribute('data-size', 'md');
+    await expect(menu).toHaveAttribute('data-scope', 'menu');
     await expect(within(menu).getByRole('group', { name: 'Edit' })).toBeInTheDocument();
     await expect(within(menu).getAllByRole('menuitem')).toHaveLength(6);
     await expect(within(menu).getAllByRole('separator')).toHaveLength(3);
@@ -158,6 +300,23 @@ export const Test: Story = {
     );
     await expect(within(menu).getByRole('menuitemradio', { name: 'Name' })).toHaveAttribute('aria-checked', 'true');
     await expect(within(menu).getByRole('menuitemradio', { name: 'Date' })).toHaveAttribute('aria-checked', 'false');
+    // The RadioItemGroup is a `group` named by its label, holding the radios.
+    const sortGroup = within(menu).getByRole('group', { name: 'Sort' });
+    await expect(within(sortGroup).getAllByRole('menuitemradio')).toHaveLength(2);
+    // The TriggerItem renders its data: icon, text and caret.
+    const shareTrigger = within(menu).getByRole('menuitem', { name: 'Share' });
+    await expect(shareTrigger.querySelector('[data-part="item-text"]')).toHaveTextContent('Share');
+    await expect(shareTrigger.querySelectorAll('.nx-icon')).toHaveLength(2);
+    // A composed row lays out like a default one: Delete's children put its own shortcut where Cut's data puts one.
+    const deleteItem = within(menu).getByRole('menuitem', { name: /Delete/ });
+    await expect(deleteItem.querySelector('[data-part="item-shortcut"]')).toHaveTextContent('⌫');
+    await expect(deleteItem.querySelector('[data-part="item-text"]')?.getBoundingClientRect().left).toBeCloseTo(
+      within(menu)
+        .getByRole('menuitem', { name: /Cut/ })
+        .querySelector('[data-part="item-text"]')
+        ?.getBoundingClientRect().left ?? 0,
+      0,
+    );
     // Option items keep their labels in line with each other, checked or not.
     const labelLeft = (name: RegExp | string, role: string) =>
       within(menu).getByRole(role, { name }).querySelector('[data-part="item-text"]')?.getBoundingClientRect().left;
@@ -220,12 +379,25 @@ export const Test: Story = {
     await waitFor(() => expect(byTestId(canvasElement, 'options-md')).toHaveTextContent('sort by date'));
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
 
+    // A long menu scrolls in a thin ScrollArea, and the keyboard highlight stays in view.
+    await userEvent.click(byTestId(canvasElement, 'long-md'));
+    const long = await within(canvasElement.ownerDocument.body).findByRole('menu');
+    await waitFor(() => expect(long).toHaveFocus());
+    await expect(popupFrame(long)).toHaveAttribute('data-width', 'thin');
+    // An explicit size wins over the inherited one.
+    await expectPopupSize(long, 'lg');
+    await expectScrollingPopup(long, 20);
+    await waitFor(() => expect(highlighted(long)).toBe('Item 20'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
+
     // A context menu opens at the pointer.
     const context = byTestId(canvasElement, 'context-md');
     const { left, top } = context.getBoundingClientRect();
     await fireEvent.contextMenu(context, { clientX: left + 10, clientY: top + 5 });
     const contextMenu = await within(canvasElement.ownerDocument.body).findByRole('menu');
     await expect(within(contextMenu).getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
+    await waitFor(() => expectNonScrollingPopup(contextMenu));
     await waitFor(() => expect(contextMenu.getBoundingClientRect().left).toBeCloseTo(left + 10, -1));
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
@@ -235,6 +407,8 @@ export const Test: Story = {
     const anchored = await within(canvasElement.ownerDocument.body).findByTestId('anchored-md');
     await expectAnchoredBelow(byTestId(canvasElement, 'anchor-md'), anchored);
     await expectArrow(byTestId(canvasElement, 'anchor-md'), anchored);
+    // With no trigger to inherit from, a menu falls back to `md`.
+    await expectPopupSize(anchored, 'md');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(canvasElement.ownerDocument.body).queryByRole('menu')).toBeNull());
 

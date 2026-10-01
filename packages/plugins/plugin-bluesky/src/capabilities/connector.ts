@@ -71,7 +71,7 @@ const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof Atp
  */
 const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
   BlueskyApi.getSavedFeeds().pipe(
-    Effect.provide(BlueskyApi.fromConnection(Ref.make(connection), client)),
+    Effect.provide(BlueskyApi.fromConnection(Ref.make(connection), client.config)),
     Effect.asVoid,
     Effect.mapError(
       () =>

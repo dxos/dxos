@@ -37,8 +37,14 @@ export const SERVER_INSTRUCTIONS = trim`
 
   Operations belong to larger workflows described by skills. When a queryOperations row names a
   skill, call loadSkill with that name and follow the returned instructions before invoking the
-  operation; loadSkill with no argument lists every skill. Skills are also offered to users as
+  operation. loadSkill also returns a one-word skillToken: pass it as invokeOperation's skillToken
+  on every call to that skill's operations, which are refused without it.
+  loadSkill with no argument lists every skill. Skills are also offered to users as
   prompts (slash commands); loadSkill brings the same text into context without user action.
+
+  When you pick up a task through this server (claim it, assign it to yourself, or start it),
+  rename your own session after the task right away, with your client's session-title tool if it
+  has one, and pass the same title wherever the task's operations accept a session title.
 `;
 
 export type PassOptions = {

@@ -69,7 +69,14 @@ export const createDeploy = ({
       state.set('error', undefined);
       state.set('deploying', true);
 
-      const result = await deployScript({ script, client, db, fn, existingFunctionId });
+      const result = await deployScript({
+        script,
+        getEdgeHttpClient: () => client.edge.http,
+        ownerDid: client.halo.identity.get()?.did,
+        db,
+        fn,
+        existingFunctionId,
+      });
 
       if (!result.success) {
         log.catch(result.error);
