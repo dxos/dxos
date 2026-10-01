@@ -214,19 +214,17 @@ const TranscriptTabs = ({
               would otherwise cascade `*:opacity-20` onto it as a direct child of the toolbar root. */}
           <ActionToolbar {...regenerateActions} attendableId={attendableId} alwaysActive />
         </Next.Panel.Header>
-        <Next.Panel.Body asChild>
-          <Next.Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
-            <Next.Tabs.Content value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface
-                type={AppSurface.Tabpanel}
-                data={{ subject, attendableId, part: 'transcript' }}
-                limit={1}
-              />
-            </Next.Tabs.Content>
-            <Next.Tabs.Content value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
-            </Next.Tabs.Content>
-          </Next.Tabs.Viewport>
+        <Next.Panel.Body>
+          <Next.Tabs.Content value='transcript' tabIndex={-1} classNames='overflow-hidden'>
+            <Surface.Surface
+              type={AppSurface.Tabpanel}
+              data={{ subject, attendableId, part: 'transcript' }}
+              limit={1}
+            />
+          </Next.Tabs.Content>
+          <Next.Tabs.Content value='summary' tabIndex={-1} classNames='overflow-hidden'>
+            <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
+          </Next.Tabs.Content>
         </Next.Panel.Body>
       </Next.Tabs.Root>
     </Next.Panel.Root>
