@@ -19,6 +19,7 @@ import { Database, Obj, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
 import * as McpServer from './McpServer.ts';
 
@@ -570,6 +571,110 @@ describe('McpServer', () => {
     });
   });
 
+  describe('runScript', () => {
+    const run = (
+      code: string,
+      options: {
+        host?: ReturnType<typeof testHost>;
+        ledger?: McpServer.SkillLedger;
+        spaceId?: SpaceId;
+        timeout?: number;
+      } = {},
+    ) => {
+      const host = options.host ?? testHost();
+      const ledger = options.ledger ?? McpServer.memorySkillLedger();
+      return {
+        invocations: host.invocations,
+        result: EffectEx.runPromise(
+          McpServer.runScript(
+            testRegistry(),
+            host.host,
+            ledger,
+            { code, spaceId: options.spaceId },
+            { sandbox: McpServer.inProcessScriptSandbox, timeout: options.timeout },
+          ),
+        ),
+      };
+    };
+
+    // The point of code mode: a loop the caller would otherwise spend one round trip per item on.
+    test('a script runs operations through the skill gate, defaulting to the call space', async ({ expect }) => {
+      const { invocations, result } = run(
+        trim`
+          await loadSkill('codeProject');
+          for (const title of ['a', 'b', 'c']) {
+            const { ok } = await invoke('${KEY}', { title });
+            print(title, ok);
+          }
+        `,
+        { spaceId: SPACE_A },
+      );
+      const { output, error } = await result;
+      expect(error).to.be.undefined;
+      expect(output).to.equal('a true\nb true\nc true');
+      expect(invocations.map(({ input, spaceId }) => ({ input, spaceId }))).to.deep.equal(
+        ['a', 'b', 'c'].map((title) => ({ input: { title }, spaceId: SPACE_A })),
+      );
+    });
+
+    test('an ungoverned call throws inside the script, where it can be caught', async ({ expect }) => {
+      const { invocations, result } = run(
+        trim`
+          try {
+            await invoke('${KEY}', { title: 'x' });
+          } catch (error) {
+            print(error.message);
+          }
+        `,
+        { spaceId: SPACE_A },
+      );
+      const { output, error } = await result;
+      expect(error).to.be.undefined;
+      expect(output).to.include("Call loadSkill with skill: 'codeProject'");
+      expect(invocations).to.have.length(0);
+    });
+
+    test('a skill loaded by an earlier tool call stays loaded in the script', async ({ expect }) => {
+      const ledger = McpServer.memorySkillLedger();
+      await EffectEx.runPromise(McpServer.loadSkill(testRegistry(), ledger, 'codeProject'));
+      const { invocations, result } = run(`await invoke('${KEY}', { title: 'x' }, { spaceId: '${SPACE_A}' });`, {
+        ledger,
+      });
+      expect((await result).error).to.be.undefined;
+      expect(invocations[0]?.spaceId).to.equal(SPACE_A);
+    });
+
+    test('queryOperations returns the rows the tool does', async ({ expect }) => {
+      const { result } = run(`print((await queryOperations({ query: 'create task' })).map((row) => row.key));`);
+      expect(JSON.parse((await result).output)).to.deep.equal([KEY]);
+    });
+
+    test('a thrown error is reported with what was printed before it', async ({ expect }) => {
+      const { result } = run(`print('before'); throw new Error('boom');`);
+      expect(await result).to.deep.equal({ output: 'before', error: 'boom' });
+    });
+
+    test('a returned value is the output when nothing was printed', async ({ expect }) => {
+      const { result } = run(`return { answer: 42 };`);
+      expect(JSON.parse((await result).output)).to.deep.equal({ answer: 42 });
+    });
+
+    test('malformed invoke arguments fail with the call signature', async ({ expect }) => {
+      const { result } = run(`await invoke(42);`);
+      expect((await result).error).to.include('invoke(key, input?, { spaceId }?)');
+    });
+
+    test('a script that outruns its budget is abandoned with an error', async ({ expect }) => {
+      const { result } = run(`await new Promise(() => {});`, { timeout: 50 });
+      expect((await result).error).to.include('abandoned');
+    });
+
+    test('nothing outside the bindings is in scope by name', async ({ expect }) => {
+      const { result } = run(`print(typeof invoke, typeof registry, typeof host, typeof ledger);`);
+      expect((await result).output).to.equal('function undefined undefined undefined');
+    });
+  });
+
   describe('hydrateRegistry', () => {
     test('wire records round-trip into the same surface an in-process registry serves', async ({ expect }) => {
       // What EDGE fetches over its binding: Obj.toJSON records plus flattened skills.
@@ -926,6 +1031,40 @@ describe('McpServer.toolsLayer', () => {
       }
       const after = await send(handler, 'prompts/list');
       expect(after.result.prompts.map((prompt: { name: string }) => prompt.name)).to.deep.equal(['codeProject']);
+    } finally {
+      await dispose();
+    }
+  });
+
+  test('code mode adds runScript, sharing the skill ledger with loadSkill', async ({ expect }) => {
+    const registry = testRegistry();
+    const { host, invocations } = testHost();
+    const { handler, dispose } = HttpRouter.toWebHandler(
+      McpServer.toolsLayer({ script: { sandbox: McpServer.inProcessScriptSandbox } }).pipe(
+        Layer.provide(
+          Layer.succeed(McpServer.RegistrySource, McpServer.RegistrySource.of({ registry: Effect.succeed(registry) })),
+        ),
+        Layer.provide(Layer.succeed(McpServer.Host, host)),
+        Layer.provide(
+          McpServer$.layerHttp({ name: 'test', version: '0.0.0', path: '/mcp', protocols: [McpProtocol.v2026_07_28] }),
+        ),
+      ),
+    );
+    try {
+      const listed = await send(handler, 'tools/list');
+      expect(listed.result.tools.map((tool: { name: string }) => tool.name)).to.have.members([
+        ...McpServer.TOOL_NAMES,
+        McpServer.RunScript.name,
+      ]);
+
+      await send(handler, 'tools/call', { name: 'loadSkill', arguments: { skill: 'codeProject' } });
+      const called = await send(handler, 'tools/call', {
+        name: 'runScript',
+        arguments: { code: `print((await invoke('${KEY}', { title: 'x' })).ok);`, spaceId: SPACE_A },
+      });
+      expect(called.result.isError).not.to.equal(true);
+      expect(called.result.structuredContent).to.deep.equal({ output: 'true' });
+      expect(invocations).to.have.length(1);
     } finally {
       await dispose();
     }

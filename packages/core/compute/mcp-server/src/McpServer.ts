@@ -5,8 +5,10 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
@@ -27,6 +29,7 @@ import { ToolFailure, failure } from './internal/failure.ts';
 import * as iconInternal from './internal/icon.ts';
 import * as identityInternal from './internal/identity.ts';
 import * as inputInternal from './internal/input.ts';
+import * as scriptInternal from './internal/script.ts';
 import * as snapshotInternal from './internal/snapshot.ts';
 import * as spaceInternal from './internal/space.ts';
 import * as viewInternal from './internal/view.ts';
@@ -538,6 +541,148 @@ export const invokeHosted = (
   );
 
 //
+// Code mode.
+//
+// A task that touches many objects costs one `invokeOperation` round trip per object, each of them
+// spent in the client's context. `runScript` lets the caller write that loop once instead: the
+// script reaches the same three verbs as functions, through the same skill gate and space rules,
+// and only what it prints comes back.
+//
+
+export { ScriptError } from './internal/script.ts';
+
+/** Runs a script's code; the host chooses the implementation, which decides how contained the code is. */
+export type ScriptSandbox = scriptInternal.Sandbox;
+
+/** In-process evaluation — NOT a security boundary; only for a host whose caller already holds its authority. */
+export const inProcessScriptSandbox: ScriptSandbox = scriptInternal.inProcess;
+
+export type ScriptOptions = {
+  readonly sandbox: ScriptSandbox;
+  /** Bounds one script; what "bounds" means is the sandbox's. */
+  readonly timeout?: Duration.Input;
+  /** Characters of printed output returned before it is truncated. */
+  readonly maxOutput?: number;
+};
+
+const DEFAULT_SCRIPT_TIMEOUT = Duration.seconds(60);
+const DEFAULT_SCRIPT_MAX_OUTPUT = 16_000;
+
+export const RunScript = Tool.make('runScript', {
+  description:
+    'Runs a JavaScript script against this server and returns what it printed — use it instead of ' +
+    'a chain of invokeOperation calls when a task touches many objects or needs a loop, a filter, ' +
+    'or a join. `code` is the body of an async function with these in scope: ' +
+    '`await invoke(key, input?, { spaceId }?)` runs an operation exactly as invokeOperation does ' +
+    '(same keys, input schemas, skill gate and ref envelopes) and throws on failure; ' +
+    '`await queryOperations({ query?, skill?, keys? })` returns the rows queryOperations does; ' +
+    '`await loadSkill(name?)` returns what loadSkill does and unlocks its operations; ' +
+    '`print(...values)` adds a line to the output (non-strings as JSON); `spaceId` is the spaceId ' +
+    'argument, used by invoke when a call names none. Nothing else is in scope: no import, require ' +
+    'or fetch. Only printed values reach you — print the fields you need, not whole objects. Look up ' +
+    'input schemas with queryOperations before writing code against them.',
+  parameters: Schema.Struct({
+    code: Schema.String.annotate({ description: 'The async function body. Print anything you need to see.' }),
+    spaceId: spaceInternal.idParameter,
+  }),
+  success: Schema.Struct({
+    output: Schema.String.annotate({ description: 'Everything the script printed, in order.' }),
+    error: Schema.optional(
+      Schema.String.annotate({
+        description: 'Why the script failed, when it threw; output holds what it printed first.',
+      }),
+    ),
+  }),
+  failure: ToolFailure,
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, true);
+
+/** The fixed surface plus {@link RunScript}, served when a host opts into code mode. */
+export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation, LoadSkill, RunScript);
+
+/**
+ * Answers one `runScript` call: the script's verbs dispatch through {@link invokeWithLedger},
+ * {@link queryOperations} and {@link loadSkill}, so a script can do nothing a sequence of tool
+ * calls could not.
+ */
+export const runScript = (
+  registry: Registry.Registry,
+  host: HostShape,
+  ledger: SkillLedger,
+  { code, spaceId }: { code: string; spaceId?: SpaceId },
+  { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
+): Effect.Effect<{ output: string; error?: string }> =>
+  Effect.gen(function* () {
+    const services = yield* Effect.context<never>();
+    // A tool failure becomes a rejection carrying its message, so the script can catch and read it.
+    const run = <A>(effect: Effect.Effect<A, ToolFailure>): Promise<A> =>
+      Effect.runPromiseWith(services)(Effect.result(effect)).then((result) =>
+        Result.isSuccess(result) ? result.success : Promise.reject(new Error(result.failure.message)),
+      );
+
+    const printer = scriptInternal.makePrinter(maxOutput);
+    const bindings = {
+      spaceId,
+      print: printer.print,
+      invoke: (key: unknown, input?: unknown, options?: unknown) =>
+        run(
+          Effect.gen(function* () {
+            const request = yield* scriptRequest(key, input, options);
+            return yield* invokeWithLedger(registry, host, ledger, {
+              ...request,
+              spaceId: request.spaceId ?? spaceId,
+            });
+          }),
+        ),
+      queryOperations: (query?: unknown) =>
+        run(
+          Schema.decodeUnknownEffect(QueryOperations.parametersSchema)(query ?? {}).pipe(
+            Effect.mapError((error) => failure('invalid_request', `queryOperations: ${String(error)}`)),
+            Effect.flatMap((params) => queryOperations(registry, params)),
+            Effect.map(({ operations }) => operations),
+          ),
+        ),
+      loadSkill: (skill?: unknown) =>
+        run(
+          skill === undefined || typeof skill === 'string'
+            ? loadSkill(registry, ledger, skill)
+            : Effect.fail(failure('invalid_request', 'loadSkill takes a skill name.')),
+        ),
+    };
+
+    const result = yield* sandbox.evaluate({ code, bindings, timeout }).pipe(Effect.result);
+    if (Result.isFailure(result)) {
+      log.info('mcp script failed', { message: result.failure.message });
+      return { output: printer.output(), error: result.failure.message };
+    }
+    // A script that printed nothing but returned a value would otherwise answer with nothing.
+    if (result.success !== undefined && printer.isEmpty()) {
+      printer.print(result.success);
+    }
+    return { output: printer.output() };
+  });
+
+const ScriptInvokeArguments = Schema.Struct({
+  key: Schema.String,
+  input: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  options: Schema.optional(Schema.Struct({ spaceId: Schema.optional(SpaceId) })),
+});
+
+/** Validates `invoke`'s positional arguments, which arrive untyped from the script. */
+const scriptRequest = (
+  key: unknown,
+  input: unknown,
+  options: unknown,
+): Effect.Effect<{ key: string; input?: Record<string, unknown>; spaceId?: SpaceId }, ToolFailure> =>
+  Schema.decodeUnknownEffect(ScriptInvokeArguments)({ key, input, options }).pipe(
+    Effect.map((decoded) => ({ key: decoded.key, input: decoded.input, spaceId: decoded.options?.spaceId })),
+    Effect.mapError((error) =>
+      failure('invalid_request', `invoke(key, input?, { spaceId }?) was called wrongly: ${String(error)}`),
+    ),
+  );
+
+//
 // Downloads.
 //
 // The reverse of each host's `createUpload`: a file in a space becomes a short-lived URL an agent's
@@ -637,6 +782,8 @@ export type LayerOptions = {
   readonly reservedToolNames?: readonly string[];
   /** Names of the host's statically-defined prompts; a projected skill may not claim one. */
   readonly reservedPromptNames?: readonly string[];
+  /** Serves {@link RunScript} as well, evaluating in this sandbox; omitted, code mode is off. */
+  readonly script?: ScriptOptions;
 };
 
 export type RegistrySourceShape = {
@@ -664,34 +811,52 @@ export const registrySourceLayer: Layer.Layer<RegistrySource, never, Registry.Se
  * registry from {@link RegistrySource} and dispatching through {@link Host} per call. Building it
  * touches neither, so `tools/list` is served without the registry.
  */
-export const toolsLayer = ({ reservedToolNames = [] }: Pick<LayerOptions, 'reservedToolNames'> = {}): Layer.Layer<
-  never,
-  never,
-  RegistrySource | Host
-> =>
+export const toolsLayer = ({
+  reservedToolNames = [],
+  script,
+}: Pick<LayerOptions, 'reservedToolNames' | 'script'> = {}): Layer.Layer<never, never, RegistrySource | Host> =>
   Effect.gen(function* () {
-    const claimed = reservedToolNames.filter((name) => (TOOL_NAMES as readonly string[]).includes(name));
+    const ownNames: readonly string[] = [...TOOL_NAMES, RunScript.name];
+    const claimed = reservedToolNames.filter((name) => ownNames.includes(name));
     if (claimed.length > 0) {
       // Loud at layer build: a host static tool of the same name would shadow this package's,
       // leaving the server advertising one tool and dispatching the other.
       throw new Error(`MCP tool name collision: the host reserves names this server defines: ${claimed.join(', ')}.`);
     }
-    return McpServer$.toolkit(ServerToolkit).pipe(
+    const handlers = Effect.gen(function* () {
+      const source = yield* RegistrySource;
+      const host = yield* Host;
+      // One ledger for every tool, so a skill loaded by `loadSkill` unlocks its operations in a script too.
+      const ledger = host.skillLedger ?? memorySkillLedger();
+      return {
+        source,
+        host,
+        ledger,
+        handlers: {
+          queryOperations: (query: Parameters<typeof queryOperations>[1]) =>
+            Effect.flatMap(source.registry, (registry) => queryOperations(registry, query)),
+          invokeOperation: (request: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId }) =>
+            Effect.flatMap(source.registry, (registry) => invokeWithLedger(registry, host, ledger, request)),
+          loadSkill: ({ skill }: { skill?: string }) =>
+            Effect.flatMap(source.registry, (registry) => loadSkill(registry, ledger, skill)),
+        },
+      };
+    });
+    if (script == null) {
+      return McpServer$.toolkit(ServerToolkit).pipe(
+        Layer.provide(ServerToolkit.toLayer(Effect.map(handlers, ({ handlers }) => ServerToolkit.of(handlers)))),
+      );
+    }
+    return McpServer$.toolkit(ScriptServerToolkit).pipe(
       Layer.provide(
-        ServerToolkit.toLayer(
-          Effect.gen(function* () {
-            const source = yield* RegistrySource;
-            const host = yield* Host;
-            const ledger = host.skillLedger ?? memorySkillLedger();
-            return ServerToolkit.of({
-              queryOperations: (query) =>
-                Effect.flatMap(source.registry, (registry) => queryOperations(registry, query)),
-              invokeOperation: (request) =>
-                Effect.flatMap(source.registry, (registry) => invokeWithLedger(registry, host, ledger, request)),
-              loadSkill: ({ skill }) =>
-                Effect.flatMap(source.registry, (registry) => loadSkill(registry, ledger, skill)),
-            });
-          }),
+        ScriptServerToolkit.toLayer(
+          Effect.map(handlers, ({ source, host, ledger, handlers }) =>
+            ScriptServerToolkit.of({
+              ...handlers,
+              runScript: (request) =>
+                Effect.flatMap(source.registry, (registry) => runScript(registry, host, ledger, request, script)),
+            }),
+          ),
         ),
       ),
     );
@@ -739,13 +904,13 @@ export const promptsLayer = (
  * plus {@link promptsLayer} — for a host that holds its registry in process (the CLI, tests). A host
  * that has to fetch its registry composes the two itself, choosing when each part loads.
  */
-export const layer = ({ reservedToolNames, reservedPromptNames }: LayerOptions = {}): Layer.Layer<
+export const layer = ({ reservedToolNames, reservedPromptNames, script }: LayerOptions = {}): Layer.Layer<
   never,
   never,
   Registry.Service | Host
 > =>
   Layer.mergeAll(
-    toolsLayer({ reservedToolNames }).pipe(Layer.provide(registrySourceLayer)),
+    toolsLayer({ reservedToolNames, script }).pipe(Layer.provide(registrySourceLayer)),
     Effect.map(Registry.Service, (registry) => promptsLayer(registry, { reservedPromptNames })).pipe(Layer.unwrap),
   );
 

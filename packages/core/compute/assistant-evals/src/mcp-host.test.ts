@@ -113,6 +113,39 @@ describe('startMcpHost', () => {
     );
   });
 
+  test('code mode serves runScript, whose loop reaches the invoker once per item', async ({ expect }) => {
+    const { invocations, context } = stubInvoker();
+
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const registry = makeRegistry({ initial: [...Operation.serializable([CreateTask]), definition.make()] });
+        const { url } = yield* startMcpHost({
+          skills: [definition],
+          spaceIds: [SPACE],
+          context: () => context,
+          registry: () => registry,
+          codeMode: true,
+        });
+        const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
+        expect(Object.keys(toolkit.toolkit.tools)).to.include('runScript');
+
+        const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
+        const code = [
+          "await loadSkill('tasks');",
+          "for (const title of ['Ship', 'Test']) {",
+          `  print((await invoke('${KEY}', { title })).id);`,
+          '}',
+        ].join('\n');
+        yield* Stream.runDrain(
+          yield* handlers.handle('runScript', { code, spaceId: SPACE }).pipe(Effect.provide(toolkit.layer)),
+        );
+
+        expect(invocations.map(({ input }) => input)).to.deep.equal([{ title: 'Ship' }, { title: 'Test' }]);
+        expect(invocations.every(({ spaceId }) => spaceId === SPACE)).to.equal(true);
+      }).pipe(Effect.scoped),
+    );
+  });
+
   test('the latency probe times the same surface from the outside', async ({ expect }) => {
     const { context } = stubInvoker();
 
