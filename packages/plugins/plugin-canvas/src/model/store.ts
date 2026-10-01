@@ -8,7 +8,7 @@
 // view stays the memory store's client and ECHO merges edits element by element.
 //
 
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';

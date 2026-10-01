@@ -16,15 +16,6 @@ import * as SandboxService from '../types/SandboxService.ts';
 /** How long the helper may take to report its port before the start counts as failed. */
 const START_TIMEOUT_MS = 15_000;
 
-/** Mirrors `local/sidecar.ts`, which this browser module cannot import. */
-const ALLOW_READ_ENV = 'DX_SANDBOX_ALLOW_READ';
-
-/**
- * The source tree a dev build of the app was bundled from (set by composer-app's vite config), made
- * readable to local sandboxes so an agent can build against its toolchain. Unset in release builds.
- */
-const SOURCE_ROOT: string | undefined = import.meta.env.VITE_DX_SOURCE_ROOT || undefined;
-
 type Helper = { child: Child; backend: SandboxService.Backend };
 
 /**
@@ -48,7 +39,7 @@ export default Capability.makeModule(
       }
       const { Command } = await import('@tauri-apps/plugin-shell');
       const token = randomToken();
-      const command = Command.create('dx-sandbox', [], SOURCE_ROOT ? { env: { [ALLOW_READ_ENV]: SOURCE_ROOT } } : {});
+      const command = Command.create('dx-sandbox');
       const port = new Promise<number>((resolve, reject) => {
         let reported = false;
         // Each event is one line, but whether it keeps its terminator is not part of the shell plugin's contract.

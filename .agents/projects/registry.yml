@@ -788,8 +788,8 @@ projects:
     summary: 'Next-generation react-ui primitives as a parallel `Next.*` namespace: sizes/levels as data-attribute CSS variables, zag-machine behavior (Solid-ready layering), components own padding and containers own gaps, grid/Column model for scrolling containers with gutters.'
     tasks: packages/ui/react-ui/src/next/TASKS.md
     design: packages/ui/react-ui/src/next/DESIGN.md
-    prs: [13502, 13504]
-    resume: '#13502 MERGED (Phases 1-2). #13504 OPEN: Phase 3 part 1 (Tooltip/Switch/IconButton fixes, @dxos/react-ui/next export, Textarea/DateInput/Popover/Combobox/Tag/ToggleIconButton), 111 play tests green. NEXT: land #13504; then react-ui-form/next core, settings-layout decision, Ref/lookup fields, pilot plugin.'
+    prs: [13502, 13504, 13512]
+    resume: '#13512 OPEN: Phase 4 steps 0-4 (Field follow-ups, Next.Panel, popup size inheritance, Next.Listbox, DragHandle/DropIndicator/DragPreview) + AUDIT.md §6 decision points. NEXT: react-ui-list/next (Listbox, OrderedList) with plugin-registry pilot; then answer AUDIT §6 open points and start react-ui-form/next core.'
 ended:
   - name: task-planning-skill
     user: burdon

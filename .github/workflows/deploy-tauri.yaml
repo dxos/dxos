@@ -17,8 +17,6 @@ on:
         type: string
         default: ''
       version:
-        # Computed once by deploy-apps' `version` job so the web bundle embedded here and the native
-        # build report the same version. Required — there is no sensible local fallback.
         description: Version to build.
         type: string
         required: true
@@ -248,19 +246,33 @@ jobs:
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
-      # The Tauri build doesn't run deploy-env.mjs (which performs this mapping for
-      # the web deploy), so reproduce it here before the Vite bundle runs.
-      - name: Export DX_POSTHOG_API_KEY for Tauri bundle
-        run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
+      - name: Stamp the Composer version
+        run: |
+          jq --arg version "$VERSION" '.version = $version' packages/apps/composer-app/package.json > version.tmp
+          mv version.tmp packages/apps/composer-app/package.json
+        env:
+          VERSION: ${{ inputs.version }}
 
-      # Reuse the web bundle built once by deploy-apps.yml's build-bundle job. Normally always present (the
-      # tauri job only runs when build-bundle succeeded); the moon fallback below is defensive.
-      - name: Download Composer bundle
+      - name: Build Composer bundle
+        run: .github/workflows/scripts/bundle-env.mjs "$ENVIRONMENT" composer
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          NODE_ENV: production
+          DX_TAURI: 'true'
+
+      - name: Upload source maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != ''
         continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: composer-bundle
-          path: packages/apps/composer-app/out/composer
+        working-directory: packages/apps/composer-app
+        env:
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ env.COMPOSER_APP_POSTHOG_PROJECT_ID }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: >-
+          pnpm dlx @posthog/cli@0.16.0 sourcemap process
+          --directory out/composer
+          --release-name composer
+          --release-version "$RELEASE_VERSION"
 
       - name: Fetch Ollama runtime
         run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs --packaged)
@@ -294,17 +306,8 @@ jobs:
             packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
 
       - name: Build Tauri app
-        # With a prebuilt bundle: `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds
-        # the downloaded out/composer and only does the native compile (+ the desktop ollama sidecar).
-        # Without one: fall back to `moon run` (which builds the bundle + sidecar via task deps).
-        run: |
-          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
-            echo "Using prebuilt Composer bundle — tauri build bare (no moon)."
-            ( cd packages/apps/composer-app && pnpm exec tauri build )
-          else
-            echo "No prebuilt bundle (unexpected) — falling back to moon."
-            moon run composer-app:tauri-build
-          fi
+        run: pnpm exec tauri build
+        working-directory: ./packages/apps/composer-app
         env:
           # The following environment variables are only set when building on macOS runners (depot-macos-latest).
           # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
@@ -361,7 +364,7 @@ jobs:
       # The web deploy is a sibling job that ships independently, so a red run here reads as "the release
       # failed" when only the desktop half did — announce which half, as build_tauri_ios already does.
       - name: Notify Discord on desktop build failure
-        if: failure() || cancelled()
+        if: failure() && !cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           REF_NAME: ${{ inputs.environment }}
@@ -475,30 +478,6 @@ jobs:
           ./scripts/ios-init.sh
         working-directory: ./packages/apps/composer-app
 
-      # No artifact reuse here, unlike the desktop job: the shared `composer-bundle` is built for this
-      # workflow's environment (iOS only builds from `dev`), so it carries the full plugin catalog. iOS
-      # ships the curated production set, so the bundle is always built here — `tauri-ios-build` carries
-      # `DX_PLUGIN_SET=production` on its `bundle` dep. iOS embeds the frontend but needs no ollama sidecar.
-      # TODO(wittjosiah): Restore the artifact reuse once iOS is deployed on production deploys — the
-      # shared bundle is the production set there, so rebuilding it here would be pure duplicated work.
-      # Previous approach, kept here to restore verbatim when that day comes:
-      #
-      # - name: Download Composer bundle
-      #   continue-on-error: true
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: composer-bundle
-      #     path: packages/apps/composer-app/out/composer
-      #
-      # - name: Build Tauri app for iOS
-      #   run: |
-      #     if [ -f packages/apps/composer-app/out/composer/index.html ]; then
-      #       echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
-      #       ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
-      #     else
-      #       echo "No prebuilt bundle (unexpected) — falling back to moon."
-      #       moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
-      #     fi
       - name: Build Tauri app for iOS
         run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:
@@ -535,7 +514,7 @@ jobs:
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Notify Discord on iOS build failure
-        if: failure() || cancelled()
+        if: failure() && !cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           REF_NAME: ${{ inputs.environment }}

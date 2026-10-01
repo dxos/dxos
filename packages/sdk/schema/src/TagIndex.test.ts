@@ -4,8 +4,8 @@
 
 import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';

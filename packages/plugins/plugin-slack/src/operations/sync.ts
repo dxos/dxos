@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -175,7 +175,7 @@ const resolveUsers = (
 ): Effect.Effect<
   Map<string, SlackApi.SlackUser>,
   never,
-  import('effect/unstable/http/HttpClient').HttpClient | SlackApi.SlackCredentials
+  import('effect/http/HttpClient').HttpClient | SlackApi.SlackCredentials
 > =>
   Effect.gen(function* () {
     const ids = new Set<string>();
@@ -212,7 +212,7 @@ const resolveBots = (
 ): Effect.Effect<
   Map<string, SlackApi.SlackBot>,
   never,
-  import('effect/unstable/http/HttpClient').HttpClient | SlackApi.SlackCredentials
+  import('effect/http/HttpClient').HttpClient | SlackApi.SlackCredentials
 > =>
   Effect.gen(function* () {
     const ids = new Set<string>();
@@ -315,7 +315,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                   yield* Database.load(targetChannel.backend.config);
                   const feed = Channel.getFeed(targetChannel);
                   invariant(feed, 'Channel is not feed-backed');
-                  yield* Feed.append(feed, mapped);
+                  yield* Feed.append(feed, mapped).pipe(Effect.provideService(Database.Origin, 'system'));
 
                   // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
                   // succeeds so the next sync is incremental.

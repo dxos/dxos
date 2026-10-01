@@ -8,13 +8,13 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcClientError from 'effect/rpc/RpcClientError';
+import * as RpcMessage from 'effect/rpc/RpcMessage';
+import * as RpcSerialization from 'effect/rpc/RpcSerialization';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcClientError from 'effect/unstable/rpc/RpcClientError';
-import * as RpcMessage from 'effect/unstable/rpc/RpcMessage';
-import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';

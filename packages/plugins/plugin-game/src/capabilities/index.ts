@@ -14,7 +14,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 // Browser-only: the entry supplies `CreateGamePanel`, the React form that picks the variant and
 // collects its input.
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
@@ -27,5 +27,5 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations, {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });

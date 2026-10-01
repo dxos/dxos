@@ -17,14 +17,12 @@ import { daysAgo, daysFromNow } from './util.ts';
 // Markdown notes (with inline DXN links and block embeds)
 //
 
-//
-// Markdown notes (with inline DXN links and block embeds)
-//
-
 export type NotesBundle = {
   cuppingNotes: Markdown.Document;
   itinerary: Markdown.Document;
   tastingProtocol: Markdown.Document;
+  wholesaleTerms: Markdown.Document;
+  welcomePacket: Markdown.Document;
 };
 
 const makeNotes = (
@@ -38,9 +36,9 @@ const makeNotes = (
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${EID.make({ entityId: obj.id })})`;
 
   const cuppingNotes = Markdown.make({
-    name: 'Cupping notes — Finca Esperanza Lot #42',
+    name: 'Cupping notes — Finca Esperanza Lot A',
     content: [
-      '# Cupping notes — Finca Esperanza Lot #42',
+      '# Cupping notes — Finca Esperanza Lot A',
       '',
       `**Farm:** ${lnk('Finca Esperanza', organizations.fincaEsperanza)} · **Contact:** ${lnk('Carmen Restrepo', people.carmen)}`,
       '',
@@ -86,6 +84,10 @@ const makeNotes = (
       '- Visit two new lots recommended by our importer.',
       '- Return to Bogotá; fly out.',
       '',
+      '## Peru (remote)',
+      '',
+      '- Video call with the Cajamarca producer our importer introduced. We have a small sample lot on hand.',
+      '',
       '## Ethiopia (Sidamo)',
       '',
       `**Host:** ${lnk('Abel Tadesse', people.abel)} · ${lnk('Sidamo Cooperative', organizations.sidamoCoop)}`,
@@ -97,7 +99,7 @@ const makeNotes = (
       '## Buying targets',
       '',
       '- Colombia: lock 18 bags (Esperanza) + 6 bags (new lot if it cups above 87).',
-      '- Ethiopia: confirm the full container of lot 42; optionally add a smaller naturals lot.',
+      '- Ethiopia: confirm the full container of Lot #42; optionally add a smaller naturals lot.',
     ].join('\n'),
   });
 
@@ -106,7 +108,7 @@ const makeNotes = (
     content: [
       '# Spring blend — tasting protocol',
       '',
-      `Project: ${emb('Spring Blend Launch', taskSet)}`,
+      `Tasks: ${emb('Spring Blend Launch', taskSet)}`,
       '',
       '## Setup',
       '',
@@ -132,7 +134,63 @@ const makeNotes = (
     ].join('\n'),
   });
 
-  return { cuppingNotes, itinerary, tastingProtocol };
+  const wholesaleTerms = Markdown.make({
+    name: 'Wholesale terms',
+    content: [
+      '# Wholesale terms',
+      '',
+      'Prices per pound, roasted, shipped in 5 lb bags. The webshop sells the same coffees in 12 oz retail bags.',
+      '',
+      '| Coffee | Wholesale / lb | Retail / 12 oz |',
+      '| --- | --- | --- |',
+      '| Linden (everyday espresso) | $18 | $19 |',
+      '| Field Notes (filter) | $18 | $19 |',
+      '| Late Shift (dark) | $17 | $18 |',
+      '| Finca Esperanza single-origin | $24 | $26 |',
+      '| Sidamo Lot #42 single-origin | $24 | $26 |',
+      '| Spring Blend (preorder) | $21 | $22 |',
+      '',
+      '## Tiers',
+      '',
+      '- **Starter:** under 40 lb a month. List price, 10 lb minimum order.',
+      '- **Standing order:** 40 lb a month or more on a fixed schedule. 8% off list and a free grinder calibration visit (Bay Area) or video call (everywhere else).',
+      '',
+      '## Ordering and delivery',
+      '',
+      '- Order by email to Sam by Monday noon; we roast Wednesday and ship Thursday.',
+      '- Bay Area: our van, Friday. Everywhere else: two-day ground, arrives the following Monday or Tuesday.',
+      '- Net 30 for accounts past their third order; card on file before that.',
+    ].join('\n'),
+  });
+
+  const welcomePacket = Markdown.make({
+    name: 'Olive & Vine welcome packet (draft)',
+    content: [
+      '# Welcome to Bramble, Olive & Vine',
+      '',
+      `For ${lnk('Mateo Ruiz', people.mateo)} at ${lnk('Olive & Vine', organizations.oliveAndVine)}, East Austin.`,
+      '',
+      '## Dialing in Linden',
+      '',
+      '_To write._',
+      '',
+      '## How to order',
+      '',
+      '_To write._',
+      '',
+      '## Your pricing',
+      '',
+      '_To write._',
+      '',
+      '## Delivery to Austin',
+      '',
+      '_To write._',
+      '',
+      `Questions go to ${lnk('Sam Okafor', people.sam)}, sam@bramblecoffee.com.`,
+    ].join('\n'),
+  });
+
+  return { cuppingNotes, itinerary, tastingProtocol, wholesaleTerms, welcomePacket };
 };
 
 /** Notes that reference people, organizations and the task set by DXN link and block embed. */

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from 'effect/unstable/cli/Command';
+import * as Command from 'effect/cli/Command';
 
 import { invitation } from './invitation/index.ts';
 import { login } from './login/index.ts';

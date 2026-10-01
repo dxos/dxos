@@ -8,10 +8,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const LANDSCAPE = `data:image/svg+xml,${encodeURIComponent(
@@ -30,19 +30,19 @@ const DefaultStory = ({ size }: SizeArgs) => {
   const [clicks, setClicks] = useState(0);
   return (
     <div className='grid grid-cols-4 gap-2'>
-      <Next.Image src={LANDSCAPE} alt={`Mountains at dusk ${size}`} data-testid={`cover-${size}`} />
+      <Next.Image src={LANDSCAPE} alt='Mountains at dusk' data-testid={`cover-${size}`} />
       <Next.Image
         src={LANDSCAPE}
-        alt={`Mountains, contained ${size}`}
+        alt='Mountains, contained'
         aspectRatio='1'
         fit='contain'
         data-testid={`contain-${size}`}
       />
-      <Next.Image src={BROKEN} alt={`Missing photo ${size}`} data-testid={`broken-${size}`} />
-      <Next.Image src={LANDSCAPE} alt={`Mountains, square ${size}`} aspectRatio='1' data-testid={`square-${size}`} />
+      <Next.Image src={BROKEN} alt='Missing photo' data-testid={`broken-${size}`} />
+      <Next.Image src={LANDSCAPE} alt='Mountains, square' aspectRatio='1' data-testid={`square-${size}`} />
       <Next.Image
         src={LANDSCAPE}
-        alt={`Open mountains ${size}`}
+        alt='Open mountains'
         onClick={() => setClicks((count) => count + 1)}
         data-testid={`clickable-${size}`}
       />
@@ -52,9 +52,11 @@ const DefaultStory = ({ size }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/image',
+  title: 'ui/react-ui-core/next/components/Image',
   render: DefaultStory,
-  decorators: [withSizes({ width: 'w-[40rem]' }), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[40rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -69,6 +71,7 @@ export const Default: Story = {};
  * frame is a button named by its `alt`, activated by click, Enter and Space, with a focus ring.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     const canvas = within(sizeRow(canvasElement, 'md'));
     for (const [testId, ratio] of [
@@ -84,11 +87,11 @@ export const Test: Story = {
       await expect(img.width).toBeCloseTo(box.width, 0);
       await expect(img.height).toBeCloseTo(box.height, 0);
     }
-    await expect(canvas.getByRole('img', { name: 'Mountains at dusk md' })).toHaveAttribute('loading', 'lazy');
+    await expect(canvas.getByRole('img', { name: 'Mountains at dusk' })).toHaveAttribute('loading', 'lazy');
 
     const broken = canvas.getByTestId('broken-md');
     await waitFor(() => expect(broken).toHaveAttribute('data-status', 'error'));
-    const icon = within(broken).getByRole('img', { name: 'Missing photo md' });
+    const icon = within(broken).getByRole('img', { name: 'Missing photo' });
     await expect(icon.tagName.toLowerCase()).toBe('svg');
     // The icon is centred in the frame.
     const frame = broken.getBoundingClientRect();
@@ -96,7 +99,7 @@ export const Test: Story = {
     await expect(glyph.left + glyph.width / 2).toBeCloseTo(frame.left + frame.width / 2, 0);
     await expect(glyph.top + glyph.height / 2).toBeCloseTo(frame.top + frame.height / 2, 0);
 
-    const clickable = canvas.getByRole('button', { name: 'Open mountains md' });
+    const clickable = canvas.getByRole('button', { name: 'Open mountains' });
     await expect(clickable).toBe(canvas.getByTestId('clickable-md'));
     await userEvent.click(clickable);
     await waitFor(() => expect(canvas.getByTestId('clicks-md')).toHaveTextContent('Opened 1'));

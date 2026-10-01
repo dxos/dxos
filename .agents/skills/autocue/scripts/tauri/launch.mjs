@@ -153,10 +153,12 @@ export const launchTauri = async ({ app, width, height, scale, theme, port, head
     ...(virtual ? { LIBGL_ALWAYS_SOFTWARE: '1' } : {}),
     ...(proxy
       ? {
-          // libsoup takes the proxy from GLib's environment resolver, which reads the lower-case names.
+          // libsoup takes the proxy from GLib's environment resolver, which reads the lower-case names. The
+          // environment's own exclusions stay: the sandbox helper's network proxy reads them too, and a host the
+          // egress proxy expects to be reached directly (a package registry) is refused through it.
           https_proxy: proxy,
           http_proxy: proxy,
-          no_proxy: 'localhost,127.0.0.1,::1',
+          no_proxy: [process.env.NO_PROXY ?? process.env.no_proxy, 'localhost,127.0.0.1,::1'].filter(Boolean).join(','),
         }
       : {}),
   };

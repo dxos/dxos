@@ -12,6 +12,7 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
@@ -95,13 +96,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const [isLg] = useMediaQuery('lg');
     const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
-    const { graph } = useAppGraph();
+    const builder = useAppGraph();
     // The sentinel deck names no workspace, so there is nothing to claim is missing. A workspace
     // token no loader recognizes stays `unknown` forever, so only a confirmed `exists` withholds
     // the message and the sidebar is never blank.
-    const tabPresence = useNavigationPresence(graph, tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab);
+    const tabPresence = useNavigationPresence(builder.graph, tab === DeckSchema.DEFAULT_DECK_ID ? undefined : tab);
     const tabUnavailable = tab !== DeckSchema.DEFAULT_DECK_ID && tabPresence !== 'exists';
-    const { getItem, setItem, pick } = useNavTreeState();
+    const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
     const { navigationSidebarState } = useSidebars(meta.profile.key);
@@ -125,14 +126,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: AppGraphNode.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        AppGraph.expandSync(graph, id, 'child');
+        AppGraph.expandSync(builder.graph, id, 'child');
       },
-      [graph, setItem],
+      [builder, setItem],
     );
 
     const handleTabChange = useCallback(
       (node: NavTreeNode.NavTreeItemGraphNode) => {
-        AppGraph.expandSync(graph, node.id, 'child');
+        AppGraph.expandSync(builder.graph, node.id, 'child');
 
         const {
           tab: activeTab,
@@ -155,20 +156,20 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         // Open the first item if the workspace is empty.
         if (activeItems.length === 0) {
-          const [item] = getItems(graph, node).filter((node) => !AppGraphNode.isActionLike(node));
+          const [item] = getItems(builder.graph, node).filter((node) => !AppGraphNode.isActionLike(node));
           if (item && item.data) {
             void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokePromise, graph],
+      [invokePromise, builder],
     );
 
     const canDrop = useCallback(
       ({ source, target }: { source: TreeData; target: TreeData }) =>
         !!target.item.properties.canDrop?.(source) ||
-        !!getParent(graph, target.item, target.path)?.properties.canDrop?.(source),
-      [graph],
+        !!getParent(builder.graph, target.item, target.path)?.properties.canDrop?.(source),
+      [builder],
     );
 
     const getDropKind = useCallback(
@@ -176,9 +177,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (target.item.properties.blockInstruction?.(source, instruction)) {
           return 'reject';
         }
-        return resolveDrop(graph, { source, target, instruction }).kind;
+        return resolveDrop(builder.graph, { source, target, instruction }).kind;
       },
-      [graph],
+      [builder],
     );
 
     const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => isSelectable(item), []);
@@ -202,7 +203,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (AppGraphNode.isAction(node)) {
-          const [parent] = AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child));
+          const [parent] = AppGraph.getConnections(
+            builder.graph,
+            node.id,
+            AppGraph.inverseRelation(AppGraphNode.child),
+          );
           if (parent) {
             void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }
@@ -211,10 +216,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const focus = keyboard ? 'content' : false;
         const current = getItem(path).current;
-        if (!current && !shift && pick(node.id)) {
-          // Already open in a deck navigated to its parent; opening it again would leave the deck as is.
-          void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id, focus });
-        } else if (!current) {
+        if (!current) {
           // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
           // handler, which upgrades any disposition to add when shift is held).
           void invokePromise(LayoutOperation.Open, {
@@ -229,7 +231,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id, focus });
         }
 
-        const defaultAction = AppGraph.getActions(graph, node.id).find((action) =>
+        const defaultAction = AppGraph.getActions(builder.graph, node.id).find((action) =>
           AppGraphNode.hasDisposition(action, 'default'),
         );
         if (AppGraphNode.isAction(defaultAction)) {
@@ -240,7 +242,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, pick, runAction, isLg],
+      [builder, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);
@@ -259,16 +261,17 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const target = location.current.dropTargets[0];
           const instruction: Instruction | null = extractInstruction(target.data);
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
+            AppGraphBuilder.flushBeforePaint(builder);
             const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
             const targetPath = target.data.path as string[];
-            const { operation, sourceParent, destination } = resolveDrop(graph, {
+            const { operation, sourceParent, destination } = resolveDrop(builder.graph, {
               source: source.data as TreeData,
               target: target.data as TreeData,
               instruction,
             });
-            const sourceItems = getItems(graph, sourceParent);
-            const targetItems = getItems(graph, getParent(graph, targetNode, targetPath));
+            const sourceItems = getItems(builder.graph, sourceParent);
+            const targetItems = getItems(builder.graph, getParent(builder.graph, targetNode, targetPath));
             const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
             const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
             const insertIndex = instruction.type === 'reorder-below' ? targetIndex + 1 : targetIndex;
@@ -295,20 +298,20 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           }
         },
       });
-    }, [graph]);
+    }, [builder]);
 
     // Group nodes are always expanded and have no toggle, so they never trigger AppGraph.expand through
     // user interaction. Watch the workspace's children reactively and mark any group nodes as open
     // so the state machinery treats them consistently with regular open nodes (including on next load).
-    const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
+    const workspaceChildren = useAtomValue(builder.graph.connections(tab, 'child'));
     useEffect(() => {
       for (const child of workspaceChildren) {
         if (AppGraphNode.hasDisposition(child, 'group')) {
           setItem([GraphNode.RootId, tab, child.id], 'open', true);
-          AppGraph.expandSync(graph, child.id, 'child');
+          AppGraph.expandSync(builder.graph, child.id, 'child');
         }
       }
-    }, [workspaceChildren, tab, setItem, graph]);
+    }, [workspaceChildren, tab, setItem, builder]);
 
     // Prefetching a hovered row is speculative, so it waits out the cursor rather than racing it: a sweep
     // should only pay for the row the cursor stops on.
@@ -324,10 +327,10 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item }: { item: AppGraphNode.Node }) => {
         interruptHoverExpand();
         hoverExpandRef.current = Effect.runFork(
-          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(AppGraph.expand(graph, item.id, 'child'))),
+          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(AppGraph.expand(builder.graph, item.id, 'child'))),
         );
       },
-      [graph, interruptHoverExpand],
+      [builder, interruptHoverExpand],
     );
 
     const navTreeContextValue = useMemo(
@@ -362,7 +365,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       <NavTreeContext.Provider value={navTreeContextValue}>
         <NavTree
           id={GraphNode.RootId}
-          root={AppGraph.getRoot(graph)}
+          root={AppGraph.getRoot(builder.graph)}
           tab={tab}
           unavailable={tabUnavailable}
           open={layout.sidebarOpen}

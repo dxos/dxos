@@ -24,6 +24,7 @@ import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -57,7 +58,7 @@ const PopoverRoot = ({ lazyMount = true, unmountOnExit = true, positioning, ...p
     lazyMount={lazyMount}
     unmountOnExit={unmountOnExit}
     // Ark's 8px default reads as detached from the trigger.
-    positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+    positioning={popupPositioning(POPUP_GUTTER, positioning)}
   />
 );
 
@@ -94,7 +95,7 @@ PopoverAnchor.displayName = 'Next.Popover.Anchor';
 //
 
 type PopoverContentProps = ThemedClassName<PopoverPrimitive.ContentProps> & {
-  /** Portalled content leaves the trigger's sized scope, so it takes its own size. */
+  /** Overrides the size inherited from the anchor's or trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
   size?: Size;
   /** Point at the trigger with an arrow in the popup's surface colour. */
   arrow?: boolean;
@@ -104,8 +105,14 @@ type PopoverContentProps = ThemedClassName<PopoverPrimitive.ContentProps> & {
 
 /** Portalled panel at `level='popup'`, padded by the size's gap, with an arrow unless `arrow={false}`. */
 const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
-  ({ classNames, size = 'md', arrow = true, container, children, ...props }, forwardedRef) => {
+  ({ classNames, size, arrow = true, container, children, ...props }, forwardedRef) => {
     const popover = usePopoverContext();
+    const popupSize = usePopupSize(
+      size,
+      popover.open,
+      [popover.getAnchorProps().id, popover.getTriggerProps().id],
+      'md',
+    );
     // zag checks for a title once, when the machine starts, which is before lazily mounted content exists.
     const [labels, setLabels] = useState<Record<LabelPart, boolean>>({ title: false, description: false });
     const [register] = useState(
@@ -119,7 +126,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
             {...(labels.title && { 'aria-labelledby': popover.getTitleProps().id })}
             {...(labels.description && { 'aria-describedby': popover.getDescriptionProps().id })}
             data-surface='popup'
-            data-size={size}
+            data-size={popupSize}
             className={mx(recipes.popup(), recipes.popoverContent(), classNames)}
             ref={forwardedRef}
           >

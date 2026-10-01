@@ -7,7 +7,7 @@
 // owned by the view, never in the model, so two views of one scene stay independent.
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { type Clipboard } from '../utils/clipboard.ts';
 import { type PartKey } from '../utils/parts.ts';

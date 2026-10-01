@@ -12,6 +12,32 @@ reviewId: 8c645fb49e
 
 _0 error(s), 19 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- 8c645fb49e-1 - ignored - moon-yml-entrypoint-registration - packages/ui/react-ui/package.json:25
+- 8c645fb49e-2 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Card/Card.stories.tsx:28
+- 8c645fb49e-3 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/Card/Card.stories.tsx:28
+- 8c645fb49e-4 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Combobox/Combobox.stories.tsx:30
+- 8c645fb49e-5 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/Combobox/Combobox.stories.tsx:30
+- 8c645fb49e-6 - resolved - extract-non-rendering-logic-from-component - packages/ui/react-ui/src/next/components/Combobox/Combobox.tsx:51
+- 8c645fb49e-7 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/DateInput/DateInput.stories.tsx:16
+- 8c645fb49e-8 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Dialog/Dialog.stories.tsx:70
+- 8c645fb49e-9 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Field/Field.stories.tsx:21
+- 8c645fb49e-10 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/Field/Field.stories.tsx:21
+- 8c645fb49e-11 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/FieldSet/FieldSet.stories.tsx:21
+- 8c645fb49e-12 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/IconButton/IconButton.stories.tsx:25
+- 8c645fb49e-13 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Select/Select.stories.tsx:34
+- 8c645fb49e-14 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Switch/Switch.stories.tsx:18
+- 8c645fb49e-15 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Tag/Tag.stories.tsx:35
+- 8c645fb49e-16 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Textarea/Textarea.stories.tsx:20
+- 8c645fb49e-17 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/ToggleIconButton/ToggleIconButton.stories.tsx:16
+- 8c645fb49e-18 - ignored - design-tokens-not-raw-spacing-sizing - packages/ui/react-ui/src/next/components/ToggleIconButton/ToggleIconButton.stories.tsx:16
+- 8c645fb49e-19 - ignored - no-styling-wrapper-divs - packages/ui/react-ui/src/next/components/Tooltip/Tooltip.stories.tsx:17
+
+## Issues
+
 # WARN 8c645fb49e-1 moon-yml-entrypoint-registration `packages/ui/react-ui/package.json:25`
 
 System One judges this a likely violation of `moon-yml-entrypoint-registration` (Every package.json export/import entrypoint must be registered in the package's moon.yml), p=0.81. The likeliest place is lines 25-36 (`".": {`, location confidence 0.59). Judged with added `diff, package, siblings` context after a first pass of 0.79. This is a single-shot classifier: confirm against the rule before acting.
@@ -87,3 +113,19 @@ System One judges this a likely violation of `design-tokens-not-raw-spacing-sizi
 # WARN 8c645fb49e-19 no-styling-wrapper-divs `packages/ui/react-ui/src/next/components/Tooltip/Tooltip.stories.tsx:17`
 
 System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes come from Flex/Grid/Column/Container, not a hand-rolled `<div className='flex …'>`), p=0.88. The likeliest place is lines 17-28 (`const DefaultStory = () => (`, location confidence 1.00). This is a single-shot classifier: confirm against the rule before acting.
+
+## Appendix
+
+### System One pass
+
+- model: jev-latest
+- base for context: `dd1e06bf0fe386df750c5d140a67fc9311420ce7`
+- thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
+- verdicts: 19 violations written to fragments, 81 uncertain, 1068 clean, 0 unanswered
+
+```text
+requests: 451 (35 verdicts re-asked with context the model requested)
+estimated input tokens: 2085900
+billed input tokens: 1939425 (cost $0.0815)
+measured chars per token: 3.23
+```

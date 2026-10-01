@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';

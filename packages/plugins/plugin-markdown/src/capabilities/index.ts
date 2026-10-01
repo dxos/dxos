@@ -16,7 +16,11 @@ import { MarkdownCapabilities } from '#types';
 // AppGraphReady ordering the event-mode module used previously); the body reads nothing.
 export const AnchorResolver = Capability.lazyModule(
   'AnchorResolver',
-  { requires: [AppCapabilities.AppGraph], provides: [AppCapabilities.AnchorResolver], environments: [] },
+  {
+    requires: [AppCapabilities.AppGraph],
+    provides: [AppCapabilities.AnchorResolver],
+    environments: ['browser', 'tauri'],
+  },
   () => import('./anchor-resolver.ts'),
 );
 // Ordering-only: registers the sort comparator once the app graph exists (mirrors the
@@ -26,7 +30,7 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.t
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
@@ -44,14 +48,14 @@ export const MarkdownState = Capability.lazyModule(
   {
     requires: [AttentionCapabilities.ViewState],
     provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
 export const Tour = Capability.lazyModule(
   'Tour',
-  { provides: [AppCapabilities.Tour], environments: [] },
+  { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
   () => import('./tour.ts'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));

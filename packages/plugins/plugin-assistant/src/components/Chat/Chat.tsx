@@ -5,7 +5,7 @@
 import { Collapsible } from '@ark-ui/react/collapsible';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -42,7 +42,7 @@ import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
 import { TaskSlashCommands } from '../../commands/index.ts';
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
+import { AiUsageQuotaError, type ProcessorRequestContext, getProcessorState } from '../../processor/index.ts';
 import {
   ChatStatus,
   ChatActivity as NaturalChatActivity,
@@ -95,8 +95,9 @@ const ChatRoot = ({
   const [debug, setDebug] = useState(debugProp ?? false);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
   const { invokePromise } = useOperationInvoker();
-  const streaming = useAtomValue(processor.streaming);
-  const active = useAtomValue(processor.active);
+  const processorState = getProcessorState(processor);
+  const streaming = useAtomValue(processorState.streaming);
+  const active = useAtomValue(processorState.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
   // A slash command runs outside the processor, so `streaming` does not cover it.
@@ -125,7 +126,7 @@ const ChatRoot = ({
     db,
     feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
   );
-  const pendingMessages = useAtomValue(processor.messages);
+  const pendingMessages = useAtomValue(processorState.messages);
   const { messages, queued } = useMemo(
     () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
     [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
@@ -146,7 +147,7 @@ const ChatRoot = ({
   const dump = useDebug({ processor });
 
   // Surface processor failures (e.g., AI service unavailable) to subscribers via the event bus.
-  const error = useAtomValue(processor.error);
+  const error = useAtomValue(processorState.error);
   useEffect(() => {
     if (Option.isSome(error)) {
       event.emit({ type: 'error', error: error.value });
@@ -168,6 +169,35 @@ const ChatRoot = ({
           break;
         }
 
+        case 'rewind': {
+          // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
+          // composer so it can be revised. Recorded on the feed rather than the chat because the
+          // continuation is appended by the agent's process, which resolves the feed and never sees the
+          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
+          const rewind = feed && resolveRewind(messages, ev.id);
+          if (rewind) {
+            Obj.update(feed, (feed) => {
+              feed.rewindFrom = rewind.rewindFrom;
+            });
+            event.emit({ type: 'update-prompt', text: rewind.text });
+          }
+          break;
+        }
+      }
+
+      onEvent?.(ev);
+    });
+    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
+    // them the handler would keep resolving rewinds against whatever was mounted first.
+  }, [event, dump, onEvent, feed, messages]);
+
+  useEffect(() => {
+    if (!processor) {
+      return;
+    }
+
+    return event.on((ev) => {
+      switch (ev.type) {
         case 'submit': {
           const text = ev.text.trim();
           if (text.length) {
@@ -255,21 +285,6 @@ const ChatRoot = ({
           break;
         }
 
-        case 'rewind': {
-          // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
-          // composer so it can be revised. Recorded on the feed rather than the chat because the
-          // continuation is appended by the agent's process, which resolves the feed and never sees the
-          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
-          const rewind = feed && resolveRewind(messages, ev.id);
-          if (rewind) {
-            Obj.update(feed, (feed) => {
-              feed.rewindFrom = rewind.rewindFrom;
-            });
-            event.emit({ type: 'update-prompt', text: rewind.text });
-          }
-          break;
-        }
-
         case 'retry': {
           if (!streaming) {
             void processor.retry();
@@ -287,12 +302,8 @@ const ChatRoot = ({
           break;
         }
       }
-
-      onEvent?.(ev);
     });
-    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
-    // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, active, onEvent, onSubmit, getContext, feed, messages, chat, db]);
+  }, [event, processor, streaming, active, onSubmit, getContext, invokePromise, chat, db, feed]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.
@@ -518,7 +529,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
   // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
   // and range table have no equivalent left.
   const model = useFeedModel(messages, { stops: 'prompt' });
-  const streaming = useAtomValue(processor.streaming);
+  const streaming = useAtomValue(getProcessorState(processor).streaming);
   useEffect(() => {
     const last = messages[messages.length - 1];
     model.setStreaming(streaming && last?.sender.role === 'assistant' ? last.id : undefined);
@@ -940,7 +951,7 @@ const CHAT_ACTIVITY_NAME = 'Chat.Activity';
  */
 const ChatActivity = ({ classNames }: ThemedClassName) => {
   const { processor, alarms } = useChatContext(CHAT_ACTIVITY_NAME);
-  const activity = useAtomValue(processor.activity);
+  const activity = useAtomValue(getProcessorState(processor).activity);
 
   // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
   // wait in front of the reader.

@@ -17,7 +17,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 // Narrower than the `appGraphBuilder` family default: its nodes invoke
 // `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 // Migration providers stay eager: a migration missing when a space opens is a data hazard.

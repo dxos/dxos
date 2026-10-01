@@ -3,7 +3,7 @@
 //
 
 import { render, screen } from '@solidjs/testing-library';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, expect, test } from 'vitest';
 
 import { PluginManagerContext } from '@dxos/app-framework';

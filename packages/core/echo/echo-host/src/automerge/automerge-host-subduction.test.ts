@@ -27,7 +27,14 @@ import { AutomergeHost } from './automerge-host.ts';
 import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter.ts';
 import { deleteSubductionRemoteHeads } from './subduction-migrations/0001_delete_remote_heads.ts';
-import { NO_TRAFFIC_WINDOW_MS, SYNC_WINDOW_MS, createDenyGate, waitForEviction } from './subduction-test-utils.ts';
+import {
+  NO_TRAFFIC_WINDOW_MS,
+  SYNC_WINDOW_MS,
+  createDenyGate,
+  waitForDoc,
+  waitForEviction,
+  waitForHostHeads,
+} from './subduction-test-utils.ts';
 
 describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
@@ -125,6 +132,46 @@ describe('AutomergeHost with Subduction', () => {
       await host1.flush(Context.default());
 
       await expect.poll(() => mirrored.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('second');
+    } finally {
+      await host1.close();
+      await host2.close();
+      await network.close();
+    }
+  });
+
+  test('a change that arrives while the document is evicted is applied', async ({ expect }) => {
+    const rt1 = createRuntime();
+    onTestFinished(() => rt1.dispose());
+    const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+    const rt2 = createRuntime();
+    onTestFinished(() => rt2.dispose());
+    const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
+
+    using created = await host1.createDoc<any>({ text: 'first' });
+    const documentId = created.documentId;
+    await host1.flush(Context.default());
+
+    const network = await new TestReplicationNetwork().open();
+    try {
+      await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+      await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+      // Pushes load only documents a local collection lists.
+      await host2.updateLocalCollectionState('test-collection', [documentId]);
+      const mirrored = await host2.loadDoc<any>(Context.default(), documentId);
+      invariant(mirrored);
+      await waitForDoc(mirrored, (doc) => doc?.text === 'first');
+      mirrored[Symbol.dispose]();
+      await waitForEviction(expect, host2, documentId);
+
+      created.change((doc: any) => {
+        doc.text = 'second';
+      });
+      await host1.flush(Context.default());
+      const [expected] = await host1.getHeads([documentId]);
+      invariant(expected);
+
+      await waitForHostHeads(host2, documentId, expected);
     } finally {
       await host1.close();
       await host2.close();

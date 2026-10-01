@@ -8,8 +8,9 @@ Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash 
 multi-string-replace edit tool, carried by a single vite server route (`vite dev` or `vite preview`)
 that runs a shell script under a configured root. Nothing is mounted outside a vite server.
 
-It also contributes the **Composer Plugin** project template: a project whose agent uses these tools to
-build a TypeScript Composer plugin on this machine and offer it back to load (QA-2).
+In a browser it also contributes the browser version of plugin-projects' **Composer Plugin** project template:
+a project whose agent uses these tools to build a TypeScript Composer plugin on this machine and offer it back
+to load (QA-2). The desktop app has no vite server, so it offers plugin-projects' own version instead.
 
 ## Extensions
 
@@ -106,7 +107,8 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
   desc: |
     The demo script for the Composer Plugin project template (`src/templates/composer-plugin.ts`): an agent
     works one parent task and its four subtasks on this machine — read the guide, write a TypeScript plugin,
-    build it, offer it — and the reader loads the result. The plugin adds a "World Clock" group to each
+    typecheck it against the plugin's dev server, offer it — and the reader loads it from that dev server
+    through Plugins → Dev Server. The plugin adds a "World Clock" group to each
     space's navtree with a "Clocks" page under it: a world map from plugin-map above a row of live clocks,
     kept in a `Clock` ECHO object. Walked by the autocue flow
     `packages/plugins/plugin-computer/autocue/composer-plugin.mjs`.
@@ -115,14 +117,19 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
   given:
     - an identity exists
     - space: a space is open (the default "My Space" is fine)
-    - Composer is a bundled build served by `vite preview` on :4173 against EDGE preview — loading by URL
-      needs the bundle's import map, and EDGE production rejects the AI requests
+    - Composer is a bundled build served by `vite preview` on :4173 against EDGE preview — a plugin's bare
+      `@dxos/*` imports resolve through the bundle's import map, and EDGE production rejects the AI requests
+    - the plugin's Vite dev server serves `temp/plugins/world-clock` on :3967 (`node_modules/.bin/vite
+      temp/plugins/world-clock` from the Composer app directory), started from its `dx.config.ts`,
+      `vite.config.ts` and `tsconfig.json`; the Computer shell kills scripts that outlive its timeout, so the
+      agent cannot run it
+    - Plugins → Dev Server is off
     - plugin-projects and Coding (Dev) are enabled; the template is contributed by Coding (Dev), so the
       create dialog offers it only when that plugin is on
     - the Assistant's default remote model is DeepSeek V4 Pro
     - no plugin named "World Clock" is loaded, no "Composer Plugin" project is left from an earlier run, and
-      `temp/plugins/world-clock` and `out/composer/plugins/world-clock` do not exist, so the agent starts from
-      an empty folder (the autocue flow's first setup step restores all of this)
+      `temp/plugins/world-clock/src` does not exist, so the agent writes the plugin from nothing (the autocue
+      flow's setup steps restore all of this, and seed the three config files so the dev server can start)
   steps:
     - name: Create a project from the Composer Plugin template
       do: Click + on the space, choose Project, pick the "Composer Plugin" template from the list, title it "World Clock" and click Create, then open the project's folder in the navtree.
@@ -132,7 +139,7 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       do: Click the project's Tasks tab.
       expect: |
         one parent task, "Build the World Clock plugin", with four subtasks under it, all to do — read the
-        guide, write the plugin, typecheck and build, offer it
+        guide, write the plugin, typecheck and check the dev server, offer it
     - name: Select the parent task and assign it to the agent
       do: Tick the parent task's checkbox, then click "Assign selected tasks to agent".
       expect: |
@@ -157,21 +164,18 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       expect: the delegated chat is back, still working
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
-      expect: all five tasks are done and the chat shows a "Load plugin" prompt naming World Clock
+      expect: all five tasks are done and the chat says World Clock is ready to load from Plugins → Dev Server
       note: |
         Takes up to twenty minutes. The model matters: with Composer's stock default (Claude Sonnet 5) the
         delegated chat stayed silent, which is why `given` sets DeepSeek V4 Pro.
-    - name: Load the plugin
-      do: Click Load on the prompt.
-      expect: World Clock loads without an error toast, but stays off — the prompt only loads it
-    - name: Enable the plugin in the registry
-      do: Close the companion and the context sidebar, open Plugins, wait a beat, then open Labs and turn World Clock on.
+    - name: Load the plugin from the dev server
+      do: Close the companion and the context sidebar, open Plugins settings, and under Dev Server click Enable.
       expect: |
-        the World Clock card is listed under Labs (its `dx.config.ts` tags it `labs`) with its toggle off,
-        and turning the toggle on activates it (and plugin-map with it, which it depends on)
+        the button turns to Disable with no warning banner, and World Clock loads and activates as a dev
+        plugin (and plugin-map with it, which it depends on)
       note: |
-        Enabling is deliberately a second step: the reader sees what the plugin is before it runs, which is
-        why the prompt's LoadPlugin call passes `enable: false`.
+        A dev plugin is not persisted: Dev Server stays on and loads it again on every reload while the dev
+        server runs, and Disable removes it.
     - name: Open the Clocks page
       do: Return to the space and click Clocks under the WORLD CLOCK group.
       expect: |
@@ -195,68 +199,11 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
       do: Right-click the "World Clock" project in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
       expect: the project and its tasks leave the navtree
-    - name: Uninstall World Clock
-      do: Open Plugins, then Labs, open the World Clock card's detail page and click Uninstall.
+    - name: Turn off the dev plugin
+      do: Open Plugins settings and under Dev Server click Disable.
       expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
-    - name: Remove the build folders
-      do: Delete `temp/plugins/world-clock` and `out/composer/plugins/world-clock` under the Composer app.
-      expect: both folders are gone, restoring the `given` for the next run
-      note: The autocue flow's first setup step does this and the uninstall before each take.
-```
-
-```mdl
-test QA-3: Build a plugin with an agent in the desktop app
-  desc: |
-    QA-2 in the native desktop app. There is no vite server there, so no Computer shell: the template's
-    desktop variant (`desktopVariant` in `src/templates/composer-plugin.ts`) has the agent create a local
-    sandbox with plugin-sandbox's Sandbox skill, link the toolchain of the source tree the app was built from,
-    build World Clock in the sandbox's workspace, and offer the URL Publish Files serves the build at. Walked
-    by the autocue flow `packages/plugins/plugin-computer/autocue/composer-plugin-desktop.mjs` through
-    `driver.mjs --target tauri`.
-  actors: both
-  status: unverified
-  given:
-    - an identity exists
-    - space: a space is open (the default "My Space" is fine)
-    - Composer is the desktop app, a release build whose frontend was bundled with `DX_ENVIRONMENT=dev` against
-      EDGE preview — a dev bundle carries Coding (Dev) and the source root local sandboxes may read
-    - plugin-sandbox's Backend setting is Local and its `dx-sandbox` helper is staged beside the app binary
-    - plugin-projects and Coding (Dev) are enabled, and the Assistant's default remote model is DeepSeek V4 Pro
-    - no plugin named "World Clock" is loaded, and no "Composer Plugin" project or "World Clock" sandbox is left
-      from an earlier run (the flow's first setup step restores this)
-  steps:
-    - name: Create a project from the Composer Plugin template
-      do: As QA-2 step 1.
-      capture: project
-      expect: a "World Clock" project opens, and its navtree folder shows what it holds
-    - name: Assign the parent task to the agent
-      do: As QA-2 steps 2 to 4 — open Tasks, tick the parent task, assign it, open the companion's Assistant tab.
-      expect: the delegated chat holds the parent and its four subtasks and is working
-      note: The project's skill is Sandbox, not Coding (Dev); its instructions name the source root it links.
-    - name: Wait for the agent to offer the plugin
-      do: Watch the subtasks tick off.
-      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox", text: "World Clock" }
-      capture: sandboxes
-      expect: |
-        a "World Clock" sandbox exists, all five tasks are done, and the chat shows a "Load plugin" prompt whose
-        URL is `http://localhost:<port>/files/<key>/manifest.json`
-      assert: return $result.results.length === 1
-    - name: Load and enable the plugin
-      do: As QA-2 steps 10 and 11.
-      expect: World Clock loads from the sandbox's published directory and activates from Labs
-    - name: Open the Clocks page and add two timezones
-      do: As QA-2 steps 12 and 13.
-      expect: the page shows the map above three ticking clock cards and the plus card
-  after:
-    - name: Delete the project
-      do: Right-click the "World Clock" project in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.space }
-      expect: the project leaves the navtree
-    - name: Delete the sandbox
-      do: Right-click the "World Clock" sandbox in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandboxes.results[0].dxn }], target: $given.space }
-      expect: the sandbox leaves the navtree and its shell environment is torn down
-    - name: Uninstall World Clock
-      do: As QA-2's after step 2.
-      expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
+    - name: Stop the dev server and remove the plugin folder
+      do: Stop the dev server on :3967 and delete `temp/plugins/world-clock` under the Composer app.
+      expect: nothing answers on :3967 and the folder is gone, restoring the `given` for the next run
+      note: The autocue flow's setup steps do this and the Disable before each take.
 ```

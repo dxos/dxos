@@ -10,6 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   DatabaseCard,
   EdgeCard,
+  IndexerCard,
   MemoryCard,
   NetworkCard,
   PerformanceCard,
@@ -36,6 +37,7 @@ const DefaultStory = () => (
     <ReplicatorMessagesCard database={fixtures.database} />
     <QueriesCard queries={fixtures.queries} />
     <SyncCard spaces={fixtures.syncRows} onCopy={() => {}} />
+    <IndexerCard spaces={fixtures.indexerRows} onRefresh={() => {}} onCopy={() => {}} />
   </StatsPanel>
 );
 

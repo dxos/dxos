@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';

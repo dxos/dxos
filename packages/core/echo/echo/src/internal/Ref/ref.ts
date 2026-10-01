@@ -7,11 +7,11 @@ import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as SchemaIssue from 'effect/SchemaIssue';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 import type * as Types from 'effect/Types';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
@@ -34,9 +34,9 @@ import {
   type UnknownTypeSchema,
   getStaticTypeSchema,
 } from '../common/types/index.ts';
-import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import { type JsonSchemaType } from '../JsonSchema/index.ts';
 import * as RefAtoms from './atoms.ts';
+import { isTargetDeleted } from './utils.ts';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -183,10 +183,6 @@ export const Ref: RefFn = (input: any): RefSchema<any> => {
 export type LoadOptions = {
   deleted?: 'exclude' | 'include';
 };
-
-/** Reads the deletion marker off a value of unconstrained target type. */
-const isTargetDeleted = (target: unknown): boolean =>
-  typeof target === 'object' && target !== null && (target as Record<symbol, unknown>)[ObjectDeletedId] === true;
 
 /**
  * Represents materialized reference to a target.
@@ -617,7 +613,7 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   get atom(): Atom.Atom<T | undefined> {
-    return RefAtoms.refSimpleFamily(this);
+    return RefAtoms.refFamily([this, false]);
   }
 
   /**

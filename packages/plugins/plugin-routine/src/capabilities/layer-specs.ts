@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { processStorageLayer } from '@dxos/app-framework';

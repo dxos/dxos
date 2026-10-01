@@ -4,8 +4,8 @@
 //
 
 // Finalize an agentic review run: parse every group fragment, merge diagnostics
-// into REVIEW.md (sorted, deduped, each stamped with `<review_id>-<seq>`), write
-// RESOLUTION.md, delete intermediate staging/group files, and print a summary.
+// into REVIEW.md (sorted, deduped, each stamped with `<review_id>-<seq>`) under an
+// `## Index` ledger, delete intermediate staging/group files, and print a summary.
 //
 // Usage:
 //   bun finalize.ts [--slug=<slug>] [--dir=<path to review store>] [--force]
@@ -14,7 +14,8 @@
 // With neither --slug/--dir/--all, the most recently modified non-finalized
 // review is used. `--force` re-finalizes an already-finalized run. `--all` walks
 // every store under `.agents/reviews/` (skips finalized unless `--force`).
-// After a successful finalize the store keeps only REVIEW.md + RESOLUTION.md.
+// After a successful finalize the store keeps only REVIEW.md; a legacy RESOLUTION.md /
+// SYSTEM-ONE.md is folded into its index and appendix and deleted.
 
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
@@ -25,13 +26,19 @@ import {
   compareDiagnostics,
   diagnosticKey,
   parseDiagnostics,
-  renderDiagnostic,
   type Diagnostic,
   type IssuedDiagnostic,
   type Severity,
 } from '../lib/diagnostics.ts';
 import { repoRoot } from '../lib/git.ts';
-import { parseResolution, renderResolution, RESOLUTION_FILE, type ResolutionStatus } from '../lib/resolution.ts';
+import { LEGACY_RESOLUTION_FILE, type ResolutionStatus } from '../lib/resolution.ts';
+import {
+  LEGACY_SYSTEM_ONE_FILE,
+  readIndexEntries,
+  readLegacySideFiles,
+  renderReviewBody,
+  splitReviewBody,
+} from '../lib/review-doc.ts';
 import {
   assertSafeSlug,
   GROUPS_MANIFEST,
@@ -43,7 +50,7 @@ import {
 } from '../lib/store.ts';
 
 const STAGING_FILE = 'STAGING.md';
-const INTERMEDIATES = [STAGING_FILE, GROUPS_MANIFEST, 'groups'];
+const INTERMEDIATES = [STAGING_FILE, GROUPS_MANIFEST, 'groups', LEGACY_RESOLUTION_FILE, LEGACY_SYSTEM_ONE_FILE];
 
 /** A review's frontmatter data before it is narrowed to specific fields; may come straight off
  * disk (already string-only) or from a freshly built stub (still raw JS scalars). */
@@ -223,7 +230,7 @@ const finalizeStore = (storeDir: string): FinalizeResult => {
       }
     }
   } else if (review.body?.trim()) {
-    for (const diagnostic of parseDiagnostics(review.body, `${slug}/REVIEW.md`)) {
+    for (const diagnostic of parseDiagnostics(splitReviewBody(review.body).issues, `${slug}/REVIEW.md`)) {
       diagnostics.push({
         ...diagnostic,
         ruleId: diagnostic.ruleId ?? 'unknown',
@@ -262,19 +269,19 @@ const finalizeStore = (storeDir: string): FinalizeResult => {
   ].sort();
 
   // Preserve agent-updated statuses on --force; new issues default to unresolved.
-  const resolutionPath = join(storeDir, RESOLUTION_FILE);
-  let priorStatuses: Map<string, ResolutionStatus> | null = null;
-  if (existsSync(resolutionPath)) {
+  const legacy = readLegacySideFiles(storeDir);
+  let priorStatuses: Map<string, ResolutionStatus> | null = legacy?.statuses ?? null;
+  if (!legacy) {
     try {
-      priorStatuses = parseResolution(readFileSync(resolutionPath, 'utf8'));
+      priorStatuses = new Map(readIndexEntries(storeDir, review.body ?? '').map(({ id, status }) => [id, status]));
     } catch (error) {
-      // A corrupt RESOLUTION.md must not abort finalize, but surface it —
+      // A corrupt index must not abort finalize, but surface it —
       // silently resetting every issue to unresolved would hide lost statuses.
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`warning: ${slug}/${RESOLUTION_FILE} unparseable (${message}); statuses reset to unresolved.`);
-      priorStatuses = null;
+      console.error(`warning: ${slug} index unparseable (${message}); statuses reset to unresolved.`);
     }
   }
+  const appendix = legacy?.appendix ?? splitReviewBody(review.body ?? '').appendix;
 
   const frontmatter = renderFrontmatter({
     ...toFrontmatterInput(review.data),
@@ -283,21 +290,18 @@ const finalizeStore = (storeDir: string): FinalizeResult => {
     groups: groupCount,
     rules: appliedRuleIds.length > 0 ? appliedRuleIds : asStringArray(review.data.rules),
   });
-  const bodyBlocks =
-    numbered.length === 0
-      ? ['<!-- no diagnostics: clean -->']
-      : [`_${counts.error} error(s), ${counts.warn} warning(s)._`, ...numbered.map(renderDiagnostic)];
-  writeFileSync(reviewPath, `${frontmatter}\n${bodyBlocks.join('\n\n')}\n`);
-  writeFileSync(resolutionPath, renderResolution(slug, numbered, priorStatuses));
+  writeFileSync(
+    reviewPath,
+    `${frontmatter}\n${renderReviewBody({ diagnostics: numbered, statuses: priorStatuses, appendix })}`,
+  );
 
-  // Staging + group fragments are ephemeral; only the finalized ledger remains.
+  // Staging, group fragments and legacy side files are ephemeral; only REVIEW.md remains.
   for (const name of INTERMEDIATES) {
     rmSync(join(storeDir, name), { recursive: true, force: true });
   }
 
   const rel = reviewPath.slice(root.length + 1);
   console.log(`REVIEW:     ${rel}`);
-  console.log(`RESOLUTION: ${rel.replace(/REVIEW\.md$/, RESOLUTION_FILE)}`);
   console.log(`reviewId:   ${reviewId}`);
   console.log(`errors:     ${counts.error}`);
   console.log(`warns:      ${counts.warn}`);

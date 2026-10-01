@@ -137,7 +137,8 @@ export const LoadPlugin = Operation.make({
       description: 'URL of the plugin manifest, e.g. https://example.com/my-plugin/manifest.json.',
     }),
     enable: Schema.optional(Schema.Boolean).annotate({
-      description: 'Enable the plugin once it is loaded (default true); false leaves it listed but off.',
+      description:
+        'Enable the plugin once it is loaded (default true); false leaves it listed but off, unless its id is already enabled (e.g. from an earlier session), in which case it starts.',
     }),
   }),
   output: Schema.Struct({

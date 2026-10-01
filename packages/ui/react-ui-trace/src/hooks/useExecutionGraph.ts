@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Process from '@dxos/compute/Process';

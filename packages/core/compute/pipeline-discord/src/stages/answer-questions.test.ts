@@ -3,11 +3,11 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 import { expect } from 'vitest';
 
 import { AiService } from '@dxos/ai';
