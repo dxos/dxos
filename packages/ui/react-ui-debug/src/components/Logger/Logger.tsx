@@ -278,6 +278,13 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   // path (so typing a package name filters, since the path carries `packages/<group>/<pkg>/…`).
   const needle = fileFilter.trim().toLowerCase();
   const visibleFiles = needle ? files.filter((file) => file.toLowerCase().includes(needle)) : files;
+  const levelItems = useMemo(
+    () => [
+      { value: 'inherit', label: t('levels.inherit.label') },
+      ...LEVELS.map((level) => ({ value: level, label: t(`level.${level}`) })),
+    ],
+    [t],
+  );
 
   return (
     <Next.Popover.Root>
@@ -321,7 +328,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                     </div>
                   )}
                   {visibleFiles.length > 0 && (
-                    <Listbox.Root>
+                    <Listbox.Root items={visibleFiles.map((file) => ({ value: file, label: file }))}>
                       <Listbox.Content classNames='dx-density-sm'>
                         {visibleFiles.map((file) => {
                           const basename = file.split('/').pop() ?? file;
@@ -339,6 +346,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                 {basename}
                               </Listbox.ItemText>
                               <Next.Select.Root
+                                items={levelItems}
                                 value={[value]}
                                 onValueChange={({ value: [next] }) =>
                                   setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
@@ -437,7 +445,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={visible.map(({ id }) => ({ value: String(id), label: String(id) }))}>
       <div
         onKeyDown={(event) => {
           if (current === undefined) {
@@ -468,12 +476,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
               >
                 <div className='flex items-center pl-2'>
                   <Next.Field.Root>
-                    <Next.Checkbox
-                      tabIndex={-1}
-                      size={3}
-                      checked={checked.has(id)}
-                      onCheckedChange={() => toggleChecked(id)}
-                    />
+                    <Next.Checkbox tabIndex={-1} checked={checked.has(id)} onCheckedChange={() => toggleChecked(id)} />
                   </Next.Field.Root>
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
