@@ -1,0 +1,60 @@
+/*
+ * Breadcrumb: the trail is one block-tall row that never wraps; when it overflows it scrolls sideways with no
+ * scrollbar (a crumb trail is glanced at, not scrolled through), so it can sit in a header row. Links are subdued
+ * text that takes the base colour on hover; the current page keeps the base colour; separators are faint.
+ */
+
+@layer dx-components {
+  .nx-breadcrumb {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .nx-breadcrumb-list {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    gap: calc(var(--nx-gap-size) / 2);
+    min-width: 0;
+    min-height: var(--nx-block-size);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nx-breadcrumb-item {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .nx-breadcrumb-link,
+  .nx-breadcrumb-current {
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    white-space: nowrap;
+  }
+
+  .nx-breadcrumb-link {
+    padding-inline: var(--nx-control-inset);
+    border-radius: var(--radius-sm, 0.25rem);
+    color: var(--color-description);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .nx-breadcrumb-link:hover {
+    color: var(--color-base-fg);
+  }
+
+  .nx-breadcrumb-separator {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    color: var(--color-subdued);
+    opacity: 0.5;
+  }
+}
