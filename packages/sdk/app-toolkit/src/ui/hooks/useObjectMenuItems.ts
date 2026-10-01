@@ -108,11 +108,12 @@ export const useObjectNavigate = (
       const pivotId = detailOf ?? Attention.getRootAttendableId(event.currentTarget);
       // As with a list row, a meta/ctrl-click opens a plank of its own rather than the detail.
       const { nativeEvent } = event;
-      const modified =
-        (nativeEvent instanceof MouseEvent || nativeEvent instanceof KeyboardEvent) &&
-        (nativeEvent.metaKey || nativeEvent.ctrlKey);
+      const keys = nativeEvent instanceof MouseEvent || nativeEvent instanceof KeyboardEvent ? nativeEvent : undefined;
+      const modified = !!keys && (keys.metaKey || keys.ctrlKey);
       const disposition = detailOf && !modified ? 'detail' : 'add';
-      void EffectEx.runPromise(openObject(subject, invoke, { pivotId, disposition }));
+      void EffectEx.runPromise(
+        openObject(subject, invoke, { pivotId, disposition, modifiers: { shift: keys?.shiftKey } }),
+      );
     };
   }, [subject, detailOf, invoke]);
 };
