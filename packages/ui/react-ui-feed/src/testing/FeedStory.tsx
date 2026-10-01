@@ -324,7 +324,7 @@ export const FeedStory = ({
               <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
                 <FeedOutline classNames='row-start-2' messages={messages} />
               </div>
-              <MessageList.Viewport classNames='dx-fullscreen' padding ref={viewportRef} />
+              <MessageList.Viewport classNames='dx-fullscreen' ref={viewportRef} />
             </Next.Panel.Body>
           </Next.Panel.Root>
           <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
