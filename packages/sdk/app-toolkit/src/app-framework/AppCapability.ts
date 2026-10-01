@@ -91,15 +91,10 @@ export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Cap
 /**
  * Module maker contributing a {@link Capabilities.LayerSpec}.
  *
- * LayerSpecs are RESTART-SCOPED: the process manager takes a one-shot snapshot of the collection
- * during boot and bakes it into a single Effect runtime. The list cannot be dynamic — rebuilding
- * the runtime for a late contribution would destroy every live service on it — so a LayerSpec
- * contributed after that snapshot (including by a plugin enabled post-boot) is ignored until the
- * next full boot, and the process manager logs an error naming the module.
- *
- * The gate is therefore baked in rather than left to the author: every contributor must be on the
- * startup pass, and they must all be there together. Multi requires never gate, so getting this
- * wrong does not fail loudly at the contribution site — it surfaces hops away as a missing service.
+ * The process manager builds its service stack from the LayerSpecs present at boot and adds any
+ * contributed later (e.g. by a plugin enabled post-boot) to the live stack, extending it without
+ * rebuilding the services already running. Contributors are still gated on the startup pass so
+ * that services operations need during boot are in place before the first one is invoked.
  */
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
