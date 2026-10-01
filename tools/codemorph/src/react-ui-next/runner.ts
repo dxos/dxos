@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
@@ -87,6 +88,7 @@ export const run = ({ paths, transforms, exclude = [], dryRun = false, root = pr
     rules: {},
     residue: [],
   }));
+  const changed: string[] = [];
   for (const path of collectFiles(paths, exclude)) {
     const fileName = relative(root, path);
     const original = readFileSync(path, 'utf8');
@@ -109,13 +111,38 @@ export const run = ({ paths, transforms, exclude = [], dryRun = false, root = pr
       summary.residue.push(...result.residue);
       text = result.text;
     });
-    if (!dryRun && text !== original) {
-      writeFileSync(path, text);
+    if (text !== original) {
+      changed.push(fileName);
+      if (!dryRun) {
+        writeFileSync(path, text);
+      }
     }
   }
   return {
     generated: new Date().toISOString(),
     paths: paths.map((path) => relative(root, path)),
+    changed,
     transforms: summaries,
   };
+};
+
+/** Arguments per tool invocation, so a large run stays under the OS argument limit. */
+const CHUNK = 200;
+
+/**
+ * Sorts imports (`oxlint --fix`) and formats (`oxfmt`) the given files with the repo's own tools.
+ * Lint findings the fix cannot resolve are left for `moon run :lint`; they do not fail the run.
+ */
+export const formatFiles = (files: string[], cwd = process.cwd()) => {
+  for (let index = 0; index < files.length; index += CHUNK) {
+    const chunk = files.slice(index, index + CHUNK);
+    spawnSync('pnpm', ['exec', 'oxlint', '--fix', '--quiet', ...chunk], { cwd, stdio: 'ignore' });
+    const result = spawnSync('pnpm', ['exec', 'oxfmt', '--no-error-on-unmatched-pattern', ...chunk], {
+      cwd,
+      stdio: 'inherit',
+    });
+    if (result.status !== 0) {
+      throw new Error(`oxfmt failed on ${chunk.length} files`);
+    }
+  }
 };

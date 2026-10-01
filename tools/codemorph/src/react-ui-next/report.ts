@@ -26,6 +26,8 @@ export type TransformSummary = {
 export type Report = {
   generated: string;
   paths: string[];
+  /** Files whose text the run changed (written unless it was a dry run). */
+  changed: string[];
   transforms: TransformSummary[];
 };
 

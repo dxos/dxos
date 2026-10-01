@@ -230,9 +230,9 @@ export class CodeFile {
     return (this.#identifiers.get(name) ?? []).some((id) => roleOf(id) === 'declaration');
   }
 
-  /** Records that an edit removed one reference of `local`, so its import can go once none remain. */
-  release(local: string) {
-    this.#released.set(local, (this.#released.get(local) ?? 0) + 1);
+  /** Records that edits removed `by` references of `local`, so its import can go once none remain. */
+  release(local: string, by = 1) {
+    this.#released.set(local, (this.#released.get(local) ?? 0) + by);
   }
 
   /** Drops an import specifier outright (its references were rewritten elsewhere). */

@@ -6,6 +6,7 @@ import ts from '@typescript/typescript6';
 
 import { type Binding, type CodeFile } from '../code-file.ts';
 import { IMPORT_TARGETS, MODULES, type PackageName, nextParts } from '../targets.ts';
+import { LAYOUT_NAMES, layout } from './layout.ts';
 import { hasRenameRule, renames } from './renames.ts';
 import { type Transform } from './transform.ts';
 
@@ -98,7 +99,12 @@ export const imports: Transform = {
       }
       switch (target.kind) {
         case 'none':
-          file.report(specifier, `${imported}: ${target.reason}`);
+          // The layout transform reports each element it left, which says more than the import does.
+          if (
+            !(file.ran.includes(layout.name) && LAYOUT_NAMES.has(imported) && file.references(binding.local).length > 0)
+          ) {
+            file.report(specifier, `${imported}: ${target.reason}`);
+          }
           break;
         case 'renames':
           if (file.references(binding.local).length === 0) {

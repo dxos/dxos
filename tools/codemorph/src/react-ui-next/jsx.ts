@@ -105,7 +105,7 @@ export const tagText = (
     return [identity.binding.local, ...path.slice(1)].join('.');
   }
   if (release) {
-    file.release(identity.binding.local);
+    file.release(identity.binding.local, element.closing ? 2 : 1);
   }
   return file.nameFor(pkg, formOf(identity.form, pkg), path);
 };
@@ -120,7 +120,7 @@ export const meaningfulChildren = (element: Element): ts.JsxChild[] =>
     : [];
 
 /** Whether the element sits among JSX children (so unwrapping it splices its children in place). */
-const inJsxChildren = (element: Element) => {
+export const inJsxChildren = (element: Element) => {
   const parent = element.node.parent;
   return ts.isJsxElement(parent) || ts.isJsxFragment(parent);
 };

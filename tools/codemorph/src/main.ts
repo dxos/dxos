@@ -5,9 +5,9 @@
 import { writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
-import { TRANSFORMS, formatSummary, run } from './react-ui-next/index.ts';
+import { TRANSFORMS, formatFiles, formatSummary, run } from './react-ui-next/index.ts';
 
-const USAGE = `Usage: codemorph --transform <name|all> [--dry-run] [--report <file.json>] [--summary <file.md>] [--exclude <path>]... <paths...>
+const USAGE = `Usage: codemorph --transform <name|all> [--dry-run] [--report <file.json>] [--summary <file.md>] [--exclude <path>]... [--format] <paths...>
 
 Transforms (all runs them in this order):
 ${TRANSFORMS.map((transform) => `  ${transform.name.padEnd(12)}${transform.description}`).join('\n')}
@@ -22,6 +22,7 @@ const main = () => {
       'report': { type: 'string' },
       'summary': { type: 'string' },
       'exclude': { type: 'string', multiple: true, default: [] },
+      'format': { type: 'boolean', default: false },
       'help': { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -41,6 +42,9 @@ const main = () => {
   }
 
   const report = run({ paths: positionals, transforms, exclude: values.exclude, dryRun: values['dry-run'] });
+  if (values.format && !values['dry-run'] && report.changed.length > 0) {
+    formatFiles(report.changed);
+  }
   const summary = formatSummary(report);
   if (values.report) {
     writeFileSync(values.report, JSON.stringify(report, null, 2) + '\n');

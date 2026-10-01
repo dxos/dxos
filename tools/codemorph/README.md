@@ -17,9 +17,10 @@ node tools/codemorph/src/main.ts --transform all --dry-run \
 - `--report <file.json>`: every conversion count and every residue item (file, line, reason, snippet).
 - `--summary <file.md>`: the markdown tables also printed to stdout.
 - `--exclude <prefix>`: skip paths with this prefix (repeatable); `node_modules`, `dist` and symlinks are always skipped.
+- `--format`: after a write run, sort imports (`oxlint --fix`) and format (`oxfmt`) the files that changed.
 
-Run on a clean tree, then `pnpm format` and `moon run :lint -- --fix`: the transforms edit source text in place and
-leave formatting (unwrapped children keep their old indentation, new imports are not sorted) to those tools.
+Run on a clean tree. The transforms edit source text in place, so without `--format` unwrapped children keep their old
+indentation and new imports are unsorted until `pnpm format` and `moon run :lint -- --fix` run.
 
 ## Transforms
 
@@ -29,14 +30,20 @@ residue. Elements are matched by what their tag resolves to through the file's i
 
 | Name         | What it does                                                                                                                                                                                                                                       |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `renames`    | Part and prop renames (`Panel.Toolbar` → `Header`, `IconButton` → `Button`, Radix → Ark names, the Phase A4 ports), unwrapping of bundled parts (`Portal`, `Overlay`, `Arrow`, `Viewport`, `Tooltip.Provider`), `density=` → `size=`, Icon sizes |
+| `renames`    | Part and prop renames (`Panel.Toolbar` → `Header`, `IconButton` → `Button`, Radix → Ark names, the Phase A4 ports), unwrapping of bundled parts (`Portal`, `Overlay`, `Arrow`, `Viewport`, `Tooltip.Provider`), `density=` → `size=`, Icon sizes; composites rebuilt from Next pieces (`VirtualTrigger` → Root `positioning={virtualAnchor(ref)}`, `ActionIconButton` → `SystemButton` preset or `Card.Action`, `Listbox.ItemContent` → row parts, `ToggleGroupIconItem` → `ToggleGroup.Item`, `IconBlock`/`Field.Block` → `Block`) |
+| `layout`     | Conservative `Flex`/`Column` → `Next.Container`: only a static `Flex column` (gap on the Container scale, no `classNames`) whose children carry no flex-dependent classes, and a `Column.Root` whose children are all `Column.Center`/`Row`. Every other element is reported with the reason |
 | `classnames` | The fixed rules of the `classNames` policy only: Icon valence/tone/spin and `shrink-0`, Card text `truncate`/tone/`lines`, `font-mono` → `Input variant='mono'`, `col-span-N` → `span`, `dx-document` → `width='document'`                        |
 | `emphasis`   | Text-emphasis class rename; a no-op until `TEXT_EMPHASIS_RENAMES` is filled                                                                                                                                                                        |
 | `imports`    | Current imports → Next entries: `@dxos/react-ui` names become `Next.*` members, list and menu names move to their `/next` entry                                                                                                                  |
 
-`all` runs `renames` first because it reads current part names (`IconButton` must still be an `IconButton` to gain
-`iconOnly` handling), and `imports` last; the imports transform leaves names the renames transform owns in place and
-reports them.
+`all` runs `renames`, `layout`, `classnames`, `emphasis`, `imports`. `renames` goes first because it reads current part
+names (`IconButton` must still be an `IconButton` to gain `iconOnly` handling); `imports` goes last and leaves names the
+renames transform owns in place, reporting them.
+
+`layout` emits `Next.Container` directly, since the current `Container` is a different component. A `Flex` row is
+never converted: `Group` pads the block axis and wraps, and a `Container` row needs `columns`, so neither is a drop-in
+replacement. A converted `Column.Root` drops its `ColumnContext`, so a descendant reading `useInColumn` sees no
+column.
 
 ### Where things go
 

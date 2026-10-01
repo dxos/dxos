@@ -4,7 +4,6 @@
 
 import ts from '@typescript/typescript6';
 
-import { type CodeFile, type Element } from '../code-file.ts';
 import {
   addAttr,
   attributes,
@@ -20,10 +19,14 @@ import {
   unwrap,
 } from '../jsx.ts';
 import { type PackageName } from '../targets.ts';
+import {
+  type RuleContext,
+  cardActionButton,
+  dialogActionButton,
+  listboxItemContent,
+  virtualTrigger,
+} from './composites.ts';
 import { type Transform } from './transform.ts';
-
-/** Context a custom rule gets: the element, plus the file to edit and report on. */
-type RuleContext = { file: CodeFile; element: Element };
 
 /** How one current part becomes its Next counterpart. */
 type Rule = {
@@ -262,15 +265,19 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Toolbar.ToggleGroupItem': { to: ['ToggleGroup', 'Item'] },
     'Toolbar.DragHandle': { to: ['DragHandle'] },
     'ToggleGroupItem': { to: ['ToggleGroup', 'Item'] },
+    'ToggleGroupIconItem': button(['ToggleGroup', 'Item']),
+    'Toolbar.ToggleGroupIconItem': button(['ToggleGroup', 'Item']),
+    'IconBlock': { to: ['Block'], drop: ['square'], review: { compact: 'Next.Block has no compact variant' } },
+    'Field.Block': { to: ['Block'] },
     'Card.DragHandle': { to: ['DragHandle'] },
     'Card.Block': { to: ['Block'] },
-    'Card.ActionIconButton': { residue: 'Card.ActionIconButton has no Next counterpart' },
+    'Card.ActionIconButton': { apply: cardActionButton },
     // Dialogs.
     'Dialog.Close': { to: ['Dialog', 'CloseTrigger'] },
     'Dialog.ActionBar': { to: ['Dialog', 'Footer'] },
     'Dialog.Overlay': UNWRAP,
     'Dialog.Portal': UNWRAP,
-    'Dialog.ActionIconButton': { residue: 'Dialog.ActionIconButton has no Next counterpart' },
+    'Dialog.ActionIconButton': { apply: dialogActionButton },
     'AlertDialog.ActionBar': { to: ['AlertDialog', 'Footer'] },
     'AlertDialog.Overlay': UNWRAP,
     'AlertDialog.Portal': UNWRAP,
@@ -279,7 +286,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Popover.Arrow': UNWRAP,
     'Popover.Viewport': { to: ['Popover', 'Body'] },
     'Popover.Close': { to: ['Popover', 'CloseTrigger'] },
-    'Popover.VirtualTrigger': { residue: 'VirtualTrigger → Root positioning.getAnchorRect (useVirtualAnchor)' },
+    'Popover.VirtualTrigger': { apply: virtualTrigger },
     'Tooltip.Provider': UNWRAP,
     // Select.
     'Select.TriggerButton': { to: ['Select', 'Trigger'] },
@@ -296,7 +303,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Menu.RadioGroup': { to: ['Menu', 'RadioItemGroup'] },
     'Menu.SubTrigger': { to: ['Menu', 'TriggerItem'] },
     'Menu.SubContent': { to: ['Menu', 'Content'], residue: 'Menu.SubContent → a nested Menu.Content inside Menu.Sub' },
-    'Menu.VirtualTrigger': { residue: 'VirtualTrigger → Root positioning.getAnchorRect (useVirtualAnchor)' },
+    'Menu.VirtualTrigger': { apply: virtualTrigger },
     // System buttons.
     ...Object.fromEntries(
       [
@@ -402,13 +409,14 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Field.TriggerIcon': { residue: 'Field.TriggerIcon → DateInput trigger or a Button in the end slot' },
   },
   'react-ui-list': {
+    'Combobox.VirtualTrigger': { apply: virtualTrigger },
     'Listbox.ItemLabel': { to: ['Listbox', 'ItemText'] },
     'Listbox.Indicator': { to: ['Listbox', 'ItemIndicator'] },
     'Listbox.Viewport': {
       unwrap: true,
       residue: 'Listbox.Viewport dropped: Listbox.Content scrolls (scroll={false} to defer to the host)',
     },
-    'Listbox.ItemContent': { residue: 'Listbox.ItemContent → compose ItemIcon / ItemText / ItemDescription' },
+    'Listbox.ItemContent': { apply: listboxItemContent },
     'OrderedList.Title': { to: ['OrderedList', 'ItemText'] },
     'OrderedList.Viewport': {
       unwrap: true,
@@ -423,7 +431,15 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
 };
 
 /** Elements whose Next counterpart takes no `size`, so `density` cannot become one. */
-const BUTTONS = new Set(['IconButton', 'Button', 'Toolbar.IconButton', 'Toolbar.Button', 'OrderedList.IconButton']);
+const BUTTONS = new Set([
+  'IconButton',
+  'Button',
+  'Toolbar.IconButton',
+  'Toolbar.Button',
+  'OrderedList.IconButton',
+  'ToggleGroupIconItem',
+  'Toolbar.ToggleGroupIconItem',
+]);
 
 const DENSITIES = new Set(['sm', 'md', 'lg']);
 
@@ -487,7 +503,7 @@ const applyRule = (ctx: RuleContext, rule: Rule, key: string) => {
 export const hasRenameRule = (pkg: PackageName, key: string): boolean => RULES[pkg][key] !== undefined;
 
 /** Rules that rebuild the whole element from its source text, so generic prop edits would overlap them. */
-const REBUILT = new Set<Rule['apply']>([avatarRoot, bannerEmpty, selectItem]);
+const REBUILT = new Set<Rule['apply']>([avatarRoot, bannerEmpty, selectItem, listboxItemContent, virtualTrigger]);
 
 export const renames: Transform = {
   name: 'renames',
