@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type SVGProps, forwardRef } from 'react';
+import React, { type SVGProps, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ChromaticPalette, type MessageValence, type NeutralPalette, type ThemedClassName } from '@dxos/ui-types';
@@ -28,18 +28,24 @@ export type IconProps = ThemedClassName<Omit<SVGProps<SVGSVGElement>, 'ref'>> & 
   valence?: IconValence;
   /** A lower-emphasis colour (`--color-description` or `--color-subdued`); `hue` and `valence` take precedence. */
   tone?: IconTone;
-  /** Rotates continuously, as a busy indicator; still under `prefers-reduced-motion`. */
+  /**
+   * Rotates continuously, as a busy indicator; still under `prefers-reduced-motion`. Spinners share one phase (the
+   * animation starts at the wall clock's second), so several in a list turn together.
+   */
   spin?: boolean;
   /** The icon at this size's scale instead of its scope's (one icon in a denser or roomier control). */
   size?: Size;
 };
 
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon, label, hue, valence, tone, spin, size, classNames, ...props }, forwardedRef) => {
+  ({ icon, label, hue, valence, tone, spin, size, classNames, style, ...props }, forwardedRef) => {
     const href = useIconHref(icon);
+    // A negative delay of the wall clock's offset into the 1s turn puts every spinner at the same angle.
+    const spinDelay = useMemo(() => (spin ? `${-(Date.now() % 1_000)}ms` : undefined), [spin]);
     return (
       <svg
         {...props}
+        style={spinDelay ? { ...style, animationDelay: spinDelay } : style}
         {...(label ? { 'role': 'img', 'aria-label': label } : { 'aria-hidden': true })}
         data-scope='icon'
         data-part='root'

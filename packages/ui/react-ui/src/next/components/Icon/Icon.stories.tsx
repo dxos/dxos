@@ -93,7 +93,7 @@ export const Default: Story = {};
 
 /**
  * One icon scale per size (decision 2): the same size in a rail Block as in a control. A labelled icon is an `img`;
- * an unlabelled one is hidden from assistive tech (decision 9). `tone` lowers emphasis, `spin` animates, and `size`
+ * an unlabelled one is hidden from assistive tech (decision 9). `tone` lowers emphasis, `spin` animates (every spinner in one phase), and `size`
  * takes another size's icon scale.
  */
 export const Test: Story = {
@@ -124,6 +124,8 @@ export const Test: Story = {
     await expect(color('tone-subdued-md')).not.toBe(plain);
     await expect(color('tone-subdued-md')).not.toBe(color('tone-description-md'));
     await expect(getComputedStyle(byTestId(canvasElement, 'spin-md')).animationName).toBe('nx-spin');
+    // Spinners share a phase: each starts at the wall clock's offset into the turn.
+    await expect(parseFloat(byTestId(canvasElement, 'spin-md').style.animationDelay)).toBeLessThanOrEqual(0);
     for (const size of SIZES) {
       await expect(byTestId(canvasElement, `small-${size}`).getBoundingClientRect().width, size).toBeCloseTo(
         GEOMETRY.xs.icon,
