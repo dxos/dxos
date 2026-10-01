@@ -125,6 +125,12 @@ export const hasEntityId = refInternal.Ref.hasEntityId;
 export type LoadOptions = refInternal.LoadOptions;
 
 /**
+ * Loads the targets of `refs` in ref order, omitting missing targets and, unless
+ * `{ deleted: 'include' }` asks for them, deleted ones.
+ */
+export const loadAll: <T>(refs: readonly Ref<T>[], options?: LoadOptions) => Promise<T[]> = refInternal.loadAll;
+
+/**
  * The URI a reference property points at, or `undefined` when the node is not a reference.
  *
  * A reference declares its target twice: as a typed annotation on the declaration and as the JSON
