@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Next } from '@dxos/react-ui/next';
+import { Select } from '@dxos/react-ui';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
@@ -59,28 +59,31 @@ export const createSelectField = ({
         {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
       </p>
     ) : (
-      <Next.Select.Root
+      <Select.Root
         disabled={!!readonly}
-        value={[value ?? sentinel]}
+        value={value ?? sentinel}
         // A choice is a commit: the select never blurs, so it commits itself.
-        onValueChange={({ value: [next] }) => {
+        onValueChange={(next) => {
           onValueChange(type, hasDefault && next === sentinel ? undefined : next);
           onBlur();
         }}
       >
-        <Next.Select.Trigger classNames='w-full' disabled={!!readonly} />
+        <Select.TriggerButton classNames='w-full' disabled={!!readonly} />
         {normalized.length > 0 && (
-          <Next.Select.Content>
-            {hasDefault && <Next.Select.Item item={{ value: sentinel, label: defaultLabel }} />}
-            {normalized.map((option) => (
-              <Next.Select.Item
-                key={option.value}
-                item={{ value: option.value, label: option.label ?? option.value }}
-              />
-            ))}
-          </Next.Select.Content>
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {hasDefault && <Select.Option value={sentinel}>{defaultLabel}</Select.Option>}
+                {normalized.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label ?? option.value}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
         )}
-      </Next.Select.Root>
+      </Select.Root>
     );
 
     return (

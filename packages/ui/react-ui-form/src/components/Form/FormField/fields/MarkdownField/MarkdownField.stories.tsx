@@ -10,7 +10,7 @@ import { expect, userEvent } from 'storybook/test';
 import { Filter, Format, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui/next';
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -60,8 +60,8 @@ const RefStory = () => {
 
   return (
     <TestLayout>
-      <Next.Panel.Root>
-        <Next.Panel.Body>
+      <Panel.Root>
+        <Panel.Content>
           <Form.Root schema={TextNoteHolder} values={values as any} db={space.db}>
             <Form.Viewport>
               <Form.Content>
@@ -69,8 +69,8 @@ const RefStory = () => {
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
     </TestLayout>
   );
 };
@@ -95,8 +95,8 @@ const EmptyRefStory = () => {
 
   return (
     <TestLayout>
-      <Next.Panel.Root>
-        <Next.Panel.Body>
+      <Panel.Root>
+        <Panel.Content>
           <Form.Root schema={EmptyRefSchema} defaultValues={{}} db={space.db}>
             <Form.Viewport>
               <Form.Content>
@@ -104,8 +104,8 @@ const EmptyRefStory = () => {
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
     </TestLayout>
   );
 };

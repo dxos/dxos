@@ -2,16 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Icon, Select, type SelectRootProps } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
 import { presentationFor } from '../../presentation.tsx';
-
-type SelectRootProps = ComponentProps<typeof Next.Select.Root>;
 
 export type SelectFieldOptions = FormFieldRendererProps & {
   options?: Array<{ value: string | number; label?: string; secondaryLabel?: string; icon?: string; iconHue?: string }>;
@@ -46,27 +44,27 @@ export const SelectField = ({
   }
 
   return (
-    <Next.Select.Root
-      value={[value]}
-      onValueChange={({ value: [value] }) => handleValueChange(value)}
-      disabled={!!readonly}
-    >
-      <Next.Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
+    <Select.Root value={value} onValueChange={handleValueChange} disabled={!!readonly}>
+      <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
       {options?.length !== 0 && (
-        <Next.Select.Content>
-          {options?.map(({ value, label, secondaryLabel, icon, iconHue }) => (
-            // NOTE: Numeric values are converted to and from strings.
-            <Next.Select.Item key={String(value)} value={String(value)}>
-              <span className='flex items-center flex-row gap-2'>
-                {icon && <Next.Icon icon={icon} classNames={getIconHueStyles(iconHue)} />}
-                {label ?? String(value)}
-                {secondaryLabel && <span className='text-subdued text-xs'>{secondaryLabel}</span>}
-              </span>
-            </Next.Select.Item>
-          ))}
-        </Next.Select.Content>
+        <Select.Portal>
+          <Select.Content>
+            <Select.Viewport>
+              {options?.map(({ value, label, secondaryLabel, icon, iconHue }) => (
+                // NOTE: Numeric values are converted to and from strings.
+                <Select.Option key={String(value)} value={String(value)}>
+                  <span className='flex items-center flex-row gap-2'>
+                    {icon && <Icon icon={icon} classNames={getIconHueStyles(iconHue)} />}
+                    {label ?? String(value)}
+                    {secondaryLabel && <span className='text-subdued text-xs'>{secondaryLabel}</span>}
+                  </span>
+                </Select.Option>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
       )}
-    </Next.Select.Root>
+    </Select.Root>
   );
 };
 

@@ -14,7 +14,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui/next';
+import { Toolbar, Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { hues } from '@dxos/ui-types';
@@ -59,25 +59,27 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   }
 
   return (
-    <TestLayout json={json ? { values, schema: schema?.ast } : undefined}>
-      <Form.Root
-        schema={schema}
-        defaultValues={values}
-        db={space.db}
-        onSave={handleSave}
-        onCancel={handleCancel}
-        {...props}
-      >
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.FieldSet label='Section' description='This is a [section description](https://dxos.org).'>
-              <Form.Fields />
-            </Form.FieldSet>
-            <Form.Actions />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </TestLayout>
+    <Tooltip.Provider>
+      <TestLayout json={json ? { values, schema: schema?.ast } : undefined}>
+        <Form.Root
+          schema={schema}
+          defaultValues={values}
+          db={space.db}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          {...props}
+        >
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.FieldSet label='Section' description='This is a [section description](https://dxos.org).'>
+                <Form.Fields />
+              </Form.FieldSet>
+              <Form.Actions />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </TestLayout>
+    </Tooltip.Provider>
   );
 };
 
@@ -447,30 +449,32 @@ const ReactiveBufferedStory = () => {
   );
 
   return (
-    <TestLayout json={{ source }}>
-      <div className='flex flex-col h-full'>
-        <Next.Toolbar.Root>
-          <Next.Button
-            icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={running ? 'Stop external ticks' : 'Start external ticks'}
-            onClick={() => setRunning((value) => !value)}
-          />
-          <Next.Button
-            icon='ph--plus--regular'
-            label='Tick counter once (external)'
-            disabled={running}
-            onClick={tick}
-          />
-        </Next.Toolbar.Root>
-        <Form.Root schema={ReactiveSchema} values={source} onValuesChanged={handleValuesChanged}>
-          <Form.Viewport>
-            <Form.Content>
-              <Form.Fields />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      </div>
-    </TestLayout>
+    <Tooltip.Provider>
+      <TestLayout json={{ source }}>
+        <div className='flex flex-col h-full'>
+          <Toolbar.Root>
+            <Toolbar.IconButton
+              icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+              label={running ? 'Stop external ticks' : 'Start external ticks'}
+              onClick={() => setRunning((value) => !value)}
+            />
+            <Toolbar.IconButton
+              icon='ph--plus--regular'
+              label='Tick counter once (external)'
+              disabled={running}
+              onClick={tick}
+            />
+          </Toolbar.Root>
+          <Form.Root schema={ReactiveSchema} values={source} onValuesChanged={handleValuesChanged}>
+            <Form.Viewport>
+              <Form.Content>
+                <Form.Fields />
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+        </div>
+      </TestLayout>
+    </Tooltip.Provider>
   );
 };
 

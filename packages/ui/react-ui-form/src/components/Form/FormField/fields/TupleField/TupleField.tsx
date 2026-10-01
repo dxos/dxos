@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Field } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { safeParseFloat } from '@dxos/util';
 
@@ -28,8 +28,9 @@ export const TupleField = ({
   return (
     <div className={mx('grid gap-form-gap', gridCols[binding.length - 1])}>
       {binding.map((prop) => (
-        <Next.NumberInput
+        <Field.Input
           key={prop}
+          type='number'
           disabled={!!readonly}
           value={values[prop]}
           onChange={(event) => {

@@ -11,8 +11,7 @@ import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationVal
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Button, Field, Icon, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -187,17 +186,17 @@ export const RefField = (props: RefFieldProps) => {
           // No layout of its own: the trigger it stands in for (`asChild`) is already a grid,
           // and a `flex` here only competes with it.
           <div className='w-full'>
-            <Next.Field.Root key={item.id}>
-              <Next.Input value={item.label} readOnly classNames='w-full' />
-            </Next.Field.Root>
+            <Field.Root key={item.id}>
+              <Field.Input value={item.label} readOnly classNames='w-full' />
+            </Field.Root>
           </div>
         ) : (
-          <Next.Button classNames='w-full text-start gap-form-gap'>
+          <Button classNames='w-full text-start gap-form-gap'>
             <div className='grow overflow-hidden'>
               <span className='truncate text-description'>{placeholder || label || t('ref-field.placeholder')}</span>
             </div>
-            <Next.Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
-          </Next.Button>
+            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+          </Button>
         )}
       </ObjectPicker.Trigger>
       <ObjectPicker.Portal>

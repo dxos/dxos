@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Field, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -21,7 +21,7 @@ export const PasswordField = ({
   onBlur,
   onValueChange,
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<Next.InputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
@@ -31,7 +31,8 @@ export const PasswordField = ({
   }
 
   return (
-    <Next.PasswordInput
+    <Field.Input
+      type='password'
       noAutoFill
       spellCheck={false}
       disabled={!!readonly}

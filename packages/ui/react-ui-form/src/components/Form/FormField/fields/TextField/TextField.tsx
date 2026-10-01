@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Next } from '@dxos/react-ui/next';
+import { Field, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -22,7 +22,7 @@ export const TextField = ({
   onBlur,
   onValueChange,
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<Next.InputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
@@ -34,7 +34,7 @@ export const TextField = ({
   // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
   const key = format === Format.TypeFormat.Key;
   return (
-    <Next.Input
+    <Field.Input
       noAutoFill
       disabled={!!readonly}
       placeholder={placeholder}

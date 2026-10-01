@@ -10,7 +10,7 @@ import { Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Next } from '@dxos/react-ui/next';
+import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 
@@ -115,19 +115,19 @@ const ReactiveStory = () => {
   return (
     <TestLayout json={snapshot}>
       <div className='flex flex-col gap-2'>
-        <Next.Toolbar.Root>
-          <Next.Button
+        <Toolbar.Root>
+          <Toolbar.IconButton
             icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
             label={running ? 'Stop background mutations' : 'Start background mutations'}
             onClick={() => setRunning((value) => !value)}
           />
-          <Next.Button
+          <Toolbar.IconButton
             icon='ph--shuffle--regular'
             label='Mutate a random field once'
             disabled={running}
             onClick={mutate}
           />
-        </Next.Toolbar.Root>
+        </Toolbar.Root>
         <ObjectForm object={person} type={Person.Person} />
       </div>
     </TestLayout>

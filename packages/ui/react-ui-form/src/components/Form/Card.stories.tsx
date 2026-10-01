@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Next } from '@dxos/react-ui/next';
+import { Card, Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -34,33 +34,33 @@ const Contact = Schema.Struct({
 const values = { name: 'Ada Lovelace', email: 'ada@example.com', role: 'Engineer' };
 
 const ReferenceCard = () => (
-  <Next.Card.Root>
-    <Next.Card.Header>
-      <Next.Block>
-        <Next.Icon icon='ph--user--regular' />
-      </Next.Block>
-      <Next.Card.Title>Reference card</Next.Card.Title>
-    </Next.Card.Header>
-    <Next.Card.Body>
-      <Next.Card.Row>
-        <Next.Card.Text>A card row — the inset to match.</Next.Card.Text>
-      </Next.Card.Row>
-      <Next.Card.Row>
-        <Next.Card.Text variant='description'>Second row, same track.</Next.Card.Text>
-      </Next.Card.Row>
-    </Next.Card.Body>
-  </Next.Card.Root>
+  <Card.Root fullWidth>
+    <Card.Header>
+      <Card.Block>
+        <Icon icon='ph--user--regular' />
+      </Card.Block>
+      <Card.Title>Reference card</Card.Title>
+    </Card.Header>
+    <Card.Body>
+      <Card.Row>
+        <Card.Text>A card row — the inset to match.</Card.Text>
+      </Card.Row>
+      <Card.Row>
+        <Card.Text variant='description'>Second row, same track.</Card.Text>
+      </Card.Row>
+    </Card.Body>
+  </Card.Root>
 );
 
 const FormCard = () => (
-  <Next.Card.Root>
-    <Next.Card.Header>
-      <Next.Block>
-        <Next.Icon icon='ph--pencil--regular' />
-      </Next.Block>
-      <Next.Card.Title>Form card</Next.Card.Title>
-    </Next.Card.Header>
-    <Next.Card.Body>
+  <Card.Root fullWidth>
+    <Card.Header>
+      <Card.Block>
+        <Icon icon='ph--pencil--regular' />
+      </Card.Block>
+      <Card.Title>Form card</Card.Title>
+    </Card.Header>
+    <Card.Body>
       <Form.Root schema={Contact} values={values}>
         <Form.Viewport>
           <Form.Content>
@@ -68,8 +68,8 @@ const FormCard = () => (
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Next.Card.Body>
-  </Next.Card.Root>
+    </Card.Body>
+  </Card.Root>
 );
 
 const DefaultStory = () => (

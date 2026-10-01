@@ -10,8 +10,7 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { Field, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -425,11 +424,11 @@ const renderSelectStatic =
 
 // An end-of-row button sits in a control cell, so it centres on the same line as a control's own
 // trailing icon (a select's caret, a date field's calendar) and its hover fill never touches the row's edges.
-export const CompactIconButton = (props: Next.ButtonProps) => {
+export const CompactIconButton = (props: IconButtonProps) => {
   return (
-    <Next.Block>
-      <Next.Button variant='ghost' iconOnly size='sm' iconSize='xs' {...props} />
-    </Next.Block>
+    <Field.Block>
+      <IconButton variant='ghost' iconOnly density='sm' size={3} {...props} />
+    </Field.Block>
   );
 };
 

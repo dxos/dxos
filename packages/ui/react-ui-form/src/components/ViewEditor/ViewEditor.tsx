@@ -27,10 +27,9 @@ import {
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { Banner, Field, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { OrderedList } from '@dxos/react-ui-list/next';
-import { Next } from '@dxos/react-ui/next';
+import { OrderedList } from '@dxos/react-ui-list';
 import {
   ParentLabelAnnotation,
   ProjectionModel,
@@ -221,9 +220,11 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
             <Form.Content>
               {/* If readonly is set, then the callout is not needed. */}
               {schemaReadonly && !readonly && (
-                <Next.Banner.Root valence='info'>
-                  <Next.Banner.Title>{t('system-schema.description')}</Next.Banner.Title>
-                </Next.Banner.Root>
+                <Banner.Root valence='info'>
+                  <Banner.Content classNames='my-form-padding'>
+                    <Banner.Title>{t('system-schema.description')}</Banner.Title>
+                  </Banner.Content>
+                </Banner.Root>
               )}
               <Form.Fields />
               {type && (
@@ -252,10 +253,10 @@ const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>):
     );
 
     return (
-      <Next.Field.Root>
+      <Field.Root>
         <FormFieldLabel readonly={readonly} label={label} />
         <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
-      </Next.Field.Root>
+      </Field.Root>
     );
   },
 });
