@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { keySymbols } from '@dxos/react-focus';
@@ -29,7 +29,7 @@ const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
   lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
 };
 
-export type AttentionSigilButtonProps = Omit<Next.ButtonProps, 'variant'> &
+export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Next.Button>, 'variant' | 'size'> &
   Attention.AttendableId &
   Attention.Related & {
     isMenu?: boolean;

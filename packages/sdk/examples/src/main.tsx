@@ -84,7 +84,7 @@ const main = async () => {
       <ThemeProvider tx={defaultTx} themeMode='light'>
         <div className='demo'>
           <div className='buttons'>
-            <Next.Tooltip.Trigger asChild content='Offline mode' className='flex'>
+            <Next.Tooltip.Trigger content='Offline mode' className='flex'>
               <Next.Switch
                 data-testid='airplane-mode'
                 classNames='mr-2'
@@ -92,12 +92,9 @@ const main = async () => {
                   setOffline(!offline);
                   return handleToggleNetwork(e);
                 }}
-                label={
-                  <>
-                    <Next.Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
-                  </>
-                }
+                label='Offline mode'
               />
+              <Next.Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
             </Next.Tooltip.Trigger>
             <Next.Tooltip.Trigger content='Write batching' className='flex'>
               <Next.Switch
@@ -107,12 +104,9 @@ const main = async () => {
                   setBatching(!batching);
                   return handleToggleBatching(e);
                 }}
-                label={
-                  <>
-                    <Next.Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
-                  </>
-                }
+                label='Write batching'
               />
+              <Next.Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
             </Next.Tooltip.Trigger>
           </div>
           {clients.map((client, index) => (

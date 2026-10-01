@@ -5,14 +5,17 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { SettingsOperation } from '../../operations/index.ts';
 import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
-export type PluginRegistryButtonProps = Partial<Omit<ComponentPropsWithoutRef<typeof IconButton>, 'icon' | 'label'>>;
+export type PluginRegistryButtonProps = Pick<
+  ComponentPropsWithoutRef<typeof Next.Button>,
+  'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
+>;
 
 /**
  * Icon button that opens the plugin registry via {@link SettingsOperation.OpenPluginRegistry}.

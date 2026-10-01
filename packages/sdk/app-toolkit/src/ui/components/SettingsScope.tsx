@@ -77,22 +77,16 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
           </Next.AlertDialog.Body>
           <Next.AlertDialog.Footer>
             <div className='grow' />
-            <Next.AlertDialog.Cancel asChild>
-              <Next.Button>{t('settings-scope.conflict-dialog.cancel.label')}</Next.Button>
-            </Next.AlertDialog.Cancel>
-            <Next.AlertDialog.Action asChild>
-              <Next.Button data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
-                {t('settings-scope.conflict-dialog.keep-local.label')}
-              </Next.Button>
+            <Next.AlertDialog.Cancel>{t('settings-scope.conflict-dialog.cancel.label')}</Next.AlertDialog.Cancel>
+            <Next.AlertDialog.Action data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
+              {t('settings-scope.conflict-dialog.keep-local.label')}
             </Next.AlertDialog.Action>
-            <Next.AlertDialog.Action asChild>
-              <Next.Button
-                data-testid='settingsScope.keepShared'
-                variant='primary'
-                onClick={() => handleResolve('shared')}
-              >
-                {t('settings-scope.conflict-dialog.keep-shared.label')}
-              </Next.Button>
+            <Next.AlertDialog.Action
+              data-testid='settingsScope.keepShared'
+              variant='primary'
+              onClick={() => handleResolve('shared')}
+            >
+              {t('settings-scope.conflict-dialog.keep-shared.label')}
             </Next.AlertDialog.Action>
           </Next.AlertDialog.Footer>
         </Next.AlertDialog.Content>

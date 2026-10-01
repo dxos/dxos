@@ -54,7 +54,7 @@ export const Main = () => {
   );
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={plugins.map((plugin) => ({ value: plugin.meta.profile.key, label: plugin.meta.profile.key }))}>
       <Listbox.Content aria-label='Plugins'>
         {plugins.map((plugin) => (
           <Item
