@@ -77,7 +77,7 @@ const DefaultStory = () => {
           </Card.Header>
           <Card.Body>
             <Card.Row>
-              <Card.Text classNames='text-sm text-description' data-testid={`crm.story.image.${subject.id}`}>
+              <Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='description'>
                 {(subject as { image?: string }).image ?? 'image: none'}
               </Card.Text>
             </Card.Row>

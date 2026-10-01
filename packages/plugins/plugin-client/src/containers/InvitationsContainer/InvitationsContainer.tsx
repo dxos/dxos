@@ -116,7 +116,7 @@ export const InvitationsContainer = () => {
 
 const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => (
   <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
-    <Icon icon='ph--paper-plane-tilt--duotone' size='lg' classNames='text-description' />
+    <Icon icon='ph--paper-plane-tilt--duotone' size='lg' tone='description' />
     <Flex column classNames='min-w-0'>
       <div className='font-mono truncate'>{row.code}</div>
       <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
@@ -129,7 +129,7 @@ const RedeemedInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitat
   const date = row.redeemedAt ?? row.createdAt;
   return (
     <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
-      <Icon icon='ph--check-circle--duotone' size='lg' classNames='text-success-text' />
+      <Icon icon='ph--check-circle--duotone' size='lg' valence='success' />
       <Flex column classNames='min-w-0'>
         <div className='font-mono truncate'>{row.code}</div>
         <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>

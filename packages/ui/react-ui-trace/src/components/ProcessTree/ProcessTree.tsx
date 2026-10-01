@@ -157,7 +157,6 @@ const makeIconRenderer =
           size='md'
           synchronized
           classNames={mx(
-            'shrink-0',
             process.state === Process.State.RUNNING && 'animate-spin',
             process.state === Process.State.FAILED && 'text-error-text',
             process.state === Process.State.SUCCEEDED && 'text-success-text',

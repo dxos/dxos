@@ -68,7 +68,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
             <Icon icon={icon} />
           </CardIconSlot>
         </Block>
-        <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
+        <Card.Title lines={2}>{label}</Card.Title>
         {menuItems.length > 0 && <Card.Menu items={menuItems} />}
       </Card.Header>
       {archived && (

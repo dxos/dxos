@@ -80,7 +80,7 @@ export const MobileMain = () => {
   const showNavBar = !keyboardOpen && drawerClosed;
 
   return (
-    <Panel.Root {...attentionAttrs} classNames='dx-document'>
+    <Panel.Root {...attentionAttrs} width='document'>
       <Panel.Header>
         <MobileAppBar {...appBarProps} />
       </Panel.Header>

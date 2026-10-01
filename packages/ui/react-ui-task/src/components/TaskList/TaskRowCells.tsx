@@ -264,7 +264,7 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
       <Block>
-        <Icon icon={icon} classNames={mx('shrink-0', styles)} />
+        <Icon icon={icon} classNames={mx(styles)} />
       </Block>
     );
   }

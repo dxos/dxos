@@ -49,7 +49,7 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
   >
     {/* Icon box matches the plank toolbar height so the sigil stays put as the plank folds. */}
     <div className='flex h-(--dx-rail-content) shrink-0 items-center justify-center'>
-      <Icon icon={icon} size='lg' classNames='shrink-0 text-subdued' />
+      <Icon icon={icon} size='lg' tone='subdued' />
     </div>
     {/* TODO(wittjosiah): Plain span — no react-ui primitive renders a vertical (writing-mode) label. */}
     <span className='truncate text-sm font-normal text-description [writing-mode:vertical-rl] rotate-180'>{label}</span>

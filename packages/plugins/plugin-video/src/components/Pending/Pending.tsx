@@ -17,7 +17,7 @@ export const Pending = composable<HTMLDivElement, PendingProps>(({ classNames, l
     ref={forwardedRef}
   >
     <span className='flex items-center gap-1'>
-      <Icon icon='ph--spinner--regular' classNames='animate-spin' />
+      <Icon icon='ph--spinner--regular' spin />
       {label}
     </span>
   </div>

@@ -248,7 +248,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root classNames='px-2'>
-          <Icon icon='ph--at--regular' size='md' classNames='text-description' />
+          <Icon icon='ph--at--regular' size='md' tone='description' />
           <Field.Root>
             <Input
               classNames='grow'

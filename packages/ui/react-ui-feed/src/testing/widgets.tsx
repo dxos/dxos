@@ -78,7 +78,7 @@ const Panel = ({
 
 const Frame = ({ icon, title, children, classNames }: WidgetProps<any> & { classNames?: string }) => (
   <div className={mx('flex gap-2 px-2 py-1 rounded border border-subdued-separator text-sm', classNames)}>
-    {icon && <Icon icon={icon} size='md' classNames='mt-1 shrink-0 text-description' />}
+    {icon && <Icon icon={icon} size='md' classNames='mt-1' tone='description' />}
     <div className='min-w-0'>
       {title && <p className='text-xs text-description'>{title}</p>}
       {children}

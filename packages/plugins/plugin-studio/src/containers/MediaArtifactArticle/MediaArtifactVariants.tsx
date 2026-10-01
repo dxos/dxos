@@ -137,11 +137,7 @@ export const MediaArtifactVariants = ({
                   variant={selected === index ? 'primary' : 'ghost'}
                   onClick={() => setSelected(index)}
                 >
-                  {variant.jobId ? (
-                    <Icon icon='ph--spinner-gap--regular' size='md' classNames='animate-spin' />
-                  ) : (
-                    index + 1
-                  )}
+                  {variant.jobId ? <Icon icon='ph--spinner-gap--regular' size='md' spin /> : index + 1}
                 </Button>
               ))}
             </>

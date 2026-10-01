@@ -284,7 +284,7 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <div {...composableProps(props, { classNames: 'grid place-items-center dx-fill p-8' })} ref={forwardedRef}>
       <div className='flex flex-col items-center gap-2 text-center'>
-        <Icon icon='ph--file--regular' size='xl' classNames='text-subdued' />
+        <Icon icon='ph--file--regular' size='xl' tone='subdued' />
         {name && <span className='text-sm'>{name}</span>}
         <span className='text-xs text-subdued'>
           {size === undefined ? type : t('file-details.label', { type, size: formatBytes(size) })}

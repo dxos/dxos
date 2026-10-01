@@ -204,7 +204,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>
               <Flex gap='sm' align='center'>
                 <Field.Root>
-                  <Input value={space.id} disabled classNames='flex-1 font-mono text-xs' />
+                  <Input value={space.id} disabled classNames='flex-1 text-xs' variant='mono' />
                 </Field.Root>
                 <SystemButton.Clipboard iconOnly label={t('copy-space-id.label')} value={space.id} />
               </Flex>

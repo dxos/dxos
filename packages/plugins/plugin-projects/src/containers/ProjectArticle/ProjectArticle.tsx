@@ -378,7 +378,7 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
 
   return (
     <Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
-      <Icon icon='ph--flag--regular' classNames='text-info-text' />
+      <Icon icon='ph--flag--regular' valence='info' />
       <span className='truncate'>{milestone.name}</span>
       {milestone.targetDate && <span className='text-subdued shrink-0'>{milestone.targetDate}</span>}
     </Flex>

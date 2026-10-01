@@ -170,7 +170,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
           {state === 'pending' && (
             <Grid cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>
-                <Icon icon='ph--spinner--regular' size='xl' classNames='animate-spin' />
+                <Icon icon='ph--spinner--regular' size='xl' spin />
               </div>
             </Grid>
           )}

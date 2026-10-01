@@ -238,7 +238,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         className='flex items-center gap-2 p-1 text-description min-h-(--dx-control)'
         data-testid={`assistant.tool-${single.kind}`}
       >
-        <Icon icon={icon} size='md' classNames='shrink-0' />
+        <Icon icon={icon} size='md' />
         <span className='truncate'>{header}</span>
       </div>
     );
@@ -268,7 +268,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         <span className='flex min-w-0 items-center gap-2 text-description tabular-nums'>
           {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
               whether it is collapsed or not. */}
-          <Icon icon={icon} size='md' classNames='shrink-0' />
+          <Icon icon={icon} size='md' />
           <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
           {failed > 0 && (
             <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>

@@ -98,7 +98,7 @@ const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
     <div className='flex items-center gap-2 text-sm'>
       <Icon
         icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
-        classNames={mx('shrink-0', peer.online ? 'text-green-500' : 'text-description')}
+        classNames={mx(peer.online ? 'text-green-500' : 'text-description')}
         size='xs'
       />
       <span className='truncate flex-1'>{peer.displayName ?? peer.peerId.slice(0, 8)}</span>

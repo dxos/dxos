@@ -183,7 +183,7 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
         <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
             <span className='grow text-description truncate'>{t('context.label')}</span>
-            <Icon icon='ph--brain--regular' size='md' classNames='text-description' />
+            <Icon icon='ph--brain--regular' size='md' tone='description' />
           </TogglePanel.Header>
           <TogglePanel.Body>
             <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-description whitespace-pre-wrap'>

@@ -18,7 +18,7 @@ export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }
   const { engine, playing, outputNode } = useMixerEngine();
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
+    <Panel.Root role={role} width='document'>
       <Panel.Body classNames='grid grid-rows-[3fr_1fr]'>
         <Mixer dream={dream} engine={engine} />
         <Flex column classNames='p-2'>

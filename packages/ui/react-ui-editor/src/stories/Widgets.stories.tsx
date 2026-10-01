@@ -134,7 +134,7 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
       </Card.Header>
       {text && (
         <Card.Row>
-          <Card.Text classNames='text-description'>{text}</Card.Text>
+          <Card.Text variant='description'>{text}</Card.Text>
         </Card.Row>
       )}
     </Card.Root>

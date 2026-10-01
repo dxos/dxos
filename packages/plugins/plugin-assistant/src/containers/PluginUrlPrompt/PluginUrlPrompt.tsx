@@ -77,7 +77,7 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       data-testid='assistant.pluginUrlPrompt'
     >
       <Flex gap='sm' align='center'>
-        <Icon icon='ph--cloud-arrow-down--regular' size='lg' classNames='shrink-0 text-subdued' />
+        <Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subdued' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-url-prompt.title', { plugin: label })}</p>
           <p className='text-sm text-subdued'>

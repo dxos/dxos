@@ -98,7 +98,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
             className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
-            <Icon icon='ph--spinner-gap--regular' size='xl' classNames='animate-spin' />
+            <Icon icon='ph--spinner-gap--regular' size='xl' spin />
           </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />

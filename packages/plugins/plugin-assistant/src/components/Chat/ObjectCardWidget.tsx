@@ -44,7 +44,7 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
             <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
           </CardIconSlot>
         </Block>
-        <Card.Title classNames='line-clamp-1'>{title}</Card.Title>
+        <Card.Title lines={1}>{title}</Card.Title>
       </Card.Header>
       <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
     </Card.Root>

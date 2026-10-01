@@ -144,7 +144,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
               <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
-                <Icon icon='ph--book--regular' size='xl' classNames='text-description' />
+                <Icon icon='ph--book--regular' size='xl' tone='description' />
               </Flex>
             )}
             <Flex column gap='sm' classNames='min-w-0'>

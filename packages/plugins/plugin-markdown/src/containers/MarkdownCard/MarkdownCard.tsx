@@ -68,7 +68,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
       )}
       <Card.Section>
         <Card.Row fullWidth>
-          <Card.Text classNames='px-2 text-xs text-description'>
+          <Card.Text classNames='px-2 text-xs' variant='description'>
             {info.words} {t('words.label', { count: info.words })}
           </Card.Text>
         </Card.Row>

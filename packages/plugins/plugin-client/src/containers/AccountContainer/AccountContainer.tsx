@@ -155,7 +155,7 @@ export const AccountContainer = () => {
               <>
                 <Form.Field standalone label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
-                    <Icon icon='ph--check-circle--duotone' size='lg' classNames='text-success-text justify-self-end' />
+                    <Icon icon='ph--check-circle--duotone' size='lg' classNames='justify-self-end' valence='success' />
                   ) : (
                     <Flex column gap='xs' align='end'>
                       <Button

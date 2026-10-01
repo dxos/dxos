@@ -102,13 +102,9 @@ const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
   const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
   return (
     <>
-      {scoped.type === 'outgoing-relation' && (
-        <Icon icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
-      )}
-      {scoped.type === 'incoming-relation' && (
-        <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
-      )}
-      <Icon icon={scoped.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
+      {scoped.type === 'outgoing-relation' && <Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />}
+      {scoped.type === 'incoming-relation' && <Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />}
+      <Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
     </>
   );
 };

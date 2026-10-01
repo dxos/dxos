@@ -106,9 +106,11 @@ const PendingCard = ({ label }: { label: string }) => (
   <Card.Root data-testid='cardMasonry.pending' aria-busy='true'>
     <Card.Header>
       <Block>
-        <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />
+        <Icon icon='ph--spinner-gap--regular' spin />
       </Block>
-      <Card.Title classNames='truncate text-description'>{label}</Card.Title>
+      <Card.Title truncate tone='description'>
+        {label}
+      </Card.Title>
     </Card.Header>
   </Card.Root>
 );

@@ -836,7 +836,7 @@ const LoginTab = ({
           >
             {moreOptions.map((opt) => (
               <Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
-                <Icon icon={opt.icon} size='xl' classNames={mx('shrink-0', opt.classNames)} />
+                <Icon icon={opt.icon} size='xl' classNames={mx(opt.classNames)} />
                 <Next.Container gap='sm' gutter='none'>
                   <span>{opt.label}</span>
                   <span className='text-xs text-description font-normal'>{opt.description}</span>

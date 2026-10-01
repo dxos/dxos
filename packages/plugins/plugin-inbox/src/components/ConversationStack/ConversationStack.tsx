@@ -432,7 +432,7 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
     >
       <div className='p-2'>
         <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
-          <Icon icon='ph--text-align-left--regular' size='lg' classNames='text-subdued' />
+          <Icon icon='ph--text-align-left--regular' size='lg' tone='subdued' />
         </div>
       </div>
       <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
@@ -758,7 +758,9 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
                 <Icon icon='ph--users--regular' />
               )}
             </Block>
-            <Card.Text classNames='text-sm text-description'>{recipients.join(', ')}</Card.Text>
+            <Card.Text classNames='text-sm' variant='description'>
+              {recipients.join(', ')}
+            </Card.Text>
           </Card.Row>
         )}
 

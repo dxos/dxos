@@ -36,7 +36,7 @@ export const AuthorizingDeviceDialog = () => {
         </span>
 
         <Flex column align='center' justify='center' gap='lg' classNames='flex-1'>
-          <Icon icon='ph--spinner-gap--regular' size='xl' classNames='animate-spin text-description' />
+          <Icon icon='ph--spinner-gap--regular' size='xl' spin tone='description' />
           <h1 className='text-2xl text-center'>{t('authorizing-device.title')}</h1>
         </Flex>
 

@@ -46,7 +46,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
       {imageUrl && <Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
         <Card.Row>
-          <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title>
+          <Card.Title lines={2}>{post.title}</Card.Title>
         </Card.Row>
       )}
       {snippet && (

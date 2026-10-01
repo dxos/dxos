@@ -215,7 +215,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
 
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
   <li className='flex items-center gap-2 p-2'>
-    <Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={mx(paletteToText(issue.severity), 'shrink-0')} />
+    <Icon icon={SEVERITY_ICON[issue.severity]} size='md' classNames={mx(paletteToText(issue.severity))} />
     <Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
       <span className='wrap-break-words break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (

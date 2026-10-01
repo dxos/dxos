@@ -298,7 +298,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                   <Icon
                     icon='ph--spinner-gap--regular'
                     size='lg'
-                    classNames='text-subdued [animation:spin_1s_linear_infinite]'
+                    classNames='[animation:spin_1s_linear_infinite]'
+                    tone='subdued'
                   />
                 </div>
               )}

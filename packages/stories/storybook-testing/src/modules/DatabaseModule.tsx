@@ -255,9 +255,9 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
     >
       <Card.Header>
         <Block>
-          <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} classNames='text-subdued' />
+          <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subdued' />
         </Block>
-        <Card.Title classNames='truncate'>{label}</Card.Title>
+        <Card.Title truncate>{label}</Card.Title>
       </Card.Header>
     </Card.Root>
   );

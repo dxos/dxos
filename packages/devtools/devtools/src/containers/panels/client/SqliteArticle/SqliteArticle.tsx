@@ -359,7 +359,8 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
                 value={params}
                 onChange={({ target }) => setParams(target.value)}
                 placeholder='[]'
-                classNames='font-mono text-xs'
+                classNames='text-xs'
+                variant='mono'
               />
             </Field.Root>
           </div>

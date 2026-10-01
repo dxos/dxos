@@ -86,14 +86,14 @@ export const TaskQuestion = ({
         data-testid='task-question'
       >
         <div className='flex items-center gap-2 min-w-0'>
-          <Icon icon='ph--question--regular' classNames='text-warning-text' />
+          <Icon icon='ph--question--regular' valence='warning' />
           <span className='font-medium truncate' title={question.text}>
             {question.text}
           </span>
         </div>
         {answer && (
           <div className='flex items-center gap-2 min-w-0' data-testid='task-question.answer'>
-            <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
+            <Icon icon='ph--check-circle--regular' valence='success' />
             <span className='truncate' title={answer.answer}>
               {answer.answer}
             </span>
@@ -124,7 +124,7 @@ export const TaskQuestion = ({
           below — the context, the options, the answer field — is that same second column, so the
           question reads as one block hanging off one glyph rather than as four indented things. */}
       <div className={TASK_GRID_ICON}>
-        <Icon icon='ph--question--regular' classNames='text-warning-text' />
+        <Icon icon='ph--question--regular' valence='warning' />
       </div>
       <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
 
@@ -137,7 +137,7 @@ export const TaskQuestion = ({
       {answer ? (
         <>
           <div className={TASK_GRID_ICON}>
-            <Icon icon='ph--check-circle--regular' classNames='text-success-text' />
+            <Icon icon='ph--check-circle--regular' valence='success' />
           </div>
           <span className='wrap-break-word min-w-0' data-testid='task-question.answer'>
             {answer.answer}

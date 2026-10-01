@@ -21,7 +21,7 @@ export type ObjectArticleProps = {
  * `auto · 1fr`. Used by the Event and Message article containers so both share one layout.
  */
 export const ObjectArticle = ({ role, toolbar, header, children }: ObjectArticleProps) => (
-  <Panel.Root role={role} classNames='dx-document'>
+  <Panel.Root role={role} width='document'>
     <Panel.Header>{toolbar}</Panel.Header>
     <Panel.Body classNames='grid grid-rows-[auto_1fr]'>
       {header}

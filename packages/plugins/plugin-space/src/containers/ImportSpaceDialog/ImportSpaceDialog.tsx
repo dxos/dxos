@@ -76,7 +76,7 @@ export const ImportSpaceDialog = () => {
             classNames='my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm'
           >
             <div>
-              <Icon icon='ph--spinner-gap--regular' size='xl' classNames='animate-spin' />
+              <Icon icon='ph--spinner-gap--regular' size='xl' spin />
               <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
             </div>
           </Flex>

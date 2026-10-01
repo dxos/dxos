@@ -58,7 +58,7 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
         <Block>
           <Icon icon={icon} />
         </Block>
-        <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
+        <Card.Title lines={2}>{title}</Card.Title>
       </Card.Header>
       <Card.Body>
         {post.description && (

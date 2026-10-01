@@ -60,7 +60,7 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
               onClick={handleToggleStar}
             />
           </Block>
-          {snapshot.title ? <Card.Title classNames='line-clamp-2'>{snapshot.title}</Card.Title> : <div />}
+          {snapshot.title ? <Card.Title lines={2}>{snapshot.title}</Card.Title> : <div />}
           <Block end />
         </Card.Header>
         <Card.Body>

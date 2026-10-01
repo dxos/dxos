@@ -106,7 +106,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
             <Block>
               <Icon icon='ph--rss-simple--regular' />
             </Block>
-            <Card.Text classNames='truncate'>{post.title ?? t('post-title.placeholder')}</Card.Text>
+            <Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
               <Block end>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>

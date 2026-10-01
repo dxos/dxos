@@ -29,7 +29,7 @@ export const BookmarkCard = ({ subject }: BookmarkCardProps) => {
         <Card.Poster alt={bookmark.title} image={bookmark.image} fit='cover' classNames='rounded-t-xs' />
       )}
       <Card.Row>
-        <Card.Title classNames='line-clamp-2'>{bookmark.title}</Card.Title>
+        <Card.Title lines={2}>{bookmark.title}</Card.Title>
       </Card.Row>
       {bookmark.excerpt && (
         <Card.Row>

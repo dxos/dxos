@@ -70,7 +70,9 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       )}
       {description && (
         <Card.Row>
-          <Card.Text classNames='line-clamp-3 text-description'>{description}</Card.Text>
+          <Card.Text classNames='line-clamp-3' variant='description'>
+            {description}
+          </Card.Text>
         </Card.Row>
       )}
       {url && (

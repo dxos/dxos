@@ -101,7 +101,7 @@ export const FormFieldLabel = ({
       {labelEnd}
       {error ? (
         <Tooltip.Trigger asChild content={error} side='bottom'>
-          <Icon icon='ph--warning--regular' size='md' classNames='text-error-text' />
+          <Icon icon='ph--warning--regular' size='md' valence='error' />
         </Tooltip.Trigger>
       ) : (
         <span />

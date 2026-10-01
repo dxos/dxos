@@ -217,12 +217,12 @@ const DisclosureStory = () => {
                   type='button'
                   className='flex items-center gap-2 px-3 py-2 text-start dx-hover dx-focus-ring-inset'
                 >
-                  <Icon icon='ph--package--regular' size='lg' classNames='shrink-0' />
+                  <Icon icon='ph--package--regular' size='lg' />
                   <span className='flex-1 min-w-0 truncate'>{item.name}</span>
                   <Icon
                     icon='ph--caret-right--regular'
                     size='md'
-                    classNames={mx('shrink-0 transition-transform', expanded && 'rotate-90')}
+                    classNames={mx('transition-transform', expanded && 'rotate-90')}
                   />
                 </button>
                 {expanded && (

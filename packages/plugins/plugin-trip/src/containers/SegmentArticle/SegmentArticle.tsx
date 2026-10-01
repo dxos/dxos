@@ -50,7 +50,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   }
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
+    <Panel.Root role={role} width='document'>
       <Panel.Header>
         <Toolbar.Root>
           <div className='grow' />

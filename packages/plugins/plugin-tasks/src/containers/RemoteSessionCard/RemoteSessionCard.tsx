@@ -68,7 +68,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
       </Card.Row>
       {title && (
         <Card.Row>
-          <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
+          <Card.Title lines={2}>{title}</Card.Title>
         </Card.Row>
       )}
       {(repo || branch || worktreeName) && (
@@ -93,7 +93,9 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
       </Card.Row>
       {lastMessage && (
         <Card.Row>
-          <Card.Text classNames='line-clamp-3 text-description'>{lastMessage}</Card.Text>
+          <Card.Text classNames='line-clamp-3' variant='description'>
+            {lastMessage}
+          </Card.Text>
         </Card.Row>
       )}
       {sessionId && (

@@ -218,7 +218,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
           not carry. A value keeps the hue its option table gives it. */}
       <div className={TASK_GRID_ICON}>
-        <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
+        <Icon icon={icon} classNames={mx(unset ? 'text-description' : iconClassNames)} />
       </div>
       <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-description')}>{label}</span>
     </>

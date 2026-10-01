@@ -17,7 +17,7 @@ export const SkillArticle = ({ role, attendableId, subject }: SkillArticleProps)
   const { hasAttention } = useAttention(attendableId);
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
+    <Panel.Root role={role} width='document'>
       <Panel.Header>
         <Toolbar.Root disabled={!hasAttention} />
       </Panel.Header>
