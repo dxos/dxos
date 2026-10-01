@@ -68,20 +68,21 @@ const ChatDialogRoot = ({
       size={size}
       setSize={setSize}
     >
-      <Next.Dialog.Root modal={false} open={open} onOpenChange={({ open }) => setOpen(open)}>
-        <div className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
-          <Next.Dialog.Content
-            size='md'
-            inOverlayLayout
-            classNames={[
-              'grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
-            ]}
-            onEscapeKeyDown={onEscape}
-            onInteractOutside={(event) => event.preventDefault()}
-          >
-            {children}
-          </Next.Dialog.Content>
-        </div>
+      <Next.Dialog.Root
+        modal={false}
+        open={open}
+        onOpenChange={({ open }) => setOpen(open)}
+        onEscapeKeyDown={onEscape}
+        onInteractOutside={(event) => event.preventDefault()}
+      >
+        <Next.Dialog.Content
+          size='md'
+          placement='end'
+          scrim={false}
+          classNames='grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content'
+        >
+          {children}
+        </Next.Dialog.Content>
       </Next.Dialog.Root>
     </ChatDialogContextProvider>
   );
