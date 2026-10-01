@@ -499,11 +499,12 @@ export class AppManager {
 
   /** Discloses a row's children, leaving an already-open row alone. */
   async #expandRow(row: Locator, timeout: number): Promise<void> {
-    const toggle = row.getByTestId('treeItem.toggle').first();
+    // The tree's disclosure caret (Ark's branch trigger), which carries the branch's open state.
+    const toggle = row.locator('[data-part="branch-trigger"]').first();
     // Read the state only once the toggle exists: `getAttribute` on a detached element answers
     // `null`, which is indistinguishable from "collapsed" and would click an open row shut.
     await expect(toggle).toBeAttached({ timeout });
-    if ((await toggle.getAttribute('aria-expanded')) === 'true') {
+    if ((await toggle.getAttribute('data-state')) === 'open') {
       return;
     }
     // Hovering the row is what expands it in the graph, and a row with no children yet has a
@@ -513,7 +514,7 @@ export class AppManager {
     await expect(toggle).toBeEnabled({ timeout });
     await toggle.click();
     // An open commits through the model at once, so an expand that did not take fails here.
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true', { timeout });
+    await expect(toggle).toHaveAttribute('data-state', 'open', { timeout });
   }
 
   async expandCollection(nth = 0, timeout = 15_000): Promise<void> {
