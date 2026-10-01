@@ -109,10 +109,12 @@ export const isolate = ({
   readonly evaluate: (params: {
     readonly mainModule: string;
     readonly timeout: Duration.Duration;
+    /** The `runScript` call's space: the host answering the isolate needs it as the calls' default. */
+    readonly spaceId?: string;
   }) => Effect.Effect<ScriptResult, { readonly message: string }>;
 }): Sandbox => ({
   run: ({ code, spaceId, timeout, maxOutput }) =>
-    evaluate({ mainModule: isolateInternal.module({ code, spaceId, maxOutput }), timeout }).pipe(
+    evaluate({ mainModule: isolateInternal.module({ code, spaceId, maxOutput }), timeout, spaceId }).pipe(
       Effect.catch((error) => Effect.succeed({ output: '', error: `The script could not run: ${error.message}` })),
     ),
 });
