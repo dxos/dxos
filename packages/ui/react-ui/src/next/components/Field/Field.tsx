@@ -11,6 +11,7 @@ import { type MessageValence, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { type Span, spanAttributes } from '../Container/index.ts';
 
 //
 // Root
@@ -25,16 +26,21 @@ type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps> & {
    * ErrorText shows and the control reports `aria-invalid`.
    */
   validationValence?: FieldValence;
+  /** Tracks the field spans in its parent Container (e.g. two columns of a multi-column form). */
+  span?: Span;
 };
 
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
 const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
-  ({ classNames, invalid, validationValence, ...props }, forwardedRef) => {
+  ({ classNames, invalid, validationValence, span, style, ...props }, forwardedRef) => {
     // Ark inherits only `disabled` from an enclosing Fieldset; an invalid set marks its fields invalid too.
     const fieldset = useFieldsetContext();
+    const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
     return (
       <FieldPrimitive.Root
         {...props}
+        {...spanAttrs}
+        style={{ ...spanStyle, ...style }}
         invalid={invalid ?? (validationValence === 'error' || fieldset?.invalid)}
         data-valence={validationValence === 'neutral' ? undefined : validationValence}
         className={mx(recipes.field(), classNames)}

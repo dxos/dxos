@@ -22,6 +22,18 @@ export type Gutter = 'rail' | 'inset' | 'sm' | 'md' | 'lg' | 'none' | 'inherit';
 /** Space between the container's rows; the current `ColumnGap` steps (0.25, 0.5, 0.75rem). */
 export type ContainerGap = 'none' | 'sm' | 'md' | 'lg';
 
+/** Tracks a child spans in its parent Container: a count, or `full` for every track of the content area. */
+export type Span = number | 'full';
+
+/**
+ * The attributes that place an element across `span` tracks of its parent Container; the count travels as a custom
+ * property because CSS cannot yet read a numeric attribute in every engine.
+ */
+export const spanAttributes = (span: Span | undefined) => {
+  const style: CSSProperties & CSSVariables = typeof span === 'number' ? { '--nx-span': String(span) } : {};
+  return { 'data-span': span === undefined ? undefined : String(span), style };
+};
+
 //
 // Container
 //
@@ -40,6 +52,8 @@ export type ContainerProps = {
   level?: Level;
   /** Row gap only: columns are shared through subgrid, so a column gap would shift the parent's tracks. */
   gap?: ContainerGap;
+  /** Tracks the container spans in a parent Container (e.g. a cell across two columns of a `row`). */
+  span?: Span;
 };
 
 /**
@@ -55,9 +69,12 @@ export const containerAttributes = ({
   place,
   level,
   gap,
+  span,
 }: ContainerProps) => {
-  const style: CSSProperties & CSSVariables = columns ? { '--nx-columns': columns } : {};
+  const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
+  const style: CSSProperties & CSSVariables = columns ? { ...spanStyle, '--nx-columns': columns } : spanStyle;
   return {
+    ...spanAttrs,
     'data-size': size,
     'data-gutter': gutter,
     'data-layout': layout,
@@ -72,7 +89,7 @@ export const containerAttributes = ({
 /** Grid part (decision 5): every prop is a `data-*` attribute resolved by `theme/container.css`. */
 export const Container = slottable<HTMLDivElement, ContainerProps>(
   (
-    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, gap, ...props },
+    { children, asChild, size, gutter = 'inherit', columns, layout = 'stack', place, level, gap, span, ...props },
     forwardedRef,
   ) => {
     const localRef = useRef<HTMLDivElement>(null);
@@ -98,6 +115,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       place,
       level,
       gap,
+      span,
     });
     return (
       <ark.div

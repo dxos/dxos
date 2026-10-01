@@ -45,6 +45,43 @@ const Section = ({ size, prefix = '' }: { size: Size; prefix?: string }) => (
   </Next.Container>
 );
 
+/** Three tracks: a cell across two, a one-track cell, then a cell across all three (`span='full'`). */
+const Spans = ({ size }: { size: Size }) => (
+  <Next.Container layout='row' columns='repeat(3, minmax(0, 1fr))' data-testid={`spans-${size}`}>
+    <Next.Container span={2} data-testid={`span-two-${size}`}>
+      <Next.Input aria-label='Two tracks' />
+    </Next.Container>
+    <Next.Container data-testid={`span-one-${size}`}>
+      <Next.Input aria-label='One track' />
+    </Next.Container>
+    <Next.Container span='full' data-testid={`span-full-${size}`}>
+      <Next.Input aria-label='Every track' />
+    </Next.Container>
+  </Next.Container>
+);
+
+/**
+ * Two groups side by side, the second across two of three tracks: each cell of the row names its own edge lines, so
+ * the inheriting group inside it (and anything inheriting below that) aligns within the cell rather than the form,
+ * whose `content-*` lines a cell away from the row's edges does not reach.
+ */
+const SideBySide = ({ size }: { size: Size }) => (
+  <Next.Container layout='row' columns='repeat(3, minmax(0, 1fr))' gap='md' data-testid={`split-${size}`}>
+    {(['left', 'right'] as const).map((side) => (
+      <Next.Container key={side} span={side === 'left' ? 1 : 2} data-testid={`split-${side}-${size}`}>
+        <Next.Typography>{side === 'left' ? 'Shipping' : 'Billing'}</Next.Typography>
+        <Next.Container data-testid={`split-${side}-group-${size}`}>
+          <Next.Input aria-label={`${side} street`} data-testid={`split-${side}-input-${size}`} />
+          <Next.Container layout='row' columns='auto minmax(0, 1fr)' data-testid={`split-${side}-row-${size}`}>
+            <Next.Label classNames='pe-(--nx-gap-size)'>City</Next.Label>
+            <Next.Input aria-label={`${side} city`} data-testid={`split-${side}-city-${size}`} />
+          </Next.Container>
+        </Next.Container>
+      </Next.Container>
+    ))}
+  </Next.Container>
+);
+
 type StoryArgs = SizeArgs & {
   /** Also render the section in a pane below the query threshold. */
   narrow?: boolean;
@@ -57,6 +94,8 @@ const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
       <Next.Typography data-testid={`gap-first-${size}`}>A stack with a large row gap</Next.Typography>
       <Next.Typography data-testid={`gap-second-${size}`}>between its children</Next.Typography>
     </Next.Container>
+    <Spans size={size} />
+    <SideBySide size={size} />
     {narrow && (
       <div className='@container w-[20rem]'>
         <Section size={size} prefix='narrow-' />
@@ -86,7 +125,9 @@ export const Default: Story = {};
  * A row is one block tall and centres its control (finding 11); rails, the content-sized label track and full bleed
  * line up across nested (subgrid) containers; `level='+1'` steps one rung above its host without leaving the host's
  * tracks (finding 8); below the query threshold rails collapse to the inset and the label stacks above its input.
- * `gap` spaces rows only (0.75rem for `lg`), leaving the shared columns alone.
+ * `gap` spaces rows only (0.75rem for `lg`), leaving the shared columns alone. `span` places a child across tracks
+ * (a count, or `full` for the whole content area), and each cell of a `row` provides its own edge lines, so groups
+ * inheriting inside side-by-side cells align within their own column.
  */
 export const Test: Story = {
   args: { allSizes: true, narrow: true },
@@ -131,6 +172,42 @@ export const Test: Story = {
     );
 
     await expect(rect(canvasElement, 'narrow-row-md-rail-start').width).toBe(0);
+    for (const size of SIZES) {
+      const spans = rect(canvasElement, `spans-${size}`);
+      const track = spans.width / 3;
+      const two = rect(canvasElement, `span-two-${size}`);
+      const one = rect(canvasElement, `span-one-${size}`);
+      const full = rect(canvasElement, `span-full-${size}`);
+      await expect(two.left, size).toBeCloseTo(spans.left, 0);
+      await expect(two.width, size).toBeCloseTo(2 * track, 0);
+      await expect(one.left, size).toBeCloseTo(two.right, 0);
+      await expect(one.width, size).toBeCloseTo(track, 0);
+      await expect(full.top, size).toBeGreaterThanOrEqual(two.bottom);
+      await expect(full.left, size).toBeCloseTo(spans.left, 0);
+      await expect(full.width, size).toBeCloseTo(spans.width, 0);
+      await expect(getComputedStyle(byTestId(canvasElement, `span-two-${size}`)).gridColumnEnd).toBe('span 2');
+
+      const left = rect(canvasElement, `split-left-${size}`);
+      const right = rect(canvasElement, `split-right-${size}`);
+      await expect(right.left - left.right, size).toBeCloseTo(8, 0);
+      await expect(right.width, size).toBeCloseTo(2 * left.width + 8, 0);
+      await expect(left.top, size).toBeCloseTo(right.top, 0);
+      for (const [side, cell] of [
+        ['left', left],
+        ['right', right],
+      ] as const) {
+        for (const part of ['group', 'input', 'row']) {
+          const inner = rect(canvasElement, `split-${side}-${part}-${size}`);
+          await expect(inner.left, `${side} ${part} ${size}`).toBeCloseTo(cell.left, 0);
+          await expect(inner.right, `${side} ${part} ${size}`).toBeCloseTo(cell.right, 0);
+        }
+        await expect(rect(canvasElement, `split-${side}-city-${size}`).right, `${side} city ${size}`).toBeCloseTo(
+          cell.right,
+          0,
+        );
+      }
+    }
+
     await expect(rect(canvasElement, 'narrow-row-md-input').top).toBeGreaterThan(
       rect(canvasElement, 'narrow-row-md-label').top,
     );
