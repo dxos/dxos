@@ -55,7 +55,7 @@ const BaseStory = ({ children, toolbar }: BaseStoryArgs) => (
 
 const JsonInspectorPanel = ({ data }: { data: unknown }) => (
   <Next.ScrollContainer.Root pin>
-    <Next.ScrollContainer.Content thin>
+    <Next.ScrollContainer.Content width='thin'>
       <Next.ScrollContainer.Viewport>
         <JsonHighlighter data={data} classNames='text-xs' />
       </Next.ScrollContainer.Viewport>
@@ -302,7 +302,7 @@ const TimelinePlayback = ({
 
         <div className='min-h-0'>
           <Next.ScrollContainer.Root pin>
-            <Next.ScrollContainer.Content thin>
+            <Next.ScrollContainer.Content width='thin'>
               <Next.ScrollContainer.Viewport ref={setTimelineViewport}>
                 <Timeline
                   branches={branches}

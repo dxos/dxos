@@ -132,7 +132,7 @@ export const ProcessTree = React.memo(
               id={ROOT_ID}
               model={model}
               virtualize
-              size='sm'
+              density='sm'
               selectionMode='multiple'
               classNames='text-sm tabular-nums font-thin'
               gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
@@ -156,12 +156,14 @@ const makeIconRenderer =
       <Next.Tooltip.Trigger content={process.state.toString()}>
         <Next.Icon
           size='md'
-          synchronized
-          classNames={mx(
-            process.state === Process.State.RUNNING && 'animate-spin',
-            process.state === Process.State.FAILED && 'text-error-text',
-            process.state === Process.State.SUCCEEDED && 'text-success-text',
-          )}
+          spin={process.state === Process.State.RUNNING}
+          valence={
+            process.state === Process.State.FAILED
+              ? 'error'
+              : process.state === Process.State.SUCCEEDED
+                ? 'success'
+                : undefined
+          }
           icon={Match.value(process.state).pipe(
             Match.when(Process.State.RUNNING, () => 'ph--spinner-gap--regular'),
             Match.when(Process.State.SUCCEEDED, () => 'ph--check-circle--regular'),

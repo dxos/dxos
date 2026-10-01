@@ -392,7 +392,7 @@ export const Streaming: Story = {
         </Next.Panel.Header>
         <Next.Panel.Body>
           <Next.ScrollContainer.Root pin ref={scrollerRef}>
-            <Next.ScrollContainer.Content thin>
+            <Next.ScrollContainer.Content width='thin'>
               <Next.ScrollContainer.Viewport ref={setViewport}>
                 <Timeline branches={branches} commits={commits} showTimestamp scroller={viewport} />
               </Next.ScrollContainer.Viewport>

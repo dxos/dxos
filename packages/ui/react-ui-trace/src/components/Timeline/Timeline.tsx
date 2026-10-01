@@ -450,11 +450,8 @@ const CommitIcon = memo(({ commit }: { commit: Commit }) => {
     <Next.Icon
       icon={commit.icon}
       size='md'
-      synchronized
-      classNames={mx(
-        commit.icon === 'ph--spinner-gap--regular' && 'animate-spin',
-        commit.level !== undefined && levelColors[commit.level],
-      )}
+      spin={commit.icon === 'ph--spinner-gap--regular'}
+      classNames={commit.level !== undefined ? levelColors[commit.level] : undefined}
     />
   );
 });
