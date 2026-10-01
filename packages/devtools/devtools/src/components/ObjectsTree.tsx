@@ -19,14 +19,8 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type ColumnRenderer,
-  type IconRenderer,
-  Tree,
-  TREE_BLOCK,
-  type TreeItemDataProps,
-  type TreeModel,
-} from '@dxos/react-ui-list';
+import { type TreeItemDataProps, type TreeModel } from '@dxos/react-ui-list';
+import { Tree, type TreeNode } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
@@ -69,34 +63,40 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
 
   return (
     <ObjectsTreeContext.Provider value={contextValue}>
-      <Next.ScrollArea.Root classNames='dx-expand'>
-        <Next.ScrollArea.Viewport>
-          <Tree<ObjectsTreeItem>
-            id={ROOT_ANCHOR}
-            model={model.treeModel}
-            // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic
-            // minimum is the content's min-content width, so a long relation typename on a deep row
-            // would widen the track and push the trailing columns instead of truncating.
-            //
-            // The role sits in the SAME track as the actions rather than its own: a separate
-            // `min-content` column is sized from the widest role across the whole subgrid, so
-            // expanding a node whose child carries a role widened that track and visibly shifted
-            // every row's action button.
-            gridTemplateColumns={`[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content [tree-row-end]`}
-            classNames='w-full min-w-0'
-            renderIcon={ObjectsTreeIcon}
-            renderColumns={ObjectsTreeColumns}
-            onOpenChange={handleOpenChange}
-            onSelect={handleSelect}
-          />
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
+      <Tree.Root
+        id={ROOT_ANCHOR}
+        model={model.treeModel}
+        // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic minimum is the content's
+        // min-content width, so a long relation typename on a deep row would widen the track and push the trailing
+        // column instead of truncating. The role shares the actions' track: a `min-content` column of its own is sized
+        // from the widest role across every row, so opening a node whose child has a role shifted every row's button.
+        columns='var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) min-content'
+        onOpenChange={handleOpenChange}
+        onSelect={handleSelect}
+      >
+        <Tree.Content>{renderRow}</Tree.Content>
+      </Tree.Root>
     </ObjectsTreeContext.Provider>
   );
 };
 
+/** A row: the relation direction and the entity's glyph, its label, then its role and action menu. */
+const renderRow = (node: TreeNode<ObjectsTreeItem>) =>
+  node.item ? (
+    <Tree.Item node={node}>
+      <Tree.ItemIndicator />
+      <Tree.ItemIcon>
+        <ObjectsTreeIcon item={node.item} path={node.path} />
+      </Tree.ItemIcon>
+      <Tree.ItemText />
+      <ObjectsTreeColumns item={node.item} path={node.path} />
+    </Tree.Item>
+  ) : null;
+
+type ObjectsTreeRowProps = { item: ObjectsTreeItem; path: string[] };
+
 /** Relation direction arrow plus the entity's own glyph, which a static icon name cannot express. */
-const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
+const ObjectsTreeIcon = ({ item, path }: ObjectsTreeRowProps) => {
   const { model } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const scoped = useAtomValue(model.itemAt(path)) ?? item;
   const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
@@ -113,8 +113,8 @@ const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
   );
 };
 
-/** Trailing columns: the reference key this entity is held under, and the per-row action menu. */
-const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => {
+/** Trailing column: the reference key this entity is held under, and the per-row action menu. */
+const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
   const { model, onOpen, canOpen } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const node = useAtomValue(model.itemAt(path)) ?? item;
 
