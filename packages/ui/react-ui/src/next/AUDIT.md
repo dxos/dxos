@@ -794,3 +794,62 @@ No open questions remain.
 | 9   | Ref and lookup fields         | needs milestones 5, 6                                                                                              |
 | 10  | Higher-level form components  | needs milestones 7–9, point 10                                                                                     |
 | 11  | Tree next                     | blocked on points 2, 3                                                                                             |
+
+## 7. Migration plan
+
+The cut-over is one PR, landed before production, after which the current components are deleted. Counts are from
+[MIGRATION-INVENTORY.md](MIGRATION-INVENTORY.md) (generated 2026-10-01; regenerate before Phase C).
+
+### Scale
+
+1,297 files in 153 packages import `@dxos/react-ui` (1,255), `@dxos/react-ui-list` (87) or `@dxos/react-ui-form`
+(128); 198 are stories. `@dxos/react-ui-menu` adds 125 files. 11 files use Next today.
+
+### Phase A: close the gaps (on `main`, in normal PRs)
+
+Nothing in the cut-over PR may be a new component; every Next counterpart lands first, with stories and tests.
+
+1. Decided but unbuilt: Container `span`, `ControlFrame`, `Next.Empty` and composite `Empty` parts, `Banner`,
+   collapsible `OrderedList.Item`, `Input variant='mono'`, `Image backdrop`, the group B list decisions, Tree
+   exported from `react-ui-list/next`.
+2. `react-ui-form/next` from the spike (draft PR #13550) through milestones 6–10.
+3. A Next action binding for `react-ui-menu` (`useMenuActions` → Next Menu and Toolbar).
+4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
+   Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components.
+5. Translation keys: four `osTranslations` lookups use undefined keys (`drag-handle.label`, `toolbar-delete.label`,
+   `drawer.resize.label`); fixed by moving them to react-ui translations (group B).
+
+### Phase B: codemods (a tools package, tested on fixtures)
+
+| Codemod                                                                                                             | Kind       | Scope             |
+| ------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------- |
+| `Panel.Toolbar`→`Header`, `Statusbar`→`Footer`, drop `asChild`                                                      | mechanical | 196 + 24 files    |
+| `IconButton`→`Button iconOnly`, `Toolbar.IconButton`/`Button`→`Button`, `SystemIconButton`→`SystemButton`           | mechanical | 183+ files        |
+| Radix→Ark part names (`Dialog.Close`, `Select.TriggerButton`, `RadioGroup`, `SubTrigger`, `ItemLabel`, `Indicator`) | mechanical | per inventory §2  |
+| Remove `Tooltip.Provider`; unwrap Portal, Overlay, Arrow, Viewport                                                  | mechanical | per inventory §2  |
+| `Panel.Content`→`Body` (with `asChild`→ScrollArea residue)                                                          | semi       | 245 files         |
+| `density=`→`size=`, `Icon size=`                                                                                    | semi       | 66 + 161 elements |
+| Import rewrite `@dxos/react-ui` → Next exports (namespace flattening)                                               | mechanical | all               |
+| Text-emphasis class rename                                                                                          | regex      | 770 occurrences   |
+
+Each codemod reports what it could not convert; that list is the manual residue for Phase C.
+
+### Phase C: the cut-over PR (one long-lived branch, landed as one PR)
+
+1. Branch from `main`; run the codemods; commit per codemod, so review reads one rename at a time.
+2. Manual residue in dependency order, one commit per batch: (1) UI leaf libraries, (2) editor, mosaic, form,
+   table, canvas, (3) shell, devtools, stories, (4) plugins in depth order with inbox, space, assistant and deck
+   isolated, (5) apps.
+3. Replace the theme: Next becomes the default export, the current components and their CSS are deleted, and
+   `density` contexts go.
+4. Verification: build, lint, full test sweep, every storybook play test, the boot-budget gate, and a visual pass
+   over Composer's main surfaces.
+
+### Risks
+
+- **`classNames`:** 1,139 props in 490 files. Next keeps `className` as an escape hatch (DESIGN decision 6), so
+  they compile; most are layout classes (flex, gap, padding) that should become Container props, which is the
+  bulk of the manual work.
+- **Branch drift:** a long-lived branch against an active `main`; rebase the codemods (rerun, do not merge their
+  output) and keep the manual batches small.
+- **Review size:** mechanical commits are reviewed by rerunning the codemod; only the residue needs reading.
