@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import { VoidInput } from '@dxos/conductor';
@@ -15,8 +15,6 @@ import { Next } from '@dxos/react-ui/next';
 import { FunctionBody, getHeight } from './common/index.ts';
 import { type TriggerShape } from './trigger-def.ts';
 import { createTriggerSpec, getOutputSchema } from './trigger-spec.ts';
-
-type SelectRootProps = ComponentProps<typeof Next.Select.Root>;
 
 export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 
@@ -54,9 +52,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
   return (
     <FunctionBody
       shape={shape}
-      status={
-        <TriggerKindSelect value={functionTrigger.spec?.kind} onValueChange={(kind) => setKind(kind as Trigger.Kind)} />
-      }
+      status={<TriggerKindSelect value={functionTrigger.spec?.kind} onValueChange={setKind} />}
       inputSchema={VoidInput}
       outputSchema={getOutputSchema(functionTrigger.spec!.kind!)}
     />
@@ -64,14 +60,24 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 };
 
 // TODO(burdon): Factor out.
-const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
+type TriggerKindSelectProps = {
+  value?: Trigger.Kind;
+  onValueChange: (kind: Trigger.Kind) => void;
+};
+
+const TriggerKindSelect = ({ value, onValueChange }: TriggerKindSelectProps) => {
   return (
     <Next.Select.Root
-      value={[value]}
-      onValueChange={({ value: [value] }) => onValueChange(value)}
+      value={value === undefined ? [] : [value]}
+      onValueChange={({ value: [next] }) => {
+        const kind = Trigger.Kinds.find((kind) => kind === next);
+        if (kind) {
+          onValueChange(kind);
+        }
+      }}
       items={Trigger.Kinds.map((kind) => ({ value: kind, label: kind }))}
     >
-      <Next.Select.Trigger variant='ghost' classNames='w-full px-0!' />
+      <Next.Select.Trigger classNames='w-full px-0!' />
       <Next.Select.Content>
         {Trigger.Kinds.map((kind) => (
           <Next.Select.Item key={kind} item={{ value: kind, label: kind }} />

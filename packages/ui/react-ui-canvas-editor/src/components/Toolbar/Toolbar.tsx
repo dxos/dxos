@@ -64,7 +64,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
         onValueChange={({ value: [value] }) => setLayout(value as LayoutKind)}
         items={LAYOUTS.map((layout) => ({ value: layout, label: layout }))}
       >
-        <Next.Select.Trigger variant='ghost' classNames='w-[100px]' />
+        <Next.Select.Trigger classNames='w-[100px]' />
         <Next.Select.Content>
           {LAYOUTS.map((layout) => (
             <Next.Select.Item key={layout} item={{ value: layout, label: layout }} />

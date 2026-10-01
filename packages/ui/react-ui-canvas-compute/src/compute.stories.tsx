@@ -148,7 +148,7 @@ const DefaultStory = ({
               onValueChange={({ value: [value] }) => setSidebar(value as RenderProps['sidebar'])}
               items={sidebarTypes.map((type) => ({ value: type, label: type }))}
             >
-              <Next.Select.Trigger classNames='w-full'>{sidebar}</Next.Select.Trigger>
+              <Next.Select.Trigger classNames='w-full' />
               <Next.Select.Content>
                 {sidebarTypes.map((type) => (
                   <Next.Select.Item key={type} item={{ value: type, label: type }} />

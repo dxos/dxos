@@ -25,7 +25,7 @@ import { type ConstantShape } from './constant-def.tsx';
 export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
   TextBoxProps & { title?: string; chat?: boolean };
 
-const inferType = (value: any): string | undefined => {
+const inferType = (value: any): ComputeValueType | undefined => {
   if (typeof value === 'string') {
     return 'string';
   } else if (typeof value === 'number') {
