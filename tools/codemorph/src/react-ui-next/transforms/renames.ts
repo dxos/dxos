@@ -255,6 +255,7 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Toolbar.Button': button(['Button']),
     'Toolbar.ToggleGroupItem': { to: ['ToggleGroup', 'Item'] },
     'Toolbar.DragHandle': { to: ['DragHandle'] },
+    'ToggleGroup': { to: ['ToggleGroup', 'Root'] },
     'ToggleGroupItem': { to: ['ToggleGroup', 'Item'] },
     'ToggleGroupIconItem': button(['ToggleGroup', 'Item']),
     'Toolbar.ToggleGroupIconItem': button(['ToggleGroup', 'Item']),

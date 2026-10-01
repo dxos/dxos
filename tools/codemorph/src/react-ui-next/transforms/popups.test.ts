@@ -64,4 +64,20 @@ describe('popups', () => {
       export const Row = () => <Block rail='end'>x</Block>;
     `);
   });
+
+  test('ToggleGroup → ToggleGroup.Root', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Scope = () => <Next.ToggleGroup type='single' />;
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Scope = () => <Next.ToggleGroup.Root type='single' />;
+    `);
+  });
 });
