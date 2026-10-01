@@ -783,7 +783,7 @@ No open questions remain.
 
 | #   | Milestone                     | Status                                                                                                             |
 | --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| 1   | Foundations                   | pane host, popup size, Group stretch done; child span (point 7), required marker (point 8), depth-5 benchmark open |
+| 1   | Foundations                   | pane host, popup size, Group stretch, child span (point 7) done; required marker (point 8), depth-5 benchmark open |
 | 2   | Next.Listbox                  | done                                                                                                               |
 | 3   | `react-ui-list/next` scaffold | done: `./next` entry, Listbox, plugin-registry pilot (open: points 14, 15, 23)                                     |
 | 4   | OrderedList next              | done: OrderedList; plugin-sheet `RangeList` migrated (open: points 16–20, 24, 40–44)                               |
@@ -811,13 +811,16 @@ Nothing in the cut-over PR may be a new component; every Next counterpart lands 
 
 1. Decided but unbuilt: Container `span`, `ControlFrame`, `Next.Empty` and composite `Empty` parts, `Banner`,
    collapsible `OrderedList.Item`, `Input variant='mono'`, `Image backdrop`, the group B list decisions, Tree
-   exported from `react-ui-list/next`.
+   exported from `react-ui-list/next`. **Done (Phase A1):** Container `span` (and Field/Fieldset), row cells with
+   their own lines, `ControlFrame`, `Next.Empty`, `Banner`, the `div` group Fieldset, `Input variant='mono'`,
+   `Image backdrop='dominant'`; composite `Empty` parts, the collapsible Item, the group B decisions and Tree remain.
 2. `react-ui-form/next` from the spike (draft PR #13550) through milestones 6–10.
 3. A Next action binding for `react-ui-menu` (`useMenuActions` → Next Menu and Toolbar).
 4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
    Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components.
 5. Translation keys: four `osTranslations` lookups use undefined keys (`drag-handle.label`, `toolbar-delete.label`,
-   `drawer.resize.label`); fixed by moving them to react-ui translations (group B).
+   `drawer.resize.label`); fixed by moving them to react-ui translations (group B). **Done:** the list DragHandle and
+   DeleteButton and Dialog's delete action read react-ui keys; `drawer.resize.label` already did.
 
 ### Phase B: codemods (a tools package, tested on fixtures)
 

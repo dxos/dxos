@@ -100,7 +100,7 @@ with Phase 4 milestone 5).
 - [x] **Popover, Tooltip, Dialog** — portal `container` on every popup; Popover `Body`, `modal`, lazy-mount naming fix; Tooltip `content`/`side` shorthand, `TextTooltip`; `AlertDialog`, `DIALOG_AUTOFOCUS_ATTRIBUTE`; virtual triggers via `positioning.getAnchorRect` (DESIGN.md follow-up 45).
 - [x] **Card** — `Section`, `Row`, `Text`, `Action`, `Link`, `Menu`, `DragHandle`; root `border`, `selected`, clickable `onClick`; `fullWidth` deliberate, `Html` deferred (DESIGN.md follow-up 46).
 - [x] **Image** — `onClick` as a button (Enter/Space) (DESIGN.md follow-up 47).
-- [ ] **Image dominant colour** — decide whether to move the current `Image`'s sampler to a shared utility and adopt it, given decision 11 (DESIGN.md follow-up 47).
+- [x] **Image dominant colour** — `Next.Image backdrop='dominant'` (opt-in); the sampler is `sampleDominantColor` in `@dxos/lit-ui` (AUDIT.md §6 point 13).
 - [x] **Tooltip after a press** — a click then Space left a Toggle's Tooltip suppressed; the press now ends at the next focus, key or hover (DESIGN.md follow-up 48); Toggle `Test` covers it.
 - [x] **SystemButton** — `Next.SystemButton.*` ports every `SystemIconButton` preset on Button/Toggle with translated default labels (DESIGN.md follow-up 51).
 - [x] **Field and date/time** — every current `Field.*` part: segmented `DateInput` (zag `date-input`) with an Ark `DatePicker` calendar replacing the native input, `PinInput`, `NumberInput`, `PasswordInput`, Textarea `variant`; `Field.Block`/`TriggerIcon` mapped; Field story shows every field type (DESIGN.md follow-up 54).
@@ -114,7 +114,7 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 ### Tasks
 
 - [ ] **1. Foundations** — pane host, popup size decision, Container child span, Group stretch, required marker, depth-5 benchmark, `+1` fallback.
-  - Done: `Next.Panel`, popup size inheritance, Group `fill`. Open: child span, benchmark (AUDIT.md §6 point 7); the required marker is `Field.RequiredIndicator` (point 38).
+  - Done: `Next.Panel`, popup size inheritance, Group `fill`, Container `span` (point 7). Open: benchmark; the required marker is `Field.RequiredIndicator` (point 38).
 - [x] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
 - [x] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
 - [x] **4. OrderedList next** — Container rows, DragHandle, DropIndicator, Collapsible disclosure; pilot plugin-sheet `RangeList`.
@@ -130,3 +130,24 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 - [ ] **Migration: text emphasis rename** — rename `--color-description`/`--color-subdued` (and `text-description`/`text-subdued`) to `--nx-text-muted`/`--nx-text-subtle` across the codebase in one change, with the old components' deletion (DESIGN.md "Text emphasis").
   - [x] `animate` flag on `Tree.Root` (default on): port the current Tree's disclosure animation (rows fade in on open; height conceal before a close commits; user-driven only, not persisted open state; theme duration, 0 when reduced motion), working with `virtualize='window'`.
 - [x] **Part naming** — DESIGN.md "Part naming" rules 1–13 applied (AUDIT.md §6 points 25–39): `Panel.Header`/`Body`/`Footer` (content-sized rows); Items render their default row from `item` or compose `ItemIcon`/`ItemText`/`ItemDescription`/`ItemIndicator`, with `ItemGroup`/`ItemGroupLabel` in Listbox and Combobox; Combobox `Control`/`Input`/`Trigger`/`ClearTrigger`; Menu `RadioItemGroup`/`TriggerItem`/`ItemShortcut`; `Field.RequiredIndicator` rendered by `Field.Label`; `Fieldset`; `SystemButton.Remove`; OrderedList `Content scroll`/`ItemText`; foreign re-exports dropped.
+
+## Phase A1: Next foundations
+
+The decided-but-unbuilt foundations of AUDIT.md §7 Phase A item 1 (decision review 2026-10-01, group A), plus the props
+the classNames research and the react-ui-menu/next binding asked for.
+
+### Tasks
+
+- [x] **Container `span`** — a count or `'full'` on Container, `Field.Root` and `Fieldset.Root`, rendered from `data-span`; Container `Test`.
+- [x] **Row cells name their own lines** — an inheriting Container in a `row` cell defines `content-*`/`full-*` across its track (spike 46); Container `Test` (side-by-side groups).
+- [x] **`ControlFrame`** — exported; Input's `start`/`end` row is built on it; ring follows focus in its content.
+- [x] **`Next.Empty`** — `icon`, text as children, translated "No items"; composite `Empty` parts are the lists workstream's.
+- [x] **`Next.Banner`** — Root/Title/Body on a rail-gutter Container; no empty part.
+- [x] **Fieldset group** — always `div role='group'` named by its Legend; `disabled` reaches Button, Switch, Checkbox, Input and Textarea through `useFieldsetDisabled`.
+- [x] **`Input variant='mono'`**.
+- [x] **`Image backdrop='dominant'`** — sampler shared from `@dxos/lit-ui`; host surface without CORS.
+- [x] **Chrome strings** — `drag-handle.label`, `remove.label`, `empty.label` under the react-ui `translationKey`; `Next.DragHandle` label defaults; list DragHandle/DeleteButton and Dialog's delete off `osTranslations`.
+- [x] **className props** — Container/Panel.Root `width='document'`; Typography `lines`, `mono`, `tone='subdued'`; Card.Title on Typography; Icon `tone`, `spin`, `size`; Button `align='start'`.
+- [x] **Menu/Toolbar gaps** — Button `spin` and `iconSize`; `Toolbar.Separator variant='gap'`; Switch in the toolbar's roving focus; `Menu.TriggerItem disabled`; `virtualAnchor`/`useVirtualAnchor`.
+- [ ] **Menu item icon size** — Menu items have no per-instance icon size yet (the binding's `iconSize`).
+- [ ] **`dx-avatar` backdrop** — the shared sampler is ready; the avatar does not use it yet.
