@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Button, Column, Field, Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Button, Column, Field, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { WithKeyboard } from '../../testing/index.ts';
@@ -24,11 +25,11 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
       <Panel.Body asChild>
         <Column.Root gutter='sm' classNames='py-form-chrome'>
           <Column.Center>
-            <Flex column>
+            <Next.Container gutter='none'>
               <Field.Root>
                 <Input placeholder={label} />
               </Field.Root>
-            </Flex>
+            </Next.Container>
           </Column.Center>
         </Column.Root>
       </Panel.Body>

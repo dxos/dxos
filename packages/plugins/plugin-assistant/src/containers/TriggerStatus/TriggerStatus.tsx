@@ -9,6 +9,7 @@ import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { Button, Flex, Popover, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -109,12 +110,12 @@ const TriggerStatusPopover = ({
 
   return (
     <Flex column gap='sm' classNames='p-2 w-[240px]'>
-      <Flex column gap='xs'>
+      <Next.Container gap='sm' gutter='none'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
           <div className='text-xs text-description'>{currentFunctionName}</div>
         )}
-      </Flex>
+      </Next.Container>
     </Flex>
   );
 };

@@ -10,6 +10,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
 import { Field, Flex, Input, Select, SystemButton, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -72,7 +73,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   }
 
   return (
-    <Flex column gap='sm' role='group'>
+    <Next.Container gap='md' role='group' gutter='none'>
       <Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
@@ -113,7 +114,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           <SystemButton.Clipboard value={joinUrl} />
         </Flex>
       )}
-    </Flex>
+    </Next.Container>
   );
 };
 

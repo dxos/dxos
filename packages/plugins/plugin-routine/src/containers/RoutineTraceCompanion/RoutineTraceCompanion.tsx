@@ -6,9 +6,10 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Accordion, Empty, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Accordion, Empty, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -53,7 +54,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
             ) : (
               <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
                 {({ items }) => (
-                  <Flex column>
+                  <Next.Container gutter='none'>
                     {items.map((run) => (
                       <Accordion.Item key={run.pid} item={run}>
                         <Accordion.ItemTrigger hover>
@@ -76,7 +77,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                         </Accordion.ItemContent>
                       </Accordion.Item>
                     ))}
-                  </Flex>
+                  </Next.Container>
                 )}
               </Accordion.Root>
             )}

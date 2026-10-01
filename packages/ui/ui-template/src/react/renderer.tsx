@@ -17,6 +17,7 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 import { type Align, Button, Field, Flex, type Gap, Grid, Input, type Justify, Tabs } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox, Listbox } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model.ts';
@@ -169,7 +170,7 @@ export const createReactRenderer = ({
     } else {
       return (
         <Field.Root key={path}>
-          <Flex column>
+          <Next.Container gutter='none'>
             {props.label ? <Field.Label>{asText(props.label)}</Field.Label> : null}
             <Input
               placeholder={asText(props.placeholder)}
@@ -177,7 +178,7 @@ export const createReactRenderer = ({
               // MVU: the input is controlled from published state; each change dispatches.
               onChange={(event) => handlers.input?.(event.target.value)}
             />
-          </Flex>
+          </Next.Container>
         </Field.Root>
       );
     }
@@ -255,7 +256,7 @@ export const createReactRenderer = ({
     }
 
     return (
-      <Flex key={path} column gap='xs' role='list'>
+      <Next.Container key={path} gap='sm' role='list' gutter='none'>
         {items.map((item, index) => (
           <Flex key={asText(itemField(node, scope, item, 'id') ?? index)} role='listitem' align='center'>
             {node.children?.length
@@ -263,7 +264,7 @@ export const createReactRenderer = ({
               : asText(itemField(node, scope, item, 'label') ?? item)}
           </Flex>
         ))}
-      </Flex>
+      </Next.Container>
     );
   },
 

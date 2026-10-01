@@ -27,6 +27,7 @@ import {
 } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -209,7 +210,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
-        <Flex column gap='sm'>
+        <Next.Container gap='md' gutter='none'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
           {mappedForCollection ? (
             <Flex column gap='sm'>
@@ -238,7 +239,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           ) : (
             <JsonHighlighter data={record.value} />
           )}
-        </Flex>
+        </Next.Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   ) : null;

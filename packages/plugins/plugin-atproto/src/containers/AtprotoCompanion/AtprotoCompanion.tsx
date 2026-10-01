@@ -13,6 +13,7 @@ import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Banner, Button, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Next } from '@dxos/react-ui/next';
 import { type PublishFieldNote } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
@@ -255,7 +256,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <Flex column gap='xs'>
+              <Next.Container gap='sm' gutter='none'>
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Banner.Root valence='warning'>
@@ -325,7 +326,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     );
                   })}
                 </div>
-              </Flex>
+              </Next.Container>
             </Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>

@@ -29,6 +29,7 @@ import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
+import { Next } from '@dxos/react-ui/next';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard, ProjectPipeline } from '#components';
@@ -361,11 +362,11 @@ ProjectArticle.displayName = 'ProjectArticle';
 
 /** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
 const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
-  <Flex role='list' column gap='xs'>
+  <Next.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (
       <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
     ))}
-  </Flex>
+  </Next.Container>
 );
 
 /** One row, holding its own subscription so a rename re-renders just that row. */

@@ -8,8 +8,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Button, Flex, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
@@ -76,7 +77,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   }, [invokePromise, search, database]);
 
   return (
-    <Flex column>
+    <Next.Container gutter='none'>
       {/* TODO(burdon): Fix indentation; is this the right way to extend properties? */}
       {selectedProviders.length > 0 && (
         // Re-key the form on the set of selected providers so the merged schema
@@ -100,7 +101,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
         disabled={selectedProviders.length === 0 || running}
         onClick={handleRun}
       />
-    </Flex>
+    </Next.Container>
   );
 };
 
