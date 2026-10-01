@@ -7,11 +7,11 @@ import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as SchemaIssue from 'effect/SchemaIssue';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 import type * as Types from 'effect/Types';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';

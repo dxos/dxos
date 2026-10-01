@@ -6,8 +6,8 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Stream from 'effect/Stream';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { SessionConfig } from '@dxos/ai';
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import type * as Toolkit from 'effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as JsonSchema from 'effect/JsonSchema';
@@ -11,8 +13,6 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import type * as SchemaRepresentation from 'effect/SchemaRepresentation';
 import * as Stream from 'effect/Stream';
-import * as Tool from 'effect/unstable/ai/Tool';
-import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';

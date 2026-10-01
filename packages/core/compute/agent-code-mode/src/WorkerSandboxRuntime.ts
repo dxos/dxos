@@ -9,8 +9,8 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema, Type } from '@dxos/echo';

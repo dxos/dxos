@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import { XMLParser } from 'fast-xml-parser';
 
 import { normalizeText } from '@dxos/markdown';

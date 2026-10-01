@@ -4,7 +4,7 @@
 
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
