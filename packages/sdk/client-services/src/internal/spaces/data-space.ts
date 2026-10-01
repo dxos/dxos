@@ -4,7 +4,7 @@
 
 import { save } from '@automerge/automerge';
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
-import { create } from '@bufbuild/protobuf';
+import { create, equals } from '@bufbuild/protobuf';
 
 import { Event, Mutex, scheduleTask, sleep, sleepWithContext, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
@@ -34,6 +34,7 @@ import {
   MemberProfileSchema,
   MembershipPolicy,
   type ProfileDocument,
+  ProfileDocumentSchema,
   SpaceMember_Role,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
@@ -424,6 +425,29 @@ export class DataSpace {
         createMappedFeedWriter<Credential, FeedMessage_Payload>(credentialPayload, this._inner.controlPipeline.writer),
       );
     }
+
+    await this._syncOwnProfile();
+  }
+
+  /**
+   * Rewrites this member's profile credential when it no longer matches the identity's profile, since
+   * other members resolve this identity's name from the space and a profile set or changed while the
+   * space was not open never reached it.
+   */
+  private async _syncOwnProfile(): Promise<void> {
+    const profile = this._signingContext.getProfile();
+    if (!profile) {
+      return;
+    }
+
+    const self = Array.from(this._inner.spaceState.members.values()).find((member) =>
+      member.key.equals(this._signingContext.identityKey),
+    );
+    if (!self || (self.profile && equals(ProfileDocumentSchema, self.profile, profile))) {
+      return;
+    }
+
+    await this.updateOwnProfile(profile);
   }
 
   @timed(10_000)
