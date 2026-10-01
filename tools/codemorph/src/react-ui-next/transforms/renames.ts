@@ -322,7 +322,9 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Popover.VirtualTrigger': { apply: virtualTrigger },
     'Tooltip.Provider': UNWRAP,
     // Select.
-    'Select.TriggerButton': { to: ['Select', 'Trigger'] },
+    // Next's trigger has one look (a control showing the chosen option); `variant` has no counterpart.
+    'Select.TriggerButton': { to: ['Select', 'Trigger'], drop: ['variant'] },
+    'Select.Trigger': { drop: ['variant'] },
     'Select.Portal': UNWRAP,
     'Select.Viewport': UNWRAP,
     'Select.Arrow': UNWRAP,
