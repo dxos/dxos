@@ -124,6 +124,12 @@ const DefaultStory = ({ size, variants }: StoryArgs) => (
         iconSize='lg'
         data-testid={`icon-size-${size}`}
       />
+      <Next.Button
+        icon='ph--check-circle--regular'
+        iconClassNames='text-success-text'
+        label='Synced'
+        data-testid={`icon-class-${size}`}
+      />
     </Next.Group>
   </>
 );
@@ -154,7 +160,7 @@ export const Default: Story = {};
  * colour, and every variant has a hover state. `caretDown` adds a smaller trailing caret (an icon-only button then
  * widens to fit it), `compact` pads by one inset, `tooltipSide` moves the label Tooltip, and `hue` fills with a Tag's
  * hue, shifting brightness on hover. `align='start'` packs a stretched button's content at its start, `spin` spins the
- * leading icon, and `iconSize` takes another size's icon scale. The story ends with a tooltip open.
+ * leading icon, `iconSize` takes another size's icon scale, and `iconClassNames` styles the leading icon. The story ends with a tooltip open.
  */
 export const Test: Story = {
   args: { allSizes: true, variants: true },
@@ -385,6 +391,7 @@ export const Test: Story = {
     );
     const spinner = byTestId(canvasElement, 'spin-md').querySelector('svg');
     await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');
+    await expect(byTestId(canvasElement, 'icon-class-md').querySelector('svg')).toHaveClass('text-success-text');
     for (const size of SIZES) {
       const glyph = byTestId(canvasElement, `icon-size-${size}`).querySelector('svg')?.getBoundingClientRect();
       await expect(glyph?.width, size).toBeCloseTo(GEOMETRY.lg.icon, 0);

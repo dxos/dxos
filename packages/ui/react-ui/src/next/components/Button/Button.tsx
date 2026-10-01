@@ -4,7 +4,7 @@
 
 import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
-import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
+import { type ChromaticPalette, type ClassNameValue, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
@@ -44,6 +44,8 @@ export type ButtonVariantProps = {
   size?: Size;
   /** The icons at this size's scale instead of the button's. */
   iconSize?: Size;
+  /** Classes for the leading icon (e.g. a state colour), where the button's own colour would not reach it. */
+  iconClassNames?: ClassNameValue;
 };
 
 /** Content is a label (or children) with optional leading/trailing icons, or a lone icon named by its label. */
@@ -92,6 +94,7 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
       spin,
       size,
       iconSize,
+      iconClassNames,
       id,
       onFocus,
       icon,
@@ -133,7 +136,7 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         className={className}
         ref={forwardedRef}
       >
-        {icon && <Icon icon={icon} spin={spin} size={iconSize} />}
+        {icon && <Icon icon={icon} spin={spin} size={iconSize} classNames={iconClassNames} />}
         {!iconOnly && (children ?? label)}
         {iconEnd && <Icon icon={iconEnd} size={iconSize} />}
         {caretDown && <Icon icon='ph--caret-down--bold' />}
