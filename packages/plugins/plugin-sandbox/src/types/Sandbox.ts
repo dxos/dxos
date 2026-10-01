@@ -9,6 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 
+import * as Repository from './Repository.ts';
+
 export const SKILL_KEY = 'org.dxos.skill.sandbox';
 
 /**
@@ -29,6 +31,8 @@ export class Sandbox extends Type.makeObject<Sandbox>(DXN.make('org.dxos.type.sa
         }),
       ),
     ),
+    /** Repositories every command in the sandbox has as git remotes; the sandbox's work outlives it there. */
+    repositories: Schema.optional(Schema.Array(Ref.Ref(Repository.Repository))),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' })),
 ) {}
 
