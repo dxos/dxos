@@ -28,10 +28,4 @@ export {
   type ReverseRefQuery,
   referenceIndexKey,
 } from './indexes/reverse-ref-index.ts';
-export {
-  type EntityPropPath,
-  EscapedPropPath,
-  SQL_MAX_BOUND_VARIABLES,
-  SqlBoundVariableLimit,
-  normalizePropPath,
-} from './utils.ts';
+export { type EntityPropPath, EscapedPropPath, SQL_MAX_BOUND_VARIABLES, normalizePropPath } from './utils.ts';

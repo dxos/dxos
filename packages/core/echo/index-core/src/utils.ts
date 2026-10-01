@@ -83,8 +83,7 @@ export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE
 
 /**
  * The bound-variable limit chunked reads plan against. A reference rather than
- * {@link SQL_MAX_BOUND_VARIABLES} itself so a host on a wider SQLite can raise it, as echo-host does
- * on the client, and tests can shrink it to drive the multi-statement paths.
+ * {@link SQL_MAX_BOUND_VARIABLES} itself so tests can shrink it to drive the multi-statement paths.
  */
 export const SqlBoundVariableLimit: Context.Reference<number> = Context.Reference<number>(
   '@dxos/index-core/SqlBoundVariableLimit',

@@ -58,7 +58,6 @@ import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './inv
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { QueryServiceImpl } from './query-service.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
-import { withClientSqlLimits } from './sql-limits.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -243,7 +242,7 @@ export class EchoHost extends Resource {
       useSubduction,
     });
 
-    this._runtime = withClientSqlLimits(runtime);
+    this._runtime = runtime;
     this._spaceStateManager = new SpaceStateManager({ runtime });
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
       isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
