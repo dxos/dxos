@@ -15,6 +15,7 @@ import { type RefFieldDataProps, type RefOption } from '#types';
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { Organization } from '../testing/schema.ts';
 import { Form } from './Form.tsx';
+import { ObjectPicker } from './ObjectPicker.tsx';
 import { RefSchema } from './testing.ts';
 
 const SPACE_ID = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE';
@@ -143,5 +144,32 @@ export const Test: Story = {
     await userEvent.click(save);
     await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(trigger).toHaveTextContent('Wayne Enterprises'));
+  },
+};
+
+/** `ObjectPicker trigger`: a toolbar's icon button opens the picker in place of the selection button. */
+const CustomTriggerStory = () => {
+  const [picked, setPicked] = useState<string>();
+  return (
+    <Next.Toolbar.Root>
+      <ObjectPicker
+        options={OPTIONS}
+        onSelect={setPicked}
+        trigger={<Next.Button icon='ph--plus--regular' iconOnly label='Add object' />}
+      />
+      <span data-testid='picked'>{picked}</span>
+    </Next.Toolbar.Root>
+  );
+};
+
+export const CustomTrigger: Story = {
+  render: () => <CustomTriggerStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Add object' }));
+    const popup = await body.findByRole('dialog');
+    await userEvent.click(within(popup).getByRole('option', { name: /Globex/ }));
+    await waitFor(() => expect(canvas.getByTestId('picked')).toHaveTextContent(OPTIONS[1].id));
   },
 };

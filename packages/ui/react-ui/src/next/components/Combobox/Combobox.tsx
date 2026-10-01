@@ -322,7 +322,8 @@ type ComboboxTriggerProps = ThemedClassName<ComboboxPrimitive.TriggerProps> & {
 /**
  * In a Control, a control-sized square that toggles the listbox (a caret by default). Elsewhere, a control-sized
  * button like `Select.Trigger` that shows the selected option and a caret, and opens a popup whose search field takes
- * focus; closing returns focus to it.
+ * focus; closing returns focus to it. With `asChild` the child (e.g. an icon-only `Button` in a toolbar) is the trigger
+ * as it is, named and styled by itself.
  */
 const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>((props, forwardedRef) =>
   useContext(ControlContext) ? (
@@ -343,7 +344,7 @@ const ComboboxCaretTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>
 );
 
 const ComboboxButtonTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
-  ({ classNames, children, placeholder, onClick, ...props }, forwardedRef) => {
+  ({ classNames, children, placeholder, onClick, asChild, ...props }, forwardedRef) => {
     const combobox = useComboboxContext();
     const { loading, registerTrigger } = useComboboxRootContext('Next.Combobox.Trigger');
     useLayoutEffect(() => {
@@ -357,11 +358,12 @@ const ComboboxButtonTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps
     return (
       <ComboboxPrimitive.Trigger
         {...props}
+        asChild={asChild}
         // A tab stop that zag returns focus to on close.
         focusable
         aria-busy={loading || undefined}
-        // Named by the Label and the value, not zag's generic "Toggle suggestions".
-        aria-labelledby={`${combobox.getLabelProps().id} ${valueId}`}
+        // Named by the Label and the value, not zag's generic "Toggle suggestions"; a child (`asChild`) names itself.
+        aria-labelledby={asChild ? undefined : `${combobox.getLabelProps().id} ${valueId}`}
         onClick={(event) => {
           onClick?.(event);
           // zag closes on a trigger click without restoring focus, and the focused search field unmounts.
@@ -370,7 +372,7 @@ const ComboboxButtonTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps
             requestAnimationFrame(() => button.focus());
           }
         }}
-        className={mx(recipes.selectTrigger(), classNames)}
+        className={asChild ? mx(classNames) : mx(recipes.selectTrigger(), classNames)}
         ref={forwardedRef}
       >
         {children ?? (

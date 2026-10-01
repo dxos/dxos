@@ -3,7 +3,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { type DragEvent, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type DragEvent, type KeyboardEvent, type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Next } from '@dxos/react-ui/next';
 import { hues } from '@dxos/ui-types';
@@ -90,6 +90,8 @@ export type ObjectPickerProps = PickerBaseProps & {
   /** The selected option's id. */
   value?: string;
   placeholder?: string;
+  /** Replaces the selection button, e.g. a toolbar's add button that picks an object to insert. */
+  trigger?: ReactElement;
   /** Called with the picked id, or `undefined` when the selected option is picked again. */
   onSelect: (id: string | undefined) => void;
 };
@@ -101,6 +103,7 @@ export type ObjectPickerProps = PickerBaseProps & {
 export const ObjectPicker = ({
   value,
   placeholder,
+  trigger,
   loading,
   createSchema,
   createInitialValuePath,
@@ -141,7 +144,11 @@ export const ObjectPicker = ({
       createLabel={createLabel}
       createIcon={createIcon}
     >
-      <Next.Combobox.Trigger placeholder={placeholder} />
+      {trigger ? (
+        <Next.Combobox.Trigger asChild>{trigger}</Next.Combobox.Trigger>
+      ) : (
+        <Next.Combobox.Trigger placeholder={placeholder} />
+      )}
       <Next.Combobox.Content>
         {creating !== undefined && createSchema ? (
           <CreateForm
