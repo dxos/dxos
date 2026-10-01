@@ -106,6 +106,21 @@ with Phase 4 milestone 5).
 - [x] **Field and date/time** — every current `Field.*` part: segmented `DateInput` (zag `date-input`) with an Ark `DatePicker` calendar replacing the native input, `PinInput`, `NumberInput`, `PasswordInput`, Textarea `variant`; `Field.Block`/`TriggerIcon` mapped; Field story shows every field type (DESIGN.md follow-up 54).
 - [ ] **Toolbar action binding** — `useMenuActions` (`ActionIconButton`, `Toolbar.Menu`) on Next Menu; Phase 4 with react-ui-menu.
 
+## Phase A4: ports with no counterpart
+
+Current components with no Next counterpart (AUDIT.md §7 Phase A item 4), in importer order; renames and dropped
+parts are listed there for the codemods.
+
+### Tasks
+
+- [x] **Avatar** — Ark avatar; one `Avatar.Root` element (`src`/`fallback`/`icon`, hue, status ring), `Image`/`Fallback` parts; block-sized per size, `fill` for portraits. — Test asserts size, initials, ring, image load.
+- [x] **Tabs** — Ark tabs; `Root`/`List`/`Trigger` (a Button)/`Content`/`Indicator`; `keepMounted`, `selectedVariant`. — Test (sizes, manual activation, unmount) and Vertical.
+- [x] **Main** — app shell on `.nx-main-*` rules and `data-surface` zones; same parts as current. — Test (sidebar toggles) and Drawer (padding, resize).
+- [x] **Progress** — Ark progress; single component: `value`/`max`, indeterminate, error, countdown. — Test.
+- [x] **Splitter** — Ark splitter; `ResizeTrigger` replaces `Handle`. — Test (rem round-trip) and Collapsed.
+- [x] **Toast** — Ark toast; `Toaster` host, `Header`/`Title`/`Description`/`Footer`/`ActionTrigger`/`CloseTrigger`. — Test and Timeout.
+- [ ] **Master-detail Tabs** — `Tabs.Viewport`/`BackButton`/`activePart` (3 callers) not ported; decide whether it is a Tabs mode or a separate layout.
+
 ## Phase 4: react-ui-list and react-ui-form rewrite
 
 Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in the milestone order of
