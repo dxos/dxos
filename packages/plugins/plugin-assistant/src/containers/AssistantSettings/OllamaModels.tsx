@@ -188,42 +188,30 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
             </p>
           ))}
         {/* Root value is held empty so the trigger always shows the placeholder; the live text is
-            the separate `query` driving the input and suggestion filter. */}
+            the separate `query` driving the search field and suggestion filter. A query that names no
+            pick is offered as the create row, which pulls it. */}
         <Next.Combobox.Root
+          items={suggestions.map((pick) => ({ value: pick, label: pick }))}
+          filter={null}
           open={open}
-          onOpenChange={setOpen}
-          value=''
-          onValueChange={() => {}}
-          placeholder={t('settings.ollama.pull.placeholder')}
+          onOpenChange={({ open }) => setOpen(open)}
+          value={[]}
+          onValueChange={({ value: [pick] }) => pick && handlePull(pick)}
+          inputValue={query}
+          onInputValueChange={({ inputValue }) => setQuery(inputValue)}
+          onCreate={offerCustom ? handlePull : undefined}
+          createLabel={(name) => t('settings.ollama.pull-custom.label', { name })}
+          createIcon='ph--download-simple--regular'
         >
-          <Next.Combobox.Trigger classNames='w-full' />
-          <Next.Combobox.Portal>
-            <Next.Combobox.Content>
-              <Next.Combobox.Input
-                value={query}
-                onValueChange={setQuery}
-                placeholder={t('settings.ollama.pull.placeholder')}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && filter.length > 0) {
-                    handlePull(filter);
-                  }
-                }}
-              />
-              <Next.Combobox.List>
-                {offerCustom && (
-                  <Next.Combobox.Item
-                    value={filter}
-                    label={t('settings.ollama.pull-custom.label', { name: filter })}
-                    icon='ph--download-simple--regular'
-                    onSelect={() => handlePull(filter)}
-                  />
-                )}
-                {suggestions.map((pick) => (
-                  <Next.Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
-                ))}
-              </Next.Combobox.List>
-            </Next.Combobox.Content>
-          </Next.Combobox.Portal>
+          <Next.Combobox.Trigger classNames='w-full' placeholder={t('settings.ollama.pull.placeholder')} />
+          <Next.Combobox.Content>
+            <Next.Combobox.Input placeholder={t('settings.ollama.pull.placeholder')} />
+            <Next.Combobox.List>
+              {suggestions.map((pick) => (
+                <Next.Combobox.Item key={pick} item={{ value: pick, label: pick }} />
+              ))}
+            </Next.Combobox.List>
+          </Next.Combobox.Content>
         </Next.Combobox.Root>
       </Form.Field>
     </Form.FieldSet>

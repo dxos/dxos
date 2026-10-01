@@ -344,9 +344,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
         {items.map((node) => {
           const open = () =>
             void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
-          return (
-            <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />
-          );
+          return <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />;
         })}
       </Listbox.Content>
     </Listbox.Root>

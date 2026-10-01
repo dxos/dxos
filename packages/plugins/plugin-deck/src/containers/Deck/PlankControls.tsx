@@ -50,9 +50,9 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
 );
 
 type PlankControlProps = Pick<ComponentPropsWithoutRef<typeof Next.Button>, 'variant' | 'classNames' | 'disabled'> & {
-  label: string;
-  icon: string;
-  onClick?: () => void;
+  'label': string;
+  'icon': string;
+  'onClick'?: () => void;
   'data-testid'?: string;
 };
 

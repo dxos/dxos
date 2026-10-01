@@ -83,44 +83,42 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
         </Next.Popover.Trigger>
         <Next.Popover.Content classNames={styles.panel}>
           <Next.Popover.Body>
-            <Next.Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
-              <Next.Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
-                <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
-                  <ViewPanel chat={chat} />
-                </Next.Tabs.Content>
-                <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
-                  {context && <SkillsPanel registry={registry} db={db} context={context} />}
-                </Next.Tabs.Content>
-                <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
-                  <McpServersPanel db={db} />
-                </Next.Tabs.Content>
-                <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
-                  <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                </Next.Tabs.Content>
-                <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
-                  <EnvironmentPanel chat={chat} />
-                </Next.Tabs.Content>
-                <Next.Tabs.List classNames={[styles.toolbar]}>
-                  <Next.Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                  <Next.Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                  <Next.Tabs.Trigger
-                    value='mcp-servers'
-                    icon='ph--plugs-connected--regular'
-                    label={t('options.mcp.title')}
-                  />
-                  <Next.Tabs.Trigger
-                    value='model'
-                    icon='ph--cpu--regular'
-                    label={t('options.chat-model.title')}
-                    data-testid='assistant.options.model'
-                  />
-                  <Next.Tabs.Trigger
-                    value='environment'
-                    icon='ph--hard-drives--regular'
-                    label={t('options.environment.title')}
-                  />
-                </Next.Tabs.List>
-              </Next.Tabs.Viewport>
+            <Next.Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
+              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+                <ViewPanel chat={chat} />
+              </Next.Tabs.Content>
+              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+                {context && <SkillsPanel registry={registry} db={db} context={context} />}
+              </Next.Tabs.Content>
+              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+                <McpServersPanel db={db} />
+              </Next.Tabs.Content>
+              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+                <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+              </Next.Tabs.Content>
+              <Next.Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+                <EnvironmentPanel chat={chat} />
+              </Next.Tabs.Content>
+              <Next.Tabs.List classNames={[styles.toolbar]}>
+                <Next.Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+                <Next.Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
+                <Next.Tabs.Trigger
+                  value='mcp-servers'
+                  icon='ph--plugs-connected--regular'
+                  label={t('options.mcp.title')}
+                />
+                <Next.Tabs.Trigger
+                  value='model'
+                  icon='ph--cpu--regular'
+                  label={t('options.chat-model.title')}
+                  data-testid='assistant.options.model'
+                />
+                <Next.Tabs.Trigger
+                  value='environment'
+                  icon='ph--hard-drives--regular'
+                  label={t('options.environment.title')}
+                />
+              </Next.Tabs.List>
             </Next.Tabs.Root>
           </Next.Popover.Body>
         </Next.Popover.Content>
@@ -251,7 +249,7 @@ const ModelsPanel = ({
         value={preset}
         onValueChange={onPresetChange}
         autoFocus
-        items={presets.map(({ id, label }) => ({ value: id, label: label }))}
+        items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
       >
         <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
@@ -358,7 +356,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
 
   return (
     <Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>
-      <Listbox.Root>
+      <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
         <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
           {servers.map((server) => (
             <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
@@ -531,10 +529,10 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
       <Next.Field.Root>
         <Next.Field.Label srOnly>{t('mcp-server-api-key.label')}</Next.Field.Label>
         <Next.PasswordInput
-          autoComplete='off'
+          ignorePasswordManagers
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
-          onChange={(event) => setApiKey(event.target.value)}
+          onValueChange={setApiKey}
           data-testid='assistant.mcp-server.api-key'
         />
       </Next.Field.Root>
@@ -582,6 +580,14 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
     return options;
   }, [types, t]);
 
+  const typeItems = useMemo(
+    () => [
+      { value: ANY, label: t('any-type-filter.label') },
+      ...typeOptions.map(({ uri, label }) => ({ value: uri, label })),
+    ],
+    [typeOptions, t],
+  );
+
   // Current type URI and filter.
   const [selectedUri, setSelectedUri] = useState<URI.URI | typeof ANY>(ANY);
   const anyFilter = useMemo(() => Filter.or(...typeOptions.map(({ uri }) => Filter.type(uri))), [typeOptions]);
@@ -626,14 +632,16 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
       <div className={mx('flex flex-col', styles.toolbar)}>
         <Next.Select.Root
-          value={[selectedUri === ANY ? undefined : selectedUri]}
-          onValueChange={({ value: [val] }) => setSelectedUri(val as URI.URI | typeof ANY)}
+          items={typeItems}
+          value={selectedUri === ANY ? [] : [selectedUri]}
+          onValueChange={({ value: [value] }) =>
+            setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
+          }
         >
           <Next.Select.Trigger placeholder={t('type-filter.placeholder')} />
           <Next.Select.Content>
-            <Next.Select.Item item={{ value: ANY, label: t('any-type-filter.label') }} />
-            {typeOptions.map(({ uri, label }) => (
-              <Next.Select.Item key={uri} item={{ value: uri, label: label }} />
+            {typeItems.map((item) => (
+              <Next.Select.Item key={item.value} item={item} />
             ))}
           </Next.Select.Content>
         </Next.Select.Root>

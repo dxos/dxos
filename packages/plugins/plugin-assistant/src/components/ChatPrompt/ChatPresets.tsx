@@ -11,9 +11,9 @@ import { AssistantPreset } from '#types';
 export const ChatPresets = ({ presets, preset, onPresetChange }: AssistantPreset.ChatPresetProps) => {
   return (
     <Next.Select.Root
-      value={[preset]}
-      onValueChange={({ value: [value] }) => onPresetChange(value)}
-      items={presets.map(({ id, label }) => ({ value: id, label: label }))}
+      value={preset ? [preset] : []}
+      onValueChange={({ value: [value] }) => value && onPresetChange?.(value)}
+      items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
     >
       <Next.Select.Trigger classNames='text-sm' />
       <Next.Select.Content>

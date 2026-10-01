@@ -598,7 +598,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
       >
-        <NaturalChatThread.Viewport classNames={classNames} padding />
+        <NaturalChatThread.Viewport classNames={classNames} />
       </NaturalChatThread.Root>
 
       {/* TODO(burdon): Why is this required? */}
@@ -608,21 +608,17 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         duration={20_000}
         onOpenChange={(open) => !open && setToastError(undefined)}
       >
-        <Next.Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
-          {t('ai-service-error.label')}
-        </Next.Toast.Title>
+        <Next.Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Next.Toast.Header>
         <Next.Toast.Description>{toastError?.message}</Next.Toast.Description>
         {toastAction && onViewUsage && (
           <Next.Toast.Footer>
-            <Next.Toast.ActionTrigger asChild>
-              <Next.Button
-                onClick={() => {
-                  setToastError(undefined);
-                  onViewUsage();
-                }}
-              >
-                {t(toastAction.labelKey)}
-              </Next.Button>
+            <Next.Toast.ActionTrigger
+              onClick={() => {
+                setToastError(undefined);
+                onViewUsage();
+              }}
+            >
+              {t(toastAction.labelKey)}
             </Next.Toast.ActionTrigger>
           </Next.Toast.Footer>
         )}

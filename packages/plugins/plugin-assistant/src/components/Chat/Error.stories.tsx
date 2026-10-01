@@ -40,15 +40,11 @@ const FailureToast = ({ rawError }: FailureToastProps) => {
       <Next.Toast.Toaster />
       {/* Long, 32-bit-safe duration keeps the toast up for review; larger values overflow setTimeout and fire immediately. */}
       <Next.Toast.Root open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
-        <Next.Toast.Title icon='ph--warning--regular' onClose={() => setOpen(false)}>
-          {t('ai-service-error.label')}
-        </Next.Toast.Title>
+        <Next.Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Next.Toast.Header>
         <Next.Toast.Description>{error.message}</Next.Toast.Description>
         {action && (
           <Next.Toast.Footer>
-            <Next.Toast.ActionTrigger asChild>
-              <Next.Button onClick={() => setOpen(false)}>{t(action.labelKey)}</Next.Button>
-            </Next.Toast.ActionTrigger>
+            <Next.Toast.ActionTrigger onClick={() => setOpen(false)}>{t(action.labelKey)}</Next.Toast.ActionTrigger>
           </Next.Toast.Footer>
         )}
       </Next.Toast.Root>

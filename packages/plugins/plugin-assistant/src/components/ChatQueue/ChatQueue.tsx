@@ -29,7 +29,7 @@ export const ChatQueue = ({ classNames, messages, onCancel }: ChatQueueProps) =>
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={messages.map((message) => ({ value: message.id, label: Message.extractText(message) }))}>
       <Listbox.Content classNames={['w-full gap-1 items-end', classNames]}>
         {messages.map((message) => (
           <QueuedItem key={message.id} message={message} onCancel={onCancel} />
