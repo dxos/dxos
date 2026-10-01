@@ -5,6 +5,8 @@
 import {
   DIALOG_AUTOFOCUS_ATTRIBUTE as NEXT_DIALOG_AUTOFOCUS_ATTRIBUTE,
   AlertDialog as NextAlertDialog,
+  Banner as NextBanner,
+  type BannerRootProps as NextBannerRootProps,
   Block as NextBlock,
   type BlockProps as NextBlockProps,
   Button as NextButton,
@@ -35,6 +37,8 @@ import {
   type DragMoveDirection as NextDragMoveDirection,
   DragPreview as NextDragPreview,
   DropIndicator as NextDropIndicator,
+  Empty as NextEmpty,
+  type EmptyProps as NextEmptyProps,
   Field as NextField,
   Fieldset as NextFieldset,
   type FieldValence as NextFieldValence,
@@ -136,6 +140,10 @@ export namespace Next {
   export const Dialog = NextDialog;
   export const DIALOG_AUTOFOCUS_ATTRIBUTE = NEXT_DIALOG_AUTOFOCUS_ATTRIBUTE;
   export const AlertDialog = NextAlertDialog;
+  export const Banner = NextBanner;
+  export type BannerRootProps = NextBannerRootProps;
+  export const Empty = NextEmpty;
+  export type EmptyProps = NextEmptyProps;
   export const Switch = NextSwitch;
   export type SwitchProps = NextSwitchProps;
   export const SystemButton = NextSystemButton;

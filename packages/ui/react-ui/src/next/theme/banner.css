@@ -1,0 +1,65 @@
+/*
+ * Banner: a message on its valence's surface; `--dx-valence-*` is what a `valence` Button inside it reads.
+ */
+
+@layer dx-components {
+  .nx-banner {
+    --nx-banner-surface: var(--color-neutral-surface);
+    --nx-banner-fg: var(--color-neutral-fg);
+    --dx-valence-bg: var(--color-neutral-bg);
+    --dx-valence-bg-hover: var(--color-neutral-bg-hover);
+    --dx-valence-text: var(--color-neutral-text);
+    border-radius: var(--radius-sm, 0.25rem);
+    background: var(--nx-banner-surface);
+    color: var(--nx-banner-fg);
+  }
+  .nx-banner[data-valence='success'] {
+    --nx-banner-surface: var(--color-success-surface);
+    --nx-banner-fg: var(--color-success-fg);
+    --dx-valence-bg: var(--color-success-bg);
+    --dx-valence-bg-hover: var(--color-success-bg-hover);
+    --dx-valence-text: var(--color-success-text);
+  }
+  .nx-banner[data-valence='info'] {
+    --nx-banner-surface: var(--color-info-surface);
+    --nx-banner-fg: var(--color-info-fg);
+    --dx-valence-bg: var(--color-info-bg);
+    --dx-valence-bg-hover: var(--color-info-bg-hover);
+    --dx-valence-text: var(--color-info-text);
+  }
+  .nx-banner[data-valence='warning'] {
+    --nx-banner-surface: var(--color-warning-surface);
+    --nx-banner-fg: var(--color-warning-fg);
+    --dx-valence-bg: var(--color-warning-bg);
+    --dx-valence-bg-hover: var(--color-warning-bg-hover);
+    --dx-valence-text: var(--color-warning-text);
+  }
+  .nx-banner[data-valence='error'] {
+    --nx-banner-surface: var(--color-error-surface);
+    --nx-banner-fg: var(--color-error-fg);
+    --dx-valence-bg: var(--color-error-bg);
+    --dx-valence-bg-hover: var(--color-error-bg-hover);
+    --dx-valence-text: var(--color-error-text);
+  }
+
+  .nx-banner-title > h2 {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .nx-banner-title .nx-icon {
+    color: var(--dx-valence-text);
+  }
+  /* The body's last line keeps a gap's distance from the banner's edge, as the title row's block gives its first. */
+  .nx-banner-body {
+    margin: 0;
+    padding-block-start: 0;
+    padding-block-end: var(--nx-gap-size);
+  }
+  .nx-banner-body:first-child {
+    padding-block-start: var(--nx-gap-size);
+  }
+}

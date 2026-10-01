@@ -1,0 +1,27 @@
+/*
+ * Empty: a centred, unpainted status message in place of missing content, in the secondary text colour.
+ */
+
+@layer dx-components {
+  .nx-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-gap-size);
+    padding: var(--nx-block-size) var(--nx-gap-size);
+    text-align: center;
+    color: var(--color-description);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+  /* The icon reads as an illustration, so it takes the next block size up rather than the text's icon size. */
+  .nx-empty > .nx-icon {
+    width: var(--nx-block-size);
+    height: var(--nx-block-size);
+    color: var(--color-subdued);
+  }
+  .nx-empty > p {
+    margin: 0;
+  }
+}
