@@ -14,8 +14,16 @@ import React, {
 } from 'react';
 
 import { useFocusGroup } from '@dxos/react-focus';
-import { type ThemedClassName, ToggleIconButton, createContext, useMergeRefs, useTranslation } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import {
+  IconBlock,
+  IconButton,
+  type IconButtonProps,
+  type ThemedClassName,
+  ToggleIconButton,
+  createContext,
+  useMergeRefs,
+  useTranslation,
+} from '@dxos/react-ui';
 import { translationKey as uiTranslationKey } from '@dxos/react-ui/translations';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
@@ -180,10 +188,10 @@ export const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHand
     );
   }
   return (
-    <Next.Button
+    <IconButton
       variant='ghost'
       disabled={disabled}
-      showTooltip={false}
+      noTooltip
       icon='ph--dots-six-vertical--regular'
       iconOnly
       label={t('drag-handle.label')}
@@ -236,16 +244,16 @@ export const OrderedListIconButton = ({
   disabled,
   classNames,
   ...props
-}: Next.ButtonProps & { autoHide?: boolean }) => (
-  <Next.Block>
-    <Next.Button
+}: IconButtonProps & { autoHide?: boolean }) => (
+  <IconBlock>
+    <IconButton
       {...props}
       variant='ghost'
       iconOnly
       disabled={disabled}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
-  </Next.Block>
+  </IconBlock>
 );
 
 /**
@@ -260,8 +268,8 @@ export const OrderedListDeleteButton = ({
   disabled,
   classNames,
   ...props
-}: Partial<Pick<Next.ButtonProps, 'icon'>> &
-  Omit<Next.ButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
+}: Partial<Pick<IconButtonProps, 'icon'>> &
+  Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
   const { t } = useTranslation(uiTranslationKey);
   return (
     <OrderedListIconButton
@@ -279,7 +287,7 @@ export const OrderedListDeleteButton = ({
  * Expand/collapse caret; reflects and toggles the item's expanded state via the disclosure
  * trigger's `aria-expanded` + `aria-controls`.
  */
-export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<Next.ButtonProps>) => {
+export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<IconButtonProps>) => {
   const { t } = useTranslation(osTranslations);
   const { expanded, toggle, triggerProps } = useOrderedListItemContext('OrderedListExpandCaret');
   const handleClick = useCallback(

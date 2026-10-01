@@ -4,10 +4,9 @@
 
 import React, { memo } from 'react';
 
-import { composable } from '@dxos/react-ui';
-import { Next } from '@dxos/react-ui/next';
+import { IconButton, type IconButtonProps, composable } from '@dxos/react-ui';
 
-export type TreeItemToggleProps = Omit<Next.ButtonProps, 'icon' | 'size' | 'label'> & {
+export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label'> & {
   open?: boolean;
   isBranch?: boolean;
   hidden?: boolean;
@@ -23,14 +22,14 @@ export const TreeItemToggle = memo(
   composable<HTMLButtonElement, TreeItemToggleProps>(
     ({ classNames, open, isBranch, hidden, density = 'md', ...props }, forwardedRef) => {
       return (
-        <Next.Button
+        <IconButton
           ref={forwardedRef}
           data-testid='treeItem.toggle'
           aria-expanded={open}
           variant='ghost'
           // Sets the `--dx-control` the square below is measured against, so a denser tree gets a
           // smaller toggle rather than an `md` square in an `sm` grid.
-          size={density}
+          density={density}
           classNames={[
             // One control tall, not `h-full`: a row with a description is taller than its title
             // line, and stretching the toggle centred the chevron against the whole row instead of
@@ -45,10 +44,10 @@ export const TreeItemToggle = memo(
             hidden ? 'hidden' : !isBranch && 'invisible',
             classNames,
           ]}
-          iconSize='xs'
+          size={3}
           icon='ph--caret-right--bold'
           iconOnly
-          showTooltip={false}
+          noTooltip
           label={open ? 'Click to close' : 'Click to open'}
           tabIndex={-1}
           {...props}

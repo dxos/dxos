@@ -38,9 +38,8 @@ import React, {
   useState,
 } from 'react';
 
-import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
-import { Next } from '@dxos/react-ui/next';
 import {
   getStyles,
   hoverableControls,
@@ -1496,7 +1495,7 @@ const TreeNodeHeading = <T extends { id: string }>({
   const styles = props.iconHue ? getStyles(props.iconHue) : undefined;
   const text = toLocalizedString(props.label, t);
   return (
-    <Next.TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
+    <TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
       <div
         data-testid='treeItem.heading'
         className={mx('flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none', props.headingClassName)}
@@ -1505,8 +1504,8 @@ const TreeNodeHeading = <T extends { id: string }>({
           <RenderIcon item={item} path={path} props={props} />
         ) : (
           props.icon && (
-            <Next.Icon
-              size='lg'
+            <Icon
+              size={5}
               icon={props.icon}
               // Centred in a block, the column a child row's toggle sits in.
               classNames={['my-1 mx-0.5', styles?.text]}
@@ -1518,7 +1517,7 @@ const TreeNodeHeading = <T extends { id: string }>({
         </span>
         <CountBadge count={props.count} modifiedCount={props.modifiedCount} />
       </div>
-    </Next.TextTooltip>
+    </TextTooltip>
   );
 };
 
@@ -1529,17 +1528,17 @@ const TreeNodeHeading = <T extends { id: string }>({
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Next.Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
-      </Next.Tag>
+      </Tag>
     );
   }
 
   if (typeof count === 'number') {
     return (
-      <Next.Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
-      </Next.Tag>
+      </Tag>
     );
   }
 
