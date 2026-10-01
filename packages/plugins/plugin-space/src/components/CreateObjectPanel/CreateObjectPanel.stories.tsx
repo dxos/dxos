@@ -86,8 +86,9 @@ export const Default: Story = {
 // "Table" contains no match for the query — impossible before plugin/description were searchable.
 export const FilterByPlugin: Story = {
   render: DefaultStory,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async () => {
+    // The dialog portals its content out of the canvas.
+    const canvas = within(document.body);
     const input = await canvas.findByTestId('create-object-form.schema-input', undefined, { timeout: 10_000 });
     await userEvent.type(input, 'Kanban');
     void expect(await canvas.findByText('Table', undefined, { timeout: 10_000 })).toBeVisible();
