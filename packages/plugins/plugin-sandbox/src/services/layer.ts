@@ -12,10 +12,12 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { getLocalSandboxBackend } from '#local-backend';
 
+import * as RepositoryService from '../types/RepositoryService.ts';
 import * as SandboxCapabilities from '../types/SandboxCapabilities.ts';
 import * as SandboxService from '../types/SandboxService.ts';
 import * as Settings from '../types/Settings.ts';
 import { makeEdgeBackend } from './edge-backend.ts';
+import { makeEdgeRepositoryBackend } from './repository-backend.ts';
 import { type EdgeContext } from './sandbox-url.ts';
 
 /** Environment variable selecting the backend under Node or Bun; it overrides the plugin setting. */
@@ -26,6 +28,14 @@ export const layerEdge: Layer.Layer<SandboxService.Service, never, Capability.Se
   SandboxService.Service,
   Effect.gen(function* () {
     return makeEdgeBackend(edgeContext(yield* Capability.Service));
+  }),
+);
+
+/** Repositories live on EDGE whichever backend runs the sandboxes: they are what outlives them. */
+export const layerRepository: Layer.Layer<RepositoryService.Service, never, Capability.Service> = Layer.effect(
+  RepositoryService.Service,
+  Effect.gen(function* () {
+    return makeEdgeRepositoryBackend(edgeContext(yield* Capability.Service));
   }),
 );
 
@@ -78,6 +88,8 @@ const NO_LOCAL_RUNTIME = 'Local sandboxes need the desktop app, or Node or Bun.'
 
 const NO_PUBLISH = 'Publishing files needs a local sandbox in the desktop app.';
 
+const NO_REPOSITORIES = 'Repositories can be attached only to EDGE sandboxes.';
+
 /** Reads the client's config and identity per call: both arrive once the client has initialized. */
 const edgeContext = (capabilities: CapabilityManager.CapabilityManager) => (): EdgeContext => {
   const [config] = capabilities.getAll(ClientCapabilities.Config);
@@ -125,6 +137,13 @@ const selecting = ({
     readFileBytes: (...args) => Effect.flatMap(select, (backend) => backend.readFileBytes(...args)),
     writeFile: (...args) => Effect.flatMap(select, (backend) => backend.writeFile(...args)),
     listFiles: (...args) => Effect.flatMap(select, (backend) => backend.listFiles(...args)),
+    exposePort: (...args) => Effect.flatMap(select, (backend) => backend.exposePort(...args)),
+    setRepositories: (...args) =>
+      Effect.flatMap(select, (backend) =>
+        backend.setRepositories
+          ? backend.setRepositories(...args)
+          : Effect.fail(new SandboxService.SandboxError({ message: NO_REPOSITORIES })),
+      ),
     publish: (...args) =>
       Effect.flatMap(select, (backend) =>
         backend.publish
@@ -141,5 +160,13 @@ const envPreference = (): Settings.Backend | undefined => {
 
 const unavailable = (message: string): SandboxService.Backend => {
   const fail = () => Effect.fail(new SandboxService.SandboxError({ message }));
-  return { kind: 'local', create: fail, exec: fail, readFileBytes: fail, writeFile: fail, listFiles: fail };
+  return {
+    kind: 'local',
+    create: fail,
+    exec: fail,
+    readFileBytes: fail,
+    writeFile: fail,
+    listFiles: fail,
+    exposePort: fail,
+  };
 };

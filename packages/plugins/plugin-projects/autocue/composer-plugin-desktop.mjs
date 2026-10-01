@@ -8,9 +8,24 @@ import { join } from 'node:path';
 
 // Re-imported with the driver's cache-busting query, which reaches only the file it loads, so an edit to the
 // browser flow is picked up by the next `run` too.
-const { prepare, steps: browserSteps } = await import(
-  `../../plugin-computer/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`
-);
+const {
+  prepare,
+  steps: browserSteps,
+  card,
+  showSidebar,
+  LINGER,
+  PLUGIN_NAME,
+  TWENTY_MIN,
+} = await import(`../../plugin-computer/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`);
+
+/** The browser flow's step with this name, so the desktop take picks steps by name rather than position. */
+const at = (name) => {
+  const index = browserSteps.findIndex((step) => step.name === name);
+  if (index < 0) {
+    throw new Error(`the browser flow has no step "${name}"`);
+  }
+  return index;
+};
 
 /**
  * The Composer Plugin demo in the native desktop app: the same take as plugin-computer's browser flow, but the
@@ -30,8 +45,9 @@ const { prepare, steps: browserSteps } = await import(
  *   (cd packages/apps/composer-app/src-tauri && cargo build --release --features tauri/custom-protocol)
  *   node .agents/skills/autocue/scripts/driver.mjs --target tauri --out /tmp/demo
  *
- * The first three steps are off-camera prep; the rest are the browser flow's. On Linux the app keeps its database in
- * memory (`VITE_DX_STORAGE=memory`), so every launch starts from a new identity and only localStorage settings persist.
+ * The first three steps are off-camera prep; the rest are the browser flow's, but for its own load. On Linux the app
+ * keeps its database in memory (`VITE_DX_STORAGE=memory`), so every launch starts from a new identity and only
+ * localStorage settings persist.
  */
 
 /** The same marker the browser flow keeps; cleared here so a replay tells this take's project apart. */
@@ -155,7 +171,63 @@ export const steps = [
       }
     },
   },
-  // The browser flow's take. Its uninstall of an earlier take's plugin keys off the browser build folder, which the
-  // desktop take never writes, so it always runs: replay this flow from before "Load the plugin", never after it.
-  ...browserSteps.slice(2),
+  // The browser flow's take, up to where it loads from the dev server: the desktop agent offers a URL instead. Its
+  // uninstall of an earlier take's plugin keys off the browser plugin folder, which the desktop take never writes, so
+  // it always runs: replay this flow from before "Load the plugin", never after it.
+  ...browserSteps.slice(
+    at('Create a project from the Composer Plugin template'),
+    at('Wait for the agent to offer the plugin'),
+  ),
+  {
+    name: 'Wait for the agent to offer the plugin',
+    run: async ({ page }) => {
+      await page.getByTestId('assistant.pluginUrlPrompt').waitFor({ state: 'visible', timeout: TWENTY_MIN });
+    },
+  },
+  {
+    // The prompt loads without enabling, so the plugin is turned on in the registry, on camera.
+    name: 'Load the plugin',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: '[data-testid="assistant.pluginUrlPrompt.load"]', label: 'Load' });
+      await page.waitForFunction((name) => composer.plugins().some((plugin) => plugin.name === name), PLUGIN_NAME, {
+        timeout: 30_000,
+      });
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  {
+    // The registry shot is the one that proves the load, so the side panels close first and the take
+    // slows down: Labs after a beat, then the card, then the toggle.
+    name: 'Enable the plugin in the registry',
+    done: async ({ page }) =>
+      page.evaluate((name) => composer.plugins().some((plugin) => plugin.name === name && plugin.enabled), PLUGIN_NAME),
+    run: async ({ demo, page }) => {
+      for (const label of ['Close companion', 'Close context sidebar']) {
+        const button = page.locator(`button:has-text("${label}")`).first();
+        if (await button.isVisible().catch(() => false)) {
+          await demo.click({ selector: `button:has-text("${label}") >> nth=0`, label });
+          await page.waitForTimeout(LINGER / 5);
+        }
+      }
+      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
+      await page.waitForTimeout(1_000);
+      await showSidebar({ demo, page }, 'pluginRegistry.labs', 'Labs');
+      const plugin = page.locator(card(PLUGIN_NAME));
+      await plugin.waitFor({ state: 'visible', timeout: 10_000 });
+      await plugin.scrollIntoViewIfNeeded();
+      await demo.hover({ selector: card(PLUGIN_NAME), label: PLUGIN_NAME });
+      await page.waitForTimeout(LINGER);
+      const toggle = `${card(PLUGIN_NAME)} input[type="checkbox"]`;
+      if (!(await page.locator(toggle).isChecked())) {
+        await demo.click({ selector: toggle, label: 'Enable' });
+      }
+      await page.waitForFunction(
+        (name) => composer.plugins().some((plugin) => plugin.name === name && plugin.active),
+        PLUGIN_NAME,
+        { timeout: 15_000 },
+      );
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  ...browserSteps.slice(at('Open the Clocks page')),
 ];

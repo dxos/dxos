@@ -74,6 +74,9 @@ export const make = (url: string, token: string): SandboxService.Backend => {
       call('list', { spaceId, sandboxId, path }, Schema.Struct({ entries: Schema.Array(FileEntry) })).pipe(
         Effect.map(({ entries }) => entries),
       ),
+    // The sidecar listens on loopback only, so there is no public address to hand out.
+    exposePort: () =>
+      Effect.fail(new SandboxService.SandboxError({ message: 'Local sandboxes cannot expose ports; use EDGE.' })),
     publish: (spaceId, sandboxId, path) =>
       call('publish', { spaceId, sandboxId, path }, Schema.Struct({ path: Schema.String })).pipe(
         Effect.map(({ path: served }) => `${url.replace(/\/$/, '')}${served}`),

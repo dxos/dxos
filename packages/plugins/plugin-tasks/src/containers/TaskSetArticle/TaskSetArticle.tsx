@@ -54,6 +54,8 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
    * host itself in front of the reader. A host offers `'companion'` only where it contributes one.
    */
   detail?: 'plank' | 'companion';
+  /** Whether rows render their task's description beneath the title. */
+  showDescription?: boolean;
 };
 
 /**
@@ -63,7 +65,13 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs are
  * what keep the lists and parent edges consistent.
  */
-export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
+export const TaskSetArticle = ({
+  role,
+  attendableId,
+  subject: taskSet,
+  detail = 'plank',
+  showDescription = true,
+}: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
@@ -284,7 +292,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       groups={groups}
       hierarchical
       selectable
-      showDescription
+      showDescription={showDescription}
       showEstimates
       descriptionComponents={descriptionComponents}
       checked={checked}

@@ -119,7 +119,7 @@ Give each subagent its group number and the store path. Prompt template:
 decision model that returns calibrated probabilities for typed questions. It is
 orders of magnitude cheaper than a subagent (input tokens only, $0.042 per
 million) but cannot explore, so each rule's `context` field decides what it is
-shown. Needs `TYPESAFE_API_KEY`.
+shown. Needs `TYPESAFE_API_KEY`, which is `op://CI/Typesafe AI Test Key/credential` in 1Password.
 
 ```sh
 bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
@@ -230,7 +230,7 @@ Every PR is expected to carry a review of its own change. The author or agent ru
 only checks the committed store, so CI needs no API key and spends nothing.
 
 ```sh
-bun .agents/skills/agentic-review/scripts/fast.ts            # needs TYPESAFE_API_KEY (`op`, see 1password skill)
+TYPESAFE_API_KEY='op://CI/Typesafe AI Test Key/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts
 bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
 ```
 

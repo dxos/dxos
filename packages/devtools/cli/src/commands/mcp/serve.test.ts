@@ -30,6 +30,12 @@ const SKILL = 'project';
  */
 const PROMPTS = [SKILL, 'database', 'file', 'registry'];
 
+/**
+ * Stands in for the `skillToken` the `loadSkill` request `id` answered with: the token derives from a
+ * secret the server draws at start, so a scripted session cannot know it in advance.
+ */
+const tokenFrom = (id: number) => ({ tokenFrom: id });
+
 /** The requests every session sends after its own opening, whichever revision it speaks. */
 const SURFACE_REQUESTS = [
   { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },
@@ -37,7 +43,7 @@ const SURFACE_REQUESTS = [
   { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: SKILL } } },
   { jsonrpc: '2.0', id: 5, method: 'prompts/get', params: { name: SKILL, arguments: {} } },
   { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: 'noSuchSkill' } } },
-  // Before its skill is loaded, so it is refused; the same call after `loadSkill` (20) runs, as 21.
+  // Without its skill's token, so it is refused; the same call with the token `loadSkill` (20) returns runs, as 21.
   {
     jsonrpc: '2.0',
     id: 7,
@@ -49,7 +55,10 @@ const SURFACE_REQUESTS = [
     jsonrpc: '2.0',
     id: 21,
     method: 'tools/call',
-    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.registry.queryPlugins' } },
+    params: {
+      name: 'invokeOperation',
+      arguments: { key: 'org.dxos.operation.registry.queryPlugins', skillToken: tokenFrom(20) },
+    },
   },
   { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'whoami', arguments: {} } },
   { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'queryOperations', arguments: {} } },
@@ -71,7 +80,10 @@ const SURFACE_REQUESTS = [
     jsonrpc: '2.0',
     id: 13,
     method: 'tools/call',
-    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.space.queryTypes' } },
+    params: {
+      name: 'invokeOperation',
+      arguments: { key: 'org.dxos.operation.space.queryTypes', skillToken: tokenFrom(22) },
+    },
   },
   // `key` is required, so these arguments fail input decoding before the handler runs.
   { jsonrpc: '2.0', id: 14, method: 'tools/call', params: { name: 'invokeOperation', arguments: {} } },
@@ -134,7 +146,12 @@ const runSession = (
     const writeNext = () => {
       while (next < requests.length) {
         const request = requests[next++] as { id?: number };
-        child.stdin.write(`${JSON.stringify(request)}\n`);
+        const line = JSON.stringify(request, (key, value) =>
+          key === 'skillToken' && typeof value?.tokenFrom === 'number'
+            ? responses.get(value.tokenFrom)?.result?.structuredContent?.skillToken
+            : value,
+        );
+        child.stdin.write(`${line}\n`);
         if (request.id !== undefined && awaitedIds.includes(request.id)) {
           return;
         }
@@ -298,7 +315,7 @@ const surfaceTests = (responses: () => Map<number, Response>) => {
 
   // A skill carries the conventions its operations' descriptions do not, so skipping it is refused
   // with the call that fixes it, rather than left to produce a plausible but wrong invocation.
-  test('refuses an operation until a skill governing it is loaded', ({ expect }) => {
+  test('refuses an operation called without the token of a skill governing it', ({ expect }) => {
     const refused = getResult(7);
     expect(refused.isError).to.be.true;
     expect(refused.content[0].text).to.include('skill_not_loaded');
