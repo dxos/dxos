@@ -17,6 +17,7 @@ import { Group } from '../Group/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Image, type ImageProps } from '../Image/index.ts';
 import { Menu } from '../Menu/index.ts';
+import { SystemButton } from '../SystemButton/index.ts';
 import { Typography, type TypographyProps } from '../Typography/index.ts';
 
 /** A click inside a clickable card or row (a trailing action, a menu) must not also activate it. */
@@ -297,25 +298,45 @@ CardText.displayName = 'Next.Card.Text';
 // Action
 //
 
-type CardActionProps = Omit<ButtonProps, 'iconOnly' | 'icon' | 'label' | 'children'> & {
-  icon: string;
-  /** Names the action and shows in its Tooltip. */
-  label: string;
-};
+type CardActionProps = Omit<ButtonProps, 'iconOnly' | 'icon' | 'label' | 'children'> &
+  (
+    | {
+        /** A `SystemButton` preset: its icon, and its translated label unless `label` is given. */
+        system: 'close' | 'delete';
+        icon?: never;
+        label?: string;
+      }
+    | {
+        system?: never;
+        icon: string;
+        /** Names the action and shows in its Tooltip. */
+        label: string;
+      }
+  );
 
-/** A ghost icon-only Button for a Header or Row; its click stays with it, never activating a clickable card. */
-const CardAction = forwardRef<HTMLButtonElement, CardActionProps>(({ onClick, ...props }, forwardedRef) => (
-  <Button
-    variant='ghost'
-    {...props}
-    iconOnly
-    onClick={(event) => {
+const CARD_ACTION_SYSTEM = { close: SystemButton.Close, delete: SystemButton.Delete } as const;
+
+/**
+ * A ghost icon-only Button for a Header or Row; its click stays with it, never activating a clickable card. With
+ * `system` it is that `SystemButton` preset, so it takes the preset's icon and translated label.
+ */
+const CardAction = forwardRef<HTMLButtonElement, CardActionProps>(
+  ({ system, icon, label, onClick, ...props }, forwardedRef) => {
+    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
       stopPropagation(event);
       onClick?.(event);
-    }}
-    ref={forwardedRef}
-  />
-));
+    };
+
+    if (system) {
+      const Preset = CARD_ACTION_SYSTEM[system];
+      return <Preset variant='ghost' {...props} label={label} onClick={handleClick} ref={forwardedRef} />;
+    }
+
+    return (
+      <Button variant='ghost' {...props} icon={icon} label={label} iconOnly onClick={handleClick} ref={forwardedRef} />
+    );
+  },
+);
 
 CardAction.displayName = 'Next.Card.Action';
 

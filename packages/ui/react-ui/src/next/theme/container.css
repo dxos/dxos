@@ -144,6 +144,11 @@
     justify-self: center;
   }
 
+  /* The current `IconBlock compact`: rail-wide, so columns still align, but only as tall as its content. */
+  .nx-block[data-compact] {
+    height: auto;
+  }
+
   /* Responsive: collapse against the nearest query container (the pane), never the viewport. */
   @container (width < 24rem) {
     .nx-grid.nx-grid[data-gutter='rail'] {

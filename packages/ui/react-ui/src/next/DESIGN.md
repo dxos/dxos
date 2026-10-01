@@ -304,8 +304,8 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     gap only (`none|sm|md|lg` = 0/0.25/0.5/0.75rem, the current `ColumnGap`), since columns are shared through subgrid
     and a column gap would move the parent's tracks. `Column.Section label` needs no part: an inheriting Container
     with `Typography asChild` on an `<h2>` is the section, and a `label` prop would add a sibling that `asChild`
-    cannot carry. `Block` stays one block square: `square` is its only shape and `compact` would break the rail
-    alignment it exists for. ScrollArea takes `orientation` (`vertical|horizontal|all`, ui-types `AllowedAxis`, the
+    cannot carry. `Block` stays one block wide: `square` is its default shape, and `compact` (amended for the codemods) keeps
+    the width, so rail alignment holds, but drops the fixed height (`data-compact`). ScrollArea takes `orientation` (`vertical|horizontal|all`, ui-types `AllowedAxis`, the
     current values), `autoHide` (thumbs show on hover, through the thumbs' Tailwind group names), `snap` (mandatory on
     the scrolling axis) and `scrollbars={false}` (no overlay thumb and no native bar); a horizontal pane reserves no
     end-track width.

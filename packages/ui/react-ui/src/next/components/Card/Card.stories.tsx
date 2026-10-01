@@ -8,6 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { translations } from '#translations';
+
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
@@ -150,6 +152,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       <Next.Card.Root border={false} data-testid={`borderless-${size}`}>
         <Next.Card.Header>
           <Next.Card.Title>Borderless</Next.Card.Title>
+          <Next.Card.Action system='delete' data-testid={`delete-${size}`} />
+          <Next.Card.Action system='close' data-testid={`close-${size}`} />
         </Next.Card.Header>
       </Next.Card.Root>
     </div>
@@ -181,7 +185,7 @@ const meta = {
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[52rem]' }), withTheme()],
   args: { size: 'md' },
   argTypes: SIZE_ARG_TYPES,
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'centered', translations },
 } satisfies Meta<SizeArgs>;
 
 export default meta;
@@ -296,6 +300,10 @@ export const Test: Story = {
     await userEvent.click(clickable);
     await waitFor(() => expect(clickable).toHaveTextContent('Opened 2'));
     await expect(getComputedStyle(canvas.getByTestId('borderless-md')).borderTopColor).toBe('rgba(0, 0, 0, 0)');
+
+    // System actions take the SystemButton preset's icon and translated label.
+    await expect(canvas.getByTestId('close-md')).toHaveAccessibleName('Close');
+    await expect(canvas.getByTestId('delete-md')).toHaveAccessibleName('Delete');
 
     // Grid: leading and trailing cells sit in the card's rails at every size, the rails one gap inside the
     // border; text starts at the content edge.
