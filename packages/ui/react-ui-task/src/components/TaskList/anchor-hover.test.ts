@@ -4,8 +4,9 @@
 
 import { type Mock, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
+
 import { AnchorHover } from './anchor-hover.ts';
-import { DX_POPOVER_CONTENT_ATTR } from './anchor.ts';
 
 describe('AnchorHover', () => {
   let anchor: HTMLElement;

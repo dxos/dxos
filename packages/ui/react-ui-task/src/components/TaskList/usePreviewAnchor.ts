@@ -4,7 +4,9 @@
 
 import { type KeyboardEvent, type MouseEvent, type PointerEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { AnchorHover, DxAnchorActivate } from '@dxos/react-ui';
+import { DxAnchorActivate } from '@dxos/react-ui';
+
+import { AnchorHover } from './anchor-hover.ts';
 
 export type PreviewAnchorOptions = {
   /** URI of the object the chip names; without one the chip does nothing. */

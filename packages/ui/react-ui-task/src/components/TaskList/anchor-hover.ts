@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DX_POPOVER_CONTENT_ATTR } from './anchor.ts';
+import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
 
 /** Delay before hover opens the preview — long enough that crossing the anchor en route elsewhere does not fire it. */
 const HOVER_OPEN_DELAY = 100;
@@ -20,8 +20,9 @@ export type AnchorHoverOptions = {
 /**
  * Hover intent for an element that previews an object in a popover card: opens after a short hover,
  * closes once the pointer has left both the anchor and the card, and stops closing on leave once the
- * reader interacts with the card. Framework-free so `dx-anchor` and React triggers share it.
+ * reader interacts with the card.
  */
+// TODO(wittjosiah): Move to a shared UI package and use it from `dx-anchor`, which carries a copy of this logic.
 export class AnchorHover {
   readonly #anchor: Element;
   readonly #open: () => void;
