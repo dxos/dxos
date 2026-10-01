@@ -9,7 +9,8 @@ import { expect } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { callTool } from '@dxos/ai';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Database, Feed, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
@@ -47,14 +48,41 @@ class Assigned extends Type.makeRelation<Assigned>(DXN.make('com.example.relatio
   target: Task,
 })(Schema.Struct({ role: Schema.optional(Schema.String) })) {}
 
-const TestLayer = AssistantTestLayer({ types: [Person, Task, Project, Assigned, Feed.Feed] });
+class ScoreFailed extends Schema.TaggedError<ScoreFailed>('ScoreFailed')('ScoreFailed', {
+  title: Schema.String,
+}) {}
+
+/** Scores a title by its length, and fails on an empty one: the operation `operations.md` is written against. */
+const Score = Operation.make({
+  meta: { key: DXN.make('com.example.operation.score'), name: 'Score' },
+  input: Schema.Struct({ title: Schema.String }),
+  output: Schema.Number,
+});
+
+const handlers = OperationHandlerSet.make(
+  Score.pipe(
+    Operation.withHandler(({ title }) =>
+      title.length === 0 ? Effect.fail(new ScoreFailed({ title })) : Effect.succeed(title.length),
+    ),
+  ),
+);
+
+const TestLayer = AssistantTestLayer({
+  types: [Person, Task, Project, Assigned, Feed.Feed],
+  operationHandlers: [handlers],
+});
 
 const EvalResult = Schema.Struct({ output: Schema.String, ok: Schema.Boolean });
 
 /** Runs `code` through the eval tool as a turn would, failing the test if the code failed. */
 const run = Effect.fnUntraced(function* (code: string) {
   const runtime = yield* Effect.context<Database.Service | Operation.Service>();
-  const toolkit = makeEvalToolkit({ dialect: EffectDialect, sandbox: Sandbox.inProcess, runtime, operations: [] });
+  const toolkit = makeEvalToolkit({
+    dialect: EffectDialect,
+    sandbox: Sandbox.inProcess,
+    runtime,
+    operations: [{ name: 'score', parameters: {}, definition: Score, invoke: () => Effect.void }],
+  });
   const result = yield* callTool(yield* toolkit.handlers, {
     _tag: 'toolCall',
     toolCallId: 'docs',
@@ -187,6 +215,28 @@ describe('DOCS', () => {
           'childOf Write',
           'roots 2',
         ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'operations.md and errors.md: Effect.exit contains a failed operation',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* run(`
+          const Score = yield* Database.resolve('dxn:com.example.operation.score');
+          for (const title of ['Write the docs', '']) {
+            const exit = yield* Effect.exit(Operation.invoke(Score, { title }));
+            if (exit._tag === 'Failure') {
+              yield* print('failed', String(exit.cause).includes('ScoreFailed'));
+            } else {
+              yield* print('score', exit.value);
+            }
+          }
+        `);
+        expect(output).toEqual('score 14\nfailed true');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

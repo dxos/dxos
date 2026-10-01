@@ -5,9 +5,9 @@ array. `Filter.*` builds a filter; `Query.select(filter)` turns one into a query
 `Database.query` takes either.
 
 ```js
-const Task = yield * Database.resolve('dxn:com.example.type.task:0.1.0');
-const open = yield * Database.query(Filter.type(Task, { status: 'open' })).run;
-yield * print('open', open.length);
+const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');
+const open = yield* Database.query(Filter.type(Task, { status: 'open' })).run;
+yield* print('open', open.length);
 ```
 
 ## By type and properties
@@ -25,7 +25,7 @@ Filter.type(Task, { tags: Filter.contains('urgent') }); // an array field that h
 ## By id
 
 ```js
-const [task] = yield * Database.query(Filter.id(id)).run;
+const [task] = yield* Database.query(Filter.id(id)).run;
 ```
 
 ## Combining filters
@@ -45,7 +45,7 @@ alternatives on the field instead, or run two queries.
 
 ```js
 const top =
-  yield * Database.query(Query.select(Filter.type(Task)).orderBy(Order.property('priority', 'desc')).limit(3)).run;
+  yield* Database.query(Query.select(Filter.type(Task)).orderBy(Order.property('priority', 'desc')).limit(3)).run;
 ```
 
 `Order.natural()` is the database's own order; `.skip(n)` pages past the first `n`.
@@ -56,10 +56,10 @@ const top =
 `.referencedBy(Type, field)` moves to the objects whose `Ref` field points at the selection:
 
 ```js
-const Person = yield * Database.resolve('dxn:com.example.type.person:0.1.0');
-const owners = yield * Database.query(Query.select(Filter.type(Task, { status: 'open' })).reference('owner')).run;
+const Person = yield* Database.resolve('dxn:com.example.type.person:0.1.0');
+const owners = yield* Database.query(Query.select(Filter.type(Task, { status: 'open' })).reference('owner')).run;
 const adasTasks =
-  yield * Database.query(Query.select(Filter.type(Person, { name: 'Ada' })).referencedBy(Task, 'owner')).run;
+  yield* Database.query(Query.select(Filter.type(Person, { name: 'Ada' })).referencedBy(Task, 'owner')).run;
 ```
 
 ## Relations
@@ -68,10 +68,10 @@ const adasTasks =
 those whose target is; `.target()` and `.source()` then move to the other end:
 
 ```js
-const Assigned = yield * Database.resolve('dxn:com.example.relation.assigned:0.1.0');
-const assigned = yield * Database.query(Query.select(Filter.id(ada.id)).sourceOf(Assigned)).run;
-const tasks = yield * Database.query(Query.select(Filter.id(ada.id)).sourceOf(Assigned).target()).run;
-yield * print(assigned.map((relation) => relation.role));
+const Assigned = yield* Database.resolve('dxn:com.example.relation.assigned:0.1.0');
+const assigned = yield* Database.query(Query.select(Filter.id(ada.id)).sourceOf(Assigned)).run;
+const tasks = yield* Database.query(Query.select(Filter.id(ada.id)).sourceOf(Assigned).target()).run;
+yield* print(assigned.map((relation) => relation.role));
 ```
 
 Pass the relation's own fields to narrow it: `.sourceOf(Assigned, { role: 'reviewer' })`.
@@ -79,9 +79,9 @@ Pass the relation's own fields to narrow it: `.sourceOf(Assigned, { role: 'revie
 ## Parents and children
 
 ```js
-const children = yield * Database.query(Query.select(Filter.id(project.id)).children()).run;
-const tasksOf = yield * Database.query(Filter.and(Filter.type(Task), Filter.childOf(project))).run;
-const roots = yield * Database.query(Filter.and(Filter.type(Task), Filter.hasParent(false))).run;
+const children = yield* Database.query(Query.select(Filter.id(project.id)).children()).run;
+const tasksOf = yield* Database.query(Filter.and(Filter.type(Task), Filter.childOf(project))).run;
+const roots = yield* Database.query(Filter.and(Filter.type(Task), Filter.hasParent(false))).run;
 ```
 
 `Filter.childOf` also matches grandchildren; pass `{ transitive: false }` for direct children only.

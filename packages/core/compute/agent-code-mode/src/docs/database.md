@@ -8,7 +8,7 @@ Resolve a type by its DXN before you query or create objects of it. The result i
 the same value `Filter.type`, `Obj.make` and `Relation.make` take:
 
 ```js
-const Task = yield * Database.resolve('dxn:com.example.type.task:0.1.0');
+const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');
 ```
 
 ## Create
@@ -16,8 +16,8 @@ const Task = yield * Database.resolve('dxn:com.example.type.task:0.1.0');
 `Obj.make` builds an object; `Database.add` stores it and returns the stored object.
 
 ```js
-const created = yield * Database.add(Obj.make(Task, { title: 'New', status: 'open' }));
-yield * print('created', created.id);
+const created = yield* Database.add(Obj.make(Task, { title: 'New', status: 'open' }));
+yield* print('created', created.id);
 ```
 
 ## Update
@@ -34,7 +34,7 @@ Obj.update(task, (task) => {
 ## Delete
 
 ```js
-yield * Database.remove(task);
+yield* Database.remove(task);
 ```
 
 ## Flush
@@ -48,9 +48,9 @@ A `Ref<typename>` field holds a reference to another object — never the object
 string. Make one from an object you hold with `Ref.make(obj)`, creating the target first:
 
 ```js
-const Person = yield * Database.resolve('dxn:com.example.type.person:0.1.0');
-const owner = yield * Database.add(Obj.make(Person, { name: 'Ada' }));
-yield * Database.add(Obj.make(Task, { title: 'Review', status: 'open', owner: Ref.make(owner) }));
+const Person = yield* Database.resolve('dxn:com.example.type.person:0.1.0');
+const owner = yield* Database.add(Obj.make(Person, { name: 'Ada' }));
+yield* Database.add(Obj.make(Task, { title: 'Review', status: 'open', owner: Ref.make(owner) }));
 ```
 
 Read one back with `yield* Database.load(task.owner)`. A ref array can point at objects that were
@@ -59,12 +59,12 @@ through `Effect.result` (see `errors.md`):
 
 ```js
 for (const ref of project.tasks) {
-  const loaded = yield * Effect.result(Database.load(ref));
+  const loaded = yield* Effect.result(Database.load(ref));
   if (loaded._tag === 'Failure') {
-    yield * print('missing', ref.uri);
+    yield* print('missing', ref.uri);
     continue;
   }
-  yield * print(loaded.success.title);
+  yield* print(loaded.success.title);
 }
 ```
 
@@ -75,8 +75,8 @@ The system prompt marks relation types as such. Pass the endpoints under the `Re
 `Relation.Target` keys:
 
 ```js
-const Assigned = yield * Database.resolve('dxn:com.example.relation.assigned:0.1.0');
-yield * Database.add(Relation.make(Assigned, { [Relation.Source]: owner, [Relation.Target]: task, role: 'reviewer' }));
+const Assigned = yield* Database.resolve('dxn:com.example.relation.assigned:0.1.0');
+yield* Database.add(Relation.make(Assigned, { [Relation.Source]: owner, [Relation.Target]: task, role: 'reviewer' }));
 ```
 
 `Relation.getSource(relation)` and `Relation.getTarget(relation)` read the endpoints back. Finding
@@ -92,7 +92,7 @@ Obj.update(project, (project) => {
   project.tasks = [...project.tasks, Ref.make(task)];
 });
 Obj.setParent(task, project);
-yield * print(Obj.getParent(task)?.name);
+yield* print(Obj.getParent(task)?.name);
 ```
 
 Finding the children of an object is a query — see `queries.md`.

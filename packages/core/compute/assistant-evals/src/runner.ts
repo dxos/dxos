@@ -19,6 +19,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
+import { AiContext } from '@dxos/assistant';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
@@ -220,11 +221,11 @@ const runAgentSession = <I>(
   model: DXN.DXN,
   spaceId: SpaceId,
   input: I,
+  seededChat?: Ref.Ref<Chat.Chat>,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
-      const skills = yield* Effect.forEach(instructions.skills, (ref) => Database.load(ref));
       const textDoc = yield* Database.load(instructions.text);
       const prompt = [
         SYSTEM_INSTRUCTIONS,
@@ -232,7 +233,14 @@ const runAgentSession = <I>(
         ...(input === undefined || input === null ? [] : [`<input>${JSON.stringify(input)}</input>`]),
       ].join('\n\n');
 
-      const agent = yield* AgentSessions.createSession({ skills, model, context: [...(instructions.objects ?? [])] });
+      const context = [...(instructions.objects ?? [])];
+      const agent = seededChat
+        ? yield* sessionOnChat(yield* Database.load(seededChat), instructions.skills, context, model)
+        : yield* AgentSessions.createSession({
+            skills: yield* Effect.forEach(instructions.skills, (ref) => Database.load(ref)),
+            model,
+            context,
+          });
       yield* agent.submitPrompt(prompt);
       yield* agent.waitForCompletion();
 
@@ -243,11 +251,35 @@ const runAgentSession = <I>(
         .filter((text) => text.length > 0)
         .at(-1);
     }).pipe(
+      Effect.scoped,
       Effect.provide(
         ServiceResolver.provide({ space: spaceId }, Database.Service, AgentService.AgentService, Registry.Service),
       ),
     ),
   );
+
+/**
+ * A session on a chat the seed provided, bound the way `createSession` binds a fresh one: chat-scoped
+ * tools then see the seeded chat and its state rather than a new one.
+ */
+const sessionOnChat = (
+  chat: Chat.Chat,
+  skills: readonly Ref.Ref<Skill.Skill>[],
+  objects: Ref.Ref<Obj.Unknown>[],
+  model: DXN.DXN,
+) =>
+  Effect.gen(function* () {
+    const feed = yield* Database.load(chat.feed);
+    const runtime = yield* Effect.context<Database.Service>();
+    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    yield* Effect.promise(() => binder.bind({ skills: [...skills], objects: [...objects, Ref.make(chat)] }));
+    if (!chat.session?.model) {
+      Obj.update(chat, (chat) => {
+        chat.session = { ...chat.session, model };
+      });
+    }
+    return yield* AgentService.getSession(chat);
+  });
 
 export interface CreateEvalRunnerOptions<I, O> {
   instructions: string;
@@ -457,7 +489,7 @@ export function createEvalRunner<I, O>(
         const agentStep = Effect.tryPromise({
           try: (): Promise<O> =>
             asSession
-              ? runAgentSession(harness, instructions, model, defaultSpace.id, input).then((reply) => {
+              ? runAgentSession(harness, instructions, model, defaultSpace.id, input, seeded.chat).then((reply) => {
                   // The reply is free text, so only a scenario whose output admits a string can run this way.
                   if (!Schema.is(options.output)(reply)) {
                     throw new Error(`Agent reply does not match the eval's output schema: ${String(reply)}`);

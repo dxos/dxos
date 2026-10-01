@@ -106,6 +106,10 @@ describe('prompt', () => {
       expect(instructions).toContain(`- \`${name}\` — `);
     }
     expect(DOCS['queries.md']).toContain('Filter.id(id)');
+    // A formatter reading a snippet as top-level code turns `yield*` into multiplication.
+    for (const [name, text] of Object.entries(DOCS)) {
+      expect(text.includes('yield * '), name).toBe(false);
+    }
     // Models guessed `result.value`; the field is `success`.
     expect(DOCS['errors.md']).toContain("{ _tag: 'Success', success }");
   });
