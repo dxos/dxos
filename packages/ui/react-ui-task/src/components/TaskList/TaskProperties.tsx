@@ -6,7 +6,7 @@ import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Column, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 import { Person, Task } from '@dxos/types';
@@ -68,134 +68,135 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
   const { createdAt } = Obj.getMeta(task);
 
   return (
-    <Column.Section
-      label={t('task-properties.label')}
-      gap='sm'
-      classNames={classNames}
-      data-testid='taskList.properties'
-    >
-      {createdAt !== undefined && (
+    // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
+    <Next.Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
+      <section>
+        <Next.Typography asChild tone='subdued' classNames='text-sm'>
+          <h2>{t('task-properties.label')}</h2>
+        </Next.Typography>
+        {createdAt !== undefined && (
+          <TaskProperty
+            icon='ph--calendar-plus--regular'
+            label={<Next.Timestamp date={createdAt} />}
+            unset
+            testId='taskList.property.created'
+          />
+        )}
+
         <TaskProperty
-          icon='ph--calendar-plus--regular'
-          label={<Next.Timestamp date={createdAt} />}
-          unset
-          testId='taskList.property.created'
+          icon={statusIcon(status)}
+          iconClassNames={statusTextStyle(status)}
+          label={t(`status-${status}.label`)}
+          testId='taskList.property.status'
+          actions={
+            onTaskUpdate &&
+            (() =>
+              Task.StatusOptions.map(({ id }) =>
+                createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
+                  label: t(`status-${id}.label`),
+                  icon: statusIcon(id),
+                  iconClassNames: statusTextStyle(id),
+                  checked: status === id,
+                }),
+              ))
+          }
         />
-      )}
 
-      <TaskProperty
-        icon={statusIcon(status)}
-        iconClassNames={statusTextStyle(status)}
-        label={t(`status-${status}.label`)}
-        testId='taskList.property.status'
-        actions={
-          onTaskUpdate &&
-          (() =>
-            Task.StatusOptions.map(({ id }) =>
-              createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
-                label: t(`status-${id}.label`),
-                icon: statusIcon(id),
-                iconClassNames: statusTextStyle(id),
-                checked: status === id,
+        <TaskProperty
+          icon={assignee ? assigneeIcon : UNSET_ICON}
+          label={assigneeLabel ?? t('set-assignee.label')}
+          unset={!assignee}
+          testId='taskList.property.assignee'
+          actions={
+            onTaskUpdate &&
+            (() => [
+              createMenuAction('assignee-none', () => onTaskUpdate(task, { assignee: null }), {
+                label: t('assignee-none.label'),
+                checked: !assignee,
               }),
-            ))
-        }
-      />
-
-      <TaskProperty
-        icon={assignee ? assigneeIcon : UNSET_ICON}
-        label={assigneeLabel ?? t('set-assignee.label')}
-        unset={!assignee}
-        testId='taskList.property.assignee'
-        actions={
-          onTaskUpdate &&
-          (() => [
-            createMenuAction('assignee-none', () => onTaskUpdate(task, { assignee: null }), {
-              label: t('assignee-none.label'),
-              checked: !assignee,
-            }),
-            // An assignee the people list cannot show — an agent, or an actor with no contact — is
-            // listed as itself, so the picker says who holds the task before it is switched away.
-            ...(assignee &&
-            !assignee.contact &&
-            !members.some((member) => member.did === assignee.identityDid) &&
-            assigneeLabel
-              ? [
-                  createMenuAction('assignee-current', () => {}, {
-                    label: assigneeLabel,
-                    icon: assigneeIcon,
-                    checked: true,
-                    testId: 'taskList.assignee.current',
-                  }),
-                ]
-              : []),
-            // The space's members first — the people who can actually pick the task up — then its
-            // contacts. Both are what the field accepts, as the status and priority pickers offer.
-            ...members.map((member) =>
-              createMenuAction(
-                `assignee-member-${member.did}`,
-                () => onTaskUpdate(task, { assignee: { identityDid: member.did, name: member.name } }),
-                {
-                  label: member.name ?? shortDid(member.did),
-                  icon: PERSON_ICON,
-                  checked: assignee?.identityDid === member.did,
-                  testId: 'taskList.assignee.member',
-                },
+              // An assignee the people list cannot show — an agent, or an actor with no contact — is
+              // listed as itself, so the picker says who holds the task before it is switched away.
+              ...(assignee &&
+              !assignee.contact &&
+              !members.some((member) => member.did === assignee.identityDid) &&
+              assigneeLabel
+                ? [
+                    createMenuAction('assignee-current', () => {}, {
+                      label: assigneeLabel,
+                      icon: assigneeIcon,
+                      checked: true,
+                      testId: 'taskList.assignee.current',
+                    }),
+                  ]
+                : []),
+              // The space's members first — the people who can actually pick the task up — then its
+              // contacts. Both are what the field accepts, as the status and priority pickers offer.
+              ...members.map((member) =>
+                createMenuAction(
+                  `assignee-member-${member.did}`,
+                  () => onTaskUpdate(task, { assignee: { identityDid: member.did, name: member.name } }),
+                  {
+                    label: member.name ?? shortDid(member.did),
+                    icon: PERSON_ICON,
+                    checked: assignee?.identityDid === member.did,
+                    testId: 'taskList.assignee.member',
+                  },
+                ),
               ),
-            ),
-            ...people.map((person) =>
-              createMenuAction(
-                `assignee-${person.id}`,
-                () => onTaskUpdate(task, { assignee: { contact: Ref.make(person) } }),
-                {
-                  label: Obj.getLabel(person) ?? person.id,
-                  icon: PERSON_ICON,
-                  checked: Task.refEntityId(assignee?.contact) === person.id,
-                },
+              ...people.map((person) =>
+                createMenuAction(
+                  `assignee-${person.id}`,
+                  () => onTaskUpdate(task, { assignee: { contact: Ref.make(person) } }),
+                  {
+                    label: Obj.getLabel(person) ?? person.id,
+                    icon: PERSON_ICON,
+                    checked: Task.refEntityId(assignee?.contact) === person.id,
+                  },
+                ),
               ),
-            ),
-          ])
-        }
-      />
+            ])
+          }
+        />
 
-      <TaskProperty
-        icon={priorityIcon(priority)}
-        iconClassNames={priorityTextStyle(priority)}
-        label={priority ? t(`priority-${priority}.label`) : t('set-priority.label')}
-        unset={!priority}
-        testId='taskList.property.priority'
-        actions={
-          onTaskUpdate &&
-          (() =>
-            [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
-              createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
-                label: t(`priority-${id}.label`),
-                icon,
-                iconClassNames: priorityTextStyle(id),
-                checked: (priority ?? 'none') === id,
-              }),
-            ))
-        }
-      />
+        <TaskProperty
+          icon={priorityIcon(priority)}
+          iconClassNames={priorityTextStyle(priority)}
+          label={priority ? t(`priority-${priority}.label`) : t('set-priority.label')}
+          unset={!priority}
+          testId='taskList.property.priority'
+          actions={
+            onTaskUpdate &&
+            (() =>
+              [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
+                createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
+                  label: t(`priority-${id}.label`),
+                  icon,
+                  iconClassNames: priorityTextStyle(id),
+                  checked: (priority ?? 'none') === id,
+                }),
+              ))
+          }
+        />
 
-      <TaskProperty
-        icon={estimate ? ESTIMATE_ICON : UNSET_ICON}
-        iconClassNames={estimateTextStyle(estimate)}
-        label={estimate ? estimate.toUpperCase() : t('set-estimate.label')}
-        unset={!estimate}
-        testId='taskList.property.estimate'
-        actions={
-          onTaskUpdate &&
-          (() =>
-            [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-              createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
-                label: title,
-                checked: (estimate ?? 'none') === id,
-              }),
-            ))
-        }
-      />
-    </Column.Section>
+        <TaskProperty
+          icon={estimate ? ESTIMATE_ICON : UNSET_ICON}
+          iconClassNames={estimateTextStyle(estimate)}
+          label={estimate ? estimate.toUpperCase() : t('set-estimate.label')}
+          unset={!estimate}
+          testId='taskList.property.estimate'
+          actions={
+            onTaskUpdate &&
+            (() =>
+              [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+                createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
+                  label: title,
+                  checked: (estimate ?? 'none') === id,
+                }),
+              ))
+          }
+        />
+      </section>
+    </Next.Container>
   );
 };
 

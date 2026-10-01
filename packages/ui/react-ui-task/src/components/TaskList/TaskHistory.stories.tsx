@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { useObject } from '@dxos/echo-react';
-import { Column } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
@@ -55,9 +55,9 @@ const DefaultStory = ({ seed = seedTask }: { seed?: () => Task.Task }) => {
   const [history] = useObject(task, 'history');
 
   return (
-    <Column.Root gutter='md' classNames='w-[32rem] py-2'>
+    <Next.Container gutter='md' classNames='w-[32rem] py-2'>
       <TaskHistory entries={history ?? []} limit={10} />
-    </Column.Root>
+    </Next.Container>
   );
 };
 

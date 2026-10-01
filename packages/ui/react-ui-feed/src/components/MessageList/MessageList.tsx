@@ -15,7 +15,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Column, ColumnRootProps, composable, composableProps, createContext, setRef } from '@dxos/react-ui';
+import { composable, composableProps, createContext, setRef } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import { Next } from '@dxos/react-ui/next';
 import { type Message } from '@dxos/types';
@@ -546,16 +546,17 @@ MessageListRoot.displayName = 'MessageList.Root';
 
 const MESSAGE_LIST_VIEWPORT_NAME = 'MessageList.Viewport';
 
-type MessageListViewportExtra = Pick<ScrollAreaRootProps, 'autoHide' | 'native' | 'scrollbars'> &
-  Pick<ColumnRootProps, 'gutter'> & {
-    /**
-     * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
-     *
-     * Mounted inside `ScrollArea.Root` because it is positioned and does not scroll, so nothing has
-     * to enter the flex-height chain the placement measures.
-     */
-    overlay?: ReactNode;
-  };
+type MessageListViewportExtra = Pick<ScrollAreaRootProps, 'autoHide' | 'native' | 'scrollbars'> & {
+  /** Inline gutter of each row, as a page Container's. */
+  gutter?: 'sm' | 'md' | 'lg';
+  /**
+   * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
+   *
+   * Mounted inside `ScrollArea.Root` because it is positioned and does not scroll, so nothing has
+   * to enter the flex-height chain the placement measures.
+   */
+  overlay?: ReactNode;
+};
 
 /**
  * The scroll container and the mounted window of rows.
@@ -606,10 +607,10 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
         <div key={message.id} data-object-id={message.id} {...windowRowProps(index, message.id)}>
           {!empty && (
-            <Column.Root gutter={gutter}>
+            <Next.Container gutter={gutter}>
               {/* The widgets' query container: it must be an element whose width is definite, since
                   containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
-              <Column.Center classNames='dx-container-type-inline-size'>
+              <div className='dx-container-type-inline-size'>
                 <Chrome
                   message={message}
                   index={index}
@@ -618,8 +619,8 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
                 >
                   <MessageListItem message={message} />
                 </Chrome>
-              </Column.Center>
-            </Column.Root>
+              </div>
+            </Next.Container>
           )}
         </div>,
       );

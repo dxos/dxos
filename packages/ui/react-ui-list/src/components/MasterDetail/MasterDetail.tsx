@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Column, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 import { getStyles, mx } from '@dxos/ui-theme';
@@ -119,13 +119,15 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     );
   }
 
-  // The gutter is owned by a `Column.Root` so the list aligns to the surface's column system: rows and
-  // their selection highlight sit in the centre track, matching the detail's inset.
+  // The gutter is owned by a Container so the list aligns to the surface's column system: rows and
+  // their selection highlight sit in the content track, matching the detail's inset.
   return (
-    <Column.Root gutter='sm' classNames={classNames}>
-      <Column.Center>{list}</Column.Center>
-      <div className='col-span-full pt-trim-md'>{detail}</div>
-    </Column.Root>
+    <Next.Container gutter='sm' classNames={classNames}>
+      {list}
+      <div data-place='full' className='pt-trim-md'>
+        {detail}
+      </div>
+    </Next.Container>
   );
 };
 

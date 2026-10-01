@@ -9,7 +9,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'reac
 
 import { useObject } from '@dxos/echo-react';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type ColumnRenderer, type HeadingRenderer, isTreeDataFor, Tree } from '@dxos/react-ui-list';
+import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';

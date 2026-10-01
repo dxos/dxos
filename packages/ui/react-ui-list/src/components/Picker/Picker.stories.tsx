@@ -16,7 +16,6 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import { Column } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -69,16 +68,14 @@ const DefaultStory = ({
   );
 
   return (
-    <Column.Root gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
+    <Next.Container gutter='sm' classNames='border border-separator rounded-md py-form-gap'>
       <Picker.Root>
-        <Column.Center>
-          <Picker.Input
-            autoFocus
-            escapeBehavior={escapeBehavior}
-            placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
-            {...(controlled && { value: query, onValueChange: setQuery })}
-          />
-        </Column.Center>
+        <Picker.Input
+          autoFocus
+          escapeBehavior={escapeBehavior}
+          placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
+          {...(controlled && { value: query, onValueChange: setQuery })}
+        />
         <Next.ScrollArea.Root classNames='max-h-[20rem] py-form-gap'>
           <Next.ScrollArea.Viewport>
             <ul role='listbox' className='flex flex-col'>
@@ -105,10 +102,10 @@ const DefaultStory = ({
           </Next.ScrollArea.Viewport>
         </Next.ScrollArea.Root>
       </Picker.Root>
-      <Column.Center classNames='text-sm text-description'>
+      <div className='text-sm text-description'>
         Picked: <span className='font-mono'>{picked ?? '—'}</span>
-      </Column.Center>
-    </Column.Root>
+      </div>
+    </Next.Container>
   );
 };
 

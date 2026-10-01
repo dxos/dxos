@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { TREE_BLOCK, useListDisclosure, Listbox } from '@dxos/react-ui-list';
+import { Listbox, TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 import { type Actor, PullRequest, Task } from '@dxos/types';
