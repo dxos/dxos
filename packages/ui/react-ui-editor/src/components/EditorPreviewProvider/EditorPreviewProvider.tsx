@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
@@ -91,7 +91,9 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
       <Next.Popover.Root
         open={open}
         onOpenChange={({ open }) => handleOpenChange(open)}
-        positioning={Next.virtualAnchor(triggerRef as unknown as RefObject<HTMLButtonElement>)}
+        positioning={Next.virtualAnchor(triggerRef)}
+        // A preview card shows beside the link; focus stays in the editor.
+        autoFocus={false}
       >
         <div className='contents' ref={setRoot}>
           {children}

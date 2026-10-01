@@ -24,7 +24,7 @@ const ContactPreviewCard = () => {
   }
 
   return (
-    <Next.Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+    <Next.Popover.Content>
       <Next.Popover.Body classNames='dx-card-popover-width'>
         <Next.Card.Root border={false} data-testid='contact-preview'>
           <Next.Card.Header>

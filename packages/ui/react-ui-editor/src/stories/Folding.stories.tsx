@@ -81,7 +81,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
       <Next.Panel.Header>
         <Next.Toolbar.Root classNames='dx-document'>
           <Next.SystemButton.Disclosure
-            active={!collapsed}
+            expanded={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {
               if (!view) {

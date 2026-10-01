@@ -191,16 +191,15 @@ const CommentsList = ({
       <Listbox.Root
         value={activeId}
         onValueChange={handleSelect}
-        items={resolved.map(({ comment, range }) => ({ value: comment.id, label: comment.id }))}
+        items={resolved.map(({ comment }) => ({ value: comment.id, label: comment.id }))}
       >
         <Listbox.Content aria-label='Comments' classNames='p-1'>
           {resolved.map(({ comment, range }) => (
             <Listbox.Item key={comment.id} id={comment.id} classNames='flex items-center gap-2'>
-              <Listbox.ItemContent
-                classNames='grow'
-                title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
-                description={range ? `${range.from}–${range.to}` : comment.cursor}
-              />
+              <Listbox.ItemText classNames='grow'>
+                {(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
+              </Listbox.ItemText>
+              <Listbox.ItemDescription>{range ? `${range.from}–${range.to}` : comment.cursor}</Listbox.ItemDescription>
               <Next.Button
                 variant='ghost'
                 iconOnly

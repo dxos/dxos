@@ -42,7 +42,6 @@ const PreviewCard = () => {
   }
   return (
     <Next.Popover.Content
-      onOpenAutoFocus={(event) => event.preventDefault()}
       classNames={[
         'origin-(--transform-origin)',
         'data-[state=open]:animate-popover-in',

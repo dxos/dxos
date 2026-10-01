@@ -180,34 +180,31 @@ export const EditorMenuProvider = ({
 
   return (
     <Next.Popover.Root
-      modal={false}
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
-      positioning={Next.virtualAnchor(triggerRef)}
+      positioning={{ ...Next.virtualAnchor(triggerRef), placement: 'bottom-start' }}
+      // In search mode the query is typed into the popover's own input, so it must take focus.
+      autoFocus={!!search}
+      // Focus stays in the editor; the menu machine still routes Escape here.
+      onEscapeKeyDown={() => {
+        const currentView = getViewRef.current?.();
+        if (currentView) {
+          onCancel?.({ view: currentView });
+        }
+      }}
     >
       {/* Menu. */}
       <Next.Popover.Content
-        align='start'
         classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
         style={{
           // The search input shares the box, so `numItems` keeps meaning "items visible".
           maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
         }}
-        // Focus stays in the editor; the menu machine still routes Escape here.
-        onEscapeKeyDown={() => {
-          const currentView = getViewRef.current?.();
-          if (currentView) {
-            onCancel?.({ view: currentView });
-          }
-        }}
-        // In search mode the query is typed into the popover's own input, so it must take focus.
-        onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
       >
         {search && (
           <Next.Field.Root>
             <Next.Input
               ref={searchInputRef}
-              size='sm'
               variant='subdued'
               classNames='shrink-0 mb-1'
               value={query}
@@ -220,12 +217,8 @@ export const EditorMenuProvider = ({
             />
           </Next.Field.Root>
         )}
-        <Next.Popover.Body asChild classNames='dx-expand'>
-          <Next.ScrollArea.Root>
-            <Next.ScrollArea.Viewport>
-              <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
-            </Next.ScrollArea.Viewport>
-          </Next.ScrollArea.Root>
+        <Next.Popover.Body classNames='dx-expand'>
+          <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
         </Next.Popover.Body>
       </Next.Popover.Content>
 
