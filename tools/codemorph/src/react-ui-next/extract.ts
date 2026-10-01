@@ -84,9 +84,9 @@ export const readReactUiNext = (repoRoot: string): EntryExports => {
   };
 };
 
-/** The named exports of a sibling package's `src/next/index.ts`, following its `export *` chain. */
+/** The named exports of a sibling package's Next components (`src/components/index.ts`, formerly its `/next` entry), following its `export *` chain. */
 export const readSiblingNext = (repoRoot: string, pkg: string): EntryExports => {
-  const dir = join(repoRoot, 'packages/ui', pkg, 'src/next');
+  const dir = join(repoRoot, 'packages/ui', pkg, 'src/components');
   const values = new Set<string>();
   const types = new Set<string>();
   const visit = (file: string) => {
