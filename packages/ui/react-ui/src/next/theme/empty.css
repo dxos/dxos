@@ -1,0 +1,23 @@
+/*
+ * Empty: a collection's empty state, an optional icon over a line of description-coloured text, at least a block tall.
+ */
+
+@layer dx-components {
+  .nx-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-gap-size);
+    min-height: var(--nx-block-size);
+    padding-block: var(--nx-gap-size);
+    color: var(--color-description);
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+    text-align: center;
+  }
+
+  .nx-empty-text {
+    margin: 0;
+  }
+}

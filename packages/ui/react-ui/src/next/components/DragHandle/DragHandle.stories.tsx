@@ -89,7 +89,8 @@ export const Default: Story = {};
 const announcer = (root: HTMLElement) => root.ownerDocument.getElementById('nx-drag-announcer');
 
 /**
- * At every size the handle is a control-sized ghost square in a block cell, a tab stop described as a drag handle. From
+ * At every size the handle is a control-sized ghost square in a block cell, described as a drag handle; in a list row it
+ * leaves the tab order to the list and is reached by entering the row. From
  * the keyboard Alt+ArrowDown moves its row at once; Space grabs (`aria-pressed`), ArrowUp/Down then move, and Escape
  * drops; the handle keeps focus across moves and each step is announced. The drop indicator is a line on its row's top
  * edge spanning the row, and the drag preview reads at the source row's size.
@@ -103,7 +104,8 @@ export const Test: Story = {
       await expect(rect.height, `${size} handle`).toBeCloseTo(controlSize(size), 0);
       await expect(rect.width, `${size} handle`).toBeCloseTo(controlSize(size), 0);
       await expect(handle).toHaveAttribute('data-variant', 'ghost');
-      await expect(handle.tabIndex).toBe(0);
+      // A list row's controls leave the tab order to the list (the grid pattern); the handle is reached with ArrowRight.
+      await expect(handle.tabIndex).toBe(-1);
 
       const row = byTestId(canvasElement, `row-two-${size}`).getBoundingClientRect();
       const indicator = byTestId(canvasElement, `row-two-${size}`).querySelector<HTMLElement>(

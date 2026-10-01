@@ -32,6 +32,8 @@ import {
   type DragMoveDirection as NextDragMoveDirection,
   DragPreview as NextDragPreview,
   DropIndicator as NextDropIndicator,
+  Empty as NextEmpty,
+  type EmptyProps as NextEmptyProps,
   Field as NextField,
   Fieldset as NextFieldset,
   type FieldValence as NextFieldValence,
@@ -63,6 +65,7 @@ import {
   PinInput as NextPinInput,
   type PinInputProps as NextPinInputProps,
   Popover as NextPopover,
+  RowContext as NextRowContext,
   ScrollArea as NextScrollArea,
   Select as NextSelect,
   type SelectOption as NextSelectOption,
@@ -87,7 +90,10 @@ import {
   Tooltip as NextTooltip,
   Typography as NextTypography,
   type TypographyProps as NextTypographyProps,
+  type VirtualMode as NextVirtualMode,
+  VirtualSpacer as NextVirtualSpacer,
   dragScope as nextDragScope,
+  useVirtualRows as nextUseVirtualRows,
 } from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
@@ -173,6 +179,12 @@ export namespace Next {
   export const Listbox = NextListbox;
   export type ListboxOption = NextListboxOption;
   export type ListboxSelectionMode = NextListboxSelectionMode;
+  export type VirtualMode = NextVirtualMode;
+  export const useVirtualRows = nextUseVirtualRows;
+  export const VirtualSpacer = NextVirtualSpacer;
+  export const RowContext = NextRowContext;
+  export const Empty = NextEmpty;
+  export type EmptyProps = NextEmptyProps;
   export const Panel = NextPanel;
   export type PanelRootProps = NextPanelRootProps;
   export const Separator = NextSeparator;
