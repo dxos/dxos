@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
@@ -68,10 +68,7 @@ export const Test: Story = {
       );
       await expect(parseFloat(getComputedStyle(row).marginTop), `${size} inset`).toBeCloseTo(GEOMETRY[size].inset, 0);
       const toggle = within(row).getByRole('button', { name: 'Show password' });
-      await expect(toggle.getBoundingClientRect().right, `${size} toggle end`).toBeCloseTo(
-        rect.right - GEOMETRY[size].inset,
-        0,
-      );
+      await expectEndCell(toggle.querySelector('svg'), rect.right, size, `${size} toggle`);
     }
     await expectScoped(canvasElement);
 

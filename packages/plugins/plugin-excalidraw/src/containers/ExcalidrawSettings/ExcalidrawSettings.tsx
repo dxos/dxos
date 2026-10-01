@@ -4,9 +4,10 @@
 
 import React from 'react';
 
+import '@dxos/react-ui/next/theme.css';
 import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 
 import { meta } from '#meta';
 import { Settings } from '#types';

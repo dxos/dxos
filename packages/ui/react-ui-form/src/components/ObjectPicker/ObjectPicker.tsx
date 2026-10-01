@@ -12,7 +12,10 @@ import { useSearchListResults } from '@dxos/react-ui-search';
 import { translationKey } from '#translations';
 import { type CreateOptions, type RefOption } from '#types';
 
-import { Form } from '../Form/index.ts';
+// The parts, not the `Form` namespace: RefField renders this picker, so it sits inside the Form's own module cycle, and the
+// namespace object reads every part when its module is evaluated, which fails if that happens mid-cycle.
+import { FormActions, FormContent, FormRoot, FormViewport } from '../Form/FormControls.tsx';
+import { FormFields } from '../Form/FormFields/FormFields.tsx';
 
 export type ObjectPickerContentProps = ThemedClassName<
   CreateOptions & {
@@ -97,7 +100,7 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
               the top — a dialog header, a card title. A popover has nothing above the first field, so
               the top trim is added here. */}
           <Popover.Viewport classNames='pt-form-padding'>
-            <Form.Root
+            <FormRoot
               testId='create-referenced-object-form'
               schema={createSchema}
               defaultValues={createInitialValuePath ? { [createInitialValuePath]: formInitialValue } : {}}
@@ -105,13 +108,13 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
               onSave={handleFormSave}
               onCancel={handleFormCancel}
             >
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.Fields />
-                  <Form.Actions />
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
+              <FormViewport>
+                <FormContent>
+                  <FormFields />
+                  <FormActions />
+                </FormContent>
+              </FormViewport>
+            </FormRoot>
           </Popover.Viewport>
         </Combobox.Content>
       );

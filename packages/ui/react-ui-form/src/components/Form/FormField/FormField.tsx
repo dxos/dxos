@@ -124,7 +124,7 @@ FormFieldLabel.displayName = 'Form.FieldLabel';
  * type `format`. Dates/times are rendered human-readable; everything else falls
  * back to `String(value)`.
  */
-const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string => {
+export const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string => {
   if (value == null) {
     return '';
   }
@@ -273,7 +273,7 @@ export const useFormSchemaProperty = (componentName: string, path: string) => {
 type SchemaProperty = ReturnType<typeof useFormSchemaProperty>;
 
 /** The binding for a row at a path, from the form handler. */
-const useFormFieldBindingAt = <T,>(
+export const useFormFieldBindingAt = <T,>(
   componentName: string,
   path: string,
   property: SchemaProperty,
@@ -400,7 +400,7 @@ export const FormFieldRow = <T,>({
 FormFieldRow.displayName = 'Form.FieldRow';
 
 /** Whether a value counts as unfilled for the required marker. `false` and `0` are values. */
-const isEmptyValue = (value: unknown): boolean =>
+export const isEmptyValue = (value: unknown): boolean =>
   value == null || value === '' || (Array.isArray(value) && value.length === 0);
 
 //

@@ -104,6 +104,32 @@ const DefaultStory = () => (
       </Next.Container>
     </Next.Fieldset.Root>
 
+    {/* Grid sets: subgrids of the enclosing Container at any depth, the inner one folding a subgrid Collapsible. */}
+    <Next.Fieldset.Root gutter='inherit' level='+1' data-testid='shipping'>
+      <Next.Fieldset.Legend>Shipping</Next.Fieldset.Legend>
+      <Next.Field.Root data-testid='carrier'>
+        <Next.Field.Header>
+          <Next.Field.Label>Carrier</Next.Field.Label>
+        </Next.Field.Header>
+        <Next.Input />
+      </Next.Field.Root>
+      <Next.Collapsible.Root asChild defaultOpen>
+        <Next.Fieldset.Root gutter='inherit' level='+1' disabled data-testid='geo'>
+          <Next.Fieldset.Legend>
+            <Next.Collapsible.Trigger>Coordinates</Next.Collapsible.Trigger>
+          </Next.Fieldset.Legend>
+          <Next.Collapsible.Content gutter='inherit'>
+            <Next.Field.Root data-testid='latitude'>
+              <Next.Field.Header>
+                <Next.Field.Label>Latitude</Next.Field.Label>
+              </Next.Field.Header>
+              <Next.Input />
+            </Next.Field.Root>
+          </Next.Collapsible.Content>
+        </Next.Fieldset.Root>
+      </Next.Collapsible.Root>
+    </Next.Fieldset.Root>
+
     <Next.Group justify='end'>
       <Next.Button>Cancel</Next.Button>
       <Next.Button type='submit' variant='primary'>
@@ -153,11 +179,11 @@ export const Test: Story = {
     await expect(canvas.getByRole('group', { name: 'Notifications' })).toBeInTheDocument();
     await expect(getComputedStyle(profile).borderTopWidth).toBe('0px');
 
-    // The legend is an sm label row spanning the content track, like a Field's header.
+    // The legend is a control-tall label row spanning the content track, like a Field's header.
     const legend = bounds(canvasElement, '[data-testid="profile"] [data-part="legend"]');
     const label = bounds(canvasElement, '[data-testid="name"] label');
     const input = bounds(canvasElement, '[data-testid="name"] .nx-input');
-    await expect(legend.height).toBeCloseTo(24, 0);
+    await expect(legend.height).toBeCloseTo(28, 0);
     await expect(legend.left).toBeCloseTo(label.left, 0);
     // The trailing Block is inset in a block-sized cell that ends at the control's edge.
     await expect(bounds(canvasElement, '[data-testid="profile-lock"]').right + 2).toBeCloseTo(input.right, 0);
@@ -198,6 +224,25 @@ export const Test: Story = {
     await expect(canvas.getByRole('textbox', { name: 'Alias' })).toBeDisabled();
     await expect(canvas.getByRole('button', { name: 'Reset' })).toBeDisabled();
     await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeEnabled();
+
+    // A grid set is a `group` element (a `<fieldset>` cannot be a subgrid) whose fields keep the content track at any
+    // depth, a nested set's Collapsible Content included; its legend is a grid item on the content track too.
+    const shipping = canvas.getByRole('group', { name: 'Shipping' });
+    await expect(shipping.tagName).toBe('DIV');
+    await expect(shipping).toHaveAttribute('data-surface', '+1');
+    await expect(getComputedStyle(shipping).display).toBe('grid');
+    for (const field of ['carrier', 'latitude']) {
+      const control = bounds(canvasElement, `[data-testid="${field}"] .nx-input`);
+      await expect(control.left).toBeCloseTo(input.left, 0);
+      await expect(control.right).toBeCloseTo(input.right, 0);
+    }
+    await expect(bounds(canvasElement, '[data-testid="shipping"] > [data-part="legend"]').left).toBeCloseTo(
+      label.left,
+      0,
+    );
+    // Disabled reaches a grid set's fields through Ark's context rather than the native fieldset.
+    await expect(canvas.getByRole('textbox', { name: 'Latitude' })).toBeDisabled();
+    await expect(canvas.getByRole('textbox', { name: 'Carrier' })).toBeEnabled();
 
     await expect(canvas.getByText('Complete your account.')).toBeVisible();
     await expect(canvas.getByRole('group', { name: 'Account' })).toHaveAttribute('data-invalid');

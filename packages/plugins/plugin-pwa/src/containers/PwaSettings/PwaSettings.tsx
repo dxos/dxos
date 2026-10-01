@@ -5,11 +5,12 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
+import '@dxos/react-ui/next/theme.css';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface, SettingsScope, useUpdateRow } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form/next';
 
 import { meta } from '#meta';
 import { Settings } from '#types';

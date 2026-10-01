@@ -52,6 +52,11 @@ export type ContainerProps = {
   level?: Level;
   /** Row gap only: columns are shared through subgrid, so a column gap would shift the parent's tracks. */
   gap?: ContainerGap;
+  /**
+   * Block alignment of a `row`'s cells: `center` (default) centres controls in a one-block row; `start` tops cells of
+   * differing heights (e.g. two forms side by side), which centring would offset against the tallest.
+   */
+  align?: 'center' | 'start';
   /** Tracks the container spans in a parent Container (e.g. a cell across two columns of a `row`). */
   span?: Span;
   /** `document` caps a template root at the reading width and centres it (the current `dx-document`). */
@@ -71,6 +76,7 @@ export const containerAttributes = ({
   place,
   level,
   gap,
+  align,
   span,
   width,
 }: ContainerProps) => {
@@ -84,6 +90,7 @@ export const containerAttributes = ({
     'data-place': place,
     'data-surface': level,
     'data-gap': gap,
+    'data-align': align === 'start' ? align : undefined,
     'data-width': width,
     'data-columns': columns ? '' : undefined,
     style,
@@ -103,6 +110,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       place,
       level,
       gap,
+      align,
       span,
       width,
       ...props
@@ -113,16 +121,16 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
     const ref = useComposedRefs(forwardedRef, localRef);
     const { className, style, ...rest } = composableProps(props, { classNames: recipes.container() });
 
-    // Subgrid only reaches the parent's tracks from a direct child.
+    // Subgrid only reaches the parent's tracks from a direct child; own `columns` start a fresh template, so any parent will do.
     useEffect(() => {
-      if (process.env.NODE_ENV === 'production' || gutter !== 'inherit') {
+      if (process.env.NODE_ENV === 'production' || gutter !== 'inherit' || columns) {
         return;
       }
       const parent = localRef.current?.parentElement;
       if (parent && !parent.matches('.nx-grid, .nx-scroll-root')) {
         log.warn('inheriting Container is not a direct child of a Container', { parent: parent.className });
       }
-    }, [gutter]);
+    }, [gutter, columns]);
 
     const { style: columnsStyle, ...attributes } = containerAttributes({
       size,
@@ -132,6 +140,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       place,
       level,
       gap,
+      align,
       span,
       width,
     });

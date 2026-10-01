@@ -18,6 +18,7 @@ import {
   byTestId,
   controlSize,
   expectAnchoredBelow,
+  expectEndCell,
   expectPopupSize,
   expectScoped,
   expectScrollingPopup,
@@ -265,8 +266,9 @@ export const Test: Story = {
       );
       await expect(parseFloat(getComputedStyle(control).marginTop), size).toBeCloseTo(GEOMETRY[size].inset, 0);
       const trigger = control.querySelector('[data-part="trigger"]')?.getBoundingClientRect();
-      await expect(trigger?.width, size).toBeCloseTo(controlSize(size), 0);
+      await expect(trigger?.width, size).toBeCloseTo(GEOMETRY[size].block, 0);
       await expect(trigger?.right, size).toBeCloseTo(rect.right, 0);
+      await expectEndCell(control.querySelector('[data-part="trigger"] svg'), rect.right, size, `${size} caret`);
     }
     await expectScoped(canvasElement);
 
@@ -479,5 +481,111 @@ export const Test: Story = {
     await userEvent.clear(input);
     await userEvent.type(input, 'a');
     await waitFor(() => expect(within(body.getByRole('listbox')).getAllByRole('option').length).toBeGreaterThan(1));
+  },
+};
+
+const TAGS: Next.ComboboxOption[] = [
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'later', label: 'Later' },
+  { value: 'idea', label: 'Idea' },
+];
+
+/**
+ * A multiple selection as removable chips in a wrapping Control whose caret opens a search popup; picking toggles a
+ * tag and keeps the popup open, and the create row has its own text and icon.
+ */
+const MultipleStory = () => {
+  const [items, setItems] = useState(TAGS);
+  const [value, setValue] = useState<string[]>(['urgent']);
+  const labelOf = (id: string) => items.find((item) => item.value === id)?.label ?? id;
+  return (
+    <Next.Field.Root>
+      <Next.Combobox.Root
+        items={items}
+        multiple
+        closeOnSelect={false}
+        value={value}
+        onValueChange={({ value }) => setValue(value)}
+        onCreate={(query) => {
+          const option = { value: query.toLowerCase(), label: query };
+          setItems((items) => [...items, option]);
+          setValue((value) => [...value, option.value]);
+        }}
+        createLabel={(query) => `Add tag “${query}”`}
+        createIcon='ph--tag--regular'
+      >
+        <Next.Combobox.Label>Tags</Next.Combobox.Label>
+        <Next.Combobox.Control wrap data-testid='tags'>
+          {value.map((id) => (
+            <Next.Tag key={id} onDelete={() => setValue((value) => value.filter((other) => other !== id))}>
+              {labelOf(id)}
+            </Next.Tag>
+          ))}
+          <Next.Combobox.Trigger />
+        </Next.Combobox.Control>
+        <Next.Combobox.Content data-testid='tags-popup'>
+          <Next.Combobox.Input />
+          <Next.Combobox.List />
+        </Next.Combobox.Content>
+      </Next.Combobox.Root>
+    </Next.Field.Root>
+  );
+};
+
+export const Multiple: Story = { render: () => <MultipleStory /> };
+
+/** The Control's caret trigger. */
+const caretOf = (control: HTMLElement): HTMLElement => {
+  const caret = control.querySelector<HTMLElement>('[data-part="trigger"]');
+  if (!caret) {
+    throw new Error('No caret trigger.');
+  }
+  return caret;
+};
+
+/**
+ * 1. TestMultiple: chips sit in a control-tall row that wraps as they grow; picking toggles a tag without closing, a
+ * chip's delete removes it, and the create row shows the Root's text and icon.
+ */
+export const TestMultiple: Story = {
+  render: () => <MultipleStory />,
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const control = byTestId(canvasElement, 'tags');
+    const single = control.getBoundingClientRect().height;
+    await expect(single).toBeCloseTo(controlSize('md'), 0);
+    await expect(within(control).getByText('Urgent')).toBeVisible();
+
+    // 2. The caret opens the popup; picking toggles tags in and out, and the popup stays open.
+    await userEvent.click(caretOf(control));
+    const popup = await body.findByTestId('tags-popup');
+    await userEvent.click(within(popup).getByRole('option', { name: 'Later' }));
+    await waitFor(() => expect(within(control).getByText('Later')).toBeVisible());
+    await expect(body.getByTestId('tags-popup')).toBeVisible();
+    await userEvent.click(within(popup).getByRole('option', { name: 'Urgent' }));
+    await waitFor(() => expect(within(control).queryByText('Urgent')).toBeNull());
+
+    // 3. The create row has the Root's label and icon, and creating adds a chip.
+    await userEvent.keyboard('Someday');
+    const create = await within(popup).findByRole('option', { name: 'Add tag “Someday”' });
+    await expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--tag--regular');
+    await userEvent.click(create);
+    await waitFor(() => expect(within(control).getByText('Someday')).toBeVisible());
+    await userEvent.keyboard('{Escape}');
+
+    // 4. A chip's delete removes it; enough chips wrap the row onto a second line.
+    await userEvent.click(within(control).getByRole('button', { name: /Someday/ }));
+    await waitFor(() => expect(within(control).queryByText('Someday')).toBeNull());
+    await userEvent.click(caretOf(control));
+    const reopened = await body.findByTestId('tags-popup');
+    for (const name of ['Urgent', 'Idea']) {
+      await userEvent.click(within(reopened).getByRole('option', { name }));
+    }
+    for (const name of ['A rather long tag name', 'Another long tag name', 'Yet another tag']) {
+      await userEvent.clear(within(reopened).getByRole('combobox'));
+      await userEvent.type(within(reopened).getByRole('combobox'), name);
+      await userEvent.click(await within(reopened).findByRole('option', { name: `Add tag “${name}”` }));
+    }
+    await waitFor(() => expect(control.getBoundingClientRect().height).toBeGreaterThan(single * 1.5));
   },
 };

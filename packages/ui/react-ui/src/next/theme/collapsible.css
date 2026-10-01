@@ -3,7 +3,7 @@
  */
 
 @layer dx-components {
-  .nx-collapsible {
+  .nx-collapsible:not(.nx-grid) {
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -53,6 +53,10 @@
 
   .nx-collapsible-content {
     overflow: hidden;
+  }
+  /* A grid content (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
+  .nx-collapsible-content.nx-grid {
+    row-gap: inherit;
   }
   .nx-collapsible-content[data-state='open'] {
     animation: nx-collapsible-open var(--nx-disclosure-duration) var(--nx-disclosure-ease-open);

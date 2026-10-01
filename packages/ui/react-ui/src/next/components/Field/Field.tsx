@@ -11,7 +11,7 @@ import { type MessageValence, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type Span, spanAttributes } from '../Container/index.ts';
+import { type Level, type Span, spanAttributes } from '../Container/index.ts';
 
 //
 // Root
@@ -26,13 +26,21 @@ type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps> & {
    * ErrorText shows and the control reports `aria-invalid`.
    */
   validationValence?: FieldValence;
+  /**
+   * `stack` (default) puts the label above the control (decision 13). `row` joins the parent's `columns` as a subgrid
+   * row (Phase 4 decision 3): the Header and HelperText take the tracks before the parent's interior `control` line,
+   * every other child the tracks after it; below the pane's collapse width the row stacks.
+   */
+  layout?: 'stack' | 'row';
+  /** A surface rung for a `row` field, which then draws a separator border around itself (a settings card row). */
+  level?: Level;
   /** Tracks the field spans in its parent Container (e.g. two columns of a multi-column form). */
   span?: Span;
 };
 
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
 const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
-  ({ classNames, invalid, validationValence, span, style, ...props }, forwardedRef) => {
+  ({ classNames, invalid, validationValence, layout, level, span, style, ...props }, forwardedRef) => {
     // Ark inherits only `disabled` from an enclosing Fieldset; an invalid set marks its fields invalid too.
     const fieldset = useFieldsetContext();
     const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
@@ -43,6 +51,8 @@ const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
         style={{ ...spanStyle, ...style }}
         invalid={invalid ?? (validationValence === 'error' || fieldset?.invalid)}
         data-valence={validationValence === 'neutral' ? undefined : validationValence}
+        data-layout={layout === 'row' ? layout : undefined}
+        data-surface={layout === 'row' ? level : undefined}
         className={mx(recipes.field(), classNames)}
         ref={forwardedRef}
       />
@@ -57,23 +67,21 @@ FieldRoot.displayName = 'Next.Field.Root';
 //
 
 type FieldHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  /** The row's own size; `sm` by default so it reads as a caption row above an `md` control. */
+  /** Overrides the field's size; by default the row shares it, so its actions share the control's end column. */
   size?: Size;
 };
 
 /** The label row: a Label followed by optional trailing Icons or icon-only Buttons, aligned to the control's edges. */
-const FieldHeader = forwardRef<HTMLDivElement, FieldHeaderProps>(
-  ({ classNames, size = 'sm', ...props }, forwardedRef) => (
-    <div
-      {...props}
-      data-scope='field'
-      data-part='header'
-      data-size={size}
-      className={mx(recipes.fieldHeader(), classNames)}
-      ref={forwardedRef}
-    />
-  ),
-);
+const FieldHeader = forwardRef<HTMLDivElement, FieldHeaderProps>(({ classNames, size, ...props }, forwardedRef) => (
+  <div
+    {...props}
+    data-scope='field'
+    data-part='header'
+    data-size={size}
+    className={mx(recipes.fieldHeader(), classNames)}
+    ref={forwardedRef}
+  />
+));
 
 FieldHeader.displayName = 'Next.Field.Header';
 

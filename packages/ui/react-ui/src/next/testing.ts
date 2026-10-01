@@ -18,6 +18,17 @@ export const GEOMETRY: Record<Size, { block: number; inset: number; icon: number
 /** Control height per size: the block less its inset on both sides. */
 export const controlSize = (size: Size) => GEOMETRY[size].block - 2 * GEOMETRY[size].inset;
 
+/**
+ * A trailing icon (a control's caret, trigger or stepper; a row's icon-only action) sits in the block-wide end cell of
+ * whatever ends at `end`: its centre half a block from that edge and its box the control icon size, so every trailing
+ * icon of a form column shares one column and one size.
+ */
+export const expectEndCell = async (icon: Element | null | undefined, end: number, size: Size, message: string) => {
+  const box = icon?.getBoundingClientRect();
+  await expect(box && box.left + box.width / 2, `${message} centre`).toBeCloseTo(end - GEOMETRY[size].block / 2, 0);
+  await expect(box?.width, `${message} icon`).toBeCloseTo(GEOMETRY[size].icon, 0);
+};
+
 export const byTestId = (root: HTMLElement, testId: string) => {
   const element = root.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
   if (!element) {
