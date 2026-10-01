@@ -94,6 +94,41 @@ describe('GraphBuilder', () => {
       expect(count).to.equal(3);
     });
 
+    test('flushBeforePaint flushes a connector an exhausted budget left dirty', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const state = Atom.make(0);
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
+        }),
+      );
+      const graph = builder.graph;
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+      const data = () => registry.get(graph.connections(GraphNode.RootId, 'child'))[0]?.data;
+      expect(data()).to.equal(0);
+
+      let granted = false;
+      builder._frameBudget = () => ({
+        hasTime: () => granted,
+        spend: () => {},
+        flushBeforePaint: () => (granted = true),
+      });
+      builder._schedule = () => new Promise(() => {});
+      registry.set(state, 1);
+      await Promise.resolve();
+      registry.set(state, 2);
+      await Promise.resolve();
+      expect(data()).to.equal(0);
+
+      GraphBuilder.flushBeforePaint(builder);
+      await Promise.resolve();
+      expect(data()).to.equal(2);
+    });
+
     test('updates with new extensions', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });

@@ -52,7 +52,7 @@ describe('Composer Plugin project template', () => {
     expect(subtasks.map((task) => task.title)).toEqual([
       'Read the plugin guide',
       'Write the plugin in TypeScript',
-      'Typecheck and build',
+      'Typecheck and check the dev server',
       'Offer the plugin to load',
     ]);
     expect(subtasks.every((task) => task.status === 'todo')).toBe(true);
