@@ -10,14 +10,15 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { DensityProvider, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Tree, TREE_BLOCK } from '@dxos/react-ui-list';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Tree, type TreeNode } from '@dxos/react-ui-list/next';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu/next';
 import { Next } from '@dxos/react-ui/next';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
+import { type NavTreeNode } from '#types';
 
 import { NAV_TREE_ITEM } from '../NavTree/index.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
@@ -137,32 +138,41 @@ const L1PanelContent = ({
   const navTreeContext = useNavTreeContext();
 
   return (
-    <DensityProvider size='md'>
+    <>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
-      <Next.ScrollArea.Root orientation='vertical'>
-        <Next.ScrollArea.Viewport>
-          <Tree
-            classNames='pt-[2px]'
-            model={navTreeContext.model}
-            id={item.id}
-            rootId={item.id}
-            path={path}
-            draggable
-            compact
-            gridTemplateColumns={`[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
-            renderColumns={NavTreeItemColumns}
-            canDrop={navTreeContext.canDrop}
-            getDropKind={navTreeContext.getDropKind}
-            canSelect={navTreeContext.canSelect}
-            onOpenChange={navTreeContext.onOpenChange}
-            onSelect={navTreeContext.onSelect}
-            onItemHover={navTreeContext.onItemHover}
-          />
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
-    </DensityProvider>
+      <Tree.Root
+        model={navTreeContext.model}
+        id={item.id}
+        rootId={item.id}
+        path={path}
+        size='md'
+        draggable
+        columns={COLUMNS}
+        canDrop={navTreeContext.canDrop}
+        getDropKind={navTreeContext.getDropKind}
+        canSelect={navTreeContext.canSelect}
+        onOpenChange={navTreeContext.onOpenChange}
+        onSelect={navTreeContext.onSelect}
+        onItemHover={navTreeContext.onItemHover}
+      >
+        <Tree.Content>{renderRow}</Tree.Content>
+      </Tree.Root>
+    </>
   );
 };
+
+/** Disclosure, icon, label, count, the actions menu, then the late item-end surface. */
+const COLUMNS = `var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) auto min-content minmax(${ITEM_END_SIZE}, min-content)`;
+
+const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
+  <Tree.Item node={node}>
+    <Tree.ItemIndicator />
+    <Tree.ItemIcon />
+    <Tree.ItemText data-testid='treeItem.heading' />
+    <Tree.ItemCount />
+    {node.item && <NavTreeItemColumns path={node.path} item={node.item} open={node.open} />}
+  </Tree.Item>
+);
 
 /**
  * Header row.

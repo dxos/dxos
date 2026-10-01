@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 
-import { type Size } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
 import { hexToFallback } from '@dxos/util';
 
 import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
 
 export type UserAccountAvatarProps = {
-  size?: Size;
+  size?: ComponentProps<typeof Next.Avatar.Root>['size'];
   userId?: string;
   hue?: string;
   emoji?: string;
@@ -35,9 +34,9 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status, badge }: U
         <span className='relative inline-grid'>
           <Next.Avatar.Root
             variant='circle'
-            size={size ?? 12}
+            size={size ?? 'xl'}
             {...(resolved && { status: status ?? 'active' })}
-            hue={hue || fallbackValue?.hue}
+            hue={Next.toAvatarHue(hue || fallbackValue?.hue)}
             fallback={emoji || fallbackValue?.emoji || ''}
             data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
           />

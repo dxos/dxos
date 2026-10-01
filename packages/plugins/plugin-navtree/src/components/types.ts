@@ -2,18 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ComponentProps, FC } from 'react';
+import type { FC } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import type { Density } from '@dxos/react-ui';
 import type { TreeModel } from '@dxos/react-ui-list';
-import type { Tree } from '@dxos/react-ui-list/next';
+import type { TreeRootProps } from '@dxos/react-ui-list/next';
 
 import { NavTreeNode } from '#types';
 
 import type { L1PanelProps } from './Sidebar/index.ts';
-
-type TreeProps = ComponentProps<typeof Tree>;
 
 export type NavTreeContextValue = {
   model: TreeModel<NavTreeNode.NavTreeItemGraphNode>;
@@ -21,7 +18,7 @@ export type NavTreeContextValue = {
   renderItemEnd?: FC<{ node: AppGraphNode.Node; open: boolean }>;
   onTabChange?: (node: NavTreeNode.NavTreeItemGraphNode) => void;
 } & Pick<
-  TreeProps<NavTreeNode.NavTreeItemGraphNode>,
+  TreeRootProps<NavTreeNode.NavTreeItemGraphNode>,
   'canDrop' | 'canSelect' | 'getDropKind' | 'onOpenChange' | 'onSelect' | 'onItemHover'
 > &
   Pick<L1PanelProps, 'onBack'>;
@@ -30,5 +27,4 @@ export type NavTreeItemColumnsProps = {
   path: string[];
   item: AppGraphNode.Node;
   open: boolean;
-  density?: Density;
 };

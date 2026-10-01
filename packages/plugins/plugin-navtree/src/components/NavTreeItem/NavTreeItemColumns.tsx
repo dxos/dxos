@@ -5,6 +5,7 @@
 import React, { Fragment, memo, useMemo } from 'react';
 
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Tree } from '@dxos/react-ui-list/next';
 import { Next } from '@dxos/react-ui/next';
 
 import { getListActions, useActions } from '#hooks';
@@ -28,31 +29,32 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
 
   return (
     // `data-popover-anchor` lets the enclosing row highlight itself while a popover (e.g. rename) is open on it.
-    // The enclosing row is an ARIA `treeitem`, not a grid row, so these columns carry no `gridcell` role —
-    // the empty div is a subgrid spacer holding the actions column when the item has no actions.
+    // The empty div holds the actions track when the item has no actions.
     <div className='contents dx-app-no-drag' {...(anchored && { 'data-popover-anchor': '' })}>
-      <ActionRoot>
-        {allActions.length === 1 ? (
-          <NavTreeItemMonolithicAction
-            baseLabel={toLocalizedString(allActions[0].properties?.label, t)}
-            parent={item}
-            path={path}
-            {...allActions[0]}
-          />
-        ) : allActions.length > 1 ? (
-          <NavTreeItemActionDropdownMenu
-            testId={`navtree.treeItem.actionsLevel${level}`}
-            label={t('tree-item-actions.label')}
-            icon='ph--dots-three-vertical--regular'
-            parent={item}
-            path={path}
-            menuActions={allActions}
-            caller={NAV_TREE_ITEM}
-          />
-        ) : (
-          <div />
-        )}
-      </ActionRoot>
+      <Tree.ItemActions>
+        <ActionRoot>
+          {allActions.length === 1 ? (
+            <NavTreeItemMonolithicAction
+              baseLabel={toLocalizedString(allActions[0].properties?.label, t)}
+              parent={item}
+              path={path}
+              {...allActions[0]}
+            />
+          ) : allActions.length > 1 ? (
+            <NavTreeItemActionDropdownMenu
+              testId={`navtree.treeItem.actionsLevel${level}`}
+              label={t('tree-item-actions.label')}
+              icon='ph--dots-three-vertical--regular'
+              parent={item}
+              path={path}
+              menuActions={allActions}
+              caller={NAV_TREE_ITEM}
+            />
+          ) : (
+            <div />
+          )}
+        </ActionRoot>
+      </Tree.ItemActions>
       {ItemEnd && <ItemEnd node={item} open={open} />}
     </div>
   );

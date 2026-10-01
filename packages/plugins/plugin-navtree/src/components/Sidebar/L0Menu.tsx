@@ -121,25 +121,27 @@ const L0ItemRoot = memo(
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
 
       return (
-        <Next.Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
-          <Next.Tabs.TabPrimitive
-            className={mx(
-              'group/l0item flex w-full justify-center items-center relative',
-              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer aria-disabled:cursor-default',
-              l0Breakpoints[item.properties.l0Breakpoint],
-            )}
-            tabIndex={type === 'tab' ? 0 : undefined}
-            data-type={type}
-            data-testid={testId}
-            data-object-id={id}
-            {...(item.properties.pending === true && { 'aria-disabled': true })}
-            value={item.id}
-            onClick={handleClick}
-            onMouseEnter={onMouseEnter}
-            ref={forwardedRef}
-          >
-            {children}
-          </Next.Tabs.TabPrimitive>
+        <Next.Tooltip.Trigger asChild side='right' content={localizedString}>
+          <Next.Tabs.Trigger asChild value={item.id}>
+            <button
+              type='button'
+              className={mx(
+                'group/l0item flex w-full justify-center items-center relative',
+                'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer aria-disabled:cursor-default',
+                l0Breakpoints[item.properties.l0Breakpoint],
+              )}
+              tabIndex={type === 'tab' ? 0 : undefined}
+              data-type={type}
+              data-testid={testId}
+              data-object-id={id}
+              {...(item.properties.pending === true && { 'aria-disabled': true })}
+              onClick={handleClick}
+              onMouseEnter={onMouseEnter}
+              ref={forwardedRef}
+            >
+              {children}
+            </button>
+          </Next.Tabs.Trigger>
         </Next.Tooltip.Trigger>
       );
     },
@@ -240,7 +242,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <Next.DropIndicator edge={closestEdge} />}
+      {(closestEdge === 'top' || closestEdge === 'bottom') && <Next.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });
@@ -382,12 +384,12 @@ export const L0Menu = ({
               emoji={userAccountItem.properties.emoji}
               status={userAccountItem.properties.status}
               badge={userAccountItem.properties.badge}
-              size={10}
+              size='lg'
             />
           </L0ItemRoot>
         ) : (
           <div className='flex w-full justify-center items-center'>
-            <UserAccountAvatar size={10} />
+            <UserAccountAvatar size='lg' />
           </div>
         )}
       </div>
