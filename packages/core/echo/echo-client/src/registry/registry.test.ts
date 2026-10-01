@@ -30,6 +30,14 @@ describe('registry lenses', () => {
   });
 
   test('a pair has at most one lens: the same lens again replaces it, a different one throws', () => {
+    // A lens between versions that version documents cannot run is rejected outright.
+    const Unrunnable = Type.makeObject(DXN.make('org.dxos.test.registryTask', '0.3.0'))(
+      Schema.Struct({ name: Schema.String, count: Schema.Number }),
+    );
+    expect(() => makeRegistry().add([Lens.make(TaskV1, Unrunnable, { name: 'title' })])).toThrow(
+      /cannot translate version documents/,
+    );
+
     const registry = makeRegistry();
     registry.add([Lens.make(TaskV1, TaskV2, { name: 'title' })]);
     const again = Lens.make(TaskV1, TaskV2, { name: 'title' });
@@ -37,7 +45,7 @@ describe('registry lenses', () => {
     expect(registry.lenses()).toEqual([again]);
 
     const Other = Type.makeObject(DXN.make('org.dxos.test.registryTask', '0.2.0'))(
-      Schema.Struct({ name: Schema.String, title: Schema.optional(Schema.String) }),
+      Schema.Struct({ name: Schema.String, note: Schema.optional(Schema.String) }),
     );
     expect(() => registry.add([Lens.make(TaskV1, Other, { name: 'title' })])).toThrow(
       /a different lens is already registered/,
