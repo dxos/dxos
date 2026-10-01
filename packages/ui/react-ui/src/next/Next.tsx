@@ -4,7 +4,15 @@
 
 import {
   DIALOG_AUTOFOCUS_ATTRIBUTE as NEXT_DIALOG_AUTOFOCUS_ATTRIBUTE,
+  Accordion as NextAccordion,
+  type AccordionItemContentProps as NextAccordionItemContentProps,
+  type AccordionItemProps as NextAccordionItemProps,
+  type AccordionItemTriggerProps as NextAccordionItemTriggerProps,
+  type AccordionRootProps as NextAccordionRootProps,
   AlertDialog as NextAlertDialog,
+  AttentionGlyph as NextAttentionGlyph,
+  type AttentionGlyphPresence as NextAttentionGlyphPresence,
+  type AttentionGlyphProps as NextAttentionGlyphProps,
   Avatar as NextAvatar,
   type AvatarAnimation as NextAvatarAnimation,
   type AvatarHue as NextAvatarHue,
@@ -14,6 +22,13 @@ import {
   type AvatarVariant as NextAvatarVariant,
   Block as NextBlock,
   type BlockProps as NextBlockProps,
+  Breadcrumb as NextBreadcrumb,
+  type BreadcrumbCurrentProps as NextBreadcrumbCurrentProps,
+  type BreadcrumbItemProps as NextBreadcrumbItemProps,
+  type BreadcrumbLinkProps as NextBreadcrumbLinkProps,
+  type BreadcrumbListProps as NextBreadcrumbListProps,
+  type BreadcrumbRootProps as NextBreadcrumbRootProps,
+  type BreadcrumbSeparatorProps as NextBreadcrumbSeparatorProps,
   Button as NextButton,
   type ButtonHue as NextButtonHue,
   type ButtonProps as NextButtonProps,
@@ -40,6 +55,8 @@ import {
   type DateInputGranularity as NextDateInputGranularity,
   type DateInputProps as NextDateInputProps,
   type DateInputType as NextDateInputType,
+  Deferred as NextDeferred,
+  type DeferredProps as NextDeferredProps,
   Dialog as NextDialog,
   DragHandle as NextDragHandle,
   type DragHandleProps as NextDragHandleProps,
@@ -60,6 +77,20 @@ import {
   Field as NextField,
   Fieldset as NextFieldset,
   type FieldValence as NextFieldValence,
+  FloatingPanel as NextFloatingPanel,
+  type FloatingPanelBodyProps as NextFloatingPanelBodyProps,
+  type FloatingPanelCloseTriggerProps as NextFloatingPanelCloseTriggerProps,
+  type FloatingPanelContentProps as NextFloatingPanelContentProps,
+  type FloatingPanelControlProps as NextFloatingPanelControlProps,
+  type FloatingPanelDragTriggerProps as NextFloatingPanelDragTriggerProps,
+  type FloatingPanelHeaderProps as NextFloatingPanelHeaderProps,
+  type FloatingPanelPoint as NextFloatingPanelPoint,
+  type FloatingPanelRootProps as NextFloatingPanelRootProps,
+  type FloatingPanelSize as NextFloatingPanelSize,
+  type FloatingPanelStage as NextFloatingPanelStage,
+  type FloatingPanelStageTriggerProps as NextFloatingPanelStageTriggerProps,
+  type FloatingPanelTitleProps as NextFloatingPanelTitleProps,
+  type FloatingPanelTriggerProps as NextFloatingPanelTriggerProps,
   Focus as NextFocus,
   type FocusContextValue as NextFocusContextValue,
   type FocusGroupProps as NextFocusGroupProps,
@@ -83,6 +114,9 @@ import {
   Label as NextLabel,
   type LabelProps as NextLabelProps,
   type Level as NextLevel,
+  Link as NextLink,
+  type LinkProps as NextLinkProps,
+  type LinkVariant as NextLinkVariant,
   Listbox as NextListbox,
   type ListboxOption as NextListboxOption,
   type ListboxSelectionMode as NextListboxSelectionMode,
@@ -129,6 +163,9 @@ import {
   type SelectOption as NextSelectOption,
   Separator as NextSeparator,
   type SeparatorProps as NextSeparatorProps,
+  Skeleton as NextSkeleton,
+  type SkeletonProps as NextSkeletonProps,
+  type SkeletonVariant as NextSkeletonVariant,
   Slider as NextSlider,
   type SliderProps as NextSliderProps,
   Splitter as NextSplitter,
@@ -389,4 +426,41 @@ export namespace Next {
   export type StepsProps = NextStepsProps;
   export const TextCrawl = NextTextCrawl;
   export type TextCrawlProps = NextTextCrawlProps;
+  export const Accordion = NextAccordion;
+  export type AccordionItemContentProps = NextAccordionItemContentProps;
+  export type AccordionItemProps = NextAccordionItemProps;
+  export type AccordionItemTriggerProps = NextAccordionItemTriggerProps;
+  export type AccordionRootProps = NextAccordionRootProps;
+  export const Link = NextLink;
+  export type LinkProps = NextLinkProps;
+  export type LinkVariant = NextLinkVariant;
+  export const Skeleton = NextSkeleton;
+  export type SkeletonProps = NextSkeletonProps;
+  export type SkeletonVariant = NextSkeletonVariant;
+  export const Deferred = NextDeferred;
+  export type DeferredProps = NextDeferredProps;
+  export const FloatingPanel = NextFloatingPanel;
+  export type FloatingPanelBodyProps = NextFloatingPanelBodyProps;
+  export type FloatingPanelCloseTriggerProps = NextFloatingPanelCloseTriggerProps;
+  export type FloatingPanelContentProps = NextFloatingPanelContentProps;
+  export type FloatingPanelControlProps = NextFloatingPanelControlProps;
+  export type FloatingPanelDragTriggerProps = NextFloatingPanelDragTriggerProps;
+  export type FloatingPanelHeaderProps = NextFloatingPanelHeaderProps;
+  export type FloatingPanelPoint = NextFloatingPanelPoint;
+  export type FloatingPanelRootProps = NextFloatingPanelRootProps;
+  export type FloatingPanelSize = NextFloatingPanelSize;
+  export type FloatingPanelStage = NextFloatingPanelStage;
+  export type FloatingPanelStageTriggerProps = NextFloatingPanelStageTriggerProps;
+  export type FloatingPanelTitleProps = NextFloatingPanelTitleProps;
+  export type FloatingPanelTriggerProps = NextFloatingPanelTriggerProps;
+  export const AttentionGlyph = NextAttentionGlyph;
+  export type AttentionGlyphProps = NextAttentionGlyphProps;
+  export type AttentionGlyphPresence = NextAttentionGlyphPresence;
+  export const Breadcrumb = NextBreadcrumb;
+  export type BreadcrumbRootProps = NextBreadcrumbRootProps;
+  export type BreadcrumbListProps = NextBreadcrumbListProps;
+  export type BreadcrumbItemProps = NextBreadcrumbItemProps;
+  export type BreadcrumbLinkProps = NextBreadcrumbLinkProps;
+  export type BreadcrumbCurrentProps = NextBreadcrumbCurrentProps;
+  export type BreadcrumbSeparatorProps = NextBreadcrumbSeparatorProps;
 }

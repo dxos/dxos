@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './Accordion/index.ts';
 export * from './AlertDialog/index.ts';
+export * from './AttentionGlyph/index.ts';
 export * from './Avatar/index.ts';
 export * from './Block/index.ts';
+export * from './Breadcrumb/index.ts';
 export * from './Button/index.ts';
 export * from './Card/index.ts';
 export * from './Carousel/index.ts';
@@ -13,12 +16,14 @@ export * from './Collapsible/index.ts';
 export * from './Combobox/index.ts';
 export * from './Container/index.ts';
 export * from './DateInput/index.ts';
+export * from './Deferred/index.ts';
 export * from './Dialog/index.ts';
 export * from './DragHandle/index.ts';
 export * from './Editable/index.ts';
 export * from './ErrorFallback/index.ts';
 export * from './Field/index.ts';
 export * from './Fieldset/index.ts';
+export * from './FloatingPanel/index.ts';
 export * from './Focus/index.ts';
 export * from './Group/index.ts';
 export * from './HoverCard/index.ts';
@@ -26,6 +31,7 @@ export * from './Icon/index.ts';
 export * from './Image/index.ts';
 export * from './Input/index.ts';
 export * from './Label/index.ts';
+export * from './Link/index.ts';
 export * from './Listbox/index.ts';
 export * from './Main/index.ts';
 export * from './MediaPlayer/index.ts';
@@ -42,6 +48,7 @@ export * from './ScrollArea/index.ts';
 export * from './ScrollContainer/index.ts';
 export * from './Select/index.ts';
 export * from './Separator/index.ts';
+export * from './Skeleton/index.ts';
 export * from './Slider/index.ts';
 export * from './Splitter/index.ts';
 export * from './Steps/index.ts';
