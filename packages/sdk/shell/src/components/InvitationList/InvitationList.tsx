@@ -22,7 +22,12 @@ export const InvitationList = ({ invitations, send, ...invitationProps }: Invita
   const { t } = useTranslation(translationKey);
   const { className, InvitationListItem: Item = InvitationListItem } = invitationProps;
   return (
-    <Listbox.Root>
+    <Listbox.Root
+      items={invitations.map((invitation) => {
+        const value = invitation.get().invitationId;
+        return { value, label: value };
+      })}
+    >
       <Listbox.Content classNames={['flex flex-col gap-2', className]} aria-label={t('invitation-list.heading')}>
         {invitations.map((invitation) => {
           const value = invitation.get().invitationId;

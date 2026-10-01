@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useRef } from 'react';
 
 import { useId } from '@dxos/react-ui';
 import { Next } from '@dxos/react-ui/next';
@@ -18,9 +18,15 @@ export interface IdentityDialogProps
 
 export const IdentityDialog = (props: IdentityDialogProps) => {
   const titleId = useId('identityDialog__title', props.title);
+  const contentRef = useRef<HTMLDivElement>(null);
   return (
-    <Next.Dialog.Root defaultOpen onOpenChange={({ open }) => open || props.onDone?.()}>
-      <Next.Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
+    <Next.Dialog.Root
+      defaultOpen
+      onOpenChange={({ open }) => open || props.onDone?.()}
+      // Focus the dialog itself rather than its first control, so no field opens with a caret.
+      initialFocusEl={() => contentRef.current}
+    >
+      <Next.Dialog.Content aria-labelledby={titleId} ref={contentRef}>
         <Next.Dialog.Body>
           <IdentityPanel
             {...{

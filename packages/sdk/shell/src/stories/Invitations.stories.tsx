@@ -7,6 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -101,13 +102,11 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <div>
           <h1>{header}</h1>
           {spaces.length > 0 ? (
-            <Listbox.Root>
-              <Listbox.Content aria-label='Spaces'>
-                {spaces.map((space) => (
-                  <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
-                ))}
-              </Listbox.Content>
-            </Listbox.Root>
+            <ul aria-label='Spaces'>
+              {spaces.map((space) => (
+                <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
+              ))}
+            </ul>
           ) : (
             <div className='text-center'>No spaces</div>
           )}
@@ -203,7 +202,14 @@ const Invitations = () => {
       <div className='dx-base-surface rounded-sm p-2 mb-2'>
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
-          <Listbox.Root>
+          <Listbox.Root
+            items={[
+              {
+                value: requirePublicKey(identity.identityKey).toHex(),
+                label: identity.profile?.displayName ?? '',
+              },
+            ]}
+          >
             <Listbox.Content aria-label='Identity'>
               <IdentityListItem
                 identity={identity}

@@ -52,6 +52,7 @@ const IdentityHeading = ({
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(requirePublicKey(identity.identityKey));
+  const displayNameId = useId('identityHeading__displayName');
   const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
@@ -99,67 +100,67 @@ const IdentityHeading = ({
 
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
-      <Next.Avatar.Root>
-        <div className='flex justify-center'>
-          <Next.Avatar.Content
-            size={16}
-            variant='circle'
-            status={isConnected ? 'active' : 'error'}
-            hue={hue || fallbackValue.hue}
-            fallback={emoji || fallbackValue.emoji}
-            classNames='relative z-[2] chromatic-ignore'
+      <div className='flex justify-center'>
+        {/* Four rem across: larger than any block size, so the avatar fills a sized host. */}
+        <Next.Avatar.Root
+          fill
+          variant='circle'
+          status={isConnected ? 'active' : 'error'}
+          hue={Next.toAvatarHue(hue || fallbackValue.hue)}
+          fallback={emoji || fallbackValue.emoji}
+          aria-labelledby={displayNameId}
+          classNames='w-16 relative z-[2] chromatic-ignore'
+        />
+      </div>
+
+      <span id={displayNameId} className='sr-only' data-testid='identityHeading.displayName'>
+        {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
+      </span>
+
+      <Next.Field.Root>
+        <Next.Field.Label srOnly>{t('display-name-input.label')}</Next.Field.Label>
+        <Next.Input
+          variant='subdued'
+          data-testid='display-name-input'
+          placeholder={t('display-name-input.placeholder')}
+          classNames='mt-2 text-center font-light text-xl'
+          value={displayName}
+          onChange={({ target: { value } }) => setDisplayName(value)}
+        />
+      </Next.Field.Root>
+
+      <div className='flex justify-center pt-3'>
+        <Next.Toolbar.Root classNames='w-fit'>
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} />
+          <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
+          <Next.SystemButton.Clipboard
+            iconSize='lg'
+            iconOnly
+            label={t('copy-self-did.label')}
+            data-testid='update-profile-form-copy-key'
+            value={identity.did}
           />
-        </div>
-
-        <Next.Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
-          {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
-        </Next.Avatar.Label>
-
-        <Next.Field.Root>
-          <Next.Field.Label srOnly>{t('display-name-input.label')}</Next.Field.Label>
-          <Next.Input
-            variant='subdued'
-            data-testid='display-name-input'
-            placeholder={t('display-name-input.placeholder')}
-            classNames='mt-2 text-center font-light text-xl'
-            value={displayName}
-            onChange={({ target: { value } }) => setDisplayName(value)}
-          />
-        </Next.Field.Root>
-
-        <div className='flex justify-center pt-3'>
-          <Next.Toolbar.Root classNames='w-fit'>
-            <EmojiPickerToolbarButton size={5} emoji={emoji} onChangeEmoji={setEmoji} />
-            <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
-            <Next.SystemButton.Clipboard
-              iconSize='lg'
-              iconOnly
-              label={t('copy-self-did.label')}
-              data-testid='update-profile-form-copy-key'
-              value={identity.did}
-            />
-            {onManageCredentials && (
-              <Next.Button
-                iconSize='lg'
-                icon='ph--identification-card--regular'
-                iconOnly
-                label={t('manage-credentials.label')}
-                tooltipSide='bottom'
-                onClick={onManageCredentials}
-              />
-            )}
+          {onManageCredentials && (
             <Next.Button
               iconSize='lg'
-              icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
+              icon='ph--identification-card--regular'
               iconOnly
-              label={t(isConnected ? 'disconnect.label' : 'connect.label')}
+              label={t('manage-credentials.label')}
               tooltipSide='bottom'
-              classNames={!isConnected && 'text-error-text'}
-              onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+              onClick={onManageCredentials}
             />
-          </Next.Toolbar.Root>
-        </div>
-      </Next.Avatar.Root>
+          )}
+          <Next.Button
+            iconSize='lg'
+            icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
+            iconOnly
+            label={t(isConnected ? 'disconnect.label' : 'connect.label')}
+            tooltipSide='bottom'
+            classNames={!isConnected && 'text-error-text'}
+            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+          />
+        </Next.Toolbar.Root>
+      </div>
     </Heading>
   );
 };

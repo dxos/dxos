@@ -47,16 +47,15 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
     <>
       <InputLabel>{t('identity-added.label')}</InputLabel>
       <div className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Next.Avatar.Root labelId={labelId}>
-          <Next.Avatar.Content
-            status='active'
-            hue={profileString(addedIdentity, 'hue') || fallbackValue.hue}
-            fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
-          />
-          <Next.Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
-            {displayName}
-          </Next.Avatar.Label>
-        </Next.Avatar.Root>
+        <Next.Avatar.Root
+          aria-labelledby={labelId}
+          status='active'
+          hue={Next.toAvatarHue(profileString(addedIdentity, 'hue') || fallbackValue.hue)}
+          fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
+        />
+        <span id={labelId} className={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
+          {displayName}
+        </span>
       </div>
       <ActionBar>
         {mode === 'halo-only' ? (

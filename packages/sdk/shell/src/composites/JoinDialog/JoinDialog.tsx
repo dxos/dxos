@@ -36,8 +36,8 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
             {...{
               ...joinPanelProps,
               titleId,
-              exitActionParent: <Next.AlertDialog.Cancel asChild />,
-              doneActionParent: <Next.AlertDialog.Action asChild />,
+              exitActionParent: <Next.Dialog.CloseTrigger asChild />,
+              doneActionParent: <Next.Dialog.CloseTrigger asChild />,
             }}
           />
         </Next.AlertDialog.Body>

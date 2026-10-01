@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentProps,
   type ComponentPropsWithoutRef,
   type Dispatch,
   type ReactNode,
@@ -19,7 +20,7 @@ import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
-export type LargeButtonProps = Next.ButtonProps & {
+export type LargeButtonProps = ComponentProps<typeof Next.Button> & {
   isFull?: boolean;
 };
 
@@ -107,6 +108,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
             return (
               <Next.Menu.CheckboxItem
                 key={id}
+                item={{ value: id, label: action.label, icon: action.icon }}
                 aria-labelledby={`${id}__label`}
                 aria-describedby={`${id}__description`}
                 checked={activeActionKey === id}
