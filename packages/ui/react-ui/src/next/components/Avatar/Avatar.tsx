@@ -6,7 +6,7 @@ import { Avatar as AvatarPrimitive } from '@ark-ui/react/avatar';
 import React, { forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type ChromaticPalette, type NeutralPalette, type ThemedClassName } from '@dxos/ui-types';
+import { type ChromaticPalette, type NeutralPalette, type ThemedClassName, hues } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
@@ -19,6 +19,10 @@ export type AvatarStatus = 'active' | 'inactive' | 'current' | 'internal' | 'err
 export type AvatarAnimation = 'pulse' | 'none';
 
 export type AvatarHue = NeutralPalette | ChromaticPalette;
+
+/** A stored hue name (e.g. from a profile) as an `AvatarHue`; `undefined` when it names no palette. */
+export const toAvatarHue = (value?: string): AvatarHue | undefined =>
+  value === 'neutral' ? 'neutral' : hues.find((hue) => hue === value);
 
 /** `fill` paints the hue's solid background, `surface` its tint (Tag's colours), `transparent` none. */
 export type AvatarHueVariant = 'fill' | 'surface' | 'transparent';

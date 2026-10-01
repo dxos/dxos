@@ -63,6 +63,7 @@ export const REACT_UI_NEXT: EntryExports = {
     'virtualAnchor',
     'useVirtualAnchor',
     'Avatar',
+    'toAvatarHue',
     'Tabs',
     'Progress',
     'Splitter',

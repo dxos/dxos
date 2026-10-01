@@ -20,6 +20,7 @@ import {
   type AvatarRootProps as NextAvatarRootProps,
   type AvatarStatus as NextAvatarStatus,
   type AvatarVariant as NextAvatarVariant,
+  toAvatarHue as nextToAvatarHue,
   Banner as NextBanner,
   type BannerRootProps as NextBannerRootProps,
   Block as NextBlock,
@@ -372,6 +373,7 @@ export namespace Next {
   export type AvatarAnimation = NextAvatarAnimation;
   export type AvatarHue = NextAvatarHue;
   export type AvatarHueVariant = NextAvatarHueVariant;
+  export const toAvatarHue = nextToAvatarHue;
   export const Tabs = NextTabs;
   export type TabsRootProps = NextTabsRootProps;
   export type TabsTriggerProps = NextTabsTriggerProps;
