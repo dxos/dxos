@@ -1,6 +1,6 @@
 # Next migration: codemod dry run
 
-Generated 2026-10-01 on `claude/react-ui-next-design-4db6eb` at `02cc8066fd` by the Phase B codemods
+Generated 2026-10-01 on `claude/react-ui-next-design-4db6eb` at `5a90a84a7b` by the Phase B codemods
 (`tools/codemorph`; its README documents each transform). This was a dry run: no source changed. Scope: every
 `.ts`/`.tsx` under `packages/**` except `packages/ui/react-ui/src`, `node_modules`, `dist` and symlinks (12,264
 files).
@@ -19,9 +19,9 @@ three seconds.
 
 ## Headline
 
-- **Converted:** 908 files change. That is 2,452 renames in 676 files, 25 layout elements in 14 files, 87
+- **Converted:** 908 files change. That is 2,500 renames in 678 files, 25 layout elements in 14 files, 87
   `classNames` tokens in 65 files, and 2,457 imports in 906 files.
-- **Residue (Phase C's manual list):** 983 items in 544 files. By area: plugins 338 files, ui 135, sdk 26,
+- **Residue (Phase C's manual list):** 983 items in 543 files. By area: plugins 336 files, ui 136, sdk 26,
   devtools 18, stories 18, apps 8, common 1. A later transform does not repeat an item an earlier one reported.
 - **Round 2 (since the first dry run, which had 981 items in 570 files):**
   - Converted 71 elements that had no mapping before:
@@ -36,6 +36,11 @@ three seconds.
   - Layout residue is now reported per element, not per import. The 109 `Flex`/`Column` import items became 168
     element items that each say why the element stays. Without them the residue fell from 872 items to 815, and the
     total covers 26 fewer files.
+- **Round 3 (Button `size`, decided in AUDIT "Decision review 2026-10-01 (follow-ups)"):** `density` on a button is
+  no longer dropped. Of 47 buttons, 2 have their density hoisted to their `Card.Root` (one each). 45 get `size` on the
+  button: 37 sit in a component whose caller sets the scope (reported), 6 have a computed density (reported), and 2
+  differ from their siblings. No button sat under an in-file scope that already set the same size. The residue count is
+  unchanged, but each reported button now keeps its size instead of losing it.
 - **Largest residue groups:**
   - `Flex` (151) and `Column` (17) elements, mostly because of `classNames` (93) or a row layout (38).
   - react-ui-form, which has no `/next` entry yet: 135.
@@ -44,7 +49,7 @@ three seconds.
   - `Field.Switch`/`Field.Checkbox` labels: 56.
   - `*Props` types: 49.
   - Icon sizes off the xs–xl scale: 42.
-  - Button `density`: 40.
+  - Buttons whose size the caller's scope should decide: 37.
 - **Text emphasis:** deferred. The transform exists with an empty rename table, so it converts nothing.
 
 ## Gaps the dry run surfaced
@@ -54,10 +59,11 @@ three seconds.
    list its names.
 2. **`Flex` rows have no unambiguous Next form.** `Group` pads the block axis and wraps, and a `Container` row needs
    `columns`. So 38 rows stay, as do the 88 `Flex` elements with `classNames`.
-3. **Button `density`:** Next Button takes no `size`, so the transform drops `density` on 40 buttons and reports each
-   one. Set `size` on the host instead.
+3. **Button sizes set across files:** 37 buttons get `size` on themselves because their scope is in the calling
+   component. Where every caller passes the same size, move it to the caller's scope by hand.
 4. **Icon sizes off the scale:** `size={2}`, `{7}`, `{8}`, `{10}`, `{12}` and computed sizes have no xs–xl step.
-5. **Master-detail Tabs** (`Viewport`, `BackButton`, `activePart`) still has no decision (AUDIT §7 Phase A item 4).
+5. **Master-detail Tabs** (`Viewport`, `BackButton`, `activePart`) and react-ui-list `MasterDetail` are removed
+   (follow-ups decision): ChatOptions, Welcome and VideoArticle compose Tabs + `Splitter` by hand.
 6. **Small Next additions this round would need (reported, not added):**
    - `Card.Action` default labels for close and delete. Five `Card.ActionIconButton`s have no `label` and relied on
      the translated default.
@@ -73,7 +79,7 @@ three seconds.
 
 | Transform    | Files scanned | Files changed | Conversions | Residue items | Residue files |
 | ------------ | ------------: | ------------: | ----------: | ------------: | ------------: |
-| `renames`    |        12,264 |           676 |       2,452 |           425 |           289 |
+| `renames`    |        12,264 |           678 |       2,500 |           425 |           289 |
 | `layout`     |        12,264 |            14 |          25 |           168 |            96 |
 | `classnames` |        12,264 |            65 |          87 |            52 |            42 |
 | `emphasis`   |        12,264 |             0 |           0 |             0 |             0 |
@@ -92,17 +98,17 @@ three seconds.
 | Card.Block → Block                    |    98 |
 | Field.Input → Input                   |    76 |
 | Toolbar.Button → Button               |    58 |
+| button density → size                 |    45 |
 | size={n} → iconSize='xs–xl' (Button)  |    43 |
 | Banner.Empty → Empty                  |    41 |
 | Select.TriggerButton → Select.Trigger |    40 |
 | Select.Portal unwrapped               |    39 |
 | Select.Viewport unwrapped             |    39 |
-| Select.Option → Select.Item item={…}  |    36 |
-| (92 more)                             |   705 |
+| (95 more)                             |   744 |
 
 | Residue reason                                                                                                  | Count |
 | --------------------------------------------------------------------------------------------------------------- | ----: |
-| density dropped: Next Button sizes from its scope (set size on the host)                                        |    40 |
+| button size set: its scope is decided by the caller (another component)                                         |    37 |
 | Field.Switch → Next.Switch with a label prop                                                                    |    34 |
 | Panel.Content asChild wrapped ScrollArea.Root: Panel.Body composes its own ScrollArea; collapse the pair        |    33 |
 | Field.Checkbox → Next.Checkbox with a label prop                                                                |    22 |
@@ -117,7 +123,7 @@ three seconds.
 | size {iconSize} has no xs–xl step                                                                               |     9 |
 | Listbox.ItemContent: icon is computed or a custom element; pass its props to ItemIcon by hand                   |     7 |
 | Avatar size is xs–xl (a block across) or fill in Next                                                           |     6 |
-| (94 more)                                                                                                       |   183 |
+| (95 more)                                                                                                       |   186 |
 
 ### `layout`
 
